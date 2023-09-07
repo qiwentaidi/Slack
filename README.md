@@ -10,7 +10,7 @@
 
 `Web`扫描功能缝了`afrog`[项目地址](https://github.com/zan8in/afrog)，基本就是差不多把该扫描器的功能`UI`化了，主动探测的漏洞或者指纹会写入到`report`目录下的`html`文件中，并没有将`afrog`命令的输出进行删除（所以你在`go run main.go`运行工具时，依然能看到命令行存在`afrog`的输出内容）
 
-指纹来源`Ehole`的全部指纹以及部分`Goby`指纹
+指纹来源`Ehole`的全部指纹以及其他指纹
 
 ### 主动指纹探测/指纹`POC`扫描
 
