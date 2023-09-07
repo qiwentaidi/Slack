@@ -2,7 +2,9 @@
 
 ## 配置
 
-由于有些`POC`需要反连平台验证，所以配置`ceye`这些还是比较重要的，`jndi`则是用来验证一些类似`Fastjson`的漏洞，我也不知道为什么`afrog`作者不用反连探测![image-20230814060208008](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230814060208008.png)
+由于有些`POC`需要反连平台验证，所以配置`ceye`这些还是比较重要的，`jndi`则是用来验证一些类似`Fastjson`的漏洞，我也不知道为什么`afrog`作者不用反连探测
+
+![image-20230903200253104](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230903200253104.png)
 
 ## Web扫描
 
@@ -107,9 +109,9 @@
 
 ### `FOFA`
 
-`FOFA`是之前做的还没来得及改，后续会做成跟`HUNTER`模块一样（现在跟答辩一样可以不用）
+`FOFA`功能和鹰图几乎一致，不多做介绍，排除干扰，以及证书校验功能需要专业版及以上可用
 
-![image-20230814070534358](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230814070534358.png)
+![image-20230905232626573](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230905232626573.png)
 
 ## 其他工具
 
@@ -171,9 +173,7 @@ Apache Hadoop Yarn RPC RCE
 
 ## 备忘录
 
-想写啥写啥，有需要的别忘了点保存
-
-![image-20230805002856586](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230805002856586.png)
+![image-20230904214655728](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230904214655728.png)
 
 # 运行
 
@@ -183,7 +183,7 @@ Apache Hadoop Yarn RPC RCE
 
 # 中文显示问题&内存问题
 
-由于`Fyne`内置不支持中文字体的原因，所以需要引入外部字体文件解决中文乱码问题，但是由于原生的`Windows`字体文件要么过大（会导致引入中文字体后程序运行内存占用增加的问题）要么就是显示不清晰的问题，所以需要压缩`TTF`字体文件来到达减小程序内存占用的问题，经过测试加载中文字体内存占用增加`50MB`。
+由于`Fyne`原生不支持中文字体的原因，所以需要引入外部字体文件解决中文乱码问题，但是`Windows`的字体文件要么过大（会导致引入中文字体后程序运行内存占用增加的问题）要么就是显示不清晰的问题，所以需要压缩`TTF`字体文件来到达减小程序内存占用的问题，经过测试加载中文字体内存占用增加`50MB`。
 
 1、使用`python3 pip` 安装`fonttools`工具` pip install fonttools`or`python3 -m pip install fonttools`检查是否安装成功。
 
@@ -222,52 +222,24 @@ go get fyne.io/fyne/v2/cmd/fyne@latest
 
 ## 指纹拓展
 
-从`slack v1.1`开始舍弃了`iconmd5`指纹，规则如下所示，第一行为指纹名称，后续可以有3个键值对，分别为`title`匹配网页标题名，`iconhash`是`favicon`的`Mmh3Hash32`值可以通过`example/iconhash/main.go`文件进行计算，`header`匹配响应头中的内容，`yaml`规则尽量最外层是''即可不用转译双引号以及冒号等符号干扰...自行阅读`yaml`规则，不懂再问我
+从`slack v1.1`开始舍弃了`iconmd5`指纹，规则如下所示，第一行为指纹名称，后续可以有3个键值对，分别为`title`匹配网页标题名，`iconhash`是`favicon`的`Mmh3Hash32`值可以通过`example/iconhash/main.go`文件进行计算，`header`匹配响应头中的内容，`yaml`规则尽量最外层是''即可不用转译双引号以及冒号等符号干扰（所有文本仅先按照 || 条件进行的分割），不懂再问我
 
 ```yaml
+腾达路由器:
+  title: '(Tenda && LOGIN) || (Tenda && Router) || (Tenda && Login) || (Tenda && Wi-Fi)  || (Tenda && 登录) || (Tenda && Web Master)) || 腾达无线路由器'
+  iconhash: '-2145085239'
 Nexus Repository Manager: 
   title: 'Nexus Repository Manager'
-  iconhash: '1323738809'
+  iconhash: '1323738809 || -1546574541'
   header: 'NX-ANTI-CSRF-TOKEN'
+Nginx:
+  title: "Welcome to nginx!"
+  header: 'Server:nginx'
 ```
 
 ## 杀软库拓展
 
 匹配运行的进程名`finger/antivirues.yaml`
-
-## `GoPOC`扩展
-
-例如下面`Redis`未授权访问漏洞回显，需要传入`address`地址以及`cmd`需要执行的命令，执行成功后`common.SetTextRefresh(response, global.AttackResult)`刷新内容即可，第一个参数传输出的内容
-
-```
-func Redis(address, cmd string) {
-	conn, err := net.DialTimeout("tcp4", address, time.Second*time.Duration(10))
-	if err != nil {
-		// 连接失败
-		common.SetTextRefresh("连接失败\n", global.AttackResult)
-		return
-	}
-	defer conn.Close()
-	request := strings.TrimSpace(cmd) + "\r\n"
-	if _, err = conn.Write([]byte(request)); err != nil {
-		common.SetTextRefresh("发送数据包失败\n", global.AttackResult)
-		return
-	}
-	buffer := make([]byte, 4096)
-	n, err := conn.Read(buffer)
-	if err != nil {
-		common.SetTextRefresh("读取数据包失败\n", global.AttackResult)
-		return
-	}
-	response := string(buffer[:n])
-	common.SetTextRefresh(response, global.AttackResult)
-}
-
-```
-
-将写好的`go`文件放到`plugins/vulattack/`路径下，然后在`gui/module/attack.go`文件17行中找到`vul := []string`为其添加一个可以显示的漏洞名，如果无回显的漏洞则可以如文件26所示，增加一个`if`或的判断，给用户提示需要输入反弹`shell`命令
-
-![image-20230817044008145](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230817044008145.png)
 
 ## 验证指纹是否可用
 
@@ -312,5 +284,24 @@ func Redis(address, cmd string) {
 5、WEB扫描模块增加从指纹自动识别POC进行攻击
 
 6、优化了一下&输出被转译等其他Bug
+```
+
+`v1.2`
+
+```
+1、完善了FOFA查询功能，目前可以跟鹰图一样使用
+
+2、网站扫描：
+	(1)优化了界面布局
+	(2)增加停止扫描功能
+	(3)目标支持x.x.x.x:80形式
+	(4)指纹匹配规则进行了优化，之前会出现指纹匹配不上的问题
+	(5)仅指纹扫描功能取消敏感目录探测(帆神说被封了要赔他IP)
+	
+3、优化了备忘录界面布局
+
+4、UI库全新升级界面更美观，控件做了圆角、以及阴影处理，新版本中表格控件目前存在bug，所以目前使用的仍然是老版本的代码
+
+5、带有文件logo的文本框，可以将txt文件移入读取路径
 ```
 
