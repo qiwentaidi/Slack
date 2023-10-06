@@ -4,7 +4,7 @@
 
 所见即所得，点击对应的按钮会跳转到相应的模块
 
-![image-20230925143151483](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230925143151483.png)
+![image-20231006123103052](assets/image-20231006123103052.png)
 
 ## 渗透测试
 
@@ -20,19 +20,9 @@
 - 主动指纹探测： 需要配合仅指纹扫描一起使用，在指纹扫描的基础上，增加主动指纹探测（可能会导致`IP`封禁）
 - 指纹`POC`扫描： 根据网页指纹进行`POC`扫描，此过程种会进行主动目录探测例如`Nacos|XXL-JOB`等并会将其当作指纹`，避免发送无用数据包，导致扫的很慢
 
-![image-20230909131110075](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230909131110075.png)
+![image-20231006123216814](assets/image-20231006123216814.png)
 
 运行优先级，如果你勾选了仅指纹扫描 > 指纹`POC`扫描
-
-#### 指定`POC`目录扫描
-
-可以文件夹拖到文本框内，会自动识别路径，或者点击右侧文件按钮选择，只对选中路径下的`POC`文件进行攻击，仅指纹扫描与指纹`POC`扫描无效，但你仍然可以选`FastJson`扫描功能，但是此时指定扫描的目录不会生效，且该情况下`POC`数量查询功能无效
-
-
-
-简而言之，选好指定路径后，其他选项都别动
-
-![image-20230910172309497](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230910172309497.png)
 
 #### 自定义`POC`扫描
 
@@ -44,15 +34,15 @@
 
 根据`yaml poc`的`severity`值进行检测风险等级
 
-![image-20230909124648344](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230909124648344.png)
+![image-20230909124648344](assets/image-20230909124648344.png)
 
 #### 联动`FOFA`、鹰图
 
-导入模式都与你正常网页搜索一直，不包含去重、排除等，`FOFA`最多导入1000条资产，鹰图最多导入500(考虑到正常账号也就500免费积分)
+导入模式都与你正常网页搜索一样，不包含去重、排除等，`FOFA`最多导入1000条资产，鹰图最多导入500(考虑到正常账号也就500免费积分)
 
-![image-20230910172707493](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230910172707493.png)
+![image-20230910172707493](assets/image-20230910172707493.png)
 
-![image-20230910172719413](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230910172719413.png)
+![image-20230910172719413](assets/image-20230910172719413.png)
 
 #### 任务下发
 
@@ -61,12 +51,6 @@
 ```
 1、传入公司名称 -> 天眼查、备案查【根域名组】 -> fofa【IP|URL|子域名】 -> [IP] -> 端口扫描【协议://IP:端口，会将IP对应的域名都替换一遍】 -> HTTP 等待和URL一起进入网站扫描，其他可暴破服务进入端口暴破
 ```
-
-#### 表格功能
-
-查看详情主要是有些文本过长无法全部显示时候，点击会弹出小窗显示全部内容，双击`URL`链接也可以实现打开链接功能
-
-![image-20230909124745131](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230909124745131.png)
 
 ### 端口/指纹扫描
 
@@ -98,9 +82,7 @@
 如果端口遗漏多请在配置中调高端口超时时间,默认10s
 ```
 
-![image-20230909125658502](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230909125658502.png)
-
-![image-20230917144402636](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230917144402636.png)
+![image-20231006123603637](assets/image-20231006123603637.png)
 
 ### 端口暴破
 
@@ -117,19 +99,15 @@ mysql://10.0.0.1:3306
 
 **联想模式** 顾名思义就是给出一定的条件，生成的特定字典，会联动其他工具处进行使用
 
-![image-20230917145702078](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230917145702078.png)
-
-控制台会输出成功和失败日志，失败日志每5s会输出一次。
-
-![image-20230917150023256](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230917150023256.png)
+![image-20230917145702078](assets/image-20230917145702078.png)
 
 ### 目录扫描
 
-![image-20230925142050705](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230925142050705.png)
+![image-20230925142050705](assets/image-20230925142050705.png)
 
 ### 漏洞利用
 
-目前支持验证漏洞
+目前支持验证漏洞，暂时没做别的
 
 ```
 Apache Hadoop Yarn RPC RCE
@@ -137,31 +115,27 @@ Apache Hadoop Yarn RPC RCE
 
 对于一些无回显的`POC`会提示执行反弹`shell`命令
 
-![image-20230816185538003](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230816185538003.png)
-
-![image-20230815191332939](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230815191332939.png)
-
-![image-20230816184945520](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230816184945520.png)
+![image-20230816184945520](assets/image-20230816184945520.png)
 
 ## 资产收集模块
 
 ### 公司名称查资产
 
-查看控股企业获得1级全资子公司的域名或者股权等信息，勾选查询`HUNTER`资产数量会查询资产数量，运行完毕后运行日志处会出现提示
+查看控股企业获得1级全资子公司的域名或者股权等信息，勾选查询`HUNTER`资产数量会查询资产数量，运行完毕后运行左上角日志处会出现提示
 
-![image-20230810152036444](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230810152036444.png)
+![image-20231006123809156](assets/image-20231006123809156.png)
+
+![image-20231006123822523](assets/image-20231006123822523.png)
 
 ### 子域名暴破
 
-此模块在v1.4已更新，使用了IP纯真库以及CName关键字匹配进行CDN校验
+此模块在v1.4已更新，使用了IP纯真库以及CName关键字匹配进行CDN校验，注意如果网络环境差会导致暴破的很慢，这个自行考究
 
-![image-20230820062824013](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230820062824013.png)
+![image-20231006123920861](assets/image-20231006123920861.png)
 
 ### 域名信息收集
 
-![image-20230925143506164](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230925143506164.png)
-
-![image-20230920123316052](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230920123316052.png)
+![image-20231006124136876](assets/image-20231006124136876.png)
 
 ## 空间引擎
 
@@ -171,30 +145,24 @@ Apache Hadoop Yarn RPC RCE
 
 `HUNTER`模块标签右键功能与`Web`扫描一致，查询框右键可以查看历史查询记录
 
-![image-20230909130739404](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230909130739404.png)
+![image-20230909130739404](assets/image-20230909130739404.png)
 
-![image-20230805000337553](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230805000337553.png)
+![image-20230920110739631](assets/image-20230920110739631.png)
 
-![image-20230805000525983](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230805000525983.png)
-
-![image-20230805000754835](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230805000754835.png)
-
-![image-20230920110739631](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230920110739631.png)
-
-![image-20230920110727981](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230920110727981.png)
+![image-20230920110727981](assets/image-20230920110727981.png)
 
 导出方式分为
 
 - 全部导出，需要消耗积分，导出最大数量，以当前可用积分为准
 - 导出当前数据，不消耗积分，仅保存当前查询结果
 
-![image-20230805001156867](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230805001156867.png)
+![image-20230805001156867](assets/image-20230805001156867.png)
 
 ### `FOFA`
 
 `FOFA`功能和鹰图几乎一致，不多做介绍，排除干扰，以及证书校验功能需要专业版及以上可用
 
-![image-20230905232626573](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230905232626573.png)
+![image-20230905232626573](assets/image-20230905232626573.png)
 
 ## 小工具
 
@@ -202,34 +170,33 @@ Apache Hadoop Yarn RPC RCE
 
 从上到下进行模式加解密（比如我先添加了`Base64`，再添加`Urlencode`那程序会按添加顺序进行操作）。
 
-- 加密：选择要添加的模式进行加解密，选择好加密模式后在上方文本框输入文本内容（无需点击`encode`按钮，本身就是个摆设按钮）即可自动完成加密功能。
-- 解密：把需要解密的内容复制到下方文本框，点击`decode`按钮进行解密。
+点击添加模式添加内容，右键已添加的列表进行删除
 
-![GIF 2023-5-31 22-31-09](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/GIF 2023-5-31 22-31-09.gif)
+![image-20231006124235726](assets/image-20231006124235726.png)
 
 ### 杀软识别&补丁检测
 
 杀软库可以通过修改`./config/antivirues.yaml`文件增加杀软指纹。
 
-![image-20230920123610349](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230920123610349.png)
-
-
+![image-20230920123610349](assets/image-20230920123610349.png)
 
 ### `Fscan`内容提取
 
-![image-20230810143000846](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230810143000846.png)
+除了常见的一些结果，另外添加了vcenter和海康摄像头的识别
+
+![image-20231006124412626](assets/image-20231006124412626.png)
 
 ### 反弹`shell`生成器
 
-![image-20230920123933460](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230920123933460.png)
+![image-20230920123933460](assets/image-20230920123933460.png)
 
 ### 联想字典生成器
 
-![image-20230920124006361](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230920124006361.png)
+![image-20230920124006361](assets/image-20230920124006361.png)
 
 ### 备忘录
 
-![image-20230920123530091](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230920123530091.png)
+![image-20230920123530091](assets/image-20230920123530091.png)
 
 # 运行
 
