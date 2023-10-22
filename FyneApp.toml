@@ -1,0 +1,6 @@
+[Details]
+  Icon = "./gui/mytheme/static/logo.ico"
+  Name = "slack"
+  ID = "golang.qwtd.slack"
+  Version = "1.4.3"
+  Build = 14

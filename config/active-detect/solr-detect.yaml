@@ -1,0 +1,15 @@
+id: solr-detect
+
+info:
+  name: Solr Panel
+  author: qwtd
+  severity: info
+  verified: true
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /solr
+    expression: response.status == 200 && response.body.bcontains(b'Apache SOLR') && response.body.bcontains(b'core')
+expression: r0()

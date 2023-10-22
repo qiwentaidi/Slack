@@ -1,0 +1,405 @@
+网宿 CDN:
+  - wswebcdn.com
+  - lxdns.com
+  - wswebpic.com
+  - chinanetcenter.com
+  - customcdn.com.cn
+  - customcdn.cn
+  - 51cdn.com
+  - wscdns.com
+  - cdn20.com
+  - wsdvs.com
+  - wsglb0.com
+  - speedcdns.com
+  - wtxcdn.com
+华为云 CDN:
+  - cdnhwc1.com
+  - cdnhwc2.com
+  - cdnhwc3.com
+腾讯云 CDN:
+  - cdntip.com
+  - dnsv1.com
+  - tencdns.net
+  - tdnsv5.com
+Google Web 业务:
+  - google.com
+  - 1e100.net
+CloudXNS:
+  - ffdns.net
+Heroku SaaS:
+  - herokuapp.com
+Relected Networks:
+  - rncdn1.com
+  - simplecdn.net
+动力在线CDN:
+  - powercdn.cn
+Verizon CDN (Edgecast):
+  - mucdn.net
+  - nucdn.net
+  - alphacdn.net
+  - systemcdn.net
+  - edgecastcdn.net
+  - zetacdn.net
+Tata communications CDN:
+  - bitgravity.com
+美橙互联CDN:
+  - cdncenter.cn
+360 云 CDN (由奇虎 360 运营):
+  - qh-cdn.com
+  - qihucdn.com
+  - 360cdn.com
+AWS CloudFront:
+  - cloudfront.net
+百度云 CDN:
+  - bdydns.com
+西部数码:
+  - 800cdn.com
+Stackpath (原 MaxCDN):
+  - netdna.com
+  - netdna-cdn.com
+  - netdna-ssl.com
+七牛云:
+  - qbox.me
+  - qiniu.com
+  - qiniudns.com
+Zenlayer CDN:
+  - zenlogic.net
+  - ogslb.com
+  - uxengine.net
+SpeedyCloud CDN:
+  - xundayun.cn
+  - xundayun.com
+  - speedycloud.cc
+Akamai CDN:
+  - akamai.net
+  - akamaiedge.net
+  - ytcdn.net
+  - edgesuite.net
+  - akamaitech.net
+  - akamaitechnologies.com
+  - edgekey.net
+  - akamaized.net
+  - akadns.net
+CDN77:
+  - cdn77.org
+  - cdn77.net
+Incapsula CDN:
+  - incapdns.net
+阿里云盾高防:
+  - aligaofang.com
+  - yundunddos.com
+AT&T Content Delivery Network:
+  - att-dsa.net
+北京同兴万点网络技术:
+  - cdnetworks.net
+  - txnetworks.cn
+  - cdnnetworks.com
+  - txcdn.cn
+蓝盾云CDN:
+  - cloudfence.cn
+Cedexis GSLB:
+  - cedexis.net
+CDNSUN:
+  - cdnsun.net
+帝联科技:
+  - dnion.com
+  - ewcache.com
+  - globalcdn.cn
+  - tlgslb.com
+  - fastcdn.com
+  - flxdns.com
+  - dlgslb.cn
+猫云融合 CDN:
+  - maoyun.tv
+  - maoyundns.com
+QUANTIL (网宿):
+  - mwcloudcdn.com
+  - mwcname.com
+FlexBalancer - Smart Traffic Routing:
+  - flexbalancer.net
+Limelight Network:
+  - llnwi.net
+  - llnwd.net
+  - unud.net
+  - lldns.net
+Oracle Dyn Web Application Security suite (原 Zenedge CDN):
+  - zenedge.net
+宝腾互联旗下上海万根网络（CDN 联盟）:
+  - cdnunion.net
+  - cdnunion.com
+易通锐进（Akamai 中国）由网宿承接:
+  - tl88.net
+Microsoft Azure Traffic Manager:
+  - trafficmanager.net
+可靠云 CDN (贴图库):
+  - aocdn.com
+腾讯云视频 CDN:
+  - tcdnvod.com
+mmTrix性能魔方（高升控股旗下）:
+  - mmtrixopt.com
+星域云P2P CDN:
+  - p2cdn.com
+  - 00cdn.com
+白山云 CDN:
+  - bsgslb.cn
+  - qingcdn.com
+  - bsclink.cn
+  - trpcdn.net
+腾讯云大禹 BGP 高防:
+  - dayugslb.com
+新浪云 CDN:
+  - sinacdn.com
+  - sinasws.com
+新流云（新流万联）:
+  - ngaagslb.cn
+Microsoft Azure:
+  - cloudapp.net
+华为云WAF高防云盾:
+  - huaweicloud.com
+BelugaCDN:
+  - belugacdn.com
+中联数据（中联利信）:
+  - cnispgroup.com
+Bilibili 高可用地域负载均衡:
+  - hdslb.com
+极御云安全（浙江壹云云计算有限公司）:
+  - xwaf.cn
+360 云 CDN (由奇安信运营):
+  - qhcdn.com
+CDN.NET / CDNSUN / ONAPP:
+  - worldssl.net
+G - Core Labs:
+  - gcdn.co
+Azion Tech | Edge Computing PLatform:
+  - azioncdn.net
+VeryCloud 云分发:
+  - verycloud.cn
+  - verycdn.net
+  - verygslb.com
+ZEIT Now Smart CDN:
+  - zeit.co
+  - zeit-cdn.net
+Medianova:
+  - mncdn.com
+世纪互联云快线业务:
+  - 21vokglb.cn
+  - 21vianet.com.cn
+  - 21okglb.cn
+  - 21speedcdn.com
+  - 21cvcdn.com
+  - okcdn.com
+  - okglb.com
+CDNetworks:
+  - panthercdn.com
+  - cdnga.net
+  - cdngc.net
+  - gccdn.net
+  - gccdn.cn
+世纪互联旗下上海蓝云（承载 Azure 中国）:
+  - chinacloudsites.cn
+魔门云 CDN:
+  - momentcdn.com
+京东云 CDN:
+  - jcloudcs.com
+  - jdcdn.com
+  - qianxun.com
+  - jcloudlb.com
+  - jcloud-cdn.com
+快网 CDN:
+  - cloudglb.com
+  - fastweb.com
+  - fastwebcdn.com
+  - cloudcdn.net
+  - fwcdn.com
+  - fwdns.net
+  - hadns.net
+  - hacdn.net
+  - cachecn.com
+QUIC.Cloud:
+  - quic.cloud
+Stackpath CDN:
+  - stackpathdns.com
+  - stackpathcdn.com
+西部数码虚拟主机:
+  - vhostgo.com
+中国电信天翼云CDN:
+  - ctxcdn.cn
+高升控股CDN技术:
+  - gosuncdn.com
+CDNIFY:
+  - cdnify.io
+蓝视云 CDN:
+  - lsycdn.com
+逸云科技云加速 CDN:
+  - scsdns.com
+CenturyLink CDN (原 Level 3):
+  - footprint.net
+KeyCDN:
+  - kxcdn.com.
+深信服 AD 系列应用交付产品  单边加速解决方案:
+  - sangfordns.com
+饿了么静态域名与地域负载均衡:
+  - elemecdn.com
+新浪云 SAE 云引擎:
+  - saebbs.com
+云帆加速CDN:
+  - yfcdn.net
+网易云 CDN:
+  - 126.net
+  - 163jiasu.com
+Stackpath (原 Highwinds):
+  - hwcdn.net
+又拍云:
+  - aicdn.com
+新浪静态域名:
+  - sinajs.cn
+奇安信网站卫士:
+  - 360cloudwaf.com
+  - 360anyu.com
+  - 360safedns.com
+  - 360wzws.com
+TAN14 CDN:
+  - tan14.net
+Google Cloud Storage:
+  - googleapis.com
+蚂蚁金服旗下业务地域负载均衡系统:
+  - alipaydns.com
+腾正安全加速（原 15CDN）:
+  - 15cdn.com
+  - tzcdn.cn
+Coding Pages:
+  - coding.io
+  - coding.me
+StatusPage.io:
+  - stspg-customer.com
+Bilibili 高可用负载均衡:
+  - hdslb.net
+Instart CDN:
+  - inscname.net
+  - insnw.net
+百度旗下业务地域负载均衡系统:
+  - shifen.com
+网堤安全:
+  - 2cname.com
+Cloudflare:
+  - cloudflare.net
+知道创宇云安全创宇盾（政务专用）:
+  - 365cyd.cn
+美团云 CDN:
+  - msscdn.com
+WebLuker (蓝汛):
+  - xgslb.net
+绿盟云 WAF:
+  - nscloudwaf.com
+NodeCache:
+  - ncname.com
+Microsoft Azure CDN:
+  - azureedge.net
+  - msecnd.net
+  - mschcdn.com
+  - v0cdn.net
+Netlify:
+  - netlify.com
+Bunny CDN:
+  - b-cdn.net
+新浪科技融合CDN负载均衡:
+  - sinaedge.com
+  - sina.com.cn
+青云 CDN:
+  - qingcache.com
+  - qingcloud.com
+  - frontwize.com
+UCloud 罗马 Rome 全球网络加速:
+  - ucloudgda.com
+全速云（网宿）CloudEdge 云加速:
+  - wscloudcdn.com
+知道创宇云安全加速乐CDN:
+  - jiashule.com
+  - jiasule.org
+牛盾云安全:
+  - newdefend.cn
+  - anquan.io
+UCloud CDN:
+  - ucloud.cn
+  - ucloud.com.cn
+  - cdndo.com
+领智云 CDN（杭州领智云画）:
+  - lccdn.org
+Fastly:
+  - fastly.net
+  - fastlylb.net
+Microsoft Azure App Service:
+  - azurewebsites.net
+  - azurewebsites.windows.net
+上海云盾YUNDUN:
+  - jsd.cc
+Bilibili 业务 GSLB:
+  - biliapi.com
+美橙互联旗下建站之星:
+  - websitecname.cn
+蓝汛 CDN:
+  - ccgslb.com.cn
+  - ccgslb.net
+  - ccgslb.com
+  - ccgslb.cn
+  - c3cache.net
+  - c3dns.net
+  - chinacache.net
+GitLab Pages:
+  - gitlab.io
+Conversant - SwiftServe CDN:
+  - swiftserve.com
+美团云（三快科技）负载均衡:
+  - sankuai.com
+AWS Cloud:
+  - amazonaws.com
+阿里云 CDN:
+  - tbcache.com
+  - aliyun-inc.com
+  - aliyuncs.com
+  - alikunlun.net
+  - alikunlun.com
+  - alicdn.com
+  - kunlun(.*).com
+  - cdngslb.com
+CacheFly CDN:
+  - cachefly.net
+Internap CDN:
+  - internapcdn.net
+TurboBytes Multi-CDN:
+  - turbobytes.net
+  - turbobytes-cdn.com
+LeaseWeb CDN:
+  - lswcdn.net
+云端智度融合 CDN:
+  - spdydns.com
+GitHub Pages:
+  - github.io
+金山云 CDN:
+  - ksyuncdn.com
+  - ks-cdn.com
+  - ksyuncdn-k1.com
+新乐视云联（原乐视云）CDN:
+  - cdnle.com
+CDN.NET:
+  - worldcdn.net
+网宿 WAF CDN:
+  - wsssec.com
+腾讯旗下业务地域负载均衡系统:
+  - tencent-cloud.net
+创世云融合 CDN:
+  - chuangcdn.com
+  - aocde.com
+蛮蛮云 CDN（中联利信）:
+  - mmycdn.cn
+  - chinamaincloud.com
+Cedexis GSLB (For China):
+  - cdxcn.cn
+百度云加速:
+  - yunjiasu-cdn.net
+宝腾互联旗下上海万根网络（YaoCDN）:
+  - mygslb.com
+  - cdnudns.com
+  - sprycdn.com
+安恒玄武盾:
+  - saaswaf.com

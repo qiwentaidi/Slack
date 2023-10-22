@@ -1,0 +1,18 @@
+id: nacos-actuator-unauth
+
+info:
+  name: Nacos Actuator Unauth
+  author: qwtd
+  severity: high
+  verified: true
+  reference:
+    - https://github.com/LandGrey/SpringBootVulExploit
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /nacos/actuator/env
+    expression: |
+      response.status == 200 && response.content_type.contains("json") && response.body.bcontains(b"java.version") && response.body.bcontains(b"os.arch")
+expression: r0()

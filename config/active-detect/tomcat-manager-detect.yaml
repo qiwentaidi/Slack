@@ -1,0 +1,16 @@
+id: tomcat-manager-console-detect
+
+info:
+  name: Tomcat Manager Console Detect
+  author: qwtd
+  severity: info
+  verified: true
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /;/manager/html
+    expression: response.status == 401 && response.body.bcontains(b'401 Unauthorized')
+
+expression: r0()

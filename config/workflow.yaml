@@ -1,0 +1,1585 @@
+Java:
+  - config/afrog-pocs/CVE/2021/CVE-2021-44228.yaml
+Jeecg: 
+  - config/afrog-pocs/addpocs/jeecg-druid-unauth.yaml
+  - config/afrog-pocs/addpocs/jeecg-jeecgFormDemoController-fileupload.yaml
+JeecgBoot: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-37304.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-37305.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-1454.yaml
+Jeewms: 
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-61972.yaml
+Nacos: 
+  - config/afrog-pocs/unauthorized/nacos-create-user-unauthorized.yaml
+  - config/afrog-pocs/unauthorized/nacos-user-list-unauthorized.yaml
+  - config/afrog-pocs/vulnerability/nacos-config-server-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/nacos-default-password.yaml
+  - config/afrog-pocs/vulnerability/nacos-jraftserver-deserialization-rce.yaml
+  - config/afrog-pocs/vulnerability/nacos-secret-default-key-unauth.yaml
+  - config/afrog-pocs/vulnerability/nacos-severidentity-bypass.yaml
+  - config/afrog-pocs/vulnerability/nacos-token-create-user.yaml
+  - config/afrog-pocs/unauthorized/nacos-actuator-unauth.yaml
+Resin: 
+  - config/afrog-pocs/CNVD/2007/CNVD-200705-315.yaml
+  - config/afrog-pocs/vulnerability/resin-inputfile-fileread.yaml
+  - config/afrog-pocs/vulnerability/resin-viewfile-fileread.yaml
+致远OA M1 Server: 
+  - config/afrog-pocs/vulnerability/seeyon-m1-usertokenservice-rce.yaml
+畅捷通: 
+  - config/afrog-pocs/vulnerability/chanjet-tplus-rce.yaml
+  - config/afrog-pocs/vulnerability/yonyou-chanjet-gnremote-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/yonyou-chanjet-tplus-file-upload.yaml
+  - config/afrog-pocs/vulnerability/yonyou-chanjet-tplus-password-reset.yaml
+  - config/afrog-pocs/vulnerability/yonyou-chanjet-tplus-read-file.yaml
+  - config/afrog-pocs/vulnerability/chanjet-tplus-checkmutex-sqli.yaml
+  - config/afrog-pocs/CNVD/2022/CNVD-2022-60632.yaml
+畅捷CRM: 
+  - config/afrog-pocs/vulnerability/chanjet-crm-get-usedspace-sql-injection.yaml
+Weaver E-Mobile:
+  - config/afrog-pocs/CNVD/2017/CNVD-2017-03561.yaml
+Ueditor:
+  - config/afrog-pocs/CNVD/2017/CNVD-2017-20077.yaml
+  - config/afrog-pocs/addpocs/ueditor-xss.yaml
+极通EWEBS: 
+  - config/afrog-pocs/CNVD/2017/CNVD-2017-26282.yaml
+FineReport-V8: 
+  - config/afrog-pocs/CNVD/2018/CNVD-2018-04757.yaml
+MetInfo: 
+  - config/afrog-pocs/CNVD/2018/CNVD-2018-13393.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-16996.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-16997.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-17418.yaml
+  - config/afrog-pocs/vulnerability/metinfo-file-read.yaml
+Cobbler: 
+  - config/afrog-pocs/CNVD/2018/CNVD-2018-16876.yaml
+  - config/afrog-pocs/vulnerability/cobbler-webgui.yaml
+  - config/afrog-pocs/vulnerability/cobbler-exposed-directory.yaml
+  - config/afrog-pocs/vulnerability/cobbler-default-login.yaml
+Xiuno-BBS: 
+  - config/afrog-pocs/CNVD/2019/CNVD-2019-01348.yaml
+Catfishcms: 
+  - config/afrog-pocs/CNVD/2019/CNVD-2019-06255.yaml
+Coremail: 
+  - config/afrog-pocs/CNVD/2019/CNVD-2019-16798.yaml
+  - config/afrog-pocs/addpocs/coremail-username-enumeration.yaml
+致远OA: 
+  - config/afrog-pocs/CNVD/2019/CNVD-2019-19299.yaml
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-62422.yaml
+  - config/afrog-pocs/default-pwd/seeyon-a8-management-monitor-default-password.yaml
+  - config/afrog-pocs/disclosure/seeyon-a6-employee-info-leak.yaml
+  - config/afrog-pocs/disclosure/seeyon-oa-cookie-leak-login-bypass.yaml
+  - config/afrog-pocs/disclosure/seeyon-session-leak.yaml
+  - config/afrog-pocs/vulnerability/yyoa-a6-userinfo-disclosure.yaml
+  - config/afrog-pocs/vulnerability/seeyon-wps-assist-servlet-upload.yaml
+  - config/afrog-pocs/vulnerability/seeyon-wooyun-2015-0108235-sqli.yaml
+  - config/afrog-pocs/vulnerability/seeyon-oa-ajax-anyfile-upload.yaml
+  - config/afrog-pocs/vulnerability/seeyon-fanruan-report-server-directory-travesal.yaml
+  - config/afrog-pocs/vulnerability/seeyon-ajax-unauthorized-access.yaml
+  - config/afrog-pocs/vulnerability/seeyon-a8-info-disclosure.yaml
+  - config/afrog-pocs/vulnerability/seeyon-a6-setextno-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/seeyon-a6-createmysql-disclosure.yaml
+  - config/afrog-pocs/vulnerability/seeyon-a6-config-disclosure.yaml
+  - config/afrog-pocs/vulnerability/seeyon-resetpassword-anyuser.yaml
+Discuz: 
+  - config/afrog-pocs/CNVD/2019/CNVD-2019-22239.yaml
+  - config/afrog-pocs/vulnerability/discuz-v72-sqli.yaml
+  - config/afrog-pocs/vulnerability/discuz-wechat-plugins-unauth.yaml
+  - config/afrog-pocs/vulnerability/wooyun-2010-080723.yaml
+# E-Cology
+Weaver OA: 
+  - config/afrog-pocs/CNVD/2019/CNVD-2019-32204.yaml
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-33202.yaml
+  - config/afrog-pocs/CNVD/2023/CNVD-2023-12632.yaml
+  - config/afrog-pocs/vulnerability/e-cology-arbitrary-file-upload.yaml
+  - config/afrog-pocs/vulnerability/e-cology-filedownload-directory-traversal.yaml
+  - config/afrog-pocs/vulnerability/e-cology-getsqldata-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/e-cology-jqueryfiletree-ile-inclusion.yaml
+  - config/afrog-pocs/vulnerability/e-cology-oa-e-weaver-signature-download.yaml
+  - config/afrog-pocs/vulnerability/e-cology-springframework-directory-traversal.yaml
+  - config/afrog-pocs/vulnerability/e-cology-syncuserinfo-sqli.yaml
+  - config/afrog-pocs/vulnerability/e-cology-v8-sqli.yaml
+  - config/afrog-pocs/vulnerability/e-cology-validate-sqli.yaml
+  - config/afrog-pocs/vulnerability/e-cology-verify-quick-login-user-login.yaml
+  - config/afrog-pocs/vulnerability/e-cology-workflowcentertreedata-sqli.yaml
+  - config/afrog-pocs/vulnerability/ecology-changeuserinfo-info-leak.yaml
+  - config/afrog-pocs/vulnerability/ecology-filedownloadforoutdoc-sqli.yaml
+  - config/afrog-pocs/vulnerability/ecology-ktreeuploadaction-upload.yaml
+  - config/afrog-pocs/vulnerability/ecology-oa-database-info-leak.yaml
+  - config/afrog-pocs/vulnerability/ecology-oa-deleteuserrequestinfobyxml-xxe.yaml
+  - config/afrog-pocs/vulnerability/ecology-ofslogin-aul.yaml
+  - config/afrog-pocs/vulnerability/ecology-v9-sqli.yaml
+  - config/afrog-pocs/vulnerability/weaver-oa-workrelate-file-upload.yaml
+  - config/afrog-pocs/vulnerability/weaver-ecology-oa-plugin-checkserver-setting-sqli.yaml
+  - config/afrog-pocs/addpocs/ecology-HrmCareerApplyPerView-sqli.yaml
+Weaver E-Office:
+  - config/afrog-pocs/disclosure/ecology-e-office-mysql-config-leak.yaml
+  - config/afrog-pocs/vulnerability/e-cology-e-office-officeserver-file-read.yaml
+  - config/afrog-pocs/vulnerability/e-office-v10-officeserver-upload.yaml
+  - config/afrog-pocs/vulnerability/e-office-v10-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/e-weaver-eoffice-webservice-upload-fileupload.yaml
+  - config/afrog-pocs/vulnerability/e-cology-e-office-officeserver-file-read.yaml
+  - config/afrog-pocs/vulnerability/eoffice-v9-file-upload.yaml
+  - config/afrog-pocs/addpocs/eoffice-v9-ajax-file-upload.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-2766.yaml
+Weaver E-Bridge: 
+  - config/afrog-pocs/vulnerability/e-bridge-saveyzjfile-file-read.yaml
+  - config/afrog-pocs/vulnerability/weaver-ebridge-file-read.yaml
+Weaver E-Mobile: 
+  - config/afrog-pocs/vulnerability/e-mobile-6.0-client-rce.yaml
+Joomla: 
+  - config/afrog-pocs/CNVD/2019/CNVD-2019-34135.yaml
+  - config/afrog-pocs/CVE/2015/CVE-2015-7297.yaml
+  - config/afrog-pocs/CVE/2017/CVE-2017-8917.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-6605.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-7314.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-23752.yaml
+  - config/afrog-pocs/vulnerability/joomla-jvehicles-lfi.yaml
+  - config/afrog-pocs/vulnerability/joomla-component-vreview-sql.yaml
+O2OA: 
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-18740.yaml
+  - config/afrog-pocs/default-pwd/o2oa-default-password.yaml
+  - config/afrog-pocs/vulnerability/o2oa-open-read-file.yaml
+  - config/afrog-pocs/vulnerability/o2-default-password.yaml
+迅优CMS:
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-23735.yaml
+极致CMS: 
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-49710.yaml
+Zkeco: 
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-57264.yaml
+Ecshop: 
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-58823.yaml
+  - config/afrog-pocs/vulnerability/ecshop-2x-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/ecshop-collection-list-sqli.yaml
+  - config/afrog-pocs/vulnerability/ecshop-rce.yaml
+H5S视频平台: 
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-67113.yaml
+佑友防火墙: 
+  - config/afrog-pocs/CNVD/2020/CNVD-2020-73282.yaml
+若依管理系统: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-01931.yaml
+  - config/afrog-pocs/unauthorized/ruoyi-druid-unauth.yaml
+锐捷-NBR路由器: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-09650.yaml
+  - config/afrog-pocs/disclosure/ruijie-nbr1300g-cli-password-leak.yaml
+  - config/afrog-pocs/vulnerability/ruijie-nbr-fileupload.yaml
+WeiPHP: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-09693.yaml
+  - config/afrog-pocs/vulnerability/weiphp3-sessionid-fileupload.yaml
+  - config/afrog-pocs/vulnerability/weiphp-sql.yaml
+  - config/afrog-pocs/vulnerability/weiphp-path-traversal.yaml
+MessageSolution Enterprise Email Archiving (EEA): 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-10543.yaml
+锐捷-RG-UAC: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-14536.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-27648.yaml
+ShopXO: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-15822.yaml
+Landray OA: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-28277.yaml
+  - config/afrog-pocs/vulnerability/landray-oa-treexml-rce.yaml
+  - config/afrog-pocs/vulnerability/landray-oa-syssearchmain-rce.yaml
+  - config/afrog-pocs/vulnerability/landray-oa-datajson-rce.yaml
+Sapido-router: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-32085.yaml
+  - config/afrog-pocs/vulnerability/sapido-router-rce.yaml
+奇安信-天擎: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-32799.yaml
+奇安信-VPN:
+  - config/afrog-pocs/vulnerability/qianxin-userlist-motify-user-password.yaml
+OpenSNS: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-34590.yaml
+WIFISKY-7层流控路由器: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-39012.yaml
+紫光档案管理系统: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-41638.yaml
+  - config/afrog-pocs/vulnerability/max-test-command-executor-rce.yaml
+H3C IMC: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-39067.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-34928.yaml
+  - config/afrog-pocs/vulnerability/h3c-imc-rce.yaml
+Finetree 5MP Network Camera: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-42372.yaml
+原创先锋后台管理系统: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-42789.yaml
+Apache storm: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-46825.yaml
+  - config/afrog-pocs/unauthorized/storm-unauthorized-access.yaml
+Weaver E-Office: 
+  - config/afrog-pocs/CNVD/2021/CNVD-2021-49104.yaml
+向日葵-SunLogin: 
+  - config/afrog-pocs/CNVD/2022/CNVD-2022-03672.yaml
+  - config/afrog-pocs/CNVD/2022/CNVD-2022-10270.yaml
+Zentao: 
+  - config/afrog-pocs/CNVD/2022/CNVD-2022-42853.yaml
+  - config/afrog-pocs/vulnerability/zentao-api-getmodel-api-getmethod-filepath-fileread.yaml
+  - config/afrog-pocs/vulnerability/zentao-misc-captcha-user-auth-bypass-to-rce.yaml
+宏景eHR人力资源信息管理系统: 
+  - config/afrog-pocs/CNVD/2023/CNVD-2023-08743.yaml
+Struts2: 
+  - config/afrog-pocs/CVE/2007/CVE-2007-4556.yaml
+  - config/afrog-pocs/CVE/2012/CVE-2012-0392.yaml
+  - config/afrog-pocs/CVE/2013/CVE-2013-1965.yaml
+  - config/afrog-pocs/CVE/2013/CVE-2013-2251.yaml
+  - config/afrog-pocs/CVE/2016/CVE-2016-3081.yaml
+  - config/afrog-pocs/CVE/2017/CVE-2017-5638.yaml
+  - config/afrog-pocs/CVE/2017/CVE-2017-9791.yaml
+  - config/afrog-pocs/CVE/2017/CVE-2017-12611.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-11776.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-0230.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-17530.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-31805.yaml
+JBoss: 
+  - config/afrog-pocs/CVE/2010/CVE-2010-1871.yaml
+  - config/afrog-pocs/CVE/2017/CVE-2017-7504.yaml
+  - config/afrog-pocs/CVE/2017/CVE-2017-12149.yaml
+  - config/afrog-pocs/default-pwd/jmx-default-password.yaml
+  - config/afrog-pocs/default-pwd/jboss-default-password.yaml
+Adobe-ColdFusion: 
+  - config/afrog-pocs/CVE/2010/CVE-2010-2861.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-26360.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-29300.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-38204.yaml
+PHP-CGI:
+  - config/afrog-pocs/CVE/2012/CVE-2012-1823.yaml
+ElasticSearch: 
+  - config/afrog-pocs/CVE/2014/CVE-2014-3120.yaml
+  - config/afrog-pocs/CVE/2015/CVE-2015-1427.yaml
+  - config/afrog-pocs/CVE/2015/CVE-2015-3337.yaml
+  - config/afrog-pocs/CVE/2015/CVE-2015-5531.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-22145.yaml
+  - config/afrog-pocs/unauthorized/elasticsearch-unauth.yaml
+Drupal: 
+  - config/afrog-pocs/CVE/2014/CVE-2014-3704.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-7600.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-6340.yaml
+Atlassian-Confluence: 
+  - config/afrog-pocs/CVE/2015/CVE-2015-8399.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-3396.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-26084.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-26085.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-26134.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-26138.yaml
+  - config/afrog-pocs/vulnerability/atlassian-bitbucket-loginbypass.yaml
+Apache ActiveMQ: 
+  - config/afrog-pocs/CVE/2016/CVE-2016-3088.yaml
+  - config/afrog-pocs/default-pwd/activemq-default-password.yaml
+  - config/afrog-pocs/disclosure/activemq-path-disclosure.yaml
+SpringBoot: 
+  - config/afrog-pocs/CVE/2016/CVE-2016-4977.yaml
+  - config/afrog-pocs/CVE/2017/CVE-2017-8046.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-1273.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-3799.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-5405.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-5410.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-21234.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-22947.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-22963.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-22965.yaml
+  - config/afrog-pocs/vulnerability/springboot-admin-unauth.yaml
+  - config/afrog-pocs/vulnerability/springboot-h2-db-rce.yaml
+  - config/afrog-pocs/vulnerability/springboot-log4j-rce.yaml
+  - config/afrog-pocs/unauthorized/env-detect.yaml
+  - config/afrog-pocs/unauthorized/heapdump-detect.yaml
+NUUO 摄像头: 
+  - config/afrog-pocs/CVE/2016/CVE-2016-5674.yaml
+  - config/afrog-pocs/vulnerability/nuuo-file-inclusion.yaml
+Zabbix: 
+  - config/afrog-pocs/CVE/2016/CVE-2016-10134.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-23131.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-23134.yaml
+  - config/afrog-pocs/default-pwd/zabbix-default-password.yaml
+  - config/afrog-pocs/unauthorized/zabbix-authentication-bypass.yaml
+  - config/afrog-pocs/unauthorized/zabbix-dashboards-access.yaml
+Wordpress: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-5487.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-19985.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-11738.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-0434.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-1020.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-1119.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-1390.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-1950.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-3982.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-21661.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-31474.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-41840.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2023-0236.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-23492.yaml
+  - config/afrog-pocs/fingerprinting/wordpress-login.yaml
+  - config/afrog-pocs/vulnerability/wordpress-ext-adaptive-images-lfi.yaml
+  - config/afrog-pocs/vulnerability/wordpress-ext-mailpress-rce.yaml
+  - config/afrog-pocs/vulnerability/wordpress-install.yaml
+  - config/afrog-pocs/vulnerability/wordpress-wpconfig-inclosure.yaml
+Nnetgear 路由器: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-5521.yaml
+Hikvision IP Camera: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-7921.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-36260.yaml
+  - config/afrog-pocs/disclosure/hikvision-info-leak.yaml
+PHP: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-9841.yaml
+  - config/afrog-pocs/addpocs/phpinfo-leak.yaml
+  - config/afrog-pocs/vulnerability/phpstudy-backdoor-rce.yaml
+Weblogic: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-10271-2.yaml
+  - config/afrog-pocs/CVE/2017/CVE-2017-10271.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-2725.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-2551.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-14750.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-14883.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-21371.yaml
+  - config/afrog-pocs/default-pwd/weblogic-weak-login.yaml
+  - config/afrog-pocs/fingerprinting/weblogic-panel.yaml
+  - config/afrog-pocs/vulnerability/weblogic-cve-2019-2729-2.yml
+  - config/afrog-pocs/vulnerability/weblogic-ssrf.yaml
+Supervisor: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-11610.yaml
+Apache Tomcat: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-12615.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-11759.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-1938.yaml
+  - config/afrog-pocs/default-pwd/tomcat-default-login.yaml
+  - config/afrog-pocs/default-pwd/tomcat-examples-login.yaml
+Apache Solr: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-12629.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-0193.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-17558.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-27905.yaml
+  - config/afrog-pocs/vulnerability/solr-admin-query.yaml
+  - config/afrog-pocs/vulnerability/solr-file-read.yaml
+  - config/afrog-pocs/vulnerability/solr-log4j-rce.yaml
+  - config/afrog-pocs/vulnerability/solr-velocity-template-rce.yaml
+  - config/afrog-pocs/vulnerability/apache-solr-remotestreaming-anyfileread.yaml
+Apache CouchDB:
+  - config/afrog-pocs/CVE/2017/CVE-2017-12635.yaml
+  - config/afrog-pocs/unauthorized/couchdb-unauthorized.yaml
+  - config/afrog-pocs/vulnerability/couchdb-admin-party.yaml
+Next.js: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-16877.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-5284.yaml
+Laravel: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-16894.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-3129.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-40734.yamlR
+  - config/afrog-pocs/vulnerability/laravel-improper-webdir.yaml
+Embedthis: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-17562.yaml
+DedeCMS:
+  - config/afrog-pocs/CVE/2017/CVE-2017-17731.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-6910.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-7700.yaml
+  - config/afrog-pocs/disclosure/dede-cms-radminpass-disclosure.yaml
+  - config/afrog-pocs/vulnerability/dedecms-carbuyaction-fileinclude.yaml
+  - config/afrog-pocs/vulnerability/dedecms-common-func-rce.yaml
+  - config/afrog-pocs/vulnerability/dedecms-config-xss.yaml
+  - config/afrog-pocs/vulnerability/dedecms-guestbook-sqli.yaml
+  - config/afrog-pocs/vulnerability/dedecms-membergroup-sqli.yaml
+  - config/afrog-pocs/vulnerability/dedecms-rce.yaml
+  - config/afrog-pocs/vulnerability/dedecms-url-redirection.yaml
+GlassFish: 
+  - config/afrog-pocs/CVE/2017/CVE-2017-1000028.yaml
+Ruby: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-3760.yaml
+uWSGI: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-7490.yaml
+CouchCMS: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-7662.yaml
+Apache OFBiz: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-8033.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-9496.yaml
+  - config/afrog-pocs/default-pwd/ofbiz-default-password.yaml
+  - config/afrog-pocs/vulnerability/apache-ofbiz-log4j-rce.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-30128.yaml
+AppWeb Authentication: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-8715.yaml
+Cobub Razor: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-8770.yaml
+DVR: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-9995.yaml
+Nagios XI: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-10735.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-10736.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-10737.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-10738.yaml
+Devaldi-FlexPaper: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-11686.yaml
+Apache Mod_jk: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-11759.yaml
+phpMyAdmin: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-12613.yaml
+  - config/afrog-pocs/vulnerability/phpmyadmin-setup.yaml
+  - config/afrog-pocs/vulnerability/phpmyadmin-setup-deserialization.yaml
+  - config/afrog-pocs/vulnerability/phpmyadmin-server-import.yaml
+  - config/afrog-pocs/vulnerability/phpmyadmin-misconfiguration.yaml
+Webgrind: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-12909.yaml
+Fortinet SSLVPN: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-13379.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-40684.yaml
+JavaMelody: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-15531.yaml
+Kibana: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-17246.yaml
+mini_httpd: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-18778.yaml
+PhpCMS: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-19127.yaml
+GitList: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-1000533.yaml
+Jenkins: 
+  - config/afrog-pocs/CVE/2018/CVE-2018-1000600.yaml
+  - config/afrog-pocs/CVE/2018/CVE-2018-1000861.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-36883.yaml
+  - config/afrog-pocs/unauthorized/jenkins-unauthorized-access.yaml
+YouPHPTube: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-5127.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-5129.yaml
+RAILS-Framework: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-5418.yaml
+QNAP PhotoStation: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-7192.yaml
+Nexus Repository Manager: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-7238.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-10199.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-10204.yaml
+  - config/afrog-pocs/default-pwd/nexus-default-password.yaml
+Atlassian-JIRA: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-8442.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-8449.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-8451.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-11581.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-14179.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-14181.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-0540.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-26256.yaml
+  - config/afrog-pocs/unauthorized/jira-unauthenticated.yaml
+  - config/afrog-pocs/unauthorized/jira-service-desk-signup.yaml
+Zimbra: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-9670.yaml
+Mongo-Express: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-10758.yaml
+PulseSecure-SSL-VPN: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-11510.yaml
+Zeroshell-Firewall: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-12725.yaml
+Webmin: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-15107.yaml
+Harbor: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-16097.yaml
+  - config/afrog-pocs/addpocs/harbor-swaggerui-unauth.yaml
+  - config/afrog-pocs/addpocs/CVE-2022-46463.yaml
+Nostromo: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-16278.yaml
+蜂网企业流控云路由器: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-16313.yaml
+rConfig: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-16663.yaml
+vBulletin: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-16759.yaml
+D-Link: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-16920.yaml
+  - config/afrog-pocs/CVE/2019/CVE-2019-17506.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-9376.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-25078.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-27250.yaml
+  - config/afrog-pocs/default-pwd/dlink-default-password.yaml
+  - config/afrog-pocs/disclosure/dlink-850l-password-leak.yaml
+小米路由器: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-18371.yaml
+Openfire: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-18394.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-32315.yaml
+  - config/afrog-pocs/default-pwd/openfire-default-password.yaml
+Citrix-ADC: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-19781.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-8191.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-8193.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-3519.yaml
+Citrix-NetScaler-Gateway: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-8191.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-8193.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-3519.yaml
+Citrix-XenMobile: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-8209.yaml
+TVT-NVMS-1000: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-20085.yaml
+PANDORAFMS-产品: 
+  - config/afrog-pocs/CVE/2019/CVE-2019-20224.yaml
+Cisco产品: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-3452.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-1497.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-1499.yaml
+GilaCMS: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-5515.yaml
+BIG-IP: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-5902.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-22986.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-1388.yaml
+Liferay: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-7961.yaml
+Intellian: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-7980.yaml
+DrayTek产品: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-8515.yaml
+Apache Skywalking: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-9483.yaml
+Craft-CMS: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-9757.yaml
+LimeSurvey: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-11455.yaml
+Kong: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-11710.yaml
+Apache Cocoon: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-11991.yaml
+Grafana: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-13379.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-43798.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-26148.yaml
+  - config/afrog-pocs/default-pwd/grafana-default-password.yaml
+  - config/afrog-pocs/vulnerability/grafana-file-read.yaml
+Apache kylin: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-13937.yaml
+Apache APISIX: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-13945.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-45232.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-24112.yaml
+  - config/afrog-pocs/default-pwd/apisix-default-login.yaml
+TerraMaster-TOS: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-15568.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-28185.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-28187.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-28188.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-24990.yaml
+SALTSTACK-产品: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-16846.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-25282.yaml
+Apache Flink: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-17518.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-17519.yaml
+  - config/afrog-pocs/vulnerability/flink-upload-rce.yaml
+Apache Airflow: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-17526.yaml
+  - config/afrog-pocs/unauthorized/airflow-unauth.yaml
+浪潮 ClusterEngineV4.0:
+  - config/afrog-pocs/CVE/2020/CVE-2020-21224.yaml
+  - config/afrog-pocs/default-pwd/inspur-clusterengine-default-login.yaml
+74CMS: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-22208.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-22209.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-22210.yaml
+  - config/afrog-pocs/CVE/2020/CVE-2020-22211.yaml
+  - config/afrog-pocs/vulnerability/74cms-ajax-personal-controller-class-php-sqlinject.yaml
+  - config/afrog-pocs/vulnerability/74cms-sqli-1.yaml
+  - config/afrog-pocs/vulnerability/74cms-sqli-2.yaml
+NexusDB: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-24571.yaml
+Gitlab: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-26413.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-22205.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-22214.yaml
+  - config/afrog-pocs/default-pwd/gitlab-weak-login.yaml
+  - config/afrog-pocs/vulnerability/gitlab-public-repos.yaml
+  - config/afrog-pocs/vulnerability/gitlab-api-user-enum.yaml
+  - config/afrog-pocs/vulnerability/gitlab-public-snippets.yaml
+  - config/afrog-pocs/vulnerability/gitlab-uninitialized-password.yaml
+  - config/afrog-pocs/vulnerability/gitlab-user-enum.yaml
+SonarQube: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-27986.yaml
+OpenTSDB: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-35476.yaml
+GateOne: 
+  - config/afrog-pocs/CVE/2020/CVE-2020-35736.yaml
+LanProxy: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-3019.yaml
+Node-RED: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-3223.yaml
+  - config/afrog-pocs/vulnerability/node-red-ui-base-anyfile-read.yaml
+E-Learning: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-3239.yaml
+  - config/afrog-pocs/vulnerability/e-learning-system-authentication-bypass-rce.yaml
+Zyxel NBG2105:
+  - config/afrog-pocs/CVE/2021/CVE-2021-3297.yaml
+Zyxel ZyWALL: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-0342.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-30525.yaml
+noVNC: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-3654.yaml
+Minio Browser: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-21287.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-28432.yaml
+  - config/afrog-pocs/default-pwd/minio-default-password.yaml
+Jellyfin: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-21402.yaml
+VMware vCenter:
+  - config/afrog-pocs/CVE/2021/CVE-2021-21972.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-21985.yaml
+  - config/afrog-pocs/vulnerability/vmware-vcenter-7-arbitrary-file-read.yaml
+  - config/afrog-pocs/vulnerability/vmware-vcenter-arbitrary-file-read.yaml
+VMware vRealize Operations Manager: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-21975.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-20887.yaml
+  - config/afrog-pocs/vulnerability/vrealize-operations-log4j-rce.yaml
+Apache Druid: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-25646.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-36749.yaml
+  - config/afrog-pocs/default-pwd/druid-default-login.yaml
+Microsoft-Exchange: 
+  - config/afrog-pocs/fingerprinting/microsoft-exchange-panel.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-26855.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-41349.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-41040.yaml
+Appspace: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-27670.yaml
+Jetty: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-28164.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-28169.yaml
+Prometheus: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-29622.yaml
+VoIPmonitor: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-30461.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-24260.yaml
+Pentaho: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-31602.yaml
+Dahua Storm (IP Camera): 
+  - config/afrog-pocs/CVE/2021/CVE-2021-33044.yaml
+Dahua Storm (DVR): 
+  - config/afrog-pocs/CVE/2021/CVE-2021-33044.yaml
+Apache ShenYu: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-37580.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-23944.yaml
+  - config/afrog-pocs/addpocs/apache-shenyu-unauth-adduser.yaml
+B&E Tracker: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-40247.yaml
+Apache-Web-Server: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-40438.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-41773.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-42013.yaml
+GeoServer: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-40822.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-24816.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-25157.yaml
+  - config/afrog-pocs/default-pwd/geoserver-default-login.yaml
+Auerswald: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-40859.yaml
+Metabase: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-41277.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-38646.yaml
+Payara-Micro: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-41381.yaml
+GoCD: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-43287.yaml
+kkFileView: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-43734.yaml
+Apache Superset:
+  - config/afrog-pocs/CVE/2021/CVE-2021-44451.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-27524.yaml
+Franklin-Fueling:
+  - config/afrog-pocs/CVE/2021/CVE-2021-46417.yaml
+TELESQUARE-TLR-2855KS6: 
+  - config/afrog-pocs/CVE/2021/CVE-2021-46418.yaml
+  - config/afrog-pocs/CVE/2021/CVE-2021-46419.yaml
+TELESQUARE-SDT-CW3B1:
+  - config/afrog-pocs/CVE/2021/CVE-2021-46422.yaml
+uDraw: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-0656.yaml
+Dogtag-PKI: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-2414.yaml
+Wavlink-WiFi-Repeater: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-2486.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-2487.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-2488.yaml
+Oracle-E-Business-Suite: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-21587.yaml
+  - config/afrog-pocs/default-pwd/oracle-business-intelligence-password.yaml
+Juniper Device Manager: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-22242.yaml
+VMware Workspace ONE Access: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-22954.yaml
+Crestron Device:
+  - config/afrog-pocs/CVE/2022/CVE-2022-23178.yaml
+AVEVA-InTouch-Access-Anywhere-Secure-Gateway: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-23854.yaml
+MCMS: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-23898.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-25125.yaml
+Casdoor: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-24124.yaml
+  - config/afrog-pocs/addpocs/casdoor-fileread.yaml
+TOTOLINK: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-25084.yaml
+Dynamicweb:
+  - config/afrog-pocs/CVE/2022/CVE-2022-25369.yaml
+MotionEye: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-25568.yaml
+PHICOMM-FIR302B:
+  - config/afrog-pocs/CVE/2022/CVE-2022-27373.yaml
+Razer Sila: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-29013.yaml
+SolarView-Compact:
+  - config/afrog-pocs/CVE/2022/CVE-2022-29303.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-23333.yaml
+WSO2: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-29464.yaml
+  - config/afrog-pocs/default-pwd/wso2-default-login.yaml
+Roxy-WI: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-31137.yaml
+muhttpd: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-31793.yaml
+PbootCMS: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-32417.yaml
+LIN-CMS:
+  - config/afrog-pocs/CVE/2022/CVE-2022-32430.yaml
+ThinkPHP: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-33107.yaml
+  - config/afrog-pocs/CVE/2022/CVE-2022-47945.yaml
+  - config/afrog-pocs/disclosure/thinkphp-509-information-disclosure.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-2-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-3-0-log-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-5-0-23-index-php-method-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-30-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-50-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-50x-arbitrary-file-read.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-5010-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-5022-5129-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-5023-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-lang-rce.yaml
+  - config/afrog-pocs/vulnerability/thinkphp-v6-file-write.yaml
+  - config/afrog-pocs/vulnerability/thinkphp5-controller-rce.yaml
+ZOHO ManageEngine Password Manager Pro:
+  - config/afrog-pocs/CVE/2022/CVE-2022-35405.yaml
+Zimbra: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-37042.yaml
+FORTINET FortiNAC:
+  - config/afrog-pocs/CVE/2022/CVE-2022-39952.yaml
+Fortinet FortiOS: 
+  - config/afrog-pocs/CVE/2022/CVE-2022-40684.yaml
+SolarView-Compact:
+  - config/afrog-pocs/CVE/2022/CVE-2022-40881.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-29919.yaml
+Centos Web Panel:
+  - config/afrog-pocs/CVE/2022/CVE-2022-44877.yaml
+KubeView:
+  - config/afrog-pocs/CVE/2022/CVE-2022-45933.yaml
+CACTI-monitoring system:
+  - config/afrog-pocs/CVE/2022/CVE-2022-46169.yaml
+  - config/afrog-pocs/vulnerability/cacti-weathermap-file-write.yaml
+C-Lodop打印服务系统:
+  - config/afrog-pocs/vulnerability/c-lodop-read-file.yaml
+百卓 Smart 多业务安全网关:
+  - config/afrog-pocs/vulnerability/byzoro-smart-importhtml-rce.yaml
+Aspera-Faspex:
+  - config/afrog-pocs/CVE/2022/CVE-2022-47986.yaml
+nostromo:
+  - config/afrog-pocs/CVE/2022/CVE-2022-48253.yaml
+pyLoad:
+  - config/afrog-pocs/CVE/2023/CVE-2023-0297.yaml
+MLflow:
+  - config/afrog-pocs/CVE/2023/CVE-2023-1177.yaml
+Sophos-Web-Appliance:
+  - config/afrog-pocs/CVE/2023/CVE-2023-1671.yaml
+Go-FastDfs:
+  - config/afrog-pocs/CVE/2023/CVE-2023-1800.yaml
+  - config/afrog-pocs/vulnerability/go-fastdfs-unauth.yaml
+Dahua 智慧园区: 
+  - config/afrog-pocs/CVE/2023/CVE-2023-3836.yaml
+  - config/afrog-pocs/vulnerability/dahua-zhyq-getfacecapture-sqli.yaml
+  - config/afrog-pocs/vulnerability/dahua-zhyq-video-fileupload.yaml
+  - config/afrog-pocs/vulnerability/dahua-zhyq-password-disclosure.yaml
+  - config/afrog-pocs/vulnerability/dahua-zhyq-pio-fileupload.yaml
+  - config/afrog-pocs/vulnerability/dahua-ipms-rce.yaml
+  - config/afrog-pocs/addpocs/dahua-zhyq-create-user-unauth.yaml
+Dahua DSS: 
+  - config/afrog-pocs/vulnerability/dahua-dss-file-read.yaml
+CxCMS:
+  - config/afrog-pocs/vulnerability/cxcms-arbitrary-file-read.yaml
+MeterSphere: 
+  - config/afrog-pocs/CVE/2023/CVE-2023-25573.yaml
+  - config/afrog-pocs/vulnerability/metersphere-plugincontroller-rce.yaml
+Ruckus Wireless: 
+  - config/afrog-pocs/CVE/2023/CVE-2023-25717.yaml
+SPIP: 
+  - config/afrog-pocs/CVE/2023/CVE-2023-27372.yaml
+Altenergy-Power-Control-Software:
+  - config/afrog-pocs/CVE/2023/CVE-2023-28343.yaml
+cPanel Login: 
+  - config/afrog-pocs/CVE/2023/CVE-2023-29489.yaml
+PowerJob:
+  - config/afrog-pocs/CVE/2023/CVE-2023-29922.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-29923.yaml
+  - config/afrog-pocs/default-pwd/phpmyadmin-default-login.yaml
+Repetier-Server:
+  - config/afrog-pocs/CVE/2023/CVE-2023-31059.yaml
+H3C Router Management:
+  - config/afrog-pocs/CVE/2023/CVE-2023-33629.yaml
+  - config/afrog-pocs/vulnerability/h3c-information-leakage.yaml
+Traggo-Server:
+  - config/afrog-pocs/CVE/2023/CVE-2023-34843.yaml
+Chamilo:
+  - config/afrog-pocs/CVE/2023/CVE-2023-34960.yaml
+Ivanti-Landesk Cloud Service:
+  - config/afrog-pocs/CVE/2023/CVE-2023-35078.yaml
+NocoDB:
+  - config/afrog-pocs/CVE/2023/CVE-2023-35843.yaml
+Lightdash:
+  - config/afrog-pocs/CVE/2023/CVE-2023-35844.yaml
+CloudPanel:
+  - config/afrog-pocs/CVE/2023/CVE-2023-35885.yaml
+RocketMQ:
+  - config/afrog-pocs/CVE/2023/CVE-2023-37582.yaml
+  - config/afrog-pocs/vulnerability/rocketmq-broker-unauth.yaml
+# 默认密码
+3Com-NJ2000:
+  - config/afrog-pocs/default-pwd/3com-nj2000-default-login.yaml
+Adobe-Experience-Manager:
+  - config/afrog-pocs/default-pwd/aem-default-login.yaml
+  - config/afrog-pocs/default-pwd/aem-felix-console.yaml
+Alibaba-Canal: 
+  - config/afrog-pocs/default-pwd/alibaba-canal-default-password.yaml
+  - config/afrog-pocs/disclosure/alibaba-canal-info-leak.yaml
+  - config/afrog-pocs/vulnerability/alibaba-canal-config-leak.yaml
+AlphaWeb-XE:
+  - config/afrog-pocs/default-pwd/alphaweb-default-login.yaml
+Apache-Ambari:
+  - config/afrog-pocs/default-pwd/ambari-default-password.yaml
+Aolynk BR304:
+  - config/afrog-pocs/default-pwd/aolynk-br304-default-password.yaml
+ArcGIS-Company Products:
+  - config/afrog-pocs/default-pwd/arcgis-default-password.yaml
+  - config/afrog-pocs/fingerprinting/arcgis-login.yaml
+  - config/afrog-pocs/fingerprinting/arcgis-datastore-detect.yaml
+  - config/afrog-pocs/fingerprinting/arcgis-sharing-rest-login.yaml
+  - config/afrog-pocs/vulnerability/arcgis-rest-service-directory-traversal.yaml
+ARL-资产灯塔系统:
+  - config/afrog-pocs/default-pwd/arl-default-password.yaml
+AudioCodes:
+  - config/afrog-pocs/default-pwd/audiocodes-default-login.yaml
+Apache Axis2:
+  - config/afrog-pocs/default-pwd/axis2-default-password.yaml
+Azkaban-Web-Client:
+  - config/afrog-pocs/default-pwd/azkaban-default-password.yaml
+UPS-Adapter-CS141-SNMP-Module:
+  - config/afrog-pocs/default-pwd/cs141-default-login.yaml
+Cogent-DataHub:
+  - config/afrog-pocs/default-pwd/datahub-metadata-default-login.yaml
+Dataiku:
+  - config/afrog-pocs/default-pwd/dataiku-default-login.yaml
+Datang AC:
+  - config/afrog-pocs/default-pwd/datang-ac-default-password.yaml
+DELL-EMC:
+  - config/afrog-pocs/default-pwd/dell-emc-ecom-default-login.yaml
+Dell-iDRAC:
+  - config/afrog-pocs/default-pwd/dell-idrac-default-login.yaml
+  - config/afrog-pocs/default-pwd/dell-idrac9-default-password.yaml
+D-Link-AC-集中管理平台:
+  - config/afrog-pocs/default-pwd/dlink-ac-default-password.yaml
+DolphinScheduler:
+  - config/afrog-pocs/default-pwd/dolphinscheduler-default-login.yaml
+Dubbo:
+  - config/afrog-pocs/default-pwd/dubbo-admin-default-password.yaml
+DVWA:
+  - config/afrog-pocs/default-pwd/dvwa-default-login.yaml
+Emqx:
+  - config/afrog-pocs/default-pwd/emqx-default-login.yaml
+exacqVision-网络服务:
+  - config/afrog-pocs/default-pwd/exacqvision-default-login.yaml
+FUEL-CMS:
+  - config/afrog-pocs/default-pwd/fuelcms-default-login.yaml
+Apache Guacamole:
+  - config/afrog-pocs/default-pwd/guacamole-default-login.yaml
+HIKVISION-群组对讲服务配置平台:
+  - config/afrog-pocs/default-pwd/hikvision-intercom-service-default-password.yaml
+HP-1820-8G-Switch-J9979A:
+  - config/afrog-pocs/default-pwd/hp-switch-default-login.yaml
+HUAWEI-HG532e:
+  - config/afrog-pocs/default-pwd/huawei-hg532e-default-login.yaml
+Hadoop-Hue:
+  - config/afrog-pocs/default-pwd/hue-default-credential.yaml
+金和协同管理平台:
+  - config/afrog-pocs/default-pwd/jinher-oa-default-login.yaml
+JupyterHub: 
+  - config/afrog-pocs/default-pwd/jupyterhub-default-login.yaml
+Apache Kafka:
+  - config/afrog-pocs/default-pwd/kafka-center-default-password.yaml
+Apache-Karaf:
+  - config/afrog-pocs/default-pwd/karaf-default-login.yaml
+Kingsoft-Web-Server:
+  - config/afrog-pocs/default-pwd/kingsoft-v8-default-password.yaml
+Zhongdi Digital-Mapgis:
+  - config/afrog-pocs/default-pwd/mapgis-cloud-manager-default-password.yaml
+MOFI4500:
+  - config/afrog-pocs/default-pwd/mofi4500-default-password.yaml
+nps: 
+  - config/afrog-pocs/default-pwd/nps-default-password.yaml
+  - config/afrog-pocs/vulnerability/nps-default-key.yaml
+  - config/afrog-pocs/vulnerability/nps-auth-key-unauthorized-access.yaml
+网康科技·互联网控制网关: 
+  - config/afrog-pocs/default-pwd/ns-icg-default-password.yaml
+  - config/afrog-pocs/vulnerability/qi-anxin-netkang-next-generation-firewall-rce.yaml
+  - config/afrog-pocs/vulnerability/ns-asg-file-read.yaml
+  - config/afrog-pocs/vulnerability/netentsec-ns-asg-rce.yaml
+  - config/afrog-pocs/vulnerability/netentsec-ngfw-rce.yaml
+网康科技-下一代防火墙:
+  - config/afrog-pocs/vulnerability/netentsec-fiewall-heartbeat-php-rce.yaml
+OpenEMR:
+  - config/afrog-pocs/default-pwd/openemr-default-login.yaml
+OpenERP: 
+  - config/afrog-pocs/default-pwd/openerp-default-password.yaml
+openWRT: 
+  - config/afrog-pocs/default-pwd/openwrt-default-login.yaml
+Panabit智能网关: 
+  - config/afrog-pocs/default-pwd/panabit-gateway-default-password.yaml
+  - config/afrog-pocs/vulnerability/panabit-syaddmount-command-exec.yaml
+Panabit-iXCache:
+  - config/afrog-pocs/default-pwd/panabit-ixcache-default-password.yaml
+  - config/afrog-pocs/vulnerability/panabit-ixcache-dateconfig-rce.yaml
+phpmyadmin: 
+  - config/afrog-pocs/default-pwd/phpmyadmin-default-login.yaml
+RabbitMQ: 
+  - config/afrog-pocs/default-pwd/rabbitmq-default-password.yaml
+RAINLOOP-WebMail:
+  - config/afrog-pocs/default-pwd/rainloop-default-login.yaml
+RANCHER:
+  - config/afrog-pocs/default-pwd/rancher-default-password.yaml
+Apache Ranger:
+  - config/afrog-pocs/default-pwd/ranger-default-login.yaml
+Ricoh: 
+  - config/afrog-pocs/default-pwd/ricoh-weak-password.yaml
+RockMongo:
+  - config/afrog-pocs/default-pwd/rockmongo-default-password.yaml
+Advantech-R-SeeNet:
+  - config/afrog-pocs/default-pwd/rseenet-default-password.yaml
+Secnet - Smart Routing System:
+  - config/afrog-pocs/default-pwd/secnet-ac-default-password.yaml
+SeedDMS: 
+  - config/afrog-pocs/default-pwd/seeddms-default-password.yaml
+ShowDoc: 
+  - config/afrog-pocs/default-pwd/showdoc-default-password.yaml
+  - config/afrog-pocs/vulnerability/showdoc-uploadfile.yaml
+Hortonworks-SmartSense-Tool:
+  - config/afrog-pocs/default-pwd/smartsense-default-login.yaml
+Spectracom: 
+  - config/afrog-pocs/default-pwd/spectracom-default-password.yaml
+StackStorm:
+  - config/afrog-pocs/default-pwd/stackstorm-default-login.yaml
+电信网关:
+  - config/afrog-pocs/default-pwd/telecom-gateway-default-password.yaml
+UTT艾泰安全网络管理系统:
+  - config/afrog-pocs/default-pwd/utt-default-password.yaml
+Versa-Networks:
+  - config/afrog-pocs/default-pwd/versa-default-password.yaml
+Wayos-AC Control Platform:
+  - config/afrog-pocs/default-pwd/wayos-default-password.yaml
+Xerox-Workcentre:
+  - config/afrog-pocs/default-pwd/xerox-workcentre7-default-password.yaml
+xxljob: 
+  - config/afrog-pocs/default-pwd/xxljob-default-login.yaml
+  - config/afrog-pocs/vulnerability/xxl-job-executor-rce.yaml
+# 敏感信息泄露
+ASPCMS:
+  - config/afrog-pocs/disclosure/aspcms-backend-leak.yaml
+  - config/afrog-pocs/vulnerability/aspcms-commentlist-sql-injection.yaml
+Avtech IP Surveillance (Camera): 
+  - config/afrog-pocs/disclosure/avtech-dvr-exposure.yaml
+AVTECH-Video Monitoring:
+  - config/afrog-pocs/disclosure/avtech-password-disclosure.yaml
+Apache Hadoop: 
+  - config/afrog-pocs/disclosure/hadoop-disclosure.yaml
+  - config/afrog-pocs/unauthorized/hadoop-yarn-unauth.yaml
+Huawei DG8045:
+  - config/afrog-pocs/disclosure/huawei-dg8045-home-gateway-password-leakage.yaml
+Kyan 监控设备: 
+  - config/afrog-pocs/disclosure/kyan-network-monitoring-account-password-leakage.yaml
+  - config/afrog-pocs/vulnerability/kyan-network-time-php-rce.yaml
+  - config/afrog-pocs/vulnerability/kyan-network-module-php-rce.yaml
+  - config/afrog-pocs/vulnerability/kyan-network-license-php-rce.yaml
+NSFOCUS-UTS综合威胁探针:
+  - config/afrog-pocs/disclosure/nsfocus-uts-password-leak.yaml
+OpenVPN: 
+  - config/afrog-pocs/disclosure/openvpn-monitor-disclosure.yaml
+Huawei DG8045:
+  - config/afrog-pocs/disclosure/huawei-dg8045-home-gateway-password-leakage.yaml
+锐捷-EG易网关:
+  - config/afrog-pocs/disclosure/ruijie-eg-password-leak.yaml
+  - config/afrog-pocs/vulnerability/ruijie-eg-cli-rce.yaml
+  - config/afrog-pocs/vulnerability/ruijie-eg-file-read.yaml
+锐捷Smartweb:
+  - config/afrog-pocs/disclosure/ruijie-smartweb-password-disclosure.yaml
+# 主动目录探测
+Kubernetes: 
+  - config/afrog-pocs/fingerprinting/kubernetes-enterprise-manager.yaml
+  - config/afrog-pocs/unauthorized/kubernetes-unauth.yaml
+Django: 
+  - config/afrog-pocs/fingerprinting/django-admin-panel.yaml
+Fckeditor:
+  - config/afrog-pocs/fingerprinting/fckeditor.yaml
+宝塔-BT.cn: 
+  - config/afrog-pocs/unauthorized/bt742-pma-unauthorized-access.yaml
+# 未授权访问
+FRP-Web:
+  - config/afrog-pocs/unauthorized/frp-default-login.yaml
+齐治堡垒机: 
+  - config/afrog-pocs/unauthorized/qizhi-fortressaircraft-unauthorized.yaml
+Kibana: 
+  - config/afrog-pocs/unauthorized/kibana-unauth.yaml
+Jupyter Notebook: 
+  - config/afrog-pocs/unauthorized/jupyter-notebook-unauthorized-access.yaml
+  - config/afrog-pocs/vulnerability/jupyter-notebook-rce.yaml
+Influxdb: 
+  - config/afrog-pocs/unauthorized/influxdb-unauth.yaml
+H2-Console:
+  - config/afrog-pocs/unauthorized/h2-database-web-console-unauthorized-access.yaml
+Apache NiFi:
+  - config/afrog-pocs/unauthorized/nifi-api-unauthorized-access.yaml
+  - config/afrog-pocs/unauthorized/nifi-unauth.yaml
+pyspider:
+  - config/afrog-pocs/unauthorized/pyspider-unauthorized-access.yaml
+Apache Spark:
+  - config/afrog-pocs/unauthorized/spark-api-unauth.yaml
+  - config/afrog-pocs/unauthorized/spark-webui-unauth.yaml
+TensorBoard:
+  - config/afrog-pocs/unauthorized/tensorboard-unauth.yaml
+Apache Zeppelin:
+  - config/afrog-pocs/unauthorized/zeppelin-unauth.yaml
+# 漏洞
+YApi 可视化接口管理平台: 
+  - config/afrog-pocs/vulnerability/yapi-rce.yaml
+  - config/afrog-pocs/vulnerability/yapi-sql-inject.yaml
+万户 OA: 
+  - config/afrog-pocs/vulnerability/wanhu-oa-attachmentserver-upload-file.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-download-ftp-file-read.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-download-old-file-read.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-downloadhttp-file-read.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-downloadservlet-file-read.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-ezoffice-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-fileupload-controller-upload.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-officeserver-upload-file.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-smartupload-upload-file.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-tele-conference-service-xxe.yaml
+通达OA: 
+  - config/afrog-pocs/vulnerability/tongda-contact-list-disclosure.yaml
+  - config/afrog-pocs/vulnerability/tongda-insert-sql-inject-getshell.yaml
+  - config/afrog-pocs/vulnerability/tongda-oa-2017-auth-bypass.yaml
+  - config/afrog-pocs/vulnerability/tongda-oa-api-ali-upload.yaml
+  - config/afrog-pocs/vulnerability/tongda-oa-logincode-any-user-login.yaml
+  - config/afrog-pocs/vulnerability/tongda-online-user-session-disclosure-login.yaml
+  - config/afrog-pocs/vulnerability/tongda-path-traversal.yaml
+  - config/afrog-pocs/vulnerability/tongda-report-bi-func-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/tongda-swfupload-new-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/tongda-v11-getdata-rce.yaml
+  - config/afrog-pocs/vulnerability/tongda-v11-session-disclosure-login-bypass.yaml
+  - config/afrog-pocs/vulnerability/tongda-v2017-uploadfile.yaml
+  - config/afrog-pocs/vulnerability/tongda-v2017-video-file-file-read.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-4166.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-4166-2.yaml
+安恒明御WEB应用防火墙:
+  - config/afrog-pocs/vulnerability/dbappsecurity-mingyu-report-user-bypass.yaml
+安恒明御运维审计与风险控制系统:
+  - config/afrog-pocs/vulnerability/dbappsecurity-mingyu-xmlrpc-sock-adduser.yaml
+安恒明御安全网关:
+  - config/afrog-pocs/vulnerability/dbappsecurity-mingyu-aaa-portal-auth-local-submit-rce.yaml
+SMARTBI:
+  - config/afrog-pocs/vulnerability/smartbi-address-auth-bypass.yaml
+  - config/afrog-pocs/vulnerability/smartbi-db2-biconfigservice-rce.yaml
+  - config/afrog-pocs/vulnerability/smartbi-default-user-weakpass.yaml
+  - config/afrog-pocs/vulnerability/smartbi-smartbi-bi-readfile.yaml
+  - config/afrog-pocs/vulnerability/smartbi-unauthenticated-sqli.yaml
+  - config/afrog-pocs/vulnerability/smartbi-windowunloading-other.yaml
+狮子鱼CMS:
+  - config/afrog-pocs/vulnerability/shiziyu-cms-apicontroller-sqli.yaml
+  - config/afrog-pocs/vulnerability/shiziyu-cms-apigood-controller-sql-injection.yaml
+  - config/afrog-pocs/vulnerability/lionfish-cms-wxapp-php-upload.yaml
+Samsung-AP-WEA453e:
+  - config/afrog-pocs/vulnerability/samsung-wea453e-default-pwd.yaml
+  - config/afrog-pocs/vulnerability/samsung-wea453e-rce.yaml
+  - config/afrog-pocs/vulnerability/samsung-wlan-ap-wea453e-rce.yaml
+  - config/afrog-pocs/vulnerability/samsung-wlan-ap-wea453e-lfi.yaml
+Sangfor SSLVPN: 
+  - config/afrog-pocs/vulnerability/sangfor-sslvpn-rce.yaml
+SANGFOR-AD:
+  - config/afrog-pocs/vulnerability/sangfor-reporter-anyfileread.yaml
+  - config/afrog-pocs/vulnerability/sangfor-login-rce.yaml
+  - config/afrog-pocs/addpocs/sangfor-ad-infoleak.yaml
+ZZCMS:
+  - config/afrog-pocs/vulnerability/zzcms-zsmanage-sqli.yaml
+ZZZCMS:
+  - config/afrog-pocs/vulnerability/zzzcms-parser-search-rce.yaml
+致翔软件-致翔OA:
+  - config/afrog-pocs/vulnerability/zhixiang-oa-msglog-aspx-sql-inject.yaml
+ZCMS:
+  - config/afrog-pocs/vulnerability/zcms-v3-sqli.yaml
+云时空社会化商业ERP:
+  - config/afrog-pocs/vulnerability/yunshikong-erp-sql-injection.yaml
+YunGouCMS:
+  - config/afrog-pocs/vulnerability/yungoucms-sqli.yaml
+源天OA:
+  - config/afrog-pocs/vulnerability/yuantian-oa-getdata-action-sql-injection.yaml
+佑友防火墙:
+  - config/afrog-pocs/vulnerability/youyou-firewall-rce.yaml
+Youyou-移动管理系统:
+  - config/afrog-pocs/vulnerability/yonyou-upload.yaml
+  - config/afrog-pocs/vulnerability/yonyou-mobile-uploadapk-fileupload.yaml
+Yonyou-UFIDA:
+  - config/afrog-pocs/vulnerability/yonyou-ufida-oa-uapws-xxe.yaml
+Yonyou-KSOA:
+  - config/afrog-pocs/vulnerability/yonyou-ufida-ksoa-image-upload-file.yaml
+Yonyou-GRP-U8: 
+  - config/afrog-pocs/CNVD/2016/CNNVD-201610-923.yaml
+  - config/afrog-pocs/vulnerability/yonyou-grp-u8-app-proxy-uploadfile.yaml
+  - config/afrog-pocs/vulnerability/yonyou-grp-u8-sqli-to-rce.yaml
+  - config/afrog-pocs/vulnerability/yonyou-grp-u8-sqli.yaml
+  - config/afrog-pocs/vulnerability/yonyou-grp-u8-upload-file-data.yaml
+  - config/afrog-pocs/vulnerability/yonyou-grp-u8-uploadfiledata.yaml
+  - config/afrog-pocs/vulnerability/yonyou-grp-u8-bx_historyDataChecks-sqli.yaml
+  - config/afrog-pocs/addpocs/yonyou-grp-u8-obr_zdybxd_check-sqli.yaml
+  - config/afrog-pocs/addpocs/yonyou-grp-u8-selectdmje-sqli.yaml
+  - config/afrog-pocs/vulnerability/yonyou-u8-oa-sqli.yaml
+  - config/afrog-pocs/vulnerability/seeyon-wooyun-2015-148227.yaml
+  - config/afrog-pocs/addpocs/yonyou-grp-u8-slbmbygr-sqi.yaml
+Yonyou-U8-CRM:
+  - config/afrog-pocs/vulnerability/yonyou-u8-crm-getemaildata-fileupload.yaml
+  - config/afrog-pocs/vulnerability/yonyou-u8-crm-getemaildata-fileread.yaml
+Yonyou NC Cloud: 
+  - config/afrog-pocs/vulnerability/yonyou-nccloud-uapjs-upload-rce.yaml
+  - config/afrog-pocs/vulnerability/yonyou-cloud-jsinvoke-uploadfile.yaml
+Yonyou NC: 
+  - config/afrog-pocs/vulnerability/yonyou-nc-uploadservlet-rce.yaml
+  - config/afrog-pocs/vulnerability/yonyou-nc-ncmessageservlet-rce.yaml
+  - config/afrog-pocs/vulnerability/yonyou-nc-monitorservlet-rce.yaml
+  - config/afrog-pocs/vulnerability/yonyou-nc-bsh-servlet-bshservlet-rce.yaml
+  - config/afrog-pocs/vulnerability/yonyou-nc-arbitrary-file-upload.yaml
+  - config/afrog-pocs/vulnerability/yonyou-nc-accept-upload.yaml
+  - config/afrog-pocs/addpocs/yongyouNc-uploadControl-uploadFile.yaml
+Yonyou-FE协作办公平台:
+  - config/afrog-pocs/vulnerability/yonyou-fe-templateoftaohong-manager-path-traversal.yaml
+一米OA:
+  - config/afrog-pocs/vulnerability/yimi-oa-getfile-file-read.yaml
+YCCMS:
+  - config/afrog-pocs/vulnerability/yccms-rce.yaml
+西迪特-Wi-Fi-Web管理:
+  - config/afrog-pocs/vulnerability/xidite-wifi-web-cookie-bypass.yaml
+WUZHI-CMS:
+  - config/afrog-pocs/vulnerability/wuzhicms-v410-sqli.yaml
+WiseGiga:
+  - config/afrog-pocs/vulnerability/wisegiga-nas-group-php-rce.yaml
+  - config/afrog-pocs/vulnerability/wisegiga-nas-down-data-php-file-read.yaml
+惠尔顿-e地通VPN:
+  - config/afrog-pocs/vulnerability/wholeton-vpn-info-leak.yaml
+惠尔顿-网络安全审计:
+  - config/afrog-pocs/addpocs/wholeton-audit-fileread.yaml
+Western_Digital-MyBook:
+  - config/afrog-pocs/vulnerability/western-digital-mycloud-multi-uploadify-file-upload.yaml
+任我行 CRM: 
+  - config/afrog-pocs/vulnerability/wecrm-smsdatalist-sqli.yaml
+Watchguard Fireware: 
+  - config/afrog-pocs/vulnerability/watchguard-credentials-disclosure.yaml
+FTP: 
+  - config/afrog-pocs/vulnerability/vsftpd-backdoor.yaml
+  - config/afrog-pocs/CVE/2011/CVE-2011-2523.yaml
+和信创天云桌面:
+  - config/afrog-pocs/vulnerability/vesystem-upload-file.yaml
+辰信景云终端安全管理系统:
+  - config/afrog-pocs/vulnerability/v-secure-cloud-login-sqli.yaml
+Uniview-ISC:
+  - config/afrog-pocs/vulnerability/uniview-isc-logreport-php-rce.yaml
+联软安界UniSDP:
+  - config/afrog-pocs/vulnerability/unisdp-vpn-rce.yaml
+UniFi-Network:
+  - config/afrog-pocs/vulnerability/unifi-network-log4j-rce.yaml
+Typecho: 
+  - config/afrog-pocs/vulnerability/typecho-rce.yaml
+拓尔思-MAS:
+  - config/afrog-pocs/vulnerability/trs-mas-remote-command-exec.yaml
+Tpshop:
+  - config/afrog-pocs/vulnerability/tpshop-directory-traversal.yaml
+  - config/afrog-pocs/vulnerability/tpshop-sqli.yaml
+天融信上网行为管理: 
+  - config/afrog-pocs/vulnerability/topsec-topacm-rce.yaml
+天问物业ERP:
+  - config/afrog-pocs/vulnerability/tianwenwuye-erp-uploadfile-aspx-anyfile-upload.yaml
+ThinkCMF:
+  - config/afrog-pocs/vulnerability/thinkcmf-write-shell.yaml
+  - config/afrog-pocs/vulnerability/thinkcmf-lfi.yaml
+  - config/afrog-pocs/vulnerability/thinkcmf-file-include.yaml
+ThinkAdmin:
+  - config/afrog-pocs/vulnerability/thinkadmin-v6-readfile.yaml
+腾达路由器:
+  - config/afrog-pocs/vulnerability/tenda-w15e-routercfm-cfg-config-leak.yaml
+  - config/afrog-pocs/vulnerability/tenda-11n-cookie-unauth-access.yaml
+企业微信:
+  - config/afrog-pocs/vulnerability/tencent-wechat-agentinfo-disclosure.yaml
+TamronOS IPTV系统: 
+  - config/afrog-pocs/vulnerability/tamronos-iptv-rce.yaml
+  - config/afrog-pocs/vulnerability/tamron-os-iptv-ping-rce.yaml
+SPON IP网络对讲广播系统: 
+  - config/afrog-pocs/vulnerability/spon-ip-intercom-ping-rce.yaml
+  - config/afrog-pocs/vulnerability/spon-ip-intercom-file-read.yaml
+Sophos Firewall:
+  - config/afrog-pocs/vulnerability/sophos-xg115w-firewall-mr-10-authentication.yaml
+SonicWall-SSLVPN:
+  - config/afrog-pocs/vulnerability/sonicwall-ssl-vpn-rce.yaml
+SmartOA:
+  - config/afrog-pocs/vulnerability/smartoa-emaildownload-file-read.yaml
+Selea-ANPR-Camera:
+  - config/afrog-pocs/vulnerability/selea-targa-camera-read-file.yaml
+  - config/afrog-pocs/vulnerability/selea-targa-camera-lfi.yaml
+网神-Secips:
+  - config/afrog-pocs/vulnerability/secworld-secips-3600-debuginfo-readfile.yaml
+网神SecGate 3600防火墙: 
+  - config/afrog-pocs/vulnerability/secworld-secgate3600-objappupfile-uploadfile.yaml
+SeaCMS:
+  - config/afrog-pocs/vulnerability/seacmsv645-command-exec.yaml
+  - config/afrog-pocs/vulnerability/seacms-v654-rce.yaml
+  - config/afrog-pocs/vulnerability/seacms-sqli.yaml
+  - config/afrog-pocs/vulnerability/seacms-rce.yaml
+  - config/afrog-pocs/vulnerability/seacms-before-v992-rce.yaml
+SangFor-行为感知系统/日志中心:
+  - config/afrog-pocs/vulnerability/sangfor-logcent-rce.yaml
+SangFor-EDR:
+  - config/afrog-pocs/vulnerability/sangfor-edr-cssp-rce.yaml
+  - config/afrog-pocs/vulnerability/sangfor-edr-arbitrary-admin-login.yaml
+RhaPHP:
+  - config/afrog-pocs/vulnerability/rhaphp-universal-cookie.yaml
+瑞友天翼－应用虚拟化系统: 
+  - config/afrog-pocs/vulnerability/realor-gwt-system-sql-injection.yaml
+  - config/afrog-pocs/vulnerability/realor-getbsappurl-sql-inject.yaml
+企望制造ERP:
+  - config/afrog-pocs/vulnerability/qiwang-erp-comboxstore-rce.yaml
+中远麒麟堡垒机: 
+  - config/afrog-pocs/vulnerability/qilin-bastion-host-rce.yaml
+  - config/afrog-pocs/vulnerability/secvpn-admin-commonuser-sqli.yaml
+齐博-CMS:
+  - config/afrog-pocs/vulnerability/qibocms-sqli.yaml
+  - config/afrog-pocs/vulnerability/qibo-cms-job-file-read.yaml
+PowerCreator-CMS:
+  - config/afrog-pocs/vulnerability/powercreator-arbitrary-file-upload.yaml
+小猪CMS:
+  - config/afrog-pocs/vulnerability/pigcms-file-upload.yaml
+SpiderFlow:
+  - config/afrog-pocs/vulnerability/piderfow-save-rce.yaml
+PHPWEB:
+  - config/afrog-pocs/vulnerability/phpweb-appplus-php-upload.yaml
+phpstydy: 
+  - config/afrog-pocs/vulnerability/phpstudy-backdoor-rce.yaml
+phpshe 商城系统: 
+  - config/afrog-pocs/vulnerability/phpshe-sqli.yaml
+PHPOK:
+  - config/afrog-pocs/vulnerability/phpok-sqli.yaml
+PHPMyWind:
+  - config/afrog-pocs/vulnerability/phpmywind-cms-id-sql-inject.yaml
+PHP-810-dev:
+  - config/afrog-pocs/vulnerability/php-zerodium-backdoor.yaml
+PbootCMS: 
+  - config/afrog-pocs/vulnerability/pbootcms-v3.1.2-rce.yaml
+  - config/afrog-pocs/vulnerability/pbootcms-search-sql-injection.yaml
+  - config/afrog-pocs/vulnerability/pbootcms-ext-price-sql-injection.yaml
+  - config/afrog-pocs/vulnerability/pbootcms-database-file-download.yaml
+Oracle-FatWire-Content-Server:
+  - config/afrog-pocs/vulnerability/oracle-fatwire-lfi.yaml
+Odoo: 
+  - config/afrog-pocs/vulnerability/odoo-manager-disclosure.yaml
+  - config/afrog-pocs/vulnerability/odoo-file-read.yaml
+华天动力OA: 
+  - config/afrog-pocs/vulnerability/oa8000-workflowservice-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/huatiandongli-oa-anyfile-upload.yaml
+NSFOCUS-SAS:
+  - config/afrog-pocs/vulnerability/nsfocus-sas-localuser-login-anyuser.yaml
+  - config/afrog-pocs/vulnerability/nsfocus-sas-getfile-readfile.yaml
+  - config/afrog-pocs/vulnerability/nsfocus-sas-exec-rce.yaml
+nginxWebUI:
+  - config/afrog-pocs/vulnerability/nginxwebui-rce.yaml
+Nginx:
+  - config/afrog-pocs/vulnerability/nginx-merge-slashes-path-traversal.yaml
+中科网威防火墙:
+  - config/afrog-pocs/vulnerability/netpower-fireWall-npfw-commands-polling-file-read.yaml
+  - config/afrog-pocs/vulnerability/netpower-download-php-file-read.yaml
+  - config/afrog-pocs/vulnerability/firewall-password-leak.yaml
+NetMizer 日志管理系统:
+  - config/afrog-pocs/vulnerability/netmizer-log-management-data-directory-traversal.yaml
+  - config/afrog-pocs/vulnerability/netmizer-log-management-cmd-php-rce.yaml
+Natshell-router:
+  - config/afrog-pocs/vulnerability/natshell-arbitrary-file-read.yaml
+myucms:
+  - config/afrog-pocs/vulnerability/myucms-lfr.yaml
+MSA 互联网管理网关:
+  - config/afrog-pocs/vulnerability/msa-gateway-read-file.yaml
+MobileIron: 
+  - config/afrog-pocs/vulnerability/mobileiron-log4j-jndi-rce.yaml
+科迈 RAS: 
+  - config/afrog-pocs/vulnerability/maike-ras-cookie-bypass.yaml
+MagicFlow-防火墙网关:
+  - config/afrog-pocs/vulnerability/magicflow-main-xp-file-read.yaml
+菠菜系统:
+  - config/afrog-pocs/vulnerability/laojiumen-caipiao-rce.yaml
+  - config/afrog-pocs/vulnerability/bocai-anyfile-upload.yaml
+蓝海卓越计费管理系统:
+  - config/afrog-pocs/vulnerability/lanhai-jifei-debug-rce.yaml
+快排CMS:
+  - config/afrog-pocs/vulnerability/kpcms-socket-login-info-disclosure.yaml
+金山VGM防毒墙:
+  - config/afrog-pocs/vulnerability/kongsoft-vgm-antivirus-wall-rce.yaml
+金山终端安全管理系统: 
+  - config/afrog-pocs/vulnerability/kingsoft-v8-rce.yaml
+  - config/afrog-pocs/vulnerability/kingsoft-v8-get-file-content-file-read.yaml
+  - config/afrog-pocs/vulnerability/kingsoft-v8-file-read.yaml
+Konga:
+  - config/afrog-pocs/vulnerability/konga-default-jwt-key.yaml
+金蝶 EAS: 
+  - config/afrog-pocs/vulnerability/kingdee-eas-directory-traversal.yaml
+  - config/afrog-pocs/addpocs/kingdee-eas-loadtree-jndi.yaml
+金蝶云星空: 
+  - config/afrog-pocs/vulnerability/kingdee-deserialization-rce.yaml
+科达-MTS转码服务器:
+  - config/afrog-pocs/vulnerability/kedacom-mts-file-read.yaml
+科达DVR接入网关:
+  - config/afrog-pocs/vulnerability/kedacom-gateway-file-read.yaml
+JumpServer: 
+  - config/afrog-pocs/vulnerability/jumpserver-unauth-rce.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-42442.yaml
+极限OA:
+  - config/afrog-pocs/vulnerability/jixian-oa-video-file-file-read.yaml
+金和OA:
+  - config/afrog-pocs/vulnerability/jinher-oa-c6-download-file-read.yaml
+APUSIC-Company Products:
+  - config/afrog-pocs/vulnerability/jindie-oa-apusic-server-file-traversal.yaml
+Jeeplus:
+  - config/afrog-pocs/vulnerability/jeeplus-sql-injection.yaml
+  - config/afrog-pocs/addpocs/jeeplus-druid-unauth.yaml
+红帆OA:
+  - config/afrog-pocs/vulnerability/ioffice-oa-udfmr-asmx-sql-inject.yaml
+  - config/afrog-pocs/vulnerability/ioffice-oa-iofileexport-read-file.yaml
+  - config/afrog-pocs/vulnerability/hongfan-oa-iorepsavexml-file-upload.yaml
+  - config/afrog-pocs/vulnerability/hongfan-oa-ioassistance-rce.yaml
+imo云办公室: 
+  - config/afrog-pocs/vulnerability/imo-get-file-rce.yaml
+iKuai Networks:
+  - config/afrog-pocs/vulnerability/ikuai-login-panel.yaml
+Microsoft IIS: 
+  - config/afrog-pocs/vulnerability/iis-put-getshell.yaml
+  - config/afrog-pocs/addpocs/CVE-2015-1635.yaml
+  - config/afrog-pocs/addpocs/iis-shortname.yaml
+  - config/afrog-pocs/vulnerability/ms17-010.yaml
+ICewarp:
+  - config/afrog-pocs/vulnerability/icewarp-webclient-basic-rce.yaml
+冰峰网络 iceflow: 
+  - config/afrog-pocs/vulnerability/iceflow-vpn-information-leakage.yaml
+汇文软件-书目检索系统:
+  - config/afrog-pocs/vulnerability/huiwen-book-config-properties-info-leak.yaml
+Huijietong:
+  - config/afrog-pocs/vulnerability/huijietong-cloud-fileread.yaml
+华夏 ERP: 
+  - config/afrog-pocs/vulnerability/huaxia-jsherp-info-leak.yaml
+HUAWEI-HG659:
+  - config/afrog-pocs/vulnerability/huawei-home-gateway-hg659-fileread.yaml
+HikVision-视频编码设备接入网关:
+  - config/afrog-pocs/vulnerability/hikvision-showfile-file-read.yaml
+  - config/afrog-pocs/vulnerability/hikvision-gateway-data-file-read.yaml
+HikVision-IVMS-8700:
+  - config/afrog-pocs/vulnerability/hikvision-ivms-8700-upload-action-upload.yaml
+  - config/afrog-pocs/addpocs/hikvison-ivms-fileread.yaml
+  - config/afrog-pocs/vulnerability/hikvision-ivms-8700-anyfile-download.yaml
+# 海康综合安防
+HikVison-iSecure-Center: 
+  - config/afrog-pocs/vulnerability/hikvision-files-upload.yaml
+  - config/afrog-pocs/vulnerability/hikvision-fastjson-rce.yaml
+  - config/afrog-pocs/vulnerability/hikvision-anfang-report-fileupload.yaml
+  - config/afrog-pocs/vulnerability/hikvision-af-env-info-disclosure.yaml
+  - config/afrog-pocs/addpocs/hikvision-isecure-center-fileread.yaml
+HFS (HTTP File Server): 
+  - config/afrog-pocs/vulnerability/hfs-rce.yaml
+皓峰防火墙: 
+  - config/afrog-pocs/vulnerability/haofeng-firewall-setdomain-unauth.yaml
+# 银澎云计算
+好视通视频会议系统: 
+  - config/afrog-pocs/vulnerability/hanming-video-conferencing-file-read.yaml
+H3C SecPath 运维审计系统: 
+  - config/afrog-pocs/vulnerability/h3csecparh-unauthorized-login.yaml
+H3C SecPath Firewall:
+  - config/afrog-pocs/vulnerability/h3c-secpath-firewall-file-read.yaml
+迈普安全网关: 
+  - config/afrog-pocs/vulnerability/h3c-mpsec-isg1000-file-read.yaml
+H3C/安博通/任子行/OEM系列安全产品: 
+  - config/afrog-pocs/vulnerability/h3c-jquery-172-file-read.yaml
+H3C-CVM-虚拟化管理平台:
+  - config/afrog-pocs/vulnerability/h3c-cvm-fileupload.yaml
+GoAhead:
+  - config/afrog-pocs/vulnerability/goahead-detected.yaml
+广联达OA:
+  - config/afrog-pocs/vulnerability/glodon-linkworks-getimdirectionary-sqli.yaml
+  - config/afrog-pocs/vulnerability/glodon-linkworks-Getuserbyusercode-sqli.yaml
+  - config/afrog-pocs/vulnerability/glodon-linkworks-Service.asmx-disclosure.yaml
+FLIR-FLIR-AX8:
+  - config/afrog-pocs/vulnerability/flix-ax8-download-read-file.yaml
+  - config/afrog-pocs/vulnerability/flix-ax8-command-injection.yaml
+  - config/afrog-pocs/vulnerability/flir-ax8-res-php-rce.yaml
+FineReport: 
+  - config/afrog-pocs/vulnerability/finereport-directory-traversal.yaml
+  - config/afrog-pocs/vulnerability/fanruan-oa-v9-designsavevg-upload-file.yaml
+  - config/afrog-pocs/vulnerability/fanruan-finereport-fr-log-rce.yaml
+Finecms: 
+  - config/afrog-pocs/vulnerability/finecms-sqli.yaml
+飞鱼星上网行为管理: 
+  - config/afrog-pocs/vulnerability/feiyuxing-info-leak.yaml
+飞企互联-FE业务协作平台: 
+  - config/afrog-pocs/vulnerability/feiqi-fe-showimageservlet-fileread.yaml
+feifeicms:
+  - config/afrog-pocs/vulnerability/feifeicms-lfr.yaml
+飞视美-视频会议系统:
+  - config/afrog-pocs/vulnerability/facemeeting-struts2-rce.yaml
+方维o2o商业系统:
+  - config/afrog-pocs/vulnerability/fangweicms-sqli.yaml
+万户网络ezEIP: 
+  - config/afrog-pocs/vulnerability/ezeip-info-leakage.yaml
+亿邮电子邮件系统:
+  - config/afrog-pocs/vulnerability/eyou-mail-moni-detail-rce.yaml
+Evolucare-Ecsimaging:
+  - config/afrog-pocs/vulnerability/evolucare-ecsimaging-new-movie-rce.yaml
+  - config/afrog-pocs/vulnerability/evolucare-ecsimaging-download-stats-dicom-anyfile-read.yaml
+EnjoySCM:
+  - config/afrog-pocs/vulnerability/enjoyscm-uploadfile.yaml
+Emqx:
+  - config/afrog-pocs/vulnerability/emq-default-password.yaml
+EGROUPWARE-产品:
+  - config/afrog-pocs/vulnerability/egroupware-rce.yaml
+EearCMS:
+  - config/afrog-pocs/vulnerability/earcms-index-uplog-php-file-upload.yaml
+  - config/afrog-pocs/vulnerability/earcms-download-php-exec.yaml
+DuomiCms:
+  - config/afrog-pocs/vulnerability/duomicms-sqli.yaml
+dotNETCMS:
+  - config/afrog-pocs/vulnerability/dotnetcms-sqli.yaml
+DocCMS:
+  - config/afrog-pocs/vulnerability/doc-cms-keyword-sql-injection.yaml
+D-Link-DNS-ShareCenter:
+  - config/afrog-pocs/vulnerability/dlink-sharecenter-dns-320-rce.yaml
+D-Link-DSL-28881A:
+  - config/afrog-pocs/vulnerability/dlink-dsl-28881a-rce.yaml
+D-Link-DAR-8000:
+  - config/afrog-pocs/vulnerability/dlink-dar-8000-rce.yaml
+Cls-Login:
+  - config/afrog-pocs/vulnerability/csl-login-unauth-db-leak.yaml
+Crawlab:
+  - config/afrog-pocs/vulnerability/crawlab-any-adduser-and-anyfile-read.yaml
+Consul by HashiCorp: 
+  - config/afrog-pocs/vulnerability/consul-service-rce.yaml
+  - config/afrog-pocs/vulnerability/consul-rexec-rce.yaml
+CmsEasy: 
+  - config/afrog-pocs/vulnerability/cmseasy-crossall-act-php-sql-injection.yaml
+CMA客诉管理系统:
+  - config/afrog-pocs/vulnerability/cmakesu-upfile-ashx-anyfile-upload.yaml
+ClickHouse: 
+  - config/afrog-pocs/vulnerability/clickhouse-api-unauth.yaml
+CISCO-CloudCenter-Suite:
+  - config/afrog-pocs/vulnerability/cisco-cloudcenter-suite-log4j-rce.yaml
+ZTE-ZXA10F460:
+  - config/afrog-pocs/vulnerability/china-telecom-f460-gateway-rce.yaml
+中移铁通-禹路由:
+  - config/afrog-pocs/vulnerability/china-mobile-simple-index-asp-unauth.yaml
+  - config/afrog-pocs/vulnerability/china-mobile-exportsettings-info-leak.yaml
+  - config/afrog-pocs/vulnerability/china-mobile-export-settings-info-leak.yaml
+Casdoor:
+  - config/afrog-pocs/vulnerability/casbin-get-users-account-password-disclosure.yaml
+CAIMORE-Gateway:
+  - config/afrog-pocs/vulnerability/carmore-gateway-rce.yaml
+Carel-Data-Server:
+  - config/afrog-pocs/vulnerability/carel-pcoweb-hvac-bacnet-gateway-directory-traversal.yaml
+BSPHP:
+  - config/afrog-pocs/vulnerability/bsphp-nauthorized-access.yaml
+博华网龙防火墙:
+  - config/afrog-pocs/vulnerability/bohuawanglong-users-xml-password-leak.yaml
+  - config/afrog-pocs/vulnerability/bohuangwanglong-cmd-php-rce.yaml
+碧海威L7:
+  - config/afrog-pocs/vulnerability/bithighway-default-password.yaml
+百腾客户系统:
+  - config/afrog-pocs/vulnerability/baiteng-customer-relationship-system-weak-password.yaml
+ZTE-router:
+  - config/afrog-pocs/vulnerability/backdoored-zte.yaml
+Avideo:
+  - config/afrog-pocs/vulnerability/avideo-install.yaml
+AVCON6:
+  - config/afrog-pocs/vulnerability/avcon6-org-execl-file-download.yaml
+  - config/afrog-pocs/vulnerability/avcon6-download.action-download-file-read.yaml
+KubePi:
+  - config/afrog-pocs/CVE/2023/CVE-2023-22463.yaml
+亿赛通-电子文档安全管理系统: 
+  - config/afrog-pocs/vulnerability/esafenet-doc-management-rce.yaml
+  - config/afrog-pocs/vulnerability/esafenet-uploadfilefromclientserviceforclient-fileupload.yaml
+  - config/afrog-pocs/addpocs/esafenet-cdg-importfiletype-upload.yaml
+  - config/afrog-pocs/vulnerability/esafenet-update-time-sqli-1.yaml
+  - config/afrog-pocs/vulnerability/esafenet-update-time-sqli-2.yaml
+JAVA: 
+  - config/afrog-pocs/unauthorized/javamelody-detect.yaml
+JEECMS: 
+  - config/afrog-pocs/addpocs/jeecms-flowstatistic-log4j2.yaml
+新开普: 
+  - config/afrog-pocs/addpocs/xinkaipu-fastjson-rce.yaml
+FDCMS:
+  - config/afrog-pocs/addpocs/fdcms-anyfilewrite.yaml
+shiro:
+  - config/afrog-pocs/addpocs/CVE-2020-11989.yaml
+  - config/afrog-pocs/addpocs/CVE-2020-1957.yaml
+ZStack:
+  - config/afrog-pocs/addpocs/zstack-swaggerui-unauth.yaml
+Prometheus: 
+  - config/afrog-pocs/addpocs/CNVD-2021-101528.yaml
+SangFor-SG上网优化管理系统:
+  - config/afrog-pocs/vulnerability/sangfor-sg-catjs-fileread.yaml
+Sangfor-Data Center:
+  - config/afrog-pocs/vulnerability/sangfor-dc-sangforindex-xxe.yaml
+明源云 ERP: 
+  - config/afrog-pocs/vulnerability/mingyuanyun-erp-apiupdate-fileupload.yaml
+新开普-前置服务管理平台:
+  - config/afrog-pocs/vulnerability/newcapec-service-action-rce.yaml
+  - config/afrog-pocs/addpocs/newcapec-deleteFile-anyfile-delete.yaml
+OfficeWeb365:
+  - config/afrog-pocs/vulnerability/officeweb365-savedraw-fileupload.yaml
+docker: 
+  - config/afrog-pocs/vulnerability/docker-remote-api-unauth.yaml
+etcd: 
+  - config/afrog-pocs/addpocs/etcd-unauthenticated-api.yaml
+启明星辰-4A统一安全管控平台:
+  - config/afrog-pocs/addpocs/venusense-aqgkpt-getMaster-infoleak.yaml
+EasyGBS:
+  - config/afrog-pocs/addpocs/easygbs-userlist-infoleak.yaml
+时空智友: 
+  - config/afrog-pocs/vulnerability/shikongzhiyou-formservice-sqli.yaml
+  - config/afrog-pocs/vulnerability/shikongzhiyou-formservice-upload-file.yaml
+  - config/afrog-pocs/vulnerability/shikongzhiyou-login-fileread.yaml
+M7S:
+  - config/afrog-pocs/addpocs/m7s-download-fileread.yaml
+易思智能物流无人值守系统:
+  - config/afrog-pocs/vulnerability/eosine-sysreportfile-fileupload.yaml
+华测监测预警系统:
+  - config/afrog-pocs/vulnerability/huace-handler-filedownload.yaml
+  - config/afrog-pocs/vulnerability/huace-mews-config-xml-infoleak.yaml
+CraftCMS:
+  - config/afrog-pocs/CVE/2023/CVE-2023-41892.yaml
+GoAdmin:
+  - config/afrog-pocs/addpocs/goadmin-default-login.yaml
+天融信TopAPP负载均衡系统: 
+  - config/afrog-pocs/addpocs/topsec-topacm-rce.yaml
+孚盟云 CRM: 
+  - config/afrog-pocs/addpocs/CNVD-2021-25330.yaml
+迪普VPN: 
+  - config/afrog-pocs/addpocs/dptech-sslvpn-fileread.yaml
+GLPI: 
+  - config/afrog-pocs/addpocs/CVE-2022-35914.yaml
+Sangfor NGAF: 
+  - config/afrog-pocs/addpocs/sangfor-ngaf-fileread.yaml
+金盘-微信管理平台:
+  - config/afrog-pocs/addpocs/jp-wechatmanager-unauth.yaml
+金盘-移动图书馆系统:
+  - config/afrog-pocs/addpocs/jp-ydtsgxt-filedownload.yaml
+Smanga:
+  - config/afrog-pocs/addpocs/smanga-rce.yaml
+XploitSPY:
+  - config/afrog-pocs/default-pwd/xploitspy-default-login.yaml
+鸿运主动安全监控云平台:
+  - config/afrog-pocs/vulnerability/hongyun-808gps-filedownload.yaml
+Landray-EIS智慧协同平台: 
+  - config/afrog-pocs/vulnerability/landary-eis-saveimg-fileupload.yaml
+宏景HCM:
+  - config/afrog-pocs/vulnerability/potentials-hjsoft-hcm-khfieldtree-sqli.yaml
+FUXA:
+  - config/afrog-pocs/CVE/2023/CVE-2023-33831.yaml
+Honeywell:
+  - config/afrog-pocs/CVE/2023/CVE-2023-3710.yaml

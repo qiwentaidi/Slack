@@ -1,0 +1,22 @@
+id: phpinfo-leak
+
+info:
+  name: phpinfo leak
+  author: qwtd
+  severity: low
+  verified: true
+  description: |
+    phpinfo信息泄露。
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /dashboard/phpinfo.php
+    expression: response.status == 200 && response.body.bcontains(b'System') && response.body.bcontains(b'phpinfo')
+  r1:
+    request:
+      method: GET
+      path: /phpinfo.php
+    expression: response.status == 200 && response.body.bcontains(b'System') && response.body.bcontains(b'phpinfo')
+expression: r0() || r1()

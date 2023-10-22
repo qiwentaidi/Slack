@@ -1,0 +1,31 @@
+{
+  "WebScan": {
+    "Thread": 100
+  },
+  "Subdomain": {
+    "DNS1": "223.5.5.5",
+    "DNS2": "223.6.6.6"
+  },
+  "PortScan": {
+    "Thread": 2000,
+    "Timeout": 10
+  },
+  "Proxy": {
+    "Enable": false,
+    "Mode": "HTTP",
+    "Address": "127.0.0.1",
+    "Port": 8080,
+    "Username": "",
+    "Password": ""
+  },
+  "Hunter": {
+    "Api": ""
+  },
+  "Fofa": {
+    "Email": "",
+    "Api": ""
+  },
+  "Quake": {
+    "Api": ""
+  }
+}
