@@ -191,7 +191,7 @@ func SearchSubsidiary(company string) (fuzzname string, subsidiaries []string) {
 	// 获取到本公司对应的域名
 	domains := ICP2Domain(fuzzname)
 	WaitSearchDomain = append(WaitSearchDomain, util.RemoveDuplicates[string](domains)...)
-	holdData = append(holdData, []string{headOffice, "总公司", "", strings.Join(util.RemoveDuplicates[string](domains), " | ")})
+	holdData = append(holdData, []string{headOffice, "总公司", "", strings.Join(util.RemoveDuplicates[string](domains), " | "), ""})
 	for _, result := range qr.Data.Result {
 		if result.Percent == "100%" { // 提权全资子公司
 			subsidiaryDomains := ICP2Domain(result.Name)

@@ -38,7 +38,7 @@ const (
 
 4、内置字典: 可以通过打开目录新增文件自定义内置字典
 
-5、排序: 排序结果`
+5、扫描结果会自动过滤重复长度出现5次以上的数据，防止数据显示过多`
 )
 
 var (
@@ -175,7 +175,7 @@ type PathData struct {
 func PathRequest(method, url string, client *http.Client) *PathData {
 	var pd PathData // 将响应头和响应头的数据存储到结构体中
 	resp, body, err := client2.NewHttpWithDefaultHead("GET", url, client)
-	if err != nil {
+	if err != nil || resp == nil {
 		logger.Error(err)
 		return &pd
 	}
