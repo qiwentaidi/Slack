@@ -52,7 +52,7 @@ func PostgresConn(host, user, pass string) (flag bool, err error) {
 		err = db.Ping()
 		if err == nil {
 			flag = true
-			common.PortBurstResult = append(common.PortBurstResult, []string{"Postgresql", host, user, pass})
+			common.PortBurstResult = append(common.PortBurstResult, []string{"Postgresql", host, user, pass, ""})
 		}
 	}
 	return flag, err

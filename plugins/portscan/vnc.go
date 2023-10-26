@@ -58,6 +58,6 @@ func VncConn(host, pass string) (flag bool, err error) {
 	// Close the client connection when done
 	client.Close()
 	flag = true
-	common.PortBurstResult = append(common.PortBurstResult, []string{"VNC", host, "", pass})
+	common.PortBurstResult = append(common.PortBurstResult, []string{"VNC", host, "", pass, ""})
 	return flag, err
 }

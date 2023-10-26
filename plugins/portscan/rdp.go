@@ -75,10 +75,10 @@ func worker(host, domain string, wg *sync.WaitGroup, brlist chan Brutelist, sign
 		flag, err := RdpConn(host, domain, user, pass, timeout)
 		if flag && err == nil {
 			if domain != "" {
-				common.PortBurstResult = append(common.PortBurstResult, []string{"RDP", host + ":" + domain, user, pass})
+				common.PortBurstResult = append(common.PortBurstResult, []string{"RDP", host + ":" + domain, user, pass, ""})
 				custom.Console.Append(fmt.Sprintf("[+] rdp://%v:%v\\%v %v\n", host, domain, user, pass))
 			} else {
-				common.PortBurstResult = append(common.PortBurstResult, []string{"RDP", host, user, pass})
+				common.PortBurstResult = append(common.PortBurstResult, []string{"RDP", host, user, pass, ""})
 				custom.Console.Append(fmt.Sprintf("[+] rdp://%v:%v %v\n", host, user, pass))
 			}
 			*signal = true

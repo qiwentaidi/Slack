@@ -29,9 +29,8 @@ func (db *IPDB) SetOffset(offset uint32) {
 func (db *IPDB) ReadString(offset uint32) []byte {
 	db.SetOffset(offset)
 	data := make([]byte, 0, 30)
-	buf := make([]byte, 1)
 	for {
-		buf = db.ReadData(1)
+		buf := db.ReadData(1)
 		if buf[0] == 0 {
 			break
 		}

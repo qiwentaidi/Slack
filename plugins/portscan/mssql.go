@@ -56,7 +56,7 @@ func MssqlConn(host, user, pass string) (flag bool, err error) {
 		err = db.Ping()
 		if err == nil {
 			flag = true
-			common.PortBurstResult = append(common.PortBurstResult, []string{"Mssql", host, user, pass})
+			common.PortBurstResult = append(common.PortBurstResult, []string{"Mssql", host, user, pass, ""})
 		}
 	}
 	return flag, err

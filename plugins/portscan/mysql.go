@@ -54,7 +54,7 @@ func MysqlConn(host, user, pass string) (flag bool, err error) {
 		err = db.Ping()
 		if err == nil {
 			flag = true
-			common.PortBurstResult = append(common.PortBurstResult, []string{"Mysql", host, user, pass})
+			common.PortBurstResult = append(common.PortBurstResult, []string{"Mysql", host, user, pass, ""})
 		}
 	}
 	return flag, err

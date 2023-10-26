@@ -196,10 +196,10 @@ func SearchSubsidiary(company string) (fuzzname string, subsidiaries []string) {
 		if result.Percent == "100%" { // 提权全资子公司
 			subsidiaryDomains := ICP2Domain(result.Name)
 			if len(subsidiaryDomains) > 0 {
-				holdData = append(holdData, []string{result.Name, result.Percent, result.Amount, strings.Join(util.RemoveDuplicates[string](subsidiaryDomains), " | ")})
+				holdData = append(holdData, []string{result.Name, result.Percent, result.Amount, strings.Join(util.RemoveDuplicates[string](subsidiaryDomains), " | "), ""})
 				WaitSearchDomain = append(WaitSearchDomain, util.RemoveDuplicates[string](subsidiaryDomains)...)
 			} else { // 没查到域名的全资子公司也要显示
-				holdData = append(holdData, []string{result.Name, result.Percent, result.Amount, ""})
+				holdData = append(holdData, []string{result.Name, result.Percent, result.Amount, "", ""})
 			}
 			subsidiaries = append(subsidiaries, result.Name)
 		}
@@ -302,7 +302,7 @@ func WeChatOfficialAccounts(companyName string) error {
 	}
 	json.Unmarshal(b, &oa)
 	for _, result := range oa.Data.ResultList {
-		common.WechatAsset = append(common.WechatAsset, []string{result.Title, result.PublicNum, result.TitleImgURL, result.CodeImg, result.Recommend})
+		common.WechatAsset = append(common.WechatAsset, []string{result.Title, result.PublicNum, result.TitleImgURL, result.CodeImg, result.Recommend, ""})
 	}
 	return nil
 }

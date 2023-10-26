@@ -25,7 +25,7 @@ func MemcachedScan(host string) {
 				if err == nil {
 					if strings.Contains(string(rev[:n]), "STAT") {
 						custom.Console.Append(fmt.Sprintf("[+] Memcached %s unauthorized\n", host))
-						common.PortBurstResult = append(common.PortBurstResult, []string{"Memcached", host, "", "unauthorized"})
+						common.PortBurstResult = append(common.PortBurstResult, []string{"Memcached", host, "", "unauthorized", ""})
 					}
 				} else {
 					custom.Console.Append(fmt.Sprintf("[-] Memcached %v %v\n", host, err))

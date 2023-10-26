@@ -7,9 +7,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
+	"slack/common/logger"
 	"time"
 )
 
@@ -53,7 +53,7 @@ func Get(url string) ([]byte, error) {
 		return nil, errors.New("http response status code is not 200")
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func SaveFile(path string, data []byte) (err error) {
 	if err == nil {
 		err = os.Remove(path)
 		if err != nil {
-			logger.Println("旧文件删除失败", err.Error())
+			logger.Info("旧文件删除失败" + err.Error())
 		}
 	}
 

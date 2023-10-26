@@ -54,7 +54,7 @@ func OracleConn(host, user, pass string) (flag bool, err error) {
 		err = db.Ping()
 		if err == nil {
 			flag = true
-			common.PortBurstResult = append(common.PortBurstResult, []string{"Oracle", host, user, pass})
+			common.PortBurstResult = append(common.PortBurstResult, []string{"Oracle", host, user, pass, ""})
 		}
 	}
 	return flag, err

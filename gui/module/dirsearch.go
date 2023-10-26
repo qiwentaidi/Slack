@@ -15,7 +15,6 @@ import (
 	"slack/gui/global"
 	"slack/gui/mytheme"
 	"slack/lib/util"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -35,7 +34,7 @@ const (
 
 2、拓展名: 会将字典中%EXT%字段替换，不指定则去除有关%EXT%字段
 
-3、字典路径: 指定字典后，优先级大于下方默认字典
+3、字典路径: 指定字典后，优先级大于下方内置字典
 
 4、内置字典: 可以通过打开目录新增文件自定义内置字典
 
@@ -44,7 +43,7 @@ const (
 
 var (
 	DirsearchProgress *widget.ProgressBar
-	DirResult         = [][]string{{"#", "状态码", "长度", "目录", "跳转路径"}}
+	DirResult         = [][]string{{"#", "状态码", "长度", "目录", "跳转路径", ""}}
 	lengthNums        = make(map[int]int)
 	dirnum, id1       int64
 )
@@ -71,55 +70,19 @@ func DirSearchUI() *fyne.Container {
 	info := widget.NewButtonWithIcon("", theme.QuestionIcon(), func() {
 		custom.ShowCustomDialog(theme.InfoIcon(), "提示", "", widget.NewLabel(dirsearchInfo), nil, fyne.NewSize(400, 300))
 	})
-	sortTable := widget.NewSelect([]string{"编号升序(默认)", "编号降序", "状态码升序", "状态码降序"}, nil)
-	sortTable.PlaceHolder = "扫描结束后可排序结果"
-	rule1 := widget.NewForm(
-		widget.NewFormItem("状态码:", container.NewBorder(nil, nil, nil, info, codeFilter)),
-		widget.NewFormItem("拓展名:", ext),
-		widget.NewFormItem("字典路径:", global.DirDictText),
-	)
 	thread := custom.NewNumEntry("20")
 	method := widget.NewSelect([]string{"GET", "POST", "HEAD", "OPTIONS"}, nil)
 	method.SetSelected("GET")
-	rule2 := widget.NewForm(
-		widget.NewFormItem("线程:", thread),
-		widget.NewFormItem("模式:", method),
-		widget.NewFormItem("排序:", sortTable),
-	)
-	t := custom.NewTableWithUpdateHeader1(&DirResult, []float32{50, 70, 100, 400, 500})
-	sortTable.OnChanged = func(s string) {
-		go func() {
-			if len(DirResult) > 1 {
-				switch s {
-				case "编号升序(默认)":
-					sort.Slice(DirResult[1:], func(i, j int) bool {
-						num1, _ := strconv.Atoi(DirResult[i+1][0])
-						num2, _ := strconv.Atoi(DirResult[j+1][0])
-						return num1 < num2
-					})
-				case "编号降序":
-					sort.Slice(DirResult[1:], func(i, j int) bool {
-						num1, _ := strconv.Atoi(DirResult[i+1][0])
-						num2, _ := strconv.Atoi(DirResult[j+1][0])
-						return num1 > num2
-					})
-				case "状态码升序":
-					sort.Slice(DirResult[1:], func(i, j int) bool {
-						statusCode1, _ := strconv.Atoi(DirResult[i+1][1])
-						statusCode2, _ := strconv.Atoi(DirResult[j+1][1])
-						return statusCode1 < statusCode2
-					})
-				case "状态码降序":
-					sort.Slice(DirResult[1:], func(i, j int) bool {
-						statusCode1, _ := strconv.Atoi(DirResult[i+1][1])
-						statusCode2, _ := strconv.Atoi(DirResult[j+1][1])
-						return statusCode1 > statusCode2
-					})
-				}
-				t.Refresh()
-			}
-		}()
-	}
+	rule := container.NewBorder(nil, container.NewBorder(nil, nil, widget.NewLabel("字典路径:"), scan, global.DirDictText), nil, nil, container.NewGridWithColumns(3,
+		custom.NewFormItem("选状态码:", container.NewBorder(nil, nil, nil, info, codeFilter)),
+		custom.NewFormItem("拓展名:", ext),
+		container.NewGridWithColumns(2,
+			custom.NewFormItem("线程:", thread),
+			custom.NewFormItem("模式:", method),
+		),
+	))
+
+	t := custom.NewTableWithUpdateHeader1(&DirResult, []float32{50, 70, 100, 400, 500, 0})
 	scan.OnTapped = func() {
 		go func() {
 			t, err := common.ParseURLWithoutSlash(target.Text)
@@ -165,8 +128,9 @@ func DirSearchUI() *fyne.Container {
 		sl.Refresh()
 	})
 	dict := container.NewBorder(container.NewHBox(&widget.Label{Text: "内置字典(默认扫描dicc.txt)", Truncation: fyne.TextTruncateOff}, layout.NewSpacer(), open, update), nil, nil, nil, sl)
-	hbox := container.NewBorder(nil, container.NewBorder(nil, nil, nil, scan, target), nil, nil, container.NewGridWithColumns(3, rule1, widget.NewCard("", "", dict), rule2))
-	return container.NewBorder(hbox, DirsearchProgress, nil, nil, custom.Frame(t))
+	hbox := container.NewVSplit(container.NewBorder(rule, nil, nil, nil, container.NewBorder(nil, nil, nil, widget.NewCard("", "", dict), target)), custom.Frame(t))
+	hbox.Offset = 0.3
+	return container.NewBorder(nil, DirsearchProgress, nil, nil, hbox)
 }
 
 func MultiThread(method, url string, paths []string, filter []int, thread int) {
@@ -195,7 +159,7 @@ func SimpleResp(method, url, path string, client *http.Client, filter []int, lim
 		lengthNums[data.Length]++
 		if lengthNums[data.Length] <= 5 && util.ArrayContains[int](data.Status, filter) {
 			atomic.AddInt64(&dirnum, 1)
-			DirResult = append(DirResult, []string{fmt.Sprintf("%v", dirnum), fmt.Sprintf("%v", data.Status), fmt.Sprintf("%v", data.Length), path, data.Location})
+			DirResult = append(DirResult, []string{fmt.Sprintf("%v", dirnum), fmt.Sprintf("%v", data.Status), fmt.Sprintf("%v", data.Length), path, data.Location, ""})
 		}
 		mutex.Unlock()
 	}

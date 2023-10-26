@@ -53,7 +53,7 @@ func FtpConn(address, user, pass string) (flag bool, err error) {
 		err = conn.Login(user, pass)
 		if err == nil {
 			flag = true
-			common.PortBurstResult = append(common.PortBurstResult, []string{"FTP", address, user, pass})
+			common.PortBurstResult = append(common.PortBurstResult, []string{"FTP", address, user, pass, ""})
 		}
 	}
 	return flag, err

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"strings"
@@ -16,13 +15,6 @@ import (
 
 type QQwry struct {
 	IPDB
-}
-
-var logger = Logger(log.New(os.Stderr, "[qqwry]", log.Ldate|log.Ltime))
-
-type Logger interface {
-	Println(...interface{})
-	Printf(string, ...interface{})
 }
 
 const (
@@ -117,16 +109,12 @@ func (db *QQwry) searchIndex(ip uint32) uint32 {
 
 	start := binary.LittleEndian.Uint32(header[:4])
 	end := binary.LittleEndian.Uint32(header[4:])
-
-	buf := make([]byte, 7)
 	mid := uint32(0)
 	ipUint := uint32(0)
-
 	for {
 		mid = GetMiddleOffset(start, end, 7)
-		buf = db.ReadData(7, mid)
+		buf := db.ReadData(7, mid)
 		ipUint = binary.LittleEndian.Uint32(buf[:4])
-
 		if end-start == 7 {
 			offset := ByteToUInt32(buf[4:])
 			buf = db.ReadData(7)

@@ -30,7 +30,7 @@ func SmbScan(host, domain string, associate bool, usertext, passtext *widget.Ent
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := doWithTimeOut(host, user, pass)
 			if flag && err == nil {
-				common.PortBurstResult = append(common.PortBurstResult, []string{"SMB", host, user, pass})
+				common.PortBurstResult = append(common.PortBurstResult, []string{"SMB", host, user, pass, ""})
 				if domain != "" {
 					custom.Console.Append(fmt.Sprintf("[+] smb:%v:%v\\%v:%v", host, domain, user, pass))
 				} else {

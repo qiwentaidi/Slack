@@ -51,7 +51,7 @@ func Init() {
 func SubdomainUI() *fyne.Container {
 	global.SubdomainTarget = custom.NewMultiLineEntryPlaceHolder("请输入域名，目标仅支持换行分割\n\n如果域名解析的非常慢，请考虑是否是本机网络不佳")
 	global.SubdomainText = custom.NewFileEntry("")
-	table := custom.NewTableWithUpdateHeader1(&common.SubdomainResult, []float32{50, 200, 600})
+	table := custom.NewTableWithUpdateHeader1(&common.SubdomainResult, []float32{50, 200, 600, 0})
 	progress := custom.NewCenterLable("0/0")
 	level := custom.NewNumEntry("1")
 	thread := custom.NewNumEntry("600")
@@ -134,7 +134,7 @@ func burstSubdomain(domains, subs, servers []string, level, tread int, limier ch
 					if len(addrs) > 0 {
 						atomic.AddInt64(&id, 1)
 						temps = append(temps, subdomains)
-						common.SubdomainResult = append(common.SubdomainResult, []string{fmt.Sprintf("%v", id), subdomains, strings.Join(addrs, "	")})
+						common.SubdomainResult = append(common.SubdomainResult, []string{fmt.Sprintf("%v", id), subdomains, strings.Join(addrs, "	"), ""})
 					}
 				}
 				progress.Text = fmt.Sprintf("%d/%d", num, count)

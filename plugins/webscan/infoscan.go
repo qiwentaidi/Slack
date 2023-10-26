@@ -87,7 +87,7 @@ func FingerScan(targets []string, finger2poc bool, progress *widget.Label) {
 				if finger2poc { // 如果开启指纹poc扫描则加入待扫描的目标
 					common.UrlFingerMap[url] = append(common.UrlFingerMap[url], fingerprints...)
 				}
-				common.ScanResult = append(common.ScanResult, []string{fmt.Sprintf("%d", id), url, fmt.Sprintf("%v", data.StatusCode), fmt.Sprintf("%v", len(data.Body)), data.Title, strings.Join(fingerprints, " | ")})
+				common.ScanResult = append(common.ScanResult, []string{fmt.Sprintf("%d", id), url, fmt.Sprintf("%v", data.StatusCode), fmt.Sprintf("%v", len(data.Body)), data.Title, strings.Join(fingerprints, " | "), ""})
 			}
 			atomic.AddUint32(&progressid, 1)
 			progress.SetText(fmt.Sprintf("%d/%d", progressid, count))

@@ -71,6 +71,6 @@ func TelnetConn(addr, user, pass string, port, serverType int) (flag bool, err e
 		return flag, err
 	}
 	flag = true
-	common.PortBurstResult = append(common.PortBurstResult, []string{"Telnet", fmt.Sprintf("%v:%v", addr, port), user, pass})
+	common.PortBurstResult = append(common.PortBurstResult, []string{"Telnet", fmt.Sprintf("%v:%v", addr, port), user, pass, ""})
 	return flag, err
 }

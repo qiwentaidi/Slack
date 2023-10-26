@@ -900,6 +900,7 @@ Hadoop-Hue:
   - config/afrog-pocs/default-pwd/jinher-oa-default-login.yaml
   - config/afrog-pocs/addpocs/jinher-oa-fileuploadmessage-fileread.yaml
   - config/afrog-pocs/vulnerability/jinher-oa-c6-download-file-read.yaml
+  - config/afrog-pocs/addpocs/jinher-oa-saveasotherformatservlet-upload.yaml
 JupyterHub: 
   - config/afrog-pocs/default-pwd/jupyterhub-default-login.yaml
 Apache Kafka:
@@ -1332,8 +1333,10 @@ Konga:
 金蝶 EAS: 
   - config/afrog-pocs/vulnerability/kingdee-eas-directory-traversal.yaml
   - config/afrog-pocs/addpocs/kingdee-eas-loadtree-jndi.yaml
+  - config/afrog-pocs/addpocs/kingdee-eas-myuploadfile-upload.yaml
 金蝶云星空: 
   - config/afrog-pocs/vulnerability/kingdee-deserialization-rce.yaml
+  - config/afrog-pocs/addpocs/kingdee-fileproxyhandler-fileread.yaml
 科达-MTS转码服务器:
   - config/afrog-pocs/vulnerability/kedacom-mts-file-read.yaml
 科达DVR接入网关:

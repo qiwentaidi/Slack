@@ -8,14 +8,14 @@ var (
 	All        string = "1-65535"
 	HighRisk   string = "21,22,23,53,80,443,8080,8000,139,445,3389,1521,3306,6379,7001,2375,27017,11211"
 	// 资产收集数组
-	HoldAsset   = [][]string{{"公司名称", "股权比例", "投资数额", "域名"}}
-	WechatAsset = [][]string{{"公众号名称", "微信号", "公众号LOGO", "二维码", "简介"}}
+	HoldAsset   = [][]string{{"公司名称", "股权比例", "投资数额", "域名", ""}}
+	WechatAsset = [][]string{{"公众号名称", "微信号", "公众号LOGO", "二维码", "简介", ""}}
 	HunterAsset = [][]string{{"公司名称 | 域名", "资产数量"}}
 	// WEB扫描
-	VulResult       = [][]string{{"#", "漏洞名称", "风险等级", "漏洞地址"}}
-	ScanResult      = [][]string{{"#", "网站地址", "状态码", "长度", "标题", "指纹"}} // WebScan
-	PortBurstResult = [][]string{{"协议", "主机", "用户名", "密码"}}
-	SubdomainResult = [][]string{{"#", "子域名", "IP"}}
+	VulHeader       = []string{"#", "漏洞名称", "风险等级", "漏洞地址", "详情"}
+	ScanResult      = [][]string{{"#", "网站地址", "状态码", "长度", "标题", "指纹", ""}} // WebScan
+	PortBurstResult = [][]string{{"协议", "主机", "用户名", "密码", ""}}
+	SubdomainResult = [][]string{{"#", "子域名", "IP", ""}}
 	// 扫描到指纹后需要扫描到的URL以及对应的指纹
 	UrlFingerMap = map[string][]string{}
 	// IP 域名目标
@@ -36,3 +36,20 @@ var (
 	}
 	Passwords = []string{"123456", "admin", "admin123", "root", "", "pass123", "pass@123", "password", "123123", "654321", "111111", "123", "1", "admin@123", "Admin@123", "admin123!@#", "{user}", "{user}1", "{user}111", "{user}123", "{user}@123", "{user}_123", "{user}#123", "{user}@111", "{user}@2019", "{user}@123#4", "P@ssw0rd!", "P@ssw0rd", "Passw0rd", "qwe123", "1234567", "12345678", "test", "test123", "123qwe", "123qwe!@#", "123456789", "123321", "666666", "a123456.", "123456~a", "123456!a", "000000", "1234567890", "8888888", "!QAZ2wsx", "1qaz2wsx", "abc123", "abc123456", "1qaz@WSX", "a11111", "a12345", "Aa1234", "Aa1234.", "Aa12345", "a123456", "a123123", "Aa123123", "Aa123456", "Aa12345.", "sysadmin", "system", "1qaz!QAZ", "2wsx@WSX", "qwe123!@#", "Aa123456!", "A123456s!", "sa123456", "1q2w3e", "Charge123", "Aa123456789"}
 )
+
+var (
+	Vulnerability = []VulnerabilityInfo{}
+)
+
+type VulnerabilityInfo struct {
+	Id        string
+	Name      string
+	RiskLevel string
+	Url       string
+	TransInfo
+}
+
+type TransInfo struct {
+	Request  string
+	Response string
+}

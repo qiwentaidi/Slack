@@ -45,7 +45,7 @@ func MongodbUnauth(host string) (flag bool, err error) {
 	if strings.Contains(text, "totalLinesWritten") {
 		flag = true
 		custom.Console.Append(fmt.Sprintf("[+] Mongodb:%v unauthorized\n", host))
-		common.PortBurstResult = append(common.PortBurstResult, []string{"Mongodb", host, "", "unauthorized"})
+		common.PortBurstResult = append(common.PortBurstResult, []string{"Mongodb", host, "", "unauthorized", ""})
 	}
 	return flag, err
 }

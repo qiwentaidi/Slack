@@ -52,8 +52,8 @@ func WebScanUI() *fyne.Container {
 	})
 	global.ProgerssWebscan = custom.NewCenterLable("0/0")
 	distribute := widget.NewButtonWithIcon("任务下发", theme.GridIcon(), nil)
-	table := custom.NewTableWithUpdateHeader1(&common.ScanResult, []float32{50, 300, 50, 80, 200, 430})
-	vultable := custom.NewTableWithUpdateHeader1(&common.VulResult, []float32{50, 300, 80, 680})
+	table := custom.NewTableWithUpdateHeader1(&common.ScanResult, []float32{50, 300, 80, 80, 200, 400, 0})
+	vultable := custom.NewVulnerabilityTable(&common.Vulnerability, []float32{50, 300, 80, 620, 60})
 	keyword := widget.NewEntry()
 	pocnums := custom.NewCenterLable("查看当前条件下可用POC数量")
 	info := widget.NewButtonWithIcon("", theme.QuestionIcon(), func() {
@@ -159,7 +159,7 @@ func Scanner(scan *widget.Button, alive, active, finger2poc *widget.Check, keywo
 	if !common.ScanDone {
 		if global.WebScanTarget.Text != "" {
 			targets := common.ParseTarget(global.WebScanTarget.Text, common.Mode_Url)
-			common.VulResult = common.VulResult[:1]
+			common.Vulnerability = nil
 			common.ScanDone = true
 			scan.Icon = theme.MediaPlayIcon()
 			go func() {

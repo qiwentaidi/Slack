@@ -59,7 +59,7 @@ func SshConn(host, user, pass string) (flag bool, err error) {
 		if err == nil {
 			defer session.Close()
 			flag = true
-			common.PortBurstResult = append(common.PortBurstResult, []string{"SSH", host, user, pass})
+			common.PortBurstResult = append(common.PortBurstResult, []string{"SSH", host, user, pass, ""})
 		}
 	}
 	return flag, err
