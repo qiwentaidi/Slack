@@ -51,24 +51,3 @@ func SelectProxy(profile *common.Profiles) (client *http.Client) {
 	}
 	return client
 }
-
-// 跟随页面跳转最多10次
-func DefaultClient() *http.Client {
-	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // 防止HTTPS报错
-		},
-	}
-}
-
-// 不跟随页面跳转
-func NotFollowClient() *http.Client {
-	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-}

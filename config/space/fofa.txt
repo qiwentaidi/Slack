@@ -1,2 +1,0 @@
-title="M7S"
-body="script/importres.js?v="

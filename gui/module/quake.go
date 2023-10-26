@@ -48,7 +48,7 @@ func QuakeUI() *fyne.Container {
 
 func (qk *QuakeSearch) HomePage() *fyne.Container {
 	e := widget.NewEntry()
-	button := &widget.Button{Text: "favicon相似度查询", Importance: widget.WarningImportance, OnTapped: func() {
+	button := &widget.Button{Text: "favicon相似度查询(没做)", Importance: widget.WarningImportance, OnTapped: func() {
 
 	}}
 	return container.NewVBox(container.NewBorder(nil, nil, widget.NewLabel("目标favicon地址:"), button, e))

@@ -56,8 +56,7 @@ func PortScanUI() *fyne.Container {
 	scan := &widget.Button{Text: "开始扫描", Icon: theme.SearchIcon(), Importance: widget.HighImportance, OnTapped: func() {
 		go func() {
 			var icmp_alive []string
-			PortScanResult.Text = ""
-			PortScanResult.Refresh()
+			PortScanResult.SetText("")
 			ports := common.ParsePort(portlist.Text)
 			ips := common.ParseIPs(global.PortScanTarget.Text)
 			if icmp.Checked {

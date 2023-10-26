@@ -2,11 +2,10 @@ package memu
 
 import (
 	"os"
-	"os/exec"
-	"runtime"
 	"slack/gui/custom"
 	"slack/gui/global"
 	"slack/gui/mytheme"
+	"slack/lib/util"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/driver/desktop"
@@ -32,7 +31,10 @@ func MyMenu() *fyne.MainMenu {
 		}},
 	})
 	return fyne.NewMainMenu(
-		fyne.NewMenu("文件", &fyne.MenuItem{Label: "打开目录", Icon: theme.FolderOpenIcon(), Action: OpenFolder}),
+		fyne.NewMenu("文件", &fyne.MenuItem{Label: "打开目录", Icon: theme.FolderOpenIcon(), Action: func() {
+			dir, _ := os.Getwd()
+			util.OpenFolder(dir)
+		}}),
 		fyne.NewMenu("配置", &fyne.MenuItem{Label: "修改配置", Icon: theme.SettingsIcon(), Action: ConfigCenter}, &fyne.MenuItem{Label: "内置字典", Icon: mytheme.DictIcon(), Action: BurstDict}),
 		fyne.NewMenu("更新",
 			&fyne.MenuItem{Label: "IP纯真库更新", Icon: theme.DownloadIcon(), Action: DowdloadQqwry},
@@ -44,21 +46,6 @@ func MyMenu() *fyne.MainMenu {
 		fyne.NewMenu("主题", &fyne.MenuItem{Label: "修改主题", Icon: mytheme.ThemeIcon(), Shortcut: settingsShortcut, Action: ChangeTheme}),
 		fyne.NewMenu("日志", &fyne.MenuItem{Label: "日志中心", Icon: theme.FileTextIcon(), Shortcut: logShortcut, Action: custom.ConsoleWindow}),
 	)
-}
-
-func OpenFolder() {
-	dir, _ := os.Getwd()
-	var command string
-	switch runtime.GOOS {
-	case "linux":
-		command = "xdg-open"
-	case "windows":
-		command = "explorer"
-	case "darwin":
-		command = "open"
-	}
-	cmd := exec.Command(command, dir)
-	cmd.Start()
 }
 
 // 窗口获得焦点时，可以使用的全局快捷键

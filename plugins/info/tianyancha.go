@@ -3,18 +3,20 @@ package info
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"slack/common"
+	"slack/common/client"
 	"slack/common/logger"
-	"slack/common/proxy"
 	"slack/gui/custom"
 	"slack/lib/util"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type TycSearchID struct {
@@ -109,7 +111,7 @@ func GetCompanyID(company string) (string, string) {
 	if err != nil {
 		logger.Info(err)
 	}
-	r2, err2 := proxy.DefaultClient().Do(r)
+	r2, err2 := client.DefaultClient().Do(r)
 	if err2 != nil {
 		logger.Info(err)
 	}
@@ -127,7 +129,7 @@ func GetCompanyID(company string) (string, string) {
 		if err != nil {
 			logger.Info(err)
 		}
-		r2, err2 := proxy.DefaultClient().Do(r)
+		r2, err2 := client.DefaultClient().Do(r)
 		if err2 != nil {
 			logger.Info(err)
 		}
@@ -209,13 +211,8 @@ func SearchSubsidiary(company string) (fuzzname string, subsidiaries []string) {
 // 返回对应域名数组
 func ICP2Domain(company string) (domains []string) {
 	var pages int
-	//companyDomain := make(map[string][]string)
-	r, err := http.Get(`https://beian.tianyancha.com/search/` + url.QueryEscape(company))
+	_, b, err := client.NewHttpWithDefaultHead("GET", "https://beian.tianyancha.com/search/"+url.QueryEscape(company), client.DefaultClient())
 	if err != nil {
-		logger.Debug(err)
-	}
-	b, err1 := io.ReadAll(r.Body)
-	if err1 != nil {
 		logger.Debug(err)
 	}
 	t := tycTotal.FindStringSubmatch(string(b))
@@ -228,7 +225,6 @@ func ICP2Domain(company string) (domains []string) {
 	} else {
 		pages = 1
 	}
-	//fmt.Printf("tyc查询到\"%v\"相关备案%d条,总页数%d\n", company, total, pages)
 	for _, v := range reg.FindAllString(string(b), -1) {
 		companyName := regCompany.FindStringSubmatch(v)
 		domain := regDomain.FindStringSubmatch(v)
@@ -244,12 +240,8 @@ func ICP2Domain(company string) (domains []string) {
 	// 查询页码大于1时需要对其他页码也进行筛选
 	if pages > 1 {
 		for i := 2; i <= pages; i++ {
-			r, err = http.Get(fmt.Sprintf(`https://beian.tianyancha.com/search/%v/p%d`, url.QueryEscape(company), i))
+			_, b, err := client.NewHttpWithDefaultHead("GET", fmt.Sprintf(`https://beian.tianyancha.com/search/%v/p%d`, url.QueryEscape(company), i), client.DefaultClient())
 			if err != nil {
-				logger.Debug(err)
-			}
-			b, err1 = io.ReadAll(r.Body)
-			if err1 != nil {
 				logger.Debug(err)
 			}
 			for _, v := range reg.FindAllString(string(b), -1) {
@@ -266,6 +258,51 @@ func ICP2Domain(company string) (domains []string) {
 			}
 		}
 	}
-
 	return domains
+}
+
+type OfficialAccounts struct {
+	State      string `json:"state"`
+	Message    string `json:"message"`
+	Special    string `json:"special"`
+	VipMessage string `json:"vipMessage"`
+	IsLogin    int    `json:"isLogin"`
+	ErrorCode  int    `json:"errorCode"`
+	Data       struct {
+		Count      int `json:"count"`
+		ResultList []struct {
+			PublicNum   string `json:"publicNum"`   // 微信号
+			CodeImg     string `json:"codeImg"`     // 二维码
+			Recommend   string `json:"recommend"`   // 简介
+			Title       string `json:"title"`       // 名称
+			TitleImgURL string `json:"titleImgURL"` // 公众号LOGO
+		} `json:"resultList"`
+	} `json:"data"`
+}
+
+// 获取微信公众号信息
+func WeChatOfficialAccounts(companyName string) error {
+	companyid, fuzzname := GetCompanyID(companyName)
+	if companyName != fuzzname { // 如果传进来的名称与模糊匹配的不相同
+		custom.Console.Append(fmt.Sprintf("[!] 正在查询微信公众号信息，天眼查模糊匹配名称为%v ——> %v,公众号信息会以模糊匹配后的公司为准\n", companyName, fuzzname))
+	}
+	_, b, err := client.NewHttpWithDefaultHead("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyid+"&pageSize=1&pageNum=1", client.DefaultClient())
+	if err != nil {
+		logger.Debug(err)
+	}
+	var oa OfficialAccounts
+	json.Unmarshal(b, &oa)
+	if oa.ErrorCode != 0 || oa.Data.Count == 0 {
+		return errors.New("公众号查询出现错误或不存在公众号资产,公司名称: " + companyName)
+	}
+	time.Sleep(time.Second * 2)
+	_, b, err = client.NewHttpWithDefaultHead("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyid+"&pageSize="+fmt.Sprint(oa.Data.Count)+"&pageNum=1", client.DefaultClient())
+	if err != nil {
+		logger.Debug(err)
+	}
+	json.Unmarshal(b, &oa)
+	for _, result := range oa.Data.ResultList {
+		common.WechatAsset = append(common.WechatAsset, []string{result.Title, result.PublicNum, result.TitleImgURL, result.CodeImg, result.Recommend})
+	}
+	return nil
 }

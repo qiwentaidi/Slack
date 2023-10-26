@@ -139,7 +139,7 @@ func doUpdate(url string) error {
 func ConfrimUpdatePoc() {
 	b, err := os.ReadFile(localPocVersion)
 	if err != nil {
-		dialog.ShowError(errors.New("检测本地漏洞版本失败！"), global.Win)
+		dialog.ShowError(errors.New("检测本地漏洞版本失败,请检查afrog-pocs下的version文件是否存在"), global.Win)
 		return
 	}
 	if version, err := CheckUpdate(remotePocVersion, string(b)); err != nil {
@@ -170,8 +170,16 @@ func ConfrimUpdatePoc() {
 
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
 func UpdatePoc(latestVersion string) error {
-	du := lastestPocUrl + "v" + latestVersion + "/afrog-pocs.zip"
-	fileName, err := download(du, "./config/")
+	workflow := lastestPocUrl + "v" + latestVersion + "/workflow.yaml"
+	webfinger := lastestPocUrl + "v" + latestVersion + "/webfiner.yaml"
+	pocs := lastestPocUrl + "v" + latestVersion + "/afrog-pocs.zip"
+	if _, err := download(workflow, "./config/"); err != nil {
+		return err
+	}
+	if _, err := download(webfinger, "./config/"); err != nil {
+		return err
+	}
+	fileName, err := download(pocs, "./config/")
 	if err != nil {
 		return err
 	}

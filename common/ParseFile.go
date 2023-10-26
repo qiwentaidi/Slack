@@ -86,18 +86,24 @@ func ParseDict(e *widget.Entry, defaults []string) []string {
 func ParseDirectoryDict(filepath, old string, new []string) (dict []string) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		logger.Info("[ERR]" + filepath + "打开失败")
+		logger.Info(err)
 	}
 	defer file.Close()
 	s := bufio.NewScanner(file)
 	for s.Scan() {
 		if s.Text() != "" { // 去除空行
-			if strings.Contains(s.Text(), old) { // 将"%EXT%" old字段替换成new数组
-				for _, n := range new {
-					dict = append(dict, strings.ReplaceAll(s.Text(), old, n))
+			if len(new) > 0 {
+				if strings.Contains(s.Text(), old) { // 如何新数组不为空,将old字段替换成new数组
+					for _, n := range new {
+						dict = append(dict, strings.ReplaceAll(s.Text(), old, n))
+					}
+				} else {
+					dict = append(dict, s.Text())
 				}
 			} else {
-				dict = append(dict, s.Text())
+				if !strings.Contains(s.Text(), old) {
+					dict = append(dict, s.Text())
+				}
 			}
 		}
 	}

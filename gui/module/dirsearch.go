@@ -2,15 +2,20 @@ package module
 
 import (
 	"fmt"
-	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"slack/common"
+	client2 "slack/common/client"
 	"slack/common/logger"
 	"slack/common/proxy"
 	"slack/gui/custom"
 	"slack/gui/global"
+	"slack/gui/mytheme"
 	"slack/lib/util"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,20 +24,22 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
 const (
-	defaultDict = "./config/dirsearch/dicc.txt"
-	springDict  = "./config/dirsearch/spring.txt"
-	//backupDict  = "./config/dirsearch/backup.txt"
-
+	defaultDict   = "./config/dirsearch/"
 	dirsearchInfo = `1、状态码: 支持200,300或200-300,400-500两类形式过滤
 
-2、拓展名: 会将字典中%EXT%字段替换，不指定默认替换成php, aspx, asp,jsp, html, js
+2、拓展名: 会将字典中%EXT%字段替换，不指定则去除有关%EXT%字段
 
-3、字典路径: 指定字典后，优先级大于下方默认字典`
+3、字典路径: 指定字典后，优先级大于下方默认字典
+
+4、内置字典: 可以通过打开目录新增文件自定义内置字典
+
+5、排序: 排序结果`
 )
 
 var (
@@ -43,10 +50,9 @@ var (
 )
 
 func DirSearchUI() *fyne.Container {
-	target := widget.NewEntry()
-	target.PlaceHolder = "请输入URL地址"
+	target := &widget.Entry{PlaceHolder: "请输入URL地址"}
 	codeFilter := widget.NewEntry()
-	ext := widget.NewEntry()
+	ext := &widget.Entry{Text: "php,aspx,asp,jsp,html,js"}
 	scan := &widget.Button{Text: "开始任务", Importance: widget.HighImportance}
 	DirsearchProgress = widget.NewProgressBar()
 	DirsearchProgress.TextFormatter = func() string {
@@ -61,21 +67,64 @@ func DirSearchUI() *fyne.Container {
 		return fmt.Sprintf("%v/%v | %v", DirsearchProgress.Value, DirsearchProgress.Max, strconv.Itoa(int(ratio*100))+"%")
 	}
 	global.DirDictText = custom.NewFileEntry("")
-	sl := custom.NewSelectList("请选择字典,默认(扫描dicc.txt)", []string{defaultDict, springDict})
+	sl := custom.NewCheckListBox(LoadLocalDict())
 	info := widget.NewButtonWithIcon("", theme.QuestionIcon(), func() {
 		custom.ShowCustomDialog(theme.InfoIcon(), "提示", "", widget.NewLabel(dirsearchInfo), nil, fyne.NewSize(400, 300))
 	})
-	rule := widget.NewForm(
+	sortTable := widget.NewSelect([]string{"编号升序(默认)", "编号降序", "状态码升序", "状态码降序"}, nil)
+	sortTable.PlaceHolder = "扫描结束后可排序结果"
+	rule1 := widget.NewForm(
 		widget.NewFormItem("状态码:", container.NewBorder(nil, nil, nil, info, codeFilter)),
 		widget.NewFormItem("拓展名:", ext),
 		widget.NewFormItem("字典路径:", global.DirDictText),
 	)
+	thread := custom.NewNumEntry("20")
+	method := widget.NewSelect([]string{"GET", "POST", "HEAD", "OPTIONS"}, nil)
+	method.SetSelected("GET")
+	rule2 := widget.NewForm(
+		widget.NewFormItem("线程:", thread),
+		widget.NewFormItem("模式:", method),
+		widget.NewFormItem("排序:", sortTable),
+	)
 	t := custom.NewTableWithUpdateHeader1(&DirResult, []float32{50, 70, 100, 400, 500})
+	sortTable.OnChanged = func(s string) {
+		go func() {
+			if len(DirResult) > 1 {
+				switch s {
+				case "编号升序(默认)":
+					sort.Slice(DirResult[1:], func(i, j int) bool {
+						num1, _ := strconv.Atoi(DirResult[i+1][0])
+						num2, _ := strconv.Atoi(DirResult[j+1][0])
+						return num1 < num2
+					})
+				case "编号降序":
+					sort.Slice(DirResult[1:], func(i, j int) bool {
+						num1, _ := strconv.Atoi(DirResult[i+1][0])
+						num2, _ := strconv.Atoi(DirResult[j+1][0])
+						return num1 > num2
+					})
+				case "状态码升序":
+					sort.Slice(DirResult[1:], func(i, j int) bool {
+						statusCode1, _ := strconv.Atoi(DirResult[i+1][1])
+						statusCode2, _ := strconv.Atoi(DirResult[j+1][1])
+						return statusCode1 < statusCode2
+					})
+				case "状态码降序":
+					sort.Slice(DirResult[1:], func(i, j int) bool {
+						statusCode1, _ := strconv.Atoi(DirResult[i+1][1])
+						statusCode2, _ := strconv.Atoi(DirResult[j+1][1])
+						return statusCode1 > statusCode2
+					})
+				}
+				t.Refresh()
+			}
+		}()
+	}
 	scan.OnTapped = func() {
 		go func() {
-			s, err := common.ParseURLWithoutSlash(target.Text)
+			t, err := common.ParseURLWithoutSlash(target.Text)
 			if target.Text != "" && err == nil {
-				if err := TestTarget(s); err != nil {
+				if err := TestTarget(t); err != nil {
 					dialog.ShowError(err, global.Win)
 					return
 				}
@@ -87,51 +136,57 @@ func DirSearchUI() *fyne.Container {
 					options = strings.Split(ext.Text, ",")
 				} else if ext.Text != "" {
 					options = []string{ext.Text}
-				} else {
-					options = []string{"php", "aspx", "asp", "jsp", "html", "js"}
 				}
 				if global.DirDictText.Text == "" {
-					if len(sl.Checked) > 0 {
-						for _, d := range sl.Checked {
+					if len(sl.Selected) > 0 {
+						for _, d := range sl.Selected {
 							count = append(count, common.ParseDirectoryDict(d, "%EXT%", options)...)
 						}
 					} else {
-						count = common.ParseDirectoryDict(defaultDict, "%EXT%", options)
+						count = common.ParseDirectoryDict(defaultDict+"dicc.txt", "%EXT%", options)
 					}
 				} else {
 					count = common.ParseDirectoryDict(global.DirDictText.Text, "%EXT%", options)
 				}
 				DirsearchProgress.SetValue(0)
 				DirsearchProgress.Max = float64(len(count))
-				SimpleHttp(s, count, common.ParsePort(codeFilter.Text))
+				MultiThread(method.Selected, t, count, common.ParsePort(codeFilter.Text), thread.Number)
 			} else {
 				dialog.ShowError(fmt.Errorf("URL为空或存在错误 %v", err), global.Win)
 			}
 		}()
 	}
-	hbox := container.NewHSplit(rule, container.NewBorder(nil, nil, nil, scan, target))
-	hbox.Offset = 0.3
-	return container.NewBorder(container.NewBorder(nil, sl, nil, nil, hbox), DirsearchProgress, nil, nil, custom.Frame(t))
+	open := widget.NewButtonWithIcon("打开字典路径", theme.FolderOpenIcon(), func() {
+		dir, _ := os.Getwd()
+		util.OpenFolder(dir + "\\config\\dirsearch\\")
+	})
+	update := widget.NewButtonWithIcon("刷新", mytheme.UpdateIcon(), func() {
+		sl.Options = LoadLocalDict()
+		sl.Refresh()
+	})
+	dict := container.NewBorder(container.NewHBox(&widget.Label{Text: "内置字典(默认扫描dicc.txt)", Truncation: fyne.TextTruncateOff}, layout.NewSpacer(), open, update), nil, nil, nil, sl)
+	hbox := container.NewBorder(nil, container.NewBorder(nil, nil, nil, scan, target), nil, nil, container.NewGridWithColumns(3, rule1, widget.NewCard("", "", dict), rule2))
+	return container.NewBorder(hbox, DirsearchProgress, nil, nil, custom.Frame(t))
 }
 
-func SimpleHttp(url string, paths []string, filter []int) {
+func MultiThread(method, url string, paths []string, filter []int, thread int) {
 	var wg sync.WaitGroup
-	limiter := make(chan bool, 10) // 限制协程数量
-	client := proxy.NotFollowClient()
+	limiter := make(chan bool, thread) // 限制协程数量
+	c := client2.NotFollowClient()
 	if common.Profile.Proxy.Enable {
-		client = proxy.SelectProxy(&common.Profile)
+		c = proxy.SelectProxy(&common.Profile)
 	}
 	for _, path := range paths {
 		wg.Add(1)
 		limiter <- true
-		go SimpleResp(url, path, client, filter, limiter, &wg)
+		go SimpleResp(method, url, path, c, filter, limiter, &wg)
 	}
 	wg.Wait()
 }
 
-func SimpleResp(url, path string, client *http.Client, filter []int, limiter chan bool, wg *sync.WaitGroup) {
+func SimpleResp(method, url, path string, client *http.Client, filter []int, limiter chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
-	data := PathRequest(url+path, client)
+	data := PathRequest(method, url+path, client)
 	atomic.AddInt64(&id1, 1)
 	DirsearchProgress.SetValue(float64(id1))
 	DirsearchProgress.Refresh()
@@ -153,27 +208,16 @@ type PathData struct {
 	Length   int    // 主体内容
 }
 
-func PathRequest(url string, client *http.Client) *PathData {
+func PathRequest(method, url string, client *http.Client) *PathData {
 	var pd PathData // 将响应头和响应头的数据存储到结构体中
-	req, err := http.NewRequest("GET", url, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+	resp, body, err := client2.NewHttpWithDefaultHead("GET", url, client)
 	if err != nil {
 		logger.Error(err)
+		return &pd
 	}
-	resp, err := client.Do(req)
-	if err != nil {
-		logger.Debug(err)
-	}
-	if resp != nil && resp.StatusCode != 302 { // 过滤重定向次数过多的
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Debug(err)
-		}
-		defer resp.Body.Close()
-		pd.Status = resp.StatusCode
-		pd.Length = len(body)
-		pd.Location = resp.Header.Get("Location")
-	}
+	pd.Status = resp.StatusCode
+	pd.Length = len(body)
+	pd.Location = resp.Header.Get("Location")
 	return &pd
 }
 
@@ -187,4 +231,18 @@ func TestTarget(target string) error {
 		return err
 	}
 	return nil
+}
+
+func LoadLocalDict() []string {
+	currentDicts := []string{}
+	filepath.WalkDir(defaultDict, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && strings.HasSuffix(path, ".txt") {
+			currentDicts = append(currentDicts, path)
+		}
+		return nil
+	})
+	return currentDicts
 }

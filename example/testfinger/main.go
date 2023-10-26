@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"slack/common/proxy"
+	"slack/common/client"
 	"slack/lib/util"
 	"slack/plugins/webscan"
 
@@ -12,7 +12,7 @@ import (
 
 func main() {
 	target := "https://localhost:11123"
-	client := proxy.DefaultClient()
+	client := client.DefaultClient()
 	yamlData, err := os.ReadFile("./config/webfinger.yaml")
 	if err != nil {
 		fmt.Printf("err: %v\n", err)

@@ -84,7 +84,7 @@ func AssetExport(search string, total int) {
 	file, _ := os.OpenFile(fmt.Sprintf("./reports/fofa_asset_%v.csv", time.Now().Format("20060102_150405")), os.O_CREATE|os.O_RDWR, os.ModePerm) // 创建结果文件
 	file.WriteString("\xEF\xBB\xBF")
 	assetFile := csv.NewWriter(file)
-	for page, size := range util.SplitInt(total, 1000) {
+	for page, size := range util.SplitInt(total, 10000) {
 		addr := "https://fofa.info/api/v1/search/all?email=" + common.Profile.Fofa.Email + "&key=" + common.Profile.Fofa.Api + "&qbase64=" +
 			FOFABaseEncode(search) + "&page=" + fmt.Sprint(page+1) + "&size=" + fmt.Sprint(size) + "&fields=host,title,ip,domain,port,protocol,country_name,region,city,icp"
 		r, err := http.Get(addr)

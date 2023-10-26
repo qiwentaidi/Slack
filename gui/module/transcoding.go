@@ -130,8 +130,21 @@ func recursiveDecrypt(decrypt []string, input string, output *string) {
 		data, _ := hex.DecodeString(input)
 		decrypted = string(data)
 	case "Ascii":
-		i, _ := strconv.Atoi(input)
-		decrypted = fmt.Sprint(i)
+		temp := ""
+		if strings.Contains(input, " ") {
+			for _, s := range strings.Split(input, " ") {
+				if i, err := strconv.Atoi(s); err == nil {
+					temp += fmt.Sprintf("%c", i)
+				} else {
+					temp += fmt.Sprintf("what?(%v)", s)
+				}
+			}
+		} else {
+			if i, err := strconv.Atoi(input); err == nil {
+				temp = fmt.Sprintf("%c", i)
+			}
+		}
+		decrypted = temp
 	case "FanruanOA":
 		PASSWORD_MASK_ARRAY := [8]int{19, 78, 10, 15, 100, 213, 43, 23} // 掩码
 		Password := ""
@@ -144,7 +157,7 @@ func recursiveDecrypt(decrypt []string, input string, output *string) {
 			}
 		}
 		decrypted = Password
-	case "SeeyonOA":
+	case "SeeyonOA-Database":
 		pass := strings.ReplaceAll(input, "/", "")
 		p := strings.Split(pass, ".0")
 		if len(p) > 1 {

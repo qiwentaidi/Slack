@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"slack/common"
+	"slack/common/client"
 	"slack/common/logger"
-	"slack/common/proxy"
 	"slack/gui/custom"
 	"slack/gui/global"
+	"slack/gui/mytheme"
 	"slack/lib/result"
 	"slack/lib/util"
 	"slack/plugins/fofa"
@@ -55,7 +57,27 @@ func FofaUI() *fyne.Container {
 			dialog.ShowInformation("提示", "查询内容为空或语法错误", global.Win)
 		}
 	}}
-	return container.NewBorder(container.NewVBox(container.NewBorder(nil, nil, nil, searchButton, search), configItem), nil, nil, nil, doctabs)
+	batchButton := widget.NewButtonWithIcon("批量查询", theme.SearchReplaceIcon(), func() {
+		var newsearch string
+		e := widget.NewMultiLineEntry()
+		e.PlaceHolder = "例如:\n192.168.10.1\n192.168.0.0/24\n192.168.0.0/255.255.255.0\nbaidu.com"
+		custom.ShowCustomDialog(mytheme.FofaIcon(), "批量输入: 请输入IP/网段/域名", "查询", e, func() {
+			if e.Text != "" {
+				for _, ip := range common.ParseTarget(e.Text, common.Mode_Other) {
+					if util.RegIP.MatchString(ip) {
+						newsearch += fmt.Sprintf(`ip="%v"||`, ip)
+					} else {
+						newsearch += fmt.Sprintf(`domain="%v"||`, ip)
+					}
+				}
+				doctabs.Append(container.NewTabItem("批量查询", fs.NewSeachPage(newsearch[:len(newsearch)-2])))
+				doctabs.SelectIndex(len(doctabs.Items) - 1)
+			} else {
+				dialog.ShowInformation("提示", "请输入查询内容", global.Win)
+			}
+		}, fyne.NewSize(400, 400))
+	})
+	return container.NewBorder(container.NewVBox(container.NewBorder(nil, nil, nil, container.NewHBox(searchButton, batchButton), search), configItem), nil, nil, nil, doctabs)
 }
 
 func (fs *FOFASearch) PageTurning(query string, pageNum *custom.NumberEntry, usage *widget.Label, turnMode int, pageSize string, data *[][]string) {
@@ -91,7 +113,7 @@ func (fs *FOFASearch) HomePage() *fyne.Container {
 	e := widget.NewEntry()
 	l := widget.NewEntry()
 	return container.NewVBox(container.NewBorder(nil, nil, widget.NewLabel("目标地址:"), &widget.Button{Text: "计算HASH", Importance: widget.WarningImportance, OnTapped: func() {
-		c := proxy.DefaultClient()
+		c := client.DefaultClient()
 		resp, err := c.Get(e.Text)
 		if err != nil {
 			logger.Info(err)
@@ -144,7 +166,7 @@ func (fs *FOFASearch) Export(query, pageSize string, data [][]string) {
 		count := custom.NewCenterLable("")
 		filename := widget.NewEntry()
 		filename.SetText(fmt.Sprintf("fofa_asset_%v", time.Now().Format("20060102_150405")))
-		method := &widget.Select{Options: []string{"导出全部", "导出当前数据"}, PlaceHolder: "导出全部", Alignment: fyne.TextAlignCenter, OnChanged: func(s string) {
+		method := &widget.Select{Options: []string{"导出全部", "导出当前数据"}, Alignment: fyne.TextAlignCenter, OnChanged: func(s string) {
 			if s == "导出全部" {
 				count.Text = fmt.Sprintf("%v", fofa.FofaTotal)
 			} else {
@@ -152,9 +174,10 @@ func (fs *FOFASearch) Export(query, pageSize string, data [][]string) {
 			}
 			count.Refresh()
 		}}
+		method.SetSelectedIndex(0)
 		export := widget.NewButton("导出", nil)
 		cancel := widget.NewButton("取消", nil)
-		p := widget.NewModalPopUp(container.NewBorder(widget.NewLabel("导出"), container.NewHBox(export, cancel), nil, nil, widget.NewForm(
+		p := widget.NewModalPopUp(container.NewBorder(widget.NewLabel("每次API查询会延时2s，10000条查一次API，导出结束会提示"), container.NewHBox(export, cancel), nil, nil, widget.NewForm(
 			widget.NewFormItem("文件名称", filename),
 			widget.NewFormItem("导出方式", method),
 			widget.NewFormItem("导出条数", count),

@@ -8,7 +8,7 @@ import (
 	"path"
 	"regexp"
 	"slack/common"
-	"slack/common/proxy"
+	"slack/common/client"
 	"slack/gui/custom"
 	"slack/lib/util"
 	"slack/plugins/subdomain"
@@ -177,7 +177,7 @@ func SeoChinaz(domain string) (string, string, string) {
 	if err != nil {
 		custom.Console.Append("[ERR] " + err.Error() + "\n")
 	}
-	c := proxy.DefaultClient()
+	c := client.DefaultClient()
 	rx, err2 := c.Do(r)
 	if err2 != nil {
 		custom.Console.Append("[ERR] " + err2.Error() + "\n")
@@ -203,7 +203,7 @@ func WhoisChinaz(domain string) (string, string, string, string, string, string)
 	if err != nil {
 		custom.Console.Append("[ERR] " + err.Error() + "\n")
 	}
-	c := proxy.DefaultClient()
+	c := client.DefaultClient()
 	rx, err2 := c.Do(r)
 	if err2 != nil {
 		custom.Console.Append("[ERR] " + err2.Error() + "\n")

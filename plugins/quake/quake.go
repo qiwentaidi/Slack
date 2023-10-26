@@ -8,8 +8,8 @@ import (
 	"io"
 	"net/http"
 	"slack/common"
+	"slack/common/client"
 	"slack/common/logger"
-	"slack/common/proxy"
 	"slack/gui/global"
 	"time"
 
@@ -69,7 +69,7 @@ func QuakeApiSearch(query string, startIndex, pageSize int, result *[][]string) 
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-QuakeToken", common.Profile.Quake.Api)
-	resp, err := proxy.DefaultClient().Do(req)
+	resp, err := client.DefaultClient().Do(req)
 	if err != nil {
 		logger.Debug(err)
 	}

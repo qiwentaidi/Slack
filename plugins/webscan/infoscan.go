@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"slack/common"
+	"slack/common/client"
 	"slack/common/logger"
 	"slack/common/proxy"
 	"slack/lib/util"
@@ -38,7 +39,7 @@ func FingerScan(targets []string, finger2poc bool, progress *widget.Label) {
 	)
 	common.ScanResult = common.ScanResult[:1]
 	limiter := make(chan bool, 50) // 限制协程数量
-	client := proxy.DefaultClient()
+	client := client.DefaultClient()
 	if common.Profile.Proxy.Enable {
 		client = proxy.SelectProxy(&common.Profile)
 	}

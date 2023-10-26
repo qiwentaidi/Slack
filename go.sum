@@ -37,8 +37,6 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RXyy7KQOVs=
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
-fyne.io/fyne/v2 v2.4.1-rc1.0.20231009111630-0635d3e98c5d h1:kmFouHavizK2UBDnMUZgPE4Tt9Kxnigf6btI5FOXrdA=
-fyne.io/fyne/v2 v2.4.1-rc1.0.20231009111630-0635d3e98c5d/go.mod h1:AWM1iPM2YfliduZ4u/kQzP9E6ARIWm0gg+57GpYzWro=
 fyne.io/fyne/v2 v2.4.1-rc1.0.20231020171735-2921c115f4cc h1:b1ZXG1YbaUCwfyP/ZTc/Kme3NVAuMQnxoXvboAN4cZ4=
 fyne.io/fyne/v2 v2.4.1-rc1.0.20231020171735-2921c115f4cc/go.mod h1:vGixY3pTUU2TKNHXqhjB478gtvM20gEJDze6k171IFI=
 fyne.io/systray v1.10.1-0.20230722100817-88df1e0ffa9a h1:6Xf9fP3/mt72NrqlQhJWhQGcNf6GoG9X96NTaXr+K6A=
@@ -168,7 +166,6 @@ github.com/gin-gonic/gin v1.4.0/go.mod h1:OW2EZn3DO8Ln9oIKOvM++LBO+5UPHJJDH72/q/
 github.com/go-check/check v0.0.0-20180628173108-788fd7840127/go.mod h1:9ES+weclKsC9YodN5RgxqK/VD9HM9JsCSh7rNhMZE98=
 github.com/go-errors/errors v1.0.1/go.mod h1:f4zRHt4oKfwPJE5k8C9vpYG+aDHdBFUsgrm6/TyX73Q=
 github.com/go-errors/errors v1.4.2 h1:J6MZopCL4uSllY1OfXM374weqZFFItUbrImctkmUxIA=
-github.com/go-errors/errors v1.4.2/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
 github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6 h1:zDw5v7qm4yH7N8C8uWd+8Ii9rROdgWxQuGoJ9WDXxfk=
 github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6/go.mod h1:9YTyiznxEY1fVinfM7RvRcjRHbw2xLBJ3AAGIT0I4Nw=
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
@@ -606,8 +603,6 @@ github.com/zan8in/fastdialer v0.0.0-20230318130117-360c8bf6e5bb h1:70NKBDzjvUbs+
 github.com/zan8in/fastdialer v0.0.0-20230318130117-360c8bf6e5bb/go.mod h1:2TapaCNt2q/KUV+WoYYlsK0QpoC8ZKFFxt6P0kfdHcs=
 github.com/zan8in/fileutil v0.0.0-20220917063910-ce47dcc0cfa9 h1:WwIlLuTbEEzJHh0ZXXrBhwALDztG1Mkvz7jfqzwuhtY=
 github.com/zan8in/fileutil v0.0.0-20220917063910-ce47dcc0cfa9/go.mod h1:IMXMxKc8XnbwVGoe2cie8JYP2rF4R6DIJh4mMniInUQ=
-github.com/zan8in/pins v0.0.0-20230415064757-40257618b466 h1:3FGXsUq3s+y8D4XJY8xwWHsBSxuDs9bOqaSUokZ2wW0=
-github.com/zan8in/pins v0.0.0-20230415064757-40257618b466/go.mod h1:hwq0CUJ14mXaWUCNaD2WXj7aKwUJfuOP0fIt9mpy6i0=
 github.com/zan8in/rawhttp v0.0.0-20230318132449-31532db674af h1:j6djL5pHc8hdPpRqqj4mSpq9NKhGmlisGbnfb80Yml8=
 github.com/zan8in/rawhttp v0.0.0-20230318132449-31532db674af/go.mod h1:7AvjxFJyo5xS0vdGrwa5iwiTYtSMj8V5HGMVTxRstoE=
 github.com/zan8in/retryabledns v0.0.0-20230317092826-5ad665eb2521 h1:NChaJHUwxfGY7OvSLDBiTnHn7FXcecsY00/xoTonlbw=

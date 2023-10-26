@@ -41,8 +41,7 @@ func (fe *ForwordEntry) TappedSecondary(ev *fyne.PointEvent) {
 			go func() {
 				lines := common.ParseTarget(fe.Text, common.Mode_Other)
 				if len(lines) > 1 {
-					global.WebScanTarget.Text = ""
-					global.WebScanTarget.Refresh()
+					global.WebScanTarget.SetText("")
 					for _, line := range lines {
 						if strings.HasPrefix(line, "http") {
 							global.WebScanTarget.Text += line + "\n"
@@ -58,8 +57,7 @@ func (fe *ForwordEntry) TappedSecondary(ev *fyne.PointEvent) {
 				if len(lines) <= 0 {
 					return
 				} else {
-					global.PortBurstTarget.Text = ""
-					global.PortBurstTarget.Refresh()
+					global.PortBurstTarget.SetText("")
 					for _, line := range lines {
 						for protocol := range common.Userdict {
 							if strings.HasPrefix(line, protocol) {

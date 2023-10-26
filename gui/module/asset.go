@@ -10,6 +10,8 @@ import (
 	"slack/plugins/hunter"
 	"slack/plugins/info"
 
+	"time"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
@@ -21,13 +23,13 @@ func AssetItem() *fyne.Container {
 	start := widget.NewButtonWithIcon("开始收集", theme.SearchIcon(), nil)
 	sr1 := widget.NewCheck("反查域名&查询全资子公司", nil)
 	sr2 := widget.NewCheck("查询HUNTER资产数量", nil)
-	sr3 := widget.NewCheck("小程序&公众号(暂未开发)", nil)
+	sr3 := widget.NewCheck("查询公众号(链接可双击打开)", nil)
 	target := widget.NewMultiLineEntry()
 	target.PlaceHolder = "ICP名称会进行模糊匹配\n目标仅支持换行分割"
 	c := container.NewAppTabs(
 		container.NewTabItem("控股企业", custom.NewTableWithUpdateHeader1(&common.HoldAsset, []float32{200, 100, 120, 380})),
 		container.NewTabItem("HUNTER资产数量(资产/1积分)", custom.NewTableWithUpdateHeader1(&common.HunterAsset, []float32{400, 200})),
-		container.NewTabItem("小程序&公众号", custom.NewTableWithUpdateHeader1(&common.WechatAsset, []float32{150, 150, 150, 100})),
+		container.NewTabItem("公众号", custom.NewTableWithUpdateHeader1(&common.WechatAsset, []float32{100, 200, 100, 100, 300})),
 	)
 	c.SetTabLocation(2)
 	start.OnTapped = func() {
@@ -64,6 +66,13 @@ func AssetItem() *fyne.Container {
 
 				custom.Console.Append(hunter.Restquota + "\n")
 			}
+			if sr3.Checked {
+				custom.Console.Append("[+] 正在进行公众号查询...\n")
+				for _, company := range targets {
+					info.WeChatOfficialAccounts(company)
+					time.Sleep(time.Second * 1)
+				}
+			}
 			custom.Console.Append("---资产收集，运行结束---\n")
 		}()
 	}
@@ -76,6 +85,6 @@ func AssetItem() *fyne.Container {
 	})
 	sbox := container.NewHSplit(container.NewBorder(container.NewBorder(nil, nil, nil, download, start), nil, nil, nil, target),
 		container.NewBorder(container.NewHBox(widget.NewLabel("查询条件:"), sr1, sr2, sr3), nil, nil, nil, custom.Frame(c)))
-	sbox.Offset = 0.3
+	sbox.Offset = 0.2
 	return container.NewBorder(nil, nil, nil, nil, sbox)
 }

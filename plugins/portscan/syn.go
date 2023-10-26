@@ -1,6 +1,7 @@
 package portscan
 
 // import (
+// 	"fmt"
 // 	"net"
 // 	"time"
 
@@ -8,10 +9,10 @@ package portscan
 // 	"github.com/google/gopacket/layers"
 // )
 
-// func TcpSYN(srcIp net.IP, srcPort int, dstIp string, dstPort int) {
+// func TcpSYN(srcIp net.IP, srcPort int, dstIp string, dstPort int) error {
 // 	dstAddrs, err := net.LookupIP(dstIp)
 // 	if err != nil {
-// 		return
+// 		return err
 // 	}
 // 	dstip := dstAddrs[0].To4()
 // 	srcip := srcIp
@@ -38,7 +39,7 @@ package portscan
 // 	}
 
 // 	if err := tcp.SetNetworkLayerForChecksum(ip); err != nil {
-// 		return
+// 		return err
 // 	}
 
 // 	buf := gopacket.NewSerializeBuffer()
@@ -48,23 +49,23 @@ package portscan
 // 	}
 
 // 	if err := gopacket.SerializeLayers(buf, opts, tcp); err != nil {
-// 		return
+// 		return err
 // 	}
 
 // 	// listen on local TCP connection
-// 	conn, err := net.ListenPacket("ip4:tcp", "0.0.0.0")
+// 	conn, err := net.ListenPacket("ip4:tcp", "0.0.0.0:1024")
 // 	if err != nil {
-// 		return
+// 		return err
 // 	}
 // 	defer conn.Close()
 
 // 	// send TCP SYN packet
 // 	if _, err := conn.WriteTo(buf.Bytes(), &net.IPAddr{IP: dstip}); err != nil {
-// 		return
+// 		return err
 // 	}
 // 	// Set deadline so we do not wait forever.
 // 	if err := conn.SetDeadline(time.Now().Add(time.Duration(10) * time.Second)); err != nil {
-// 		return
+// 		return err
 // 	}
 
 // 	for {
@@ -72,7 +73,7 @@ package portscan
 // 		// func (c *IPConn) ReadFrom(b []byte) (int, Addr, error)
 // 		n, addr, err := conn.ReadFrom(b)
 // 		if err != nil {
-// 			return
+// 			return err
 // 		} else if addr.String() == dstip.String() {
 // 			// Decode a packet
 // 			packet := gopacket.NewPacket(b[:n], layers.LayerTypeTCP, gopacket.Default)
@@ -82,10 +83,12 @@ package portscan
 
 // 				if tcp.SrcPort == dstport {
 // 					if tcp.SYN && tcp.ACK {
+// 						fmt.Println(dstPort)
+// 						return nil
 // 						//PortCheck(dstIp, dstPort,)
 // 						//return dstPort, err
 // 					} else {
-// 						return
+// 						return err
 // 					}
 // 				}
 // 			}

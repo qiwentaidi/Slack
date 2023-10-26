@@ -250,8 +250,6 @@ Finetree 5MP Network Camera:
   body: '(eassso && portalClientHelper.jsp) || easSessionId'
 金蝶政务GSiS:
   body: '/kdgs/script/kdgs.js'
-金和协同管理平台:
-  body: '金和协同管理平台'
 博达下一代防火墙:
   title: "博达下一代防火墙"
 曙光下一代防火墙:
@@ -721,8 +719,7 @@ WordPress:
   body: '(wp-admin && wp-content/) || (wp- && wp-content/themes/)'
   iconhash: '191654058'
 金和OA: 
-  body: '(Jhsoft.Web.login && PassWord.aspx) || Jinher Network || s/PasswordNew.js || js/PasswordCommon.js'
-  title: '金和协同管理平台'
+  body: '(Jhsoft.Web.login && PassWord.aspx) || Jinher Network || s/PasswordNew.js || js/PasswordCommon.js || 金和协同管理平台'
 好视通视频会议系统: 
   body: '用户登录 && resources/commonImage/favicon.ico && login/createQRCode.do'
 LANMP 默认页面: 
@@ -2981,3 +2978,16 @@ XploitSPY:
   body: "/module/system/password/forgotpassword.html || templates/index/hcmlogon.jsp"
 FUXA:
   title: "FUXA"
+蜜罐:
+  header: "img && onerror"
+联软-安全数据摆渡系统:
+  body: "UniExClient"
+联软-安全数据交换系统:
+  body: "UniExServices || <font size=6 color=red>对不起，您的请求非法，系统拒绝响应!</font>"
+安美数字酒店宽带运营系统:
+  title: "酒店宽带运营系统"
+  body: "images/login_logo.gif && www.amttgroup.com"
+契约锁电子签章平台:
+  iconhash: "738823048"
+  title: "电子签署平台"
+  header: ".qiyuesuo.com"

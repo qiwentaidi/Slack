@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/url"
 	"slack/common"
+	"slack/common/client"
 	"slack/common/logger"
-	"slack/common/proxy"
 	"slack/gui/custom"
 	"slack/gui/global"
 	"slack/gui/mytheme"
@@ -76,11 +76,15 @@ func HunterUI() *fyne.Container {
 	batchButton.OnTapped = func() {
 		var newsearch string
 		e := widget.NewMultiLineEntry()
-		e.PlaceHolder = "例如:\n192.168.10.1\n192.168.10.1-255\n192.168.0.192-192.168.0.255\n192.168.0.0/24\n192.168.0.0/255.255.255.0"
+		e.PlaceHolder = "例如:\n192.168.10.1\n192.168.10.1-255\n192.168.0.192-192.168.0.255\n192.168.0.0/24\n192.168.0.0/255.255.255.0\nbaidu.com"
 		custom.ShowCustomDialog(mytheme.HunterIcon(), "批量输入: 请输入IP/网段", "查询", e, func() {
 			if e.Text != "" {
 				for _, ip := range common.ParseTarget(e.Text, common.Mode_Other) {
-					newsearch += fmt.Sprintf(`ip="%v"||`, ip)
+					if util.RegIP.MatchString(ip) {
+						newsearch += fmt.Sprintf(`ip="%v"||`, ip)
+					} else {
+						newsearch += fmt.Sprintf(`domain.suffix="%v"||`, ip)
+					}
 				}
 				doctabs.Append(container.NewTabItem("批量查询", hs.NewSeachPage(newsearch[:len(newsearch)-2])))
 				doctabs.SelectIndex(len(doctabs.Items) - 1)
@@ -161,7 +165,7 @@ func (hs *HunterSearch) HomePage() *fyne.Container {
 	e := widget.NewEntry()
 	l := widget.NewEntry()
 	return container.NewVBox(container.NewBorder(nil, nil, widget.NewLabel("目标地址:"), &widget.Button{Text: "计算MD5", Importance: widget.WarningImportance, OnTapped: func() {
-		c := proxy.DefaultClient()
+		c := client.DefaultClient()
 		resp, err := c.Get(e.Text)
 		if err != nil {
 			logger.Info(err)

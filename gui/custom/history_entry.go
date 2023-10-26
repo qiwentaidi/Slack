@@ -28,8 +28,7 @@ func NewHistoryEntry(m string) *HistoryEntry {
 	he := &HistoryEntry{moudle: m}
 	he.PlaceHolder = "Search..."
 	he.ActionItem = widget.NewButtonWithIcon("", theme.CancelIcon(), func() {
-		he.Text = ""
-		he.Refresh()
+		he.SetText("")
 	})
 	he.ExtendBaseWidget(he)
 	return he
@@ -45,12 +44,10 @@ func (he *HistoryEntry) TappedSecondary(ev *fyne.PointEvent) {
 		}},
 		{Label: "剪切", Icon: theme.ContentCutIcon(), Action: func() {
 			clipboard.WriteAll(he.Text)
-			he.Text = ""
-			he.Refresh()
+			he.SetText("")
 		}},
 		{Label: "清空", Icon: theme.ContentClearIcon(), Action: func() {
-			he.Text = ""
-			he.Refresh()
+			he.SetText("")
 		}},
 	}}
 	if _, err := os.Stat(defaultSpaceDirectory); err != nil {

@@ -142,18 +142,12 @@ func NewImport(icon fyne.Resource, text string, num int) {
 		container.NewBorder(nil, nil, widget.NewLabel("请输入查询语句"), nil, e),
 	))
 	custom.ShowCustomDialog(icon, fmt.Sprintf("联动%v导入目标，最多导入%v条结果", text, num), "导入", c, func() {
-		global.WebScanTarget.Text = ""
 		if text == "FOFA" {
 			urls, _ := fofa.Import(e.Text, finalsize, false)
-			for _, t := range urls {
-				global.WebScanTarget.Text += t + "\n"
-			}
-			global.WebScanTarget.Refresh()
+			global.WebScanTarget.SetText(strings.Join(urls, "\n"))
 		} else {
-			for _, t := range hunter.Import(e.Text, finalsize) {
-				global.WebScanTarget.Text += t + "\n"
-			}
-			global.WebScanTarget.Refresh()
+			urls := hunter.Import(e.Text, finalsize)
+			global.WebScanTarget.SetText(strings.Join(urls, "\n"))
 		}
 	}, fyne.NewSize(400, 0))
 }
@@ -245,8 +239,7 @@ func DistributeTask() {
 				dialog.ShowError(fmt.Errorf("目标为空"), global.Win)
 				return
 			} else {
-				global.WebScanTarget.Text = ""
-				global.WebScanTarget.Refresh()
+				global.WebScanTarget.SetText("")
 				for _, line := range lines {
 					if strings.Contains(line, "http") {
 						webscan_targets = append(webscan_targets, line)

@@ -3,4 +3,4 @@
   Name = "slack"
   ID = "golang.qwtd.slack"
   Version = "1.4.3"
-  Build = 14
+  Build = 16

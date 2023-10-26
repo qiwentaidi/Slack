@@ -35,8 +35,6 @@ Resin:
   - config/afrog-pocs/CNVD/2022/CNVD-2022-60632.yaml
 畅捷CRM: 
   - config/afrog-pocs/vulnerability/chanjet-crm-get-usedspace-sql-injection.yaml
-Weaver E-Mobile:
-  - config/afrog-pocs/CNVD/2017/CNVD-2017-03561.yaml
 Ueditor:
   - config/afrog-pocs/CNVD/2017/CNVD-2017-20077.yaml
   - config/afrog-pocs/addpocs/ueditor-xss.yaml
@@ -80,6 +78,7 @@ Coremail:
   - config/afrog-pocs/vulnerability/seeyon-a6-createmysql-disclosure.yaml
   - config/afrog-pocs/vulnerability/seeyon-a6-config-disclosure.yaml
   - config/afrog-pocs/vulnerability/seeyon-resetpassword-anyuser.yaml
+  - config/afrog-pocs/addpocs/seeyon-officeservlet-database-info-leak.yaml
 Discuz: 
   - config/afrog-pocs/CNVD/2019/CNVD-2019-22239.yaml
   - config/afrog-pocs/vulnerability/discuz-v72-sqli.yaml
@@ -121,10 +120,13 @@ Weaver E-Office:
   - config/afrog-pocs/vulnerability/eoffice-v9-file-upload.yaml
   - config/afrog-pocs/addpocs/eoffice-v9-ajax-file-upload.yaml
   - config/afrog-pocs/CVE/2023/CVE-2023-2766.yaml
+  - config/afrog-pocs/vulnerability/ecology-e-office-getselectlist-crm-sqli.yaml
 Weaver E-Bridge: 
   - config/afrog-pocs/vulnerability/e-bridge-saveyzjfile-file-read.yaml
   - config/afrog-pocs/vulnerability/weaver-ebridge-file-read.yaml
-Weaver E-Mobile: 
+Weaver E-Mobile:
+  - config/afrog-pocs/CNVD/2017/CNVD-2017-03561.yaml
+  - config/afrog-pocs/vulnerability/ecology-e-office-getselectlist-crm-sqli.yaml
   - config/afrog-pocs/vulnerability/e-mobile-6.0-client-rce.yaml
 Joomla: 
   - config/afrog-pocs/CNVD/2019/CNVD-2019-34135.yaml
@@ -894,8 +896,10 @@ HUAWEI-HG532e:
   - config/afrog-pocs/default-pwd/huawei-hg532e-default-login.yaml
 Hadoop-Hue:
   - config/afrog-pocs/default-pwd/hue-default-credential.yaml
-金和协同管理平台:
+金和OA:
   - config/afrog-pocs/default-pwd/jinher-oa-default-login.yaml
+  - config/afrog-pocs/addpocs/jinher-oa-fileuploadmessage-fileread.yaml
+  - config/afrog-pocs/vulnerability/jinher-oa-c6-download-file-read.yaml
 JupyterHub: 
   - config/afrog-pocs/default-pwd/jupyterhub-default-login.yaml
 Apache Kafka:
@@ -1149,6 +1153,8 @@ Yonyou NC:
   - config/afrog-pocs/vulnerability/yonyou-nc-arbitrary-file-upload.yaml
   - config/afrog-pocs/vulnerability/yonyou-nc-accept-upload.yaml
   - config/afrog-pocs/addpocs/yongyouNc-uploadControl-uploadFile.yaml
+Yonyou-U8-Cloud:
+  - config/afrog-pocs/vulnerability/yonyou-u8-cloud-fileupload.yaml
 Yonyou-FE协作办公平台:
   - config/afrog-pocs/vulnerability/yonyou-fe-templateoftaohong-manager-path-traversal.yaml
 一米OA:
@@ -1255,7 +1261,7 @@ PowerCreator-CMS:
 小猪CMS:
   - config/afrog-pocs/vulnerability/pigcms-file-upload.yaml
 SpiderFlow:
-  - config/afrog-pocs/vulnerability/piderfow-save-rce.yaml
+  - config/afrog-pocs/vulnerability/spiderflow-save-rce.yaml
 PHPWEB:
   - config/afrog-pocs/vulnerability/phpweb-appplus-php-upload.yaml
 phpstydy: 
@@ -1337,8 +1343,6 @@ JumpServer:
   - config/afrog-pocs/CVE/2023/CVE-2023-42442.yaml
 极限OA:
   - config/afrog-pocs/vulnerability/jixian-oa-video-file-file-read.yaml
-金和OA:
-  - config/afrog-pocs/vulnerability/jinher-oa-c6-download-file-read.yaml
 APUSIC-Company Products:
   - config/afrog-pocs/vulnerability/jindie-oa-apusic-server-file-traversal.yaml
 Jeeplus:
@@ -1504,8 +1508,7 @@ KubePi:
   - config/afrog-pocs/vulnerability/esafenet-doc-management-rce.yaml
   - config/afrog-pocs/vulnerability/esafenet-uploadfilefromclientserviceforclient-fileupload.yaml
   - config/afrog-pocs/addpocs/esafenet-cdg-importfiletype-upload.yaml
-  - config/afrog-pocs/vulnerability/esafenet-update-time-sqli-1.yaml
-  - config/afrog-pocs/vulnerability/esafenet-update-time-sqli-2.yaml
+  - config/afrog-pocs/vulnerability/esafenet-update-sqli.yaml
 JAVA: 
   - config/afrog-pocs/unauthorized/javamelody-detect.yaml
 JEECMS: 
@@ -1578,8 +1581,15 @@ XploitSPY:
 Landray-EIS智慧协同平台: 
   - config/afrog-pocs/vulnerability/landary-eis-saveimg-fileupload.yaml
 宏景HCM:
-  - config/afrog-pocs/vulnerability/potentials-hjsoft-hcm-khfieldtree-sqli.yaml
+  - config/afrog-pocs/vulnerability/potential-hjsoft-hcm-khfieldtree-sqli.yaml
 FUXA:
   - config/afrog-pocs/CVE/2023/CVE-2023-33831.yaml
 Honeywell:
   - config/afrog-pocs/CVE/2023/CVE-2023-3710.yaml
+联软-安全数据交换系统:
+  - config/afrog-pocs/addpocs/leagsoft-uninxg-fileread.yaml
+安美数字酒店宽带运营系统:
+  - config/afrog-pocs/vulnerability/amtt-hiboss-language-sqli.yaml
+  - config/afrog-pocs/vulnerability/amtt-hiboss-server-ping-rce.yaml
+契约锁电子签章平台:
+  - config/afrog-pocs/addpocs/qiyuesuo-dzqz-upload.yaml

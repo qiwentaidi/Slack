@@ -3,6 +3,8 @@ package util
 import (
 	"bufio"
 	"os"
+	"os/exec"
+	"runtime"
 )
 
 func BufferWriteAppend(filename string, param string) error {
@@ -20,4 +22,18 @@ func BufferWriteAppend(filename string, param string) error {
 	buf.WriteString(param + "\n")
 	// 将缓冲中的数据写入
 	return buf.Flush()
+}
+
+func OpenFolder(path string) {
+	var command string
+	switch runtime.GOOS {
+	case "linux":
+		command = "xdg-open"
+	case "windows":
+		command = "explorer"
+	case "darwin":
+		command = "open"
+	}
+	cmd := exec.Command(command, path)
+	cmd.Start()
 }
