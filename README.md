@@ -94,42 +94,44 @@
 
 - 备忘录
 
-# 运行&中文显示问题&内存问题
+# 运行
 
-由于该程序的`UI`库采用的`fyne`底层基于`C++`如果直接运行`main.go`文件则所以需要环境中先配置好`GCC`的环境才可以正常使用，还需要存在`go`环境，**本工具不适配Win7及以下系统**
+- go version 1.18+
+- gcc
+
+**本工具不适配Windows 7及以下系统以及部分Windows Server**
 
 [详情查看]: https://github.com/fyne-io/fyne/issues/1923
 
-由于`Fyne`原生不支持中文字体的原因，所以需要引入外部字体文件解决中文乱码问题，但是直接引入完整的`Windows`字体文件要么（会导致引入中文字体后程序运行内存占用增加的问题）要么就是显示不清晰的问题，所以需要压缩`TTF(暂不支持TTC)`字体文件来到达减小程序内存占用的问题，经过测试加载中文字体内存占用增加`50MB`。
+```
+$ git clone https://github.com/qiwentaidi/Slack.git
+$ cd slack
+$ go mod tidy
+$ go run main.go
+```
 
-1、使用`python3 pip` 安装`fonttools`工具` pip install fonttools`or`python3 -m pip install fonttools`检查是否安装成功。
+# 中文显示问题&内存问题
+
+由于`Fyne`原生不支持中文字体的原因，所以需要引入外部字体文件解决中文乱码问题，但是直接引入完整的`Windows`字体文件（会导致引入中文字体后程序运行内存占用增加的问题），所以需要压缩`TTF(暂不支持TTC)`字体文件来到达减小程序内存占用的问题，经过测试加载中文字体内存占用增加`50MB`。
+
+1. `python3 -m pip install fonttools`- 安装`fonttools`工具
 
 ![image-20230525234444144](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230525234444144.png)
 
-2、选择ttf字体文件对其进行压缩（即只保留txt中的字符文件）`fonttools subset ".\Dengb.ttf" --text-file=".\汉语字典.txt" --output-file="ysfonts.ttf"`，前往`gui\mytheme\fonts`目录下将`ysfonts.tff`字体替换即可。
+2、选择ttf字体文件对其进行压缩（即只保留txt中的字符文件）`fonttools subset ".\xxx.ttf" --text-file=".\汉语字典.txt" --output-file="xxx.ttf"`，前往`gui\mytheme\fonts`目录下将字体替换，其中`bold`代表粗体，另外的是常规字体。
 
 ![image-20230525234533367](https://qwtd-image.oss-cn-hangzhou.aliyuncs.com/img/image-20230525234533367.png)
 
 # 打包
 
-使用`fyne`自带的打包模块，体积更小还能打包`logo`（`ico、png、jpg`都支持），后续可以用`upx`进行压缩体积
+使用`fyne`自带的打包模块，体积更小还能打包`logo`（`ico、png、jpg`都支持），需要存在`FyneApp.toml`文件
 
 ```
-[go>=1.16]
-go install fyne.io/fyne/v2/cmd/fyne@latest 
-[go<1.16]
-go get fyne.io/fyne/v2/cmd/fyne@latest    
+$ go install fyne.io/fyne/v2/cmd/fyne@latest
+$ fyne package -os windows(linux || darwin) 
+或者
+$ go build main.go
 ```
-
-需要存在`FyneApp.toml`文件
-
-- `windows`
-
-  `fyne package -os windows .\main.go`
-
-- 其他平台
-
-  也可以使用`fyne package`或者`go build main.go`
 
 
 # 一些模块的拓展规则
