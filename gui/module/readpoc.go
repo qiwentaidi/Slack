@@ -2,10 +2,10 @@ package module
 
 import (
 	"fmt"
-	"os"
 	"slack/common/logger"
 	"slack/gui/custom"
 	"slack/lib/poc"
+	"slack/lib/util"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -15,7 +15,6 @@ import (
 )
 
 const (
-	rulePath     = "./config/afrog-pocs/README.md"
 	pocDirectory = "./config/afrog-pocs"
 )
 
@@ -23,9 +22,7 @@ func MakeReadPocUI() *fyne.Container {
 	temp := poc.EmbedFileList
 	search := widget.NewEntry()
 	button := &widget.Button{Text: "搜索", Icon: theme.SearchIcon(), Importance: widget.HighImportance}
-	docs := container.NewDocTabs(
-		container.NewTabItemWithIcon("首页", theme.HomeIcon(), HomeRule()),
-	)
+	docs := container.NewDocTabs()
 	pocNums := custom.NewCenterLable("")
 	pocNums.SetText(fmt.Sprintf("共查询到POC数量: %v", len(temp)))
 	mode := widget.NewCheck("是否自动删除已查看标签", nil)
@@ -46,11 +43,8 @@ func MakeReadPocUI() *fyne.Container {
 		}
 		slice := strings.Split(temp[id], "\\")
 		name := strings.Split(slice[len(slice)-1:][0], ".")
-		if mode.Checked && len(docs.Items) >= 2 {
-			for i := 1; i <= len(docs.Items); { // 删除到只剩首页和另一个标签
-				if len(docs.Items) <= 1 {
-					break
-				}
+		if mode.Checked && len(docs.Items) >= 1 {
+			for i := 0; i < len(docs.Items); { // 删除到只剩首页和另一个标签
 				docs.RemoveIndex(i)
 			}
 		}
@@ -58,8 +52,6 @@ func MakeReadPocUI() *fyne.Container {
 		docs.SelectIndex(len(docs.Items) - 1)
 	}
 	button.OnTapped = func() {
-
-		//go func() {
 		temp = nil
 		if search.Text != "" {
 			for _, v := range poc.EmbedFileList {
@@ -75,21 +67,13 @@ func MakeReadPocUI() *fyne.Container {
 		}
 		pocNums.SetText(fmt.Sprintf("共查询到POC数量: %v", len(temp)))
 		list.Refresh()
-		//}()
 	}
-	hbox := container.NewHSplit(container.NewBorder(mode, pocNums, nil, nil, list), docs)
+	hbox := container.NewHSplit(container.NewBorder(mode, pocNums, nil, nil, list), container.NewBorder(nil,
+		widget.NewButtonWithIcon("打开POC文件夹", theme.FolderOpenIcon(), func() {
+			util.OpenFolder(pocDirectory)
+		}), nil, nil, docs))
 	hbox.Offset = 0.2
 	return container.NewBorder(container.NewBorder(nil, nil, nil, button, search), nil, nil, nil, hbox)
-}
-
-func HomeRule() *fyne.Container {
-	b, err := os.ReadFile(rulePath)
-	if err != nil {
-		logger.Info(err)
-	}
-	homePage := widget.NewRichTextFromMarkdown(string(b))
-	homePage.Wrapping = fyne.TextWrapBreak
-	return container.NewBorder(nil, nil, nil, nil, container.NewVScroll(homePage))
 }
 
 func DetailPage(AbsolutePath string, p poc.Poc) *fyne.Container {

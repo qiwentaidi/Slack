@@ -113,7 +113,7 @@ func DirSearchUI() *fyne.Container {
 				}
 				DirsearchProgress.SetValue(0)
 				DirsearchProgress.Max = float64(len(count))
-				MultiThread(method.Selected, t, count, common.ParsePort(codeFilter.Text), thread.Number)
+				MultiThread(method.Selected, util.RemoveIllegalChar(t), count, common.ParsePort(codeFilter.Text), thread.Number)
 			} else {
 				dialog.ShowError(fmt.Errorf("URL为空或存在错误 %v", err), global.Win)
 			}

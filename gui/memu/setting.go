@@ -7,6 +7,7 @@ import (
 	"slack/common"
 	"slack/gui/custom"
 	"slack/gui/global"
+	"slack/lib/util"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
@@ -57,10 +58,10 @@ func ConfigCenter() {
 	// SUBDOMAIN
 	var sb subdomain
 	sb.dns1 = &widget.Entry{Text: common.Profile.Subdomain.DNS1, OnChanged: func(s string) {
-		common.Profile.Subdomain.DNS1 = s
+		common.Profile.Subdomain.DNS1 = util.RemoveIllegalChar(s)
 	}}
 	sb.dns2 = &widget.Entry{Text: common.Profile.Subdomain.DNS2, OnChanged: func(s string) {
-		common.Profile.Subdomain.DNS2 = s
+		common.Profile.Subdomain.DNS2 = util.RemoveIllegalChar(s)
 	}}
 	// PORTSCAN
 	var ps portscan
@@ -95,20 +96,20 @@ func ConfigCenter() {
 	// HUNTER
 	var hu hunter
 	hu.key = &widget.Entry{Text: common.Profile.Hunter.Api, OnChanged: func(s string) {
-		common.Profile.Hunter.Api = s
+		common.Profile.Hunter.Api = util.RemoveIllegalChar(s)
 	}}
 	// FOFA
 	var fo fofa
 	fo.email = &widget.Entry{Text: common.Profile.Fofa.Email, OnChanged: func(s string) {
-		common.Profile.Fofa.Email = s
+		common.Profile.Fofa.Email = util.RemoveIllegalChar(s)
 	}}
 	fo.key = &widget.Entry{Text: common.Profile.Fofa.Api, OnChanged: func(s string) {
-		common.Profile.Fofa.Api = s
+		common.Profile.Fofa.Api = util.RemoveIllegalChar(s)
 	}}
 	// QUAKE
 	var qk quake
 	qk.key = &widget.Entry{Text: common.Profile.Quake.Api, OnChanged: func(s string) {
-		common.Profile.Quake.Api = s
+		common.Profile.Quake.Api = util.RemoveIllegalChar(s)
 	}}
 	accord := widget.NewAccordion(
 		widget.NewAccordionItem("Webscan", widget.NewForm(

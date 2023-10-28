@@ -24,13 +24,6 @@ func (sl *SuperLabel) TappedSecondary(ev *fyne.PointEvent) {
 		&fyne.MenuItem{Label: "复制", Icon: theme.ContentCopyIcon(), Action: func() {
 			clipboard.WriteAll(sl.Text)
 		}},
-		&fyne.MenuItem{Label: "查看详情", Icon: theme.ZoomInIcon(), Action: func() {
-			// if canvas.NewText(sl.Text, color.Black).MinSize().Width > sl.Size().Width-15 {
-			// 	l := widget.NewLabel(sl.Text)
-			// 	sl.p = widget.NewPopUpMenu(fyne.NewMenu("", fyne.NewMenuItem(l.Text, nil)), global.Win.Canvas())
-			// 	sl.p.ShowAtPosition(ev.AbsolutePosition)
-			// }
-		}},
 		&fyne.MenuItem{Label: "打开链接", Icon: theme.MailAttachmentIcon(), Action: func() {
 			openlink(sl.Text)
 		}},

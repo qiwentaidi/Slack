@@ -1,10 +1,11 @@
 package main
 
 import (
-	"net/http"
+	"image/color"
 
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
 )
 
 func main() {
@@ -54,7 +55,10 @@ func main() {
 	// 		breakCh <- true
 	// 	}),
 	// ))
-	r, _ := http.Get("https://img5.tianyancha.com/sogou/WeChat/798df198d994ed6500bc2d4be9c346bd.png@!watermark01")
-	w.SetContent(canvas.NewImageFromReader(r.Body, ""))
+	l := canvas.NewText("ceshi", &color.RGBA{75, 0, 130, 255})
+	l2 := canvas.NewText("ceshi", &color.RGBA{255, 140, 0, 255})
+	l3 := canvas.NewText("ceshi", &color.RGBA{200, 0, 0, 200})
+	l4 := canvas.NewText("ceshi", &color.RGBA{0, 64, 128, 255})
+	w.SetContent(container.NewHBox(l, l2, l3, l4))
 	w.ShowAndRun()
 }

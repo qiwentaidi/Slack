@@ -30,10 +30,11 @@ var (
 	count      int
 	id, num    int64
 	database   *qqwry.QQwry
+	onec       sync.Once
 )
 
 // 初始化IP纯真库
-func Init() {
+func InitQqwry() {
 	fs, err := os.OpenFile(memu.Qqwrypath, os.O_RDONLY, 0400)
 	if err != nil {
 		logger.Debug("qqwry open err:" + err.Error())
@@ -58,6 +59,7 @@ func SubdomainUI() *fyne.Container {
 	scan := &widget.Button{Text: "开始任务", OnTapped: func() {
 		progress.SetText("任务正在初始化...")
 		go func() {
+			onec.Do(InitQqwry)
 			domains := common.ParseTarget(global.SubdomainTarget.Text, common.Mode_Other)
 			subs := common.ParseFile(global.SubdomainText.Text)
 			servers := []string{common.Profile.Subdomain.DNS1 + ":53", common.Profile.Subdomain.DNS2 + ":53"}

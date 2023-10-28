@@ -102,7 +102,7 @@ func (r *Result) PrintColorResultInfoConsole(number string) {
 	if strings.ToUpper(r.PocInfo.Info.Severity) == "INFO" { // 如果poc执行到等级为INFO视为指纹，需要根据指纹再去执行POC,指纹名截取-左侧的第一个字符串
 		common.UrlFingerMap[r.Target] = append(common.UrlFingerMap[r.Target], strings.Split(r.PocInfo.Id, "-")[0])
 	}
-	common.Vulnerability = append(common.Vulnerability, common.VulnerabilityInfo{Id: fmt.Sprintf("%v", number), Name: r.PocInfo.Id, RiskLevel: r.PocInfo.Info.Severity,
+	common.Vulnerability = append(common.Vulnerability, common.VulnerabilityInfo{Id: fmt.Sprintf("%v", number), Name: r.PocInfo.Id, RiskLevel: strings.ToUpper(r.PocInfo.Info.Severity),
 		Url: r.FullTarget, TransInfo: common.TransInfo{Request: string(r.AllPocResult[0].ResultRequest.Raw), Response: r.AllPocResult[0].ReadFullResultResponseInfo()}})
 }
 

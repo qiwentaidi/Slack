@@ -28,7 +28,6 @@ func init() {
 func NewConsoleLog() *ConsoleLog {
 	cl := &ConsoleLog{}
 	cl.Wrapping = fyne.TextWrapBreak
-	cl.Text = "资产收集的运行日志以及暴破状况会在此显示"
 	cl.ExtendBaseWidget(cl)
 	return cl
 }
@@ -40,7 +39,7 @@ func (cl *ConsoleLog) Append(text string) {
 
 // 轻量日志显示，日志数量过多的话用logger写入文件
 func ConsoleWindow() {
-	ShowCustomDialog(theme.FileTextIcon(), "日志中心", "清空日志", Frame(container.NewVScroll(Console)), func() {
+	ShowCustomDialog(theme.FileTextIcon(), "日志中心(资产收集|暴破状况)", "清空日志", Frame(container.NewVScroll(Console)), func() {
 		Console.SetText("")
 	}, fyne.NewSize(500, 700))
 }

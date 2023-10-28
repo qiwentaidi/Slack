@@ -77,7 +77,7 @@ func HunterUI() *fyne.Container {
 		var newsearch string
 		e := widget.NewMultiLineEntry()
 		e.PlaceHolder = "例如:\n192.168.10.1\n192.168.10.1-255\n192.168.0.192-192.168.0.255\n192.168.0.0/24\n192.168.0.0/255.255.255.0\nbaidu.com"
-		custom.ShowCustomDialog(mytheme.HunterIcon(), "批量输入: 请输入IP/网段", "查询", e, func() {
+		custom.ShowCustomDialog(mytheme.HunterIcon(), "批量输入: 请输入IP/网段/域名", "查询", e, func() {
 			if e.Text != "" {
 				for _, ip := range common.ParseTarget(e.Text, common.Mode_Other) {
 					if util.RegIP.MatchString(ip) {
