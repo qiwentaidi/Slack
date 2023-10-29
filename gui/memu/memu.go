@@ -1,6 +1,7 @@
 package memu
 
 import (
+	"net/url"
 	"os"
 	"slack/gui/custom"
 	"slack/gui/global"
@@ -41,6 +42,10 @@ func MyMenu() *fyne.MainMenu {
 			&fyne.MenuItem{Label: "漏洞更新", Icon: theme.ViewRefreshIcon(), Action: ConfrimUpdatePoc},
 			&fyne.MenuItem{Label: "客户端更新", Icon: mytheme.UpdateIcon(), Action: func() {
 				ConfrimUpdateClient(1)
+			}},
+			&fyne.MenuItem{Label: "功能建议", Icon: mytheme.GithubIcon(), Action: func() {
+				u, _ := url.ParseRequestURI(fyne.CurrentApp().Metadata().Custom["Issues"])
+				fyne.CurrentApp().OpenURL(u)
 			}},
 		),
 		fyne.NewMenu("主题", &fyne.MenuItem{Label: "修改主题", Icon: mytheme.ThemeIcon(), Shortcut: settingsShortcut, Action: ChangeTheme}),

@@ -56,7 +56,7 @@ func (qk *QuakeSearch) HomePage() *fyne.Container {
 
 func (qk *QuakeSearch) NewSeachPage(query string) *fyne.Container {
 	data := [][]string{{"#", "URL", "IP", "端口", "协议", "标题", "域名", "中间件", "城市"}}
-	table := custom.NewTableWithUpdateHeader1(&data, []float32{50, 280, 200, 60, 100, 200, 200, 150, 100}, custom.SuperClick)
+	table := custom.NewTableWithUpdateHeader(&data, []float32{50, 280, 200, 60, 100, 200, 200, 150, 100}, custom.SuperClick)
 	usage := custom.NewCenterLable("")
 	pageNum := custom.NewNumEntry("1")
 	pageSize := &widget.Select{Options: []string{"10条/页", "20条/页", "50条/页", "100条/页"}, Alignment: fyne.TextAlignCenter, OnChanged: func(s string) {

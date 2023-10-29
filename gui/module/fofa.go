@@ -126,7 +126,7 @@ func (fs *FOFASearch) HomePage() *fyne.Container {
 
 func (fs *FOFASearch) NewSeachPage(query string) *fyne.Container {
 	data := [][]string{{"#", "URL", "标题", "IP", "端口", "域名", "协议", "地理位置", "备案号"}}
-	table := custom.NewTableWithUpdateHeader1(&data, []float32{50, 250, 200, 150, 60, 200, 70, 150, 200}, custom.SuperClick)
+	table := custom.NewTableWithUpdateHeader(&data, []float32{50, 250, 200, 150, 60, 200, 70, 150, 200}, custom.SuperClick)
 	usage := custom.NewCenterLable("")
 	pageNum := custom.NewNumEntry("1")
 

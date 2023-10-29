@@ -94,8 +94,8 @@ func SystemUI() *fyne.Container {
 			go Patch(entry.Text)
 		}
 	})
-	av := custom.NewTableWithUpdateHeader1(&AntivirusResult, []float32{300, 150, 400}, custom.SimpleClick)
-	patch := custom.NewTableWithUpdateHeader1(&AuthPatchResult, []float32{150, 170, 300, 300, 500}, custom.SimpleClick)
+	av := custom.NewTableWithUpdateHeader(&AntivirusResult, []float32{300, 150, 400}, custom.SimpleClick)
+	patch := custom.NewTableWithUpdateHeader(&AuthPatchResult, []float32{150, 170, 300, 300, 500}, custom.SimpleClick)
 	c := container.NewAppTabs(
 		container.NewTabItem("杀软识别", av),
 		container.NewTabItem("补丁检测", patch),

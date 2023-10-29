@@ -52,7 +52,7 @@ func PortBurstUI() *fyne.Container {
 	info := widget.NewButtonWithIcon("", theme.QuestionIcon(), func() {
 		custom.ShowCustomDialog(theme.InfoIcon(), "提示", "", widget.NewLabel(portburstInfo), nil, fyne.NewSize(400, 300))
 	})
-	t := custom.NewTableWithUpdateHeader1(&common.PortBurstResult, []float32{80, 270, 200, 200, 0}, custom.SuperClick)
+	t := custom.NewTableWithUpdateHeader(&common.PortBurstResult, []float32{80, 270, 200, 200, 0}, custom.SuperClick)
 	scan.OnTapped = func() {
 		hosts := common.ParseTarget(global.PortBurstTarget.Text, common.Mode_Other)
 		go func() {

@@ -22,7 +22,7 @@ const (
 )
 
 // 表格内容用superlabel，并且支持排序
-func NewTableWithUpdateHeader1(data *[][]string, width []float32, mode ClickMode) *widget.Table {
+func NewTableWithUpdateHeader(data *[][]string, width []float32, mode ClickMode) *widget.Table {
 	var sorts = make([]int, len((*data)[0]))
 	table := widget.NewTable(
 		func() (rows int, cols int) {

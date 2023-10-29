@@ -2,15 +2,19 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"runtime"
 	"runtime/debug"
 	"slack/common/logger"
+	"strings"
 	"time"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
 )
 
 const (
-	Version                = "1.4.4"
 	defaultConfigFile      = "./config/config.json"
 	defaultConfigDirectory = "./config"
 	DefaultWebTimeout      = 10
@@ -133,4 +137,33 @@ func GC() {
 		debug.FreeOSMemory()
 		time.Sleep(10 * time.Second)
 	}
+}
+
+// 如果.old文件存在则删除
+func init() {
+	const oldPocZip = "./config/afrog-pocs.zip"
+	currentMain := strings.Split(os.Args[0], "\\")
+	dir, _ := os.Getwd()
+	oldFile := fmt.Sprintf("%v\\.%v.old", dir, currentMain[len(currentMain)-1:][0])
+	if _, err := os.Stat(oldFile); err == nil {
+		if err2 := os.Remove(oldFile); err2 != nil {
+			logger.Error(err)
+		}
+	}
+	if _, err := os.Stat(oldPocZip); err == nil {
+		if err2 := os.Remove(oldFile); err2 != nil {
+			logger.Error(err)
+		}
+	}
+}
+
+func init() {
+	// 初始化元数据
+	app.SetMetadata(fyne.AppMetadata{
+		Name:    "slack",
+		Version: "1.4.5",
+		Custom: map[string]string{
+			"Issues": "https://github.com/qiwentaidi/Slack/issues/new",
+		},
+	})
 }

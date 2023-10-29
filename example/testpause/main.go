@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"slack/gui/mytheme"
 
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -10,6 +11,7 @@ import (
 
 func main() {
 	a := app.New()
+	a.Settings().SetTheme(&mytheme.MyTheme{})
 	w := a.NewWindow("test")
 	// paused := false
 	// pauseCh := make(chan bool)

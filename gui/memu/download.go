@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
-	"slack/common"
 	"slack/common/logger"
 	"slack/gui/custom"
 	"slack/gui/global"
@@ -30,11 +29,10 @@ import (
 const (
 	remoteClientVersion = "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/version"
 	updateClientContent = "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update" // 更新内容
-	// https://gitee.com/the-temperature-is-too-low/Slack/releases/download/v1.4.3/slack.exe
-	lastestClinetUrl = "https://gitee.com/the-temperature-is-too-low/Slack/releases/download/"
+	lastestClinetUrl    = "https://gitee.com/the-temperature-is-too-low/Slack/releases/download/"
 
 	localPocVersion  = "./config/afrog-pocs/version"
-	localPocDir      = "./config/afrog-pocs/"
+	localConfigDir   = "./config/"
 	remotePocVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
 	updatePocContent = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/update"
 	lastestPocUrl    = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
@@ -58,8 +56,8 @@ func CheckUpdate(removeTarget, localVersion string) (string, error) {
 		return "", err2
 	}
 	remoteVersion := string(b)
-	if remoteVersion == localVersion {
-		return "", errors.New("当前已是最新版本 " + string(b))
+	if remoteVersion <= localVersion {
+		return "", errors.New("当前已是最新版本 " + localVersion)
 	}
 	return remoteVersion, nil
 }
@@ -69,7 +67,7 @@ func ConfrimUpdateClient(numOfTimes int) {
 	if numOfTimes == 0 {
 		return
 	}
-	if version, err := CheckUpdate(remoteClientVersion, common.Version); err != nil {
+	if version, err := CheckUpdate(remoteClientVersion, fyne.CurrentApp().Metadata().Version); err != nil {
 		dialog.ShowInformation("提示", "客户端"+err.Error(), global.Win)
 	} else {
 		r, err := http.Get(updateClientContent)
@@ -173,22 +171,22 @@ func UpdatePoc(latestVersion string) error {
 	workflow := lastestPocUrl + "v" + latestVersion + "/workflow.yaml"
 	webfinger := lastestPocUrl + "v" + latestVersion + "/webfiner.yaml"
 	pocs := lastestPocUrl + "v" + latestVersion + "/afrog-pocs.zip"
-	if _, err := download(workflow, "./config/"); err != nil {
+	if _, err := download(workflow, localConfigDir); err != nil {
 		return err
 	}
-	if _, err := download(webfinger, "./config/"); err != nil {
+	if _, err := download(webfinger, localConfigDir); err != nil {
 		return err
 	}
-	fileName, err := download(pocs, "./config/")
+	fileName, err := download(pocs, localConfigDir)
 	if err != nil {
 		return err
 	}
-	if err := os.RemoveAll(localPocDir); err != nil {
+	if err := os.RemoveAll(localConfigDir + "afrog-pocs"); err != nil {
 		return err
 	}
 	time.Sleep(time.Second * 2)
 	uz := util.NewUnzip()
-	if _, err := uz.Extract("./config/"+fileName, "./config/"); err != nil {
+	if _, err := uz.Extract(localConfigDir+fileName, localConfigDir); err != nil {
 		return fmt.Errorf("afrog-poc decompression failed. %s", err.Error())
 	}
 	custom.ShowCustomDialog(theme.InfoIcon(), "提示", "重启客户端重新加载漏洞", custom.NewCenterLable("更新成功!!"), func() {
