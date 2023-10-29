@@ -52,7 +52,7 @@ func WebScanUI() *fyne.Container {
 	})
 	global.ProgerssWebscan = custom.NewCenterLable("0/0")
 	distribute := widget.NewButtonWithIcon("任务下发", theme.GridIcon(), nil)
-	table := custom.NewTableWithUpdateHeader1(&common.ScanResult, []float32{50, 300, 80, 80, 200, 400, 0})
+	table := custom.NewTableWithUpdateHeader1(&common.ScanResult, []float32{50, 300, 80, 80, 200, 400, 0}, custom.SuperClick)
 	vultable := custom.NewVulnerabilityTable(&common.Vulnerability, []float32{50, 300, 80, 620, 60})
 	keyword := widget.NewEntry()
 	pocnums := custom.NewCenterLable("查看当前条件下可用POC数量")

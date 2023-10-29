@@ -22,13 +22,13 @@ const (
 )
 
 // 表格内容用superlabel，并且支持排序
-func NewTableWithUpdateHeader1(data *[][]string, width []float32) *widget.Table {
+func NewTableWithUpdateHeader1(data *[][]string, width []float32, mode ClickMode) *widget.Table {
 	var sorts = make([]int, len((*data)[0]))
 	table := widget.NewTable(
 		func() (rows int, cols int) {
 			return len((*data)[1:]), len((*data)[0])
 		}, func() fyne.CanvasObject {
-			return NewSuperLabel("")
+			return NewSuperLabel("", mode)
 		}, func(id widget.TableCellID, o fyne.CanvasObject) {
 			if lb, ok := o.(*SuperLabel); ok {
 				lb.SetText((*data)[1:][id.Row][id.Col])
@@ -54,36 +54,11 @@ func NewTableWithUpdateHeader1(data *[][]string, width []float32) *widget.Table 
 			default:
 				b.Icon = nil
 			}
-			b.Importance = widget.MediumImportance
 			b.OnTapped = func() {
 				applySort(sorts, data, id.Col, table)
 			}
 			b.Enable()
 			b.Refresh()
-		}
-	}
-	for i, v := range width {
-		table.SetColumnWidth(i, v)
-	}
-	return table
-}
-
-// 表格内容用普通标签
-func NewTableWithUpdateHeader2(data *[][]string, width []float32) *widget.Table {
-	table := widget.NewTable(
-		func() (rows int, cols int) {
-			return len((*data)[1:]), len((*data)[0])
-		}, func() fyne.CanvasObject {
-			return NewCenterLable("")
-		}, func(id widget.TableCellID, o fyne.CanvasObject) {
-			if lb, ok := o.(*widget.Label); ok {
-				lb.SetText((*data)[1:][id.Row][id.Col])
-			}
-		})
-	table.ShowHeaderRow = true
-	table.UpdateHeader = func(id widget.TableCellID, o fyne.CanvasObject) {
-		if lb, ok := o.(*widget.Label); ok {
-			lb.SetText((*data)[0][id.Col])
 		}
 	}
 	for i, v := range width {
@@ -98,7 +73,7 @@ func NewVulnerabilityTable(data *[]common.VulnerabilityInfo, width []float32) *w
 		func() (rows int, cols int) {
 			return len((*data)), 5
 		}, func() fyne.CanvasObject {
-			return container.NewStack(NewSuperLabel(""), canvas.NewText("", color.White), &widget.Button{Icon: theme.ZoomInIcon(), Importance: widget.LowImportance})
+			return container.NewStack(NewSuperLabel("", SimpleClick), canvas.NewText("", color.White), &widget.Button{Icon: theme.ZoomInIcon(), Importance: widget.LowImportance})
 		}, func(id widget.TableCellID, o fyne.CanvasObject) {
 			l := o.(*fyne.Container).Objects[0].(*SuperLabel)
 			r := o.(*fyne.Container).Objects[1].(*canvas.Text) // canvas.Text可以设置任意字体颜色
@@ -114,8 +89,10 @@ func NewVulnerabilityTable(data *[]common.VulnerabilityInfo, width []float32) *w
 					req.Wrapping = fyne.TextWrap(fyne.TextTruncateClip)
 					resp := NewMultiLineEntryText((*data)[id.Row].Response)
 					resp.Wrapping = fyne.TextWrap(fyne.TextTruncateClip)
-					hbox := container.NewHSplit(req, resp)
-					ShowCustomDialog(mytheme.DetailIcon(), "数据包详情", "", container.NewStack(hbox), nil, fyne.NewSize(800, 800))
+					hbox := container.NewHSplit(widget.NewCard("Request", "", req), widget.NewCard("Response", "", resp))
+					ShowCustomDialog(mytheme.DetailIcon(), "数据包详情", "", container.NewStack(container.NewBorder(
+						container.NewGridWithColumns(2, NewFormItem("漏洞ID:", widget.NewLabel((*data)[id.Row].Name)),
+							NewFormItem("拓展信息:", widget.NewLabel((*data)[id.Row].TransInfo.ExtInfo))), nil, nil, nil, hbox)), nil, fyne.NewSize(800, 800))
 				}
 			} else if id.Col == 0 {
 				l.SetText((*data)[id.Row].Id)

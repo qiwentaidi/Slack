@@ -129,7 +129,7 @@ func (hs *HunterSearch) Search(query, pageSize, pageNum string, data *[][]string
 
 func (hs *HunterSearch) NewSeachPage(query string) *fyne.Container {
 	data := [][]string{{"#", "URL", "IP", "端口/服务", "域名", "应用/组件", "站点标题", "状态码", "ICP备案企业", "地理位置", "更新时间"}}
-	table := custom.NewTableWithUpdateHeader1(&data, []float32{50, 280, 120, 100, 200, 200, 200, 60, 200, 150, 150})
+	table := custom.NewTableWithUpdateHeader1(&data, []float32{50, 280, 120, 100, 200, 200, 200, 60, 200, 150, 150}, custom.SuperClick)
 	pageNum := custom.NewNumEntry("1")
 	usage := custom.NewCenterLable("")
 	pageSize := &widget.Select{Options: []string{"10条/页", "50条/页", "100条/页"}, Alignment: fyne.TextAlignCenter, OnChanged: func(s string) {

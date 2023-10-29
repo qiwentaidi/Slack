@@ -52,4 +52,5 @@ type VulnerabilityInfo struct {
 type TransInfo struct {
 	Request  string
 	Response string
+	ExtInfo  string // 拓展信息
 }

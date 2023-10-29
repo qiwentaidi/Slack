@@ -82,7 +82,7 @@ func DirSearchUI() *fyne.Container {
 		),
 	))
 
-	t := custom.NewTableWithUpdateHeader1(&DirResult, []float32{50, 70, 100, 400, 500, 0})
+	t := custom.NewTableWithUpdateHeader1(&DirResult, []float32{50, 70, 100, 400, 500, 0}, custom.SuperClick)
 	scan.OnTapped = func() {
 		go func() {
 			t, err := common.ParseURLWithoutSlash(target.Text)

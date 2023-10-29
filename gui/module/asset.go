@@ -27,9 +27,9 @@ func AssetItem() *fyne.Container {
 	target := widget.NewMultiLineEntry()
 	target.PlaceHolder = "ICP名称会进行模糊匹配\n目标仅支持换行分割"
 	c := container.NewAppTabs(
-		container.NewTabItem("控股企业", custom.NewTableWithUpdateHeader1(&common.HoldAsset, []float32{200, 100, 120, 380, 0})),
-		container.NewTabItem("HUNTER资产数量(资产/1积分)", custom.NewTableWithUpdateHeader1(&common.HunterAsset, []float32{400, 200})),
-		container.NewTabItem("公众号", custom.NewTableWithUpdateHeader1(&common.WechatAsset, []float32{100, 200, 100, 100, 300, 0})),
+		container.NewTabItem("控股企业", custom.NewTableWithUpdateHeader1(&common.HoldAsset, []float32{200, 100, 120, 380, 0}, custom.SuperClick)),
+		container.NewTabItem("HUNTER资产数量(资产/1积分)", custom.NewTableWithUpdateHeader1(&common.HunterAsset, []float32{400, 200}, custom.SimpleClick)),
+		container.NewTabItem("公众号", custom.NewTableWithUpdateHeader1(&common.WechatAsset, []float32{100, 200, 100, 100, 300, 0}, custom.SimpleClick)),
 	)
 	c.SetTabLocation(2)
 	start.OnTapped = func() {
