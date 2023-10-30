@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"slack/common/logger"
 	"slack/lib/proto"
 )
 
@@ -20,13 +21,13 @@ func Request(target, data string, variableMap map[string]any) error {
 func callFunction(name string, args []interface{}, funcMap map[string]interface{}) interface{} {
 	f, ok := funcMap[name]
 	if !ok {
-		fmt.Printf("function %s not found\n", name)
+		logger.Debug(fmt.Sprintf("function %s not found", name))
 		return nil
 	}
 
 	v := reflect.ValueOf(f)
 	if v.Kind() != reflect.Func {
-		fmt.Printf("%s is not a function\n", name)
+		logger.Debug(fmt.Sprintf("%s is not a function", name))
 		return nil
 	}
 	in := make([]reflect.Value, len(args))

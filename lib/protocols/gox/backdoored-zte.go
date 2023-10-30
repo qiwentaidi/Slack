@@ -4,7 +4,10 @@ import (
 	"fmt"
 
 	"slack/lib/protocols/netxclient"
-	"slack/lib/util"
+
+	"github.com/zan8in/pins/netx"
+
+	urlutil "github.com/zan8in/pins/url"
 )
 
 func backdoored_zte(target string, variableMap map[string]any) error {
@@ -13,7 +16,7 @@ func backdoored_zte(target string, variableMap map[string]any) error {
 	variableMap["request"] = nil
 	variableMap["response"] = nil
 
-	hostname, err := util.Hostname(target)
+	hostname, err := urlutil.Hostname(target)
 	if err != nil {
 		return err
 	}
@@ -21,7 +24,7 @@ func backdoored_zte(target string, variableMap map[string]any) error {
 
 	data, err := telnet_login(host, variableMap)
 	if err != nil {
-		host2, err := util.Host(target)
+		host2, err := urlutil.Host(target)
 		if err != nil {
 			return err
 		}
@@ -53,7 +56,7 @@ func telnet_login(host string, variableMap map[string]any) (string, error) {
 		return "", err
 	}
 
-	client, err := netxclient.NewClient(host, *nc.Config())
+	client, err := netx.NewClient(host, *nc.Config())
 	if err != nil {
 		return "", err
 	}

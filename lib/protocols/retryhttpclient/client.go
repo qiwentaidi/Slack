@@ -27,7 +27,7 @@ var (
 	RtryNoRedirectHttpClient *http.Client
 	RtryRedirectHttpClient   *http.Client
 
-	defaultTimeout = 10 * time.Second
+	defaultTimeout = 20 * time.Second
 
 	maxDefaultBody int64
 )
@@ -74,7 +74,6 @@ func Request(target string, rule poc.Rule, variableMap map[string]any) error {
 	if err != nil {
 		return err
 	}
-
 	// target
 	target = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 	if !strings.HasPrefix(rule.Request.Path, "^") {
@@ -150,6 +149,7 @@ func Request(target string, rule poc.Rule, variableMap map[string]any) error {
 		milliseconds = time.Since(start).Nanoseconds() / 1e6
 	}
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), &trace))
+
 	// http client do request
 	resp := &http.Response{}
 	if !rule.Request.FollowRedirects {
@@ -163,6 +163,7 @@ func Request(target string, rule poc.Rule, variableMap map[string]any) error {
 		}
 		return err
 	}
+
 	reader := io.LimitReader(resp.Body, maxDefaultBody)
 	respBody, err := io.ReadAll(reader)
 	if err != nil {
@@ -173,7 +174,7 @@ func Request(target string, rule poc.Rule, variableMap map[string]any) error {
 
 	// respbody gbk to utf8 encoding
 	utf8RespBody := util.Str2UTF8(string(respBody))
-	// utf8RespBody := string(respBody) // fixed issue with https://github.com/zan8in/afrog/issues/68
+	// utf8RespBody := string(respBody) // fixed issue with https://slack/lib/afrog/v2/issues/68
 
 	// store the response
 	protoResp := &proto.Response{}

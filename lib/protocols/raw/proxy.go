@@ -1,12 +1,17 @@
 package raw
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/url"
+	"os"
 	"strings"
 	"time"
+
+	fileutil "github.com/zan8in/pins/file"
 )
 
 const (
@@ -31,6 +36,7 @@ func LoadProxyServers(proxy string) error {
 	if len(proxy) == 0 {
 		return nil
 	}
+
 	if len(strings.Split(proxy, ",")) > 1 {
 		for _, proxy := range strings.Split(proxy, ",") {
 			if strings.TrimSpace(proxy) == "" {
@@ -44,6 +50,24 @@ func LoadProxyServers(proxy string) error {
 		}
 	} else if proxyURL, err := validateProxyURL(proxy); err == nil {
 		proxyURLList = append(proxyURLList, proxyURL)
+	} else if fileutil.FileExists(proxy) {
+		file, err := os.Open(proxy)
+		if err != nil {
+			return fmt.Errorf("could not open proxy file: %w", err)
+		}
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			proxy := scanner.Text()
+			if strings.TrimSpace(proxy) == "" {
+				continue
+			}
+			if proxyURL, err := validateProxyURL(proxy); err != nil {
+				return err
+			} else {
+				proxyURLList = append(proxyURLList, proxyURL)
+			}
+		}
 	} else {
 		return fmt.Errorf("invalid proxy file or URL provided for %s", proxy)
 	}
@@ -59,6 +83,9 @@ func processProxyList() error {
 		counter := 0
 
 		if len(proxyURLList) > 0 {
+			i := RandomIntWithMin(0, len(proxyURLList))
+			go runProxyConnectivity(proxyURLList[i], done, exitCounter)
+
 			for {
 				select {
 				case <-done:
@@ -80,6 +107,36 @@ func processProxyList() error {
 	return nil
 }
 
+func runProxyConnectivity(proxyURL url.URL, done chan bool, exitCounter chan bool) {
+	if err := testProxyConnection(proxyURL, DefaultTimeout); err == nil {
+		if ProxyURL == "" && ProxySocksURL == "" {
+			assignProxyURL(proxyURL)
+			done <- true
+		}
+	}
+	exitCounter <- true
+}
+
+func testProxyConnection(proxyURL url.URL, timeoutDelay int) error {
+	timeout := time.Duration(timeoutDelay) * time.Second
+	_, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", proxyURL.Hostname(), proxyURL.Port()), timeout)
+	if err != nil {
+		fmt.Println("testproxy error: ", err, proxyURL)
+		return err
+	}
+	return nil
+}
+
+func assignProxyURL(proxyURL url.URL) {
+	if proxyURL.Scheme == HTTP || proxyURL.Scheme == HTTPS {
+		ProxyURL = proxyURL.String()
+		ProxySocksURL = ""
+	} else if proxyURL.Scheme == SOCKS5 {
+		ProxyURL = ""
+		ProxySocksURL = proxyURL.String()
+	}
+}
+
 func validateProxyURL(proxy string) (url.URL, error) {
 	if url, err := url.Parse(proxy); err == nil && isSupportedProtocol(url.Scheme) {
 		return *url, nil
@@ -93,6 +150,6 @@ func isSupportedProtocol(value string) bool {
 }
 
 func RandomIntWithMin(min, max int) int {
-	rand.NewSource(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano())
 	return int(rand.Intn(max-min) + min)
 }

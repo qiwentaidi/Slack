@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"slack/lib/proto"
+
+	"github.com/zan8in/pins/netx"
 )
 
 type Config struct {
@@ -21,16 +23,16 @@ type Config struct {
 
 type NetClient struct {
 	address string
-	config  Config
-	netx    *Client
+	config  netx.Config
+	netx    *netx.Client
 }
 
-func (nc *NetClient) Config() *Config {
+func (nc *NetClient) Config() *netx.Config {
 	return &nc.config
 }
 
 func NewNetClient(address string, conf Config) (*NetClient, error) {
-	netxconf := Config{}
+	netxconf := netx.Config{}
 
 	if conf.MaxRetries != 0 {
 		netxconf.MaxRetries = conf.MaxRetries
@@ -70,7 +72,7 @@ func (nc *NetClient) Request(data, dataType string, variableMap map[string]any) 
 	}
 
 	var err error
-	nc.netx, err = NewClient(nc.address, nc.config)
+	nc.netx, err = netx.NewClient(nc.address, nc.config)
 	if err != nil {
 		return err
 	}

@@ -12,7 +12,9 @@ import (
 	"strings"
 
 	"slack/lib/protocols/netxclient"
-	"slack/lib/util"
+
+	"github.com/zan8in/pins/netx"
+	urlutil "github.com/zan8in/pins/url"
 )
 
 var (
@@ -34,7 +36,7 @@ func MS17010Scan(target string, variableMap map[string]any) error {
 	variableMap["request"] = nil
 	variableMap["response"] = nil
 
-	hostname, err := util.Hostname(target)
+	hostname, err := urlutil.Hostname(target)
 	if err != nil {
 		return err
 	}
@@ -50,7 +52,7 @@ func MS17010Scan(target string, variableMap map[string]any) error {
 		return err
 	}
 
-	client, err := netxclient.NewClient(address, *nc.Config())
+	client, err := netx.NewClient(address, *nc.Config())
 	if err != nil {
 		return err
 	}
@@ -147,6 +149,7 @@ func MS17010Scan(target string, variableMap map[string]any) error {
 		result1 := fmt.Sprintf("[+] %s\tMS17-010\t(%s)", hostname, os)
 		setResponse(result1, variableMap)
 
+		// gologger.Info().Msg(result)
 		// common.LogSuccess(result)
 		// defer func() {
 		// 	if common.SC != "" {

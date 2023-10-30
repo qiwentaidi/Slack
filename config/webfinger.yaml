@@ -1036,7 +1036,7 @@ ITC-CMS:
 Panabit-iXCache:
   body: '<title>iXCache</title>'
 Panabit-Panalog:
-  body: "id=\"codeno\" && 日志系统"
+  body: "(id=\"codeno\" && 日志系统) || Maintain/cloud_index.php"
   title: "panalog"
 Panabit智能网关: 
   title: 'panabit'
@@ -1123,7 +1123,7 @@ Natshell-router:
   body: "<h4>欢迎登录NatShell</h4"
 Richmail 邮件系统: 
   title: 'RichMail'
-  body: '0;url=/webmail/ || (richmail.config.js && login)'
+  body: '0;url=/webmail/ || (richmail.config.js && login) || "imgUrl": "/webmail" + "/common/validatecode.do"'
 智跃HR人力资源管理系统: 
   body: 'images/ZY.LOGO.64.png'
 启迪国信 UEM管理平台: 

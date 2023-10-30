@@ -37,7 +37,6 @@ Resin:
   - config/afrog-pocs/vulnerability/chanjet-crm-get-usedspace-sql-injection.yaml
 Ueditor:
   - config/afrog-pocs/CNVD/2017/CNVD-2017-20077.yaml
-  - config/afrog-pocs/addpocs/ueditor-xss.yaml
 极通EWEBS: 
   - config/afrog-pocs/CNVD/2017/CNVD-2017-26282.yaml
 FineReport-V8: 
@@ -128,6 +127,7 @@ Weaver E-Mobile:
   - config/afrog-pocs/CNVD/2017/CNVD-2017-03561.yaml
   - config/afrog-pocs/vulnerability/ecology-e-office-getselectlist-crm-sqli.yaml
   - config/afrog-pocs/vulnerability/e-mobile-6.0-client-rce.yaml
+  - config/afrog-pocs/addpocs/emobile-lang2sql-file-upload.yaml
 Joomla: 
   - config/afrog-pocs/CNVD/2019/CNVD-2019-34135.yaml
   - config/afrog-pocs/CVE/2015/CVE-2015-7297.yaml
@@ -1596,3 +1596,8 @@ Honeywell:
   - config/afrog-pocs/vulnerability/amtt-hiboss-server-ping-rce.yaml
 契约锁电子签章平台:
   - config/afrog-pocs/addpocs/qiyuesuo-dzqz-upload.yaml
+Richmail 邮件系统: 
+  - config/afrog-pocs/addpocs/richmail-infoleak.yaml
+Panabit-Panalog:
+  - config/afrog-pocs/addpocs/panabit-log-useradd.yaml
+  - config/afrog-pocs/addpocs/panabit-log-rce.yaml

@@ -166,6 +166,7 @@ github.com/gin-gonic/gin v1.4.0/go.mod h1:OW2EZn3DO8Ln9oIKOvM++LBO+5UPHJJDH72/q/
 github.com/go-check/check v0.0.0-20180628173108-788fd7840127/go.mod h1:9ES+weclKsC9YodN5RgxqK/VD9HM9JsCSh7rNhMZE98=
 github.com/go-errors/errors v1.0.1/go.mod h1:f4zRHt4oKfwPJE5k8C9vpYG+aDHdBFUsgrm6/TyX73Q=
 github.com/go-errors/errors v1.4.2 h1:J6MZopCL4uSllY1OfXM374weqZFFItUbrImctkmUxIA=
+github.com/go-errors/errors v1.4.2/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
 github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6 h1:zDw5v7qm4yH7N8C8uWd+8Ii9rROdgWxQuGoJ9WDXxfk=
 github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6/go.mod h1:9YTyiznxEY1fVinfM7RvRcjRHbw2xLBJ3AAGIT0I4Nw=
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
@@ -603,6 +604,8 @@ github.com/zan8in/fastdialer v0.0.0-20230318130117-360c8bf6e5bb h1:70NKBDzjvUbs+
 github.com/zan8in/fastdialer v0.0.0-20230318130117-360c8bf6e5bb/go.mod h1:2TapaCNt2q/KUV+WoYYlsK0QpoC8ZKFFxt6P0kfdHcs=
 github.com/zan8in/fileutil v0.0.0-20220917063910-ce47dcc0cfa9 h1:WwIlLuTbEEzJHh0ZXXrBhwALDztG1Mkvz7jfqzwuhtY=
 github.com/zan8in/fileutil v0.0.0-20220917063910-ce47dcc0cfa9/go.mod h1:IMXMxKc8XnbwVGoe2cie8JYP2rF4R6DIJh4mMniInUQ=
+github.com/zan8in/pins v0.0.0-20231009082442-920437d7fa86 h1:sAwnml3XSZlSYr0yMUvGUgtNQ1fJoU6AdwyMh1mKHwc=
+github.com/zan8in/pins v0.0.0-20231009082442-920437d7fa86/go.mod h1:S9s9dtMfihcAMCxApBB1v69hi6njQWT7FMGTI0ObaCA=
 github.com/zan8in/rawhttp v0.0.0-20230318132449-31532db674af h1:j6djL5pHc8hdPpRqqj4mSpq9NKhGmlisGbnfb80Yml8=
 github.com/zan8in/rawhttp v0.0.0-20230318132449-31532db674af/go.mod h1:7AvjxFJyo5xS0vdGrwa5iwiTYtSMj8V5HGMVTxRstoE=
 github.com/zan8in/retryabledns v0.0.0-20230317092826-5ad665eb2521 h1:NChaJHUwxfGY7OvSLDBiTnHn7FXcecsY00/xoTonlbw=
