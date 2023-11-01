@@ -82,7 +82,7 @@ func DirSearchUI() *fyne.Container {
 		),
 	))
 
-	t := custom.NewTableWithUpdateHeader(&DirResult, []float32{50, 70, 100, 400, 500, 0}, custom.SuperClick)
+	table := custom.NewTableWithUpdateHeader(&DirResult, []float32{50, 70, 100, 400, 500, 0}, custom.SuperClick)
 	scan.OnTapped = func() {
 		go func() {
 			t, err := common.ParseURLWithoutSlash(target.Text)
@@ -92,6 +92,7 @@ func DirSearchUI() *fyne.Container {
 					return
 				}
 				DirResult = DirResult[:1]
+				table.Refresh()
 				var options = []string{}
 				var count = []string{}
 				dirnum = 0
@@ -111,7 +112,8 @@ func DirSearchUI() *fyne.Container {
 				} else {
 					count = common.ParseDirectoryDict(global.DirDictText.Text, "%EXT%", options)
 				}
-				DirsearchProgress.SetValue(0)
+				id1 = 0
+				lengthNums = make(map[int]int)
 				DirsearchProgress.Max = float64(len(count))
 				MultiThread(method.Selected, util.RemoveIllegalChar(t), count, common.ParsePort(codeFilter.Text), thread.Number)
 			} else {
@@ -128,7 +130,7 @@ func DirSearchUI() *fyne.Container {
 		sl.Refresh()
 	})
 	dict := container.NewBorder(container.NewHBox(&widget.Label{Text: "内置字典(默认扫描dicc.txt)", Truncation: fyne.TextTruncateOff}, layout.NewSpacer(), open, update), nil, nil, nil, sl)
-	hbox := container.NewVSplit(container.NewBorder(rule, nil, nil, nil, container.NewBorder(nil, nil, nil, widget.NewCard("", "", dict), target)), custom.Frame(t))
+	hbox := container.NewVSplit(container.NewBorder(rule, nil, nil, nil, container.NewBorder(nil, nil, nil, widget.NewCard("", "", dict), target)), custom.Frame(table))
 	hbox.Offset = 0.3
 	return container.NewBorder(nil, DirsearchProgress, nil, nil, hbox)
 }

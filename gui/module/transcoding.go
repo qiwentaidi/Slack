@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"html"
 	"io"
 	"net/url"
 	"slack/gui/custom"
@@ -28,7 +29,7 @@ func TranscodingUI() *fyne.Container {
 	vbox := container.NewBorder(nil, container.NewBorder(nil, nil, auto, nil, container.NewGridWithColumns(2, encode, decode)), nil, nil, tobeEncry)
 	list := container.NewVBox()
 	add := widget.NewButtonWithIcon("添加规则(右键删除)", theme.ContentAddIcon(), func() {
-		list.Add(custom.NewTappedSelect([]string{"Base64", "Base64 URL", "URLcode", "Unicode", "HEX", "MD5", "Ascii", "FanruanOA", "SeeyonOA"}, list))
+		list.Add(custom.NewTappedSelect([]string{"Base64", "Base64 URL", "URLcode", "Unicode", "HEX", "HTML", "MD5", "Ascii", "FanruanOA", "SeeyonOA"}, list))
 	})
 	tobeEncry.OnChanged = func(s string) {
 		if auto.Checked {
@@ -89,6 +90,8 @@ func recursiveEncrypt(encrypt []string, input string, output *string) {
 		encrypted = temp[1 : len(temp)-1]
 	case "HEX":
 		encrypted = hex.EncodeToString([]byte(input))
+	case "HTML":
+		encrypted = html.EscapeString(input)
 	case "MD5":
 		if input != "" {
 			hash := md5.New()
@@ -129,6 +132,8 @@ func recursiveDecrypt(decrypt []string, input string, output *string) {
 	case "HEX":
 		data, _ := hex.DecodeString(input)
 		decrypted = string(data)
+	case "HTML":
+		html.UnescapeString(input)
 	case "Ascii":
 		temp := ""
 		if strings.Contains(input, " ") {
