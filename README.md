@@ -13,6 +13,16 @@
 
 由Fyne到Wails的变迁仅用了2个月的时间，后续Fyne版本将停止更新，但是仍然可以通过分支选择你想要查看的模块，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
 
+# 运行
+
+```shell
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+wails doctor // 检测是否安装成功
+
+wails dev
+```
+
 ## 渗透测试
 
 ### 网站扫描
