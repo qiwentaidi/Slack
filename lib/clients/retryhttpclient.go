@@ -1,0 +1,336 @@
+package clients
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptrace"
+	"net/url"
+	"regexp"
+	"slack-wails/core/webscan/poc"
+	"slack-wails/core/webscan/proto"
+	"slack-wails/lib/util"
+	"strings"
+	"time"
+
+	"github.com/zan8in/retryablehttp"
+	"golang.org/x/net/context"
+)
+
+var (
+	RtryRedirect   *retryablehttp.Client
+	RtryNoRedirect *retryablehttp.Client
+
+	RtryRedirectHttpClient *http.Client
+
+	defaultTimeout = 20 * time.Second
+
+	maxDefaultBody int64
+)
+
+type Options struct {
+	Proxy   string
+	Timeout int
+}
+
+func Init(opt *Options) (err error) {
+	po := &retryablehttp.DefaultPoolOptions
+	po.Proxy = opt.Proxy
+	po.Timeout = opt.Timeout
+	po.Retries = 1
+	po.DisableRedirects = true
+
+	retryablehttp.InitClientPool(po)
+	if RtryNoRedirect, err = retryablehttp.GetPool(po); err != nil {
+		return err
+	}
+
+	po.DisableRedirects = false
+	po.EnableRedirect(retryablehttp.FollowAllRedirect)
+	retryablehttp.InitClientPool(po)
+	if RtryRedirect, err = retryablehttp.GetPool(po); err != nil {
+		return err
+	}
+
+	maxDefaultBody = int64(2 * 1024 * 1024)
+
+	return nil
+}
+
+func Request(target string, rule poc.Rule, variableMap map[string]any) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	variableMap["request"] = nil
+	variableMap["response"] = nil
+
+	u, err := url.Parse(target)
+	if err != nil {
+		return err
+	}
+	// target
+	target = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+	if !strings.HasPrefix(rule.Request.Path, "^") {
+		targetfull := fulltarget(fmt.Sprintf("%s://%s", u.Scheme, u.Host), u.Path)
+		if targetfull != target {
+			target = targetfull
+		}
+	}
+	target = strings.TrimRight(target, "/")
+
+	// path
+	rule.Request.Path = setVariableMap(strings.TrimSpace(rule.Request.Path), variableMap)
+
+	newpath := rule.Request.Path
+	if strings.HasPrefix(rule.Request.Path, "^") {
+		newpath = "/" + rule.Request.Path[1:]
+	}
+
+	if !strings.HasPrefix(newpath, "/") {
+		newpath = "/" + newpath
+	}
+
+	newpath = strings.ReplaceAll(newpath, " ", "%20")
+	newpath = strings.ReplaceAll(newpath, "#", "%23")
+
+	target = target + newpath
+
+	// body
+	if strings.HasPrefix(strings.ToLower(rule.Request.Headers["Content-Type"]), "multipart/form-Data") && strings.Contains(rule.Request.Body, "\n\n") {
+		multipartBody, err := dealMultipart(rule.Request.Headers["Content-Type"], rule.Request.Body)
+		if err != nil {
+			return err
+		}
+		rule.Request.Body = setVariableMap(strings.TrimSpace(multipartBody), variableMap)
+	} else {
+		rule.Request.Body = setVariableMap(strings.TrimSpace(rule.Request.Body), variableMap)
+	}
+
+	// newhttprequest
+	req, err := retryablehttp.NewRequestWithContext(ctx, rule.Request.Method, target, nil)
+	if len(rule.Request.Body) > 0 {
+		req, err = retryablehttp.NewRequestWithContext(ctx, rule.Request.Method, target, strings.NewReader(rule.Request.Body))
+	}
+	if err != nil {
+		return err
+	}
+
+	// Tips: poc rule.request.host is changed
+	// created: 2023/07/25
+	if len(rule.Request.Host) > 0 {
+		req.Request.Host = setVariableMap(rule.Request.Host, variableMap)
+	}
+
+	for k, v := range rule.Request.Headers {
+		req.Header.Add(k, setVariableMap(v, variableMap))
+	}
+
+	if len(req.Header.Get("User-Agent")) == 0 {
+		req.Header.Add("User-Agent", util.RandomUA())
+	}
+
+	// default post content-type
+	if rule.Request.Method == http.MethodPost && len(req.Header.Get("Content-Type")) == 0 {
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	}
+
+	// latency
+	var milliseconds int64
+	start := time.Now()
+	trace := httptrace.ClientTrace{}
+	trace.GotFirstResponseByte = func() {
+		milliseconds = time.Since(start).Nanoseconds() / 1e6
+	}
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), &trace))
+
+	// http client do request
+	resp := &http.Response{}
+	if !rule.Request.FollowRedirects {
+		resp, err = RtryNoRedirect.Do(req)
+	} else {
+		resp, err = RtryRedirect.Do(req)
+	}
+	if err != nil {
+		if resp != nil {
+			resp.Body.Close()
+		}
+		return err
+	}
+
+	reader := io.LimitReader(resp.Body, maxDefaultBody)
+	respBody, err := io.ReadAll(reader)
+	if err != nil {
+		resp.Body.Close()
+		return err
+	}
+	resp.Body.Close()
+
+	// respbody gbk to utf8 encoding
+	utf8RespBody := util.Str2UTF8(string(respBody))
+
+	// store the response
+	protoResp := &proto.Response{}
+	protoResp.Status = int32(resp.StatusCode)
+	protoResp.Url = url2ProtoUrl(resp.Request.URL)
+
+	newRespHeader := make(map[string]string)
+	rawHeaderBuilder := strings.Builder{}
+	for k := range resp.Header {
+		newRespHeader[strings.ToLower(k)] = resp.Header.Get(k)
+
+		rawHeaderBuilder.WriteString(k)
+		rawHeaderBuilder.WriteString(": ")
+		rawHeaderBuilder.WriteString(resp.Header.Get(k))
+		rawHeaderBuilder.WriteString("\n")
+	}
+	protoResp.Headers = newRespHeader
+	protoResp.ContentType = resp.Header.Get("Content-Type")
+	protoResp.Body = []byte(utf8RespBody)
+	protoResp.Raw = []byte(resp.Proto + " " + resp.Status + "\n" + strings.Trim(rawHeaderBuilder.String(), "\n") + "\n\n" + utf8RespBody)
+	protoResp.RawHeader = []byte(strings.Trim(rawHeaderBuilder.String(), "\n"))
+	protoResp.Latency = milliseconds
+	variableMap["response"] = protoResp
+
+	// store the request
+	protoReq := &proto.Request{}
+	protoReq.Method = rule.Request.Method
+	protoReq.Url = url2ProtoUrl(req.URL.URL)
+
+	newReqHeader := make(map[string]string)
+	rawReqHeaderBuilder := strings.Builder{}
+	for k := range req.Header {
+		newReqHeader[k] = req.Header.Get(k)
+
+		rawReqHeaderBuilder.WriteString(k)
+		rawReqHeaderBuilder.WriteString(": ")
+		rawReqHeaderBuilder.WriteString(req.Header.Get(k))
+		rawReqHeaderBuilder.WriteString("\n")
+	}
+
+	protoReq.Headers = newReqHeader
+	protoReq.ContentType = req.Header.Get("Content-Type")
+	protoReq.Body = []byte(rule.Request.Body)
+
+	reqPath := strings.Replace(target, fmt.Sprintf("%s://%s", u.Scheme, u.Host), "", 1)
+	protoReq.Raw = []byte(req.Method + " " + reqPath + " " + req.Proto + "\n" + "Host: " + resp.Request.Host + "\n" + strings.Trim(rawReqHeaderBuilder.String(), "\n") + "\n\n" + string(rule.Request.Body))
+	protoReq.RawHeader = []byte(strings.Trim(rawReqHeaderBuilder.String(), "\n"))
+	variableMap["request"] = protoReq
+
+	// store the full target url
+	variableMap["fulltarget"] = target
+
+	return nil
+}
+
+func url2ProtoUrl(u *url.URL) *proto.UrlType {
+	return &proto.UrlType{
+		Scheme:   u.Scheme,
+		Domain:   u.Hostname(),
+		Host:     u.Host,
+		Port:     u.Port(),
+		Path:     u.EscapedPath(),
+		Query:    u.RawQuery,
+		Fragment: u.Fragment,
+	}
+}
+
+func setVariableMap(find string, variableMap map[string]any) string {
+	for k, v := range variableMap {
+		_, isMap := v.(map[string]string)
+		if isMap {
+			continue
+		}
+		newstr := fmt.Sprintf("%v", v)
+		oldstr := "{{" + k + "}}"
+		if !strings.Contains(find, oldstr) {
+			continue
+		}
+		find = strings.ReplaceAll(find, oldstr, newstr)
+	}
+	return find
+}
+
+func dealMultipart(contentType string, ruleBody string) (result string, err error) {
+	// 处理multipart的/n
+	re := regexp.MustCompile(`(?m)multipart\/form-Data; boundary=(.*)`)
+	match := re.FindStringSubmatch(contentType)
+	if len(match) != 2 {
+		return "", errors.New("no boundary in content-type")
+	}
+	boundary := "--" + match[1]
+
+	// 处理rule
+	multiPartContent := ""
+	multiFile := strings.Split(ruleBody, boundary)
+	if len(multiFile) == 0 {
+		return multiPartContent, errors.New("ruleBody.Body multi content format err")
+	}
+
+	for _, singleFile := range multiFile {
+		//	处理单个文件
+		//	文件头和文件响应
+		spliteTmp := strings.Split(singleFile, "\n\n")
+		if len(spliteTmp) == 2 {
+			fileHeader := spliteTmp[0]
+			fileBody := spliteTmp[1]
+			fileHeader = strings.Replace(fileHeader, "\n", "\r\n", -1)
+			multiPartContent += boundary + fileHeader + "\r\n\r\n" + strings.TrimRight(fileBody, "\n") + "\r\n"
+		}
+	}
+	multiPartContent += boundary + "--" + "\r\n"
+	return multiPartContent, nil
+}
+
+func fulltarget(target, path string) string {
+	if len(path) == 0 {
+		return target
+	}
+
+	i := strings.LastIndex(path, "/")
+
+	if i > 0 && strings.Contains(path, ".") {
+		target = fmt.Sprintf("%s%s", target, path[:i])
+
+	} else if !strings.Contains(path, ".") {
+
+		target = fmt.Sprintf("%s%s", target, path)
+	}
+
+	return target
+}
+
+func Url2UrlType(u *url.URL) *proto.UrlType {
+	return &proto.UrlType{
+		Scheme:   u.Scheme,
+		Domain:   u.Hostname(),
+		Host:     u.Host,
+		Port:     u.Port(),
+		Path:     u.EscapedPath(),
+		Query:    u.RawQuery,
+		Fragment: u.Fragment,
+	}
+}
+
+func ParseRequest(oReq *http.Request) (*proto.Request, error) {
+	req := &proto.Request{}
+	req.Method = oReq.Method
+	req.Url = Url2UrlType(oReq.URL)
+	header := make(map[string]string)
+	for k := range oReq.Header {
+		header[k] = oReq.Header.Get(k)
+	}
+	req.Headers = header
+	req.ContentType = oReq.Header.Get("Content-Type")
+	if oReq.Body == nil || oReq.Body == http.NoBody {
+	} else {
+		data, err := io.ReadAll(oReq.Body)
+		if err != nil {
+			return nil, err
+		}
+		req.Body = data
+		oReq.Body = io.NopCloser(bytes.NewBuffer(data))
+	}
+	return req, nil
+}

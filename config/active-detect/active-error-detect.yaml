@@ -1,0 +1,23 @@
+id: active-error-detect
+
+info:
+    name: Active Error Detect
+    author: qwtd
+    severity: info
+    verified: true
+
+rules:
+    r0:
+        request:
+            method: GET
+            path: /slack_errorpage_test
+            follow_redirects: true
+        expressions:
+           - '"thinkphp-error-page" != "" && response.status == 404 && (response.body.bcontains(b"<title>系统发生错误</title>") || response.body.bcontains(b"模块不存在"))'
+           - '"thinkphp-debug-page" != "" && response.status == 404 && response.body.bcontains(b"模块不存在") && response.body.bcontains(b"TinkPHP") && response.body.bcontains(b"LOG_PATH")'
+           - '"phpstudy-error-page" != "" && response.status == 404 && response.body.bcontains(b"www.xp.cn")'
+           - '"spring-error-page" != "" && response.status == 404 && response.body.bcontains(b"Whitelabel Error Page")'
+           - '"django-debug-page" != "" && response.status == 404 && response.body.bcontains(b"Django") && response.body.bcontains(b"DEBUG = True")'
+           - '"laravel-debug-page" != "" && response.status == 500 && ((response.body.bcontains(b"ErrorException") && response.body.bcontains(b"Laravel Client")) || response.body.bcontains(b"laravel/&shy;framework"))'
+           
+expression: r0()

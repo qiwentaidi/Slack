@@ -1,0 +1,16 @@
+id: springboot-actuator
+
+info:
+  name: Springboot Actuator Detected
+  author: qwtd
+  severity: info
+  verified: true
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /actuator
+    expression: |
+      response.status == 200 && response.body.bcontains(b'"_links":') && response.body.bcontains(b'"self":') && response.body.bcontains(b'"health"')
+expression: r0()

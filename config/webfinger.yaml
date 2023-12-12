@@ -1,0 +1,2991 @@
+# 规则 所有文本仅先按照 || 条件进行大的分割
+# 支持 (abc && 456) || 123 , 不支持(wtf || qnd) && wcao ==> 需要转换成 (wtf && wcao) || (qnd && wcao)
+登录框: 
+  body: 'login'
+致远OA: 
+  body: '/seeyon/USER-DATA/IMAGES/LOGIN/login.gif || /seeyon/common/ || /seeyon/main.do?method=main'
+  iconhash: '-187813927'
+通用企业管理软件: 
+  body: '/cwbase/web/Login.aspx'
+致远OA M3 Server: 
+  title: 'M3 Server'
+致远OA M1 Server: 
+  title: 'M1-Server'
+  iconhash: "-1214117000"
+iDS联网数字标牌管理系统: 
+  title: 'iDS联网数字标牌管理系统'
+Acrolinx-Dashboard:
+  title: "Acrolinx Dashboard"
+  body: "com.acrolinx.dashboard.Dashboard/com.acrolinx.dashboard.Dashboard.nocache.js"
+腾达路由器:
+  title: '(Tenda && LOGIN) || (Tenda && Router) || (Tenda && Login) || (Tenda && Wi-Fi)  || (Tenda && 登录) || (Tenda && Web Master)) || 腾达无线路由器'
+  iconhash: '-2145085239'
+企业微信:
+  body: 'wework_admin.normal_layout' 
+Nexus Repository Manager: 
+  title: 'Nexus Repository Manager'
+  iconhash: '1323738809 || -1546574541'
+  header: 'NX-ANTI-CSRF-TOKEN'
+Aliyun:
+  body: 'errors.aliyun.com'
+网动统一通信平台(Active UC): 
+  title: '网动统一通信平台(Active UC)'
+Zentao: 
+  title: 'Welcome to use zentao || Welcome to zentao'
+  body: 'self.location&Lw== || /theme/default/images/main/zt-logo.png'
+  header: 'zentaosid'
+快云服务器小助手: 
+  title: '快云服务器助手'
+富通天下外贸ERP: 
+  title: '用户登录_富通天下外贸ERP'
+海翔D8药业云平台: 
+  title: '登录海翔'
+Kibana: 
+  title: 'Kibana'
+  iconhash: '-267431135 || -759754862 || -1200737715 || 75230260 || 1668183286'
+永中在线编辑软件系统: 
+  body: 'Web Office && img/eio.png'
+南方数码交易一体化系统: 
+  body: '/SouthUIContent/themes/easydropdown.css'
+朗新天霁人力资源管理系统: 
+  body: 'hrsoft.com.cn && chkLogindiv && CustStyle'
+科荣 AIO 运营管理系统: 
+  body: 'style1/css/ListRange.css && 主账套 && login.jsp'
+联达动力医院综合办公管理系统: 
+  body: 'login.aspx?Method=AJAX && UserName= && Login_Return_XML.aspx'
+中农信达三资云平台: 
+  body: '技术支持：北京中农信达信息技术有限公司'
+电子申请客户端管理系统(EAC): 
+  body: 'script/css/gwssi.css'
+青纺联物联查询平台: 
+  body: '青纺联物联查询平台 && Themes/default/login.css'
+致梦科技-管家婆物联通: 
+  body: 'HtmlPages/Vue/vue.js && GetLoginValidate'
+广联达 Glodon: 
+  body: '/ConsoleCommon/Content/weebox.css && 广联达'
+任我行 CRM: 
+  body: '/Handlers/IdentifyingCode.ashx'
+FLIR-FLIR-AX8:
+  title: "FLIR AX8"
+广联达OA:
+  body: "/Services/Identification/"
+广联达 广讯通: 
+  body: 'gtp.standard && JS/gxtAutoLogin.js'
+智能表综合管理系统: 
+  body: 'js/jsCore.js && Ajax_Code/Login.ashx && login.css'
+科德电子智慧水务平台: 
+  body: '山东科德电子有限公司 && J_LoginSub'
+秦川燃气综合管理系统: 
+  body: '系统登录 && res/icon/key.png && login'
+东胜物流软件: 
+  body: 'js/dhtmlxcombo_whp.js && login.aspx'
+Pantek-Smart Router:
+  body: 'alt="歡迎使用智慧路由器"'
+汉王人脸考勤管理系统:
+  body: '/HWface/script/LoginCheck.js || 汉王人脸考勤管理系统'
+九思 OA 协同办公系统: 
+  body: '/jsoa/login.jsp'
+润申信息企业标准化管理系统: 
+  body: '润申信息 && 企业标准化管理系统 && loginForm'
+银达汇智智慧综合管理平台: 
+  body: '福州银达云创信息科技有限公司 && miniui/crypto/CodeManage.js'
+  iconhash: '1170487960'
+同鑫T9eHR信息化管理系统: 
+  body: 'T9eHR-iconfont && Authentication/Login'
+NortekControlLineareMerge: 
+  body: 'img/emerge.ico && login_pw'
+顶讯科技-易宝OA系统: 
+  title: '欢迎登录易宝OA系统'
+惠商+管理系统: 
+  title: '惠商+管理系统'
+红帆-ioffice OA: 
+  title: 'iOffice.net'
+管家婆全渠道业务同步中心: 
+  title: '管家婆全渠道业务同步中心'
+Spring env: 
+  body: 'servletContextInitParams || logback'
+微三云管理系统: 
+  body: 'WSY_logo && 管理系统 MANAGEMENT SYSTEM'
+日志易: 
+  body: 'auth/passwordReset && yw-login- && yw-login-logo'
+思迪数据池管理平台: 
+  body: 'Ajax/Login && 思迪 && canvas'
+科迈 RAS: 
+  body: '科迈RAS && CmxGoUrl.php'
+Weblogic: 
+  body: 'Error 404--Not Found || Error 403-- || /console/framework/skins/wlsconsole/images/login_WebLogic_branding.png || Welcome to Weblogic Application Server || <i>Hypertext Transfer Protocol -- HTTP/1.1</i>'
+TWCMS: 
+  body: 'href="/twcms/theme/default/css/global.css'
+天融信VPN设备: 
+  header: 'topsecsvportalname'
+Oracle-FatWire-Content-Server:
+  header: "FutureTenseContentServer"
+PbootCMS: 
+  header: 'PbootSystem || PbootCMS'
+LIN-CMS:
+  title: "lin-cms"
+启明某VPN设备: 
+  body: 'cover_admin.css && SSLVPN LOGIN'
+天玥运维安全网关: 
+  body: 'css/fw/full.css && js/p/login.js'
+  title: '天玥运维安全网关'
+H2-Console:
+  title: "H2 Console"
+CT-CMS:
+  body: '([InternetShortcut] && IDList=) || www.ctcms.cn || 缺少模板文件：index.html'
+TP-LINK 产品: 
+  header: 'TP-LINK'
+Influxdb: 
+  header: 'X-Influxdb'
+CaseManager: 
+  title: 'CaseManager'
+微宏 OA: 
+  body: 'wh/servlet/MainServer'
+Shiro: 
+  header: 'rememberMe= || =deleteMe'
+  title: 'Apache Shiro Quickstart'
+Dreamer CMS: 
+  header: 'dreamer-'
+  iconhash: '-748565678'
+重庆佰鼎-佰鼎OA: 
+  body: 'default.aspx && Style/Style.css && Skin2017 && TxtUserPwd'
+Swagger UI: 
+  body: 'Swagger UI'
+Ruijie: 
+  body: '4008 111 000'
+  iconhash: '-692947551'
+紫光档案管理系统:
+  title: "紫光档案管理系统"
+Ivanti-Landesk Cloud Service:
+  body: 'LANDESK && Cloud Services Appliance'
+Huawei SMC: 
+  body: 'Script/SmcScript.js?version='
+H3C Router: 
+  body: '/wnm/ssl/web/frame/login.html'
+Chamilo:
+  body: "Chamilo"
+  header: "Chamilo"
+H3C HCI Manager:
+  body: '/uis/spring_check?'
+H3C IMC: 
+  body: '/imc/login.jsf?'
+Cisco SSLVPN: 
+  body: '/+CSCOE+/logon.html'
+Cisco产品: 
+  iconhash: '163842882 || 804949239 || -646322113 || -299287097'
+GilaCMS:
+  body: '(Homepage && Gila CMS) || <meta name="generator" content="Gila CMS">'
+通达OA: 
+  body: '/images/tongda.ico || Office Anywhere || (通达OA && login)'
+  iconhash: '-759108386'
+深信服 waf: 
+  body: 'rsa.js && commonFunction.js'
+深信服防火墙数据中心: 
+  body: 'Redirect to... && /LogInOut.php'
+深信服一体化网关 MIG: 
+  body: 'cgi-bin/login.cgi && /html/wz_tooltip.js'
+天融信防火墙: 
+  body: 'TOPSEC && image/aaa.png && username'
+天融信TopAPP负载均衡系统: 
+  body: 'TopAPP负载均衡系统 && 天融信'
+网御 vpn: 
+  body: '/vpn/common/js/leadsec.js && /vpn/user/common/custom/auth_home.css'
+ThinkCMF:
+  iconhash: '-1395507748 || -495975421'
+  header: 'ThinkCMF'
+  body: "Made by <a href=\"http://www.thinkcmf.com\" target=\"_blank\">ThinkCMF</a> || content=\"ThinkCMF"
+ThinkAdmin:
+  title: "ThinkAdmin"
+  body: "(think\\\\admin\\\\service\\\\SystemService && 系统登录 ·) || (/static/plugs && 系统登录 ·)" 
+天问物业ERP:
+  body: "天问物业ERP系统"
+天融信上网行为管理: 
+  body: '/images/login_bg.jpg && action="login_commit.php"'
+Tpshop:
+  body: '/index.php/Mobile/Index/index.html || (Public/js/jqueryUrlGet.js && /index.php)'
+  iconhash: "-173765955"
+拓尔思-MAS:
+  iconhash: "1402419986"
+  body: '// 兼容IE6：1)修复PNG;  2)属性选择器'
+Typecho: 
+  body: 'typecho && usr/themes'
+唯德科创 IPEasy 知易通: 
+  title: '_IPEasy知易通'
+TensorBoard:
+  title: 'TensorBoard'
+Apache Spark:
+  body: "url=servlet/hype"
+  iconhash: "856048515"
+  title: "Spark Master at"
+Apache Cocoon:
+  header: "x-cocoon-version"
+Apache Airflow: 
+  title: 'Airflow - Login'
+Apache storm: 
+  title: 'Storm UI'
+启明星辰-天清汉马USG防火墙: 
+  body: '/cgi-bin/webui?op=get_product_model || 天清汉马USG || Venusense FW'
+  title: '启明星辰 安全系统 || Venusense USG'
+启明星辰-天玥网络安全审计:
+  title: '天玥 || 网御网络审计系统'
+  body: '<a href=\"../client/Site-downloadRunTimeDetector'
+启明星辰-4A统一安全管控平台:
+  body: 'cas/css/ace-part2.min.css'
+飞鱼星上网行为管理: 
+  body: 'css/R1Login.css && share.ti_username && login_logo'
+Finetree 5MP Network Camera: 
+  title: '5MP Network Camera'
+原创先锋后台管理系统:
+  body: "https://www.bjycxf.com"
+群晖 NAS: 
+  body: '(Synology && webman/) || (DiskStation && webman/modules && NAS)'
+金蝶云星空: 
+  body: 'HTML5/content/themes/kdcss.min.css || /ClientBin/Kingdee.BOS.XPF.App.xap'
+  title: "金蝶云星空"
+新开普:
+  title: 'Login - Davinci'
+金蝶云星空-Silverlight: 
+  body: '/K3Cloud/Silverlight/'
+金蝶 EAS: 
+  body: '(eassso && portalClientHelper.jsp) || easSessionId'
+金蝶政务GSiS:
+  body: '/kdgs/script/kdgs.js'
+博达下一代防火墙:
+  title: "博达下一代防火墙"
+曙光下一代防火墙:
+  body: '曙光下一代防火墙 && /login.html'
+Saber企业级开发平台:
+  title: "Saber企业级开发平台"
+  body: "<strong>很抱歉，如果没有 JavaScript 支持，Saber 将不能正常工作"
+Supervisor: 
+  body: "images/supervisor.gif"
+  title: "Supervisor Status"
+Zeroshell-Firewall:
+  title: "ZeroShell"
+ARL-资产灯塔系统:
+  title: "资产灯塔系统"
+  iconhash: "1708240621"
+PulseSecure-SSL-VPN:
+  body: '<b>Pulse Connect Secure</b>'
+Mongo-Express:
+  title: "Mongo Express"
+  header: 'X-Powered-By:Express'
+nginxWebUI:
+  title: "nginxWebUI"
+YouPHPTube:
+  title: "YouPHPTube Encoder"
+  body: "view/js/seetalert && YouPHPTube"
+Dapr-Dashboard:
+  title: "Dapr Dashboard"
+Zimbra:
+  header: "zm_test="
+  body: 'window._zimbraMail || content="Zimbra'
+  title: 'Zimbra 网络客户端登录'
+Atlassian: 
+  iconhash: '628535358 || 705143395 || 743365239'
+Atlassian-Crowd:
+  title: "Atlassian Crowd"
+  iconhash: "-1231308448"
+Atlassian-Bamboo:
+  body: '(window.BAMBOO && docs.atlassian.com) || (content="Bamboo" && docs.atlassian.com)'
+  title: 'Atlassian Bamboo || Bamboo || Build dashboard'
+  iconhash: '-1379982221'
+Atlassian-JIRA: 
+  iconhash: '981867722 || -1581907337 || 552727997 || 855273746'
+  body: 'jira.webresources && com.atlassian.plugins'
+Atlassian-Confluence: 
+  iconhash: '-305179312 || -1642532491'
+  body: 'confluence-base-url && com-atlassian-confluence'
+  title: "Atlassian Confluence"
+青藤云安全-云平台: 
+  body: 'content="云安全,安全一体化平台" && /main.html'
+紫光华智-视频监控:
+  body: 'var g_plugindownloadurl && /video-player/unisinsight.msi && loginWithNewPwd'
+火绒安全-终端安全控制中心:
+  title: "火绒终端安全控制中心"
+LEANOTE-蚂蚁笔记:
+  body: "name=\"author\" content=\"leanote,蚂蚁笔记\""
+jQuery:
+  body: "jquery"
+Nginx:
+  title: "Welcome to nginx!"
+  header: 'Server:nginx'
+CoreMail: 
+  body: 'coremail/common || coremail/index.jsp'
+  title: 'Coremail邮件系统 || Coremail 电子邮局'
+Jboss: 
+  body: 'jboss.css'
+  iconhash: '-656811182 || 937999361'
+Gitlab: 
+  body: 'assets/gitlab_logo'
+  iconhash: '1278323681 || 516963061'
+Gogs:
+  header: i_like_gogs
+Gitea:
+  header: i_like_gitea
+  iconhash: '1969970750'
+ElasticSearch: 
+  body: 'You Know, for Search && version'
+  iconhash: '1611729805'
+FRP-Web:
+  title: "frps dashboard"
+宝塔-BT.cn: 
+  body: '入口校验失败 || (没有找到站点 && 可能原因 && CDN产品 && Web服务 && 检查端口是否正确) || (<title>恭喜，站点创建成功 && 面板系统后台 && 系统自动生成) || (扫码登录更安全 && bt.cn && /login) || (站点创建成功 && bt.cn) || (站点创建成功 && 宝塔) || 宝塔Linux面板'
+  iconhash: '-386189083'
+DouPHP: 
+  body: 'Powered by DouPHP && DouPHP && theme'
+SQLiteManager:
+  title: "SQLiteManager"
+PHP-CGI:
+  header: "PHP-CGI"
+西迪特-Wi-Fi-Web管理:
+  title: "Wi-Fi Web管理"
+YCCMS:
+  title: 'YCCMS-后台管理'
+  body: '/admins/Login/checkLogin.html'
+XDCMS:
+  body: 'xdcms/css'
+WiseGiga:
+  body: "wisemail"
+  iconhash: "-1894250621"
+# 东菀市智跃科技软件有限公司 ZY-889 人脸机
+WEBSERVICE:
+  body: 'script/importres.js?v='
+惠尔顿-e地通VPN:
+  title: 'e地通Socks5 VPN登录系统'
+惠尔顿-网络安全审计:
+  body: '惠尔顿网络安全审计V'
+Western_Digital-MyBook:
+  body: "src=\"/img/headernav_separator.gif\""
+WUZHI-CMS:
+  body: 'content="wuzhicms'
+一米OA:
+  title: "一米OA"
+  body: '(yimioa.apk && isSavePwd:) || /yimioa.apk'
+Adobe-ColdFusion:
+  body: '/cfajax/ || ColdFusion.Ajax || body="<cfscript> || ColdFusion documentation'
+  header: "CFTOKEN"
+Yonyou: 
+  body: 'UFIDA Software CO.LTD all rights reserved'
+Yonyou-FE协作办公平台:
+  title: "FE协作"
+  body: "V_show && V_hedden"
+Yonyou NC Cloud: 
+  body: 'platform/pub/welcome.do'
+Yonyou NC: 
+  body: '(uclient.yonyou.com && UClient) || (logo/images/ufida_nc.png && 用友NC) || url=nccloud'
+Yonyou ERP: 
+  body: 'login_main_bg || login_owner || /nc/servlet/nc.ui.iufo.login.index'
+Yonyou-GRP-U8: 
+  body: 'window.location.replace("login.jsp?up=1") || getFirstU8Accid'
+Yonyou-U8-CRM:
+  body: "用友U8CRM"
+Yonyou-IntelligentPlant: 
+  body: '/modules/core/client/views/sidemenu.client.view.html'
+Yonyou-KSOA:
+  body: 'onmouseout="this.classname='
+Yonyou-U8-Cloud:
+  body: '开启u8 cloud云端之旅'
+Yonyou-Uclient:
+  body: 'http-equiv=refresh content=0;url=index.jsp'
+Yonyou-TurboCRM:
+  body: 'turboui.js'
+Yonyou-UFIDA:
+  body: '/system/login/login.asp?appid='
+Youyou-移动管理系统:
+  body: '/mobsm/login/home && /mobsm/html/index.jsp && 移动系统管理'
+Django:
+  title: 'The install worked successfully! Congratulations!'
+  header: 'Django'
+泰合信息安全运营中心系统-日志审计:
+  title: '泰合信息安全运营中心系统-日志审计 - 登录'
+RabbitMQ: 
+  body: '<title>RabbitMQ Management</title>'
+  iconhash: '1064742722'
+RAINLOOP-WebMail:
+  header: "Server:RainLoop"
+Zabbix: 
+  body: 'zabbix && Zabbix SIA'
+  iconhash: '892542951'
+联软准入: 
+  body: '网络准入 && leagsoft && redirect'
+列目录: 
+  body: 'Index of / || - /</title> || Directory listing for /'
+浪潮 ClusterEngineV4.0:
+  body: '0;url=module/login/login.html || (img/inspur_logo.png && Management System)'
+RegentApi_v2.0: 
+  body: 'RegentApi_v2.0'
+Apache Tomcat: 
+  body: '(/manager/status && /manager/html) || href="tomcat.css || tomcat.apache.org || This is the default Tomcat home page || <h3>Apache Tomcat'
+  iconhash: '-297069493'
+  header: 'Apache-Coyote || tomcat'
+  title: 'Apache Tomcat/ || Error report'
+Apache Solr:
+  title: "Solr Admin"
+  body: "SolrCore Initialization Failures || app_config.solr_path"
+Discuz!: 
+  body: 'Discuz! && Comsenz && cache/'
+  iconhash: '-505448917'
+深信服WEB防篡改管理系统: 
+  body: 'WEB防篡改 && cgi-bin/tamper_admin.cgi'
+YApi 可视化接口管理平台: 
+  body: 'YApi && id="yapi" && prd && 可视化接口管理平台'
+WeiPHP: 
+  body: 'weiphp.css && weiphp && Public/static'
+Apache Mod_jk:
+  header: 'mod_jk/'
+Devaldi-FlexPaper:
+  body: 'Login to the FlexPaper Console && href="http://flexpaper.devaldi.com/plugins.htm'
+PHP-810-dev:
+  header: 'PHP/8.1.0-dev'
+小米路由器:
+  title: "小米路由器"
+  header: 'Tx-Server:MiXr || realm="MI- || MI-Router || MI-Routers || MiRouter3 || MIRouter'
+  body: "url=/cgi-bin/luci/web || MiRouter-Router-2</a>"
+  iconhash: "-1472951746"
+Nagios XI: 
+  body: 'Nagios XI && nagiosxi && Nagios'
+山石网科 防火墙: 
+  body: 'Hillstone && licenseAggrement && GLOBAL_CONFIG.js'
+360天堤新一代智慧防火墙: 
+  body: '360天堤 && 360 && 360防火墙'
+360网神防火墙系统: 
+  body: 'resources/image/logo_header.png && 360 && 网神防火墙系统'
+网神SecGate 3600防火墙: 
+  body: '网神SecGate && 3600防火墙 && css/lsec/login.css'
+SeaCMS:
+  body: "seacms_path"
+Apache CouchDB:
+  header: "CouchDB"
+  body: '("couchdb":"Welcome" && version) || "couchdb":"welcome"'
+Next.js: 
+  header: "Next.js"
+  body: '<a href="https://nextjs.org/ || /_next/static'
+蓝盾防火墙: 
+  body: '蓝盾 && Bluedon && default/js/act/login.js'
+LanProxy: 
+  body: 'LanProxy && password && lanproxy-config'
+ManageEngine ADManager Plus: 
+  body: 'ADManager && Hashtable.js && ManageEngine'
+phpshe 商城系统: 
+  body: 'Powered by phpshe && include/js/global.js'
+74CMS: 
+  body: '74cms && qscms.root && index.php'
+Apache2 Debian 默认页: 
+  body: 'Apache2 Debian Default && It works! && Debian Logo'
+Grafana: 
+  body: '(Grafana && login && grafana-app) || <title>Grafana</title>'
+Alibaba-Canal: 
+  title: 'Canal Admin'
+kkFileView:
+  title: "kkFileView演示首页"
+  body: 'https://github.com/kekingcn/kkFileView'
+IBOS酷办公OA系统: 
+  body: 'IBOS && login-panel && loginsubmit'
+中新金盾信息安全管理系统: 
+  body: '中新金盾信息安全管理系统 && login && useusbkey'
+RhaPHP:
+  title: 'RhaPHP系统安装'
+VMware vCenter: 
+  body: 'VMware && ID_VISDK && download'
+AWS S3 Bucket: 
+  body: 'InvalidBucketName && aliyuncs'
+网心云设备: 
+  body: '网心云设备 && favicon.png'
+ZZZCMS:
+  body: "href=\"/?brandlist/zzzcms || .banner .in_business ul li dd"
+  title: "zzzcms网站管理系统zzzcms.com || 开源免费建站系统zzzcms.com"
+ZZCMS:
+  title: "zzcms-"
+  body: "(/zx/search.php && t=Math.random()) || (/inc/showuserlogin.php?style=H && t=Math.random())"
+ZCMS:
+  body: "_ZCMS_ShowNewMessage || zcms_skin || app=ZCMS"
+  title: "ZCMS泽元内容管理"
+SangFor-行为感知系统/日志中心:
+  body: 'isHighPerformance : !!SFIsHighPerformance,'
+Sangfor NGAF: 
+  body: 'LogInOut.php?type=logout && 欢迎登录'
+Sangfor: 
+  iconhash: '-1926484046 || 123821839'
+Sangfor SSLVPN: 
+  body: '/por/login_psw.csp || loginPageSP/loginPrivacy.js'
+SangFor-tampermatch system:
+  title: "防火墙WEB防篡改管理系统"
+  body: '<li style="color:#999999;margin-left:6px;list-style:circle inside;">如忘记密码，请与防火墙管理员联系</li> || href="tamper/style/control.css'
+SANGFOR-运维安全管理系统:
+  body: 'window.location.href="https://"+window.location.host+"/fort/login"'
+# 应用交付管理系统
+SANGFOR-AD:
+  body: '/report/report.php?cls_mode=cluster_mode_hp_clu || default_target="/cgi-bin/login.cgi?action=log&fro=self || /reportCenter/index.php?cls_mode=cluster_mode_others'
+  iconhash: '-1810847295'
+Sangfor-Data Center:
+  body: "acloglogin.php"
+  title: "SANGFOR 数据中心"
+  header: 'Location:./src/acloglogin.php'
+SangFor-behavior perception system:
+  body: "haovuytkjlnvxpuhsecmbljplpvjz = function(str, key) "
+SANGFOR-M5100:
+  body: "value=\"M5100-Q-4.0"
+SANGFOR-P5100:
+  body: '<font color="white">深信服科技版权所有 && P5100'
+SANGFOR-M5X00:
+  body: "M5X00-Sinfor--SG"
+SANGFOR-M5000-AC:
+  body: "value=\"M5000-AC"
+SANGFOR-M5500:
+  body: 'value="M5500-SC || value="M5500-Q"'
+SangFor-SG上网优化管理系统:
+  title: "SANGFOR上网优化管理"
+  body: 'utccjfaewjb = function(str, key) || document.write(WRFWWCSFBXMIGKRKHXFJ'
+SANGFOR-集中管理系统:
+  body: "/cgi-bin/login.cgi?requestname= || 对不起，集中管理平台暂不支持您当前使用的浏览器"
+SangFor-Internet Behavior Management System:
+  body: '(content="must-revalidate" && function(str, key)) || (Internet Authentication System && 上网认证系统)'
+  title: "SANGFOR上网行为管理"
+SangFor-Virtualization Management Platform:
+  body: 'content="webkit && ie-stand && id="privacyTipWin"'
+SangFor-Application Performance Management:
+  title: "Sangfor APM"
+  body: "help=\"版本信息:<br/>APM-"
+Sangfor-IPSec-VPN:
+  title: "Sangfor-IPSec"
+SangFor-EDR:
+  body: 'dataLayer && GTM-TL7G2LW'
+SANGFOR-S5100:
+  body: "id=\"ver_title\">S5100"
+SangFor-Next Generation Firewall Data Center:
+  body: 'window.open("/LogInOut.php" && _top'
+SANGFOR-WOC-Report-Center:
+  title: "Sangfor WOC Report Center"
+  header: 'Set-Cookie:sf_session=a%3A5%'
+Tianxin SCADA System:
+  title: "天信SCADA系统-登录"
+IBM HTTP Server: 
+  body: 'IBM HTTP Server && Support'
+nps: 
+  body: 'nps && ehang && login'
+Harbor: 
+  body: "harbor.app"
+  title: "Harbor"
+Nostromo:
+  header: 'nostromo'
+vBulletin:
+  title: "Powered by vBulletin"
+  body: 'content="vBulletin || (Powered by vBulletin && trade) || Powered by < a href="https://www.vbulletin.com"'
+  header: "bbsessionhash && bblastvisit"
+rConfig:
+  title: "rConfig - Configuration Management"
+  iconhash: "-1599141080"
+Webmin: 
+  body: 'Webmin && session_login'
+  iconhash: '-1038557304 || 1280907310 || 1453890729 || 479413330'
+Node-RED:
+  title: "Node-RED"
+  iconhash: '321591353'
+E-Learning:
+  body: "method=\"post\" action=\"/eln3_asp/login.do"
+群晖 DiskStation: 
+  body: 'DiskStation && 文件服务器 && modules'
+蜂网企业流控云路由器: 
+  body: 'ifw8 && 企业级流控云路由器 && login'
+网御 安全网关: 
+  body: '安全系统 && 网御星云 && login'
+Citrix-NetScaler-Gateway: 
+  body: 'Citrix Access Gateway && login'
+Citrix-虚拟桌面: 
+  iconhash: '-1272756243'
+Citrix-XCP:
+  body: "<p/>Citrix Systems, Inc. XCP 1.6.10"
+Citrix-XenServer:
+  body: 'Citrix Systems, Inc. XenServer || <a href="XenCenterSetup.exe">XenCenter installer</a> || (Welcome to Citrix Hypervisor && XenCenter)'
+  title: 'XenServer'
+Citrix-ConfProxy:
+  header: "confproxy"
+Citrix-Endpoint-Management:
+  title: "Endpoint Management - Console - Logon"
+  body: '<div class="info_text_cloud text hide">You have to first configure Endpoint Management</div>'
+Citrix-ADC:
+  title: "Citrix Login || Citrix ADC"
+Citrix-XenMobile:
+  title: "XenMobile"
+Citrix-ShareFile:
+  title: "Citrix ShareFile"
+深信服安全感知平台: 
+  body: '安全感知平台 && login.js && apps'
+Apache2 Ubuntu 默认页: 
+  body: 'Apache2 Ubuntu Default Page && ubuntu-logo.png'
+CAS 单点登录: 
+  body: 'Central Authentication Service && cas/login'
+noVNC: 
+  body: 'noVNC && <span>no</span> && host'
+  title: 'noVNC'
+MessageSolution Enterprise Email Archiving (EEA): 
+  body: 'MessageSolution && index.jsp'
+阿里巴巴otter manager: 
+  body: 'Otter Manager && channelList'
+VMware vRealize Operations Manager: 
+  body: 'vRealize && VMware && Identity Manager'
+H3C-ER3200 路由器: 
+  body: 'ER3200 && home.asp && h3c.com'
+安恒云堡垒机: 
+  body: 'DBAPPSecurity && 安恒云堡垒机'
+安恒明御安全网关: 
+  title: '明御安全网关'
+安恒明御运维审计与风险控制系统:
+  title: "明御运维审计"
+  body: "明御 && 运维审计与风险控制系统"
+安恒明御WEB应用防火墙:
+  title: "明御WEB应用防火墙"
+  body: "<img id=\"company_logo\" src=\"images/waf.company.png"
+安恒数据大脑API网关: 
+  body: 'mssp-fe && /static/imgs/logo.png'
+GlassFish: 
+  header: 'GlassFish Server Open Source Edition'
+  title: 'GlassFish Server - Server Running'
+CouchCMS:
+  body: "Page generated by CouchCMS - Simple Open-Source Content Management"
+uWSGI:
+  header: "uwsgi"
+Apache OFBiz:
+  body: "www.ofbiz.org && /images/ofbiz_powered.gif"
+Ruby: 
+  body: 'src="/assets/ && name="csrf-param && content="authenticity_token'
+  header: "Rails_env || Rubyversion || ruby || WEBrick || Phusion || Mongrel || X-Rack-Cache"
+RAILS-Framework:
+  title: "Ruby on Rails"
+  body: 'Ruby on Rails || (/users/sign_in && type="hidden && name="authenticity_token && href="/assets/)'
+ThinkPHP: 
+  body: '(<h1>无法加载模块 && ThinkPHP) || (ThinkPHP && TRACE)'
+  header: 'ThinkPHP'
+  iconhash: '1165838194'
+DedeCMS:
+  body: '(Power by && DedeCms) || http://www.dedecms.com/ || /templets/default/style/dedecms.css || <div><h3>DedeCMS Error Warning!</h3>'
+协众OA: 
+  body: 'scripts/cnoa.extra.js || Powered by 协众OA'
+  iconhash: '-1466673461'
+  header: 'CNOAOASESSID'
+FastAdmin 框架: 
+  body: '(assets/img/favicon.ico && bootstrap.min.css && navbar-toggle) || (ajax\/upload && assets/img/favicon.ico && fastadmin)'
+imo云办公室: 
+  body: '<a title="imo云办公室" || (高效率网上办公平台 && imo_setup.exe)'
+永中DCS: 
+  body: '<title>永中文档在线预览DCS</title> && www.yozodcs.com'
+JeecgBoot: 
+  body: 'JeecgBoot && polyfill_'
+  title: "JeecgBoot 企业级低代码平台"
+Jeecg:
+  body: 'loginController.do || /plug-in/'
+# Jeewms二开的Jeecg
+Jeewms:
+  body: 'plug-in/lhgDialog/lhgdialog.min.js'
+3Com-NJ2000:
+  body: '3Com Corporation Web Interface && content="3Com IntelliJack NJ2000'
+Catfishcms:
+  body: "<img alt=\"Catfish(鲶鱼)\""
+Xiuno-BBS:
+  body: "Xiuno BBS || plugin/zaesky_theme_xiunoo/view/css/bootstrap.css?1.0 || view/js/xiuno.js?1.0 || xiuno.min.js"
+MetInfo:
+  title: "Powered by MetInfo"
+  body: 'content="MetInfo || powered_by_metinfo || /images/css/metinfo.css'
+Cobbler:
+  title: "Cobbler Web Interface"
+  body: "/cobbler_webui_content/ || /cobbler_web/do_login"
+Kong: 
+  title: "Kong Dashboard || Kong Admin"
+FineReport: 
+  body: '数据决策系统 && ReportServer?op'
+FineReport-V10: 
+  body: 'ReportServer&=fs'
+金山VGM防毒墙:
+  title: "金山VGM防毒墙"
+金山TimeOn云杀毒: 
+  body: '<title>TimeOn && iepngfix/iepngfix_tilebg.js'
+金山终端安全: 
+  body: '终端安全系统 && setup/kanclient.exe && iepngfix/iepngfix_tilebg.js'
+YzmCMS: 
+  body: 'YzmCMS && yzm-common.css'
+微擎 - 公众平台自助引擎: 
+  body: '微擎 - 公众平台自助引擎 && www.w7.cc && login'
+C-Lodop打印服务系统:
+  body: '/CLodopfuncs.js || www.c-lodop.com'
+Jspxcms: 
+  body: '- Powered by Jspxcms && template/'
+TVT-NVMS-1000:
+  title: "NVMS-1000"
+PANDORAFMS-产品:
+  title: "Pandora FMS"
+  body: "title=\"Pandora RSS Feed"
+WordPress: 
+  body: '(wp-admin && wp-content/) || (wp- && wp-content/themes/)'
+  iconhash: '191654058'
+金和OA: 
+  body: '(Jhsoft.Web.login && PassWord.aspx) || Jinher Network || s/PasswordNew.js || js/PasswordCommon.js || 金和协同管理平台'
+好视通视频会议系统: 
+  body: '用户登录 && resources/commonImage/favicon.ico && login/createQRCode.do'
+LANMP 默认页面: 
+  body: '<title>LANMP && <strong>恭喜 && wdlinux.cn && 本页可删除'
+CentOS 默认页面: 
+  body: '<title>Welcome to CentOS</title> && img/centos-logo.png && centos.org'
+Sapido-router:
+  body: "etop_home_menu_style.css && b28n.js"
+Ueditor: 
+  body: 'ueditor.all.js && UE.getEditor'
+Fckeditor:
+  body: "new FCKeditor"
+Live Helper Chat:
+  title: 'Live Helper Chat'
+Emessage:
+  body: '<title>emessage'
+Gocron: 
+  body: '<title>gocron'
+Landray-EIS智慧协同平台: 
+  body: '/scripts/jquery.landray.common.js && 蓝凌软件'
+Landray-OA:
+  body: '(sys/ui/extend/theme/default/style/icon.css && sys/ui/extend/theme/default/style/profile.css) || (蓝凌软件 && App_Themes/Login) || (lui_login_input_username && lui_login_input_password)'
+phpinfo: 
+  body: '<title>phpinfo && Virtual Directory Support'
+Kyan 监控设备: 
+  body: 'login_files && platform && 欢迎登陆系统'
+Hue 大数据框架: 
+  body: 'Welcome to Hue && Query. Explore. && login'
+亿邮邮件系统: 
+  body: '(eYou && q=login && tpl/user) || (eYou && q=help && tpl/user)'
+XAMPP: 
+  title: 'Welcome to XAMPP'
+  iconhash: '-1275226814 || -1437701105'
+网神下一代极速防火墙: 
+  body: '网神信息技术 && login && 防火墙'
+中腾OA: 
+  body: 'systemAction && zt_webframe && login'
+极通EWEBS: 
+  body: 'N-soft && ClientDownload.xgi'
+Igenus邮件系统: 
+  body: 'iGENUS && login.php && language'
+图创图书馆集群管理系统: 
+  body: 'interlib/common/ && self.location.href'
+华天动力OA: 
+  body: 'OAapp/WebObjects/OAapp.woa && window.location'
+JEECMS: 
+  body: '(/r/cms/www && shortcut icon) || Powered by JEECMS'
+Huawei DG8045:
+  iconhash: '-1395400951'
+  title: 'DG8045 Home Gateway DG8045'
+Apache Hadoop: 
+  body: 'static/hadoop-st.png && Cluster'
+TamronOS IPTV系统: 
+  body: 'TamronOS && loginbox && tamronos.com'
+H3C Web网管: 
+  body: 'webui && Web网管用户登录 && china_logo.jpg'
+H3C ER6300G2: 
+  body: 'ER6300G2 && h3c.com && login'
+H3C ER3100: 
+  body: 'ER3100 && h3c.com && login'
+SDCMS神盾内容管理系统: 
+  body: 'sdcms && login'
+天迈科技网络视频监控系统: 
+  body: 'jsessionid && 天迈科技 && 网络视频监控系统'
+WIFISKY-7层流控路由器: 
+  body: 'WIFISKY && adminusr && 深圳市领空技术'
+GitList:
+  title: "GitList"
+  iconhash: "363098331"
+Resin:
+  header: "Resin"
+后台: 
+  title: '后台'
+Druid:
+  body: 'druid.index || DruidDrivers || DruidVersion || Druid Stat Index'
+Minio Browser: 
+  title: 'Minio Browser || href="/minio/loader.css'
+MINIO-Console:
+  title: "minio console"
+PhpCMS:
+  body: '(Powered by && http://www.phpcms.cn) || content="Phpcms" || Powered by Phpcms || data/config.js'
+mini_httpd:
+  header: "mini_httpd"
+  body: "href=\"http://www.acme.com/software/mini_httpd"
+Consul by HashiCorp: 
+  title: 'Consul'
+  body: "HashiCorp Boundary || <meta name=\"vault/config/environment\""
+景云网络防病毒系统: 
+  body: 'styles/images/logo.png && login_form && 防病毒'
+VA 虚拟应用管理平台: 
+  body: 'Res/Images/logo_va.png && panel_login'
+GitBook: 
+  body: 'content="GitBook && gitbook'
+万户网络ezEIP: 
+  body: 'Powered By wanhu - www.wanhu.com.cn && ezEip'
+阿姆瑞特智能DNS: 
+  body: 'DNS && main.php?mod=member && DNS_'
+PHPOA 协同办公软件: 
+  body: 'login.php && 提示信息 && showMsg'
+JBoss EAP: 
+  body: 'title>EAP && eap.css && JBoss'
+若依管理系统: 
+  body: 'ruoyi/login.js || ruoyi/js/ry-ui.js'
+万户 OA: 
+  body: 'defaultroot && Logon!logon.action && domainAccount'
+全息AI弱电网络综合运维平台: 
+  body: '全息AI && g_is_hk && login'
+天融信产品: 
+  body: '<TITLE>Web User Login && loginCheck'
+天融信VPN: 
+  header: 'topsecsvportalstyle'
+天融信WEB应用安全防护系统: 
+  body: 'module=login && topsec && login'
+天融信 Reporter: 
+  body: 'Login @ Reporter && topsec && login'
+易瑞授权访问系统: 
+  title: '易瑞授权访问系统'
+E-Tiller: 
+  body: '北京勤云 && reader/view_abstract.aspx'
+FangMail: 
+  body: 'fangmail/default/css/em_css.css && fangmail/cgi/index.cgi'
+XMAPP:
+  iconhash: '-33197636'
+Tencent-Exmail: 
+  header: 'ssl_edition=mail.qq.com'
+  body: 'cgi-bin/getinvestigate?flowid= && cgi-bin/bizmail_portal'
+FishEye: 
+  header: 'FESESSIONID='
+天玥网络安全审计系统: 
+  body: '天玥 && venustech && func_login'
+金航网上阅卷系统: 
+  body: '金航 && jsyj && 衡水金航'
+科脉·蛙笑在线商业管理软件: 
+  body: 'Kemai && Login.aspx && 科脉'
+朗拓健康医院管理系统: 
+  body: 'static/mq/yaoxun_pbm_im.js && js/app.'
+品德科技医学在线考试系统: 
+  body: '考试系统 && 品德 && login.aspx'
+SPON IP网络对讲广播系统: 
+  body: 'spon_base64.js && login'
+NVS3000综合视频监控平台: 
+  body: '视频监控 && NVS3000综合 && login'
+银达汇智 智慧综合管理平台: 
+  body: 'miniui && Help ? && main.aspx'
+云信通短信运营管理平台: 
+  body: '短信 && Simpla && chklogin.aspx'
+AceNet 驰崴防火墙: 
+  body: 'Technology && login_commit.php'
+Teleport 堡垒机: 
+  body: '(TELEPORT && teleport.js && login-account) || (teleport.js && login-type-oath && bind-oath'
+天融信-上网行为管理系统: 
+  body: 'images/logo3.gif && dkey_activex_download.php && login_commit.php'
+Yii框架: 
+  body: 'yii.js && yii.'
+PHP: 
+  header: 'PHP/ || PHPSSIONID'
+JAVA: 
+  header: 'JSESSIONID'
+WPS 部署可视化平台: 
+  title: 'WPS 部署可视化平台'
+phpstudy: 
+  title: 'phpstudy for windows'
+有WAF: 
+  header: 'WAF/'
+移动云 WAF: 
+  header: 'CloudWAF'
+epoint政务服务系统: 
+  body: 'epoint-web-zwdt'
+管理后台登录: 
+  title: '管理员 && 登录'
+360天擎: 
+  title: '360天擎'
+博华网龙信息安全一体机: 
+  title: '博华网龙信息安全一体机'
+LNMP一键安装包默认页面: 
+  title: 'LNMP一键安装包'
+HDWiki: 
+  header: 'hd_sid='
+深圳锐明行驶记录仪: 
+  title: '登录您的MDVR'
+Drupal: 
+  header: 'drupal'
+  iconhash: '-167656799 || 1174841451'
+Huawei user-login: 
+  header: 'Huawei Auth-Http'
+Prometheus: 
+  title: 'Prometheus Time Series Collection and Processing Server'
+  body: '/static/js/graph/index.js'
+  iconhash: '-1399433489'
+Kubernetes: 
+  title: 'Kubernetes Dashboard'
+  body: 'Kubernetes Enterprise Manager || Mirantis Kubernetes Engine || Kubernetes Resource Report'
+easypanel: 
+  body: 'easypanel && vhost && login'
+VMware Horizon: 
+  body: 'VMware && ui-page && portal/favicon'
+  title: 'VMware Horizon'
+  iconhash: '-991123252 || 1182206475 || 1895360511 || -1255992602'
+明源云 ERP: 
+  body: '(PubPlatform && 明源云 && LoginHandler) || (#153290 && 明源软件)'
+迪普VPN: 
+  body: 'dptech_ssl && sslvpn && loginAPI.js'
+OpenShift Web Console: 
+  title: 'OpenShift Web Console'
+好视通: 
+  body: 'fsmeeting && loginCheck.do && app.result'
+碧海云盒: 
+  body: '碧海云盒 && mt_login && login.php'
+PhpWind: 
+  body: 'content="phpwind'
+H5S视频平台:
+  title: "H5S视频平台 && WEB"
+CmsEasy: 
+  body: 'content="CmsEasy'
+ClickHouse: 
+  body: 'Ok.'
+CISCO-CloudCenter-Suite:
+  title: "CloudCenter Suite"
+中移铁通-禹路由:
+  title: "互联世界 物联未来-登录"
+ZTE-ZXA10F460:
+  body: "<modelNumber>F460</modelNumber>"
+  title: "F460 || ZXA10F460"
+CMA客诉管理系统:
+  title: "CMA客诉管理系统手机端"
+EmpireCMS: 
+  title: 'Powered by EmpireCMS'
+佑友防火墙:
+  title: "佑友防火墙"
+Emlog: 
+  body: 'content="emlog"'
+ECShop: 
+  body: 'content="ECSHOP'
+大汉版通-Hanweb-system: 
+  body: '大汉版通 && 大汉网络 && hanweb.com'
+ESPCMS: 
+  title: 'powered by espcms'
+KesionCMS: 
+  body: 'ks_inc/common.js && KesionCMS'
+东营金石软件: 
+  body: 'aspNetHidden && loginselect && txtLoginName'
+皓峰防火墙: 
+  title: '皓峰防火墙系统登录'
+科达-MTS转码服务器:
+  title: "MTS转码服务器"
+CMSTop: 
+  body: 'css/cmstop-common.css && js/cmstop-common.js'
+华域Reporter: 
+  body: 'reporter && login && action.php'
+智邦国际-企业管理软件: 
+  body: 'index2.asp && update/exec.asp && images/full.gif'
+电信网关配置管理系统: 
+  body: '<TITLE>系统登录 && login.php && img/login_bg3.png && 360.cn'
+方配在线考试系统(FPExam): 
+  body: 'exam/logo/favicon.ico && fangpage'
+Spring Eureka: 
+  body: '<title>Eureka</title> && eureka'
+迪普 SSLVPN: 
+  body: 'DPSSLVPN && SSL VPN Service && login'
+百卓byzoro-安全网关: 
+  body: '北京百卓 && PatrolFlow && login.php'
+ENESYS: 
+  body: 'dwr/interface/WebContextUtil.js'
+DWR:
+  body: 'dwr/engine.js'
+KVM_创梦云计算管理系统: 
+  body: '<title>KVM_创梦云计算管理系统</title>'
+任我行-管家婆分销ERP: 
+  body: '分销ERP && txt_DbName && DownloadDriver.asp'
+企望制造ERP:
+  title: "企望制造ERP系统"
+小黄豆CRM: 
+  body: 'xhdcrm && JS/XHD.js && login.check.xhd'
+Payara-Micro:
+  title: 'Payara Micro #badassfish - Error report'
+Dubbo:
+  header: 'Basic realm="dubbo"'
+  title: "Dubbo"
+Metabase: 
+  title: 'Metabase'
+  iconhash: '1953726032'
+GoCD:
+  body: "data-current-gocd-version= || (Login - Go && gocd-params)"
+  title: "Create a pipeline - Go"
+4images: 
+  body: 'Powered by <b>4images && 4homepages'
+Finecms: 
+  body: 'content="FineCMS'
+NUUO 摄像头: 
+  title: 'Network Video Recorder Login'
+Apache ShenYu: 
+  body: 'id="httpPath && th:text="${domain}'
+瑞友天翼－应用虚拟化系统: 
+  title: "瑞友天翼－应用虚拟化系统 || 瑞友应用虚拟化系统"
+  body: "(action=\"/CasMain.XGI && DownLoad.XGI) || (action=\"/CasMain.XGI && realor.cn) || (action=\"/CasMain.XGI && dvLogin)"
+飞鱼星路由器/行为管理: 
+  body: 'content="0.2; && /home/login.html'
+化视私云CDN直播加速服务器: 
+  body: 'img/dl.gif && 华视美达 && login.php'
+冰峰网络 iceflow: 
+  body: 'Web 配置中心 && /images/splash.jpg'
+华夏 ERP: 
+  body: 'jshERP-boot && platformConfig'
+HUAWEI-HG659:
+  title: "HUAWEI HG659 Gateway HG659"
+78 OA: 
+  body: '/resource/javascript/system/runtime.min.js && password'
+EnterCRM: 
+  body: '杭州恩软 && Ent.base.js'
+ITC-CMS: 
+  body: '/mt_res_v3/js/common/common.js && <title>CMS'
+Panabit-iXCache:
+  body: '<title>iXCache</title>'
+Panabit-Panalog:
+  body: "(id=\"codeno\" && 日志系统) || Maintain/cloud_index.php"
+  title: "panalog"
+Panabit智能网关: 
+  title: 'panabit'
+  body: 'parent.location.href = \"/login/login.htm\" && src=\"/img/jq.js'
+畅捷通: 
+  body: 'tplusbrowser || chanjet/tplus || 400 6600 566'
+  title: '畅捷通'
+三汇SMG-网关管理软件:
+  body: "text ml10 mr20 && 网关管理软件"
+畅捷通-远程通:
+  body: "<META HTTP-EQUIV=\"REFRESH\" CONTENT=\"0; URL=/GNRemote.dll?GNFunction=CheckLogin && ok=Web_sc/programs.gn && error=Web_sc/login.gn && Language=Web_sc || 远程通CHANJET_Remote"
+汇文软件-书目检索系统:
+  iconhash: "1805953451"
+  body: '(Jiangsu Huiwen Software Ltd. 江苏汇文软件有限公司 && 书目检索系统) || <div class="header_opac_logo">'
+Huijietong:
+  body: "/him/api/rest/v1.0/node/role"
+Samsung-AP-WEA453e:
+  title: "WEA453e && Samsung"
+狮子鱼CMS:
+  body: "/seller.php?s=/Public/login"
+华为AR Web管理平台: 
+  body: 'Huawei && simple/style/default/image/login.png && simple/view/ossn.html'
+Carel-Data-Server:
+  body: "src=\"/MPwebCoreFn.js"
+  header: 'Server:CarelDataServer'
+CAIMORE-Gateway:
+  title: 'Document Error: Unauthorized'
+Casdoor:
+  title: "Casdoor"
+  header: "casdoor_session_id"
+MCMS: 
+  body: 'ms.js && ms.http.js && plugins'
+向日葵-SunLogin: 
+  body: '{"success":false,"msg":"Verification failure"}'
+GROWATT 系统: 
+  body: 'login && v3/js/odm/odm.js'
+天融信应用交付系统: 
+  body: 'TopApp-AD'
+慧林信息安全管理系统: 
+  body: '用户管理登录 && login && images/zh-CN/login_03.gif'
+华为云桌面: 
+  body: 'Desktop@FusionAccess && /webui/'
+齐治堡垒机: 
+  body: 'fp_download && login.php && logo-icon-ico72.png'
+TurboMail 邮件系统: 
+  body: 'TurboMail && mailmain?type=login'
+山石网科云数据库审计与防护系统: 
+  body: '#!/dbSummary && /lib/colResizable/'
+青年软件OA: 
+  body: '/Content/qrlib/ligerUI/skins/'
+金山终端安全管理系统: 
+  body: 'iepngfix/iepngfix_tilebg.js && mysqlStat'
+多媒体信息发布系统: 
+  header: 'HowFor Web'
+亿赛通-电子文档安全管理系统: 
+  body: '电子文档安全管理系统 || /CDGServer3'
+SMARTBI:
+  body: "gcfutil = jsloader.resolve(''smartbi.gcf.gcfutil'')"
+博华网龙防火墙:
+  title: "博华网龙防火墙"
+碧海威L7:
+  title: "碧海威L7"
+百腾客户系统:
+  body: "百腾客户系统-登录"
+BSPHP:
+  body: "href=\"http://Bsphp.com/"
+百卓 Smart 多业务安全网关: 
+  body: 'writeCustomBgImg.jsp && baseajax && LoginLogo'
+中远麒麟堡垒机: 
+  body: 'admin.php && controller=admin_index && action=login'
+移动云 & 绿盟日志审计系统-log4j: 
+  body: '/pisces/login/'
+Apache APISIX: 
+  body: '{"error_msg":"404 Route Not Found"}'
+  header: "APISIX"
+  title: "Apache APISIX"
+网康科技·互联网控制网关: 
+  title: '网康科技·互联网控制网关 || (网康 && 应用安全网关)'
+  iconhash: '5471989'
+  body: "NS-ICG"
+网康科技-下一代防火墙:
+  body: "网康下一代防火墙 && /images/dashboard/dashboard.png"
+Natshell-router:
+  body: "<h4>欢迎登录NatShell</h4"
+Richmail 邮件系统: 
+  title: 'RichMail'
+  body: '0;url=/webmail/ || (richmail.config.js && login) || "imgUrl": "/webmail" + "/common/validatecode.do"'
+智跃HR人力资源管理系统: 
+  body: 'images/ZY.LOGO.64.png'
+启迪国信 UEM管理平台: 
+  body: '#commonTip && css/icomoon && login && wwLogin'
+金万维异速联: 
+  body: 'GNRemote.dll?GNFunction='
+JieLink+智能终端操作平台: 
+  body: 'JieLink<sup>+</sup>'
+宏景eHR人力资源信息管理系统: 
+  body: '人力资源信息管理系统 && hrlogon'
+禾匠点企来客服系统: 
+  body: 'const _scriptUrl && login_logo'
+iXCache: 
+  body: 'iXCache && /login/userverify.cgi'
+爱信诺开票服务器: 
+  body: 'aisino.kps.console'
+税控服务器管理系统: 
+  body: 'sys/login.do && resources/css/login_yzm.css'
+天擎: 
+  body: 'index/logo && 天擎</title>'
+齐博-CMS:
+  body: "<!--下面是钩子插件,做风格的时候尽量加上,方便扩展  --> || qibosoft"
+小鱼易连云视讯管理平台: 
+  body: 'font_1957344_lqkodjqdbl.css || static_source/localcdn/webrtc/web/favicon.ico'
+厦门快普: 
+  body: 'jKPM6 && WebResource.axd'
+iDste融合系统支撑平台: 
+  title: 'iDste融合系统支撑平台'
+大华安防 DSS: 
+  body: 'User && <meta http-equiv="refresh" content="1;URL=>'
+大华-智能物联综合管理平台: 
+  body: 'static/qwebchannel.js && moment'
+Nnetgear 路由器: 
+  header: 'NETGEAR'
+  body: 'var mmc = && Netgear'
+NSFOCUS 绿盟安全设备: 
+  header: 'NSFOCUS'
+NSFOCUS-UTS综合威胁探针:
+  body: "/uts_v2/webstatic/ && UTS"
+NSFOCUS-VPN:
+  body: '/logo_login_nsfocus.png && SSLVPN'
+NSFOCUS-SAS:
+  body: '/login_logo_sas_zh_CN.png && NSFOCUS && nbsp;SAS'
+  title: 'NSFOCUS && nbsp;SAS"'
+NSFOCUS-Aurora Self Scan Agent:
+  title: "绿盟云激活"
+  body: "/aurora_nsfocus.png"
+NSFOCUS-WVSS:
+  body: 'url: && /accounts/treaty/'
+  title: "NSFOCUS WVSS"
+NSFOCUS-ADS:
+  title: "NSFOCUS ADS"
+  body: "/login_logo_ads_en_US.png"
+NSFOCUS-SG安全网关:
+  body: "/login_logo_sg_zh_CN.png"
+NSFOCUS下一代防火墙:
+  title: "NSFOCUS NF"
+  body: "/login_logo_nf_zh_CN.png"
+NSFOCUS-BVS:
+  body: "/nsfocus_bvs.css"
+  title: "NSFOCUS BVS"
+NSFOCUS-WAF:
+  body: "/images/logo/nsfocus.png && WAF NSFOCUS"
+  header: "NSFOCUS VMWAF"
+NSFOCUS-NIDS:
+  body: "/login_logo_nids_zh_CN.png"
+NSFOCUS-RSAS:
+  body: "/login_logo_rsas_zh_CN.png"
+  title: "NSFOCUS RSAS || Aurora登录"
+  header: 'NSFOCUS && aurorasessid='
+NSFOCUS-Fortress:
+  body: "/login_logo_sas_h_zh_CN.png"
+NSFOCUS-NTA:
+  title: "NSFOCUS NTA"
+  body: "action=\"/auth/enforce"
+NSFOCUS-终端检测与响应系统:
+  body: "绿盟终端检测与响应系统 && /master/login/login.php"
+NSFOCUS-NIDPS:
+  title: "NSFOCUS NIDPS"
+NSFOCUS-大数据安全平台:
+  body: '<base href="/WebApi/login/static/dist/"> && <title></title>'
+Gitblit: 
+  body: 'gitblt-favicon.png && gitblit'
+H3C ER8300G2-X: 
+  body: 'H3C && vld.bmp && dis_login && ER8300G2'
+H3C/安博通/任子行/OEM系列安全产品: 
+  body: 'webui/js/jquerylib/jquery-1.7.2.min.js'
+IP-guard: 
+  body: 'IP-guard && sign/login'
+宁盾一体化安全认证平台: 
+  body: 'am/ndkey.ico && zhLanguagePng'
+东华医疗协同办公系统: 
+  body: 'extcomponent/security/login.jsp && login_dhc'
+安宁电子邮件系统 AnyMacro Mail: 
+  body: 'anymacro && passre.php'
+海纳CMS-HituxCMS: 
+  body: 'Powered By HituxCMS && ServiceCenter.js'
+酒店智慧营销IPTV系统: 
+  body: 'xsiptvp && IPTV'
+朗驰欣创-视频监控: 
+  body: 'Installplug.exe && NVSID'
+方正翔宇: 
+  body: 'e5style/login1.css && e5workspace/security/captcha.do'
+极通 EWEBS 应用虚拟化: 
+  body: 'NewSoft && xajax05/xajax_js/xajax_core.js'
+时空智友: 
+  body: '(login.jsp?login && 登录) || 时空智友企业信息管理 || 时空智友企业流程化管控系统'
+Apollo:
+  iconhash: "11794165"
+  title: "Apollo配置中心"
+康通电子云广播系统: 
+  body: 'static/download/JSET99Setup.exe'
+ASPCMS:
+  title: "Powered by ASPCMS"
+  body: "content=\"ASPCMS || /inc/AspCms_AdvJs.asp"
+xxljob: 
+  body: '/static/adminlte/dist/css/AdminLTE.min.css && bower_components/PACE/pace.min.js'
+  iconhash: "1691956220"
+Gophish:
+  iconhash: "803527991"
+  title: "Gophish - Login"
+HikVison-iSecure-Center: 
+  body: '/portal/common/js/commonVar.js || /portal/ui/static/js || wiportalTitle'
+  title: '综合安防管理平台'
+  iconhash: '-808437027'
+Hikvision 流媒体管理服务器: 
+  body: '流媒体管理服务器 && MSHTML && login'
+HikVision-Safety Gateway:
+  body: '(独立运行(无平台) && login_form) || (src="./webui/js/jquerylib/jquery-1.7.2.min.js" && 安全接入网关)'
+HikVision-Car Remote System:
+  title: '远程视频监控管理系统'
+  body: 'Reset.bmp && Login.bmp && LoginBg.bmp'
+HIKVISION-Hi Watch Cloud Video:
+  body: '嗨看云视频</p>'
+HikVision - Data Diagnostic Tool:
+  body: '大数据诊断工具</strong>'
+HikVision-Backup Management Server:
+  title: '备份管理服务器'
+HikVision-Video Retrieval System:
+  body: '智能视频检索系统 && 海康威视'
+HikVision-Video Cloud Structured Server:
+  body: '视频云结构化服务器 && /common/hikui/'
+HikVision-TV wall:
+  body: 'tvwall_newTvwall && 电视墙'
+HikVision-Image Restore Configuration Client:
+  body: '图像复原服务配置客户端 && 杭州海康威视数字技术股份有限公司'
+HikVision - Human Face Analysis System:
+  body: '(人脸分析子系统 || 人脸实时报警系统 || 人脸检索管理系统) && 杭州海康威视数字技术股份有限公司'
+HikVision-IVMS-7200:
+  body: 'onkeydown="return cms.util.keyDownPermit'
+HikVision-IVMS-8700:
+  body: 'src="/portal/common/js/commonvar.js'
+HikVision-智能应用服务器:
+  body: 'placeholder="{{oLan.password}}" && oCheckUser.szPassWd && /ui/css/style.css'
+HikVision-智能应用平台:
+  body: '/error/browser.do && 智能应用平台'
+HikVision-视频图像信息数据库:
+  body: '杭州海康威视系统技术有限公司 && 视频图像信息数据库'
+  title: '视频图像信息数据库平台'
+  header: 'Set-Cookie: portal_locale_cookie.sig'
+HikVision-群组对讲服务配置平台:
+  body: 'js/jquery.breadcrumbs.ex.js'
+HikVision-视频编码设备接入网关:
+  body: '视频编码设备接入网关 && data/login.php'
+Hikvision IP Camera: 
+  iconhash: '999357577'
+Nessus: 
+  body: '<title>Nessus</title>'
+  iconhash: '-1309421168'
+供应链: 
+  body: '技术支持'
+存在注册功能点: 
+  body: 'register && 注册'
+AMCREST-camera:
+  body: 'amcrest || w_cloudCurVer || (onclick="chkAlarmSound() && id="play_alarm_sound" && Amcrest Technologies) || (dhvideowhmode && platformHtm && (Amcrest || www.amcrest.com))'
+53BK数字报刊系统: 
+  body: '/Comja/'
+慧点科技OA: 
+  body: '/dojo/smartdot/css/dojo_smartdot.css'
+极限OA:
+  iconhash: '1967132225'
+源天OA:
+  body: '/vmain/login.jsp'
+YunGouCMS:
+  body: "/yungou/css/Comm.css"
+  title: "YunGouCMS"
+云时空社会化商业ERP:
+  title: '云时空社会化商业ERP'
+V2 Conference 视频会议系统: 
+  body: 'window.location.href="/Conf/index.jsp"'
+和欣控制(Hysine) Webtalk 系统: 
+  body: '_webtalk/_cur/loginA.php && WEBTALK'
+MobileIron: 
+  title: 'MobileIron User Portal: Sign In'
+  iconhash: '545827989 || 2086228042 || 967636089 || 362091310'
+  body: "(j_spring_security_check && MobileIron) || (MobileIron && 获得即时访问企业邮箱、日历和联系人) || MobileIron Admin Portal || MobileIron User Portal || MobileIron Registration || Mobilizing enterprise applications"
+慧星自来水营业管理信息系统: 
+  iconhash: '1704826498'
+Bonobo Git Server: 
+  iconhash: '-219625874'
+晶奇科技救助管理系统: 
+  iconhash: '-1185226132'
+Yonyou BIP 数据应用服务: 
+  iconhash: '1183274548'
+流量通 流量平台: 
+  iconhash: '325583172'
+北京朗新天霁人力资源系统: 
+  iconhash: '1143915194'
+护卫神·主机大师: 
+  iconhash: '1188645141'
+友加畅捷U+财会通: 
+  iconhash: '2049187099'
+万户ezOFFICE: 
+  iconhash: '-1827521324'
+信锐物联平台: 
+  iconhash: '147973611'
+WiseGrid慧敏应用交付网关: 
+  iconhash: '910523681'
+Weaver OA: 
+  iconhash: '1578525679'
+  header: "ecology_JSessionid || testBanCookie"
+  body: "_wev8.js || /wui/common/css/w7OVFont.css || (typeof poppedWindow && client/jquery.client_wev8.js) || /theme/ecology8/jquery/js/zDialog_wev8.js || ecology8/lang/weaver_lang_7_wev8.js"
+Weaver E-Mobile: 
+  body: 'window.contextPath && window.version'
+  iconhash: '2062026853'
+  title: '移动管理平台'
+Weaver E-Bridge: 
+  body: 'wx.weaver || e-Bridge'
+Weaver E-Office:
+  header: "general/login/index.php"
+  body: "/general/login/view//images/updateLoad.gif || (szFeatures && eoffice)"
+initial-instance: 
+  iconhash: '99395752'
+SpringBoot: 
+  body: '<h1>Whitelabel Error Page</h1> || "message":"No message available"'
+  iconhash: "116323821"
+Jenkins: 
+  iconhash: '81586312'
+  header: "X-Jenkins || X-Hudson"
+Cnservers LLC: 
+  iconhash: '-235701012'
+Chainpoint: 
+  iconhash: '2128230701'
+LaCie: 
+  iconhash: '-1277814690'
+Parse: 
+  iconhash: '246145559'
+Avigilon: 
+  iconhash: '1318124267'
+OpenStack: 
+  iconhash: '786533217 || -923088984 || 1232596212'
+Pi Star: 
+  iconhash: '432733105'
+Angular IO (AngularJS): 
+  iconhash: '-1255347784'
+React: 
+  iconhash: '-2009722838'
+Aplikasi: 
+  iconhash: '494866796'
+Ubiquiti Aircube: 
+  iconhash: '1249285083'
+Exostar - Managed Access Gateway: 
+  iconhash: '420473080'
+Archivematica: 
+  iconhash: '-1378182799'
+TCN: 
+  iconhash: '-702384832'
+CX: 
+  iconhash: '-532394952'
+Ace: 
+  iconhash: '-183163807'
+NetData: 
+  iconhash: '1302486561'
+OpenGeo Suite: 
+  iconhash: '-609520537'
+Dgraph Ratel: 
+  iconhash: '-1961046099'
+Material Dashboard: 
+  iconhash: '1913538826'
+Form.io: 
+  iconhash: '1319699698'
+Kubeflow: 
+  iconhash: '-1203021870'
+CapRover: 
+  iconhash: '988422585'
+WiJungle: 
+  iconhash: '2113497004'
+Onera: 
+  iconhash: '1234311970'
+SmartPing: 
+  iconhash: '430582574'
+netdata dashboard: 
+  iconhash: '1585145626 || -182423204'
+JavaMelody:
+  header: "JavaMelody && X-Application-Context"
+  body: '<a href="monitoring" target="_new">JavaMelody监控</a> || <a href="/internal/javamelody">java melody monitoring</a>'
+FRITZ!Box: 
+  iconhash: '-219752612'
+Fortinet FortiOS: 
+  iconhash: '945408572 || 945408572'
+Fortinet SSLVPN:
+  body: "fgt_lang && /sslvpn/portal.html"
+FORTINET FortiNAC:
+  title: "FortiNAC"
+  body: "FortiNAC && product"
+Ubiquiti - AirOS: 
+  iconhash: '-697231354 || 1020814938'
+Huawei - Claro: 
+  iconhash: '2109473187'
+ASUS AiCloud: 
+  iconhash: '552592949'
+SonicWALL: 
+  iconhash: '631108382 || 363324987'
+  title: 'SonicWall - Authentication'
+Selea-ANPR-Camera:
+  title: "Selea ANPR Camera"
+网神-Secips:
+  body: "usbkey_plugin.cab && 无服务权限 && 网神"
+SmartOA:
+  body: "/smartoa.plist || (content/images/login_background.jpg && iFrameHeight()) || href=\"http://www.smartoa.com.cn/download/smartoa.apk\">安卓客户端</a>"
+  header: "smartoa"
+SonicWall-SSLVPN:
+  title: 'Virtual Office'
+Google: 
+  iconhash: '708578229'
+OpenSNS:
+  body: 'Powered by OpenSNS || content="OpenSNS" || os-icon-home app-icon'
+奇安信-天擎:
+  title: "360新天擎 || 360天擎 || 360天擎终端安全管理系统"
+  body: '"appid":"skylar6" || /task/index/detail?id={item.id} || 已过期或者未授权，购买请联系4008-136-360'
+奇安信-Secfox:
+  body: 'class="secfox-login-browser-continue || 欢迎您使用网神Secfox日志收集与分析系统 || (id=mTokenPlugin width=0 height=0 style= && type=application/x-xtx-axhost)'
+  title: '网神SecFox安全审计系统 || SecFox-LAS-BH || SecFox'
+奇安信-企业安全部署:
+  header: "IocpServer"
+  title: "360企业安全部署"
+奇安信-VPN:
+  title: "奇安信VPN"
+  body: 'href="/download/GWSetup.exe" target="_blank" style="">点此链接下载奇安信VPN客户端</a>'
+奇安信-天眼:
+  title: '360天眼 || src="/static/img/skyeye-logo-big.png" || /static/build/animate_nprogress_timepiacker_tooltipster.min.css'
+奇安信-代码卫士:
+  title: "360代码卫士"
+奇安信-数据脱敏系统:
+  body: '<a href=\"#!/home\" class=\"sysname\">360网神数据脱敏系统'
+奇安信-企业版控制中心:
+  title: "360企业版控制中心"
+360-WiFi expander:
+  title: "360WiFi扩展器"
+  body: 'id="slogan">欢迎使用360WiFi扩展器</div> || SRouter_360R1_iOS'
+Intellian: 
+  title: "Intellian Aptus Web"
+奇安信-天机管理中心:
+  title: "360天机管理中心"
+  body: "src=\"/resource/img/login/logo_403.png\" alt=\"360天机\"/></a>"
+奇安信-天堤新一代智慧防火墙:
+  title: "360天堤新一代智慧防火墙 || 360网神新一代智慧防火墙"
+  body: 'var __permission = "360防火墙 || (<span class="fwtitle_big">360 && ngfw_encode)'
+Dahua Storm (IP Camera): 
+  iconhash: '2019488876 || 833190513'
+Dahua Storm (DVR): 
+  iconhash: '1281253102'
+Dahua: 
+  iconhash: '-1466785234'
+Dahua 智慧园区: 
+  body: '/WPMS/asset/lib/gridster/'
+Dahua DSS:
+  body: '/portal/include/script/dahuaDefined/headCommon.js'
+Huawei - ADSL/Router: 
+  iconhash: '-1395400951'
+Sophos Firewall:
+  title: "Blocked site"
+  header: 'Server:xxxx'
+  iconhash: '1601194732'
+LANCOM Systems: 
+  iconhash: '-325082670'
+Plesk: 
+  iconhash: '-1050786453 || -134375033 || -981606721'
+TilginAB (HomeGateway): 
+  iconhash: '-1346447358'
+Supermicro Intelligent Management (IPMI): 
+  iconhash: '1410610129'
+Ubiquiti Login Portals: 
+  iconhash: '-1446794564'
+Go-FastDfs:
+  title: "Go-FastDfs"
+Sophos-Web-Appliance:
+  body: "resources/images/sophos_web.ico || url(resources/images/en/login_swa.jpg)"
+  title: "Sophos Web Appliance"
+Sophos User Portal/VPN Portal: 
+  iconhash: '1045696447'
+OpenVPN: 
+  iconhash: '396533629'
+  header: 'Server:openvpn'
+  title: 'OpenVPN-Admin'
+Cyberoam: 
+  iconhash: '1462981117'
+Technicolor: 
+  iconhash: '-2138771289 || 1594377337'
+Vodafone (Technicolor): 
+  iconhash: '165976831'
+UBNT Router UI: 
+  iconhash: '-1677255344'
+Intelbras Wireless: 
+  iconhash: '-359621743'
+Kerio Connect (Webmail): 
+  iconhash: '-677167908'
+BIG-IP: 
+  iconhash: '878647854'
+  header: 'BIGipServer || X-WA-Info || X-PvInfo || F5_load || BIGIP || BIG-IP || MRHSession || LastMRH_Session || f5_fullwt= || f5_ht_shrinked= || mrhshint='
+  title: "BIG-IP"
+Microsoft OWA: 
+  iconhash: '442749392'
+pfSense: 
+  iconhash: '1405460984 || 1015545776'
+iKuai Networks: 
+  iconhash: '-271448102'
+  title: "登录爱快流控路由"
+3CX Phone System: 
+  iconhash: '970132176'
+Bluehost: 
+  iconhash: '-1119613926'
+ZTE Corporation (Gateway/Appliance): 
+  iconhash: '459900502'
+Ruckus Wireless: 
+  iconhash: '-2069844696'
+  title: "ruckus wireless"
+SPIP:
+  header: 'Composed-By:SPIP || X-Spip-Cache:'
+  body: "spip.php? || content=\"SPIP"
+Altenergy-Power-Control-Software:
+  title: "Altenergy Power Control Software"
+Bitnami: 
+  iconhash: '-1607644090'
+Juniper Device Manager: 
+  iconhash: '2141724739'
+Technicolor Gateway: 
+  iconhash: '1835479497'  
+NETASQ - Secure / Stormshield: 
+  iconhash: '-1929912510'
+Vmware Secure File Transfer: 
+  iconhash: '1642701741'
+SAP Netweaver: 
+  iconhash: '-266008933'
+SAP ID Service Log On: 
+  iconhash: '-1967743928'
+SAP Conversational AI: 
+  iconhash: '1347937389'
+Xerox-Workcentre:
+  body: "XEROX WORKCENTRE && /header.php?tab=status"
+Etcd-viewer:
+  title: "etcd viewer"
+  body: "<a class=\"navbar-brand\" href=\"./home\">etcd viewer</a>"
+Wayos-AC Control Platform:
+  body: "(维盟（WayOS） && www.wayos.cn) || (AC集中管理平台 && http://www.wayos.com) || var new_ac_username = getCookie(\"new_ac_username\"); && <span>深圳维盟科技有限公司</span>"
+Versa-Networks:
+  iconhash: "-1053531639 || 186362384 || 2033952700 || -1086395444"
+  body: "Versa Networks"
+天镜脆弱性扫描与管理系统:
+  title: "天镜脆弱性扫描与管理系统"
+Palo Alto Login Portal: 
+  iconhash: '602431586'
+Palo Alto Networks: 
+  iconhash: '-318947884'
+Docker: 
+  iconhash: '-1814887000 || 1937209448'
+Amazon: 
+  iconhash: '-1544605732 || 716989053'
+Zhejiang Uniview Technologies Co.: 
+  iconhash: '-1240222446'
+ISP Manager: 
+  iconhash: '-986678507'
+AXIS (network cameras): 
+  iconhash: '-1616143106'
+Roundcube Webmail: 
+  iconhash: '-976235259'
+pyspider:
+  body: "content=\"pyspider dashboard\""
+Apache NiFi:
+  title: "NIFI"
+  body: "stylesheet\" href=\"/nifi"
+UniFi Video Controller (airVision): 
+  iconhash: '768816037'
+Freebox OS: 
+  iconhash: '1838417872'
+Keenetic: 
+  iconhash: '547282364'
+Sierra Wireless Ace Manager (Airlink): 
+  iconhash: '-1571472432'
+Synology DiskStation: 
+  iconhash: '149371702'
+INSTAR IP Cameras: 
+  iconhash: '-1169314298'
+Octoprint (3D printer): 
+  iconhash: '1307375944'
+Vesta Hosting Control Panel: 
+  iconhash: '1954835352'
+Farming Simulator Dedicated Server: 
+  iconhash: '509789953'
+Residential Gateway: 
+  iconhash: '-1933493443'
+Repetier-Server:
+  title: "Repetier-Server"
+Traggo-Server:
+  body: "traggo"
+H3C-CVM-虚拟化管理平台:
+  header: "H3C-CVM"
+H3C Router Management:
+  body: 'mailto:service@h3c.com && 系统管理'
+  header: 'H3C-Miniware-Webs'
+PowerJob:
+  title: "PowerJob"
+cPanel Login: 
+  iconhash: '1993518473 || 1544230796 || 1244636413'
+Arris: 
+  iconhash: '-1477563858'
+PLEX Server: 
+  iconhash: '-895890586'
+Deluge: 
+  iconhash: '944969688'
+Cambium Networks: 
+  iconhash: '-435817905'
+Watchguard Fireware: 
+  iconhash: '-569941107 || 15831193'
+Shock && Innovation!! netis setup: 
+  iconhash: '1326164945'
+cacaoweb: 
+  iconhash: '-1738184811'
+Loxone (Automation): 
+  iconhash: '904434662'
+HP Printer / Server: 
+  iconhash: '-2144363468 || 905744673'
+Netflix: 
+  iconhash: '902521196'
+Linksys Smart Wi-Fi: 
+  iconhash: '-2063036701'
+lwIP (A Lightweight TCP/IP stack): 
+  iconhash: '-1205024243'
+Hitron Technologies: 
+  iconhash: '607846949'
+MOBOTIX Camera: 
+  iconhash: '661332347'
+Blue Iris (Webcam): 
+  iconhash: '-520888198'
+Vigor Router: 
+  iconhash: '104189364'
+Alibaba Cloud (Block Page): 
+  iconhash: '1227052603'
+DD WRT (DD-WRT milli_httpd): 
+  iconhash: '252728887'
+Mitel Networks (MiCollab End User Portal): 
+  iconhash: '-1922044295'
+Dlink Webcam: 
+  iconhash: '31972968 || 1144925962 || 1221759509 || -1354933624'
+Dlink Router: 
+  iconhash: '1037387972'
+PRTG Network Monitor: 
+  iconhash: '-655683626'
+Wildfly: 
+  iconhash: '-1666561833'
+Workday: 
+  iconhash: '-459291760'
+JustHost: 
+  iconhash: '1734609466'
+Baidu (IP error page): 
+  iconhash: '-1507567067'
+Intelbras SA: 
+  iconhash: '-1343070146 || 2006716043 || 283740897'
+Yii PHP Framework (Default Favicon): 
+  iconhash: '-1298108480'
+truVision NVR (interlogix): 
+  iconhash: '1782271534'
+SOYAL Serial Device Server: 
+  iconhash: '1777351344'
+Redmine: 
+  iconhash: '603314'
+phpMyAdmin: 
+  iconhash: '-476231906 || -1010568750'
+Webgrind:
+  body: "<span id=\"invocation_sum\"></span> different functions called in <span id=\"runtime_sum"
+Jetty: 
+  iconhash: '-629047854'
+  header: "Server:jetty"
+  body: "<h1>Jetty9 worked</h1> || <h1>Welcome to Jetty 9</h1> || <a href=\"http://www.eclipse.org/jetty/\">http://www.eclipse.org/jetty</a>"
+  title: "Welcome to Jetty"
+Luma Surveillance: 
+  iconhash: '-1351901211'
+Parallels Plesk Panel: 
+  iconhash: '-519765377 || -771764544 || -652508439'
+Metasploit: 
+  iconhash: '-127886975 || 1139788073 || -1235192469 || 579239725'
+ALIBI NVR: 
+  iconhash: '1876585825'
+Websockets test page: 
+  iconhash: '-291579889'
+macOS Server (Apple): 
+  iconhash: '1629518721'
+OpenRG: 
+  iconhash: '-986816620'
+HeroSpeed Digital Technology Co. (NVR/IPC/XVR): 
+  iconhash: '-873627015'
+Nomadix Access Gateway: 
+  iconhash: '2071993228'
+Magento: 
+  iconhash: '-38580010'
+MK-AUTH: 
+  iconhash: '1490343308'
+Shoutcast Server: 
+  iconhash: '-632583950'
+FireEye: 
+  iconhash: '95271369 || 1476335317 || -842192932 || 105083909 || 240606739 || 2121539357'
+Adobe Campaign Classic: 
+  iconhash: '-333791179'
+Niagara Web Server: 
+  iconhash: '-676077969'
+Hitron Technologies Inc.: 
+  iconhash: '711742418'
+IBM Notes: 
+  iconhash: '728788645'
+Barracuda: 
+  iconhash: '1436966696'
+ServiceNow: 
+  iconhash: '86919334'
+Openfire: 
+  iconhash: '1211608009'
+  title: 'Openfire Admin Console || Openfire HTTP Binding Service || Openfire 管理界面'
+  body: 'background: transparent url(images/login_logo.gif) no-repeat'
+HP iLO: 
+  iconhash: '2059618623'
+Sunny WebBox: 
+  iconhash: '1975413433'
+Wavlink-WiFi-Repeater:
+  title: "WiFi Repeater Web Server || Wi-Fi APP Login"
+  body: "SYS_DOMAIN1=\"wifi.wavlink.com\" || var model=\"WN579X3\""
+  iconhash: "-1350437236"
+ZyXEL: 
+  iconhash: '943925975'
+Dogtag-PKI:
+  title: "Identity Management"
+Huawei: 
+  iconhash: '281559989'
+uDraw:
+  title: "uDraw - Draw with Friends"
+wdCP 云主机面板: 
+  iconhash: '1786752597'
+Domoticz (Home Automation): 
+  iconhash: '90680708'
+Tableau: 
+  iconhash: '-1441956789'
+MDaemon Webmail: 
+  iconhash: '-766957661'
+Teltonika: 
+  iconhash: '-1612496354 || 119741608'
+Entrolink: 
+  iconhash: '1973665246'
+WindRiver-WebServer: 
+  iconhash: '74935566'
+Microhard Systems: 
+  iconhash: '-1723752240'
+Skype: 
+  iconhash: '-1807411396'
+Eltex (Router): 
+  iconhash: '1877797890'
+bintec elmeg: 
+  iconhash: '-375623619 || 1770799630'
+SyncThru Web Service (Printers): 
+  iconhash: '1483097076'
+BoaServer: 
+  iconhash: '1169183049'
+Securepoint: 
+  iconhash: '1051648103'
+Moodle: 
+  iconhash: '-438482901'
+RADIX: 
+  iconhash: '-1492966240'
+CradlePoint Technology (Router): 
+  iconhash: '1466912879'
+Blackboard: 
+  iconhash: '-1593651747'
+Jupyter Notebook: 
+  iconhash: '-895963602'
+  body: "<div id=\"ipython-main-app\" class=\"container\">"
+HostMonster - Web hosting: 
+  iconhash: '-972810761'
+Rocket Chat: 
+  iconhash: '225632504'
+mofinetwork: 
+  iconhash: '-1702393021'
+TOTOLINK: 
+  iconhash: '547474373'
+  body: "totolink"
+Dynamicweb:
+  body: "Dynamicweb"
+AdminSet:
+  title: 'AdminSet Login'
+Cloudera-Hadoop-Hue:
+  title: "Hue - 欢迎使用 Hue || Hue - Welcome to Hue"
+Ossia (Provision SR)  ||  Webcam/IP Camera: 
+  iconhash: '-374235895'
+Jeedom (home automation): 
+  iconhash: '462223993'
+Niagara Web Server / Tridium: 
+  iconhash: '1991562061'
+Solarwinds Serv-U FTP Server: 
+  iconhash: '812385209'
+SolarWinds:
+  body: 'SolarWinds'
+  title: "SolarWinds Network Management"
+Aruba (Virtual Controller): 
+  iconhash: '1142227528'
+Dell: 
+  iconhash: '-1153950306'
+RemObjects SDK / Remoting SDK for .NET HTTP Server Microsoft: 
+  iconhash: '72005642'
+Roxy-WI:
+  title: "Roxy-WI"
+muhttpd:
+  body: "Block11.gif"
+Zyxel ZyWALL: 
+  iconhash: '-484708885 || -440644339'
+  title: 'ZyWALL'
+Zyxel NBG2105:
+  title: "ZyXEL NBG2105"
+VisualSVN Server: 
+  iconhash: '706602230'
+STARFACE VoIP Software: 
+  iconhash: '-332324409'
+Netis (network devices): 
+  iconhash: '-594256627'
+WHM: 
+  iconhash: '-649378830'
+Tandberg: 
+  iconhash: '97604680'
+Ghost (CMS): 
+  iconhash: '-1231681737 || -1015932800'
+Avtech IP Surveillance (Camera): 
+  iconhash: '-194439630'
+AVTECH-Video Monitoring:
+  header: 'Linux/2.x UPnP/1.0 Avtech/1.0 || Nserver:avtech'
+Liferay: 
+  iconhash: '129457226'
+  header: 'Liferay Portal || guest_language_id='
+  body: "Powered by Liferay Portal || Liferay.AUI || Liferay.currentURL"
+Odoo: 
+  iconhash: '-617743584'
+  title: "Odoo"
+Polycom: 
+  iconhash: '77044418'
+Cake PHP: 
+  iconhash: '980692677'
+Exacq: 
+  iconhash: '476213314'
+CheckPoint: 
+  iconhash: '794809961'
+Ubiquiti UNMS: 
+  iconhash: '1157789622'
+WorldClient for Mdaemon: 
+  iconhash: '-35107086 || 1985721423'
+Netport Software (DSL): 
+  iconhash: '-1124868062'
+f5 Big IP: 
+  iconhash: '-335242539'
+Mailcow: 
+  iconhash: '2146763496'
+QNAP NAS Virtualization Station: 
+  iconhash: '-1041180225'
+  body: "Virtualization Station && var hostname"
+QNAP PhotoStation:
+  title: "Photo Station"
+Netgear: 
+  iconhash: '-1319025408'
+Gogs: 
+  iconhash: '917966895'
+Trendnet IP camera: 
+  iconhash: '512590457'
+  header: "Basic realm=\"netcam\" || realm=\"TV- || realm=TV-"
+  body: "window.location = \"rdr.cgi\""
+TRENDnet-TEW-812DRU:
+  header: 'realm="TEW-812DRU'
+  title: "TEW-812DRU"
+TRENDnet-TEW-731BR:
+  body: '<font size=4><b>TEW-731BR'
+TRENDnet-TEW-826DAP:
+  body: 'var model = "TEW-826DAP"'
+TRENDnet-TEW-733GR:
+  header: "TEW-733GR"
+TRENDnet-Router:
+  body: '<META HTTP-equiv="Content-Type"contet="text/html; cahrset=ks_c_5601-1987"> || <link rel="stylesheet" rev="stylesheet" href="ubicom_style.css" type="text/css" />'
+  title: "TRENDnet || Router-Trendnet"
+TRENDnet-TEW-816DRM:
+  body: 'id="uspw">Login to the TEW-816DRM</td>'
+TRENDnet-TEW-740APBO:
+  body: "TEW-740APBO</div>"
+  title: "TEW-740APBO"
+TRENDnet-TEW-823DRU:
+  body: 'var model = "TEW-823DRU"'
+TRENDnet-TEW-825DAP:
+  body: 'var model = "TEW-825DAP"'
+TRENDnet-TEW-755AP:
+  body: 'var model = "TEW-755AP"'
+TRENDnet-TEW-810DR:
+  body: "TEW-810DR pre-test"
+TRENDnet-TEW-822DRE:
+  body: 'TEW-822DRE && lang_obj.write("product_description")'
+TRENDnet-TEW-821DAP:
+  body: 'var model = "TEW-821DAP"'
+TRENDnet-TEW-827DRU:
+  body: 'var model = "TEW-827DRU"'
+TRENDnet-TEW-824DRU:
+  body: 'var model = "TEW-824DRU" || Capture(status_router.sys_model)</script></div>Trendnet TEW824DRU'
+TRENDnet-TV-IP851WIC:
+  body: 'src="descript.gif?cidx=TV-IP851WIC1.022014-03-31'
+  header: 'realm="TV-IP851WIC'
+TRENDnet-TV-IP751WIC:
+  header: 'realm="TV-IP751WIC'
+  body: '<p align="center"> TV-IP751WIC || src="descript.gif?cidx=TV-IP751WIC1.022014-03-31'
+TRENDnet-TV-IP551WI:
+  header: 'realm="TV-IP551WI'
+  body: "(TV-IP551WI)</title>"
+TRENDnet-TV-IP551W:
+  header: "realm=\"TV-IP551W"
+  body: "(TV-IP551W)</title>"
+TRENDnet-TV-IP450PI:
+  header: "realm=\"TV-IP450PI"
+TRENDnet-TV-IP450P:
+  header: "realm=\"TV-IP450P"
+TRENDnet-TV-IP345PI:
+  body: "span>TV-IP345PI</span>"
+TRENDnet-TV-IP322WI:
+  header: "realm=\"TV-IP322WI"
+TRENDnet-TV-IP342PI:
+  body: "var titlename=''TV-IP342PI''"
+TRENDnet-TV-IP320PI:
+  header: "realm=\"TV-IP320PI"
+TRENDnet-TV-IP312PI:
+  header: "realm=\"TV-IP312PI"
+TRENDnet-TV-NVR208:
+  body: '<div class=\"loginLogo\">TV-NVR208</div>'
+TRENDnet-TV-IP302PI:
+  header: 'realm=\"TV-IP302PI'
+TRENDnet-Print-Server:
+  header: "PRINT_SERVER WEB"
+  body: "<frame name=\"Banner\" scrolling=\"no\" noresize target=\"Inhalt\" src=\"head.htm\">"
+TRENDnet-TEW-651BR:
+  body: "<b>Login to the TEW-651BR</b>" 
+  title: "TEW-651BR"
+TRENDnet-TV-IP751WC:
+  body: "TV-IP751WC"
+  header: "realm=\"TV-IP751WC"
+TRENDnet-TV-IP651W:
+  header: "realm=\"TV-IP651W"
+  body: "(TV-IP651W)</title> || <modelName>TV-IP651W"
+TRENDnet-TV-IP344PI:
+  body: "<span>TV-IP344PI</span>"
+TRENDnet-TV-IP311PI:
+  header: "realm=\"TV-IP311PI"
+Tianxing Netan - Safety One-way Import System:
+  body: "<meta http-equiv=\"Refresh\" content=\"0;url=/userMainAction.action\" />"
+  title: "天行安全单向导入系统"
+TRENDnet-TPL-410AP:
+  body: "Login to the TPL-410AP</td>"
+TRENDnet-TV-IP851WC:
+  header: "realm=\"TV-IP851WC"
+TRENDnet-TV-IP651WI:
+  header: "realm=\"TV-IP651WI"
+  body: "(TV-IP651WI)</title> || <modelName>TV-IP651WI</modelName>"
+TRENDnet-TV-NVR104:
+  header: "realm=\"TV-NVR104"
+TRENDnet-TV-IP310PI:
+  header: "realm=\"TV-IP310PI"
+TRENDnet-TV-IP321PI:
+  header: "realm=\"TV-IP321PI"
+TRENDnet-TV-IP430PI:
+  header: "realm=\"TV-IP430PI"
+TRENDnet-TEW-828DRU:
+  title: "TEW-828DRU"
+  body: "Capture(status_router.sys_model)</script></div>Trendnet TEW828DRU"
+  header: "realm=\"tew-828dru"
+TRENDnet-TEW-820AP:
+  body: 'TEW-820AP && <script>lang_obj.write("product_description")'
+TRENDnet-TEW-730APO:
+  body: "Login to the TEW-730APO"
+TRENDnet-TW100:
+  title: "TW100-"
+迅优CMS:
+  body: '<a href="https://www.seo1158.com/ || 迅优网络'
+O2OA:
+  title: "O2OA"
+  body: "o2_core"
+Asustor: 
+  iconhash: '1678170702'
+KubePi:
+  iconhash: "-845562631 || -285331386"
+  title: 'KubePi || 百胜容器云管理平台 || BSEIP容器管理平台'
+  body: "We're sorry but kubepi doesn''t work properly without JavaScript enabled"
+Zkeco:
+  body: '/media/images/ZKECO16.ico || class="m-btn  zkgreen rnd || /logoZKAccess_zh-cn.jpg'
+  header: "sessionidadms"
+  title: "考勤管理系统 || (ZKECO 时间 && 安全管理平台)"
+wdCP cloud host management system: 
+  iconhash: '255892555'
+Joomla: 
+  iconhash: '1627330242 || -1950415971 || 366524387'
+  body: 'Joomla! - Open Source Content Management || (/media/system/js/core.js && /media/system/js/mootools-core.js) || content="Joomla"'
+致翔软件-致翔OA:
+  body: "(url(/LoginBg/ && background) || (text/ecmascript\" src=\"/js/md5.js || __VIEWSTATE)"
+极致CMS:
+  iconhash: "1657387632"
+SmarterMail: 
+  iconhash: '-1935525788'
+Seafile: 
+  iconhash: '-12700016'
+NETGEAR ReadyNAS: 
+  iconhash: '-137295400'
+iPECS: 
+  iconhash: '-195508437'
+bet365: 
+  iconhash: '-2116540786'
+Reolink: 
+  iconhash: '-38705358'
+idera: 
+  iconhash: '-450254253'
+Proofpoint: 
+  iconhash: '-1630354993'
+Kerio Connect WebMail: 
+  iconhash: '-1678298769'
+Realtek: 
+  iconhash: '2055322029'
+Askey Cable Modem: 
+  iconhash: '-1710631084 || 89321398'
+JAWS Web Server (IP Camera): 
+  iconhash: '90066852 || 768231242'
+Homegrown Website Hosting: 
+  iconhash: '-421986013'
+Technicolor / Thomson Speedtouch (Network / ADSL): 
+  iconhash: '156312019'
+DVR (Korean): 
+  iconhash: '-560297467'
+TP-LINK (Network Device): 
+  iconhash: '1842351293 || 1274078387'
+Salesforce: 
+  iconhash: '1433417005'
+Apache Haus: 
+  iconhash: '-632070065'
+Untangle: 
+  iconhash: '1103599349'
+Shenzhen coship electronics co.: 
+  iconhash: '224536051'
+前景互联-管理系统:
+  body: "/Content/Web/theme/skin01/img/p_login_logo01.png"
+Auxmed traffic management platform:
+  title: "爱讯流量管理平台"
+Solidophone traffic management platform:
+  body: "玄鸟流量管理平台"
+Sungoin-Traffic Management Platform:
+  body: "尚景流量管理平台"
+Icecast Streaming Media Server: 
+  iconhash: '1424295654'
+NEC WebPro: 
+  iconhash: '1922032523'
+Vivotek (Camera): 
+  iconhash: '-1654229048'
+Univention Portal: 
+  iconhash: '-1697334194'
+Portainer: 
+  iconhash: '-1424036600'
+  body: 'portainer.updatePassword || portainer.init.admin'
+Safedog:
+  body: '404.safedog.cn/images/safedogsite/broswer_logo.jpg'
+  header: 'Safedog || WAF/2.0'
+NOS Router: 
+  iconhash: '-831826827'
+CrushFTP: 
+  iconhash: '-1022206565'
+Endian Firewall: 
+  iconhash: '-1225484776'
+Kerio Control Firewall: 
+  iconhash: '-631002664 || -466504476'
+Ferozo Panel: 
+  iconhash: '2072198544'
+Cafe24 (Korea): 
+  iconhash: '1251810433'
+Mautic (Open Source Marketing Automation): 
+  iconhash: '1273982002'
+NETIASPOT (Network): 
+  iconhash: '-978656757'
+Multilaser: 
+  iconhash: '916642917'
+Canvas LMS (Learning Management): 
+  iconhash: '575613323'
+IBM Server: 
+  iconhash: '1726027799'
+ADB Broadband S.p.A. (Network): 
+  iconhash: '-587741716'
+ARRIS (Network): 
+  iconhash: '-360566773'
+Huawei (Network): 
+  iconhash: '-884776764 || 987967490'
+WAMPSERVER: 
+  iconhash: '929825723 || 443944613'
+Seagate Technology (NAS): 
+  iconhash: '240136437'
+UPC Ceska Republica (Network): 
+  iconhash: '1911253822'
+Flussonic (Video Streaming): 
+  iconhash: '-393788031'
+CommuniGate: 
+  iconhash: '-1588746893'
+Avideo:
+  title: "AVideo"
+  body: "AVideo Analytics"
+ZTE (Network): 
+  iconhash: '1427976651'
+ZTE-router:
+  header: 'Server:ZTE/ROSNG'
+InfiNet Wireless  ||  WANFleX (Network): 
+  iconhash: '1648531157'
+Mersive Solstice: 
+  iconhash: '938616453'
+Université Toulouse 1 Capitole: 
+  iconhash: '1632780968'
+Digium (Switchvox): 
+  iconhash: '2068154487'
+PowerMTA monitoring: 
+  iconhash: '-1788112745'
+SmartLAN/G: 
+  iconhash: '-644617577'
+Checkpoint (Gaia): 
+  iconhash: '-1822098181'
+YTM (Federal Service for Alcohol Market Regulation  ||  Russia): 
+  iconhash: '-1131689409'
+MailWizz: 
+  iconhash: '2127152956'
+openmediavault (NAS): 
+  iconhash: '-693082538'
+openWRT: 
+  iconhash: '1941381095 || -675839242'
+  title: "OpenWrt"
+  header: "realm=\"OpenWrt"
+Honeywell: 
+  iconhash: '903086190'
+  body: "/main/login.lua?pageid="
+BOMGAR Support Portal: 
+  iconhash: '829321644'
+Nuxt JS: 
+  iconhash: '-1442789563'
+RoundCube Webmail: 
+  iconhash: '-2140379067'
+Netgear (Network): 
+  iconhash: '1047213685'
+SonarQube: 
+  iconhash: '1485257654'
+  body: "content=\"SonarQube"
+  title: "SonarQube"
+Lupus Electronics XT: 
+  iconhash: '-299324825'
+Vanderbilt SPC: 
+  iconhash: '-1162730477'
+VZPP Plesk: 
+  iconhash: '-1268095485'
+Baidu: 
+  iconhash: '1118684072'
+ownCloud: 
+  iconhash: '-1616115760'
+Sentora: 
+  iconhash: '-2054889066'
+Alfresco: 
+  iconhash: '1333537166'
+Digital Keystone (DK): 
+  iconhash: '-373674173'
+DVR: 
+  title: 'DVR Login'
+  header: 'GNU rsp/1.0'
+WISPR (Airlan): 
+  iconhash: '-106646451'
+Synology VPN Plus: 
+  iconhash: '1235070469'
+Sentry: 
+  iconhash: '2063428236'
+Web Client Pro: 
+  iconhash: '-956471263'
+MDaemon Remote Administration: 
+  iconhash: '99432374'
+Paradox IP Module: 
+  iconhash: '727253975'
+DokuWiki: 
+  iconhash: '-630493013'
+Sails: 
+  iconhash: '552597979'
+FastPanel Hosting: 
+  iconhash: '774252049'
+C-Lodop: 
+  iconhash: '-329747115'
+Jamf Pro Login: 
+  iconhash: '1262005940'
+StruxureWare (Schneider Electric): 
+  iconhash: '979634648'
+Axcient Replibit Management Server: 
+  iconhash: '475379699'
+Twonky Server (Media Streaming): 
+  iconhash: '-878891718'
+Windows Azure: 
+  iconhash: '-2125083197'
+ISP Manager (Web Hosting Panel): 
+  iconhash: '-1151675028'
+JupyterHub: 
+  iconhash: '1248917303'
+  title: "JupyterHub || Jupyter Hub"
+CenturyLink Modem GUI Login: 
+  iconhash: '-1908556829'
+Tecvoz: 
+  iconhash: '-1452159623 || 1059329877'
+OPNsense: 
+  iconhash: '-1148190371'
+Ligowave (network): 
+  iconhash: '1467395679'
+Rumpus: 
+  iconhash: '-1528414776'
+Spiceworks (panel): 
+  iconhash: '-2117390767'
+TeamCity: 
+  iconhash: '-1944119648'
+INSTAR Full-HD IP-Camera: 
+  iconhash: '-1748763891'
+GPON Home Gateway: 
+  iconhash: '251106693'
+Alienvault: 
+  iconhash: '-1779611449'
+Arbor Networks: 
+  iconhash: '-1745552996'
+Accrisoft: 
+  iconhash: '-1275148624'
+Yasni: 
+  iconhash: '-178685903'
+initial: 
+  iconhash: '-43161126'
+innovaphone: 
+  iconhash: '671221099'
+Shinobi (CCTV): 
+  iconhash: '-10974981'
+Siemens OZW772: 
+  iconhash: '-336242473'
+Lantronix (Spider): 
+  iconhash: '882208493'
+ClaimTime (Ramsell Public Health  &&  Safety): 
+  iconhash: '-687783882'
+Surfilter SSL VPN Portal: 
+  iconhash: '-590892202'
+Kyocera (Printer): 
+  iconhash: '-50306417'
+Lucee!: 
+  iconhash: '784872924'
+Ricoh: 
+  iconhash: '1135165421'
+Handle Proxy: 
+  iconhash: '926501571'
+iomega NAS: 
+  iconhash: '-689902428 || -600508822 || 656868270 || -2056503929 || -1656695885 || 331870709 || 1241049726 || 998138196 || 322531336 || -401934945 || -613216179'
+Chef Automate: 
+  iconhash: '-276759139'
+Gargoyle Router Management Utility: 
+  iconhash: '1862132268'
+KeepItSafe Management Console: 
+  iconhash: '-1738727418'
+UniFi-Network:
+  title: "UniFi Network"
+Entronix Energy Management Platform: 
+  iconhash: '-368490461'
+OpenProject: 
+  iconhash: '1836828108'
+Unified Management Console (Polycom): 
+  iconhash: '-1775553655'
+Moxapass ioLogik Remote Ethernet I/O Server : 
+  iconhash: '381100274'
+HFS (HTTP File Server): 
+  iconhash: '2124459909 || 731374291'
+  title: "HFS"
+  header: 'hfs_sid_= || Server:HFS'
+Traccar GPS tracking: 
+  iconhash: '-335153896'
+IW: 
+  iconhash: '896412703'
+Combivox: 
+  iconhash: '-342262483'
+NetComWireless (Network): 
+  iconhash: '5542029'
+Elastic (Database): 
+  iconhash: '1552860581'
+truVision (NVR): 
+  iconhash: '-1093172228'
+SpamExperts: 
+  iconhash: '-1688698891'
+iDirect Canada (Network Management): 
+  iconhash: '-256828986'
+OpenERP: 
+  iconhash: '1966198264'
+  body: "new openerp.init("
+  title: "OpenERP"
+PKP (OpenJournalSystems) Public Knowledge Project: 
+  iconhash: '2099342476'
+LiquidFiles: 
+  iconhash: '541087742'
+ZyXEL (Network): 
+  iconhash: '-882760066'
+Universal Devices (UD): 
+  iconhash: '16202868'
+TC-Group: 
+  iconhash: '-1734573358'
+Deluge Web UI: 
+  iconhash: '-1589842876'
+AMH 云主机面板: 
+  iconhash: '1822002133'
+OTRS (Open Ticket Request System): 
+  iconhash: '-2006308185'
+Bosch Security Systems (Camera): 
+  iconhash: '-1702769256'
+Razer Sila: 
+  title: 'Razer Sila'
+Aspera-Faspex:
+  title: "Aspera Faspex"
+nostromo:
+  header: 'Server:nostromo'
+pyLoad:
+  title: "Login - pyLoad"
+MLflow:
+  title: "MLflow"
+CACTI-monitoring system:
+  header: 'Set-Cookie:cacti= || Cacti Access'
+  title: "Login to Cacti"
+  body: "/plugins/jqueryskin/include/login.css"
+SolarView-Compact:
+  body: "SolarView Compact"
+  iconhash: "-244067125"
+Centos Web Panel:
+  title: 'CentOS-WebPanel.com || Control WebPanel || CentOS WebPanel || (CWP && User) || (CWP && 用户)'
+KubeView:
+  title: "KubeView"
+  iconhash: "-379154636"
+WSO2:
+  title: "WSO2 Management Console || WSO2 Data Services Server || WSO2 API Manager"
+  iconhash: "1398055326"
+PHICOMM-FIR302B:
+  title: "FIR302B"
+DotCMS:
+  header: 'set-cookie:dotcms'
+  body: "/dotAsset || /index.dot"
+MotionEye: 
+  iconhash: '-923693877'
+  body: "static/img/motioneye-logo.svg"
+  title: "Motioneye"
+Saia Burgess Controls - PCD: 
+  iconhash: '-1547576879'
+Arcadyan o2 box (Network): 
+  iconhash: '1479202414'
+Abilis (Network/Automation): 
+  iconhash: '-166151761'
+Airwatch: 
+  iconhash: '-1863663974 || 788771792 || 321909464 || 1095915848 || -1153873472'
+KeyHelp (Keyweb AG): 
+  iconhash: '-1267819858 || 726817668'
+GLPI: 
+  iconhash: '-1474875778'
+Netcom Technology: 
+  iconhash: '5471989'
+CradlePoint: 
+  iconhash: '-1457536113'
+MyASP: 
+  iconhash: '-736276076'
+Lenel: 
+  iconhash: '538585915'
+OkoFEN Pellematic: 
+  iconhash: '-625364318'
+SimpleHelp (Remote Support): 
+  iconhash: '1117165781'
+GraphQL: 
+  iconhash: '-1067420240'
+DNN (CMS): 
+  iconhash: '-1465479343'
+Apple: 
+  iconhash: '1232159009 || 1382324298 || -1498185948'
+ISPConfig: 
+  iconhash: '483383992'
+IP Camera: 
+  iconhash: '492290497'
+AfterLogicWebMail系统: 
+  iconhash: '-194791768'
+B2Bbuilder: 
+  iconhash: '492941040'
+深信服下一代防火墙管理系统: 
+  iconhash: '123821839'
+JumpServer: 
+  iconhash: '-1162630024'
+  title: 'Jumpserver'
+  body: '<a href="/users/password/forgot/"> && csrfmiddlewaretoken && <input type="password" class="form-control" name="password" placeholder="密码"'
+StackStorm:
+  title: "StackStorm Web UI"
+  iconhash: "-1105655963"
+电信网关:
+  body: 'img/lo1gin_bg3.png && 系统登录'
+Piwigo:
+  body: 'generator" content="Piwigo || piwigo.org">Piwigo</a>'
+  header: "pwg_id"
+UTT艾泰安全网络管理系统:
+  body: 'Technology, Inc. && 上海艾泰科技有限公司'
+Spectracom: 
+  body: 'Spectracom'
+ShowDoc: 
+  iconhash: '1969934080'
+  title: 'ShowDoc'
+Hortonworks-SmartSense-Tool:
+  title: "Hortonworks SmartSense Tool is loading..."
+  body: "name=\"hstapp/config/environment\""
+协达OA: 
+  iconhash: '-1850889691'
+中成科信 综合管理平台: 
+  iconhash: '1632964065'
+SeaweedFS: 
+  iconhash: '1210969935'
+FreeRDP 远程RDP工具: 
+  iconhash: '-2052468252'
+Apache ActiveMQ: 
+  iconhash: '1766699363'
+  title: 'Apache ActiveMQ'
+Apache-Skywalking: 
+  iconhash: '1929532064'
+Parallels Default page: 
+  iconhash: '-1050786453'
+Plesk 面板: 
+  iconhash: '-134375033'
+DzzOffice 开源办公系统: 
+  iconhash: '-1961736892'
+Cobub Razor: 
+  title: 'Cobub Razor'  
+SuperMap iServer Web Manager: 
+  iconhash: '1740191553'
+Jellyfin: 
+  iconhash: '-2069226242'
+  body: "<meta name=\"application-name\" content=\"Jellyfin\"> || class=\"page homePage libraryPage allLibraryPage backdropPage pageWithAbsoluteTabs withTabs\" || The Free Software Media System"
+  title: "Jellyfin"
+孚盟云 CRM: 
+  iconhash: '1533124028'
+TVT 公司产品: 
+  iconhash: '492290497'
+ShopXO:
+  body: "Powered by <a href=\"http://shopxo.net/\" title=\"ShopXO电商系统\" target=\"_blank\">"
+资产灯塔系统: 
+  iconhash: '1708240621'
+锐捷-RG-EW1200G: 
+  body: '锐捷 && /static/img/title.ico && /js/app'
+锐捷-RG-UAC:
+  title: "RG-UAC登录页面"
+  body: "images/free_login.png"
+锐捷防火墙: 
+  body: '下一代防火墙 && 锐捷网络'
+锐捷-NBR路由器: 
+  iconhash: '738520282'
+  body: 'Ruijie - NBR || (support.ruijie.com.cn && <p>系统负荷过高，导致网络拥塞，建议降低系统负荷或重启路由器) || class="line resource" id="nbr_1"'
+锐捷-SSLVPN: 
+  iconhash: '-1525950034'
+  body: '(SSLVPN && rjweb && login) || (SSLVPN && rjsslvpn_encookie && login)'
+锐捷交换机-睿易: 
+  body: 'cgi-bin/luci && #f47f3e'
+锐捷-EG易网关:
+  body: '(ruijie && href="eg.css) || 锐捷网络有限公司 EG易网关 || (webchat.ruijie.com.cn && main.htm && 4008 111 000 && www.ruijie.com.cn/service/know.aspx)'
+锐捷Smartweb:
+  body: "锐捷网络有限公司 无线设备 web管理"
+二级域名分发系统: 
+  iconhash: '-2055778861'
+致远 Analytics Cloud 分析云: 
+  iconhash: '410106848'
+明致 OA: 
+  iconhash: '1591287747'
+奥联通讯管理平台: 
+  iconhash: '-1356973161'
+百傲瑞达: 
+  iconhash: '-1169502834'
+明源云ERP: 
+  iconhash: '-626335361'
+  title: '明源云ERP'
+天智智慧医院综合质量监管平台: 
+  iconhash: '1986460035'
+Solar 网络管理系统: 
+  iconhash: '-1871496583'
+畅捷CRM: 
+  iconhash: '-1068428644'
+  title: "畅捷CRM"
+Uniview-ISC:
+  body: 'ActiveX/Setup.exe'
+联软安界UniSDP:
+  body: "UniSSOView"
+辰信景云终端安全管理系统:
+  title: '辰信景云终端安全管理系统'
+和信创天云桌面:
+  body: "和信下一代云桌面"
+蓝海卓越计费管理系统:
+  title: "蓝海卓越计费管理系统"
+Adminer:
+  title: "Login - Adminer"
+Microsoft-Azure-Default-Page:
+  title: "Microsoft Azure App Service - Welcome"
+Microsoft IIS: 
+  iconhash: '-1414475558'
+  title: "IIS Windows Server || IIS7"
+  header: 'Microsoft-IIS || ASP.NET_SessionId'
+悟空CRM: 
+  iconhash: '872805507'
+用友GRP-U8 新政府会计制度专版: 
+  iconhash: '-299520369'
+e-cology 运维管理平台: 
+  iconhash: '-384583337'
+H3C SecPath 运维审计系统: 
+  iconhash: '1776863739'
+  body: 'H3C SecPath'
+H3C SecPath Firewall:
+  title: 'Web user login || H3C SecPath Series || H3C SecPath Firewall System'
+信呼 OA: 
+  iconhash: '1652488516'
+MeterSphere: 
+  iconhash: '1023469568'
+  title: "MeterSphere"
+  header: "ms_session_id"
+H2 Database Console: 
+  iconhash: '-525659379'
+天融信设备: 
+  iconhash: '-2019013898'
+慧林ICP/iP备案系统: 
+  iconhash: '-556918553'
+飞思网巡 IT运维系统: 
+  iconhash: '1622043013'
+字节数联云桌面系统: 
+  iconhash: '-1142582922'
+迪浪云OA: 
+  iconhash: '-179985729'  
+金睛云华高级威胁检测系统: 
+  iconhash: '1747722638'
+VMware Workspace ONE Access: 
+  iconhash: '-1250474341'
+  title: "VMware Workspace ONE® Assist || Workspace ONE Access"
+  body: "<div class=\"admin-header-org\">Workspace ONE Access</div>"
+  header: "/AirWatch/default.aspx"
+ACE Manager:
+  title: '::: ACEmanager :::'
+网防G01: 
+  iconhash: '-968234332'
+Analytics Cloud 分析云: 
+  iconhash: '410106848'
+明源云MIP集成平台: 
+  iconhash: '-834208471'
+MapGIS Server Manager: 
+  iconhash: '-252149748'
+金钟集团智能物流管理系统: 
+  iconhash: '-364449966'
+即会通企业版(LiveUC) || 视频会议: 
+  iconhash: '-637931821'
+华测监测预警系统: 
+  iconhash: '-628229493'
+35企业邮箱系统: 
+  iconhash: '1676919780'
+指挥调度平台: 
+  iconhash: '-1971504131'
+feifeicms:
+  body: "data-target=\"#navbar-feifeicms\""
+飞视美-视频会议系统:
+  body: "class=\"subNav\">飞视美</div>"
+  title: "飞视美视频会议系统"
+飞企互联-FE业务协作平台: 
+  iconhash: '-391577146'
+  body: 'flyrise.stopBackspace.js'
+Elib 图书馆集群管理系统: 
+  iconhash: '478149598'
+迈普安全网关: 
+  iconhash: '-1234665500'
+  title: "迈普通信技术股份有限公司"
+  body: "/php/common/checknum_creat.php?module=config_authnum && ISG1000"
+奇安信自动化渗透测试系统: 
+  iconhash: '-747580443'
+红海eHR人力资源管理系统: 
+  iconhash: '-1015496453'
+Free plan-CMS:
+  body: "Powered by zychr.com"
+Mambo-CMS:
+  body: 'content="Mambo || <div id="mambo'
+PowerCreator-CMS:
+  title: "PowerCreator CMS"
+  body: 'Email:Support@powercreator.com.cn || (<span class="Bottom_VersionNO"> && PowerCreator)'
+小猪CMS:
+  header: 'X-Powered-By:PigCms.com'
+PHPWEB:
+  body: "PDV_PAGENAME"
+SpiderFlow:
+  title: "SpiderFlow"
+Laravel: 
+  header: 'laravel_session'
+  title: "Laravel Filemanager || Laravel || Whoops! There was an error."
+  body: 'vendor/laravel-admin/ || 欢迎登录laravel-admin || Sorry, the page you are looking for could not be found.'
+Embedthis:
+  header: "Embedthis-Appweb"
+  title: "Embedthis Appweb"
+PMWAY-E6:
+  title: "鹏为软件 E6"
+红帆OA:
+  body: 'iOffice'
+海昌OA:
+  body: '/loginmain4/js/jquery.min.js'
+Futong World ERP:
+  body: "<h1>富通天下ERP</h1>"
+Alcatel_Lucent-OS6865-U12X:
+  body: "<span>Device OS6865-U12X"
+Alcatel_Lucent-OS6865-P16X:
+  body: "<span>Device OS6865-P16X"
+Bootstrap:
+  body: 'bootstrap.css || bootstrap.min.css || bootstrap.js || bootstrap.min.js'
+Bootstrap-CDN:
+  body: 'cdn.bootcss.com'
+Struts2:
+  body: 'Struts Problem Report || There is no Action mapped for namespace || No result defined for action and result input || (<input type="hidden" name="struts.token.name && action)'
+  title: "Struts2 Showcase"
+  header: "Struts2"
+D-Link:
+  title: "DSL-6740C || DSL-7740C || DTR244DG"
+  iconhash: '-2031183903 || 1081719753 || 1703788174 || 517158172 || 1038500535 || -355305208 || -1897829998'
+  body: 'D-Link || (DIR-620 && D-Link Russia) || (title && DIR-620)'
+D-Link-DSL-28881A:
+  body: 'DSL-2888A'
+D-Link-AC-集中管理平台:
+  body: 'AC集中管理平台 && D-Link路由器管理页'
+中科网威-anysec:
+  title: "Anysec Login"
+DrayTek产品: 
+  header: 'realm="Vigor || DrayTek/Vigor2130 || VigorAccess Web Server || ViKING'
+  title: 'Vigor 2960 || Vigor Login Page || VigorConnect'
+  body: 'src="V2960/excanvas.js'
+Apache Skywalking:
+  title: "SkyWalking"
+Craft-CMS:
+  header: 'Craft CMS || Set-Cookie:Craft'
+LimeSurvey:
+  body: 'content="LimeSurvey || href="http://www.limesurvey.org" target="_blank" || alt="Powered by LimeSurvey || data-limesurvey-lang='
+  title: 'LimeSurvey'
+  iconhash: "1781653957"
+Apache kylin:
+  body: 'href="/kylin/" && to you under the Apache License'
+  title: "Kylin"
+TerraMaster-NAS:
+  body: 'http://www.terra-master.com/ || (NAS Setup && X-UA-Compatible && nas.cgi)'
+  title: 'TerraMaster'
+TerraMaster-TOS:
+  title: "TOS Loading"
+  header: 'X-Powered-By:TerraMaster'
+SALTSTACK-产品:
+  title: "SaltStack"
+  body: "SaltStack Config"
+Apache Flink:
+  title: "Apache Flink Web Dashboard"
+  body: "<img alt=\"Apache Flink Dashboard\" src=\"images/flink-logo.png"
+NexusDB:
+  header: "NexusDB"
+OpenTSDB:
+  title: "OpenTSDB"
+GateOne: 
+  header: 'Server:GateOne'
+Apache Druid: 
+  title: "Apache Druid"
+  body: "src=\"/druid.js\" && href=\"/druid.css\""
+Microsoft-Exchange:
+  header: "x-owa-version || OutlookSession" 
+  title: "Microsoft Outlook Web Access || Microsoft Outlook Web Access"
+  body: ".mouse .owaLogoContainer, .twide .owaLogoContainer && owaLogoContainer || (owa/auth && Outlook && logonDiv) || themes/resources/segoeui-semibold.ttf || aria-label=\"Outlook Web App || owaLgnBdy || <!-- owapage = ASP.auth_logon_aspx || /exchweb/bin/auth/owalogon.asp || /exchweb/bin/auth/owalogon.asp?url= || href=\"/owa/auth/ || window.location.replace(\"/owa/\" + window.location.hash);</script></head><body></body> || <meta http-equiv=\"Refresh\" contect=\"0;url=/owa\">"
+  iconhash: '-1249852061 || 1356662359 || 1768726119'
+Appspace:
+  title: "Appspace"
+VoIPmonitor:
+  title: "VoIPmonitor"
+  body: "share.voipmonitor.org && VoIPmonitor"
+Pentaho: 
+  title: 'Pentaho User Console - Login || Pentaho 用户控制台 - 登录'
+Oracle-Access-Manager:
+  body: "footerVersion\">Oracle Access Manager Version"
+  header: 'Set-Cookie:ObSSOCookie= || obrareq.cgi'
+  title: "Oracle Access Manager"
+B && E Tracker:
+  title: 'Budget and Expense Tracker System'
+Apache-Web-Server:
+  header: 'Server:httpd'
+GeoServer:
+  body: "/org.geoserver.web.GeoServerBasePage/ || class=\"geoserver lebeg || \\webapps\\geoserver || window.location.replace(\"web/\"); && geoserver"
+  title: "GeoServer: Welcome"
+Auerswald:
+  title: "Auerswald"
+Apache Superset:
+  iconhash: "1582430156"
+  body: "alt=\"Superset\" || (Superset && appbuilder) || <a href=\"https://manage.app-sdx.preset.io\" class=\"button\">Back to workspaces</a></section> || (/static/assets/dist/common.644ae7ae973b00abc14b.entry.js && Superset) || (/static/appbuilder/js/jquery-latest.js && Superset) || (/static/assets/images/favicon.png && Superset)"
+Franklin-Fueling:
+  body: "Franklin Fueling Systems"
+FUEL-CMS:
+  body: "\"fuel_developed_by\":\" || FUEL CMS"
+TELESQUARE-TLR-2855KS6:
+  body: 'TELESQUARE-TLR-2855KS6'
+  title: 'TLR-2005KSH'
+TELESQUARE-SDT-CW3B1:
+  title: 'Login to SDT-CS3B1'
+Oracle-E-Business-Suite:
+  title: "E-Business Suite Home Page Redirect"
+  header: "X-ORACLE-DMS-ECID"
+Crestron Device:
+  title: "Crestron-AirMedia || HD-MD4x2-4K-E"
+  header: 'Server:Crestron Webserver'
+  body: "Download AirMedia Utility Software</span></td>"
+AVEVA-InTouch-Access-Anywhere-Secure-Gateway:
+  body: "InTouch Access Anywhere"
+ZOHO-流量管理:
+  title: "ManageEngine Analytics Plus || ManageEngine NetFlow"
+  body: "href=\"/netflow/css/netflow.css || (NetFlow Analyzer && ZOHO)"
+ZOHO ManageEngine Desktop:
+  title: "ManageEngine Desktop"
+ZOHO ManageEngine Password Manager Pro:
+  title: "ManageEngine Password Manager Pro"
+NocoDB:
+  icon_hash: "-2017596142"
+  body: "href=\"./_nuxt/nocodb-sdk || href=\"./_nuxt/NocoIcon"
+Lightdash:
+  title: "Lightdash"
+CloudPanel:
+  title: "CloudPanel"
+RocketMQ:
+  title: "RocketMQ"
+Adobe-Experience-Manager:
+  body: "Welcome to Adobe Experience Manager || (AEM 登录 && Adobe) || (Adobe Experience Manager && coral-Heading coral-Heading)"
+  iconhash: "-144483185"
+AlphaWeb-XE:
+  title: "AlphaWeb XE Login Page"
+  iconhash: "-524347710"
+Apache-Ambari:
+  title: "Ambari"
+  iconhash: "-165021467"
+Aolynk BR304:
+  title: "Aolynk BR304"
+ArcGIS-Company Products:
+  title: "ArcGIS Manager"
+  body: "action=\"/arcgismanager/main/login.jsf || esri/discovery/admin.js"
+AudioCodes:
+  title: 'AudioCodes'
+Apache Axis2:
+  body: "axis2-web/css/axis-style.css || (Validate && Welcome && Axis && deployed && installation && Admin)"
+  title: "Axis 2 - Home"
+Azkaban-Web-Client:
+  title: "Azkaban Web Client"
+UPS-Adapter-CS141-SNMP-Module:
+  body: "CS141"
+Cogent-DataHub:
+  body: "<img src=\"images/Cogent.gif\""
+  title: "Cogent DataHub WebView"
+Dataiku:
+  title: "dataiku"
+  iconhash: "-2079561533"
+Datang AC:
+  body: '大唐电信科技股份公司'
+Dell-EMC:
+  body: "class=\"login_server_default\">N1"
+Dell-iDRAC:
+  body: "var tmphn = \"idrac-FCZXMW1\" || /cgi-bin/webcgi/ssologin"
+DolphinScheduler:
+  body: "let node_env = ''true'' || <title>DolphinScheduler</title>"
+DVWA:
+  title: "Damn Vulnerable Web App (DVWA) - Login"
+  body: "dvwa/css/login.css || dvwa/images/login_logo.png"
+Emqx:
+  iconhash: "-670975485 || 1450564860"
+  body: "Dashboard && emq.ico"
+exacqVision-网络服务:
+  title: "exacqVision"
+Apache Guacamole:
+  body: "images/guacamole-logo || (Guacamole - Clientless Remote Desktop && scripts/guac-ui.js)"
+  title: "Guacamole Gateway"
+HIKVISION-群组对讲服务配置平台:
+  body: "js/jquery.breadcrumbs.ex.js"
+HP-1820-8G-Switch-J9979A:
+  title: "HP 1820-8G Switch J9979A"
+HUAWEI-HG532e:
+  title: "HG532e"
+Hadoop-Hue:
+  title: "Hue - Welcome to Hue"
+  body: "jHueHdfsTreeGlobals || id=\"jHueNotify || Hue and the Hue logo are trademarks of Cloudera, Inc."
+Apache Kafka:
+  title: "UI for Apache Kafka || Kafka Center"
+Apache-Karaf:
+  header: "realm=\"karaf"
+Kingsoft-Web-Server:
+  title: "Welcome to Kingsoft Web Server!"
+  header: "Kingsoft Web Server"
+Zhongdi Digital-Mapgis:
+  title: "MapGIS Server Manager"
+MapGIS云运维管理系统:
+  title: 'MapGIS Cloud Manager'
+MongoDB Ops Manager:
+  title: 'MongoDB Ops Manager || MongoDB Ops Manager'
+  body: 'MongoDB, Inc. && MongoDB Cloud Manager'
+MOFI4500:
+  title: "MOFI4500"
+新开普-前置服务管理平台:
+  iconhash: '-1278128358'
+  title: '掌上校园服务管理平台'
+Opengear-Management-Console:
+  title: "Opengear Management Console"
+OpenEMR:
+  header: 'Set-Cookie:OpenEMR='
+  body: "<frame src=\"/interface/login/filler.php"
+  title: "OpenEMR login"
+RANCHER:
+  iconhash: "464587962"
+  title: "Loading && hellip;"
+  body: "rancherEnv || (<title>Loading?</title> && ember-basic-dropdown-wormhole)"
+Apache Ranger:
+  title: "Ranger - Sign In"
+  iconhash: "1302629996"
+北京嘉和美康电子病历系统:
+  title: "北京嘉和美康电子病历系统"
+RockMongo:
+  title: "RockMongo"
+Advantech-R-SeeNet:
+  title: "R-SeeNet"
+Secnet - Smart Routing System:
+  title: "安网-智能路由系统 || 智能路由系统 || 安网科技-智能路由系统"
+SeedDMS:
+  title: "SeedDMS"
+Apache Zeppelin:
+  body: "MathJax.Hub.Config(config); && Licensed under the Apache License"
+  iconhash: "960250052"
+  title: "Zeppelin"
+PHPOK:
+  title: "phpok"
+  body: "Powered By phpok.com || content=\"phpok"
+PHPMyWind:
+  body: "phpMyWind.com All Rights Reserved || content=\"PHPMyWind"
+中科网威防火墙:
+  body: "(<input type=\"checkbox\" id=\"authened_type\" name=\"authened_type\"><i class=\"checkbox\"></i> && 北京中科网威) || var dkey_verify = Get_Verify_Info(hex_md5 || (<body onload=\"chkVersion();setLanguage();loading()\" onkeydown=\"keyLogin(event);\"> && 北京中科网威)"
+  title: "中科网威防火墙"
+NetMizer 日志管理系统:
+  body: "var mywindows = Ext.create && window.location.href=\"main.html\";"
+  title: "NetMizer 日志管理系统"
+myucms:
+  body: 'myucms'
+MSA 互联网管理网关:
+  body: '互联网管理网关'
+MagicFlow-防火墙网关:
+  header: "MSA/1.0"
+菠菜系统:
+  body: 'newindex/static/js/16070610231968312.js'
+快排CMS:
+  body: 'kpcms.cn'
+Konga:
+  title: "Konga"
+科达DVR接入网关:
+  title: "欢迎使用DVR接入网关"
+  body: "classid=\"clsid:23CF673F-3FE7-467D-AA36-D2AA72D5361B && (src=''images/ind_log_kedacom.png'' || 苏州科达科技有限公司 || /kdc/)"
+APUSIC-Company Products:
+  body: "<td>管理Apusic应用服务器</td>"
+  header: "Apusic Application Server"
+  title: "Apusic应用服务器监控管理平台 || 欢迎使用Apusic应用服务器"
+Jeeplus:
+  body: "http://www.jeeplus.org/ || <meta name=\"author\" content=\"jeeplus\"> || (jeeplus.js && /static/common/) || /static/plugin/city-picker/css/city-picker.css || We're sorry but Jeeplus doesn't work"
+  title: "Jeeplus"
+ICewarp:
+  header: "Server:IceWarp || ESMTP Icewarp || IceWarp MailServer"
+  body: "Powered by <a href=\"http://www.icewarp.com"
+  title: "icewarp"
+GoAhead:
+  header: "GoAhead"
+方维o2o商业系统:
+  title: '方维o2o商业系统'
+  iconhash: '1989380033 || 1285373991'
+亿邮电子邮件系统:
+  title: "eYou 邮件系统"
+  header: "eYouWS || EMPHPSID"
+  body: "cr\">eYouMail || content=\"亿邮电子邮件系统 || /tpl/login/user/images/dbg.png || var loginssl = document.form_login.login_ssl.value;"
+Evolucare-Ecsimaging:
+  body: "ecsimaging-default-login.png"
+EnjoySCM:
+  title: "供应商网上服务厅"
+EGROUPWARE-产品:
+  body: "content=\"eGroupWare"
+EearCMS:
+  body: "earcms || /static/index/propeller.svg || /static/index/plane.svg || /images/propeller.svg"
+DuomiCms:
+  body: "DuomiCms || Power by DuomiCms"
+dotNETCMS:
+  body: "dotNETCMS"
+DocCMS:
+  body: "Power by DocCms"
+D-Link-DNS-ShareCenter:
+  body: "/cgi-bin/login_mgr.cgi && ShareCenter"
+D-Link-DAR-8000:
+  body: "DAR-8000 && D-Link"
+CxCMS:
+  body: "Powered by CxCms"
+Cls-Login:
+  body: 'csl/login'
+Crawlab:
+  title: "Crawlab"
+# 华平软件视频会议 AVCON6
+AVCON6:
+  body: "filename=AVCON6Setup.exe || language_dispose.action"
+  title: "AVCON6系统管理平台"
+CNVP-JCMS:
+  body: 'http://www.cnvp.com.cn'
+FDCMS:
+  title: 'FDCMS方达内容管理系统'
+# 上海云轴信息科技有限公司
+ZStack:
+  title: 'ZCE Dashboard'
+  body: '上海云轴信息科技有限公司'
+LiveBOS:
+  title: 'LiveBOS'
+  body: 'Power by LiveBOS'
+  header: 'LIVEBOS'
+OfficeWeb365:
+  body: '请输入furl参数 || http://officeweb365.net'
+EasyGBS:
+  title: 'EasyGBS'
+  iconhash: '1550946924'
+M7S:
+  title: 'M7s UI'
+易思智能物流无人值守系统:
+  body: '易思智能物流无人值守系统'
+华测监测预警系统:
+  title: '监测预警系统'
+  iconhash: "-628229493"
+CraftCMS:
+  iconhash: '-47932290'
+GoAdmin:
+  title: "GoAdmin"
+  body: "<h2>GoAdmin</h2>"
+久其财务报表:
+  body: '/netrep/'
+EasyImage:
+  body: "简单图床"
+JeeSite:
+  header: "Cookie:jeesite"
+金盘-移动图书馆系统:
+  body: "//分词检索字段"
+金盘-微信管理平台:
+  body: "js/controllers/usermessagecontroller.js"
+Smanga:
+  title: "smanga"
+  iconhash: "-1668187909"
+XploitSPY:
+  title: "XploitSPY"
+鸿运主动安全监控云平台:
+  body: "./open/webApi.html"
+宏景HCM:
+  iconhash: "947874108 || 1193049521"
+  body: "/module/system/password/forgotpassword.html || templates/index/hcmlogon.jsp"
+FUXA:
+  title: "FUXA"
+蜜罐:
+  header: "img && onerror"
+联软-安全数据摆渡系统:
+  body: "UniExClient"
+联软-安全数据交换系统:
+  body: "UniExServices || <font size=6 color=red>对不起，您的请求非法，系统拒绝响应!</font>"
+安美数字酒店宽带运营系统:
+  title: "酒店宽带运营系统"
+  body: "images/login_logo.gif && www.amttgroup.com"
+契约锁电子签章平台:
+  iconhash: "738823048"
+  title: "电子签署平台"
+  header: ".qiyuesuo.com"

