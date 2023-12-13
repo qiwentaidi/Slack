@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -253,14 +254,18 @@ type PathData struct {
 	Length   int    // 主体内容
 }
 
-func (a *App) PathRequest(method, url string, timeout int) PathData {
+func (a *App) PathRequest(method, url string, timeout int, bodyExclude string) PathData {
 	var pd PathData // 将响应头和响应头的数据存储到结构体中
 	resp, body, err := clients.NewRequest(method, url, nil, nil, timeout, clients.NotFollowClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 		return pd
 	}
-	pd.Status = resp.StatusCode
+	if bytes.Contains(body, []byte(bodyExclude)) {
+		pd.Status = 0
+	} else {
+		pd.Status = resp.StatusCode
+	}
 	pd.Length = len(body)
 	pd.Location = resp.Header.Get("Location")
 	return pd

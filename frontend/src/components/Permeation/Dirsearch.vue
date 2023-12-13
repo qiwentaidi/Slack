@@ -95,7 +95,7 @@ async function start() {
             callback();
             return;
         }
-        PathRequest(from.defaultOption, from.url + path, config.timeout).then((result) => {
+        PathRequest(from.defaultOption, from.url + path, config.timeout, config.exclude).then(result => {
             if (result.Status !== 0) {
                 statusCounts[result.Status] = (statusCounts[result.Status] || 0) + 1;
                 if (statusCounts[result.Status] <= config.times) {
@@ -141,6 +141,7 @@ const config = reactive({
     thread: 100,
     timeout: 8,
     times: 5,
+    exclude: "",
 })
 </script>
 
@@ -193,7 +194,7 @@ const config = reactive({
                                     <QuestionFilled size="24" />
                                 </el-icon></span>
                         </el-tooltip>
-                        <el-input placeholder="后续完成"></el-input>
+                        <el-input v-model="config.exclude"></el-input>
                     </el-form-item>
                     <el-form-item label="自定义字典:" style="margin-bottom: 20px;">
                         <el-tooltip placement="left">

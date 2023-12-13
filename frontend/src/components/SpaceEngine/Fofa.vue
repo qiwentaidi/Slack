@@ -219,15 +219,15 @@ function BatchSearch() {
 }
 
 // mode = 0 导出当前查询数据 
-function SaveData(mode: number) {
+async function SaveData(mode: number) {
     if (table.editableTabs.length != 0) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         if (mode == 0) {
             ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "国家", "省份", "城市", "备案号"], table.acvtiveNames, "fofa_asset", tab.content!)
         }else {
             let temp = [{}]
-            splitInt(tab.total,10000).forEach((val, idx, array) => {
-                FofaSearch(table.acvtiveNames, val.toString(), (idx+1).toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
+            splitInt(tab.total,10000).forEach(async (val, idx, array) => {
+                await FofaSearch(table.acvtiveNames, val.toString(), (idx+1).toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
                     if (result.Status == false) {
                         return
                     }

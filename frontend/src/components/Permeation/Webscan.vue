@@ -125,7 +125,7 @@ class Scanner {
                 return
             }
             dashboard.runningStatus = target
-            FingerScan(target, data, global.proxy).then((result) => {
+            FingerScan(target, data, global.proxy).then(result => {
                 dashboard.runningStatus = target
                 if (result.StatusCode == 0) {
                     dashboard.reqErrorURLs.push(target)

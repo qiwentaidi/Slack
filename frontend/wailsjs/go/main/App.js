@@ -86,8 +86,8 @@ export function Minimise() {
   return window['go']['main']['App']['Minimise']();
 }
 
-export function PathRequest(arg1, arg2, arg3) {
-  return window['go']['main']['App']['PathRequest'](arg1, arg2, arg3);
+export function PathRequest(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['PathRequest'](arg1, arg2, arg3, arg4);
 }
 
 export function PocNums(arg1, arg2) {
