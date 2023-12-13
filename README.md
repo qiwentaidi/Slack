@@ -23,6 +23,8 @@ wails doctor // 检测是否安装成功
 wails dev // 调试
 
 wails build // 编译
+
+编译完的应用在 build/bin 目录下，需要移动到当前目录下运行
 ```
 
 ## 渗透测试
