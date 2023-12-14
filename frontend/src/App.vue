@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, provide } from 'vue';
+import { CheckConfig } from "../wailsjs/go/main/App";
+import { onMounted } from 'vue';
+import { ElNotification } from 'element-plus'
 import Header from './components/Header.vue'
 import Introduction from './components/Introduction.vue';
 import Settings from './components/Settings.vue';
@@ -17,6 +20,17 @@ import Dirsearch from './components/Permeation/Dirsearch.vue';
 import Portscan from './components/Permeation/Portscan.vue';
 import Pocdetail from './components/Permeation/Pocdetail.vue';
 import Fofa from './components/SpaceEngine/Fofa.vue';
+
+onMounted(() => {
+  if (!CheckConfig()) {
+    ElNotification({
+      title: 'Warning',
+      message: 'config配置文件目录加载失败',
+      type: 'warning',
+    })
+  }
+});
+
 const currentComponent = ref('Introduction');
 provide('currentComponent', currentComponent);
 

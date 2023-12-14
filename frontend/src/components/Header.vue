@@ -1,5 +1,5 @@
 <template>
-  <el-menu index="0" mode="horizontal" :ellipsis="false" route>
+  <el-menu index="0" mode="horizontal" :ellipsis="false" route text-color="#000">
     <el-menu-item @click="currentComponent = 'Introduction'">
       <el-icon>
         <HomeFilled />
@@ -108,7 +108,7 @@ import {
   HomeFilled,
   Close,
   Setting, 
-  Bell
+  Bell,
 } from "@element-plus/icons-vue";
 
 import { Quit, Minimise, ToggleMaximise } from "../../wailsjs/go/main/App";

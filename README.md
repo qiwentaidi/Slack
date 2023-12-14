@@ -2,16 +2,17 @@
 
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/qiwentaidi/Slack?filename=go.mod">
-<img src="https://img.shields.io/badge/wails-v2.6-blue">
+<img src="https://img.shields.io/badge/wails-v2.7.1-blue">
 <a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/v/release/qiwentaidi/Slack">
 <a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/downloads/qiwentaidi/Slack/total">
 </p>
 
 
 
+
 # 使用须知
 
-由Fyne到Wails的变迁使用了2个月的时间，功能未全部完善所以暂不提供打包版，后续Fyne版本将停止更新，但是仍然可以通过分支选择你想要查看的模块，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
+由Fyne到Wails的变迁使用了2个月的时间，功能未全部完善所以暂不提供编译版，后续Fyne版本将停止更新，但是仍然可以通过分支选择你想要查看的模块，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
 
 # 运行
 
@@ -68,6 +69,30 @@ wails build // 编译
 ![image-20231125184445970](assets/image-20231125184445970.png)
 
 ![image-20231208110624124](assets/image-20231208110624124.png)
+
+# 常见问题
+
+Q：`Windows grdp`库无法打包
+
+```
+Wails CLI v2.7.1
+
+Executing: go mod tidy
+  • Generating bindings: 
+  ERROR  
+          package slack-wails
+                imports slack-wails/core/portscan
+                imports github.com/tomatome/grdp/protocol/pdu
+                imports github.com/tomatome/grdp/protocol/t125/gcc
+                imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
+```
+
+A：
+
+```
+1、检查go env，CGO_ENABLED是否为1
+2、是否安装
+```
 
 # 联系方式
 

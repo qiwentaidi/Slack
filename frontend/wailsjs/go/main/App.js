@@ -18,6 +18,10 @@ export function CheckCdn(arg1, arg2, arg3) {
   return window['go']['main']['App']['CheckCdn'](arg1, arg2, arg3);
 }
 
+export function CheckConfig() {
+  return window['go']['main']['App']['CheckConfig']();
+}
+
 export function CheckTarget(arg1, arg2) {
   return window['go']['main']['App']['CheckTarget'](arg1, arg2);
 }

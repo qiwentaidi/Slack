@@ -14,6 +14,8 @@ export function AssetWechat(arg1:string):Promise<main.WechatInfo>;
 
 export function CheckCdn(arg1:string,arg2:string,arg3:string):Promise<string>;
 
+export function CheckConfig():Promise<boolean>;
+
 export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
 
 export function DomainInfo(arg1:string):Promise<string>;

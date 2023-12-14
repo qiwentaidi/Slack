@@ -58,6 +58,13 @@ func (a *App) ToggleMaximise() {
 	runtime.WindowToggleMaximise(a.ctx)
 }
 
+func (a *App) CheckConfig() bool {
+	if _, err := os.Stat("./config"); err != nil {
+		return false
+	}
+	return true
+}
+
 // wx
 func (a *App) WechatAppid(appid, secert string) string {
 	return core.CheckSecert(appid, secert)
