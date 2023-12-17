@@ -14,7 +14,7 @@ export function AssetWechat(arg1:string):Promise<main.WechatInfo>;
 
 export function CheckCdn(arg1:string,arg2:string,arg3:string):Promise<string>;
 
-export function CheckConfig():Promise<boolean>;
+export function CheckFileStat(arg1:string):Promise<boolean>;
 
 export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
 
@@ -30,7 +30,11 @@ export function FofaTips(arg1:string):Promise<space.TipsResult>;
 
 export function Fscan2Txt(arg1:string):Promise<string>;
 
+export function GetFileContent(arg1:string):Promise<string>;
+
 export function GetFingerPoc(arg1:Array<string>):Promise<Array<string>>;
+
+export function GoSimpleFetch(arg1:string):Promise<main.Response>;
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
 

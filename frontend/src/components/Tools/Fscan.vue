@@ -10,12 +10,14 @@ const fscan = reactive({
     result: '',
 })
 
-function extractresult(){
-    Fscan2Txt(fscan.content).then(
-        result => {
-            fscan.result = result
-        }
-    )
+function extractresult() {
+    if (fscan.content !== "") {
+        Fscan2Txt(fscan.content).then(
+            result => {
+                fscan.result = result
+            }
+        )
+    }
 }
 </script>
 
@@ -24,8 +26,10 @@ function extractresult(){
     <el-form :model="fscan" label-width="100px">
         <el-form-item label="文件内容">
             <div class="head">
-                <el-input v-model="fscan.content" :rows="7" resize='none' type="textarea" placeholder='请输入result.txt的文件内容' />
-                <el-button type="primary" style=" margin-left: 10px; height: 40px;" @click="extractresult">提取关键结果</el-button>            
+                <el-input v-model="fscan.content" :rows="7" resize='none' type="textarea"
+                    placeholder='请输入result.txt的文件内容' />
+                <el-button type="primary" style=" margin-left: 10px; height: 40px;"
+                    @click="extractresult">提取关键结果</el-button>
             </div>
         </el-form-item>
         <el-form-item label="提取结果">

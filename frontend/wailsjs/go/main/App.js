@@ -18,8 +18,8 @@ export function CheckCdn(arg1, arg2, arg3) {
   return window['go']['main']['App']['CheckCdn'](arg1, arg2, arg3);
 }
 
-export function CheckConfig() {
-  return window['go']['main']['App']['CheckConfig']();
+export function CheckFileStat(arg1) {
+  return window['go']['main']['App']['CheckFileStat'](arg1);
 }
 
 export function CheckTarget(arg1, arg2) {
@@ -50,8 +50,16 @@ export function Fscan2Txt(arg1) {
   return window['go']['main']['App']['Fscan2Txt'](arg1);
 }
 
+export function GetFileContent(arg1) {
+  return window['go']['main']['App']['GetFileContent'](arg1);
+}
+
 export function GetFingerPoc(arg1) {
   return window['go']['main']['App']['GetFingerPoc'](arg1);
+}
+
+export function GoSimpleFetch(arg1) {
+  return window['go']['main']['App']['GoSimpleFetch'](arg1);
 }
 
 export function HostAlive(arg1, arg2) {

@@ -58,11 +58,36 @@ func (a *App) ToggleMaximise() {
 	runtime.WindowToggleMaximise(a.ctx)
 }
 
-func (a *App) CheckConfig() bool {
-	if _, err := os.Stat("./config"); err != nil {
+func (a *App) CheckFileStat(path string) bool {
+	if _, err := os.Stat(path); err != nil {
 		return false
 	}
 	return true
+}
+
+func (a *App) GetFileContent(filename string) string {
+	b, err := os.ReadFile(filename)
+	if err != nil {
+		return "文件不存在"
+	}
+	return string(b)
+}
+
+type Response struct {
+	OK     bool
+	Status int
+	Text   string
+}
+
+func (a *App) GoSimpleFetch(url string) *Response {
+	var r Response
+	resp, b, err := clients.NewRequest("GET", url, nil, nil, 10, clients.DefaultClient())
+	if err == nil {
+		r.OK = true
+	}
+	r.Status = resp.StatusCode
+	r.Text = string(b)
+	return &r
 }
 
 // wx

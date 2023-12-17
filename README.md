@@ -90,8 +90,8 @@ Executing: go mod tidy
 A：
 
 ```
-1、检查go env，CGO_ENABLED是否为1
-2、是否安装
+1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
+2、需要安装GCC环境
 ```
 
 # 联系方式

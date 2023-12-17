@@ -5,9 +5,9 @@
         <HomeFilled />
       </el-icon>
     </el-menu-item>
-    <el-divider class="divder" direction="vertical"/>
+    <el-divider class="divder" direction="vertical" />
     <el-sub-menu index="1">
-      <template #title><span>渗透测试</span><el-icon> 
+      <template #title><span>渗透测试</span><el-icon>
           <Smoking />
         </el-icon></template>
       <el-menu-item index="1-1" @click="currentComponent = 'Webscan'">网站扫描</el-menu-item>
@@ -48,12 +48,38 @@
     </el-sub-menu>
     <!-- 右对齐 -->
     <div class="setting" style="--wails-draggable: drag" @dblclick="ToggleMaximise"></div>
-    <el-menu-item index="5" @click="">
-        <el-icon>
-          <Bell />
-        </el-icon>
-      </el-menu-item>
-      <el-divider class="divder" direction="vertical"/>
+
+    <el-popover placement="bottom-end" title="更新通知" :width="350" trigger="hover">
+      <template #reference>
+        <el-menu-item index="5">
+          <el-icon>
+            <Bell />
+          </el-icon>
+        </el-menu-item>
+      </template>
+      <el-card class="box-card" shadow="never" style="width: 325px">
+        <template #header>
+          <div class="card-header">
+            <span>POC&指纹-v{{ version.LocalPoc }}</span>
+            <el-button class="button" :icon="Download" type="primary"
+              :disabled="version.RemotePoc !== version.LocalPoc">立即下载</el-button>
+          </div>
+        </template>
+        <el-input type="textarea" rows="5" v-model="version.PocUpdateContent" resize="none" readonly></el-input>
+      </el-card>
+      <el-card class="box-card" shadow="never" style="width: 325px; margin-top: 15px">
+        <template #header>
+          <div class="card-header">
+            <span>客户端-v{{ version.LocalClient }}</span>
+            <el-button class="button" :icon="Download" type="primary"
+              :disabled="version.RemoteClient !== version.LocalClient">立即下载</el-button>
+          </div>
+        </template>
+        <el-input type="textarea" rows="5" v-model="version.ClientUpdateContent" resize="none" readonly></el-input>
+      </el-card>
+    </el-popover>
+
+    <el-divider class="divder" direction="vertical" />
     <el-tooltip content="设置" placement="bottom">
       <el-menu-item index="6" @click="currentComponent = 'Settings'">
         <el-icon>
@@ -68,7 +94,7 @@
         </el-icon>
       </el-menu-item>
     </el-tooltip>
-    <el-divider class="divder" direction="vertical"/>
+    <el-divider class="divder" direction="vertical" />
     <!-- MAX MIN CLOSE -->
     <el-menu-item @click="minimise">
       <el-icon>
@@ -96,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from "vue";
+import { ref, inject, reactive } from "vue";
 import {
   OfficeBuilding,
   Tools,
@@ -107,14 +133,83 @@ import {
   Help,
   HomeFilled,
   Close,
-  Setting, 
+  Setting,
   Bell,
+  Download,
 } from "@element-plus/icons-vue";
-
-import { Quit, Minimise, ToggleMaximise } from "../../wailsjs/go/main/App";
+import { Quit, Minimise, ToggleMaximise, CheckFileStat, GetFileContent, GoSimpleFetch } from "../../wailsjs/go/main/App";
+import { onMounted } from "vue";
+import { ElNotification } from "element-plus";
+import { compareVersion } from "../util"
+const lv = "./config/afrog-pocs/version"
+onMounted(async () => {
+  if (!CheckFileStat("./config")) {
+    ElNotification({
+      title: "Warning",
+      message: "config配置文件目录加载失败，会影响程序功能使用",
+      type: "warning",
+    });
+    return
+  }
+  checkUpdate.updatePoc()
+  checkUpdate.updateClient()
+});
 
 const centerDialogVisible = ref(false);
 const currentComponent = inject("currentComponent");
+
+const checkUpdate = ({
+  // poc
+  updatePoc: async function () {
+    if (!CheckFileStat(lv)) {
+      version.LocalPoc = "版本文件不存在"
+      return
+    } else {
+      version.LocalPoc = await GetFileContent(lv)
+    }
+    let rp1 = await GoSimpleFetch(download.RemotePocV)
+    if (rp1.Status !== 200) {
+      version.PocUpdateContent = "检测更新失败"
+    } else {
+      if (compareVersion(version.LocalPoc, rp1.Text) == -1) {
+        version.PocUpdateContent = (await GoSimpleFetch(download.RemotePocCentent)).Text
+      } else {
+        version.PocUpdateContent = "当前已是最新版本"
+      }
+    }
+  },
+  // client
+  updateClient: async function () {
+    let rp2 = await GoSimpleFetch(download.RemoteClientV)
+    if (rp2.Status !== 200) {
+      version.ClientUpdateContent = "检测更新失败"
+    } else {
+      if (compareVersion(version.LocalClient, rp2.Text) == -1) {
+        version.ClientUpdateContent = (await GoSimpleFetch(download.RemoteClientCentent)).Text
+      } else {
+        version.ClientUpdateContent = "当前已是最新版本"
+      }
+    }
+  }
+})
+
+const version = reactive({
+  LocalPoc: "",
+  LocalClient: "1.4.5",
+  RemotePoc: "",
+  RemoteClient: "",
+  PocUpdateContent: "",
+  ClientUpdateContent: "",
+});
+
+const download = {
+  RemotePocV:
+    "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version",
+  RemoteClientV:
+    "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/version",
+  RemotePocCentent: 'https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/update',
+  RemoteClientCentent: 'https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update',
+};
 
 function quit() {
   Quit();
@@ -138,5 +233,9 @@ function minimise() {
 
 .setting {
   flex-grow: 1;
+}
+
+.el-menu-item.is-active.el-tooltip__trigger {
+  border-bottom: #fff;
 }
 </style>
