@@ -62,7 +62,7 @@
           <div class="card-header">
             <span>POC&指纹-v{{ version.LocalPoc }}</span>
             <el-button class="button" :icon="Download" type="primary" :disabled="!version.PocStatus"
-              @click="">立即下载</el-button>
+              @click="update.poc">立即下载</el-button>
           </div>
         </template>
         <el-input type="textarea" rows="5" v-model="version.PocUpdateContent" resize="none" readonly></el-input>
