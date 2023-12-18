@@ -19,6 +19,7 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/report"
+	"slack-wails/lib/update"
 	"slack-wails/lib/util"
 	"strings"
 	"sync"
@@ -607,4 +608,11 @@ func (a *App) Webscan(url, severity, keyword string, pocpathList []string, pr cl
 	}
 	r.Execute(url, pocpathList)
 	return &wr
+}
+
+func (a *App) UpdatePocFile(latestVersion string) string {
+	if err := update.UpdatePoc(latestVersion); err != nil {
+		return err.Error()
+	}
+	return ""
 }

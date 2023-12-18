@@ -150,6 +150,10 @@ export function Transcoding(arg1, arg2, arg3) {
   return window['go']['main']['App']['Transcoding'](arg1, arg2, arg3);
 }
 
+export function UpdatePocFile(arg1) {
+  return window['go']['main']['App']['UpdatePocFile'](arg1);
+}
+
 export function Webscan(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['Webscan'](arg1, arg2, arg3, arg4, arg5);
 }

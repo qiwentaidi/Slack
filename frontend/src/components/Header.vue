@@ -61,8 +61,8 @@
         <template #header>
           <div class="card-header">
             <span>POC&指纹-v{{ version.LocalPoc }}</span>
-            <el-button class="button" :icon="Download" type="primary"
-              :disabled="version.RemotePoc !== version.LocalPoc">立即下载</el-button>
+            <el-button class="button" :icon="Download" type="primary" :disabled="!version.PocStatus"
+              @click="">立即下载</el-button>
           </div>
         </template>
         <el-input type="textarea" rows="5" v-model="version.PocUpdateContent" resize="none" readonly></el-input>
@@ -71,8 +71,8 @@
         <template #header>
           <div class="card-header">
             <span>客户端-v{{ version.LocalClient }}</span>
-            <el-button class="button" :icon="Download" type="primary"
-              :disabled="version.RemoteClient !== version.LocalClient">立即下载</el-button>
+            <el-button class="button" :icon="Download" type="primary" :disabled="!version.ClientStatus"
+              @click="">立即下载</el-button>
           </div>
         </template>
         <el-input type="textarea" rows="5" v-model="version.ClientUpdateContent" resize="none" readonly></el-input>
@@ -96,7 +96,7 @@
     </el-tooltip>
     <el-divider class="divder" direction="vertical" />
     <!-- MAX MIN CLOSE -->
-    <el-menu-item @click="minimise">
+    <el-menu-item @click="Minimise">
       <el-icon>
         <Minus />
       </el-icon>
@@ -106,7 +106,7 @@
         <FullScreen />
       </el-icon>
     </el-menu-item>
-    <el-menu-item @click="quit">
+    <el-menu-item @click="Quit">
       <el-icon>
         <Close />
       </el-icon>
@@ -137,7 +137,15 @@ import {
   Bell,
   Download,
 } from "@element-plus/icons-vue";
-import { Quit, Minimise, ToggleMaximise, CheckFileStat, GetFileContent, GoSimpleFetch } from "../../wailsjs/go/main/App";
+import {
+  Quit,
+  Minimise,
+  ToggleMaximise,
+  CheckFileStat,
+  GetFileContent,
+  GoSimpleFetch,
+  UpdatePocFile
+} from "../../wailsjs/go/main/App";
 import { onMounted } from "vue";
 import { ElNotification } from "element-plus";
 import { compareVersion } from "../util"
@@ -151,18 +159,19 @@ onMounted(async () => {
     });
     return
   }
-  checkUpdate.updatePoc()
-  checkUpdate.updateClient()
+  check.poc()
+  check.client()
 });
 
 const centerDialogVisible = ref(false);
 const currentComponent = inject("currentComponent");
 
-const checkUpdate = ({
+const check = ({
   // poc
-  updatePoc: async function () {
+  poc: async function () {
     if (!CheckFileStat(lv)) {
       version.LocalPoc = "版本文件不存在"
+      version.PocStatus = false
       return
     } else {
       version.LocalPoc = await GetFileContent(lv)
@@ -170,27 +179,55 @@ const checkUpdate = ({
     let rp1 = await GoSimpleFetch(download.RemotePocV)
     if (rp1.Status !== 200) {
       version.PocUpdateContent = "检测更新失败"
+      version.PocStatus = false
     } else {
       if (compareVersion(version.LocalPoc, rp1.Text) == -1) {
         version.PocUpdateContent = (await GoSimpleFetch(download.RemotePocCentent)).Text
+        version.PocStatus = true
       } else {
         version.PocUpdateContent = "当前已是最新版本"
+        version.PocStatus = false
       }
     }
   },
   // client
-  updateClient: async function () {
+  client: async function () {
     let rp2 = await GoSimpleFetch(download.RemoteClientV)
     if (rp2.Status !== 200) {
       version.ClientUpdateContent = "检测更新失败"
+      version.ClientStatus = false
     } else {
       if (compareVersion(version.LocalClient, rp2.Text) == -1) {
         version.ClientUpdateContent = (await GoSimpleFetch(download.RemoteClientCentent)).Text
+        version.ClientStatus = true
       } else {
         version.ClientUpdateContent = "当前已是最新版本"
+        version.ClientStatus = false
       }
     }
   }
+})
+
+const update = ({
+  poc: async function () {
+    let err = await UpdatePocFile("v" + version.RemotePoc)
+    if (err !== "") {
+      ElNotification({
+        title: "Success",
+        message: "POC更新成功！",
+        type: "success",
+      });
+    }else {
+      ElNotification({
+        title: "Error",
+        message: "POC更新失败！！",
+        type: "error",
+      });
+    }
+  },
+  client: function () {
+
+  } 
 })
 
 const version = reactive({
@@ -200,6 +237,8 @@ const version = reactive({
   RemoteClient: "",
   PocUpdateContent: "",
   ClientUpdateContent: "",
+  PocStatus: false,
+  ClientStatus: false,
 });
 
 const download = {
@@ -210,14 +249,6 @@ const download = {
   RemotePocCentent: 'https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/update',
   RemoteClientCentent: 'https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update',
 };
-
-function quit() {
-  Quit();
-}
-
-function minimise() {
-  Minimise();
-}
 
 </script>
 <style>

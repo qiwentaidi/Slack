@@ -14,14 +14,15 @@ import (
 
 const (
 	LocalConfig   = "./config/"
-	lastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/tag/"
+	lastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
 )
 
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
 func UpdatePoc(latestVersion string) error {
-	workflow := lastestPocUrl + latestVersion + "/workflow.yaml"
-	webfinger := lastestPocUrl + latestVersion + "/webfiner.yaml"
-	pocs := lastestPocUrl + latestVersion + "/afrog-pocs.zip"
+	temp := lastestPocUrl + latestVersion
+	workflow := temp + "/workflow.yaml"
+	webfinger := temp + "/webfiner.yaml"
+	pocs := temp + "/afrog-pocs.zip"
 	if _, err := download(workflow, LocalConfig); err != nil {
 		return errors.New("workflow.yaml更新失败")
 	}
