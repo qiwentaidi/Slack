@@ -614,5 +614,9 @@ func (a *App) UpdatePocFile(latestVersion string) string {
 	if err := update.UpdatePoc(latestVersion); err != nil {
 		return err.Error()
 	}
+	const oldPocZip = "./config/afrog-pocs.zip"
+	if err := os.RemoveAll(oldPocZip); err != nil {
+		return err.Error()
+	}
 	return ""
 }

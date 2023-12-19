@@ -11,6 +11,7 @@ declare module 'vue' {
     Codec: typeof import('./src/components/Tools/Codec.vue')['default']
     Dirsearch: typeof import('./src/components/Permeation/Dirsearch.vue')['default']
     ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
+    ElBadge: typeof import('element-plus/es')['ElBadge']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
     ElCard: typeof import('element-plus/es')['ElCard']

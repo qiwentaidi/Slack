@@ -55,6 +55,7 @@
           <el-icon>
             <Bell />
           </el-icon>
+          <el-badge is-dot v-if="version.ClientStatus == true || version.PocStatus == true" />
         </el-menu-item>
       </template>
       <el-card class="box-card" shadow="never" style="width: 325px">
@@ -78,7 +79,6 @@
         <el-input type="textarea" rows="5" v-model="version.ClientUpdateContent" resize="none" readonly></el-input>
       </el-card>
     </el-popover>
-
     <el-divider class="divder" direction="vertical" />
     <el-tooltip content="设置" placement="bottom">
       <el-menu-item index="6" @click="currentComponent = 'Settings'">
@@ -181,6 +181,7 @@ const check = ({
       version.PocUpdateContent = "检测更新失败"
       version.PocStatus = false
     } else {
+      version.RemotePoc = rp1.Text
       if (compareVersion(version.LocalPoc, rp1.Text) == -1) {
         version.PocUpdateContent = (await GoSimpleFetch(download.RemotePocCentent)).Text
         version.PocStatus = true
@@ -217,7 +218,7 @@ const update = ({
         message: "POC更新成功！",
         type: "success",
       });
-    }else {
+    } else {
       ElNotification({
         title: "Error",
         message: "POC更新失败！！",
@@ -227,7 +228,7 @@ const update = ({
   },
   client: function () {
 
-  } 
+  }
 })
 
 const version = reactive({
@@ -268,5 +269,9 @@ const download = {
 
 .el-menu-item.is-active.el-tooltip__trigger {
   border-bottom: #fff;
+}
+
+.el-badge {
+  height: 120px;
 }
 </style>

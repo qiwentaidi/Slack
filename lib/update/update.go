@@ -20,8 +20,9 @@ const (
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
 func UpdatePoc(latestVersion string) error {
 	temp := lastestPocUrl + latestVersion
+	fmt.Printf("temp: %v\n", temp)
 	workflow := temp + "/workflow.yaml"
-	webfinger := temp + "/webfiner.yaml"
+	webfinger := temp + "/webfinger.yaml"
 	pocs := temp + "/afrog-pocs.zip"
 	if _, err := download(workflow, LocalConfig); err != nil {
 		return errors.New("workflow.yaml更新失败")

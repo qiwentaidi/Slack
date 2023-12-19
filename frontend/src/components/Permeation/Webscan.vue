@@ -160,7 +160,7 @@ class Scanner {
             }
             dashboard.logger += `[INFO] ${target}，正在进行主动指纹探测\n`
             dashboard.runningStatus = target
-            Webscan(target, "", "", form.currentLoadPath, global.proxy).then((result) => {
+            Webscan(target, "", "", form.currentLoadPath, global.proxy).then(result => {
                 if (result.length >= 1) {
                     for (const item of result) {
                         switch (item.Severity) {
@@ -200,6 +200,7 @@ class Scanner {
                 callback();
             })
         }, async (err: any) => {
+            alert(form.currentModule)
             if (err) {
                 ElMessage.error(err)
             } else {
