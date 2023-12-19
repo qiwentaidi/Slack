@@ -185,7 +185,7 @@ GilaCMS:
 深信服一体化网关 MIG: 
   body: 'cgi-bin/login.cgi && /html/wz_tooltip.js'
 天融信防火墙: 
-  body: 'TOPSEC && image/aaa.png && username'
+  body: '(TOPSEC && image/aaa.png && username) || (Web User Login && /cgi/maincgi.cgi?Url=VerifyCode)'
 天融信TopAPP负载均衡系统: 
   body: 'TopAPP负载均衡系统 && 天融信'
 网御 vpn: 
@@ -920,8 +920,6 @@ VMware Horizon:
   iconhash: '-991123252 || 1182206475 || 1895360511 || -1255992602'
 明源云 ERP: 
   body: '(PubPlatform && 明源云 && LoginHandler) || (#153290 && 明源软件)'
-迪普VPN: 
-  body: 'dptech_ssl && sslvpn && loginAPI.js'
 OpenShift Web Console: 
   title: 'OpenShift Web Console'
 好视通: 
@@ -977,8 +975,8 @@ CMSTop:
   body: 'exam/logo/favicon.ico && fangpage'
 Spring Eureka: 
   body: '<title>Eureka</title> && eureka'
-迪普 SSLVPN: 
-  body: 'DPSSLVPN && SSL VPN Service && login'
+迪普VPN: 
+  body: '(DPSSLVPN && SSL VPN Service && login) || (dptech_ssl && sslvpn && loginAPI.js)'
 百卓byzoro-安全网关: 
   body: '北京百卓 && PatrolFlow && login.php'
 ENESYS: 
@@ -1490,6 +1488,8 @@ Dahua 智慧园区:
   body: '/WPMS/asset/lib/gridster/'
 Dahua DSS:
   body: '/portal/include/script/dahuaDefined/headCommon.js'
+Dahua ICC:
+  body: '*客户端会小于800*'
 Huawei - ADSL/Router: 
   iconhash: '-1395400951'
 Sophos Firewall:
@@ -2471,8 +2471,8 @@ ShopXO:
   iconhash: '1708240621'
 锐捷-RG-EW1200G: 
   body: '锐捷 && /static/img/title.ico && /js/app'
-锐捷-RG-UAC:
-  title: "RG-UAC登录页面"
+锐捷RG-UAC:
+  title: "rg-uac || RG-UAC登录页面"
   body: "images/free_login.png"
 锐捷防火墙: 
   body: '下一代防火墙 && 锐捷网络'
@@ -2485,7 +2485,7 @@ ShopXO:
 锐捷交换机-睿易: 
   body: 'cgi-bin/luci && #f47f3e'
 锐捷-EG易网关:
-  body: '(ruijie && href="eg.css) || 锐捷网络有限公司 EG易网关 || (webchat.ruijie.com.cn && main.htm && 4008 111 000 && www.ruijie.com.cn/service/know.aspx)'
+  body: '(ruijie && href="eg.css) || 锐捷网络有限公司 EG易网关 || (webchat.ruijie.com.cn && main.htm && 4008 111 000 && www.ruijie.com.cn/service/know.aspx) || 请输入您的RG-EG易网关的用户名和密码'
 锐捷Smartweb:
   body: "锐捷网络有限公司 无线设备 web管理"
 二级域名分发系统: 
@@ -2989,3 +2989,13 @@ FUXA:
   iconhash: "738823048"
   title: "电子签署平台"
   header: ".qiyuesuo.com"
+SysAid On-Premise:
+  body: "sysaid-logo-dark-green.png"
+SpringBlade:
+  body: "saber/iconfont.css || Saber 将不能正常工作 || <title>Sword Admin || We're sorry but avue-data doesn't work"
+SSLVPN: 
+  body: "/webui/images/default/default/alert_close.jpg"
+速达软件-公司产品:
+  body: "速达Center——登陆页面"
+ZFsoft: 
+  bodu: "正方软件股份有限公司</a>"

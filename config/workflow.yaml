@@ -171,9 +171,11 @@ WeiPHP:
   - config/afrog-pocs/vulnerability/weiphp-path-traversal.yaml
 MessageSolution Enterprise Email Archiving (EEA): 
   - config/afrog-pocs/CNVD/2021/CNVD-2021-10543.yaml
-锐捷-RG-UAC: 
+锐捷RG-UAC: 
   - config/afrog-pocs/CNVD/2021/CNVD-2021-14536.yaml
   - config/afrog-pocs/CVE/2021/CVE-2021-27648.yaml
+  - config/afrog-pocs/vulnerability/ruijie-rg-uac-account-password-leakage.yaml
+  - config/afrog-pocs/vulnerability/ruijie-rg-uac-nmc-sync-rce.yaml
 ShopXO: 
   - config/afrog-pocs/CNVD/2021/CNVD-2021-15822.yaml
 Landray OA: 
@@ -392,6 +394,7 @@ Apache OFBiz:
   - config/afrog-pocs/default-pwd/ofbiz-default-password.yaml
   - config/afrog-pocs/vulnerability/apache-ofbiz-log4j-rce.yaml
   - config/afrog-pocs/CVE/2021/CVE-2021-30128.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-49070.yaml
 AppWeb Authentication: 
   - config/afrog-pocs/CVE/2018/CVE-2018-8715.yaml
 Cobub Razor: 
@@ -709,6 +712,7 @@ Casdoor:
   - config/afrog-pocs/addpocs/casdoor-fileread.yaml
 TOTOLINK: 
   - config/afrog-pocs/CVE/2022/CVE-2022-25084.yaml
+  - config/afrog-pocs/CVE/2023/CVE-2023-46574.yaml
 Dynamicweb:
   - config/afrog-pocs/CVE/2022/CVE-2022-25369.yaml
 MotionEye: 
@@ -901,6 +905,7 @@ Hadoop-Hue:
   - config/afrog-pocs/addpocs/jinher-oa-fileuploadmessage-fileread.yaml
   - config/afrog-pocs/vulnerability/jinher-oa-c6-download-file-read.yaml
   - config/afrog-pocs/addpocs/jinher-oa-saveasotherformatservlet-upload.yaml
+  - config/afrog-pocs/vulnerability/jinher-oa-c6-fileuploadmessage-fileread.yaml
 JupyterHub: 
   - config/afrog-pocs/default-pwd/jupyterhub-default-login.yaml
 Apache Kafka:
@@ -1007,6 +1012,7 @@ Huawei DG8045:
   - config/afrog-pocs/disclosure/ruijie-eg-password-leak.yaml
   - config/afrog-pocs/vulnerability/ruijie-eg-cli-rce.yaml
   - config/afrog-pocs/vulnerability/ruijie-eg-file-read.yaml
+  - config/afrog-pocs/vulnerability/ruijie-rg-eg-web-mis-rce.yaml
 锐捷Smartweb:
   - config/afrog-pocs/disclosure/ruijie-smartweb-password-disclosure.yaml
 # 主动目录探测
@@ -1060,6 +1066,11 @@ YApi 可视化接口管理平台:
   - config/afrog-pocs/vulnerability/wanhu-oa-officeserver-upload-file.yaml
   - config/afrog-pocs/vulnerability/wanhu-oa-smartupload-upload-file.yaml
   - config/afrog-pocs/vulnerability/wanhu-oa-tele-conference-service-xxe.yaml
+  - config/afrog-pocs/vulnerability/wanhu-defaultroot-sqli.yaml
+  - config/afrog-pocs/vulnerability/wanhu-defaultroot-sqli-1.yaml
+  - config/afrog-pocs/vulnerability/wanhu-defaultroot-sqli-2.yaml
+  - config/afrog-pocs/vulnerability/wanhu-defaultroot-sqli-3.yaml
+  - config/afrog-pocs/vulnerability/wanhu-oa-documentedit-sqli.yaml
 通达OA: 
   - config/afrog-pocs/vulnerability/tongda-contact-list-disclosure.yaml
   - config/afrog-pocs/vulnerability/tongda-insert-sql-inject-getshell.yaml
@@ -1082,6 +1093,8 @@ YApi 可视化接口管理平台:
   - config/afrog-pocs/vulnerability/dbappsecurity-mingyu-xmlrpc-sock-adduser.yaml
 安恒明御安全网关:
   - config/afrog-pocs/vulnerability/dbappsecurity-mingyu-aaa-portal-auth-local-submit-rce.yaml
+  - config/afrog-pocs/vulnerability/dbappsecurity-aaa-portal-auth-config-reset-suffix-rce.yaml
+  - config/afrog-pocs/vulnerability/dbappsecurity-aaa-portal-auth-config-reset-type-rce.yaml
 SMARTBI:
   - config/afrog-pocs/vulnerability/smartbi-address-auth-bypass.yaml
   - config/afrog-pocs/vulnerability/smartbi-db2-biconfigservice-rce.yaml
@@ -1127,6 +1140,9 @@ Yonyou-UFIDA:
   - config/afrog-pocs/vulnerability/yonyou-ufida-oa-uapws-xxe.yaml
 Yonyou-KSOA:
   - config/afrog-pocs/vulnerability/yonyou-ufida-ksoa-image-upload-file.yaml
+  - config/afrog-pocs/vulnerability/yonyou-ksoa-dept-sqli.yaml
+  - config/afrog-pocs/vulnerability/yonyou-ksoa-paybill-sqi.yaml
+  - config/afrog-pocs/vulnerability/yonyou-ksoa-servletimagefield-skeyvalue-sqli.yaml
 Yonyou-GRP-U8: 
   - config/afrog-pocs/CNVD/2016/CNNVD-201610-923.yaml
   - config/afrog-pocs/vulnerability/yonyou-grp-u8-app-proxy-uploadfile.yaml
@@ -1140,12 +1156,15 @@ Yonyou-GRP-U8:
   - config/afrog-pocs/vulnerability/yonyou-u8-oa-sqli.yaml
   - config/afrog-pocs/vulnerability/seeyon-wooyun-2015-148227.yaml
   - config/afrog-pocs/addpocs/yonyou-grp-u8-slbmbygr-sqi.yaml
+  - config/afrog-pocs/vulnerability/yongyou-grp-u8-smartupload01-fileupload.yaml
+  - config/afrog-pocs/vulnerability/yonyou-grp-u8-license-check-sqli.yaml
 Yonyou-U8-CRM:
   - config/afrog-pocs/vulnerability/yonyou-u8-crm-getemaildata-fileupload.yaml
   - config/afrog-pocs/vulnerability/yonyou-u8-crm-getemaildata-fileread.yaml
 Yonyou NC Cloud: 
   - config/afrog-pocs/vulnerability/yonyou-nccloud-uapjs-upload-rce.yaml
   - config/afrog-pocs/vulnerability/yonyou-cloud-jsinvoke-uploadfile.yaml
+  - config/afrog-pocs/vulnerability/yonyou-nccloud-uploadchunk-fileupload.yaml
 Yonyou NC: 
   - config/afrog-pocs/vulnerability/yonyou-nc-uploadservlet-rce.yaml
   - config/afrog-pocs/vulnerability/yonyou-nc-ncmessageservlet-rce.yaml
@@ -1156,6 +1175,7 @@ Yonyou NC:
   - config/afrog-pocs/addpocs/yongyouNc-uploadControl-uploadFile.yaml
 Yonyou-U8-Cloud:
   - config/afrog-pocs/vulnerability/yonyou-u8-cloud-fileupload.yaml
+  - config/afrog-pocs/vulnerability/yonyou-u8-cloud-registerservlet-sqli.yaml
 Yonyou-FE协作办公平台:
   - config/afrog-pocs/vulnerability/yonyou-fe-templateoftaohong-manager-path-traversal.yaml
 一米OA:
@@ -1201,6 +1221,8 @@ Tpshop:
   - config/afrog-pocs/vulnerability/tpshop-sqli.yaml
 天融信上网行为管理: 
   - config/afrog-pocs/vulnerability/topsec-topacm-rce.yaml
+天融信防火墙: 
+  - config/afrog-pocs/vulnerability/topsec-maincgi-cookie-rce.yaml
 天问物业ERP:
   - config/afrog-pocs/vulnerability/tianwenwuye-erp-uploadfile-aspx-anyfile-upload.yaml
 ThinkCMF:
@@ -1233,6 +1255,9 @@ Selea-ANPR-Camera:
   - config/afrog-pocs/vulnerability/secworld-secips-3600-debuginfo-readfile.yaml
 网神SecGate 3600防火墙: 
   - config/afrog-pocs/vulnerability/secworld-secgate3600-objappupfile-uploadfile.yaml
+  - config/afrog-pocs/vulnerability/secworld-secgate3600-obj-area-export-save-fileread.yaml
+  - config/afrog-pocs/vulnerability/secworld-secgate3600-obj-area-import-save-fileupload.yaml
+  - config/afrog-pocs/vulnerability/secworld-secgate3600-obj-av-import-save-fileupload.yaml
 SeaCMS:
   - config/afrog-pocs/vulnerability/seacmsv645-command-exec.yaml
   - config/afrog-pocs/vulnerability/seacms-v654-rce.yaml
@@ -1337,6 +1362,7 @@ Konga:
 金蝶云星空: 
   - config/afrog-pocs/vulnerability/kingdee-deserialization-rce.yaml
   - config/afrog-pocs/addpocs/kingdee-fileproxyhandler-fileread.yaml
+  - config/afrog-pocs/vulnerability/kindee-scpsupreghandler-fileupload.yaml
 科达-MTS转码服务器:
   - config/afrog-pocs/vulnerability/kedacom-mts-file-read.yaml
 科达DVR接入网关:
@@ -1601,3 +1627,14 @@ Richmail 邮件系统:
 Panabit-Panalog:
   - config/afrog-pocs/addpocs/panabit-log-useradd.yaml
   - config/afrog-pocs/addpocs/panabit-log-rce.yaml
+SysAid On-Premise:
+  - config/afrog-pocs/CVE/2023/CVE-2023-47246.yaml
+Dahua ICC:
+  - config/afrog-pocs/vulnerability/dahua-icc-login-bypass.yaml
+  - config/afrog-pocs/vulnerability/dahua-icc-readpic-fileread.yaml
+SSLVPN: 
+  - config/afrog-pocs/default-pwd/sslvpn-client-rce.yaml
+速达软件-公司产品:
+  - config/afrog-pocs/vulnerability/superdata-designreportsave-fileupload.yaml
+ZFsoft:
+  - config/afrog-pocs/vulnerability/zfsoft-createcafile-rce.yaml
