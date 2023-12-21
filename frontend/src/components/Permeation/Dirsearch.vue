@@ -96,7 +96,9 @@ async function start() {
             return;
         }
         PathRequest(from.defaultOption, from.url + path, config.timeout, config.exclude).then(result => {
-            if (result.Status !== 0) {
+            if (result.Status == 0) {
+                from.errorCounts++
+            }else if (result.Status !== 1) {
                 statusCounts[result.Status] = (statusCounts[result.Status] || 0) + 1;
                 if (statusCounts[result.Status] <= config.times) {
                     dir.value.push({
@@ -105,9 +107,7 @@ async function start() {
                         path: from.url + path,
                         location: result.Location,
                     });
-                }
-            }else {
-                from.errorCounts++
+                }    
             }
             callback()
         })

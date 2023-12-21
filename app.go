@@ -294,8 +294,8 @@ func (a *App) PathRequest(method, url string, timeout int, bodyExclude string) P
 		logger.NewDefaultLogger().Debug(err.Error())
 		return pd
 	}
-	if bytes.Contains(body, []byte(bodyExclude)) {
-		pd.Status = 0
+	if bodyExclude != "" && bytes.Contains(body, []byte(bodyExclude)) {
+		pd.Status = 1 // status 1 表示被body排除在外，不计入ERROR请求中
 	} else {
 		pd.Status = resp.StatusCode
 	}
@@ -614,9 +614,6 @@ func (a *App) UpdatePocFile(latestVersion string) string {
 	if err := update.UpdatePoc(latestVersion); err != nil {
 		return err.Error()
 	}
-	const oldPocZip = "./config/afrog-pocs.zip"
-	if err := os.RemoveAll(oldPocZip); err != nil {
-		return err.Error()
-	}
+	os.RemoveAll("./config/afrog-pocs.zip")
 	return ""
 }
