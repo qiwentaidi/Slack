@@ -59,7 +59,7 @@ const dashboard = reactive({
     medium: 0,
     low: 0,
     info: 0,
-    runningStatus: '',
+    runningStatus: "" as string,
     count: 0,
     logger: '',
     request: '',
@@ -103,7 +103,7 @@ class Scanner {
         dashboard.low = 0
         dashboard.info = 0
         dashboard.reqErrorURLs = []
-        dashboard.runningStatus = ''
+        dashboard.runningStatus = ""
         dashboard.logger = ''
     }
     public async infoScanner() {

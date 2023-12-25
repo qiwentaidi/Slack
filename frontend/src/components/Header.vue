@@ -58,22 +58,22 @@
           <el-badge is-dot v-if="version.ClientStatus == true || version.PocStatus == true" />
         </el-menu-item>
       </template>
-      <el-card class="box-card" shadow="never" style="width: 325px">
+      <el-card class="box-card" shadow="never" style="width: 325px" v-if="version.PocStatus">
         <template #header>
           <div class="card-header">
-            <span>POC&指纹-v{{ version.LocalPoc }}</span>
+            <el-text>POC&指纹{{ version.RemotePoc }} <br /> 当前v{{ version.LocalPoc }}</el-text>
             <el-button class="button" :icon="Download" type="primary" :disabled="!version.PocStatus"
               @click="update.poc">立即下载</el-button>
           </div>
         </template>
         <el-input type="textarea" rows="5" v-model="version.PocUpdateContent" resize="none" readonly></el-input>
       </el-card>
-      <el-card class="box-card" shadow="never" style="width: 325px; margin-top: 15px">
+      <el-card class="box-card" shadow="never" style="width: 325px; margin-top: 15px" v-if="version.ClientStatus">
         <template #header>
           <div class="card-header">
-            <span>客户端-v{{ version.LocalClient }}</span>
+            <el-text>客户端{{ version.RemoteClient }} <br /> 当前v{{ version.LocalClient }}</el-text>
             <el-button class="button" :icon="Download" type="primary" :disabled="!version.ClientStatus"
-              @click="">立即下载</el-button>
+              @click="update.client">立即下载</el-button>
           </div>
         </template>
         <el-input type="textarea" rows="5" v-model="version.ClientUpdateContent" resize="none" readonly></el-input>
@@ -87,7 +87,7 @@
         </el-icon>
       </el-menu-item>
     </el-tooltip>
-    <el-tooltip content="帮助" placement="bottom">
+    <el-tooltip content="关于" placement="bottom">
       <el-menu-item index="7" @click="centerDialogVisible = true">
         <el-icon>
           <Help />
@@ -114,9 +114,10 @@
     <!-- 弹窗界面 -->
     <el-dialog v-model="centerDialogVisible" title="关于" width="36%" center>
       <h4>
-        工具目前存在内存GC问题，如有改善意见或其他问题可以通过下方vx联系，项目地址可点击首页LOGO处前往
+        工具目前存在内存GC问题，如有改善意见或其他问题可以通过vx或者issue联系，联系方式可点击首页LOGO处前往项目地址获取
       </h4>
-      <img src="/wechat.png" class="center" />
+      <h4>前端: Vue + Typescript + Vite + Element-Plus</h4>
+      <h4>后端: Wails + Go</h4>
     </el-dialog>
   </el-menu>
 </template>
@@ -144,10 +145,12 @@ import {
   CheckFileStat,
   GetFileContent,
   GoSimpleFetch,
-  UpdatePocFile
+  UpdatePocFile,
+  UpdateClinetFile,
+  Restart
 } from "../../wailsjs/go/main/App";
 import { onMounted } from "vue";
-import { ElNotification } from "element-plus";
+import { ElNotification, ElMessageBox } from "element-plus";
 import { compareVersion } from "../util"
 const lv = "./config/afrog-pocs/version"
 onMounted(async () => {
@@ -198,6 +201,7 @@ const check = ({
       version.ClientUpdateContent = "检测更新失败"
       version.ClientStatus = false
     } else {
+      version.RemoteClient = rp2.Text
       if (compareVersion(version.LocalClient, rp2.Text) == -1) {
         version.ClientUpdateContent = (await GoSimpleFetch(download.RemoteClientCentent)).Text
         version.ClientStatus = true
@@ -226,8 +230,37 @@ const update = ({
       });
     }
   },
-  client: function () {
-
+  client: async function () {
+    ElNotification({
+      title: "提示",
+      message: "客户端后台自动下载中~",
+      type: "info",
+    });
+    let err = await UpdateClinetFile("v" + version.RemoteClient)
+    if (err == "") {
+      ElMessageBox.confirm(
+        '更新成功，是否重新启动?',
+        {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+          type: 'success',
+          center: true,
+        }
+      )
+        .then(() => {
+          Restart()
+        })
+        .catch((action) => {
+          // 在这里处理用户取消或者其他非 "OK" 的选项被点击时的操作
+          console.log('User cancelled or chose another option.')
+        })
+    } else {
+      ElNotification({
+        title: "Error",
+        message: "客户端更新失败！！",
+        type: "error",
+      });
+    }
   }
 })
 

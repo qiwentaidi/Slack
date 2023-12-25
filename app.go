@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slack-wails/core"
 	"slack-wails/core/info"
@@ -616,4 +617,21 @@ func (a *App) UpdatePocFile(latestVersion string) string {
 	}
 	os.RemoveAll("./config/afrog-pocs.zip")
 	return ""
+}
+
+func (a *App) UpdateClinetFile(latestVersion string) string {
+	if err := update.UpdateClinet(latestVersion); err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+func (a *App) Restart() {
+	cmd := exec.Command(os.Args[0])
+	err := cmd.Start()
+	if err != nil {
+		logger.NewDefaultLogger().Fatal(err.Error())
+	}
+	// 退出当前的进程
+	os.Exit(0)
 }

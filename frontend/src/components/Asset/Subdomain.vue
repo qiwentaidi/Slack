@@ -128,7 +128,7 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
             </el-form-item>
             <el-form-item>
                 <el-table :data="sbr" height="70vh" border style="width: 100%">
-                    <el-table-column type="index" width="60px" />
+                    <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="subdomains" label="子域名" show-overflow-tooltip="true" />
                     <el-table-column prop="cname" label="CNAME" show-overflow-tooltip="true" />
                     <el-table-column prop="ips" label="IPs" show-overflow-tooltip="true" />

@@ -126,6 +126,10 @@ export function ReadPocDetail(arg1) {
   return window['go']['main']['App']['ReadPocDetail'](arg1);
 }
 
+export function Restart() {
+  return window['go']['main']['App']['Restart']();
+}
+
 export function Subdomain(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Subdomain'](arg1, arg2, arg3, arg4);
 }
@@ -148,6 +152,10 @@ export function ToggleMaximise() {
 
 export function Transcoding(arg1, arg2, arg3) {
   return window['go']['main']['App']['Transcoding'](arg1, arg2, arg3);
+}
+
+export function UpdateClinetFile(arg1) {
+  return window['go']['main']['App']['UpdateClinetFile'](arg1);
 }
 
 export function UpdatePocFile(arg1) {

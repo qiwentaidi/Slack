@@ -212,7 +212,7 @@ const config = reactive({
         </el-form-item>
     </el-form>
     <el-table :data="dir" height="75vh" border style="width: 100%">
-        <el-table-column type="index" width="60px" />
+        <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="status" width="100px" label="状态码"
             :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable show-overflow-tooltip="true" />
         <el-table-column prop="length" width="100px" label="长度"

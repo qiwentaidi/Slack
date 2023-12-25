@@ -8,19 +8,22 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"runtime"
 	"slack-wails/lib/util"
 	"time"
+
+	update "github.com/fynelabs/selfupdate"
 )
 
 const (
-	LocalConfig   = "./config/"
-	lastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
+	LocalConfig      = "./config/"
+	lastestPocUrl    = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
+	lastestClinetUrl = "https://gitee.com/the-temperature-is-too-low/Slack/releases/download/"
 )
 
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
 func UpdatePoc(latestVersion string) error {
 	temp := lastestPocUrl + latestVersion
-	fmt.Printf("temp: %v\n", temp)
 	workflow := temp + "/workflow.yaml"
 	webfinger := temp + "/webfinger.yaml"
 	pocs := temp + "/afrog-pocs.zip"
@@ -62,4 +65,47 @@ func download(target, dest string) (string, error) {
 	writer := bufio.NewWriter(file)
 	io.Copy(writer, reader)
 	return fileName, nil
+}
+
+const (
+	BinaryFile_Windows      = "slack-wails.exe"
+	BinaryFile_Linux        = "slack-wails_linux_amd64"
+	BinaryFile_Darwin_AMD64 = "slack-wails_darwin_amd64"
+	BinaryFile_Darwin_ARM64 = "slack-wails_darwin_arm64"
+)
+
+func UpdateClinet(latestVersion string) error {
+	var binaryFileName string
+	switch runtime.GOOS {
+	case "windows":
+		binaryFileName = BinaryFile_Windows
+	case "linux":
+		binaryFileName = BinaryFile_Linux
+	case "darwin":
+		if runtime.GOARCH == "arm64" {
+			binaryFileName = BinaryFile_Darwin_ARM64
+		} else {
+			binaryFileName = BinaryFile_Darwin_AMD64
+		}
+	}
+	temp := lastestClinetUrl + latestVersion + "/" + binaryFileName
+	if err := doUpdate(temp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func doUpdate(url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	err = update.Apply(resp.Body, update.Options{})
+	if err != nil {
+		if rerr := update.RollbackError(err); rerr != nil {
+			fmt.Printf("Failed to rollback from bad update: %v", rerr)
+		}
+	}
+	return err
 }

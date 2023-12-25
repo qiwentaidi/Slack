@@ -68,6 +68,8 @@ export function Quit():Promise<void>;
 
 export function ReadPocDetail(arg1:string):Promise<poc.VulnerabilityDetails>;
 
+export function Restart():Promise<void>;
+
 export function Subdomain(arg1:string,arg2:string,arg3:string,arg4:number):Promise<Array<string>>;
 
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
@@ -79,6 +81,8 @@ export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:s
 export function ToggleMaximise():Promise<void>;
 
 export function Transcoding(arg1:Array<string>,arg2:string,arg3:number):Promise<string>;
+
+export function UpdateClinetFile(arg1:string):Promise<string>;
 
 export function UpdatePocFile(arg1:string):Promise<string>;
 
