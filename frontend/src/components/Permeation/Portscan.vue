@@ -97,8 +97,6 @@ async function scanner() {
                 if (ctrl.exit === true) {
                     return
                 }
-                form.id++;
-                form.percentage = Number(((form.id / count) * 100).toFixed(2));
                 PortCheck(ip as string, port, config.timeout).then((result) => {
                     if (result.Status) {
                         form.log += `[+] Portscan ${ip}:${port} is open!\n`
@@ -111,6 +109,8 @@ async function scanner() {
                         })
                         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
                     }
+                    form.id++;
+                    form.percentage = Number(((form.id / count) * 100).toFixed(2));
                     callback();
                 });
             }, (err: any) => {

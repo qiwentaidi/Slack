@@ -185,7 +185,7 @@ class FOFA {
     }
 }
 async function HashSearch() {
-    if (await TestTarget(from.hashURL) == false) {
+    if (!(await TestTarget(from.hashURL))) {
         ElMessage({
             showClose: true,
             message: "目标不可达",
