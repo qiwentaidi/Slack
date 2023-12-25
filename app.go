@@ -60,6 +60,11 @@ func (a *App) ToggleMaximise() {
 	runtime.WindowToggleMaximise(a.ctx)
 }
 
+// 使用默认浏览器打开链接，避免使用webview2
+func (a *App) DefaultOpenURL(url string) {
+	runtime.BrowserOpenURL(a.ctx, url)
+}
+
 func (a *App) CheckFileStat(path string) bool {
 	if _, err := os.Stat(path); err != nil {
 		return false

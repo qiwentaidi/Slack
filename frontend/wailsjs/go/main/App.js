@@ -26,6 +26,10 @@ export function CheckTarget(arg1, arg2) {
   return window['go']['main']['App']['CheckTarget'](arg1, arg2);
 }
 
+export function DefaultOpenURL(arg1) {
+  return window['go']['main']['App']['DefaultOpenURL'](arg1);
+}
+
 export function DomainInfo(arg1) {
   return window['go']['main']['App']['DomainInfo'](arg1);
 }

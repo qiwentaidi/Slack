@@ -6,7 +6,8 @@ import {
     FofaTips,
     FofaSearch,
     IconHash,
-    TestTarget
+    TestTarget,
+    DefaultOpenURL
 } from '../../../wailsjs/go/main/App'
 import { ElMessage } from 'element-plus';
 import global from "../Global.vue"
@@ -132,7 +133,7 @@ const table = reactive({
         table.editableTabs = tabs.filter((tab) => tab.name !== targetName)
     },
     openLink: (row: any) => {
-        window.open(row.URL, '_blank');
+        DefaultOpenURL(row.URL)
     },
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;

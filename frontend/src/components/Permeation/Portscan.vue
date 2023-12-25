@@ -9,7 +9,8 @@ import {
     IPParse,
     PortCheck,
     HostAlive,
-    PortBrute
+    PortBrute,
+    DefaultOpenURL
 } from '../../../wailsjs/go/main/App'
 import { onMounted } from 'vue';
 // 初始化时调用
@@ -51,7 +52,7 @@ const config = reactive({
         value: ""
     },
     ],
-    thread: 2000,
+    thread: 1000,
     timeout: 12,
     changeIp: false,
     alive: false,
@@ -63,7 +64,6 @@ async function scanner() {
     table.result = []
     table.pageContent = []
     form.id = 0
-    var date = new Date();
     if (config.changeIp === false) {
         await PortParse(form.portlist).then(
             result => {
@@ -92,7 +92,7 @@ async function scanner() {
         }
         const count = (form.ips.length * form.portsList.length)
         async.eachSeries(form.ips, (ip: string, callback: () => void) => {
-            form.log += "[INF] Portscan " + ip + "\n"
+            form.log += "[INFO] Portscan " + ip + "\n"
             async.eachLimit(form.portsList, config.thread, (port: number, callback: () => void) => {
                 if (ctrl.exit === true) {
                     return
@@ -103,9 +103,11 @@ async function scanner() {
                     if (result.Status) {
                         form.log += `[+] Portscan ${ip}:${port} is open!\n`
                         table.result.push({
+                            host: ip,
+                            port: port,
+                            fingerprint: result.Server,
                             link: result.Link,
                             title: result.HttpTitle,
-                            time: date.toLocaleString(),
                         })
                         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
                     }
@@ -131,12 +133,15 @@ async function scanner() {
             }
             form.id++;
             form.percentage = Number(((form.id / lines.length) * 100).toFixed(2));
-            PortCheck(line.split(":")[0], Number(line.split(":")[1]), config.timeout).then((result) => {
+            let temp = line.split(":")
+            PortCheck(temp[0], Number(temp[1]), config.timeout).then((result) => {
                 if (result.Status) {
                     table.result.push({
+                        host: temp[0],
+                        port: temp[1],
+                        fingerprint: result.Server,
                         link: result.Link,
                         title: result.HttpTitle,
-                        time: date.toLocaleString(),
                     })
                     table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
                 }
@@ -260,7 +265,7 @@ function updatePorts() {
     }
 }
 function openLink(row: any) {
-    window.open(row.link, '_blank');
+    DefaultOpenURL(row.link)
 }
 
 function handleSizeChange(val: any) {
@@ -392,9 +397,11 @@ function handleCurrentChange(val: any) {
             </el-form>
             <el-table :data="table.pageContent" border style="width: 100%; height: 45vh;">
                 <el-table-column type="selection" width="55px" />
-                <el-table-column prop="link" label="指纹://主机地址" />
+                <el-table-column prop="host" label="主机" />
+                <el-table-column prop="port" label="端口" width="100px" />
+                <el-table-column prop="fingerprint" label="指纹" />
+                <el-table-column prop="link" label="目标" />
                 <el-table-column prop="title" label="网站标题" />
-                <el-table-column prop="time" label="扫描时间" />
                 <el-table-column fixed="right" label="操作" width="55px">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="left">

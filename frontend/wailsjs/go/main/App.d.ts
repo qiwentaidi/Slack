@@ -18,6 +18,8 @@ export function CheckFileStat(arg1:string):Promise<boolean>;
 
 export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
 
+export function DefaultOpenURL(arg1:string):Promise<void>;
+
 export function DomainInfo(arg1:string):Promise<string>;
 
 export function ExtractIP(arg1:string):Promise<string>;
