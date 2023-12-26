@@ -108,7 +108,6 @@ const form = reactive({
     <!-- <el-tabs v-model="table.acvtiveNames" type="card" style="margin-top: 10px;" closable @tab-remove="table.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            "#", "URL", "IP", "端口/服务", "域名", "应用/组件", "站点标题", "状态码", "ICP备案企业", "地理位置", "更新时间"
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column type="index" label="#" width="60px" />
                 <el-table-column prop="URL" label="URL" width="200" show-overflow-tooltip="true" />

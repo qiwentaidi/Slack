@@ -36,11 +36,11 @@ wails build // 编译
 
 ### 主机扫描
 
-![image-20231212194010098](assets/image-20231212194010098.png)
+![image-20231226143037447](assets/image-20231226143037447.png)
 
 ### 目录扫描
 
-![image-20231125163621558](assets/image-20231125163621558.png)
+![image-20231226143213368](assets/image-20231226143213368.png)
 
 ## 资产收集
 
@@ -93,6 +93,14 @@ A：
 1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
 2、需要安装GCC环境
 ```
+
+
+
+Q：Mac系统下编译成功后更新POC异常或者找不到POC文件夹等
+
+A：由于Mac系统下打包完成为.app文件，需要将其slack-wails.app下面的/Contents/MacOS/slack-wails文件移动到程序根目录下即可正常使用
+
+
 
 # 联系方式
 
