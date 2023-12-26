@@ -54,7 +54,7 @@
             <el-form :model="global.space" label-width="80px">
               <el-form-item label="FOFA:" style="margin-top: 10px;">
                 <el-input v-model="global.space.fofaemail" placeholder="邮箱" clearable></el-input>
-                <el-input v-model="global.space.fofakey" placeholder="key" clearable></el-input>
+                <el-input v-model="global.space.fofakey" placeholder="key" clearable style="margin-top: 5px;"></el-input>
               </el-form-item>
               <el-form-item label="鹰图: ">
                 <el-input v-model="global.space.hunterkey" placeholder="key" clearable></el-input>

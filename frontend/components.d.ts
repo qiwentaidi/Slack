@@ -67,6 +67,7 @@ declare module 'vue' {
     Global: typeof import('./src/components/Global.vue')['default']
     Hash: typeof import('./src/components/Tools/transcode/Hash.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
+    Hunter: typeof import('./src/components/SpaceEngine/Hunter.vue')['default']
     Introduction: typeof import('./src/components/Introduction.vue')['default']
     Ipdomain: typeof import('./src/components/Asset/Ipdomain.vue')['default']
     Nokey: typeof import('./src/components/Tools/transcode/Nokey.vue')['default']

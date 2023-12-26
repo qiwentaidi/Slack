@@ -17,6 +17,7 @@ import Dirsearch from './components/Permeation/Dirsearch.vue';
 import Portscan from './components/Permeation/Portscan.vue';
 import Pocdetail from './components/Permeation/Pocdetail.vue';
 import Fofa from './components/SpaceEngine/Fofa.vue';
+import Hunter from './components/SpaceEngine/Hunter.vue';
 
 const currentComponent = ref('Introduction');
 provide('currentComponent', currentComponent);
@@ -38,6 +39,7 @@ const components: { [key: string]: any } = {
   'Portscan': Portscan,
   'Pocdetail': Pocdetail,
   'Fofa': Fofa,
+  'Hunter': Hunter,
 };
 
 </script>

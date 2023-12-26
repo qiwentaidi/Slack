@@ -264,9 +264,6 @@ function updatePorts() {
         form.portlist = config.options[index].value;
     }
 }
-function openLink(row: any) {
-    DefaultOpenURL(row.link)
-}
 
 function handleSizeChange(val: any) {
     table.pageSize = val;
@@ -311,8 +308,8 @@ function handleCurrentChange(val: any) {
                     </template>
                     <el-input type="textarea" rows="1" v-model="form.target" style="width: 70%;" />
                     <div>
-                        <el-button type="primary" style="margin-left: 10px" @click="scanner">开始扫描</el-button>
-                        <el-button type="primary" style="margin-left: 10px" @click="ctrl.stop">停止</el-button>
+                        <el-button type="primary" class="left" @click="scanner">开始扫描</el-button>
+                        <el-button type="primary" class="left" @click="ctrl.stop">停止</el-button>
                     </div>
                 </el-form-item>
                 <el-form-item label="预设端口:">
@@ -329,31 +326,33 @@ function handleCurrentChange(val: any) {
                 </el-form-item>
                 <el-form-item>
                     <template #label>
-                        更改IP模式:
+                        功能:
+                    </template>
+                    <el-space>
+                        <el-button color="#DEACBD" @click="CopyURLs">复制全部URL目标</el-button>
+                        <el-button color="#7FEDF9"
+                            @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">导出Excle</el-button>
+
+                        <el-dropdown>
+                            <el-button :icon="Promotion" color="#A29EDE">
+                                联动<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                            </el-button>
+                            <template #dropdown>
+                                <el-dropdown-menu>
+                                    <el-dropdown-item>发送到网站扫描(没做)</el-dropdown-item>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
+                        <el-tag type="success">端口超时: {{ config.timeout }}s</el-tag>
+                        <el-link type="primary" @click="ctrl.drawer = true">更多参数</el-link>
+                        <el-checkbox v-model="config.changeIp" label="更改IP输入模式" />
                         <el-tooltip placement="right">
                             <template #content>更改IP输入模式为192.168.0.1:6379此类形式<br />仅支持换行分割，开启后端口列表无效且扫描为单线程模式</template>
                             <el-icon>
                                 <QuestionFilled size="24" />
                             </el-icon>
                         </el-tooltip>
-                    </template>
-                    <el-checkbox v-model="config.changeIp" label="开启" />
-                    <el-button color="#7FEDF9"
-                        @click="ExportToXlsx(['指纹://主机地址', '网站标题', '扫描时间'], '端口扫描', 'portscan', table.result)"
-                        class="left">导出Excle</el-button>
-                    <el-button color="#DEACBD" style="margin-left: 10px;" @click="CopyURLs">复制全部URL目标</el-button>
-                    <el-dropdown class="left">
-                        <el-button :icon="Promotion" color="#A29EDE">
-                            联动<el-icon class="el-icon--right"><arrow-down /></el-icon>
-                        </el-button>
-                        <template #dropdown>
-                            <el-dropdown-menu>
-                                <el-dropdown-item>发送到网站扫描(没做)</el-dropdown-item>
-                            </el-dropdown-menu>
-                        </template>
-                    </el-dropdown>
-                    <el-tag type="success" class="left">端口超时: {{ config.timeout }}s</el-tag>
-                    <el-link type="primary" class="left" @click="ctrl.drawer = true">更多参数</el-link>
+                    </el-space>
                     <el-drawer v-model="ctrl.drawer" title="设置高级参数">
                         <el-form label-width="100px">
                             <el-form-item label="存活探测:" class="bottom">
@@ -405,7 +404,7 @@ function handleCurrentChange(val: any) {
                 <el-table-column fixed="right" label="操作" width="55px">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="left">
-                            <el-button link :icon="ChromeFilled" @click.prevent="openLink(scope.row)">
+                            <el-button link :icon="ChromeFilled" @click.prevent="DefaultOpenURL(scope.row.link)">
                             </el-button>
                         </el-tooltip>
                     </template>

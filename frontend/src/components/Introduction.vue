@@ -9,15 +9,12 @@ onMounted(() => {
 
 <template>
   <el-container class="el-main">
-
     <el-space  direction="vertical">
       <a href="https://github.com/qiwentaidi/Slack" target="_blank" title="前往Github仓库">
         <img src="/slack.svg" class="logo" />
       </a>
       <h2>Slack 信安人员集成化工具平台</h2>
     </el-space>
-    <h4>前端: Vue + Typescript + Vite + Element-Plus</h4>
-    <h4>后端: Wails + Go</h4>
   </el-container>
 </template>
 

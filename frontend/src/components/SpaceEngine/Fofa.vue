@@ -132,9 +132,6 @@ const table = reactive({
         table.acvtiveNames = activeName
         table.editableTabs = tabs.filter((tab) => tab.name !== targetName)
     },
-    openLink: (row: any) => {
-        DefaultOpenURL(row.URL)
-    },
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         FofaSearch(from.query, val.toString(), "1", global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
@@ -184,7 +181,7 @@ class FOFA {
         }
     }
 }
-async function HashSearch() {
+async function IconHashSearch() {
     if (!(await TestTarget(from.hashURL))) {
         ElMessage({
             showClose: true,
@@ -237,14 +234,6 @@ async function SaveData(mode: number) {
                     temp.push(...result.Results)
                 })
             }
-            // splitInt(tab.total,10000).forEach(async (val, idx, array) => {
-            //     await FofaSearch(table.acvtiveNames, val.toString(), (idx+1).toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
-            //         if (result.Status == false) {
-            //             return
-            //         }
-            //         temp.push(result.Results)
-            //     })
-            // })
             ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", temp)
             temp = []
         }
@@ -295,7 +284,7 @@ async function SaveData(mode: number) {
                 <el-input v-model="from.hashURL"></el-input>
                 <template #footer>
                     <span>
-                        <el-button type="primary" @click="HashSearch">
+                        <el-button type="primary" @click="IconHashSearch">
                             搜索
                         </el-button>
                     </span>
@@ -331,6 +320,7 @@ async function SaveData(mode: number) {
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
+                <el-table-column type="index" label="#" width="60px" />
                 <el-table-column prop="URL" label="URL" width="200" show-overflow-tooltip="true" />
                 <el-table-column prop="Title" label="标题" width="150" show-overflow-tooltip="true" />
                 <el-table-column prop="IP" label="IP" width="150" show-overflow-tooltip="true" />
@@ -344,7 +334,7 @@ async function SaveData(mode: number) {
                 <el-table-column fixed="right" label="操作" width="55px">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="left">
-                            <el-button link :icon="ChromeFilled" @click.prevent="table.openLink(scope.row)">
+                            <el-button link :icon="ChromeFilled" @click.prevent="DefaultOpenURL(scope.row.URL)">
                             </el-button>
                         </el-tooltip>
                     </template>

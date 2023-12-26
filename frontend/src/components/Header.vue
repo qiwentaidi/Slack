@@ -31,7 +31,7 @@
           <Monitor />
         </el-icon></template>
       <el-menu-item index="3-1" @click="currentComponent = 'Fofa'">FOFA</el-menu-item>
-      <el-menu-item index="3-2">鹰图</el-menu-item>
+      <el-menu-item index="3-2" @click="currentComponent = 'Hunter'">鹰图</el-menu-item>
       <el-menu-item index="3-3">360夸克</el-menu-item>
     </el-sub-menu>
 
