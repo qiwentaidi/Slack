@@ -40,6 +40,8 @@ export function GoSimpleFetch(arg1:string):Promise<main.Response>;
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
 
+export function HunterTips(arg1:string):Promise<space.HunterTipsResult>;
+
 export function IPParse(arg1:string):Promise<Array<string>>;
 
 export function IconHash(arg1:string):Promise<string>;

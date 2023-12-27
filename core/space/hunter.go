@@ -166,3 +166,16 @@ func HunterBaseEncode(str string) string {
 // 	}
 // 	return temps
 // }
+
+type HunterTipsResult struct {
+	Code int `json:"code"`
+	Data struct {
+		App []struct {
+			Name     string   `json:"name"`
+			AssetNum int      `json:"asset_num"`
+			Tags     []string `json:"tags"`
+		} `json:"app"`
+		Collect []interface{} `json:"collect"`
+	} `json:"data"`
+	Message string `json:"message"`
+}

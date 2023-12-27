@@ -1,7 +1,7 @@
 import * as XLSX from "xlsx";
 import { ElMessage } from "element-plus";
 import global from "./components/Global.vue";
-import { CheckTarget } from '../wailsjs/go/main/App'
+import { CheckTarget } from "../wailsjs/go/main/App";
 // 单sheet导出
 export function ExportToXlsx(
   headers: string[],
@@ -140,8 +140,8 @@ export async function formatURL(host: string): Promise<string[]> {
 }
 
 export function compareVersion(version1: string, version2: string) {
-  const v1 = version1.split('.').map(Number);
-  const v2 = version2.split('.').map(Number);
+  const v1 = version1.split(".").map(Number);
+  const v2 = version2.split(".").map(Number);
 
   for (let i = 0; i < v1.length || i < v2.length; i++) {
     const num1 = v1[i] || 0;
@@ -156,4 +156,52 @@ export function compareVersion(version1: string, version2: string) {
   }
 
   return 0;
+}
+
+export interface TableTabs {
+  title: string;
+  name: string;
+  content: null | [{}];
+  total: number;
+  pageSize: number;
+  currentPage: number;
+}
+
+let RegCompliance = new RegExp('(\\w+)[!,=]{1,3}"([^"]+)"');
+
+// mode 0 fofa , mode 1 hunter
+export function ApiSyntaxCheck(
+  mode: number,
+  email: string,
+  key: string,
+  query: string
+) {
+  if (mode == 0) {
+    if (global.space.fofaemail == "" || global.space.fofakey == "") {
+      ElMessage({
+        showClose: true,
+        message: "请在设置处填写FOFA Email和Key",
+        type: "error",
+      });
+      return false
+    }
+  } else {
+    if (key == "") {
+      ElMessage({
+        showClose: true,
+        message: "请在设置处填写Hunter Key",
+        type: "error",
+      });
+      return false;
+    }
+  }
+  if (RegCompliance.test(query) === false) {
+    ElMessage({
+      showClose: true,
+      message: "请输入正确的查询语法",
+      type: "warning",
+    });
+    return false
+  }
+  return true
 }

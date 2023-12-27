@@ -32,6 +32,7 @@ type TipsResult struct {
 	Message string `json:"message"`
 	Data    []Data `json:"data"`
 }
+
 type Data struct {
 	Name    string `json:"name"`
 	Company string `json:"company"`

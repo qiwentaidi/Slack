@@ -12,7 +12,7 @@
 
 # 使用须知
 
-由Fyne到Wails的变迁使用了2个月的时间，功能未全部完善所以暂不提供编译版，后续Fyne版本将停止更新，但是仍然可以通过分支选择你想要查看的模块，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
+由于功能未全部完善所以暂不提供编译版，后续Fyne版本将停止更新，但是仍然可以通过分支中获取到该模块代码，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
 
 # 运行
 
@@ -72,35 +72,31 @@ wails build // 编译
 
 # 常见问题
 
-Q：`Windows grdp`库无法打包
-
-```
-Wails CLI v2.7.1
-
-Executing: go mod tidy
-  • Generating bindings: 
-  ERROR  
-          package slack-wails
-                imports slack-wails/core/portscan
-                imports github.com/tomatome/grdp/protocol/pdu
-                imports github.com/tomatome/grdp/protocol/t125/gcc
-                imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
-```
-
-A：
-
-```
-1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
-2、需要安装GCC环境
-```
+> Q1：Windows grdp库无法打包，出现如下报错
+>
+> ```
+> Wails CLI v2.7.1
+> 
+> Executing: go mod tidy
+>   • Generating bindings: 
+>   ERROR  
+>           package slack-wails
+>                 imports slack-wails/core/portscan
+>                 imports github.com/tomatome/grdp/protocol/pdu
+>                 imports github.com/tomatome/grdp/protocol/t125/gcc
+>                 imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
+> ```
+>
+> A1：
+>
+> 1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
+> 2、需要安装GCC环境
 
 
 
-Q：Mac系统下编译成功后更新POC异常或者找不到POC文件夹等
-
-A：由于Mac系统下打包完成为.app文件，需要将其slack-wails.app下面的/Contents/MacOS/slack-wails文件移动到程序根目录下即可正常使用
-
-
+> Q2：Mac系统下编译成功后更新POC异常或者找不到POC文件夹等
+>
+> A2：由于Mac系统下打包完成为.app文件，需要将其slack-wails.app下面的/Contents/MacOS/slack-wails文件移动到程序根目录下即可正常使用
 
 # 联系方式
 

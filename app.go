@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -639,4 +640,17 @@ func (a *App) Restart() {
 	}
 	// 退出当前的进程
 	os.Exit(0)
+}
+
+// hunter
+
+func (a *App) HunterTips(query string) *space.HunterTipsResult {
+	var ts space.HunterTipsResult
+	bs64 := base64.StdEncoding.EncodeToString([]byte(query))
+	_, b, err := clients.NewRequest("GET", "https://hunter.qianxin.com/api/recommend?keyword="+bs64, nil, nil, 10, clients.DefaultClient())
+	if err != nil {
+		return &ts
+	}
+	json.Unmarshal([]byte(string(b)), &ts)
+	return &ts
 }

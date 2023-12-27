@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown } from '@element-plus/icons-vue';
-import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt } from '../../util'
+import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt, TableTabs, ApiSyntaxCheck } from '../../util'
 import {
     FofaTips,
     FofaSearch,
@@ -41,7 +41,7 @@ interface LinkItem {
 let timeout: ReturnType<typeof setTimeout>
 const entry = reactive({
     querySearchAsync: (queryString: string, cb: (arg: any) => void) => {
-        if (queryString.length > 1) {
+        if (queryString.length >= 1) {
             entry.getTips()
             clearTimeout(timeout)
             timeout = setTimeout(() => {
@@ -64,35 +64,18 @@ const entry = reactive({
             }
         })
     },
-    handleInput: (value: string) => {
-        entry.querySearchAsync(value, suggestions => {
-            from.loadAll = suggestions;
-        });
-    },
     handleSelect: (item: Record<string, any>) => {
         from.query = `app="${item.value}"`
     }
 })
 
-interface tableTabs {
-    title: string,
-    name: string,
-    content: null | [{}],
-    total: number,
-    pageSize: number,
-    currentPage: number,
-}
 
 const table = reactive({
     acvtiveNames: "1",
     tabIndex: 1,
-    editableTabs: [] as tableTabs[],
+    editableTabs: [] as TableTabs[],
     addTab: (query: string) => {
-        let ff = new FOFA
-        if (ff.CheckApi() === false) {
-            return
-        }
-        if (ff.CheckSyntax(query) === false) {
+        if (ApiSyntaxCheck(0, global.space.fofaemail, global.space.fofakey, query) === false) {
             return
         }
         const newTabName = `${++table.tabIndex}`
@@ -157,30 +140,7 @@ const table = reactive({
     }
 })
 
-let RegCompliance = new RegExp("(\\w+)[!,=]{1,3}\"([^\"]+)\"");
 
-class FOFA {
-    public CheckApi() {
-        if (global.space.fofaemail == "" || global.space.fofakey == "") {
-            ElMessage({
-                showClose: true,
-                message: "请在设置处填写FOFA Email和Key",
-                type: "error",
-            });
-            return false
-        }
-    }
-    public CheckSyntax(query: string) {
-        if (RegCompliance.test(query) === false) {
-            ElMessage({
-                showClose: true,
-                message: "请输入正确的查询语法",
-                type: "warning",
-            });
-            return false
-        }
-    }
-}
 async function IconHashSearch() {
     if (!(await TestTarget(from.hashURL))) {
         ElMessage({
@@ -253,7 +213,7 @@ async function SaveData(mode: number) {
             </template>
             <div class="head">
                 <el-autocomplete v-model="from.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                    @select="entry.handleSelect" @input="entry.handleInput" :trigger-on-focus="false" style="width: 100%;">
+                    @select="entry.handleSelect" :trigger-on-focus="false" style="width: 100%;">
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />
@@ -264,6 +224,12 @@ async function SaveData(mode: number) {
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
+                    </template>
+                    <template #default="{ item }">
+                        <el-space>
+                            <span>{{ item.value }}</span>
+                            <el-tag>{{ item.link }}</el-tag>
+                        </el-space>
                     </template>
                 </el-autocomplete>
                 <el-button type="primary" :icon="Search" @click="table.addTab(from.query)"

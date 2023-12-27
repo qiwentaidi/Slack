@@ -70,6 +70,10 @@ export function HostAlive(arg1, arg2) {
   return window['go']['main']['App']['HostAlive'](arg1, arg2);
 }
 
+export function HunterTips(arg1) {
+  return window['go']['main']['App']['HunterTips'](arg1);
+}
+
 export function IPParse(arg1) {
   return window['go']['main']['App']['IPParse'](arg1);
 }
