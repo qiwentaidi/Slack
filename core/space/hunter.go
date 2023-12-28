@@ -3,14 +3,9 @@ package space
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"slack-wails/lib/clients"
 
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/logger"
@@ -57,56 +52,61 @@ type HunterResult struct {
 	Message string `json:"message"`
 }
 
-var (
-	StartTime, SelectAssets, DeDuplication string // hunter查询的全局参数
-	PageSize                               int
-	HunterSurplus                          string // 剩余积分
-	HSearchDataSize                        string // 查询数量
-	HunterTotal                            int64  // 查询到的数量
-	HunterTime                             int64  // 所消耗时间
-)
+// var (
+// 	HunterSurplus   string // 剩余积分
+// 	HSearchDataSize string // 查询数量
+// 	HunterTotal     int64  // 查询到的数量
+// 	HunterTime      int64  // 所消耗时间
+// )
 
-func HunterApiSearch(api, query, pageSize, page string, data *[][]string) error {
-	var assembly []string
+func HunterApiSearch(api, query, pageSize, page, startTime, asset string, deduplication bool) *HunterResult {
+	var hunterStartTime string
+	switch startTime {
+	case "0":
+		hunterStartTime = time.Now().AddDate(0, -1, 0).Format("2006-01-02")
+	case "1":
+		hunterStartTime = time.Now().AddDate(0, 0, -179).Format("2006-01-02")
+	case "2":
+		hunterStartTime = time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
+	}
 	address := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(query) + "&page=" +
-		page + "&page_size=" + pageSize + "&is_web=" + SelectAssets + "&port_filter=" + DeDuplication + "&start_time=" + StartTime + "&end_time=" + time.Now().Format("2006-01-02")
-	r, err := http.Get(address)
+		page + "&page_size=" + pageSize + "&is_web=" + asset + "&port_filter=" + fmt.Sprint(deduplication) + "&start_time=" + hunterStartTime + "&end_time=" + time.Now().Format("2006-01-02")
+	_, b, err := clients.NewRequest("GET", address, nil, nil, 10, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
-	b, _ := io.ReadAll(r.Body)
-	defer r.Body.Close()
 	var hr HunterResult
 	json.Unmarshal([]byte(string(b)), &hr)
-	if hr.Code != 200 {
-		if hr.Code == 40205 {
-			logger.NewDefaultLogger().Debug(hr.Message)
-		} else {
-			logger.NewDefaultLogger().Debug(hr.Message)
-			return errors.New(hr.Message)
-		}
-	}
-	p, _ := strconv.Atoi(page)
-	t, _ := strconv.Atoi(pageSize)
-	if len(hr.Data.Arr) == 0 {
-		return errors.New("查询数据结果为空")
-	} else {
-		for i := 0; i < len(hr.Data.Arr); i++ {
-			for _, v := range hr.Data.Arr[i].Component {
-				assembly = append(assembly, v.Name+v.Version)
-			}
-			*data = append(*data, []string{
-				strconv.Itoa(t*(p-1) + i + 1), hr.Data.Arr[i].URL, hr.Data.Arr[i].IP, strconv.FormatInt(hr.Data.Arr[i].Port, 10) + "/" + hr.Data.Arr[i].Protocol,
-				hr.Data.Arr[i].Domain, strings.Join(assembly, " | "), hr.Data.Arr[i].WebTitle, strconv.FormatInt(hr.Data.Arr[i].StatusCode, 10), hr.Data.Arr[i].Company,
-				hr.Data.Arr[i].Country + "" + hr.Data.Arr[i].Province + "" + hr.Data.Arr[i].City, hr.Data.Arr[i].UpdatedAt,
-			})
-			assembly = []string{}
-		}
-		HunterSurplus = hr.Data.RestQuota
-		HunterTotal = hr.Data.Total
-		HunterTime = hr.Data.Time
-	}
-	return nil
+	return &hr
+	// if hr.Code != 200 {
+	// 	if hr.Code == 40205 {
+	// 		logger.NewDefaultLogger().Debug(hr.Message)
+	// 	} else {
+	// 		logger.NewDefaultLogger().Debug(hr.Message)
+	// 		return errors.New(hr.Message)
+	// 	}
+	// }
+	// p, _ := strconv.Atoi(page)
+	// t, _ := strconv.Atoi(pageSize)
+	// if len(hr.Data.Arr) == 0 {
+	// 	return errors.New("查询数据结果为空")
+	// } else {
+	// 	for i := 0; i < len(hr.Data.Arr); i++ {
+	// 		for _, v := range hr.Data.Arr[i].Component {
+	// 			assembly = append(assembly, v.Name+v.Version)
+	// 		}
+	// 		*data = append(*data, []string{
+	// 			strconv.Itoa(t*(p-1) + i + 1), hr.Data.Arr[i].URL, hr.Data.Arr[i].IP, strconv.FormatInt(hr.Data.Arr[i].Port, 10) + "/" + hr.Data.Arr[i].Protocol,
+	// 			hr.Data.Arr[i].Domain, strings.Join(assembly, " | "), hr.Data.Arr[i].WebTitle, strconv.FormatInt(hr.Data.Arr[i].StatusCode, 10), hr.Data.Arr[i].Company,
+	// 			hr.Data.Arr[i].Country + "" + hr.Data.Arr[i].Province + "" + hr.Data.Arr[i].City, hr.Data.Arr[i].UpdatedAt,
+	// 		})
+	// 		assembly = []string{}
+	// 	}
+	// 	HunterSurplus = hr.Data.RestQuota
+	// 	HunterTotal = hr.Data.Total
+	// 	HunterTime = hr.Data.Time
+	// }
+	// return nil
 }
 
 func SearchTotal(api, search string) (int64, string) {

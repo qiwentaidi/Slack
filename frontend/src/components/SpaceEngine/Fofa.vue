@@ -46,7 +46,7 @@ const entry = reactive({
             clearTimeout(timeout)
             timeout = setTimeout(() => {
                 cb(from.loadAll)
-            }, 3000 * Math.random())
+            }, 2000 * Math.random())
         } else {
             cb([])
         }

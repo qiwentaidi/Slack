@@ -3,7 +3,12 @@ import { ref } from 'vue'
 import {
     System
 } from '../../../wailsjs/go/main/App'
-
+import { onMounted } from 'vue';
+// 初始化时调用
+onMounted(() => {
+    avlist.value = [];
+    patch.value = [];
+});
 function checksystem(mode: number) {
     System(textarea.value, mode).then(
         result => {
@@ -40,7 +45,7 @@ function checksystem(mode: number) {
     )
 }
 
-const activeName = ref('杀软识别')
+const activeName = ref('1')
 const textarea = ref('')
 const avlist = ref([{}])
 const patch = ref([{}])
@@ -59,10 +64,9 @@ const patch = ref([{}])
             </el-col>
         </div>
     </div>
-    
     <el-tabs v-model="activeName" class="demo-tabs" type="border-card">
-        <el-tab-pane label="杀软识别" name="杀软识别">
-            <el-table :data="avlist" border style="width: 100%" height="58vh" v-if="avlist.length > 1">
+        <el-tab-pane label="杀软识别" name="1">
+            <el-table :data="avlist" style="width: 100%; height: 60vh;" v-if="avlist.length >= 1">
                 <el-table-column type="index" width="60px" />
                 <el-table-column prop="p_name" label="进程名称" />
                 <el-table-column prop="pid" label="PID" />
@@ -70,8 +74,8 @@ const patch = ref([{}])
             </el-table>
             <el-empty description="暂无数据" v-else />
         </el-tab-pane>
-        <el-tab-pane label="补丁检测" name="补丁检测">
-            <el-table :data="patch" border style="width: 100%" height="58vh" v-if="patch.length > 1">
+        <el-tab-pane label="补丁检测" name="2">
+            <el-table :data="patch" style="width: 100%; height: 60vh;" v-if="patch.length >= 1">
                 <el-table-column type="index" width="60px" />
                 <el-table-column prop="msid" label="微软编号" />
                 <el-table-column prop="kbid" label="补丁编号" />
@@ -82,7 +86,6 @@ const patch = ref([{}])
             <el-empty description="暂无数据" v-else />
         </el-tab-pane>
     </el-tabs>
-
 </template>
 
 <style>

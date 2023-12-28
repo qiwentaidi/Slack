@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
+import { ElNotification } from "element-plus";
 import { Menu, Search, ChatLineRound, ArrowDown, ChromeFilled } from '@element-plus/icons-vue';
 import { TableTabs, ApiSyntaxCheck } from '../../util'
 import global from "../Global.vue"
 import {
     DefaultOpenURL,
+    HunterSearch,
     HunterTips
 } from '../../../wailsjs/go/main/App'
 const form = reactive({
@@ -41,6 +43,7 @@ const form = reactive({
         },
     ],
     defaultSever: '3',
+    deduplication: false,
     tips: '',
     loadAll: [] as EntryTips[],
 })
@@ -60,7 +63,7 @@ const entry = reactive({
             clearTimeout(timeout)
             timeout = setTimeout(() => {
                 cb(form.loadAll)
-            }, 3000 * Math.random())
+            }, 2000 * Math.random())
         } else {
             cb([])
         }
@@ -92,6 +95,54 @@ const table = reactive({
         if (ApiSyntaxCheck(1, "", global.space.hunterkey, query) === false) {
             return
         }
+        const newTabName = `${++table.tabIndex}`
+        table.editableTabs.push({
+            title: query,
+            name: newTabName,
+            content: [{}],
+            total: 0,
+            pageSize: 10,
+            currentPage: 1,
+        });
+        HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
+            if (result.code !== 200) {
+                if (result.code == 40205) {
+                    ElNotification({
+                        title: "提示",
+                        message: result.message,
+                        type: "info",
+                    });
+                } else {
+                    ElNotification({
+                        title: "提示",
+                        message: result.message,
+                        type: "error",
+                    });
+                    return
+                }
+            }
+            form.tips = result.message + " 共查询到数据:" + result.data.total + "条," + result.data.rest_quota
+            const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
+            tab.content!.pop()
+            result.data.arr.forEach((item: any) => {
+                tab.content?.push({
+                    URL: item.url,
+                    IP: item.ip,
+                    Port: item.port,
+                    Protocol: item.protocol,
+                    Domain: item.domain,
+                    Component: item.component,
+                    Title: item.web_title,
+                    Status: item.status_code,
+                    ICP: item.company,
+                    AsOrg: item.as_org,
+                    Position: item.country + "/" + item.province,
+                    UpdateTime: item.updated_at,
+                })
+            });
+            tab.total = result.data.total
+            table.acvtiveNames = newTabName
+        })
     },
     removeTab: (targetName: string) => {
         const tabs = table.editableTabs
@@ -112,14 +163,88 @@ const table = reactive({
     },
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-
+        HunterSearch(global.space.hunterkey, form.query, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
+            if (result.code !== 200) {
+                if (result.code == 40205) {
+                    ElNotification({
+                        title: "提示",
+                        message: result.message,
+                        type: "info",
+                    });
+                } else {
+                    ElNotification({
+                        title: "提示",
+                        message: result.message,
+                        type: "error",
+                    });
+                    return
+                }
+            }
+            form.tips = result.message + " 共查询到数据:" + result.data.total + "条," + result.data.rest_quota
+            tab.content = [{}]
+            tab.content.pop()
+            result.data.arr.forEach((item: any) => {
+                tab.content?.push({
+                    URL: item.url,
+                    IP: item.ip,
+                    Port: item.port,
+                    Protocol: item.protocol,
+                    Domain: item.domain,
+                    Component: item.component,
+                    Title: item.web_title,
+                    Status: item.status_code,
+                    ICP: item.company,
+                    AsOrg: item.as_org,
+                    Position: item.country + "/" + item.province,
+                    UpdateTime: item.updated_at,
+                })
+            });
+            tab.total = result.data.total
+        })
     },
     handleCurrentChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
+        HunterSearch(global.space.hunterkey, form.query, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
+            if (result.code !== 200) {
+                if (result.code == 40205) {
+                    ElNotification({
+                        title: "提示",
+                        message: result.message,
+                        type: "info",
+                    });
+                } else {
+                    ElNotification({
+                        title: "提示",
+                        message: result.message,
+                        type: "error",
+                    });
+                    return
+                }
+            }
+            form.tips = result.message + " 共查询到数据:" + result.data.total + "条," + result.data.rest_quota
+            tab.content = [{}]
+            tab.content.pop()
+            result.data.arr.forEach((item: any) => {
+                tab.content?.push({
+                    URL: item.url,
+                    IP: item.ip,
+                    Port: item.port,
+                    Protocol: item.protocol,
+                    Domain: item.domain,
+                    Component: item.component,
+                    Title: item.web_title,
+                    Status: item.status_code,
+                    ICP: item.company,
+                    AsOrg: item.as_org,
+                    Position: item.country + "/" + item.province,
+                    UpdateTime: item.updated_at,
+                })
+            });
+            tab.total = result.data.total
+        })
     },
 })
-
 
 </script>
 
@@ -128,7 +253,7 @@ const table = reactive({
         <el-form-item label="查询条件">
             <div class="head">
                 <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                    @select="entry.handleSelect"  :trigger-on-focus="false" style="width: 100%;">
+                    @select="entry.handleSelect" :trigger-on-focus="false" style="width: 100%;">
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />
@@ -141,7 +266,6 @@ const table = reactive({
                         </el-dropdown>
                     </template>
                     <template #default="{ item }">
-                        
                         <el-space>
                             <span>{{ item.value }}</span>
                             <span>({{ item.assetNum }} 条数据)</span>
@@ -175,7 +299,7 @@ const table = reactive({
                 <el-option v-for="item in form.optionsServer" :key="item.value" :label="item.label" :value="item.value"
                     style="text-align: center;" />
             </el-select>
-            <el-checkbox size="large">数据去重(需权益积分)</el-checkbox>
+            <el-checkbox v-model="form.deduplication" size="large">数据去重(需权益积分)</el-checkbox>
         </el-space>
         <el-link @click="form.syntaxDialog = true"><el-icon>
                 <ChatLineRound />
@@ -190,30 +314,50 @@ const table = reactive({
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
-                <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="URL" label="URL" width="200" show-overflow-tooltip="true" />
-                <el-table-column prop="IP" label="IP" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="PortAndServer" label="端口/服务" width="120" show-overflow-tooltip="true" />
+                <el-table-column type="index" fixed label="#" width="60px" />
+                <el-table-column prop="URL" fixed label="URL" width="200" show-overflow-tooltip="true">
+                    <template #default="scope">
+                        <el-button link :icon="ChromeFilled" @click.prevent="DefaultOpenURL(scope.row.URL)">
+                                </el-button>
+                        {{ scope.row.URL }}
+                    </template>
+                    
+                </el-table-column>
+                <el-table-column prop="IP" fixed label="IP" width="150" show-overflow-tooltip="true" />
+                <el-table-column prop="Port" fixed label="端口/服务" width="120">
+                    <template #default="scope">
+                        {{ scope.row.Port }}
+                        <el-tag type="info">{{ scope.row.Protocol }}</el-tag>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="Domain" label="域名" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="Assembly" label="应用/组件" width="200" show-overflow-tooltip="true" />
+                <el-table-column prop="Component" label="应用/组件" width="210xp">
+                    <template #default="scope">
+                        <el-space>
+                            <el-tag v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">{{ scope.row.Component[0].name + scope.row.Component[0].version }}</el-tag> 
+                            <el-popover placement="bottom" :width="350" trigger="hover">
+                                <template #reference>
+                                    <el-button round size="small" v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">共{{ scope.row.Component.length }}条</el-button>
+                                </template>
+                                <template #default>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <el-tag v-for="component in scope.row.Component">{{ component.name + component.version }}</el-tag> 
+                                    </div>
+                                </template>
+                            </el-popover>
+                        </el-space>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="Title" label="标题" width="150" show-overflow-tooltip="true" />
                 <el-table-column prop="Status" label="状态码" show-overflow-tooltip="true" />
                 <el-table-column prop="ICP" label="备案号" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="Position" label="地理位置" width="150" show-overflow-tooltip="true" />
+                <el-table-column prop="AsOrg" label="运营商" width="150" show-overflow-tooltip="true" />
+                <el-table-column prop="Position" label="地理位置" width="120" show-overflow-tooltip="true" />
                 <el-table-column prop="UpdateTime" label="更新时间" width="150" show-overflow-tooltip="true" />
-
-                <el-table-column fixed="right" label="操作" width="55px">
-                    <template #default="scope">
-                        <el-tooltip content="打开链接" placement="left">
-                            <el-button link :icon="ChromeFilled" @click.prevent="DefaultOpenURL(scope.row.link)">
-                            </el-button>
-                        </el-tooltip>
-                    </template>
-                </el-table-column>
             </el-table>
             <div class="nkmode" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
-                <el-pagination :page-size="100" :page-sizes="[100, 500, 1000]" layout="sizes, prev, pager, next"
+                <el-pagination :page-size="10" :page-sizes="[10, 50, 100]" layout="sizes, prev, pager, next"
                     @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange" :total="item.total" />
             </div>
         </el-tab-pane>

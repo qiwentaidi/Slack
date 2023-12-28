@@ -40,6 +40,8 @@ export function GoSimpleFetch(arg1:string):Promise<main.Response>;
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
 
+export function HunterSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean):Promise<space.HunterResult>;
+
 export function HunterTips(arg1:string):Promise<space.HunterTipsResult>;
 
 export function IPParse(arg1:string):Promise<Array<string>>;

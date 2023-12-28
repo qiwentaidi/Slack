@@ -72,31 +72,33 @@ wails build // 编译
 
 # 常见问题
 
-> Q1：Windows grdp库无法打包，出现如下报错
+> Q：Windows grdp库无法打包，出现如下报错
 >
 > ```
 > Wails CLI v2.7.1
 > 
 > Executing: go mod tidy
->   • Generating bindings: 
->   ERROR  
->           package slack-wails
->                 imports slack-wails/core/portscan
->                 imports github.com/tomatome/grdp/protocol/pdu
->                 imports github.com/tomatome/grdp/protocol/t125/gcc
->                 imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
+> • Generating bindings: 
+> ERROR  
+>        package slack-wails
+>              imports slack-wails/core/portscan
+>              imports github.com/tomatome/grdp/protocol/pdu
+>              imports github.com/tomatome/grdp/protocol/t125/gcc
+>              imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
 > ```
 >
-> A1：
+> A：
 >
+> ```
 > 1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
 > 2、需要安装GCC环境
+> ```
 
 
 
-> Q2：Mac系统下编译成功后更新POC异常或者找不到POC文件夹等
+> Q：Mac系统下编译成功后更新POC异常或者找不到POC文件夹等
 >
-> A2：由于Mac系统下打包完成为.app文件，需要将其slack-wails.app下面的/Contents/MacOS/slack-wails文件移动到程序根目录下即可正常使用
+> A：由于Mac系统下打包完成为.app文件，需要将其slack-wails.app下面的/Contents/MacOS/slack-wails文件移动到程序根目录下即可正常使用
 
 # 联系方式
 
