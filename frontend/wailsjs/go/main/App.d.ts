@@ -92,6 +92,8 @@ export function UpdateClinetFile(arg1:string):Promise<string>;
 
 export function UpdatePocFile(arg1:string):Promise<string>;
 
+export function WebIconMd5(arg1:string):Promise<string>;
+
 export function Webscan(arg1:string,arg2:string,arg3:string,arg4:Array<string>,arg5:clients.Proxy):Promise<any>;
 
 export function WechatAppid(arg1:string,arg2:string):Promise<string>;

@@ -177,7 +177,7 @@ export function ApiSyntaxCheck(
   query: string
 ) {
   if (mode == 0) {
-    if (global.space.fofaemail == "" || global.space.fofakey == "") {
+    if (email == "" || key == "") {
       ElMessage({
         showClose: true,
         message: "请在设置处填写FOFA Email和Key",

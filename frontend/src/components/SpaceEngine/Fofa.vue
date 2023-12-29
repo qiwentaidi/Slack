@@ -1,15 +1,14 @@
 <script lang="ts" setup>
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown } from '@element-plus/icons-vue';
 import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt, TableTabs, ApiSyntaxCheck } from '../../util'
 import {
     FofaTips,
     FofaSearch,
     IconHash,
-    TestTarget,
     DefaultOpenURL
 } from '../../../wailsjs/go/main/App'
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 import global from "../Global.vue"
 const from = reactive({
     query: '',
@@ -31,6 +30,7 @@ const from = reactive({
     hashURL: '',
     batchURL: '',
 })
+const loading = ref(false)
 
 // 输入框Tips提示
 
@@ -79,6 +79,7 @@ const table = reactive({
             return
         }
         const newTabName = `${++table.tabIndex}`
+        loading.value = true
         table.editableTabs.push({
             title: query,
             name: newTabName,
@@ -96,6 +97,7 @@ const table = reactive({
             tab.content = result.Results;
             tab.total = result.Total
             table.acvtiveNames = newTabName
+            loading.value = false
         })
     },
     removeTab: (targetName: string) => {
@@ -117,6 +119,7 @@ const table = reactive({
     },
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        loading.value = true
         FofaSearch(from.query, val.toString(), "1", global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
             from.tips = result.Message + " 共查询到数据:" + result.Total + "条"
             if (result.Status == false) {
@@ -125,10 +128,12 @@ const table = reactive({
             tab.content = result.Results;
             tab.total = result.Total
         })
+        loading.value = false
     },
     handleCurrentChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
+        loading.value = true
         FofaSearch(from.query, tab.pageSize.toString(), val.toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
             from.tips = result.Message + " 共查询到数据:" + result.Total + "条"
             if (result.Status == false) {
@@ -137,12 +142,14 @@ const table = reactive({
             tab.content = result.Results;
             tab.total = result.Total
         })
+        loading.value = false
     }
 })
 
 
 async function IconHashSearch() {
-    if (!(await TestTarget(from.hashURL))) {
+    let hash = await IconHash(from.hashURL)
+    if (hash == "") {
         ElMessage({
             showClose: true,
             message: "目标不可达",
@@ -150,8 +157,7 @@ async function IconHashSearch() {
         });
         return
     }
-    let hash = IconHash(from.hashURL)
-    let query = `icon_hash="${(await hash).toString()}"`
+    let query = `icon_hash="${hash}"`
     table.addTab(query)
 }
 
@@ -184,10 +190,17 @@ async function SaveData(mode: number) {
             ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", tab.content!)
         }else {
             let temp = [{}]
+            temp.pop()
+            ElNotification({
+                title: "提示",
+                message: "正在进行全数据导出，API每页最大查询限度10000，请稍后。",
+                type: "info",
+            });
             let index = 0
             for (const num of splitInt(tab.total,10000)) {
                 index += 1
-                await FofaSearch(table.acvtiveNames, num.toString(), index.toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
+                ElMessage("正在导出第" + index.toString() + "页");
+                await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
                     if (result.Status == false) {
                         return
                     }

@@ -87,4 +87,7 @@ declare module 'vue' {
     Webscan: typeof import('./src/components/Permeation/Webscan.vue')['default']
     Wxappid: typeof import('./src/components/Tools/Wxappid.vue')['default']
   }
+  export interface ComponentCustomProperties {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
+  }
 }

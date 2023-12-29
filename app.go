@@ -3,8 +3,11 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -452,7 +455,7 @@ func (a *App) FofaSearch(query, pageSzie, pageNum, email, api string, fraud, cer
 func (a *App) IconHash(target string) string {
 	_, b, err := clients.NewRequest("GET", target, nil, nil, 10, clients.DefaultClient())
 	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		return ""
 	}
 	return util.Mmh3Hash32(util.Base64Encode(b))
 }
@@ -656,4 +659,14 @@ func (a *App) HunterTips(query string) *space.HunterTipsResult {
 
 func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, deduplication bool) *space.HunterResult {
 	return space.HunterApiSearch(api, query, pageSize, pageNum, times, asset, deduplication)
+}
+
+func (a *App) WebIconMd5(target string) string {
+	_, b, err := clients.NewRequest("GET", target, nil, nil, 10, clients.DefaultClient())
+	if err != nil {
+		return ""
+	}
+	hash := md5.New()
+	io.WriteString(hash, string(b))
+	return hex.EncodeToString(hash.Sum(nil))
 }

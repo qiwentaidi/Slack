@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
-import { ElNotification } from "element-plus";
+import { reactive, ref } from 'vue';
+import { ElNotification, ElMessage } from "element-plus";
 import { Menu, Search, ChatLineRound, ArrowDown, ChromeFilled } from '@element-plus/icons-vue';
-import { TableTabs, ApiSyntaxCheck } from '../../util'
+import { TableTabs, ApiSyntaxCheck, ExportToXlsx, splitInt, SplitTextArea, validateIP, validateDomain } from '../../util'
 import global from "../Global.vue"
 import {
     DefaultOpenURL,
     HunterSearch,
-    HunterTips
+    HunterTips,
+    WebIconMd5
 } from '../../../wailsjs/go/main/App'
 const form = reactive({
     query: '',
@@ -46,6 +47,10 @@ const form = reactive({
     deduplication: false,
     tips: '',
     loadAll: [] as EntryTips[],
+    icondialog: false,
+    hashURL: '',
+    batchdialog: false,
+    batchURL: '',
 })
 
 interface EntryTips {
@@ -104,6 +109,7 @@ const table = reactive({
             pageSize: 10,
             currentPage: 1,
         });
+        loading.value = true
         HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
@@ -118,6 +124,7 @@ const table = reactive({
                         message: result.message,
                         type: "error",
                     });
+                    loading.value = false
                     return
                 }
             }
@@ -135,13 +142,14 @@ const table = reactive({
                     Title: item.web_title,
                     Status: item.status_code,
                     ICP: item.company,
-                    AsOrg: item.as_org,
+                    ISP: item.isp,
                     Position: item.country + "/" + item.province,
                     UpdateTime: item.updated_at,
                 })
             });
             tab.total = result.data.total
             table.acvtiveNames = newTabName
+            loading.value = false
         })
     },
     removeTab: (targetName: string) => {
@@ -163,6 +171,7 @@ const table = reactive({
     },
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        loading.value = true
         HunterSearch(global.space.hunterkey, form.query, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
@@ -177,6 +186,7 @@ const table = reactive({
                         message: result.message,
                         type: "error",
                     });
+                    loading.value = false
                     return
                 }
             }
@@ -194,17 +204,19 @@ const table = reactive({
                     Title: item.web_title,
                     Status: item.status_code,
                     ICP: item.company,
-                    AsOrg: item.as_org,
+                    ISP: item.isp,
                     Position: item.country + "/" + item.province,
                     UpdateTime: item.updated_at,
                 })
             });
             tab.total = result.data.total
+            loading.value = false
         })
     },
     handleCurrentChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
+        loading.value = true
         HunterSearch(global.space.hunterkey, form.query, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
@@ -219,6 +231,7 @@ const table = reactive({
                         message: result.message,
                         type: "error",
                     });
+                    loading.value = false
                     return
                 }
             }
@@ -236,15 +249,95 @@ const table = reactive({
                     Title: item.web_title,
                     Status: item.status_code,
                     ICP: item.company,
-                    AsOrg: item.as_org,
+                    ISP: item.isp,
                     Position: item.country + "/" + item.province,
                     UpdateTime: item.updated_at,
                 })
             });
             tab.total = result.data.total
+            loading.value = false
         })
     },
 })
+const loading = ref(false)
+
+async function IconHashSearch() {
+    let hash = await WebIconMd5(form.hashURL)
+    if (hash == "") {
+        ElMessage({
+            showClose: true,
+            message: "目标不可达",
+            type: "warning",
+        });
+        return
+    }
+    let query = `web.icon=="${hash}"`
+    table.addTab(query)
+}
+
+function BatchSearch() {
+    const lines = SplitTextArea(form.batchURL)
+    var temp = ''
+    for (const line of lines) {
+        if (validateIP(line) === true) {
+            temp += `ip="${line}"||`
+        } else if (validateDomain(line) === true) {
+            temp += `domain.suffix="${line}"||`
+        }
+    }
+    if (temp == '') {
+        ElMessage({
+            showClose: true,
+            message: "目标为空",
+            type: "warning",
+        });
+        return
+    }
+    table.addTab(temp.slice(0, -2))
+}
+
+
+async function SaveData(mode: number) {
+    if (table.editableTabs.length != 0) {
+        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        if (mode == 0) {
+            ExportToXlsx(["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"], "asset", "hunter_asset", tab.content!)
+        } else {
+            ElNotification({
+                title: "提示",
+                message: "正在进行全数据导出，API每页最大查询限度100，请稍后。",
+                type: "info",
+            });
+            let temp = [{}]
+            temp.pop()
+            let index = 0
+            for (const num of splitInt(tab.total, 100)) {
+                index += 1
+                ElMessage("正在导出第" + index.toString() + "页");
+                await HunterSearch(global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
+                    result.data.arr.forEach((item: any) => {
+                        temp.push({
+                            URL: item.url,
+                            IP: item.ip,
+                            Port: item.port,
+                            Protocol: item.protocol,
+                            Domain: item.domain,
+                            Component: item.component,
+                            Title: item.web_title,
+                            Status: item.status_code,
+                            ICP: item.company,
+                            ISP: item.isp,
+                            Position: item.country + "/" + item.province,
+                            UpdateTime: item.updated_at,
+                        })
+                    });
+                })
+            }
+            ExportToXlsx(["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"], "asset", "hunter_asset", temp)
+            temp = []
+        }
+    }
+}
 
 </script>
 
@@ -259,8 +352,8 @@ const table = reactive({
                             <el-button :icon="Menu" />
                             <template #dropdown>
                                 <el-dropdown-menu :hide-on-click="true">
-                                    <el-dropdown-item @click="">icon搜索</el-dropdown-item>
-                                    <el-dropdown-item @click="">批量查询</el-dropdown-item>
+                                    <el-dropdown-item @click="form.icondialog = true">icon搜索</el-dropdown-item>
+                                    <el-dropdown-item @click="form.batchdialog = true">批量查询</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
@@ -273,6 +366,26 @@ const table = reactive({
                         </el-space>
                     </template>
                 </el-autocomplete>
+                <el-dialog v-model="form.icondialog" title="输入目标favicon地址会自动计算并搜索相关资产" width="50%" center>
+                    <el-input v-model="form.hashURL"></el-input>
+                    <template #footer>
+                        <span>
+                            <el-button type="primary" @click="IconHashSearch">
+                                搜索
+                            </el-button>
+                        </span>
+                    </template>
+                </el-dialog>
+                <el-dialog v-model="form.batchdialog" title="批量查询: 请输入IP/网段/域名(MAX 100)" width="40%" center>
+                    <el-input v-model="form.batchURL" type="textarea" rows="10"></el-input>
+                    <template #footer>
+                        <span>
+                            <el-button type="primary" @click="BatchSearch">
+                                搜索
+                            </el-button>
+                        </span>
+                    </template>
+                </el-dialog>
                 <el-button type="primary" :icon="Search" @click="table.addTab(form.query)"
                     style="margin-left: 10px; margin-right: 10px;">查询</el-button>
                 <el-dropdown>
@@ -281,8 +394,8 @@ const table = reactive({
                     </el-button>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item>导出当前查询页数据</el-dropdown-item>
-                            <el-dropdown-item>导出全部数据</el-dropdown-item>
+                            <el-dropdown-item @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                            <el-dropdown-item @click="SaveData(1)">导出全部数据</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -310,7 +423,8 @@ const table = reactive({
             </el-scrollbar>
         </el-dialog>
     </div>
-    <el-tabs v-model="table.acvtiveNames" type="card" style="margin-top: 10px;" closable @tab-remove="table.removeTab">
+    <el-tabs v-model="table.acvtiveNames" v-loading="loading" type="card" style="margin-top: 10px;" closable
+        @tab-remove="table.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
@@ -318,10 +432,10 @@ const table = reactive({
                 <el-table-column prop="URL" fixed label="URL" width="200" show-overflow-tooltip="true">
                     <template #default="scope">
                         <el-button link :icon="ChromeFilled" @click.prevent="DefaultOpenURL(scope.row.URL)">
-                                </el-button>
+                        </el-button>
                         {{ scope.row.URL }}
                     </template>
-                    
+
                 </el-table-column>
                 <el-table-column prop="IP" fixed label="IP" width="150" show-overflow-tooltip="true" />
                 <el-table-column prop="Port" fixed label="端口/服务" width="120">
@@ -334,14 +448,18 @@ const table = reactive({
                 <el-table-column prop="Component" label="应用/组件" width="210xp">
                     <template #default="scope">
                         <el-space>
-                            <el-tag v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">{{ scope.row.Component[0].name + scope.row.Component[0].version }}</el-tag> 
+                            <el-tag v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">{{
+                                scope.row.Component[0].name + scope.row.Component[0].version }}</el-tag>
                             <el-popover placement="bottom" :width="350" trigger="hover">
                                 <template #reference>
-                                    <el-button round size="small" v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">共{{ scope.row.Component.length }}条</el-button>
+                                    <el-button round size="small"
+                                        v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">共{{
+                                            scope.row.Component.length }}条</el-button>
                                 </template>
                                 <template #default>
                                     <div style="display: flex; flex-direction: column;">
-                                        <el-tag v-for="component in scope.row.Component">{{ component.name + component.version }}</el-tag> 
+                                        <el-tag v-for="component in scope.row.Component">{{ component.name +
+                                            component.version }}</el-tag>
                                     </div>
                                 </template>
                             </el-popover>
@@ -351,7 +469,7 @@ const table = reactive({
                 <el-table-column prop="Title" label="标题" width="150" show-overflow-tooltip="true" />
                 <el-table-column prop="Status" label="状态码" show-overflow-tooltip="true" />
                 <el-table-column prop="ICP" label="备案号" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="AsOrg" label="运营商" width="150" show-overflow-tooltip="true" />
+                <el-table-column prop="ISP" label="运营商" width="150" show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="120" show-overflow-tooltip="true" />
                 <el-table-column prop="UpdateTime" label="更新时间" width="150" show-overflow-tooltip="true" />
             </el-table>
