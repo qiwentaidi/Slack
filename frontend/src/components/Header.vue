@@ -14,7 +14,7 @@
       <el-menu-item index="1-2" @click="currentComponent = 'Portscan'">主机扫描</el-menu-item>
       <!-- <el-menu-item index="1-3">漏洞利用</el-menu-item> -->
       <el-menu-item index="1-4" @click="currentComponent = 'Dirsearch'">目录扫描</el-menu-item>
-      <!-- <el-menu-item index="1-5" @click="currentComponent = 'Postman'">Postman</el-menu-item> -->
+      <el-menu-item index="1-5" @click="currentComponent = 'Postman'">Postman</el-menu-item>
       <el-menu-item index="1-6" @click="currentComponent = 'Pocdetail'">漏洞详情</el-menu-item>
     </el-sub-menu>
     <el-sub-menu index="2">
@@ -101,10 +101,9 @@
         <Minus />
       </el-icon>
     </el-menu-item>
-    <el-menu-item @click="ToggleMaximise">
-      <el-icon>
-        <FullScreen />
-      </el-icon>
+    <el-menu-item @click="ToggleMaximise" style="width: 45px;">
+      <el-image v-if="!isMax" style="height: 18px; width: 18px;" src='/max.svg' />
+      <el-image v-else style="height: 18px; width: 18px;" src='/reduction.svg' />
     </el-menu-item>
     <el-menu-item @click="Quit">
       <el-icon>
@@ -128,7 +127,6 @@ import {
   OfficeBuilding,
   Tools,
   Minus,
-  FullScreen,
   Monitor,
   Smoking,
   Help,
@@ -164,6 +162,14 @@ onMounted(async () => {
   }
   check.poc()
   check.client()
+  // 处理窗口大小改变的逻辑
+  window.addEventListener('resize', () => {
+    if (screen.availWidth == window.innerWidth && screen.availHeight == window.innerHeight) {
+      isMax.value = true
+    }else {
+      isMax.value = false
+    }
+  });
 });
 
 const centerDialogVisible = ref(false);
@@ -284,6 +290,7 @@ const download = {
   RemoteClientCentent: 'https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update',
 };
 
+const isMax = ref(false)
 </script>
 <style>
 .el-menu.el-menu--horizontal {

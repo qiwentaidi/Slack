@@ -18,6 +18,7 @@ import Portscan from './components/Permeation/Portscan.vue';
 import Pocdetail from './components/Permeation/Pocdetail.vue';
 import Fofa from './components/SpaceEngine/Fofa.vue';
 import Hunter from './components/SpaceEngine/Hunter.vue';
+import Postman from './components/Permeation/Postman.vue';
 
 const currentComponent = ref('Introduction');
 provide('currentComponent', currentComponent);
@@ -40,6 +41,7 @@ const components: { [key: string]: any } = {
   'Pocdetail': Pocdetail,
   'Fofa': Fofa,
   'Hunter': Hunter,
+  'Postman': Postman,
 };
 
 </script>

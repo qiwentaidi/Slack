@@ -1,37 +1,78 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-const options = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
-const value = ref('GET')
-const input = ref('')
+import {
+    GoSimpleFetch,
+} from "../../../wailsjs/go/main/App";
+import { reactive } from 'vue'
+const form = reactive({
+    input: '',
+    requestOptions: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+    requestDefault: "GET",
+    repsonse: '',
 
+})
+
+function NewFetch() {
+    GoSimpleFetch(form.input).then(result => {
+        if (result.OK) {
+            form.repsonse = result.Text
+        }
+    })
+}
+
+function parsedHtml() {
+    // 获取要渲染的 HTML 代码
+    var htmlCode = document.getElementById("myHTML")!.innerHTML;
+
+    // 获取要插入 HTML 代码的 div 元素
+    var outputDiv = document.getElementById("output");
+
+    // 插入 HTML 代码到 outputDiv 中
+    outputDiv!.innerHTML = htmlCode;
+
+    // const parser = new DOMParser();
+    // const doc = parser.parseFromString(form.repsonse, 'text/html');
+    // return doc.body.innerHTML;
+}
 </script>
 
 <template>
-    <el-container>
-        <el-header>
-            <div class="head">
-                <el-select v-model=value size="large" value=options>
-                    <el-option v-for="item in options" :value="item" :label="item" />
+    <el-form>
+        <el-form-item>
+            <div class="head" style="margin-left: 0px;">
+                <el-select v-model=form.requestDefault size="large" value=options>
+                    <el-option v-for="item in form.requestOptions" :value="item" :label="item" />
                 </el-select>
-                    <el-input v-model="input" placeholder="Entry URL" style="margin-right: 10px;"/>
-                    <el-button type="primary" size="large">Send</el-button>
+                <el-input v-model="form.input" placeholder="请输入URL" style="margin-right: 10px;" />
+                <el-button type="primary" size="large" @click="NewFetch">Send</el-button>
             </div>
-        </el-header>
-        <el-main>
-            <el-tabs>
-                <el-tab-pane label="Header" name="first">Header</el-tab-pane>
-                <el-tab-pane label="Body" name="second">Body</el-tab-pane>
-            </el-tabs>
-            <el-divider content-position="left">Response</el-divider>
-            <el-tabs type="card">
-                <el-tab-pane label="Pretty" name="first">Pretty</el-tab-pane>
-                <el-tab-pane label="Raw" name="second">Raw</el-tab-pane>
-                <el-tab-pane label="Preview" name="third">Preview</el-tab-pane>
-            </el-tabs>
-        </el-main>
-        <el-footer>
-        </el-footer>
-    </el-container>
+        </el-form-item>
+    </el-form>
+
+    <el-tabs>
+        <el-tab-pane label="Params">
+
+        </el-tab-pane>
+        <el-tab-pane label="Header"></el-tab-pane>
+        <el-tab-pane label="Body"></el-tab-pane>
+    </el-tabs>
+    <el-divider content-position="left">Response</el-divider>
+    <el-tabs type="card" v-if="form.repsonse.length > 1">
+        <el-tab-pane label="Pretty"></el-tab-pane>
+        <el-tab-pane label="Raw">
+            <div id="myHTML">
+                {{form.repsonse}}
+            </div>
+            <!-- <el-input type="textarea" rows="20" v-model="form.repsonse"></el-input> -->
+        </el-tab-pane>
+        <el-tab-pane label="Preview">
+            <el-scrollbar height="500px">
+                <div id="output"></div>
+                <!-- <div v-html="parsedHtml()"></div> -->
+            </el-scrollbar>
+
+        </el-tab-pane>
+    </el-tabs>
+    <el-empty description="请输入URL点击Send发送获取响应" v-else />
 </template>
 
 <style scoped>
