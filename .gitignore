@@ -2,4 +2,3 @@ build/bin
 node_modules
 frontend/dist
 release
-slack-wails*

@@ -65,16 +65,8 @@ async function scanner() {
     table.pageContent = []
     form.id = 0
     if (config.changeIp === false) {
-        await PortParse(form.portlist).then(
-            result => {
-                form.portsList = result
-            }
-        )
-        await IPParse(form.target).then(
-            result => {
-                form.ips = result
-            }
-        )
+        form.portsList = await PortParse(form.portlist)
+        form.ips = await IPParse(form.target)
         if (form.portlist.length == 0 || form.ips.length == 0) {
             ElMessage({
                 showClose: true,
@@ -92,12 +84,12 @@ async function scanner() {
         }
         const count = (form.ips.length * form.portsList.length)
         async.eachSeries(form.ips, (ip: string, callback: () => void) => {
-            form.log += "[INFO] Portscan " + ip + "\n"
+            form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
             async.eachLimit(form.portsList, config.thread, (port: number, callback: () => void) => {
                 if (ctrl.exit === true) {
                     return
                 }
-                PortCheck(ip as string, port, config.timeout).then((result) => {
+                PortCheck(ip as string, port, config.timeout).then(result => {
                     if (result.Status) {
                         form.log += `[+] Portscan ${ip}:${port} is open!\n`
                         table.result.push({

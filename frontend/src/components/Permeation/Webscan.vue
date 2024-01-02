@@ -127,7 +127,7 @@ class Scanner {
             return
         }
         const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port
-        if (!(await TestTarget(proxyURL))) {
+        if (global.proxy.enabled && !(await TestTarget(proxyURL))) {
             ElMessage({
                 showClose: true,
                 message: "代理地址不可用",

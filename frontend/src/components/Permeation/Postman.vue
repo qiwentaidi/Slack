@@ -20,15 +20,6 @@ function NewFetch() {
 }
 
 function parsedHtml() {
-    // 获取要渲染的 HTML 代码
-    var htmlCode = document.getElementById("myHTML")!.innerHTML;
-
-    // 获取要插入 HTML 代码的 div 元素
-    var outputDiv = document.getElementById("output");
-
-    // 插入 HTML 代码到 outputDiv 中
-    outputDiv!.innerHTML = htmlCode;
-
     // const parser = new DOMParser();
     // const doc = parser.parseFromString(form.repsonse, 'text/html');
     // return doc.body.innerHTML;
@@ -58,15 +49,20 @@ function parsedHtml() {
     <el-divider content-position="left">Response</el-divider>
     <el-tabs type="card" v-if="form.repsonse.length > 1">
         <el-tab-pane label="Pretty"></el-tab-pane>
+        <el-scrollbar height="500px">
+            <!-- <div v-highlight>
+                <pre><code>{{ form.repsonse }}</code></pre>
+            </div> -->
+        </el-scrollbar>
+
         <el-tab-pane label="Raw">
-            <div id="myHTML">
+            <!-- <div id="myHTML">
                 {{form.repsonse}}
-            </div>
+            </div> -->
             <!-- <el-input type="textarea" rows="20" v-model="form.repsonse"></el-input> -->
         </el-tab-pane>
         <el-tab-pane label="Preview">
             <el-scrollbar height="500px">
-                <div id="output"></div>
                 <!-- <div v-html="parsedHtml()"></div> -->
             </el-scrollbar>
 

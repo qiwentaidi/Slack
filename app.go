@@ -92,11 +92,13 @@ type Response struct {
 func (a *App) GoSimpleFetch(url string) *Response {
 	var r Response
 	resp, b, err := clients.NewRequest("GET", url, nil, nil, 10, clients.DefaultClient())
-	if err == nil {
+	if err != nil {
+		r.OK = false
+	} else {
 		r.OK = true
+		r.Status = resp.StatusCode
+		r.Text = string(b)
 	}
-	r.Status = resp.StatusCode
-	r.Text = string(b)
 	return &r
 }
 
