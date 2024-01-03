@@ -10,13 +10,14 @@
 
 
 
+
 # 使用须知
 
 由于功能未全部完善所以暂不提供编译版，后续Fyne版本将停止更新，但是仍然可以通过分支中获取到该模块代码，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
 
 # 运行
 
-可以通过[wails](https://wails.io/zh-Hans/docs/gettingstarted/installation/)官网查看支持运行的客户端以及运行前条件
+可以通过[wails](https://wails.io/zh-Hans/docs/gettingstarted/installation/)官网查看支持运行的客户端以及运行前条件，详细功能介绍及拓展等信息见[Wiki](https://github.com/qiwentaidi/Slack/wiki)
 
 ```shell
 go install github.com/wailsapp/wails/v2/cmd/wails@latest

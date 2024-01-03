@@ -51,7 +51,7 @@ function BurstSubdomain() {
         } else {
             ElMessage({
                 showClose: true,
-                message: 'All subdomains processed',
+                message: '子域名暴破已完成',
                 type: 'success',
             })
         }

@@ -7,7 +7,7 @@ import async from 'async';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 const upload = ref<UploadInstance>()
-    
+
 // 初始化时调用
 onMounted(() => {
     dir.value = []
@@ -26,6 +26,7 @@ const from = reactive({
     filename: '',
     currentRate: 0,
     errorCounts: 0,
+    redirectClient: false,
 })
 const dir = ref([{}])
 
@@ -87,6 +88,10 @@ async function start() {
     control.exit = false
     let startTime = Date.now();
     let statusCounts: Record<string, number> = {};
+    let redirect = false
+    if (from.redirectClient) {
+        redirect = true
+    }
     async.eachLimit(from.paths, from.thread, (path: string, callback: (err?: Error) => void) => {
         from.id++;
         from.currentRate = Math.round(from.id / ((Date.now() - startTime) / 1000));
@@ -95,10 +100,10 @@ async function start() {
             callback();
             return;
         }
-        PathRequest(from.defaultOption, from.url + path, config.timeout, config.exclude).then(result => {
+        PathRequest(from.defaultOption, from.url + path, config.timeout, config.exclude, redirect).then(result => {
             if (result.Status == 0) {
                 from.errorCounts++
-            }else if (result.Status !== 1) {
+            } else if (result.Status !== 1) {
                 statusCounts[result.Status] = (statusCounts[result.Status] || 0) + 1;
                 if (statusCounts[result.Status] <= config.times) {
                     dir.value.push({
@@ -107,7 +112,7 @@ async function start() {
                         path: from.url + path,
                         location: result.Location,
                     });
-                }    
+                }
             }
             callback()
         })
@@ -117,7 +122,7 @@ async function start() {
         } else {
             ElMessage({
                 showClose: true,
-                message: `${from.url} dirsearch processed`,
+                message: `${from.url}目录扫描结束`,
                 type: 'success',
             });
         }
@@ -195,6 +200,9 @@ const config = reactive({
                                 </el-icon></span>
                         </el-tooltip>
                         <el-input v-model="config.exclude"></el-input>
+                    </el-form-item>
+                    <el-form-item label="重定向跟随:" style="margin-bottom: 20px;">
+                        <el-switch v-model="from.redirectClient" inline-prompt active-text="关闭" inactive-text="开启" />
                     </el-form-item>
                     <el-form-item label="自定义字典:" style="margin-bottom: 20px;">
                         <el-tooltip placement="left">

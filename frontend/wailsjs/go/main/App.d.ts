@@ -60,7 +60,7 @@ export function LocalWalkFiles(arg1:string):Promise<Array<string>>;
 
 export function Minimise():Promise<void>;
 
-export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string):Promise<main.PathData>;
+export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string,arg5:boolean):Promise<main.PathData>;
 
 export function PocNums(arg1:string,arg2:string):Promise<number>;
 

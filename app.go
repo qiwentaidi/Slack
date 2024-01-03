@@ -297,11 +297,14 @@ type PathData struct {
 	Length   int    // 主体内容
 }
 
-func (a *App) PathRequest(method, url string, timeout int, bodyExclude string) PathData {
+func (a *App) PathRequest(method, url string, timeout int, bodyExclude string, redirect bool) PathData {
 	var pd PathData // 将响应头和响应头的数据存储到结构体中
-	resp, body, err := clients.NewRequest(method, url, nil, nil, timeout, clients.NotFollowClient())
+	client := clients.NotFollowClient()
+	if redirect {
+		client = clients.DefaultClient()
+	}
+	resp, body, err := clients.NewRequest(method, url, nil, nil, timeout, client)
 	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
 		return pd
 	}
 	if bodyExclude != "" && bytes.Contains(body, []byte(bodyExclude)) {
@@ -602,12 +605,22 @@ func (a *App) Webscan(url, severity, keyword string, pocpathList []string, pr cl
 				}
 				extinfo = "[" + strings.TrimLeft(extinfo, ",") + "]"
 			}
+			var req, resp string
+			for i, v := range result.AllPocResult {
+				if i != len(result.AllPocResult)-1 {
+					req += fmt.Sprintf("Request%d\n%v\n\n========================================", i+1, string(v.ResultRequest.Raw))
+					resp += fmt.Sprintf("Response%d\n%v\n\n========================================", i+1, v.ReadFullResultResponseInfo())
+				} else {
+					req += fmt.Sprintf("Request%d\n%v", i+1, string(v.ResultRequest.Raw))
+					resp += fmt.Sprintf("Response%d\n%v", i+1, v.ReadFullResultResponseInfo())
+				}
+			}
 			wr = append(wr, WebResult{
 				VulName:  result.PocInfo.Id,
 				Severity: strings.ToUpper(result.PocInfo.Info.Severity),
 				VulURL:   result.FullTarget,
-				Request:  string(result.AllPocResult[0].ResultRequest.Raw),
-				Response: result.AllPocResult[0].ReadFullResultResponseInfo(),
+				Request:  req,
+				Response: resp,
 				ExtInfo:  extinfo,
 			})
 

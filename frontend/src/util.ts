@@ -135,6 +135,8 @@ export async function formatURL(host: string): Promise<string[]> {
   for (var item of temp) {
     if (item.slice(-1) !== "/") {
       urls.push(item += "/")
+    }else {
+      urls.push(item)
     }
   }
   return urls;

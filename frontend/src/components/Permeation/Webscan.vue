@@ -153,7 +153,7 @@ class Scanner {
                         status: result.StatusCode,
                         length: result.Length,
                         title: result.Title,
-                        fingerprint: result.Fingerprints.join(" | "),
+                        fingerprint: result.Fingerprints,
                     })
                     form.urlFingerMap.push({
                         url: result.URL,
@@ -488,15 +488,21 @@ function getClassBySeverity(row: any) {
             <el-table :data="form.fingerResult" border height="65vh" :cell-style="{ textAlign: 'center' }"
                 :header-cell-style="{ 'text-align': 'center' }">
                 <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="url" label="网站地址" :show-overflow-tooltip="true" />
+                <el-table-column prop="url" label="网站地址"/>
                 <el-table-column prop="status" width="100px" label="状态码"
                     :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
                     :show-overflow-tooltip="true" />
                 <el-table-column prop="length" width="100px" label="长度"
                     :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
                     :show-overflow-tooltip="true" />
-                <el-table-column prop="title" label="标题" :show-overflow-tooltip="true" />
-                <el-table-column prop="fingerprint" label="指纹" :show-overflow-tooltip="true" />
+                <el-table-column prop="title" label="标题" width="300px" />
+                <el-table-column prop="fingerprint" label="指纹">
+                    <template #default="scope">
+                        <div style="flex-wrap: wrap; display: flex;">
+                            <el-tag v-for="finger in scope.row.fingerprint" style="margin: 3px;">{{ finger }}</el-tag>
+                        </div>
+                    </template>
+                </el-table-column>
             </el-table>
         </el-tab-pane>
         <el-tab-pane label="漏洞">
@@ -528,7 +534,7 @@ function getClassBySeverity(row: any) {
         <template #header>
             <span>新建扫描任务</span>
             <el-dropdown>
-                <el-button :icon="Monitor" size="small">联动<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                <el-button :icon="Monitor" size="small">联动<el-icon><arrow-down /></el-icon>
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
