@@ -61,7 +61,7 @@
       <el-card class="box-card" shadow="never" style="width: 325px" v-if="version.PocStatus">
         <template #header>
           <div class="card-header">
-            <el-text>POC&指纹{{ version.RemotePoc }} <br /> 当前v{{ version.LocalPoc }}</el-text>
+            <el-text>POC&指纹{{ version.RemotePoc }} <br /> 当前{{ version.LocalPoc }}</el-text>
             <el-button class="button" :icon="Download" type="primary" :disabled="!version.PocStatus"
               @click="update.poc">立即下载</el-button>
           </div>
@@ -160,7 +160,6 @@ onMounted(async () => {
       isMax.value = false
     }
   });
-  check.poc()
   check.client()
   let cfg = await CheckFileStat("./config")
   if (!cfg) {
@@ -169,6 +168,8 @@ onMounted(async () => {
       message: "config配置文件目录加载失败，会影响程序功能使用",
       type: "warning",
     });
+  }else {
+    check.poc()
   }
 });
 
@@ -178,12 +179,13 @@ const currentComponent = inject("currentComponent");
 const check = ({
   // poc
   poc: async function () {
-    if (!CheckFileStat(lv)) {
+    let pcfg = await CheckFileStat(lv)
+    if (!pcfg) {
       version.LocalPoc = "版本文件不存在"
       version.PocStatus = false
       return
     } else {
-      version.LocalPoc = await GetFileContent(lv)
+      version.LocalPoc = "v" + await GetFileContent(lv)
     }
     let rp1 = await GoSimpleFetch(download.RemotePocV)
     if (rp1.Status !== 200) {

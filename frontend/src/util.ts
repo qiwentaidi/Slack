@@ -120,6 +120,7 @@ export function splitInt(n: number, slice: number): number[] {
 }
 
 export async function formatURL(host: string): Promise<string[]> {
+  let temp: Array<string> = [];
   let urls: Array<string> = [];
   for (var target of SplitTextArea(host)) {
     target = target.trim();
@@ -128,13 +129,13 @@ export async function formatURL(host: string): Promise<string[]> {
       if (result.Status === true) {
         target = result.ProtocolURL;
       }
-      if (target.slice(-1) !== "/") {
-        target += "/";
-      }
-    } else if (target.slice(-1) !== "/") {
-      target += "/";
     }
-    urls.push(target);
+    temp.push(target);
+  }
+  for (var item of temp) {
+    if (item.slice(-1) !== "/") {
+      urls.push(item += "/")
+    }
   }
   return urls;
 }
