@@ -152,16 +152,6 @@ import { ElNotification, ElMessageBox } from "element-plus";
 import { compareVersion } from "../util"
 const lv = "./config/afrog-pocs/version"
 onMounted(async () => {
-  if (!CheckFileStat("./config")) {
-    ElNotification({
-      title: "Warning",
-      message: "config配置文件目录加载失败，会影响程序功能使用",
-      type: "warning",
-    });
-    return
-  }
-  check.poc()
-  check.client()
   // 处理窗口大小改变的逻辑
   window.addEventListener('resize', () => {
     if (screen.availWidth == window.innerWidth && screen.availHeight == window.innerHeight) {
@@ -170,6 +160,16 @@ onMounted(async () => {
       isMax.value = false
     }
   });
+  check.poc()
+  check.client()
+  let cfg = await CheckFileStat("./config")
+  if (!cfg) {
+    ElNotification({
+      title: "Warning",
+      message: "config配置文件目录加载失败，会影响程序功能使用",
+      type: "warning",
+    });
+  }
 });
 
 const centerDialogVisible = ref(false);
