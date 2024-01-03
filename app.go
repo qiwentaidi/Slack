@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -469,7 +468,7 @@ type AliveTarget struct {
 }
 
 func (a *App) CheckTarget(host string, proxy clients.Proxy) *AliveTarget {
-	var client *http.Client
+	client := clients.DefaultClient()
 	if proxy.Enabled {
 		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
 	}
