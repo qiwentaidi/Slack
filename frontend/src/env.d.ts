@@ -5,3 +5,4 @@ import type { DefineComponent } from 'vue'
     export default component
 }
 declare module 'async';
+declare module 'prismjs';

@@ -107,7 +107,7 @@ wails build // 编译
 
 > Q：Mac系统下编译成功后更新POC异常或者找不到POC文件夹等
 >
-> A：由于Mac系统下打包完成为.app文件，需要将其slack-wails.app下面的/Contents/MacOS/slack-wails文件移动到程序根目录下即可正常使用
+> A：由于Mac系统下打包完成为.app文件，需要将其slack-wails.app下面的/Contents/MacOS/slack-wails文件移动到程序根目录下并通过命令行./启动即可正常使用
 
 # 联系方式
 

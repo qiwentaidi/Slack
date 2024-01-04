@@ -2,7 +2,14 @@
 import {
     GoSimpleFetch,
 } from "../../../wailsjs/go/main/App";
-import { reactive } from 'vue'
+import { reactive, onMounted, onUpdated } from 'vue'
+import Prism from "prismjs";
+onUpdated(() => {
+    Prism.highlightAll(); //修改内容后重新渲染
+});
+onMounted(() => {
+    Prism.highlightAll(); //切换菜单重新渲染
+})
 const form = reactive({
     input: '',
     requestOptions: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
@@ -17,19 +24,20 @@ function NewFetch() {
             form.repsonse = result.Text
         }
     })
+
 }
 
 function parsedHtml() {
-    // const parser = new DOMParser();
-    // const doc = parser.parseFromString(form.repsonse, 'text/html');
-    // return doc.body.innerHTML;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(form.repsonse, 'text/html');
+    return doc.body.innerHTML;
 }
 </script>
 
 <template>
     <el-form>
         <el-form-item>
-            <div class="head" style="margin-left: 0px;">
+            <div class="head">
                 <el-select v-model=form.requestDefault size="large" value=options>
                     <el-option v-for="item in form.requestOptions" :value="item" :label="item" />
                 </el-select>
@@ -43,29 +51,31 @@ function parsedHtml() {
         <el-tab-pane label="Params">
 
         </el-tab-pane>
-        <el-tab-pane label="Header"></el-tab-pane>
-        <el-tab-pane label="Body"></el-tab-pane>
+        <el-tab-pane label="Header">
+
+        </el-tab-pane>
+        <el-tab-pane label="Body">
+
+        </el-tab-pane>
     </el-tabs>
     <el-divider content-position="left">Response</el-divider>
-    <el-tabs type="card" v-if="form.repsonse.length > 1">
-        <el-tab-pane label="Pretty"></el-tab-pane>
-        <el-scrollbar height="500px">
-            <!-- <div v-highlight>
-                <pre><code>{{ form.repsonse }}</code></pre>
-            </div> -->
-        </el-scrollbar>
+    <el-tabs type="border-card" v-if="form.repsonse.length > 1">
+        <el-tab-pane label="Pretty">
+            <el-scrollbar class="fillContent">
+                <pre><code class="language-python line-numbers">{{ form.repsonse }}</code></pre>
 
+                <!-- <pre v-highlight class="pre-wrap"><code class="html">{{ form.repsonse }}</code></pre> -->
+            </el-scrollbar>
+        </el-tab-pane>
         <el-tab-pane label="Raw">
-            <!-- <div id="myHTML">
-                {{form.repsonse}}
-            </div> -->
-            <!-- <el-input type="textarea" rows="20" v-model="form.repsonse"></el-input> -->
+            <el-scrollbar class="fillContent">
+                <pre class="pre-wrap"><code>{{ form.repsonse }}</code></pre>
+            </el-scrollbar>
         </el-tab-pane>
         <el-tab-pane label="Preview">
-            <el-scrollbar height="500px">
-                <!-- <div v-html="parsedHtml()"></div> -->
+            <el-scrollbar class="fillContent">
+                <div v-html="parsedHtml()"></div>
             </el-scrollbar>
-
         </el-tab-pane>
     </el-tabs>
     <el-empty description="请输入URL点击Send发送获取响应" v-else />
@@ -74,5 +84,16 @@ function parsedHtml() {
 <style scoped>
 .head {
     display: flex;
+}
+
+.pre-wrap {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    overflow-wrap: break-word;
+}
+
+.fillContent {
+    height: calc(100vh - 300px);
 }
 </style>

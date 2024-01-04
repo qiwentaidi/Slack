@@ -27,6 +27,7 @@ const from = reactive({
     currentRate: 0,
     errorCounts: 0,
     redirectClient: false,
+    alive: false,
 })
 const dir = ref([{}])
 
@@ -64,14 +65,16 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
 }
 
 async function start() {
-    let result = await TestTarget(from.url);
-    if (!result) {
-        ElMessage({
-            showClose: true,
-            message: 'URL目标不可达',
-            type: 'warning',
-        })
-        return false;
+    if (!from.alive) {
+        let result = await TestTarget(from.url);
+        if (!result) {
+            ElMessage({
+                showClose: true,
+                message: 'URL目标不可达',
+                type: 'warning',
+            })
+            return false;
+        }
     }
     if (from.url[from.url.length - 1] !== "/") {
         from.url += "/"
@@ -152,19 +155,26 @@ const config = reactive({
 
 <template>
     <el-form :model="from" label-width="20%">
-        <el-form-item label="URL:">
+        <el-form-item>
             <div class="head">
                 <el-select v-model=from.defaultOption value=options style="width: 120px;">
                     <el-option v-for="item in from.options" :value="item" :label="item" />
                 </el-select>
-                <el-input v-model="from.url" style="margin-right: 10px; width: 50%;" />
+                <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 10px; width: 50%;" />
                 <el-button type="primary" @click="start">开始扫描</el-button>
                 <el-button type="danger" @click="control.stop">停止</el-button>
             </div>
         </el-form-item>
-        <el-form-item label="状态码过滤:">
+        <el-form-item>
             <el-space>
-                <el-input v-model="from.statu" placeholder="支持200,300 | 200-300,400-500" style="width: 300px;"></el-input>
+                <div>
+                    <span>重定向跟随：</span>
+                    <el-switch v-model="from.redirectClient" inline-prompt active-text="关闭" inactive-text="开启" />
+                </div>
+                <div>
+                    <span>初始不判断存活：</span>
+                    <el-switch v-model="from.alive" inline-prompt active-text="关闭" inactive-text="开启" />
+                </div>
                 <el-tag type="success">线程:{{ config.thread }}</el-tag>
                 <el-tag type="success">超时:{{ config.timeout }}s</el-tag>
                 <el-tooltip placement="bottom" content="请求失败数量">
@@ -201,8 +211,8 @@ const config = reactive({
                         </el-tooltip>
                         <el-input v-model="config.exclude"></el-input>
                     </el-form-item>
-                    <el-form-item label="重定向跟随:" style="margin-bottom: 20px;">
-                        <el-switch v-model="from.redirectClient" inline-prompt active-text="关闭" inactive-text="开启" />
+                    <el-form-item label="状态码过滤:" style="margin-bottom: 20px;">
+                        <el-input v-model="from.statu" placeholder="支持200,300 | 200-300,400-500"></el-input>
                     </el-form-item>
                     <el-form-item label="自定义字典:" style="margin-bottom: 20px;">
                         <el-tooltip placement="left">
