@@ -61,7 +61,6 @@ declare module 'vue' {
     ElTag: typeof import('element-plus/es')['ElTag']
     ElText: typeof import('element-plus/es')['ElText']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
-    ElUpload: typeof import('element-plus/es')['ElUpload']
     Fofa: typeof import('./src/components/SpaceEngine/Fofa.vue')['default']
     Fscan: typeof import('./src/components/Tools/Fscan.vue')['default']
     Global: typeof import('./src/components/Global.vue')['default']

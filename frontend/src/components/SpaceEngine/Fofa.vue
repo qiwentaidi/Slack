@@ -74,12 +74,21 @@ const table = reactive({
     acvtiveNames: "1",
     tabIndex: 1,
     editableTabs: [] as TableTabs[],
-    addTab: (query: string) => {
+    addTab: async (query: string) => {
         if (ApiSyntaxCheck(0, global.space.fofaemail, global.space.fofakey, query) === false) {
             return
         }
         const newTabName = `${++table.tabIndex}`
         loading.value = true
+        let result = await FofaSearch(query, "100", "1", global.space.fofaemail, global.space.fofakey, from.fraud, from.cert)
+        if (!result.Status) {
+            ElMessage({
+                showClose: true,
+                message: result.Message,
+                type: "warning",
+            });
+            return
+        }
         table.editableTabs.push({
             title: query,
             name: newTabName,
@@ -88,17 +97,12 @@ const table = reactive({
             pageSize: 100,
             currentPage: 1,
         });
-        FofaSearch(query, "100", "1", global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
-            from.tips = result.Message + " 共查询到数据:" + result.Total + "条"
-            if (result.Status == false) {
-                return
-            }
-            const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
-            tab.content = result.Results;
-            tab.total = result.Total
-            table.acvtiveNames = newTabName
-            loading.value = false
-        })
+        from.tips = result.Message + " 共查询到数据:" + result.Total + "条"
+        const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
+        tab.content = result.Results;
+        tab.total = result.Total
+        table.acvtiveNames = newTabName
+        loading.value = false
     },
     removeTab: (targetName: string) => {
         const tabs = table.editableTabs
@@ -188,7 +192,7 @@ async function SaveData(mode: number) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         if (mode == 0) {
             ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", tab.content!)
-        }else {
+        } else {
             let temp = [{}]
             temp.pop()
             ElNotification({
@@ -197,7 +201,7 @@ async function SaveData(mode: number) {
                 type: "info",
             });
             let index = 0
-            for (const num of splitInt(tab.total,10000)) {
+            for (const num of splitInt(tab.total, 10000)) {
                 index += 1
                 ElMessage("正在导出第" + index.toString() + "页");
                 await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
@@ -211,6 +215,21 @@ async function SaveData(mode: number) {
             temp = []
         }
     }
+}
+
+function getColumnData(prop: string): any[] {
+    const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+    let protocols = new Set(tab.content!.map((item: any) => item[prop]));
+    let newArray = Array.from(protocols).map(protocol => ({ text: protocol, value: protocol }))
+    return newArray
+}
+
+function filterHandlerProtocol(value: string, row: any): boolean {
+    return row.Protocol === value;
+}
+
+function filterHandlerTitle(value: string, row: any): boolean {
+    return row.Title === value;
 }
 
 </script>
@@ -301,11 +320,14 @@ async function SaveData(mode: number) {
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column type="index" label="#" width="60px" />
                 <el-table-column prop="URL" label="URL" width="200" show-overflow-tooltip="true" />
-                <el-table-column prop="Title" label="标题" width="150" show-overflow-tooltip="true" />
+                <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
+                    :filter-method="filterHandlerTitle" width="150" show-overflow-tooltip="true" />
                 <el-table-column prop="IP" label="IP" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="Port" label="端口" width="70" show-overflow-tooltip="true" />
+                <el-table-column prop="Port" label="端口" width="100"
+                    :sort-method="(a: any, b: any) => { return a.Port - b.Port }" sortable show-overflow-tooltip="true" />
                 <el-table-column prop="Domain" label="域名" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="Protocol" label="协议" width="100" show-overflow-tooltip="true" />
+                <el-table-column prop="Protocol" label="协议" :filters='getColumnData("Protocol")'
+                    :filter-method="filterHandlerProtocol" width="100" show-overflow-tooltip="true" />
                 <el-table-column prop="Country" label="国家" show-overflow-tooltip="true" />
                 <el-table-column prop="Region" label="省份" show-overflow-tooltip="true" />
                 <el-table-column prop="City" label="城市" show-overflow-tooltip="true" />
@@ -334,13 +356,15 @@ async function SaveData(mode: number) {
     height: 400px;
     overflow-y: auto;
 }
+
 .demo-image__lazy .el-image {
-  display: block;
-  min-height: 200px;
-  margin-bottom: 10px;
+    display: block;
+    min-height: 200px;
+    margin-bottom: 10px;
 }
+
 .demo-image__lazy .el-image:last-child {
-  margin-bottom: 0;
+    margin-bottom: 0;
 }
 </style>
 
