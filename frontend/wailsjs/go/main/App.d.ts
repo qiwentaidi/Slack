@@ -76,6 +76,8 @@ export function ReadPocDetail(arg1:string):Promise<poc.VulnerabilityDetails>;
 
 export function Restart():Promise<void>;
 
+export function SelectFile():Promise<string>;
+
 export function Subdomain(arg1:string,arg2:string,arg3:string,arg4:number):Promise<Array<string>>;
 
 export function System(arg1:string,arg2:number):Promise<Array<any>>;

@@ -386,7 +386,7 @@ function handleCurrentChange(val: any) {
                     </el-drawer>
                 </el-form-item>
             </el-form>
-            <el-table :data="table.pageContent" border style="width: 100%; height: 45vh;">
+            <el-table :data="table.pageContent" border style="height: 45vh;">
                 <el-table-column type="selection" width="55px" />
                 <el-table-column prop="host" label="主机" />
                 <el-table-column prop="port" label="端口" width="100px" />

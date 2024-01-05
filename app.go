@@ -67,6 +67,22 @@ func (a *App) DefaultOpenURL(url string) {
 	runtime.BrowserOpenURL(a.ctx, url)
 }
 
+func (a *App) SelectFile() string {
+	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "选择文件",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "文本数据",
+				Pattern:     "*.txt",
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Sprintf("err %s!", err)
+	}
+	return selection
+}
+
 func (a *App) CheckFileStat(path string) bool {
 	if _, err := os.Stat(path); err != nil {
 		return false

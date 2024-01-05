@@ -142,6 +142,10 @@ export function Restart() {
   return window['go']['main']['App']['Restart']();
 }
 
+export function SelectFile() {
+  return window['go']['main']['App']['SelectFile']();
+}
+
 export function Subdomain(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Subdomain'](arg1, arg2, arg3, arg4);
 }

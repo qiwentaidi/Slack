@@ -1,13 +1,10 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { TestTarget, InitDict, PathRequest } from "../../../wailsjs/go/main/App";
-import type { UploadInstance, UploadFile, UploadProps, UploadRawFile } from 'element-plus'
-import { genFileId, ElMessage } from 'element-plus'
+import { TestTarget, InitDict, PathRequest, SelectFile, GetFileContent } from "../../../wailsjs/go/main/App";
+import { ElMessage } from 'element-plus'
 import async from 'async';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
-const upload = ref<UploadInstance>()
-
 // 初始化时调用
 onMounted(() => {
     dir.value = []
@@ -19,11 +16,10 @@ const from = reactive({
     exts: 'php,aspx,asp,jsp,html,js',
     statusFilter: '',
     thread: '100',
-    paths: [{}],
+    paths: [] as string[],
     percentage: 0,
     id: 0,
     tips: '选择字典',
-    filename: '',
     currentRate: 0,
     errorCounts: 0,
     redirectClient: false,
@@ -31,15 +27,19 @@ const from = reactive({
 })
 const dir = ref([{}])
 
-function handleFileChange(file: UploadFile) {
-    const reader = new FileReader();
-    if (file.size == 0) {
-        from.tips = "不能上传空文件"
+async function handleFileChange() {
+    let path = await SelectFile()
+    let res = await GetFileContent(path)
+    if (res.length == 0) {
+        ElMessage({
+            showClose: true,
+            message: '不能上传空文件',
+            type: 'warning',
+        })
         return
     }
-    reader.onload = (event) => {
-        from.paths = []
-        const result = (event.target!.result as string).replace(/\r\n/g, '\n'); // 避免windows unix系统差异
+    if ( res !== "文件不存在") {
+        const result = res.replace(/\r\n/g, '\n'); // 避免windows unix系统差异
         const extensions = from.exts.split(',');
         for (const line of result.split('\n')) {
             if (line.includes("%EXT%")) {
@@ -51,17 +51,8 @@ function handleFileChange(file: UploadFile) {
             }
         }
         from.paths = Array.from(new Set(from.paths))
-        from.filename = file.name
-        from.tips = `loaded ${file.name} (${from.paths.length} dicts)`;
-    };
-    reader.readAsText(file.raw!);
-}
-
-const handleExceed: UploadProps['onExceed'] = (files) => {
-    upload.value!.clearFiles()
-    const file = files[0] as UploadRawFile
-    file.uid = genFileId()
-    upload.value!.handleStart(file)
+        from.tips = `loaded ${from.paths.length} dicts`;
+    }
 }
 
 async function start() {
@@ -79,7 +70,7 @@ async function start() {
     if (from.url[from.url.length - 1] !== "/") {
         from.url += "/"
     }
-    if (from.filename.length === 0) {
+    if (from.paths.length === 0) {
         await InitDict(from.exts.split(',')).then(result => {
             from.paths = result;
             from.tips = `loaded default (${from.paths.length} dicts)`;
@@ -248,12 +239,7 @@ const config = reactive({
                     <el-form-item label="自定义字典:" style="margin-bottom: 20px;">
                         <el-tooltip placement="left">
                             <template #content>默认加载config/dirsearch/dicc.txt</template>
-                            <el-upload ref="upload" :auto-upload="false" :show-file-list="false" :on-exceed="handleExceed"
-                                limit=1 accept=".txt" @change="handleFileChange" style="width: 100%;">
-                                <template #trigger>
-                                    <el-button color="#abcdef">{{ from.tips }}</el-button>
-                                </template>
-                            </el-upload>
+                            <el-button color="#abcdef" @click="handleFileChange()">{{ from.tips }}</el-button>
                         </el-tooltip>
                     </el-form-item>
                 </el-form>
