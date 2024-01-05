@@ -17,7 +17,7 @@ const from = reactive({
     options: ['GET', 'POST', 'HEAD', 'OPTIONS'],
     defaultOption: 'GET',
     exts: 'php,aspx,asp,jsp,html,js',
-    statu: '',
+    statusFilter: '',
     thread: '100',
     paths: [{}],
     percentage: 0,
@@ -91,10 +91,13 @@ async function start() {
     control.exit = false
     let startTime = Date.now();
     let statusCounts: Record<string, number> = {};
+    let filter: number[] = []
+    filter = control.psc()
     let redirect = false
     if (from.redirectClient) {
         redirect = true
     }
+
     async.eachLimit(from.paths, from.thread, (path: string, callback: (err?: Error) => void) => {
         from.id++;
         from.currentRate = Math.round(from.id / ((Date.now() - startTime) / 1000));
@@ -109,12 +112,23 @@ async function start() {
             } else if (result.Status !== 1) {
                 statusCounts[result.Status] = (statusCounts[result.Status] || 0) + 1;
                 if (statusCounts[result.Status] <= config.times) {
-                    dir.value.push({
-                        status: result.Status,
-                        length: result.Length,
-                        path: from.url + path,
-                        location: result.Location,
-                    });
+                    if (filter.length > 0) {
+                        if (filter.find(number => number === result.Status) != undefined) {
+                            dir.value.push({
+                                status: result.Status,
+                                length: result.Length,
+                                path: from.url + path,
+                                location: result.Location,
+                            });
+                        }
+                    } else {
+                        dir.value.push({
+                            status: result.Status,
+                            length: result.Length,
+                            path: from.url + path,
+                            location: result.Location,
+                        });
+                    }
                 }
             }
             callback()
@@ -141,6 +155,23 @@ const control = reactive({
     },
     format: function (percentage: any) {
         return `${from.id}/${from.paths.length} (${from.currentRate}/s)`
+    },
+    // Processing status codes
+    psc: function (): number[] {
+        let temp: number[] = []
+        if (from.statusFilter !== "") {
+            for (const block of from.statusFilter.split(",")) {
+                if (block.indexOf("-") !== -1) {
+                    let c = block.split("-")
+                    for (var i = Number(c[0]); i <= Number(c[1]); i++) {
+                        temp.push(Number(i))
+                    }
+                } else {
+                    temp.push(Number(block))
+                }
+            }
+        }
+        return temp
     }
 })
 
@@ -212,7 +243,7 @@ const config = reactive({
                         <el-input v-model="config.exclude"></el-input>
                     </el-form-item>
                     <el-form-item label="状态码过滤:" style="margin-bottom: 20px;">
-                        <el-input v-model="from.statu" placeholder="支持200,300 | 200-300,400-500"></el-input>
+                        <el-input v-model="from.statusFilter" placeholder="支持200,300 | 200-300,400-500"></el-input>
                     </el-form-item>
                     <el-form-item label="自定义字典:" style="margin-bottom: 20px;">
                         <el-tooltip placement="left">
