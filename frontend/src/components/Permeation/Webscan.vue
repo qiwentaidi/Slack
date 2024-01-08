@@ -172,51 +172,51 @@ class Scanner {
         form.currentLoadPath = await LocalWalkFiles(pathActive)
         // 主动探测
         dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
-        async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {
+        async.eachLimit(this.urls, form.thread, async (target: string, callback: () => void) => {
             if (ctrl.exit === true) {
                 return
             }
             dashboard.logger += `[INFO] ${target}，正在进行主动指纹探测\n`
             dashboard.runningStatus = target
-            Webscan(target, "", "", form.currentLoadPath, global.proxy).then(result => {
-                if (result.length >= 1) {
-                    for (const item of result) {
-                        switch (item.Severity) {
-                            case "CRITICAL":
-                                dashboard.critical += 1
-                                break
-                            case "HIGH":
-                                dashboard.high += 1
-                                break
-                            case "MEDIUM":
-                                dashboard.medium += 1
-                                break
-                            case "LOW":
-                                dashboard.low += 1
-                                break
-                            case "INFO":
-                                dashboard.info += 1
-                        }
-                        form.vulResult.push({
-                            vulName: item.VulName,
-                            severity: item.Severity,
-                            vulURL: item.VulURL,
-                            request: item.Request,
-                            response: item.Response,
-                            extInfo: item.ExtInfo
-                        })
-                        if (item.Severity == "INFO") {
-                            for (let i = 0; i < form.urlFingerMap.length; i++) {
-                                if (form.urlFingerMap[i].url === target) {
-                                    form.urlFingerMap[i].finger.push(item.VulName.split("-")[0]);
-                                    break;
-                                }
+            let result = await Webscan(target, "", "", form.currentLoadPath, global.proxy)
+            if (result!.length >= 1) {
+                for (const item of result) {
+                    switch (item.Severity) {
+                        case "CRITICAL":
+                            dashboard.critical += 1
+                            break
+                        case "HIGH":
+                            dashboard.high += 1
+                            break
+                        case "MEDIUM":
+                            dashboard.medium += 1
+                            break
+                        case "LOW":
+                            dashboard.low += 1
+                            break
+                        case "INFO":
+                            dashboard.info += 1
+                    }
+                    form.vulResult.push({
+                        vulName: item.VulName,
+                        severity: item.Severity,
+                        vulURL: item.VulURL,
+                        request: item.Request,
+                        response: item.Response,
+                        extInfo: item.ExtInfo
+                    })
+                    if (item.Severity == "INFO") {
+                        for (let i = 0; i < form.urlFingerMap.length; i++) {
+                            if (form.urlFingerMap[i].url === target) {
+                                form.urlFingerMap[i].finger.push(item.VulName.split("-")[0]);
+                                break;
                             }
                         }
                     }
                 }
-                callback();
-            })
+            }
+            dashboard.logger += `[INFO] ${target}，主动指纹探测已结束\n`
+            callback();
         }, async (err: any) => {
             if (err) {
                 ElMessage.error(err)
@@ -263,7 +263,6 @@ class Scanner {
                                 callback();
                             })
                         }
-
                     }, (err: any) => {
                         if (err) {
                             ElMessage.error(err)
@@ -488,7 +487,7 @@ function getClassBySeverity(row: any) {
             <el-table :data="form.fingerResult" border height="65vh" :cell-style="{ textAlign: 'center' }"
                 :header-cell-style="{ 'text-align': 'center' }">
                 <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="url" label="网站地址"/>
+                <el-table-column prop="url" label="网站地址" />
                 <el-table-column prop="status" width="100px" label="状态码"
                     :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
                     :show-overflow-tooltip="true" />

@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue';
 import CryptoJS from 'crypto-js';
 import { sm3 } from 'sm-crypto';
+import { BrowserOpenURL } from '../../../../wailsjs/runtime'
 const hashcode = reactive({
     currentMode: 'MD5',
     options: ["MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512", "SHA3", "SM3"],
@@ -59,6 +60,8 @@ function handleButtonClick() {
         encrypt();
     }
 }
+
+const cmd5 = "https://www.cmd5.com"
 </script>
 
 <template>
@@ -67,7 +70,7 @@ function handleButtonClick() {
             <div class="card-header">
                 <span>Hash</span>
                 <el-space>
-                    <el-link href="https://www.cmd5.com" type="primary" target="_blank" style="font-size: medium;">撞库</el-link>
+                    <el-link @click=BrowserOpenURL(cmd5) type="primary" style="font-size: medium;">撞库</el-link>
                     <el-select class="choose" v-model="hashcode.currentMode" >
                         <el-option v-for="item in hashcode.options" :value="item" :label="item"/>
                     </el-select>

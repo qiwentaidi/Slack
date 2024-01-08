@@ -18,8 +18,6 @@ export function CheckFileStat(arg1:string):Promise<boolean>;
 
 export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
 
-export function DefaultOpenURL(arg1:string):Promise<void>;
-
 export function DomainInfo(arg1:string):Promise<string>;
 
 export function ExtractIP(arg1:string):Promise<string>;
@@ -58,8 +56,6 @@ export function InitTycHeader(arg1:string):Promise<void>;
 
 export function LocalWalkFiles(arg1:string):Promise<Array<string>>;
 
-export function Minimise():Promise<void>;
-
 export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string,arg5:boolean):Promise<main.PathData>;
 
 export function PocNums(arg1:string,arg2:string):Promise<number>;
@@ -69,8 +65,6 @@ export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Pro
 export function PortCheck(arg1:string,arg2:number,arg3:number):Promise<main.PortResult>;
 
 export function PortParse(arg1:string):Promise<Array<number>>;
-
-export function Quit():Promise<void>;
 
 export function ReadPocDetail(arg1:string):Promise<poc.VulnerabilityDetails>;
 
@@ -85,8 +79,6 @@ export function System(arg1:string,arg2:number):Promise<Array<any>>;
 export function TestTarget(arg1:string):Promise<boolean>;
 
 export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<Array<string>>;
-
-export function ToggleMaximise():Promise<void>;
 
 export function Transcoding(arg1:Array<string>,arg2:string,arg3:number):Promise<string>;
 

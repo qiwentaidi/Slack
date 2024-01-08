@@ -5,9 +5,9 @@ import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt, Tabl
 import {
     FofaTips,
     FofaSearch,
-    IconHash,
-    DefaultOpenURL
+    IconHash
 } from '../../../wailsjs/go/main/App'
+import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import { ElMessage, ElNotification } from 'element-plus';
 import global from "../Global.vue"
 const from = reactive({
@@ -335,7 +335,7 @@ function filterHandlerTitle(value: string, row: any): boolean {
                 <el-table-column fixed="right" label="操作" width="55px">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="left">
-                            <el-button link :icon="ChromeFilled" @click.prevent="DefaultOpenURL(scope.row.URL)">
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)">
                             </el-button>
                         </el-tooltip>
                     </template>

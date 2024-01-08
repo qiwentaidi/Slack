@@ -10,8 +10,8 @@ import {
     PortCheck,
     HostAlive,
     PortBrute,
-    DefaultOpenURL
 } from '../../../wailsjs/go/main/App'
+import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(() => {
@@ -396,7 +396,7 @@ function handleCurrentChange(val: any) {
                 <el-table-column fixed="right" label="操作" width="55px">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="left">
-                            <el-button link :icon="ChromeFilled" @click.prevent="DefaultOpenURL(scope.row.link)">
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)">
                             </el-button>
                         </el-tooltip>
                     </template>

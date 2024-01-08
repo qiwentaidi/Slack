@@ -47,7 +47,7 @@
       <el-menu-item index="4-6" @click="currentComponent = 'Wxappid'">微信AppId校验</el-menu-item>
     </el-sub-menu>
     <!-- 右对齐 -->
-    <div class="setting" style="--wails-draggable: drag" @dblclick="ToggleMaximise"></div>
+    <div class="setting" style="--wails-draggable: drag" @dblclick="WindowToggleMaximise"></div>
 
     <el-popover placement="bottom-end" title="更新通知" :width="350" trigger="hover">
       <template #reference>
@@ -96,12 +96,12 @@
     </el-tooltip>
     <el-divider class="divder" direction="vertical" />
     <!-- MAX MIN CLOSE -->
-    <el-menu-item @click="Minimise">
+    <el-menu-item @click="WindowMinimise">
       <el-icon>
         <Minus />
       </el-icon>
     </el-menu-item>
-    <el-menu-item @click="ToggleMaximise" style="width: 45px;">
+    <el-menu-item @click="WindowToggleMaximise" style="width: 45px;">
       <el-image v-if="!isMax" style="height: 18px; width: 18px;" src='/max.svg' />
       <el-image v-else style="height: 18px; width: 18px;" src='/reduction.svg' />
     </el-menu-item>
@@ -137,9 +137,6 @@ import {
   Download,
 } from "@element-plus/icons-vue";
 import {
-  Quit,
-  Minimise,
-  ToggleMaximise,
   CheckFileStat,
   GetFileContent,
   GoSimpleFetch,
@@ -147,6 +144,7 @@ import {
   UpdateClinetFile,
   Restart
 } from "../../wailsjs/go/main/App";
+import { Quit, WindowMinimise, WindowToggleMaximise } from "../../wailsjs/runtime"
 import { onMounted } from "vue";
 import { ElNotification, ElMessageBox } from "element-plus";
 import { compareVersion } from "../util"

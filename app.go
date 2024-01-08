@@ -50,23 +50,6 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *App) Quit() {
-	runtime.Quit(a.ctx)
-}
-
-func (a *App) Minimise() {
-	runtime.WindowMinimise(a.ctx)
-}
-
-func (a *App) ToggleMaximise() {
-	runtime.WindowToggleMaximise(a.ctx)
-}
-
-// 使用默认浏览器打开链接，避免使用webview2
-func (a *App) DefaultOpenURL(url string) {
-	runtime.BrowserOpenURL(a.ctx, url)
-}
-
 func (a *App) SelectFile() string {
 	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "选择文件",
@@ -646,6 +629,7 @@ func (a *App) Webscan(url, severity, keyword string, pocpathList []string, pr cl
 		}
 	}
 	r.Execute(url, pocpathList)
+	fmt.Printf("wr: %v\n", wr)
 	return &wr
 }
 

@@ -26,10 +26,6 @@ export function CheckTarget(arg1, arg2) {
   return window['go']['main']['App']['CheckTarget'](arg1, arg2);
 }
 
-export function DefaultOpenURL(arg1) {
-  return window['go']['main']['App']['DefaultOpenURL'](arg1);
-}
-
 export function DomainInfo(arg1) {
   return window['go']['main']['App']['DomainInfo'](arg1);
 }
@@ -106,10 +102,6 @@ export function LocalWalkFiles(arg1) {
   return window['go']['main']['App']['LocalWalkFiles'](arg1);
 }
 
-export function Minimise() {
-  return window['go']['main']['App']['Minimise']();
-}
-
 export function PathRequest(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['PathRequest'](arg1, arg2, arg3, arg4, arg5);
 }
@@ -128,10 +120,6 @@ export function PortCheck(arg1, arg2, arg3) {
 
 export function PortParse(arg1) {
   return window['go']['main']['App']['PortParse'](arg1);
-}
-
-export function Quit() {
-  return window['go']['main']['App']['Quit']();
 }
 
 export function ReadPocDetail(arg1) {
@@ -160,10 +148,6 @@ export function TestTarget(arg1) {
 
 export function ThinkDict(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['ThinkDict'](arg1, arg2, arg3, arg4, arg5);
-}
-
-export function ToggleMaximise() {
-  return window['go']['main']['App']['ToggleMaximise']();
 }
 
 export function Transcoding(arg1, arg2, arg3) {

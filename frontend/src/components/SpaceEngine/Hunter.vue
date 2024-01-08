@@ -5,11 +5,11 @@ import { Menu, Search, ChatLineRound, ArrowDown, ChromeFilled } from '@element-p
 import { TableTabs, ApiSyntaxCheck, ExportToXlsx, splitInt, SplitTextArea, validateIP, validateDomain } from '../../util'
 import global from "../Global.vue"
 import {
-    DefaultOpenURL,
     HunterSearch,
     HunterTips,
     WebIconMd5
 } from '../../../wailsjs/go/main/App'
+import { BrowserOpenURL } from '../../../wailsjs/runtime'
 const form = reactive({
     query: '',
     syntaxDialog: false,
@@ -431,7 +431,7 @@ async function SaveData(mode: number) {
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" width="200" show-overflow-tooltip="true">
                     <template #default="scope">
-                        <el-button link :icon="ChromeFilled" @click.prevent="DefaultOpenURL(scope.row.URL)">
+                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)">
                         </el-button>
                         {{ scope.row.URL }}
                     </template>
