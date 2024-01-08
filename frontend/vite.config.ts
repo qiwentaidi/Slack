@@ -18,7 +18,7 @@ export default defineConfig({
         prismjsPlugin({
 	        languages: 'all', // 语言
 	        plugins: ['line-numbers','show-language','copy-to-clipboard','inline-color'],
-	        theme: 'twilight',// 主题
+	        theme: 'base16-ateliersulphurpool.light',// 主题
 	        css: true,
 	    })
     ],

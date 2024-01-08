@@ -216,7 +216,7 @@ class Scanner {
                 }
             }
             dashboard.logger += `[INFO] ${target}，主动指纹探测已结束\n`
-            callback();
+            // callback();
         }, async (err: any) => {
             if (err) {
                 ElMessage.error(err)
