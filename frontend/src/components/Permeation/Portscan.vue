@@ -52,7 +52,7 @@ const config = reactive({
         value: ""
     },
     ],
-    thread: 1000,
+    thread: 100,
     timeout: 12,
     changeIp: false,
     alive: false,
@@ -83,9 +83,9 @@ async function scanner() {
             )
         }
         const count = (form.ips.length * form.portsList.length)
-        async.eachSeries(form.ips, (ip: string, callback: () => void) => {
+        async.eachLimit(form.ips,config.thread, (ip: string, callback: () => void) => {
             form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
-            async.eachLimit(form.portsList, config.thread, (port: number, callback: () => void) => {
+            async.eachLimit(form.portsList, 1, (port: number, callback: () => void) => {
                 if (ctrl.exit === true) {
                     return
                 }
@@ -112,7 +112,7 @@ async function scanner() {
                 if (err) {
                     ElMessage.error(err)
                 } else {
-                    form.log += "[END] All target port scans completed\n"
+                    form.log += "[END] 端口扫描任务已完成\n"
                 }
             });
             callback();

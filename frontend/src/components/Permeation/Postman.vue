@@ -62,9 +62,7 @@ function parsedHtml() {
     <el-tabs type="border-card" v-if="form.repsonse.length > 1">
         <el-tab-pane label="Pretty">
             <el-scrollbar class="fillContent">
-                <pre><code class="language-python line-numbers">{{ form.repsonse }}</code></pre>
-
-                <!-- <pre v-highlight class="pre-wrap"><code class="html">{{ form.repsonse }}</code></pre> -->
+                <pre><code class="language-html line-numbers">{{ form.repsonse }}</code></pre>
             </el-scrollbar>
         </el-tab-pane>
         <el-tab-pane label="Raw">
