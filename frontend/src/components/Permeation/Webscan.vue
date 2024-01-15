@@ -86,12 +86,9 @@ const ctrl = reactive({
 
 async function startScan() {
     let ws = new Scanner
-    ws.initData()
     form.newscanner = false
+    ws.initData()
     await ws.infoScanner()
-    if (form.currentModule !== "仅指纹扫描") {
-        ws.webScanner()
-    }
 }
 
 function stopScan() {
@@ -100,10 +97,19 @@ function stopScan() {
     }
 }
 
+interface WebResult {
+    VulName: string
+    Severity: string
+    VulURL: string
+    Request: string
+    Response: string
+    ExtInfo: string
+}
+
 class Scanner {
     urls = [] as string[]
     public initData() {
-        form.urlFingerMap = []
+        form.urlFingerMap = [] as uf[]
         form.fingerResult = []
         form.vulResult = []
         dashboard.critical = 0
@@ -114,8 +120,11 @@ class Scanner {
         dashboard.reqErrorURLs = []
         dashboard.runningStatus = ""
         dashboard.logger = ''
+        return
     }
+
     public async infoScanner() {
+        // 检查先行条件
         this.urls = await formatURL(form.url)
         dashboard.count = this.urls.length
         if (this.urls.length == 0) {
@@ -130,196 +139,206 @@ class Scanner {
         if (global.proxy.enabled && !(await TestTarget(proxyURL))) {
             ElMessage({
                 showClose: true,
-                message: "代理地址不可用",
+                message: "代理地址不可达",
                 type: "warning",
             });
             return
         }
         var date = new Date();
-        dashboard.logger += `${date.toLocaleString()} 已加载任务目标: ${this.urls.length}个\n[INFO] 正在进行指纹扫描\n`
+        // 
+        // 
+        // 指纹扫描 =====================================
+        //         
+        // 
         let data = await InitRule()
-        async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {
-            if (ctrl.exit === true) {
-                return
-            }
-            dashboard.runningStatus = target
-            FingerScan(target, data, global.proxy).then(result => {
-                dashboard.runningStatus = target
-                if (result.StatusCode == 0) {
-                    dashboard.reqErrorURLs.push(target)
-                } else {
-                    form.fingerResult.push({
-                        url: result.URL,
-                        status: result.StatusCode,
-                        length: result.Length,
-                        title: result.Title,
-                        fingerprint: result.Fingerprints,
-                    })
-                    form.urlFingerMap.push({
-                        url: result.URL,
-                        finger: result.Fingerprints
-                    })
-                }
-                callback();
-            })
-        }, (err: any) => {
-            if (err) {
-                ElMessage.error(err)
-            }
-        });
-    }
-    public async webScanner() {
-        form.currentLoadPath = await LocalWalkFiles(pathActive)
-        // 主动探测
-        dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
+        dashboard.logger += `${date.toLocaleString()} 已加载任务目标: ${this.urls.length}个\n`
+        dashboard.logger += '[INFO] 正在进行指纹扫描\n'
+        let count = 0
         async.eachLimit(this.urls, form.thread, async (target: string, callback: () => void) => {
             if (ctrl.exit === true) {
                 return
             }
-            dashboard.logger += `[INFO] ${target}，正在进行主动指纹探测\n`
             dashboard.runningStatus = target
-            let result = await Webscan(target, "", "", form.currentLoadPath, global.proxy)
-            if (result!.length >= 1) {
-                for (const item of result) {
-                    switch (item.Severity) {
-                        case "CRITICAL":
-                            dashboard.critical += 1
-                            break
-                        case "HIGH":
-                            dashboard.high += 1
-                            break
-                        case "MEDIUM":
-                            dashboard.medium += 1
-                            break
-                        case "LOW":
-                            dashboard.low += 1
-                            break
-                        case "INFO":
-                            dashboard.info += 1
-                    }
-                    form.vulResult.push({
-                        vulName: item.VulName,
-                        severity: item.Severity,
-                        vulURL: item.VulURL,
-                        request: item.Request,
-                        response: item.Response,
-                        extInfo: item.ExtInfo
-                    })
-                    if (item.Severity == "INFO") {
-                        for (let i = 0; i < form.urlFingerMap.length; i++) {
-                            if (form.urlFingerMap[i].url === target) {
-                                form.urlFingerMap[i].finger.push(item.VulName.split("-")[0]);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            dashboard.logger += `[INFO] ${target}，主动指纹探测已结束\n`
-            // callback();
-        }, async (err: any) => {
-            if (err) {
-                ElMessage.error(err)
+            let result = await FingerScan(target, data, global.proxy)
+            if (result.StatusCode == 0) {
+                dashboard.reqErrorURLs.push(target)
             } else {
-                if (form.currentModule == "指纹漏洞扫描") {
-                    dashboard.logger += `[INFO] 正在进行指纹漏洞扫描\n`
-                    async.eachLimit(form.urlFingerMap, 5, async (ufm: uf, callback: () => void) => {
-                        if (ctrl.exit === true) {
-                            return
-                        }
-                        if (ufm.finger.length > 0) {
-                            form.currentLoadPath = await GetFingerPoc(ufm.finger)
-                            dashboard.logger += `[INFO] ${ufm.url}，已加载漏洞: ${form.currentLoadPath.length}个\n`
-                            dashboard.runningStatus = ufm.url
-                            Webscan(ufm.url, "", "", form.currentLoadPath, global.proxy).then((result) => {
-                                if (result.length >= 1) {
-                                    for (const item of result) {
-                                        switch (item.Severity) {
-                                            case "CRITICAL":
-                                                dashboard.critical += 1
-                                                break
-                                            case "HIGH":
-                                                dashboard.high += 1
-                                                break
-                                            case "MEDIUM":
-                                                dashboard.medium += 1
-                                                break
-                                            case "LOW":
-                                                dashboard.low += 1
-                                                break
-                                            case "INFO":
-                                                dashboard.info += 1
-                                        }
-                                        form.vulResult.push({
-                                            vulName: item.VulName,
-                                            severity: item.Severity,
-                                            vulURL: item.VulURL,
-                                            request: item.Request,
-                                            response: item.Response,
-                                            extInfo: item.ExtInfo
-                                        })
-                                    }
+                form.urlFingerMap.push({
+                    url: result.URL,
+                    finger: result.Fingerprints
+                })
+                form.fingerResult.push({
+                    url: result.URL,
+                    status: result.StatusCode,
+                    length: result.Length,
+                    title: result.Title,
+                    fingerprint: result.Fingerprints,
+                })
+            }
+            count++
+            if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
+                dashboard.logger += `[END] 主动目录探测已结束\n`
+                dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
+                count = 0
+                form.currentLoadPath = await LocalWalkFiles(pathActive) // 初始化主动指纹目录
+                callback();
+            }
+        }, (err: any) => {
+            if (form.currentModule !== "仅指纹扫描") {
+                // 主动指纹探测
+                async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {
+                    if (ctrl.exit === true) {
+                        return
+                    }
+                    dashboard.logger += `[INFO] ${target}，正在进行主动指纹探测\n`
+                    dashboard.runningStatus = target
+                    Webscan(target, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
+                        if (Array.isArray(result)) {
+                            for (const item of result) {
+                                switch (item.Severity) {
+                                    case "CRITICAL":
+                                        dashboard.critical += 1
+                                        break
+                                    case "HIGH":
+                                        dashboard.high += 1
+                                        break
+                                    case "MEDIUM":
+                                        dashboard.medium += 1
+                                        break
+                                    case "LOW":
+                                        dashboard.low += 1
+                                        break
+                                    case "INFO":
+                                        dashboard.info += 1
                                 }
-                                callback();
-                            })
-                        }
-                    }, (err: any) => {
-                        if (err) {
-                            ElMessage.error(err)
-                        } else {
-                            dashboard.logger += `[END] 指纹漏洞扫描结束\n`
-                        }
-                    })
-                } else if (form.currentModule == "全部漏洞扫描") {
-                    form.currentLoadPath = await LocalWalkFiles(pathAFG)
-                    dashboard.logger += `[INFO] 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
-                    async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {
-                        if (ctrl.exit === true) {
-                            return
-                        }
-                        Webscan(target, form.risk.join(","), form.keyword, form.currentLoadPath, global.proxy).then((result) => {
-                            dashboard.runningStatus = target
-                            if (result.length >= 1) {
-                                for (const item of result) {
-                                    switch (item.Severity) {
-                                        case "CRITICAL":
-                                            dashboard.critical += 1
-                                            break
-                                        case "HIGH":
-                                            dashboard.high += 1
-                                            break
-                                        case "MEDIUM":
-                                            dashboard.medium += 1
-                                            break
-                                        case "LOW":
-                                            dashboard.low += 1
-                                            break
-                                        case "INFO":
-                                            dashboard.info += 1
+                                form.vulResult.push({
+                                    vulName: item.VulName,
+                                    severity: item.Severity,
+                                    vulURL: item.VulURL,
+                                    request: item.Request,
+                                    response: item.Response,
+                                    extInfo: item.ExtInfo
+                                })
+                                if (item.Severity == "INFO") {
+                                    for (let i = 0; i < form.urlFingerMap.length; i++) {
+                                        if (form.urlFingerMap[i].url === target) {
+                                            form.urlFingerMap[i].finger.push(item.VulName.split("-")[0]);
+                                            break;
+                                        }
                                     }
-                                    form.vulResult.push({
-                                        vulName: item.VulName,
-                                        severity: item.Severity,
-                                        vulURL: item.VulURL,
-                                        request: item.Request,
-                                        response: item.Response,
-                                        extInfo: item.ExtInfo
-                                    })
                                 }
                             }
-                            callback();
-                        })
-                    }, (err: any) => {
-                        if (err) {
-                            ElMessage.error(err)
-                        } else {
-                            dashboard.logger += `[END] 全漏洞扫描结束\n`
                         }
-                    });
-                }
+                    })
+                    count++
+                    if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
+                        dashboard.logger += `[END] 主动目录探测已结束\n`
+                        callback();
+                    }
+                }, (err: any) => {
+                    this.webScanner()
+                })
             }
         });
 
+    }
+
+    public async webScanner() {
+        if (form.currentModule == "指纹漏洞扫描") {
+            dashboard.logger += `[INFO] 正在进行指纹漏洞扫描\n`
+            let count = 0
+            for (const uf of form.urlFingerMap) { // 统计能扫到指纹的目标数量
+                if (uf.finger.length > 0) {
+                    count++
+                } 
+            }
+            async.eachLimit(form.urlFingerMap, 5, async (ufm: uf, callback: () => void) => {
+                if (ctrl.exit === true) {
+                    return
+                }
+                if (ufm.finger.length > 0) {
+                    form.currentLoadPath = await GetFingerPoc(ufm.finger)
+                    dashboard.logger += `[INFO] ${ufm.url}，已加载漏洞: ${form.currentLoadPath.length}个\n`
+                    dashboard.runningStatus = ufm.url
+                    Webscan(ufm.url, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
+                        if (Array.isArray(result)) {
+                            for (const item of result) {
+                                switch (item.Severity) {
+                                    case "CRITICAL":
+                                        dashboard.critical += 1
+                                        break
+                                    case "HIGH":
+                                        dashboard.high += 1
+                                        break
+                                    case "MEDIUM":
+                                        dashboard.medium += 1
+                                        break
+                                    case "LOW":
+                                        dashboard.low += 1
+                                        break
+                                    case "INFO":
+                                        dashboard.info += 1
+                                }
+                                form.vulResult.push({
+                                    vulName: item.VulName,
+                                    severity: item.Severity,
+                                    vulURL: item.VulURL,
+                                    request: item.Request,
+                                    response: item.Response,
+                                    extInfo: item.ExtInfo
+                                })
+                            }
+                        }
+                    })
+                    count--
+                    if (count == 0) {
+                        dashboard.logger += `[END] 指纹漏洞扫描已结束 :)\n`
+                    }
+                }
+            })
+        } else if (form.currentModule == "全部漏洞扫描") {
+            form.currentLoadPath = await LocalWalkFiles(pathAFG)
+            dashboard.logger += `[INFO] 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
+            let count = 0
+            async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {
+                if (ctrl.exit === true) {
+                    return
+                }
+                Webscan(target, form.risk.join(","), form.keyword, form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
+                    dashboard.runningStatus = target
+                    for (const item of result) {
+                        switch (item.Severity) {
+                            case "CRITICAL":
+                                dashboard.critical += 1
+                                break
+                            case "HIGH":
+                                dashboard.high += 1
+                                break
+                            case "MEDIUM":
+                                dashboard.medium += 1
+                                break
+                            case "LOW":
+                                dashboard.low += 1
+                                break
+                            case "INFO":
+                                dashboard.info += 1
+                        }
+                        form.vulResult.push({
+                            vulName: item.VulName,
+                            severity: item.Severity,
+                            vulURL: item.VulURL,
+                            request: item.Request,
+                            response: item.Response,
+                            extInfo: item.ExtInfo
+                        })
+                    }
+                })
+                count++
+                if (count == this.urls.length) {
+                    dashboard.logger += `[END] 全部漏洞扫描结束 :)\n`
+                }
+            })
+        }
     }
 }
 

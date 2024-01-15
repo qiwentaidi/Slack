@@ -2,10 +2,12 @@
 import global from "../Global.vue";
 import async from 'async';
 import { ExportToXlsx } from '../../util'
-import { reactive, ref, } from "vue";
-import { Subdomain, InitIPResolved, SelectFile, GetFileContent } from "../../../wailsjs/go/main/App";
+import { reactive, ref } from "vue";
+import { Subdomain, InitIPResolved, SelectFile, GetFileContent, LoadSubDict, OpenFolder } from "../../../wailsjs/go/main/App";
 import { ElMessage } from 'element-plus'
 import { onMounted } from 'vue';
+import { FolderOpened, Loading } from '@element-plus/icons-vue';
+
 // 初始化时调用
 onMounted(() => {
     sbr.value = [];
@@ -14,18 +16,22 @@ const from = reactive({
     domain: "",
     thread: 600,
     timeout: 5,
-    tips: '',
-    subs: [{}],
+    tips: '选择子域字典(默认加载dicc.txt)',
+    subs: [] as string[],
     percentage: 0,
     id: 0,
 });
 const sbr = ref([{}]);
 const exit = ref(false)
-function BurstSubdomain() {
+async function BurstSubdomain() {
     exit.value = false
     sbr.value = [];
     from.id = 0;
     InitIPResolved();
+    if (from.subs.length === 0) {
+        from.subs = await LoadSubDict()
+        from.tips = `loaded ${from.subs.length} dicts`
+    }
     async.eachLimit(from.subs, from.thread, (sub: string, callback: () => void) => {
         from.id++;
         from.percentage = Number(((from.id / from.subs.length) * 100).toFixed(2));
@@ -77,7 +83,7 @@ async function handleFileChange() {
         })
         return
     }
-    if ( res !== "文件不存在") {
+    if (res !== "文件不存在") {
         const result = res.replace(/\r\n/g, '\n'); // 避免windows unix系统差异
         from.subs = Array.from(result.split('\n'))
         from.tips = `loaded ${from.subs.length} dicts`;
@@ -107,8 +113,17 @@ async function handleFileChange() {
                     </el-input-number>
                 </div>
                 <div style="display: flex;">
-                    <el-button type="primary" @click="handleFileChange()">选择子域字典</el-button>
-                    <span style="margin-left: 10px;">{{ from.tips }}</span>
+                    <el-button-group>
+                        <el-tooltip class="box-item" effect="dark" placement="top">
+                            <template #content>
+                                默认加载./config/subdomain/dicc.txt<br />
+                                部分MacOS用户无法进行文件选择，可以通过修改默认字典实现字典更改
+                            </template>
+                            <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
+                            }}</el-button>
+                        </el-tooltip>
+                        <el-button type="primary" :icon="FolderOpened" @click="OpenFolder('/config/subdomain')"></el-button>
+                    </el-button-group>
                 </div>
             </el-space>
             <el-button type="primary" style="margin-left: auto;" text
@@ -116,14 +131,14 @@ async function handleFileChange() {
                 :disabled="sbr.length < 2">数据导出</el-button>
         </el-form-item>
         <el-form-item>
-                <el-table :data="sbr" border max-height="calc(100vh - 220px)">
-                    <el-table-column type="index" label="#" width="60px" />
-                    <el-table-column prop="subdomains" label="子域名" show-overflow-tooltip="true" />
-                    <el-table-column prop="cname" label="CNAME" show-overflow-tooltip="true" />
-                    <el-table-column prop="ips" label="IPs" show-overflow-tooltip="true" />
-                    <el-table-column prop="notes" label="备注" show-overflow-tooltip="true" />
-                </el-table>
+            <el-table :data="sbr" border max-height="calc(100vh - 220px)">
+                <el-table-column type="index" label="#" width="60px" />
+                <el-table-column prop="subdomains" label="子域名" show-overflow-tooltip="true" />
+                <el-table-column prop="cname" label="CNAME" show-overflow-tooltip="true" />
+                <el-table-column prop="ips" label="IPs" show-overflow-tooltip="true" />
+                <el-table-column prop="notes" label="备注" show-overflow-tooltip="true" />
+            </el-table>
         </el-form-item>
     </el-form>
-    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage"  />
+    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" />
 </template>

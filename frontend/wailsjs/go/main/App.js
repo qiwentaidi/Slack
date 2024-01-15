@@ -58,8 +58,8 @@ export function GetFingerPoc(arg1) {
   return window['go']['main']['App']['GetFingerPoc'](arg1);
 }
 
-export function GoSimpleFetch(arg1) {
-  return window['go']['main']['App']['GoSimpleFetch'](arg1);
+export function GoFetch(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['main']['App']['GoFetch'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 export function HostAlive(arg1, arg2) {
@@ -98,12 +98,20 @@ export function InitTycHeader(arg1) {
   return window['go']['main']['App']['InitTycHeader'](arg1);
 }
 
+export function LoadSubDict() {
+  return window['go']['main']['App']['LoadSubDict']();
+}
+
 export function LocalWalkFiles(arg1) {
   return window['go']['main']['App']['LocalWalkFiles'](arg1);
 }
 
-export function PathRequest(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['main']['App']['PathRequest'](arg1, arg2, arg3, arg4, arg5);
+export function OpenFolder(arg1) {
+  return window['go']['main']['App']['OpenFolder'](arg1);
+}
+
+export function PathRequest(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['main']['App']['PathRequest'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 export function PocNums(arg1, arg2) {

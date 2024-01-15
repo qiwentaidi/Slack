@@ -12,11 +12,13 @@
     "@types/node": "^20.9.1",
     "@types/sm-crypto": "^0.3.4",
     "async": "^3.2.5",
+    "axios": "^1.6.5",
     "crypto-js": "^4.2.0",
     "element-plus": "^2.4.2",
     "jsencrypt": "^3.3.2",
     "prismjs": "^1.29.0",
     "sm-crypto": "^0.3.13",
+    "splitpanes": "^3.1.5",
     "vue": "^3.2.37",
     "vue-router": "^4.0.13",
     "xlsx": "^0.18.5"

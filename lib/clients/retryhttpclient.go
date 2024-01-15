@@ -11,11 +11,11 @@ import (
 	"regexp"
 	"slack-wails/core/webscan/poc"
 	"slack-wails/core/webscan/proto"
+	"slack-wails/lib/retryablehttp"
 	"slack-wails/lib/util"
 	"strings"
 	"time"
 
-	"github.com/zan8in/retryablehttp"
 	"golang.org/x/net/context"
 )
 

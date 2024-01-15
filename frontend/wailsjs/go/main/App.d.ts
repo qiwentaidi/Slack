@@ -34,7 +34,7 @@ export function GetFileContent(arg1:string):Promise<string>;
 
 export function GetFingerPoc(arg1:Array<string>):Promise<Array<string>>;
 
-export function GoSimpleFetch(arg1:string):Promise<main.Response>;
+export function GoFetch(arg1:string,arg2:string,arg3:string,arg4:Array<{[key: string]: string}>,arg5:number,arg6:clients.Proxy):Promise<main.Response>;
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
 
@@ -54,9 +54,13 @@ export function InitRule():Promise<Array<number>>;
 
 export function InitTycHeader(arg1:string):Promise<void>;
 
+export function LoadSubDict():Promise<Array<string>>;
+
 export function LocalWalkFiles(arg1:string):Promise<Array<string>>;
 
-export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string,arg5:boolean):Promise<main.PathData>;
+export function OpenFolder(arg1:string):Promise<string>;
+
+export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string,arg5:boolean,arg6:string):Promise<main.PathData>;
 
 export function PocNums(arg1:string,arg2:string):Promise<number>;
 

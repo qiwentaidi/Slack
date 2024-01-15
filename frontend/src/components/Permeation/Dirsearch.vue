@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { TestTarget, InitDict, PathRequest, SelectFile, GetFileContent } from "../../../wailsjs/go/main/App";
+import { TestTarget, InitDict, PathRequest, SelectFile, GetFileContent, OpenFolder } from "../../../wailsjs/go/main/App";
 import { ElMessage } from 'element-plus'
 import async from 'async';
-import { QuestionFilled } from '@element-plus/icons-vue';
+import { QuestionFilled, FolderOpened, Loading } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(() => {
@@ -15,7 +15,7 @@ const from = reactive({
     defaultOption: 'GET',
     exts: 'php,aspx,asp,jsp,html,js',
     statusFilter: '',
-    thread: '100',
+    header: '',
     paths: [] as string[],
     percentage: 0,
     id: 0,
@@ -38,7 +38,7 @@ async function handleFileChange() {
         })
         return
     }
-    if ( res !== "文件不存在") {
+    if (res !== "文件不存在") {
         const result = res.replace(/\r\n/g, '\n'); // 避免windows unix系统差异
         const extensions = from.exts.split(',');
         for (const line of result.split('\n')) {
@@ -55,56 +55,84 @@ async function handleFileChange() {
     }
 }
 
-async function start() {
-    if (!from.alive) {
-        let result = await TestTarget(from.url);
-        if (!result) {
+async function dirscan() {
+    let ds = new Dirsearch()
+    if (await ds.checkURL()) {
+        ds.scanner()
+    }
+}
+
+
+class Dirsearch {
+    public async checkURL() {
+        if (from.url == "") {
             ElMessage({
                 showClose: true,
-                message: 'URL目标不可达',
+                message: '请输入URL',
                 type: 'warning',
             })
-            return false;
+            return false
         }
+        if (!from.alive) {
+            let result = await TestTarget(from.url);
+            if (!result) {
+                ElMessage({
+                    showClose: true,
+                    message: 'URL格式错误或目标不可达',
+                    type: 'warning',
+                })
+                return false
+            }
+        }
+        return true
     }
-    if (from.url[from.url.length - 1] !== "/") {
-        from.url += "/"
-    }
-    if (from.paths.length === 0) {
-        await InitDict(from.exts.split(',')).then(result => {
-            from.paths = result;
-            from.tips = `loaded default (${from.paths.length} dicts)`;
-        });
-    }
-    dir.value = []
-    from.id = 0
-    from.errorCounts = 0
-    control.exit = false
-    let startTime = Date.now();
-    let statusCounts: Record<string, number> = {};
-    let filter: number[] = []
-    filter = control.psc()
-    let redirect = false
-    if (from.redirectClient) {
-        redirect = true
-    }
+    public async scanner() {
+        if (from.url[from.url.length - 1] !== "/") {
+            from.url += "/"
+        }
+        if (from.paths.length === 0) {
+            await InitDict(from.exts.split(',')).then(result => {
+                from.paths = result;
+                from.tips = `loaded default (${from.paths.length} dicts)`;
+            });
+        }
+        dir.value = []
+        from.id = 0
+        from.errorCounts = 0
+        control.exit = false
+        let startTime = Date.now();
+        let statusCounts: Record<string, number> = {};
+        let filter: number[] = []
+        filter = control.psc()
+        let redirect = false
+        if (from.redirectClient) {
+            redirect = true
+        }
 
-    async.eachLimit(from.paths, from.thread, (path: string, callback: (err?: Error) => void) => {
-        from.id++;
-        from.currentRate = Math.round(from.id / ((Date.now() - startTime) / 1000));
-        from.percentage = Number(((from.id / from.paths.length) * 100).toFixed(2));
-        if (control.exit === true) {
-            callback();
-            return;
-        }
-        PathRequest(from.defaultOption, from.url + path, config.timeout, config.exclude, redirect).then(result => {
-            if (result.Status == 0) {
-                from.errorCounts++
-            } else if (result.Status !== 1) {
-                statusCounts[result.Status] = (statusCounts[result.Status] || 0) + 1;
-                if (statusCounts[result.Status] <= config.times) {
-                    if (filter.length > 0) {
-                        if (filter.find(number => number === result.Status) != undefined) {
+        async.eachLimit(from.paths, config.thread, (path: string, callback: (err?: Error) => void) => {
+            from.id++;
+            from.currentRate = Math.round(from.id / ((Date.now() - startTime) / 1000));
+            from.percentage = Number(((from.id / from.paths.length) * 100).toFixed(2));
+            if (control.exit === true) {
+                callback();
+                return;
+            }
+            PathRequest(from.defaultOption, from.url + path, config.timeout, config.exclude, redirect, config.headers).then(result => {
+                if (result.Status == 0) {
+                    from.errorCounts++
+                } else if (result.Status !== 1) {
+                    statusCounts[result.Status] = (statusCounts[result.Status] || 0) + 1;
+                    if (statusCounts[result.Status] <= config.times) {
+                        if (filter.length > 0) {
+                            if (filter.find(number => number === result.Status) != undefined) {
+                                dir.value.push({
+                                    status: result.Status,
+                                    length: result.Length,
+                                    path: from.url + path,
+                                    location: result.Location,
+                                });
+                            }
+                        } else {
                             dir.value.push({
                                 status: result.Status,
                                 length: result.Length,
@@ -112,29 +140,22 @@ async function start() {
                                 location: result.Location,
                             });
                         }
-                    } else {
-                        dir.value.push({
-                            status: result.Status,
-                            length: result.Length,
-                            path: from.url + path,
-                            location: result.Location,
-                        });
                     }
                 }
+                callback()
+            })
+        }, (err: any) => {
+            if (err) {
+                ElMessage.error(err);
+            } else {
+                ElMessage({
+                    showClose: true,
+                    message: `${from.url}目录扫描结束`,
+                    type: 'success',
+                });
             }
-            callback()
-        })
-    }, (err: any) => {
-        if (err) {
-            ElMessage.error(err);
-        } else {
-            ElMessage({
-                showClose: true,
-                message: `${from.url}目录扫描结束`,
-                type: 'success',
-            });
-        }
-    });
+        });
+    }
 }
 
 const control = reactive({
@@ -168,10 +189,11 @@ const control = reactive({
 
 const config = reactive({
     drawer: false,
-    thread: 100,
+    thread: 50,
     timeout: 8,
     times: 5,
     exclude: "",
+    headers: "",
 })
 </script>
 
@@ -183,7 +205,7 @@ const config = reactive({
                     <el-option v-for="item in from.options" :value="item" :label="item" />
                 </el-select>
                 <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 10px; width: 50%;" />
-                <el-button type="primary" @click="start">开始扫描</el-button>
+                <el-button type="primary" @click="dirscan">开始扫描</el-button>
                 <el-button type="danger" @click="control.stop">停止</el-button>
             </div>
         </el-form-item>
@@ -206,16 +228,16 @@ const config = reactive({
             </el-space>
             <el-drawer v-model="config.drawer" title="设置高级参数">
                 <el-form label-width="100px" label-position="top">
-                    <el-form-item label="线程(MAX 500):" style="margin-bottom: 20px;">
+                    <el-form-item label="线程(MAX 500):" style="margin-bottom: 10px;">
                         <el-input-number v-model="config.thread" :min="1" :max="500" />
                     </el-form-item>
-                    <el-form-item label="超时时长(s):" style="margin-bottom: 20px;">
+                    <el-form-item label="超时时长(s):" style="margin-bottom: 10px;">
                         <el-input-number v-model="config.timeout" :min="1" :max="20" />
                     </el-form-item>
-                    <el-form-item label="过滤长度重复数据:" style="margin-bottom: 20px;">
+                    <el-form-item label="过滤长度重复数据:" style="margin-bottom: 10px;">
                         <el-input-number v-model="config.times" :min="1" :max="10000" />
                     </el-form-item>
-                    <el-form-item style="margin-bottom: 20px;">
+                    <el-form-item style="margin-bottom: 10px;">
                         <el-tooltip placement="left">
                             <template #content>会将字典中%EXT%字段替换，不指定则去除有关%EXT%字段</template>
                             <span>扩展名:<el-icon>
@@ -224,7 +246,7 @@ const config = reactive({
                         </el-tooltip>
                         <el-input v-model="from.exts"></el-input>
                     </el-form-item>
-                    <el-form-item style="margin-bottom: 20px;">
+                    <el-form-item style="margin-bottom: 10px;">
                         <el-tooltip placement="left">
                             <template #content>过滤某些关键字段存在的数据</template>
                             <span>过滤body内容:<el-icon>
@@ -233,14 +255,27 @@ const config = reactive({
                         </el-tooltip>
                         <el-input v-model="config.exclude"></el-input>
                     </el-form-item>
-                    <el-form-item label="状态码过滤:" style="margin-bottom: 20px;">
+                    <el-form-item label="状态码过滤:" style="margin-bottom: 10px;">
                         <el-input v-model="from.statusFilter" placeholder="支持200,300 | 200-300,400-500"></el-input>
                     </el-form-item>
-                    <el-form-item label="自定义字典:" style="margin-bottom: 20px;">
-                        <el-tooltip placement="left">
-                            <template #content>默认加载config/dirsearch/dicc.txt</template>
-                            <el-button color="#abcdef" @click="handleFileChange()">{{ from.tips }}</el-button>
-                        </el-tooltip>
+                    <el-form-item label="自定义请求头:" style="margin-bottom: 10px;">
+                        <el-input v-model="from.header" placeholder="仅支持单行请求头以键:值形式输入" type="textarea" rows="3"></el-input>
+                    </el-form-item>
+                    <el-form-item label="自定义字典:" style="margin-bottom: 10px;">
+                        <div style="display: flex;">
+                            <el-button-group>
+                                <el-tooltip class="box-item" effect="dark" placement="top">
+                                    <template #content>
+                                        默认加载./config/dirsearch/dicc.txt<br />
+                                        部分MacOS用户无法进行文件选择，可以通过修改默认字典实现字典更改
+                                    </template>
+                                    <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
+                                    }}</el-button>
+                                </el-tooltip>
+                                <el-button type="primary" :icon="FolderOpened"
+                                    @click="OpenFolder('/config/dirsearch')"></el-button>
+                            </el-button-group>
+                        </div>
                     </el-form-item>
                 </el-form>
             </el-drawer>

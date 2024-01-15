@@ -6,3 +6,4 @@ import type { DefineComponent } from 'vue'
 }
 declare module 'async';
 declare module 'prismjs';
+declare module 'splitpanes'

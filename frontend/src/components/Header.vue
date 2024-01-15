@@ -14,7 +14,7 @@
       <el-menu-item index="1-2" @click="currentComponent = 'Portscan'">主机扫描</el-menu-item>
       <!-- <el-menu-item index="1-3">漏洞利用</el-menu-item> -->
       <el-menu-item index="1-4" @click="currentComponent = 'Dirsearch'">目录扫描</el-menu-item>
-      <el-menu-item index="1-5" @click="currentComponent = 'Postman'">Postman</el-menu-item>
+      <el-menu-item index="1-5" @click="currentComponent = 'Postman'">Postman(未完成)</el-menu-item>
       <el-menu-item index="1-6" @click="currentComponent = 'Pocdetail'">漏洞详情</el-menu-item>
     </el-sub-menu>
     <el-sub-menu index="2">
@@ -139,7 +139,7 @@ import {
 import {
   CheckFileStat,
   GetFileContent,
-  GoSimpleFetch,
+  GoFetch,
   UpdatePocFile,
   UpdateClinetFile,
   Restart
@@ -154,7 +154,7 @@ onMounted(async () => {
   window.addEventListener('resize', () => {
     if (screen.availWidth == window.innerWidth && screen.availHeight == window.innerHeight) {
       isMax.value = true
-    }else {
+    } else {
       isMax.value = false
     }
   });
@@ -166,13 +166,19 @@ onMounted(async () => {
       message: "config配置文件目录加载失败，会影响程序功能使用",
       type: "warning",
     });
-  }else {
+  } else {
     check.poc()
   }
 });
 
 const centerDialogVisible = ref(false);
 const currentComponent = inject("currentComponent");
+const defultreqHeader = [
+  {
+    key: "User-Agent",
+    value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+  },
+]
 
 const check = ({
   // poc
@@ -185,14 +191,14 @@ const check = ({
     } else {
       version.LocalPoc = "v" + await GetFileContent(lv)
     }
-    let rp1 = await GoSimpleFetch(download.RemotePocV)
-    if (rp1.Status !== 200) {
+    let rp1 = await GoFetch("GET", download.RemotePocV, "", defultreqHeader, 10, null)
+    if (rp1.Error == true) {
       version.PocUpdateContent = "检测更新失败"
       version.PocStatus = false
     } else {
-      version.RemotePoc = rp1.Text
-      if (compareVersion(version.LocalPoc, rp1.Text) == -1) {
-        version.PocUpdateContent = (await GoSimpleFetch(download.RemotePocCentent)).Text
+      version.RemotePoc = rp1.Body
+      if (compareVersion(version.LocalPoc, version.RemotePoc) == -1) {
+        version.PocUpdateContent = (await GoFetch("GET", download.RemotePocCentent, "", defultreqHeader, 10, null)).Text
         version.PocStatus = true
       } else {
         version.PocUpdateContent = "当前已是最新版本"
@@ -202,14 +208,14 @@ const check = ({
   },
   // client
   client: async function () {
-    let rp2 = await GoSimpleFetch(download.RemoteClientV)
-    if (rp2.Status !== 200) {
+    let rp2 = await GoFetch("GET", download.RemoteClientV, "", defultreqHeader, 10, null)
+    if (rp2.Error == true) {
       version.ClientUpdateContent = "检测更新失败"
       version.ClientStatus = false
     } else {
-      version.RemoteClient = rp2.Text
-      if (compareVersion(version.LocalClient, rp2.Text) == -1) {
-        version.ClientUpdateContent = (await GoSimpleFetch(download.RemoteClientCentent)).Text
+      version.RemoteClient = rp2.Body
+      if (compareVersion(version.LocalClient, version.RemoteClient) == -1) {
+        version.ClientUpdateContent = (await GoFetch("GET", download.RemoteClientCentent, "", defultreqHeader, 10, null)).Text
         version.ClientStatus = true
       } else {
         version.ClientUpdateContent = "当前已是最新版本"
@@ -272,7 +278,7 @@ const update = ({
 
 const version = reactive({
   LocalPoc: "",
-  LocalClient: "1.4.5",
+  LocalClient: "1.4.6",
   RemotePoc: "",
   RemoteClient: "",
   PocUpdateContent: "",

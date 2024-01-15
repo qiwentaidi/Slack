@@ -33,7 +33,7 @@ func main() {
 			app,
 		},
 		Windows: &windows.Options{
-			WebviewBrowserPath: "", // 配合BrowserOpenURL可以让windows使用默认浏览器打开链接
+			WebviewBrowserPath: "", // 可以让windows使用默认浏览器打开链接
 		},
 		Mac: &mac.Options{
 			TitleBar: mac.TitleBarHiddenInset(),

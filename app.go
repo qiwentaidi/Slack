@@ -8,10 +8,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	rt "runtime"
 	"slack-wails/core"
 	"slack-wails/core/info"
 	"slack-wails/core/portscan"
@@ -26,7 +28,6 @@ import (
 	"slack-wails/lib/util"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/logger"
@@ -48,6 +49,27 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+}
+
+func (a *App) OpenFolder(path string) string {
+	var cmd *exec.Cmd
+	dir, _ := os.Getwd()
+	switch rt.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", dir+path)
+	case "darwin":
+		cmd = exec.Command("open", dir+path)
+	default:
+		cmd = exec.Command("xdg-open", dir+path)
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err.Error()
+	}
+	return ""
 }
 
 func (a *App) SelectFile() string {
@@ -82,22 +104,52 @@ func (a *App) GetFileContent(filename string) string {
 }
 
 type Response struct {
-	OK     bool
-	Status int
-	Text   string
+	Error  bool
+	Proto  string
+	Header []map[string]string
+	Body   string
 }
 
-func (a *App) GoSimpleFetch(url string) *Response {
-	var r Response
-	resp, b, err := clients.NewRequest("GET", url, nil, nil, 10, clients.DefaultClient())
-	if err != nil {
-		r.OK = false
-	} else {
-		r.OK = true
-		r.Status = resp.StatusCode
-		r.Text = string(b)
+func (a *App) GoFetch(method, url, body string, headers []map[string]string, timeout int, proxy clients.Proxy) *Response {
+	client := clients.DefaultClient()
+	if proxy.Enabled {
+		client, _ = clients.SelectProxy(&proxy, client)
 	}
-	return &r
+	hhhhheaders := http.Header{}
+	fmt.Printf("headers: %v\n", headers)
+	for _, head := range headers {
+		for k, v := range head {
+			hhhhheaders.Set(k, v)
+		}
+	}
+	// if body != "" {
+	// 	bytes.NewReader()
+	// }
+	resp, b, err := clients.NewRequest(method, url, hhhhheaders, nil, 10, client)
+	if err != nil {
+		return &Response{
+			Error:  true,
+			Proto:  "",
+			Header: nil,
+			Body:   "",
+		}
+	}
+	var headerArray []map[string]string
+	for key, values := range resp.Header {
+		// 对于每个键，创建一个新的 map 并添加键值对
+		headerMap := make(map[string]string)
+		headerMap["key"] = key
+		headerMap["value"] = strings.Join(values, " ")
+
+		// 将 map 添加到切片中
+		headerArray = append(headerArray, headerMap)
+	}
+	return &Response{
+		Error:  false,
+		Proto:  resp.Proto,
+		Header: headerArray,
+		Body:   string(b),
+	}
 }
 
 // wx
@@ -287,7 +339,11 @@ func (a *App) TestTarget(target string) bool {
 }
 
 func (a *App) InitDict(newExts []string) []string {
-	return core.LoadDefaultDict("dicc.txt", "%EXT%", newExts)
+	return util.LoadDirsearchDict("dicc.txt", "%EXT%", newExts)
+}
+
+func (a *App) LoadSubDict() []string {
+	return util.LoadSubdomainDict("dicc.txt")
 }
 
 type PathData struct {
@@ -296,13 +352,18 @@ type PathData struct {
 	Length   int    // 主体内容
 }
 
-func (a *App) PathRequest(method, url string, timeout int, bodyExclude string, redirect bool) PathData {
+func (a *App) PathRequest(method, url string, timeout int, bodyExclude string, redirect bool, customHeader string) PathData {
 	var pd PathData // 将响应头和响应头的数据存储到结构体中
 	client := clients.NotFollowClient()
 	if redirect {
 		client = clients.DefaultClient()
 	}
-	resp, body, err := clients.NewRequest(method, url, nil, nil, timeout, client)
+	var header http.Header
+	if customHeader != "" {
+		temp := strings.Split(customHeader, ":")
+		header.Set(temp[0], temp[1])
+	}
+	resp, body, err := clients.NewRequest(method, url, header, nil, timeout, client)
 	if err != nil {
 		return pd
 	}
@@ -472,7 +533,7 @@ type AliveTarget struct {
 func (a *App) CheckTarget(host string, proxy clients.Proxy) *AliveTarget {
 	client := clients.DefaultClient()
 	if proxy.Enabled {
-		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
+		client, _ = clients.SelectProxy(&proxy, client)
 	}
 	protocalURL, err := clients.CheckProtocol(host, client)
 	if err != nil {
@@ -584,15 +645,10 @@ func (a *App) Webscan(url, severity, keyword string, pocpathList []string, pr cl
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
-	var (
-		lock   = sync.Mutex{}
-		number uint32
-	)
+	var lock = sync.Mutex{}
 	r.OnResult = func(result *report.Result) {
 		if result.IsVul {
 			lock.Lock()
-			atomic.AddUint32(&number, 1)
-
 			extinfo := "" // 输出拓展信息
 			if len(result.Extractor) > 0 {
 				for _, v := range result.Extractor {
@@ -607,11 +663,11 @@ func (a *App) Webscan(url, severity, keyword string, pocpathList []string, pr cl
 			var req, resp string
 			for i, v := range result.AllPocResult {
 				if i != len(result.AllPocResult)-1 {
-					req += fmt.Sprintf("Request%d\n%v\n\n========================================", i+1, string(v.ResultRequest.Raw))
-					resp += fmt.Sprintf("Response%d\n%v\n\n========================================", i+1, v.ReadFullResultResponseInfo())
+					req += fmt.Sprintf("Request%d\n\n%v\n\n========================================", i+1, string(v.ResultRequest.Raw))
+					resp += fmt.Sprintf("Response%d\n\n%v\n\n========================================", i+1, v.ReadFullResultResponseInfo())
 				} else {
-					req += fmt.Sprintf("Request%d\n%v", i+1, string(v.ResultRequest.Raw))
-					resp += fmt.Sprintf("Response%d\n%v", i+1, v.ReadFullResultResponseInfo())
+					req += fmt.Sprintf("Request%d\n\n%v", i+1, string(v.ResultRequest.Raw))
+					resp += fmt.Sprintf("Response%d\n\n%v", i+1, v.ReadFullResultResponseInfo())
 				}
 			}
 			wr = append(wr, WebResult{
@@ -629,7 +685,6 @@ func (a *App) Webscan(url, severity, keyword string, pocpathList []string, pr cl
 		}
 	}
 	r.Execute(url, pocpathList)
-	fmt.Printf("wr: %v\n", wr)
 	return &wr
 }
 

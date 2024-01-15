@@ -24,6 +24,10 @@ go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
 wails doctor // 检测是否安装成功
 
+git clone https://github.com/qiwentaidi/Slack.git
+
+cd Slack
+
 wails dev // 调试
 
 wails build // 编译

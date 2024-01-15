@@ -2,8 +2,7 @@ package core
 
 import (
 	"encoding/json"
-	"io"
-	"net/http"
+	"slack-wails/lib/clients"
 )
 
 type WxAppidMessage struct {
@@ -25,12 +24,10 @@ var Describe = []WxAppidMessage{
 }
 
 func CheckSecert(appid, secert string) string {
-	resp, err := http.Get("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + appid + "&secret=" + secert)
+	_, b, err := clients.NewRequest("GET", "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+appid+"&secret="+secert, nil, nil, 10, clients.DefaultClient())
 	if err != nil {
 		return err.Error()
 	} else {
-		b, _ := io.ReadAll(resp.Body)
-		defer resp.Body.Close()
 		var wx WxAppidMessage
 		json.Unmarshal([]byte(string(b)), &wx)
 		for _, d := range Describe {

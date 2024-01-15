@@ -81,7 +81,6 @@ func (n *Nmap) Scan(ip string, port int) (status Status, response *Response) {
 
 func (n *Nmap) getRealResponse(host string, port int, timeout time.Duration, probes ...string) (status Status, response *Response) {
 	status, response = n.getResponseByProbes(host, port, timeout, probes...)
-
 	if status != Matched {
 		return status, response
 	}
