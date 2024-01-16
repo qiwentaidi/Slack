@@ -13,7 +13,7 @@
 
 # 使用须知
 
-由于功能未全部完善所以暂不提供编译版，后续Fyne版本将停止更新，但是仍然可以通过分支中获取到该模块代码，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
+Fyne版本已停止更新，但是仍然可以通过分支中获取到该模块代码，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
 
 # 运行
 
@@ -31,6 +31,8 @@ cd Slack
 wails dev // 调试
 
 wails build // 编译
+
+第一次编译会出现prism-base16-ateliersulphurpool.light.css文件丢失，将该https://github.com/PrismJS/prism-themes/blob/master/themes/prism-base16-ateliersulphurpool.light.css文件下载到frontend/node_modules/prismjs/themes目录下即可
 
 编译完的应用在 build/bin 目录下，需要移动到当前目录下运行
 ```
