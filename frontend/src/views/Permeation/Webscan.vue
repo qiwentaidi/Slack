@@ -15,7 +15,7 @@ import {
 import { ElMessage } from 'element-plus';
 import { formatURL, ApiSyntaxCheck, splitInt } from '../../util'
 import async from 'async';
-import global from "../Global.vue"
+import global from "../../global"
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(() => {

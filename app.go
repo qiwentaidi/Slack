@@ -116,7 +116,6 @@ func (a *App) GoFetch(method, url, body string, headers []map[string]string, tim
 		client, _ = clients.SelectProxy(&proxy, client)
 	}
 	hhhhheaders := http.Header{}
-	fmt.Printf("headers: %v\n", headers)
 	for _, head := range headers {
 		for k, v := range head {
 			hhhhheaders.Set(k, v)

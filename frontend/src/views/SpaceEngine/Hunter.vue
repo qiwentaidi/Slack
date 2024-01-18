@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage } from "element-plus";
 import { Menu, Search, ChatLineRound, ArrowDown, ChromeFilled } from '@element-plus/icons-vue';
 import { TableTabs, ApiSyntaxCheck, ExportToXlsx, splitInt, SplitTextArea, validateIP, validateDomain } from '../../util'
-import global from "../Global.vue"
+import global from "../../global"
 import {
     HunterSearch,
     HunterTips,

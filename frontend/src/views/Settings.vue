@@ -74,7 +74,7 @@
 </template>
 
 <script lang="ts" setup>
-import global from "./Global.vue"
+import global from "../global"
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus';
 const activeNames = ref(['1'])

@@ -5,7 +5,7 @@ import {
     DomainInfo,
     CheckCdn,
 } from '../../../wailsjs/go/main/App'
-import global from "../Global.vue"
+import global from "../../global"
 const info = `IP提取:
 输入任意内容会自动匹配IPV4地址会进行提取并统计C段数量
 

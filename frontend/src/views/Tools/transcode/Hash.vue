@@ -87,12 +87,6 @@ const cmd5 = "https://www.cmd5.com"
 </template>
 
 <style>
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .choose .el-input__inner {
     width: 80px;
 }

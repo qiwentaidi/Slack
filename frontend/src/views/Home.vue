@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { LoadConfig } from '../util'
 import { onMounted } from 'vue';
+import { BrowserOpenURL } from '../../wailsjs/runtime'
 // 初始化时调用
 onMounted(() => {
   LoadConfig() // 加载配置信息
@@ -10,7 +11,7 @@ onMounted(() => {
 <template>
   <el-container class="el-main">
     <el-space  direction="vertical">
-      <a href="https://github.com/qiwentaidi/Slack" target="_blank" title="前往Github仓库">
+      <a @click="BrowserOpenURL('https://github.com/qiwentaidi/Slack')" title="前往Github仓库">
         <img src="/slack.svg" class="logo" />
       </a>
       <h2>Slack 信安人员集成化工具平台</h2>

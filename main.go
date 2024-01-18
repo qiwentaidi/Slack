@@ -28,7 +28,7 @@ func main() {
 		OnStartup:        app.startup,
 		MinWidth:         1280,
 		MinHeight:        768,
-		Frameless:        true,
+		// Frameless:        true,
 		Bind: []interface{}{
 			app,
 		},

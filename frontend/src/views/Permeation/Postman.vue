@@ -4,7 +4,7 @@ import { reactive, nextTick, ref } from 'vue'
 import { ElTable } from 'element-plus'
 import { Plus, Minus } from '@element-plus/icons-vue';
 import Prism from "prismjs";
-import global from "../Global.vue"
+import global from "../../global"
 import { Splitpanes, Pane } from 'splitpanes'
 
 const form = reactive({
@@ -159,10 +159,6 @@ const deleteRow = (content: {}[], index: number) => {
 </template>
 
 <style scoped>
-.head {
-    display: flex;
-}
-
 .pre-wrap {
     white-space: pre-wrap;
     word-wrap: break-word;

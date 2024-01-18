@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import global from "../Global.vue";
+import global from "../../global";
 import async from 'async';
 import { ExportToXlsx } from '../../util'
 import { reactive, ref } from "vue";

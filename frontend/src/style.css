@@ -15,8 +15,6 @@
 body {
   margin: 0;
   align-items: start;
-  min-width: 320px;
-  min-height: 100vh;
 }
 
 h1 {
@@ -60,14 +58,22 @@ html {
 }
 /* img */
 .center {
-  display: block;
-  margin: 0 auto;
+  margin-left: 30%;
   width: 40%;
 }
 
-/* 垂直分割线 */
-.divder{
-  height: 100%; 
-  margin: 0;
-  width: 0;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+
+.head {
+  display: flex;
+  width: 100%;
+}
+
+.nkmode {
+  display: flex;
+  justify-content: space-between;
+ }

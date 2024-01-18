@@ -198,13 +198,13 @@ const config = reactive({
 </script>
 
 <template>
-    <el-form :model="from" label-width="20%">
+    <el-form :model="from">
         <el-form-item>
-            <div class="head">
-                <el-select v-model=from.defaultOption value=options style="width: 120px;">
+            <div class="head" style="width: 100%;">
+                <el-select v-model=from.defaultOption value=options style="width: 20vh;">
                     <el-option v-for="item in from.options" :value="item" :label="item" />
                 </el-select>
-                <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 10px; width: 50%;" />
+                <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 10px; width: 100%;" />
                 <el-button type="primary" @click="dirscan">开始扫描</el-button>
                 <el-button type="danger" @click="control.stop">停止</el-button>
             </div>

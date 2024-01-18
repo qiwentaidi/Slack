@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { ElMessage } from "element-plus";
-import global from "./components/Global.vue";
+import global from "./global";
 import { CheckTarget } from "../wailsjs/go/main/App";
 // 单sheet导出
 export function ExportToXlsx(

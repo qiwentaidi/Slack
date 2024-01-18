@@ -1,6 +1,7 @@
 import { createApp, App } from "vue";
 import AppComponent from "./App.vue";
 import "./style.css";
+import router from "./router";
 import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import "element-plus/theme-chalk/el-message.css";
 import "element-plus/theme-chalk/el-message-box.css";
@@ -13,4 +14,4 @@ export default (app: App<Element>) => {
   app.use(ElMessageBox);
   app.use(ElNotification);
 };
-createApp(AppComponent).mount("#app");
+createApp(AppComponent).use(router).mount("#app");

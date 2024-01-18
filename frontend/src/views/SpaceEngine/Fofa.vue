@@ -9,7 +9,7 @@ import {
 } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import { ElMessage, ElNotification } from 'element-plus';
-import global from "../Global.vue"
+import global from "../../global"
 const from = reactive({
     query: '',
     fraud: false,

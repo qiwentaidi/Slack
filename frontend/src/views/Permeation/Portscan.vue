@@ -298,7 +298,7 @@ function handleCurrentChange(val: any) {
                             </el-icon>
                         </el-tooltip>
                     </template>
-                    <el-input type="textarea" rows="1" v-model="form.target" style="width: 70%;" />
+                    <el-input type="textarea" rows="3" v-model="form.target" style="width: 70%;" />
                     <div>
                         <el-button type="primary" class="left" @click="scanner">开始扫描</el-button>
                         <el-button type="primary" class="left" @click="ctrl.stop">停止</el-button>

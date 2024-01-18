@@ -1,4 +1,3 @@
-<script lang="ts">
 import { reactive } from 'vue'
 var space = reactive({
     fofaemail: '',
@@ -23,4 +22,3 @@ export default {
     scan,
     proxy,
 };
-</script>

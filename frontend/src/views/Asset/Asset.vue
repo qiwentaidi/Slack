@@ -3,7 +3,7 @@ import { reactive, ref } from "vue";
 import { QuestionFilled, Tickets } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { AssetWechat, AssetSubcompany, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
-import global from "../Global.vue"
+import global from "../../global"
 import { ExportAssetToXlsx } from '../../util'
 import { onMounted } from 'vue';
 // 初始化时调用
@@ -218,9 +218,12 @@ function sleep(time: number) {
         </el-form-item>
         <el-form-item>
             <template #label>
+                Token:
                 <el-tooltip placement="right">
                     <template #content>由于天眼查登录校验机制，为了确保数据准确，需要在此处填入网页登录后Cookie头中的 X-Auth-Token 字段或者 auth_token 字段</template>
-                    <span style="color:chocolate;">Token:</span>
+                    <el-icon>
+                        <QuestionFilled size="24" />
+                    </el-icon>
                 </el-tooltip>
             </template>
             <el-input v-model="from.token" style="width: 50%;"></el-input>
