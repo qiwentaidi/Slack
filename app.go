@@ -558,19 +558,18 @@ type InfoResult struct {
 var RuleData map[string]map[string]string
 
 // 仅在执行时调用一次
-func (a *App) InitRule() []byte {
+func (a *App) InitRule() {
 	yamlData, err := os.ReadFile("./config/webfinger.yaml")
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
 	RuleData = make(map[string]map[string]string)
-	return yamlData
-}
-
-func (a *App) FingerScan(url string, yamlData []byte, proxy clients.Proxy) *InfoResult {
 	if err := yaml.Unmarshal(yamlData, &RuleData); err != nil {
 		logger.NewDefaultLogger().Debug("Failed to unmarshal YAML: " + err.Error())
 	}
+}
+
+func (a *App) FingerScan(url string, proxy clients.Proxy) *InfoResult {
 	var ir InfoResult
 	var fingerprints []string
 	var matched bool // 判断指纹匹配状态

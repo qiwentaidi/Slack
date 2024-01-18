@@ -34,8 +34,8 @@ export function ExtractIP(arg1) {
   return window['go']['main']['App']['ExtractIP'](arg1);
 }
 
-export function FingerScan(arg1, arg2, arg3) {
-  return window['go']['main']['App']['FingerScan'](arg1, arg2, arg3);
+export function FingerScan(arg1, arg2) {
+  return window['go']['main']['App']['FingerScan'](arg1, arg2);
 }
 
 export function FofaSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {

@@ -150,7 +150,7 @@ class Scanner {
         // 指纹扫描 =====================================
         //         
         // 
-        let data = await InitRule()
+        await InitRule()
         dashboard.logger += `${date.toLocaleString()} 已加载任务目标: ${this.urls.length}个\n`
         dashboard.logger += '[INFO] 正在进行指纹扫描\n'
         let count = 0
@@ -159,7 +159,7 @@ class Scanner {
                 return
             }
             dashboard.runningStatus = target
-            let result = await FingerScan(target, data, global.proxy)
+            let result = await FingerScan(target, global.proxy)
             if (result.StatusCode == 0) {
                 dashboard.reqErrorURLs.push(target)
             } else {
@@ -483,8 +483,8 @@ function getClassBySeverity(row: any) {
                     <template #title>
                         <div style="display: inline-flex; align-items: center">
                             请求失败目标
-                            <el-popover placement="left" title="可能是由于无法识别到协议而无法扫描的地址" :width="350" trigger="hover"
-                                :content='dashboard.reqErrorURLs.join("\n")'>
+                            <el-popover placement="left" title="可能是由于无法识别到协议而无法扫描的地址" :width="350" trigger="hover">
+                                    <el-input v-model="dashboard.reqErrorURLs" type="textarea" rows="5"></el-input>
                                 <template #reference>
                                     <el-icon style="margin-left: 4px" :size="12">
                                         <ZoomIn />

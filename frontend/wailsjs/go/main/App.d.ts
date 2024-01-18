@@ -22,7 +22,7 @@ export function DomainInfo(arg1:string):Promise<string>;
 
 export function ExtractIP(arg1:string):Promise<string>;
 
-export function FingerScan(arg1:string,arg2:Array<number>,arg3:clients.Proxy):Promise<main.InfoResult>;
+export function FingerScan(arg1:string,arg2:clients.Proxy):Promise<main.InfoResult>;
 
 export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:boolean,arg7:boolean):Promise<space.FofaSearchResult>;
 
@@ -50,7 +50,7 @@ export function InitDict(arg1:Array<string>):Promise<Array<string>>;
 
 export function InitIPResolved():Promise<void>;
 
-export function InitRule():Promise<Array<number>>;
+export function InitRule():Promise<void>;
 
 export function InitTycHeader(arg1:string):Promise<void>;
 
