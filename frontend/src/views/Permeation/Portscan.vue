@@ -52,7 +52,7 @@ const config = reactive({
         value: ""
     },
     ],
-    thread: 100,
+    thread: 1000,
     timeout: 12,
     changeIp: false,
     alive: false,
@@ -60,123 +60,138 @@ const config = reactive({
     burte: false,
 })
 const radio = ref('2')
-async function scanner() {
-    table.result = []
-    table.pageContent = []
-    form.id = 0
-    if (config.changeIp === false) {
-        form.portsList = await PortParse(form.portlist)
-        form.ips = await IPParse(form.target)
-        if (form.portlist.length == 0 || form.ips.length == 0) {
-            ElMessage({
-                showClose: true,
-                message: '目标或端口为空',
-                type: 'warning',
-            })
-            return
-        }
-        if (config.alive === true) {
-            HostAlive((form.ips as any), config.alive).then(
-                result => {
-                    form.ips = result
-                }
-            )
-        }
-        const count = (form.ips.length * form.portsList.length)
-        async.eachLimit(form.ips,config.thread, (ip: string, callback: () => void) => {
-            form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
-            async.eachLimit(form.portsList, 1, (port: number, callback: () => void) => {
+
+function NewScanner() {
+    const ps = new Scanner()
+    ps.PortScanner()
+}
+
+class Scanner {
+    public init() {
+        table.result = []
+        table.pageContent = []
+        ctrl.exit = false
+        form.id = 0
+    }
+    public async PortScanner() {
+        this.init()
+        if (config.changeIp === false) {
+            form.portsList = await PortParse(form.portlist)
+            form.ips = await IPParse(form.target)
+            if (form.portlist.length == 0 || form.ips.length == 0) {
+                ElMessage({
+                    showClose: true,
+                    message: '目标或端口为空',
+                    type: 'warning',
+                })
+                return
+            }
+            if (config.alive === true) {
+                HostAlive((form.ips as any), config.alive).then(
+                    result => {
+                        form.ips = result
+                    }
+                )
+            }
+            const count = (form.ips.length * form.portsList.length)
+            async.eachLimit(form.ips, 1, (ip: string, callback: () => void) => {
+                form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
+                async.eachLimit(form.portsList, config.thread, (port: number, callback: () => void) => {
+                    if (ctrl.exit === true) {
+                        return
+                    }
+                    PortCheck(ip as string, port, config.timeout).then(result => {
+                        if (result.Status) {
+                            form.log += `[+] Portscan ${ip}:${port} is open!\n`
+                            table.result.push({
+                                host: ip,
+                                port: port,
+                                fingerprint: result.Server,
+                                link: result.Link,
+                                title: result.HttpTitle,
+                            })
+                            table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+                        }
+                        form.id++;
+                        form.percentage = Number(((form.id / count) * 100).toFixed(2));
+                        callback();
+                    });
+                }, (err: any) => {
+                    if (config.burte === true) {
+                        this.burteport()
+                    }
+                    if (err) {
+                        ElMessage.error(err)
+                    } else {
+                        ctrl.exit = false
+                        form.log += "[END] 端口扫描任务已完成\n"
+                    }
+                });
+                callback();
+            });
+        } else {
+            const lines = SplitTextArea(form.target)
+            for (const line of lines) {
                 if (ctrl.exit === true) {
                     return
                 }
-                PortCheck(ip as string, port, config.timeout).then(result => {
+                form.id++;
+                form.percentage = Number(((form.id / lines.length) * 100).toFixed(2));
+                let temp = line.split(":")
+                PortCheck(temp[0], Number(temp[1]), config.timeout).then((result) => {
                     if (result.Status) {
-                        form.log += `[+] Portscan ${ip}:${port} is open!\n`
                         table.result.push({
-                            host: ip,
-                            port: port,
+                            host: temp[0],
+                            port: temp[1],
                             fingerprint: result.Server,
                             link: result.Link,
                             title: result.HttpTitle,
                         })
                         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
                     }
-                    form.id++;
-                    form.percentage = Number(((form.id / count) * 100).toFixed(2));
-                    callback();
                 });
-            }, (err: any) => {
-                if (config.burte === true) {
-                    burteport()
-                }
-                if (err) {
-                    ElMessage.error(err)
-                } else {
-                    form.log += "[END] 端口扫描任务已完成\n"
-                }
-            });
-            callback();
-        });
-    } else {
-        const lines = SplitTextArea(form.target)
-        for (const line of lines) {
+            }
+        }
+    }
+    public burteport() {
+        table.burteResult = []
+        var date = new Date();
+        async.eachLimit(getColumnData("link"), 20, (target: string, callback: () => void) => {
             if (ctrl.exit === true) {
                 return
             }
-            form.id++;
-            form.percentage = Number(((form.id / lines.length) * 100).toFixed(2));
-            let temp = line.split(":")
-            PortCheck(temp[0], Number(temp[1]), config.timeout).then((result) => {
-                if (result.Status) {
-                    table.result.push({
-                        host: temp[0],
-                        port: temp[1],
-                        fingerprint: result.Server,
-                        link: result.Link,
-                        title: result.HttpTitle,
-                    })
-                    table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+            ctrl.dict.forEach(ele => {
+                let pro = target.split("://")[0]
+                if (ele.name.toLowerCase() === pro) {
+                    form.log += "[INF] Start burte " + target + "\n"
+                    PortBrute(target, ele.dic, ctrl.passwords).then((result) => {
+                        if (result !== undefined && result.Status !== false) {
+                            form.log += `[++] ${target} ${result.Username}:${result.Password}\n`
+                            table.burteResult.push({
+                                host: result.Host,
+                                protocol: result.Protocol,
+                                username: result.Username,
+                                password: result.Password,
+                                time: date.toLocaleString(),
+                            })
+                        }
+                        callback();
+                    });
                 }
             });
-        }
+        }, (err: any) => {
+            if (err) {
+                ElMessage.error(err)
+            } else {
+                form.log += "[END] All target port brute have been completed\n"
+            }
+        });
+
     }
 }
 
-function burteport() {
-    table.burteResult = []
-    var date = new Date();
-    async.eachLimit(getColumnData("link"), 20, (target: string, callback: () => void) => {
-        if (ctrl.exit === true) {
-            return
-        }
-        ctrl.dict.forEach(ele => {
-            let pro = target.split("://")[0]
-            if (ele.name.toLowerCase() === pro) {
-                form.log += "[INF] Start burte " + target + "\n"
-                PortBrute(target, ele.dic, ctrl.passwords).then((result) => {
-                    if (result !== undefined && result.Status !== false) {
-                        form.log += `[++] ${target} ${result.Username}:${result.Password}\n`
-                        table.burteResult.push({
-                            host: result.Host,
-                            protocol: result.Protocol,
-                            username: result.Username,
-                            password: result.Password,
-                            time: date.toLocaleString(),
-                        })
-                    }
-                    callback();
-                });
-            }
-        });
-    }, (err: any) => {
-        if (err) {
-            ElMessage.error(err)
-        } else {
-            form.log += "[END] All target port brute have been completed\n"
-        }
-    });
 
-}
+
 
 function getColumnData(prop: string): any[] {
     return table.result.map((item: any) => item[prop]);
@@ -194,6 +209,7 @@ const ctrl = reactive({
                 message: '已停止任务',
                 type: 'warning',
             })
+            form.log += "[STOP] 已停止扫描任务\n"
         }
     },
     dict: [
@@ -300,7 +316,7 @@ function handleCurrentChange(val: any) {
                     </template>
                     <el-input type="textarea" rows="3" v-model="form.target" style="width: 70%;" />
                     <div>
-                        <el-button type="primary" class="left" @click="scanner">开始扫描</el-button>
+                        <el-button type="primary" class="left" @click="NewScanner">开始扫描</el-button>
                         <el-button type="primary" class="left" @click="ctrl.stop">停止</el-button>
                     </div>
                 </el-form-item>
@@ -356,7 +372,7 @@ function handleCurrentChange(val: any) {
                                 <el-input-number controls-position="right" v-model="config.thread" :min="1" :max="30000" />
                             </el-form-item>
                             <el-form-item label="超时时长(s):" class="bottom">
-                                <el-input-number controls-position="right" v-model="config.timeout" :min="1" :max="20" />
+                                <el-input-number controls-position="right" v-model="config.timeout" :min="1" />
                             </el-form-item>
                             <el-form-item label="口令猜测:" class="bottom">
                                 <el-switch v-model="config.burte" />

@@ -271,10 +271,3 @@ function sleep(time: number) {
         </el-tab-pane>
     </el-tabs>
 </template>
-
-<style>
-.log-textarea .el-textarea__inner {
-    background-color: black;
-    color: rgb(52, 228, 52);
-}
-</style>
