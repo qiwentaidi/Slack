@@ -2,6 +2,7 @@ package poc
 
 import (
 	"os"
+	"slack-wails/lib/util"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -129,9 +130,7 @@ type VulnerabilityDetails struct {
 	Solutions   string
 }
 
-const (
-	pocsWorkflower = "./config/workflow.yaml"
-)
+var pocsWorkflower = util.ExecutionPath() + "/config/workflow.yaml"
 
 // 输入目标指纹，返回对应指纹的POC路径
 func FingerPocFilepath(fingerpirnts []string) ([]string, error) {

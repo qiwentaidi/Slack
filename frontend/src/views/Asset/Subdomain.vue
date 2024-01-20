@@ -3,7 +3,8 @@ import global from "../../global";
 import async from 'async';
 import { ExportToXlsx } from '../../util'
 import { reactive, ref } from "vue";
-import { Subdomain, InitIPResolved, SelectFile, GetFileContent, LoadSubDict, OpenFolder } from "../../../wailsjs/go/main/App";
+import { Subdomain, InitIPResolved, LoadSubDict, SelectFile } from "../../../wailsjs/go/main/App";
+import { GetFileContent, OpenFolder } from "../../../wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import { onMounted } from 'vue';
 import { FolderOpened, Loading } from '@element-plus/icons-vue';
@@ -116,7 +117,7 @@ async function handleFileChange() {
                     <el-button-group>
                         <el-tooltip class="box-item" effect="dark" placement="top">
                             <template #content>
-                                默认加载./config/subdomain/dicc.txt<br />
+                                默认加载/config/subdomain/dicc.txt<br />
                                 部分MacOS用户无法进行文件选择，可以通过修改默认字典实现字典更改
                             </template>
                             <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips

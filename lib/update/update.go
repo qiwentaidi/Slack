@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	LocalConfig      = "./config/"
 	lastestPocUrl    = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
 	lastestClinetUrl = "https://gitee.com/the-temperature-is-too-low/Slack/releases/download/"
 )
+
+var LocalConfig = util.ExecutionPath() + "/config/"
 
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
 func UpdatePoc(latestVersion string) error {

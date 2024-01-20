@@ -18,10 +18,6 @@ export function CheckCdn(arg1, arg2, arg3) {
   return window['go']['main']['App']['CheckCdn'](arg1, arg2, arg3);
 }
 
-export function CheckFileStat(arg1) {
-  return window['go']['main']['App']['CheckFileStat'](arg1);
-}
-
 export function CheckTarget(arg1, arg2) {
   return window['go']['main']['App']['CheckTarget'](arg1, arg2);
 }
@@ -48,10 +44,6 @@ export function FofaTips(arg1) {
 
 export function Fscan2Txt(arg1) {
   return window['go']['main']['App']['Fscan2Txt'](arg1);
-}
-
-export function GetFileContent(arg1) {
-  return window['go']['main']['App']['GetFileContent'](arg1);
 }
 
 export function GetFingerPoc(arg1) {
@@ -106,10 +98,6 @@ export function LocalWalkFiles(arg1) {
   return window['go']['main']['App']['LocalWalkFiles'](arg1);
 }
 
-export function OpenFolder(arg1) {
-  return window['go']['main']['App']['OpenFolder'](arg1);
-}
-
 export function PathRequest(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['PathRequest'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
@@ -134,10 +122,6 @@ export function ReadPocDetail(arg1) {
   return window['go']['main']['App']['ReadPocDetail'](arg1);
 }
 
-export function Restart() {
-  return window['go']['main']['App']['Restart']();
-}
-
 export function SelectFile() {
   return window['go']['main']['App']['SelectFile']();
 }
@@ -150,24 +134,12 @@ export function System(arg1, arg2) {
   return window['go']['main']['App']['System'](arg1, arg2);
 }
 
-export function TestTarget(arg1) {
-  return window['go']['main']['App']['TestTarget'](arg1);
-}
-
 export function ThinkDict(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['ThinkDict'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function Transcoding(arg1, arg2, arg3) {
   return window['go']['main']['App']['Transcoding'](arg1, arg2, arg3);
-}
-
-export function UpdateClinetFile(arg1) {
-  return window['go']['main']['App']['UpdateClinetFile'](arg1);
-}
-
-export function UpdatePocFile(arg1) {
-  return window['go']['main']['App']['UpdatePocFile'](arg1);
 }
 
 export function WebIconMd5(arg1) {

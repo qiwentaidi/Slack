@@ -11,9 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
-	rt "runtime"
 	"slack-wails/core"
 	"slack-wails/core/info"
 	"slack-wails/core/portscan"
@@ -24,7 +22,6 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/report"
-	"slack-wails/lib/update"
 	"slack-wails/lib/util"
 	"strings"
 	"sync"
@@ -51,27 +48,7 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *App) OpenFolder(path string) string {
-	var cmd *exec.Cmd
-	dir, _ := os.Getwd()
-	switch rt.GOOS {
-	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", dir+path)
-	case "darwin":
-		cmd = exec.Command("open", dir+path)
-	default:
-		cmd = exec.Command("xdg-open", dir+path)
-	}
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err.Error()
-	}
-	return ""
-}
-
+// 只能用在App上
 func (a *App) SelectFile() string {
 	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "选择文件",
@@ -88,21 +65,6 @@ func (a *App) SelectFile() string {
 	return selection
 }
 
-func (a *App) CheckFileStat(path string) bool {
-	if _, err := os.Stat(path); err != nil {
-		return false
-	}
-	return true
-}
-
-func (a *App) GetFileContent(filename string) string {
-	b, err := os.ReadFile(filename)
-	if err != nil {
-		return "文件不存在"
-	}
-	return string(b)
-}
-
 type Response struct {
 	Error  bool
 	Proto  string
@@ -110,7 +72,15 @@ type Response struct {
 	Body   string
 }
 
-func (a *App) GoFetch(method, url, body string, headers []map[string]string, timeout int, proxy clients.Proxy) *Response {
+func (a *App) GoFetch(method, target, body string, headers []map[string]string, timeout int, proxy clients.Proxy) *Response {
+	if _, err := url.Parse(target); err != nil {
+		return &Response{
+			Error:  true,
+			Proto:  "",
+			Header: nil,
+			Body:   "",
+		}
+	}
 	client := clients.DefaultClient()
 	if proxy.Enabled {
 		client, _ = clients.SelectProxy(&proxy, client)
@@ -124,7 +94,7 @@ func (a *App) GoFetch(method, url, body string, headers []map[string]string, tim
 	// if body != "" {
 	// 	bytes.NewReader()
 	// }
-	resp, b, err := clients.NewRequest(method, url, hhhhheaders, nil, 10, client)
+	resp, b, err := clients.NewRequest(method, target, hhhhheaders, nil, 10, client)
 	if err != nil {
 		return &Response{
 			Error:  true,
@@ -325,24 +295,12 @@ func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
 
 // dirsearch
 
-// 测试URL是否可达
-func (a *App) TestTarget(target string) bool {
-	_, err := url.Parse(target)
-	if err != nil {
-		return false
-	}
-	if _, _, err2 := clients.NewRequest("GET", target, nil, nil, 10, clients.DefaultClient()); err2 != nil {
-		return false
-	}
-	return true
-}
-
 func (a *App) InitDict(newExts []string) []string {
-	return util.LoadDirsearchDict("dicc.txt", "%EXT%", newExts)
+	return util.LoadDirsearchDict(util.ExecutionPath()+"/config/dirsearch", "/dicc.txt", "%EXT%", newExts)
 }
 
 func (a *App) LoadSubDict() []string {
-	return util.LoadSubdomainDict("dicc.txt")
+	return util.LoadSubdomainDict(util.ExecutionPath()+"/config/subdomain", "/dicc.txt")
 }
 
 type PathData struct {
@@ -559,7 +517,7 @@ var RuleData map[string]map[string]string
 
 // 仅在执行时调用一次
 func (a *App) InitRule() {
-	yamlData, err := os.ReadFile("./config/webfinger.yaml")
+	yamlData, err := os.ReadFile(util.ExecutionPath() + "/config/webfinger.yaml")
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
@@ -621,7 +579,7 @@ type WebResult struct {
 
 func (a *App) PocNums(severity, keyword string) int {
 	o := runner.NewOptions("", keyword, severity, "")
-	return len(o.CreatePocList(a.LocalWalkFiles("./config/afrog-pocs")))
+	return len(o.CreatePocList(a.LocalWalkFiles(util.ExecutionPath() + "/config/afrog-pocs")))
 }
 
 func (a *App) GetFingerPoc(fingerprints []string) []string {
@@ -684,31 +642,6 @@ func (a *App) Webscan(url, severity, keyword string, pocpathList []string, pr cl
 	}
 	r.Execute(url, pocpathList)
 	return &wr
-}
-
-func (a *App) UpdatePocFile(latestVersion string) string {
-	if err := update.UpdatePoc(latestVersion); err != nil {
-		return err.Error()
-	}
-	os.RemoveAll("./config/afrog-pocs.zip")
-	return ""
-}
-
-func (a *App) UpdateClinetFile(latestVersion string) string {
-	if err := update.UpdateClinet(latestVersion); err != nil {
-		return err.Error()
-	}
-	return ""
-}
-
-func (a *App) Restart() {
-	cmd := exec.Command(os.Args[0])
-	err := cmd.Start()
-	if err != nil {
-		logger.NewDefaultLogger().Fatal(err.Error())
-	}
-	// 退出当前的进程
-	os.Exit(0)
 }
 
 // hunter

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { TestTarget, InitDict, PathRequest, SelectFile, GetFileContent, OpenFolder } from "../../../wailsjs/go/main/App";
+import { GoFetch, InitDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
+import { GetFileContent, OpenFolder } from "../../../wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import async from 'async';
 import { QuestionFilled, FolderOpened, Loading } from '@element-plus/icons-vue';
@@ -74,8 +75,8 @@ class Dirsearch {
             return false
         }
         if (!from.alive) {
-            let result = await TestTarget(from.url);
-            if (!result) {
+            let result = await GoFetch("GET",from.url, "", [{}], 10, null);
+            if (result.Error) {
                 ElMessage({
                     showClose: true,
                     message: 'URL格式错误或目标不可达',
@@ -266,7 +267,7 @@ const config = reactive({
                             <el-button-group>
                                 <el-tooltip class="box-item" effect="dark" placement="top">
                                     <template #content>
-                                        默认加载./config/dirsearch/dicc.txt<br />
+                                        默认加载/config/dirsearch/dicc.txt<br />
                                         部分MacOS用户无法进行文件选择，可以通过修改默认字典实现字典更改
                                     </template>
                                     <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips

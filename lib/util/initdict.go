@@ -8,12 +8,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
-const (
-	defaultDict          = "./config/dirsearch/"
-	defaultSubdoaminPath = "./config/subdomain/"
-)
-
-func LoadDirsearchDict(filename, old string, new []string) (dict []string) {
+func LoadDirsearchDict(defaultDict, filename, old string, new []string) (dict []string) {
 	file, err := os.Open(defaultDict + filename)
 	if err != nil {
 		logger.NewFileLogger(filename).Debug(err.Error())
@@ -40,8 +35,8 @@ func LoadDirsearchDict(filename, old string, new []string) (dict []string) {
 	return dict
 }
 
-func LoadSubdomainDict(filename string) (dict []string) {
-	file, err := os.Open(defaultSubdoaminPath + filename)
+func LoadSubdomainDict(defaultDict, filename string) (dict []string) {
+	file, err := os.Open(defaultDict + filename)
 	if err != nil {
 		logger.NewFileLogger(filename).Debug(err.Error())
 	}

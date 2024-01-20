@@ -8,10 +8,11 @@ import {
     Webscan,
     PocNums,
     GetFingerPoc,
-    TestTarget,
     FofaSearch,
-    HunterSearch
+    HunterSearch,
+    GoFetch
 } from '../../../wailsjs/go/main/App'
+import { ExecutionPath } from '../../../wailsjs/go/main/File'
 import { ElMessage } from 'element-plus';
 import { formatURL, ApiSyntaxCheck, splitInt } from '../../util'
 import async from 'async';
@@ -76,8 +77,8 @@ const dashboard = reactive({
     extInfo: '',
 })
 
-const pathActive = "./config/active-detect"
-const pathAFG = "./config/afrog-pocs"
+const pathActive = "/config/active-detect"
+const pathAFG = "/config/afrog-pocs"
 
 const ctrl = reactive({
     exit: false,
@@ -136,7 +137,7 @@ class Scanner {
             return
         }
         const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port
-        if (global.proxy.enabled && !(await TestTarget(proxyURL))) {
+        if (global.proxy.enabled && (await GoFetch("GET", proxyURL, "", [{}], 10, null))) {
             ElMessage({
                 showClose: true,
                 message: "代理地址不可达",
@@ -180,7 +181,7 @@ class Scanner {
                 dashboard.logger += `[END] 主动目录探测已结束\n`
                 dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
                 count = 0
-                form.currentLoadPath = await LocalWalkFiles(pathActive) // 初始化主动指纹目录
+                form.currentLoadPath = await LocalWalkFiles(await ExecutionPath() + pathActive) // 初始化主动指纹目录
                 callback();
             }
         }, (err: any) => {
@@ -297,7 +298,7 @@ class Scanner {
                 }
             })
         } else if (form.currentModule == "全部漏洞扫描") {
-            form.currentLoadPath = await LocalWalkFiles(pathAFG)
+            form.currentLoadPath = await LocalWalkFiles(await ExecutionPath() + pathAFG)
             dashboard.logger += `[INFO] 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
             let count = 0
             async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {

@@ -11,22 +11,24 @@ import {
   Setting,
   Download,
 } from "@element-plus/icons-vue";
+import { GoFetch } from "../../wailsjs/go/main/App";
 import {
   CheckFileStat,
   GetFileContent,
-  GoFetch,
   UpdatePocFile,
   UpdateClinetFile,
-  Restart
-} from "../../wailsjs/go/main/App";
+  Restart,
+  ExecutionPath
+} from "../../wailsjs/go/main/File";
 import { onMounted } from "vue";
 import { ElNotification, ElMessageBox } from "element-plus";
 import { compareVersion } from "../util"
-const lv = "./config/afrog-pocs/version"
+var LocalPocVersion = ""
 
 onMounted(async () => {
+  LocalPocVersion = await ExecutionPath() + "/config/afrog-pocs/version"
   check.client()
-  let cfg = await CheckFileStat("./config")
+  let cfg = await CheckFileStat(await ExecutionPath() + "/config")
   if (!cfg) {
     ElNotification({
       title: "Warning",
@@ -38,27 +40,25 @@ onMounted(async () => {
   }
 });
 
-const defultreqHeader = [{}]
-
 const check = ({
   // poc
   poc: async function () {
-    let pcfg = await CheckFileStat(lv)
+    let pcfg = await CheckFileStat(LocalPocVersion)
     if (!pcfg) {
       version.LocalPoc = "版本文件不存在"
       version.PocStatus = false
       return
     } else {
-      version.LocalPoc = "v" + await GetFileContent(lv)
+      version.LocalPoc = "v" + await GetFileContent(LocalPocVersion)
     }
-    let rp1 = await GoFetch("GET", download.RemotePocVersion, "", defultreqHeader, 10, null)
+    let rp1 = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
     if (rp1.Error == true) {
       version.PocUpdateContent = "检测更新失败"
       version.PocStatus = false
     } else {
       version.RemotePoc = rp1.Body
       if (compareVersion(version.LocalPoc, version.RemotePoc) == -1) {
-        version.PocUpdateContent = (await GoFetch("GET", download.PocUpdateCentent, "", defultreqHeader, 10, null)).Body
+        version.PocUpdateContent = (await GoFetch("GET", download.PocUpdateCentent, "", [{}], 10, null)).Body
         version.PocStatus = true
       } else {
         version.PocUpdateContent = "当前已是最新版本"
@@ -68,14 +68,14 @@ const check = ({
   },
   // client
   client: async function () {
-    let rp2 = await GoFetch("GET", download.RemoteClientVersion, "", defultreqHeader, 10, null)
+    let rp2 = await GoFetch("GET", download.RemoteClientVersion, "", [{}], 10, null)
     if (rp2.Error == true) {
       version.ClientUpdateContent = "检测更新失败"
       version.ClientStatus = false
     } else {
       version.RemoteClient = rp2.Body
       if (compareVersion(version.LocalClient, version.RemoteClient) == -1) {
-        version.ClientUpdateContent = (await GoFetch("GET", download.ClientUpdateCentent, "", defultreqHeader, 10, null)).Body
+        version.ClientUpdateContent = (await GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, null)).Body
         version.ClientStatus = true
       } else {
         version.ClientUpdateContent = "当前已是最新版本"

@@ -6,7 +6,6 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
@@ -16,6 +15,7 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
+	file := NewFile()
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "slack-wails",
@@ -31,13 +31,14 @@ func main() {
 		// Frameless:        true,
 		Bind: []interface{}{
 			app,
+			file,
 		},
 		Windows: &windows.Options{
 			WebviewBrowserPath: "", // 可以让windows使用默认浏览器打开链接
 		},
-		Mac: &mac.Options{
-			TitleBar: mac.TitleBarHiddenInset(),
-		},
+		// Mac: &mac.Options{
+		// 	TitleBar: mac.TitleBarHiddenInset(),
+		// },
 	})
 	if err != nil {
 		println("Error:", err.Error())
