@@ -94,7 +94,7 @@ class Scanner {
                 )
             }
             const count = (form.ips.length * form.portsList.length)
-            async.eachLimit(form.ips, 1, (ip: string, callback: () => void) => {
+            async.eachSeries(form.ips, (ip: string, callback: () => void) => {
                 form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
                 async.eachLimit(form.portsList, config.thread, (port: number, callback: () => void) => {
                     if (ctrl.exit === true) {
@@ -126,8 +126,8 @@ class Scanner {
                         ctrl.exit = false
                         form.log += "[END] 端口扫描任务已完成\n"
                     }
+                    callback();
                 });
-                callback();
             });
         } else {
             const lines = SplitTextArea(form.target)

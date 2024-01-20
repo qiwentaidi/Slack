@@ -1,8 +1,8 @@
 <template>
   <el-container>
-    <el-scrollbar max-height="80vh">
+    <el-scrollbar max-height="85vh">
       <el-main>
-        <el-collapse v-model="activeNames">
+        <el-collapse model-value="1">
           <el-collapse-item name="1"><template #title>
               <h2>扫描设置</h2>
             </template>
@@ -75,10 +75,7 @@
 
 <script lang="ts" setup>
 import global from "../global"
-import { ref } from 'vue'
 import { ElMessage } from 'element-plus';
-const activeNames = ref(['1'])
-
 
 const saveConfig = () => {
   global.space.fofaemail = global.space.fofaemail.replace(/[\r\n\s]/g, '');

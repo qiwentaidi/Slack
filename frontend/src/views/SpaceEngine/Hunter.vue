@@ -482,5 +482,3 @@ async function SaveData(mode: number) {
         <el-image class="center" src="/loading.gif" alt="loading" v-else></el-image>
     </el-tabs>
 </template>
-
-<style></style>
