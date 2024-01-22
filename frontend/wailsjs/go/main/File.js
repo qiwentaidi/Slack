@@ -6,12 +6,12 @@ export function CheckFileStat(arg1) {
   return window['go']['main']['File']['CheckFileStat'](arg1);
 }
 
-export function ExecutionPath() {
-  return window['go']['main']['File']['ExecutionPath']();
-}
-
 export function GetFileContent(arg1) {
   return window['go']['main']['File']['GetFileContent'](arg1);
+}
+
+export function InitConfig() {
+  return window['go']['main']['File']['InitConfig']();
 }
 
 export function OpenFolder(arg1) {
@@ -26,6 +26,10 @@ export function UpdateClinetFile(arg1) {
   return window['go']['main']['File']['UpdateClinetFile'](arg1);
 }
 
-export function UpdatePocFile(arg1) {
-  return window['go']['main']['File']['UpdatePocFile'](arg1);
+export function UpdatePocFile() {
+  return window['go']['main']['File']['UpdatePocFile']();
+}
+
+export function UserHomeDir() {
+  return window['go']['main']['File']['UserHomeDir']();
 }

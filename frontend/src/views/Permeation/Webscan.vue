@@ -12,7 +12,7 @@ import {
     HunterSearch,
     GoFetch
 } from '../../../wailsjs/go/main/App'
-import { ExecutionPath } from '../../../wailsjs/go/main/File'
+import { UserHomeDir } from '../../../wailsjs/go/main/File'
 import { ElMessage } from 'element-plus';
 import { formatURL, ApiSyntaxCheck, splitInt } from '../../util'
 import async from 'async';
@@ -77,8 +77,8 @@ const dashboard = reactive({
     extInfo: '',
 })
 
-const pathActive = "/config/active-detect"
-const pathAFG = "/config/afrog-pocs"
+// const pathActive = "/slack/active-detect"
+// const pathAFG = "/slack/afrog-pocs"
 
 const ctrl = reactive({
     exit: false,
@@ -178,10 +178,10 @@ class Scanner {
             }
             count++
             if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
-                dashboard.logger += `[END] 主动目录探测已结束\n`
-                dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
+                dashboard.logger += `[END] 指纹探测已结束\n`
+                form.currentLoadPath = await LocalWalkFiles(await UserHomeDir() + window.ActivePathPoc) // 初始化主动指纹目录
                 count = 0
-                form.currentLoadPath = await LocalWalkFiles(await ExecutionPath() + pathActive) // 初始化主动指纹目录
+                dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
                 callback();
             }
         }, (err: any) => {
@@ -233,7 +233,7 @@ class Scanner {
                     })
                     count++
                     if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
-                        dashboard.logger += `[END] 主动目录探测已结束\n`
+                        dashboard.logger += `[END] 主动指纹探测已结束\n`
                         callback();
                     }
                 }, (err: any) => {
@@ -298,7 +298,7 @@ class Scanner {
                 }
             })
         } else if (form.currentModule == "全部漏洞扫描") {
-            form.currentLoadPath = await LocalWalkFiles(await ExecutionPath() + pathAFG)
+            form.currentLoadPath = await LocalWalkFiles(await UserHomeDir() + window.AFGPathPoc)
             dashboard.logger += `[INFO] 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
             let count = 0
             async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {

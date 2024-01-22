@@ -3,9 +3,9 @@
 
 export function CheckFileStat(arg1:string):Promise<boolean>;
 
-export function ExecutionPath():Promise<string>;
-
 export function GetFileContent(arg1:string):Promise<string>;
+
+export function InitConfig():Promise<boolean>;
 
 export function OpenFolder(arg1:string):Promise<string>;
 
@@ -13,4 +13,6 @@ export function Restart():Promise<void>;
 
 export function UpdateClinetFile(arg1:string):Promise<string>;
 
-export function UpdatePocFile(arg1:string):Promise<string>;
+export function UpdatePocFile():Promise<string>;
+
+export function UserHomeDir():Promise<string>;

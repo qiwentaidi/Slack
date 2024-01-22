@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { reactive } from "vue";
 import {
   OfficeBuilding,
   Tools,
@@ -18,24 +17,47 @@ import {
   UpdatePocFile,
   UpdateClinetFile,
   Restart,
-  ExecutionPath
+  UserHomeDir,
+  InitConfig
 } from "../../wailsjs/go/main/File";
-import { onMounted } from "vue";
+import { onMounted, reactive } from "vue";
 import { ElNotification, ElMessageBox } from "element-plus";
 import { compareVersion } from "../util"
-var LocalPocVersion = ""
+import Loading from "./Loading.vue";
 
 onMounted(async () => {
-  LocalPocVersion = await ExecutionPath() + "/config/afrog-pocs/version"
-  check.client()
-  let cfg = await CheckFileStat(await ExecutionPath() + "/config")
+  // 初始赋值
+  window.ActivePathPoc = "/slack/active-detect"
+  window.AFGPathPoc = "/slack/afrog-pocs"
+  window.PocVersion = "/slack/afrog-pocs/version"
+  let home = await UserHomeDir()
+  let cfg = await CheckFileStat(home + "/slack")
   if (!cfg) {
     ElNotification({
-      title: "Warning",
-      message: "config配置文件目录加载失败，会影响程序功能使用",
-      type: "warning",
+      duration: 0,
+      message: '未检测到配置文件，正在初始化...',
+      icon: Loading,
     });
+    if (await InitConfig()) {
+      ElNotification.closeAll()
+      ElNotification({
+        message: "配置文件初始化成功!",
+        type: "success",
+      });
+      window.LocalPocVersion = await UserHomeDir() + window.PocVersion
+      check.client()
+      check.poc()
+    } else {
+      ElNotification.closeAll()
+      ElNotification({
+        title: "无法下载配置文件",
+        message: "请自行到https://gitee.com/the-temperature-is-too-low/slack-poc/releases/下载slack.zip并解压到用户根目录!",
+        type: "warning",
+      });
+    }
   } else {
+    window.LocalPocVersion = await UserHomeDir() + window.PocVersion
+    check.client()
     check.poc()
   }
 });
@@ -43,20 +65,20 @@ onMounted(async () => {
 const check = ({
   // poc
   poc: async function () {
-    let pcfg = await CheckFileStat(LocalPocVersion)
+    let pcfg = await CheckFileStat(window.LocalPocVersion)
     if (!pcfg) {
       version.LocalPoc = "版本文件不存在"
       version.PocStatus = false
       return
     } else {
-      version.LocalPoc = "v" + await GetFileContent(LocalPocVersion)
+      version.LocalPoc = "v" + await GetFileContent(window.LocalPocVersion)
     }
-    let rp1 = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
-    if (rp1.Error == true) {
+    let resp = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
+    if (resp.Error == true) {
       version.PocUpdateContent = "检测更新失败"
       version.PocStatus = false
     } else {
-      version.RemotePoc = rp1.Body
+      version.RemotePoc = resp.Body
       if (compareVersion(version.LocalPoc, version.RemotePoc) == -1) {
         version.PocUpdateContent = (await GoFetch("GET", download.PocUpdateCentent, "", [{}], 10, null)).Body
         version.PocStatus = true
@@ -68,12 +90,12 @@ const check = ({
   },
   // client
   client: async function () {
-    let rp2 = await GoFetch("GET", download.RemoteClientVersion, "", [{}], 10, null)
-    if (rp2.Error == true) {
+    let resp = await GoFetch("GET", download.RemoteClientVersion, "", [{}], 10, null)
+    if (resp.Error == true) {
       version.ClientUpdateContent = "检测更新失败"
       version.ClientStatus = false
     } else {
-      version.RemoteClient = rp2.Body
+      version.RemoteClient = resp.Body
       if (compareVersion(version.LocalClient, version.RemoteClient) == -1) {
         version.ClientUpdateContent = (await GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, null)).Body
         version.ClientStatus = true
@@ -87,8 +109,8 @@ const check = ({
 
 const update = ({
   poc: async function () {
-    let err = await UpdatePocFile("v" + version.RemotePoc)
-    if (err !== "") {
+    let err = await UpdatePocFile()
+    if (err == "") {
       ElNotification({
         title: "Success",
         message: "POC更新成功！",
@@ -96,8 +118,8 @@ const update = ({
       });
     } else {
       ElNotification({
-        title: "Error",
-        message: "POC更新失败！！",
+        title: "POC更新失败",
+        message: err,
         type: "error",
       });
     }
@@ -272,7 +294,7 @@ const download = {
 }
 
 .el-badge {
-  height: 115px;
+  margin-bottom: 70px;
 }
 
 .bottom-align {

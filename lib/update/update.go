@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"slack-wails/lib/clients"
 	"slack-wails/lib/util"
 	"time"
 
@@ -20,31 +21,15 @@ const (
 	lastestClinetUrl = "https://gitee.com/the-temperature-is-too-low/Slack/releases/download/"
 )
 
-var LocalConfig = util.ExecutionPath() + "/config/"
-
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
-func UpdatePoc(latestVersion string) error {
-	temp := lastestPocUrl + latestVersion
-	workflow := temp + "/workflow.yaml"
-	webfinger := temp + "/webfinger.yaml"
-	pocs := temp + "/afrog-pocs.zip"
-	if _, err := download(workflow, LocalConfig); err != nil {
-		return errors.New("workflow.yaml更新失败")
-	}
-	if _, err := download(webfinger, LocalConfig); err != nil {
-		return errors.New("webfinger.yaml更新失败")
-	}
-	fileName, err := download(pocs, LocalConfig)
-	if err != nil {
-		return err
-	}
-	if err := os.RemoveAll(LocalConfig + "afrog-pocs"); err != nil {
+func UpdatePoc() error {
+	LocalConfig, _ := os.UserHomeDir()
+	if err := os.RemoveAll(LocalConfig + "/afrog-pocs"); err != nil {
 		return err
 	}
 	time.Sleep(time.Second * 2)
-	uz := util.NewUnzip()
-	if _, err := uz.Extract(LocalConfig+fileName, LocalConfig); err != nil {
-		return fmt.Errorf("afrog-poc decompression failed. %v", err)
+	if !InitConfig() {
+		return errors.New("update poc failed")
 	}
 	return nil
 }
@@ -71,8 +56,8 @@ func download(target, dest string) (string, error) {
 const (
 	BinaryFile_Windows      = "slack-wails.exe"
 	BinaryFile_Linux        = "slack-wails_linux_amd64"
-	BinaryFile_Darwin_AMD64 = "slack-wails_darwin_amd64"
-	BinaryFile_Darwin_ARM64 = "slack-wails_darwin_arm64"
+	BinaryFile_Darwin_AMD64 = "slack-wails_darwin_amd64.app"
+	BinaryFile_Darwin_ARM64 = "slack-wails_darwin_arm64.app"
 )
 
 func UpdateClinet(latestVersion string) error {
@@ -109,4 +94,23 @@ func doUpdate(url string) error {
 		}
 	}
 	return err
+}
+
+func InitConfig() bool {
+	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
+	LocalConfig, _ := os.UserHomeDir()
+	_, b, err := clients.NewRequest("GET", latestConfigVersion, nil, nil, 10, http.DefaultClient)
+	if err != nil {
+		return false
+	}
+	configFile := lastestPocUrl + "v" + string(b) + "/slack.zip"
+	fileName, err := download(configFile, LocalConfig+"/")
+	if err != nil {
+		return false
+	}
+	uz := util.NewUnzip()
+	if _, err := uz.Extract(LocalConfig+"/"+fileName, LocalConfig); err != nil {
+		return false
+	}
+	return true
 }

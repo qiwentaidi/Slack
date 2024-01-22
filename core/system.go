@@ -70,7 +70,7 @@ var AuthPatchs = []AuthPatch{
 
 func AntivirusIdentify(tasklist string) ([][]string, error) {
 	var AntivirusResult [][]string
-	yamlData, err := os.ReadFile(util.ExecutionPath() + "/config/antivirues.yaml")
+	yamlData, err := os.ReadFile(util.HomeDir() + "/slack/antivirues.yaml")
 	if err != nil {
 		return nil, err
 	}

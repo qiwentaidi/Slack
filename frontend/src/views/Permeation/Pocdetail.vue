@@ -5,21 +5,21 @@ import {
     LocalWalkFiles,
     ReadPocDetail
 } from '../../../wailsjs/go/main/App'
-import { ExecutionPath } from '../../../wailsjs/go/main/File'
+import { UserHomeDir } from '../../../wailsjs/go/main/File'
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(async () => {
-    LoadPocList(from.value);
+    LoadPocList(window.AFGPathPoc);
 });
 
 var from = reactive({
-    value: '/config/afrog-pocs/',
+    value: window.AFGPathPoc,
     pocOptions: [{
         label: "通用POC",
-        value: '/config/afrog-pocs/'
+        value: window.AFGPathPoc
     }, {
         label: "主动目录探测",
-        value: '/config/active-detect'
+        value: window.ActivePathPoc
     }],
     keyword: '',
     expands: [],
@@ -41,7 +41,7 @@ const pd = reactive({
 })
 
 async function LoadPocList(filepath: string) {
-    let poclist = LocalWalkFiles(await ExecutionPath() + filepath)
+    let poclist = LocalWalkFiles(await UserHomeDir() + filepath)
     let index = 0
     table.result = []
     for (const fullpath of await poclist) {

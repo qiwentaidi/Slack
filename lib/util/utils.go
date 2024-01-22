@@ -3,6 +3,7 @@ package util
 import (
 	"io"
 	"net/url"
+	"os"
 	"slack-wails/core/webscan/proto"
 
 	"strings"
@@ -12,6 +13,11 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
+
+func HomeDir() string {
+	s, _ := os.UserHomeDir()
+	return s
+}
 
 // IsURL tests a string to determine if it is a well-structured url or not.
 func IsURL(input string) bool {

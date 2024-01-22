@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { GoFetch, InitDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
-import { GetFileContent, OpenFolder } from "../../../wailsjs/go/main/File";
+import { GetFileContent, OpenFolder, UserHomeDir } from "../../../wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import async from 'async';
 import { QuestionFilled, FolderOpened, Loading } from '@element-plus/icons-vue';
@@ -54,6 +54,10 @@ async function handleFileChange() {
         from.paths = Array.from(new Set(from.paths))
         from.tips = `loaded ${from.paths.length} dicts`;
     }
+}
+
+async function Open() {
+    OpenFolder(await UserHomeDir() + "/slack/dirsearch")
 }
 
 async function dirscan() {
@@ -267,14 +271,14 @@ const config = reactive({
                             <el-button-group>
                                 <el-tooltip class="box-item" effect="dark" placement="top">
                                     <template #content>
-                                        默认加载/config/dirsearch/dicc.txt<br />
+                                        默认加载配置文件中/dirsearch/dicc.txt<br />
                                         部分MacOS用户无法进行文件选择，可以通过修改默认字典实现字典更改
                                     </template>
                                     <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
                                     }}</el-button>
                                 </el-tooltip>
                                 <el-button type="primary" :icon="FolderOpened"
-                                    @click="OpenFolder('/config/dirsearch')"></el-button>
+                                    @click="Open"></el-button>
                             </el-button-group>
                         </div>
                     </el-form-item>

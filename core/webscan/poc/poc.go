@@ -130,7 +130,7 @@ type VulnerabilityDetails struct {
 	Solutions   string
 }
 
-var pocsWorkflower = util.ExecutionPath() + "/config/workflow.yaml"
+var pocsWorkflower = util.HomeDir() + "/slack/workflow.yaml"
 
 // 输入目标指纹，返回对应指纹的POC路径
 func FingerPocFilepath(fingerpirnts []string) ([]string, error) {

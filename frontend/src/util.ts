@@ -2,6 +2,7 @@ import * as XLSX from "xlsx";
 import { ElMessage } from "element-plus";
 import global from "./global";
 import { CheckTarget } from "../wailsjs/go/main/App";
+import { CheckFileStat, UserHomeDir, InitConfig } from "../wailsjs/go/main/File";
 // 单sheet导出
 export function ExportToXlsx(
   headers: string[],

@@ -296,11 +296,11 @@ func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
 // dirsearch
 
 func (a *App) InitDict(newExts []string) []string {
-	return util.LoadDirsearchDict(util.ExecutionPath()+"/config/dirsearch", "/dicc.txt", "%EXT%", newExts)
+	return util.LoadDirsearchDict(util.HomeDir()+"/slack/dirsearch", "/dicc.txt", "%EXT%", newExts)
 }
 
 func (a *App) LoadSubDict() []string {
-	return util.LoadSubdomainDict(util.ExecutionPath()+"/config/subdomain", "/dicc.txt")
+	return util.LoadSubdomainDict(util.HomeDir()+"/slack/subdomain", "/dicc.txt")
 }
 
 type PathData struct {
@@ -517,7 +517,7 @@ var RuleData map[string]map[string]string
 
 // 仅在执行时调用一次
 func (a *App) InitRule() {
-	yamlData, err := os.ReadFile(util.ExecutionPath() + "/config/webfinger.yaml")
+	yamlData, err := os.ReadFile(util.HomeDir() + "/slack/webfinger.yaml")
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
@@ -579,7 +579,7 @@ type WebResult struct {
 
 func (a *App) PocNums(severity, keyword string) int {
 	o := runner.NewOptions("", keyword, severity, "")
-	return len(o.CreatePocList(a.LocalWalkFiles(util.ExecutionPath() + "/config/afrog-pocs")))
+	return len(o.CreatePocList(a.LocalWalkFiles(util.HomeDir() + "/slack/afrog-pocs")))
 }
 
 func (a *App) GetFingerPoc(fingerprints []string) []string {

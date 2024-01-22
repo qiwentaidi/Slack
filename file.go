@@ -17,19 +17,20 @@ func NewFile() *File {
 	return &File{}
 }
 
-func (f *File) ExecutionPath() string {
-	return util.ExecutionPath()
+// 开始就要检测
+func (f *File) UserHomeDir() string {
+	return util.HomeDir()
 }
 
 func (f *File) OpenFolder(path string) string {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", f.ExecutionPath()+path)
+		cmd = exec.Command("cmd", "/c", "start", path)
 	case "darwin":
-		cmd = exec.Command("open", f.ExecutionPath()+path)
+		cmd = exec.Command("open", path)
 	default:
-		cmd = exec.Command("xdg-open", f.ExecutionPath()+path)
+		cmd = exec.Command("xdg-open", path)
 	}
 
 	cmd.Stdout = os.Stdout
@@ -56,11 +57,10 @@ func (f *File) GetFileContent(filename string) string {
 	return string(b)
 }
 
-func (f *File) UpdatePocFile(latestVersion string) string {
-	if err := update.UpdatePoc(latestVersion); err != nil {
+func (f *File) UpdatePocFile() string {
+	if err := update.UpdatePoc(); err != nil {
 		return err.Error()
 	}
-	os.RemoveAll(f.ExecutionPath() + "/config/afrog-pocs.zip")
 	return ""
 }
 
@@ -79,4 +79,8 @@ func (f *File) Restart() {
 	}
 	// 退出当前的进程
 	os.Exit(0)
+}
+
+func (f *File) InitConfig() bool {
+	return update.InitConfig()
 }
