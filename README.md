@@ -13,7 +13,7 @@
 
 # 使用须知
 
-Fyne版本已停止更新，但是仍然可以通过分支中获取到该模块代码，本人不太熟悉前端框架，对内存或者功能实现上并不好，欢迎各位师傅提供意见
+Fyne版本已停止更新，可以通过fyne分支中获取到该模块代码。
 
 # 运行
 
@@ -30,11 +30,11 @@ cd Slack
 
 wails dev // 调试
 
-wails build // 编译
+wails build // 编译，首次编译会执行出错，通过下面命令下载CSS高亮主题再次编译即可
 
-第一次编译会出现prism-base16-ateliersulphurpool.light.css文件丢失，将该https://github.com/PrismJS/prism-themes/blob/master/themes/prism-base16-ateliersulphurpool.light.css文件下载到frontend/node_modules/prismjs/themes目录下即可
+curl -o .\frontend\node_modules\prismjs\themes\prism-base16-ateliersulphurpool.light.css https://raw.githubusercontent.com/PrismJS/prism-themes/master/themes/prism-base16-ateliersulphurpool.light.css
 
-编译完的应用在 build/bin 目录下，需要移动到当前目录下运行
+编译完的应用在 build/bin 目录下
 ```
 
 # 渗透测试
@@ -117,7 +117,7 @@ wails build // 编译
 
 # 联系方式
 
-如果有问题可以加我联系方式（请备注来意 进群或者问题交流）
+如果有问题或者好的提议可以Issue提问或者加我联系方式（请备注来意 进群或者问题交流）
 
 ![image-20231006124944803](assets/image-20231006124944803.png)
 
