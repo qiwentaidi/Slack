@@ -445,9 +445,6 @@ function handleCurrentChange(val: any) {
             </template>
             <el-input class="log-textarea" v-model="form.log" type="textarea" rows="20" readonly></el-input>
         </el-tab-pane>
-        <el-tab-pane label="ceshisssssssssssssssssssssssssss" name="4">
-
-        </el-tab-pane>
     </el-tabs>
 </template>
 
@@ -460,24 +457,4 @@ function handleCurrentChange(val: any) {
 .bottom {
     margin-bottom: 20px;
 }
-
-.el-tabs__item {
-    position: relative;
-    display: inline-block;
-    max-width: 130px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    .el-tooltip {
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .el-icon-close {
-      position: absolute !important;
-      top: 13px !important;
-      right: 3px !important;
-    }
-  }
 </style>
