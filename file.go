@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"slack-wails/lib/update"
 	"slack-wails/lib/util"
@@ -20,6 +21,10 @@ func NewFile() *File {
 // 开始就要检测
 func (f *File) UserHomeDir() string {
 	return util.HomeDir()
+}
+
+func (f *File) PathBase(p string) string {
+	return filepath.Base(p)
 }
 
 func (f *File) OpenFolder(path string) string {

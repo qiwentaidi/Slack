@@ -9,6 +9,8 @@ export function InitConfig():Promise<boolean>;
 
 export function OpenFolder(arg1:string):Promise<string>;
 
+export function PathBase(arg1:string):Promise<string>;
+
 export function Restart():Promise<void>;
 
 export function UpdateClinetFile(arg1:string):Promise<string>;

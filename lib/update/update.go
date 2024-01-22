@@ -24,7 +24,7 @@ const (
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
 func UpdatePoc() error {
 	LocalConfig, _ := os.UserHomeDir()
-	if err := os.RemoveAll(LocalConfig + "/afrog-pocs"); err != nil {
+	if err := os.RemoveAll(LocalConfig + "/slack"); err != nil {
 		return err
 	}
 	time.Sleep(time.Second * 2)
@@ -112,5 +112,6 @@ func InitConfig() bool {
 	if _, err := uz.Extract(LocalConfig+"/"+fileName, LocalConfig); err != nil {
 		return false
 	}
+	os.Remove(LocalConfig + "/slack.zip")
 	return true
 }
