@@ -68,6 +68,8 @@ export function ReadPocDetail(arg1:string):Promise<poc.VulnerabilityDetails>;
 
 export function SelectFile():Promise<string>;
 
+export function Sock5UnauthScan(arg1:string,arg2:number,arg3:number):Promise<boolean>;
+
 export function Subdomain(arg1:string,arg2:string,arg3:string,arg4:number):Promise<Array<string>>;
 
 export function System(arg1:string,arg2:number):Promise<Array<any>>;

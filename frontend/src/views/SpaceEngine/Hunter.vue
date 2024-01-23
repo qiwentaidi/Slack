@@ -63,15 +63,11 @@ interface EntryTips {
 let timeout: ReturnType<typeof setTimeout>
 const entry = reactive({
     querySearchAsync: (queryString: string, cb: (arg: any) => void) => {
-        if (queryString.length >= 1) {
-            entry.getTips()
-            clearTimeout(timeout)
-            timeout = setTimeout(() => {
-                cb(form.loadAll)
-            }, 2000 * Math.random())
-        } else {
-            cb([])
-        }
+        entry.getTips()
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+            cb(form.loadAll)
+        }, 1000 * Math.random())
     },
     getTips: function () {
         HunterTips(form.query).then(result => {
@@ -346,7 +342,7 @@ async function SaveData(mode: number) {
         <el-form-item label="查询条件">
             <div class="head">
                 <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                    @select="entry.handleSelect" :trigger-on-focus="false" style="width: 100%;">
+                    @select="entry.handleSelect" :trigger-on-focus="false" debounce="1000" style="width: 100%;">
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />

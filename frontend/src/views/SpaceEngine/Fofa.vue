@@ -8,14 +8,13 @@ import {
     IconHash
 } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
-import { ElMessage, ElNotification } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import global from "../../global"
-const from = reactive({
+const form = reactive({
     query: '',
     fraud: false,
     cert: false,
     tips: '',
-    dialog: false,
     fofaImg: [
         'fofa1.png',
         'fofa2.png',
@@ -25,8 +24,10 @@ const from = reactive({
         'fofa6.png',
     ],
     loadAll: [] as LinkItem[],
+    syntaxdialog: false,
     icondialog: false,
     batchdialog: false,
+    socksdialog: false,
     hashURL: '',
     batchURL: '',
 })
@@ -41,22 +42,18 @@ interface LinkItem {
 let timeout: ReturnType<typeof setTimeout>
 const entry = reactive({
     querySearchAsync: (queryString: string, cb: (arg: any) => void) => {
-        if (queryString.length >= 1) {
-            entry.getTips()
-            clearTimeout(timeout)
-            timeout = setTimeout(() => {
-                cb(from.loadAll)
-            }, 2000 * Math.random())
-        } else {
-            cb([])
-        }
+        entry.getTips()
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+            cb(form.loadAll)
+        }, 1000 * Math.random())
     },
     getTips: function () {
-        FofaTips(from.query).then(result => {
-            from.loadAll = []
+        FofaTips(form.query).then(result => {
+            form.loadAll = []
             if (result.code == 0) {
                 for (const item of result.data) {
-                    from.loadAll.push({
+                    form.loadAll.push({
                         value: item.name,
                         link: item.company
                     })
@@ -65,7 +62,7 @@ const entry = reactive({
         })
     },
     handleSelect: (item: Record<string, any>) => {
-        from.query = `app="${item.value}"`
+        form.query = `app="${item.value}"`
     }
 })
 
@@ -80,7 +77,7 @@ const table = reactive({
         }
         const newTabName = `${++table.tabIndex}`
         loading.value = true
-        let result = await FofaSearch(query, "100", "1", global.space.fofaemail, global.space.fofakey, from.fraud, from.cert)
+        let result = await FofaSearch(query, "100", "1", global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
         if (!result.Status) {
             ElMessage({
                 showClose: true,
@@ -97,7 +94,7 @@ const table = reactive({
             pageSize: 100,
             currentPage: 1,
         });
-        from.tips = result.Message + " 共查询到数据:" + result.Total + "条"
+        form.tips = result.Message + " 共查询到数据:" + result.Total + "条"
         const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
         tab.content = result.Results;
         tab.total = result.Total
@@ -124,8 +121,8 @@ const table = reactive({
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         loading.value = true
-        FofaSearch(from.query, val.toString(), "1", global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
-            from.tips = result.Message + " 共查询到数据:" + result.Total + "条"
+        FofaSearch(form.query, val.toString(), "1", global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+            form.tips = result.Message + " 共查询到数据:" + result.Total + "条"
             if (result.Status == false) {
                 return
             }
@@ -138,8 +135,8 @@ const table = reactive({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         loading.value = true
-        FofaSearch(from.query, tab.pageSize.toString(), val.toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
-            from.tips = result.Message + " 共查询到数据:" + result.Total + "条"
+        FofaSearch(form.query, tab.pageSize.toString(), val.toString(), global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+            form.tips = result.Message + " 共查询到数据:" + result.Total + "条"
             if (result.Status == false) {
                 return
             }
@@ -152,7 +149,7 @@ const table = reactive({
 
 
 async function IconHashSearch() {
-    let hash = await IconHash(from.hashURL)
+    let hash = await IconHash(form.hashURL)
     if (hash == "") {
         ElMessage({
             showClose: true,
@@ -166,7 +163,7 @@ async function IconHashSearch() {
 }
 
 function BatchSearch() {
-    const lines = SplitTextArea(from.batchURL)
+    const lines = SplitTextArea(form.batchURL)
     var temp = ''
     for (const line of lines) {
         if (validateIP(line) === true) {
@@ -195,8 +192,8 @@ async function SaveData(mode: number) {
         } else {
             let temp = [{}]
             temp.pop()
-            ElNotification({
-                title: "提示",
+            ElMessage({
+                showClose: true,
                 message: "正在进行全数据导出，API每页最大查询限度10000，请稍后。",
                 type: "info",
             });
@@ -204,7 +201,7 @@ async function SaveData(mode: number) {
             for (const num of splitInt(tab.total, 10000)) {
                 index += 1
                 ElMessage("正在导出第" + index.toString() + "页");
-                await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaemail, global.space.fofakey, from.fraud, from.cert).then(result => {
+                await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
                     if (result.Status == false) {
                         return
                     }
@@ -232,27 +229,32 @@ function filterHandlerTitle(value: string, row: any): boolean {
     return row.Title === value;
 }
 
+const handleClose = (done: () => void) => {
+    ElMessageBox.confirm('关闭会影响结果显示，是否确认退出?')
+        .then(() => {
+            done()
+        })
+        .catch(() => {
+            // catch error
+        })
+}
+
 </script>
 
 <template>
-    <el-form :model="from">
-        <el-form-item>
-            <template #label>
-                <el-tooltip placement="right">
-                    <template #content>输入字符>=2会出现提示</template>
-                    <span>查询条件</span>
-                </el-tooltip>
-            </template>
+    <el-form :model="form">
+        <el-form-item label="查询条件">
             <div class="head">
-                <el-autocomplete v-model="from.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                    @select="entry.handleSelect" :trigger-on-focus="false" style="width: 100%;">
+                <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
+                    @select="entry.handleSelect" :trigger-on-focus="false" debounce="1000" style="width: 100%;">
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />
                             <template #dropdown>
                                 <el-dropdown-menu :hide-on-click="true">
-                                    <el-dropdown-item @click="from.icondialog = true">icon搜索</el-dropdown-item>
-                                    <el-dropdown-item @click="from.batchdialog = true">批量查询</el-dropdown-item>
+                                    <el-dropdown-item @click="form.icondialog = true">icon搜索</el-dropdown-item>
+                                    <el-dropdown-item @click="form.batchdialog = true">批量查询</el-dropdown-item>
+                                    <el-dropdown-item @click="form.socksdialog = true">代理池爬取</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
@@ -264,7 +266,7 @@ function filterHandlerTitle(value: string, row: any): boolean {
                         </el-space>
                     </template>
                 </el-autocomplete>
-                <el-button type="primary" :icon="Search" @click="table.addTab(from.query)"
+                <el-button type="primary" :icon="Search" @click="table.addTab(form.query)"
                     style="margin-left: 10px; margin-right: 10px;">查询</el-button>
                 <el-dropdown>
                     <el-button color="#A29EDE">
@@ -278,8 +280,9 @@ function filterHandlerTitle(value: string, row: any): boolean {
                     </template>
                 </el-dropdown>
             </div>
-            <el-dialog v-model="from.icondialog" title="输入目标favicon地址会自动计算并搜索相关资产" width="50%" center>
-                <el-input v-model="from.hashURL"></el-input>
+            <!-- icon搜索 -->
+            <el-dialog v-model="form.icondialog" title="输入目标favicon地址会自动计算并搜索相关资产" width="50%" center>
+                <el-input v-model="form.hashURL"></el-input>
                 <template #footer>
                     <span>
                         <el-button type="primary" @click="IconHashSearch">
@@ -288,8 +291,9 @@ function filterHandlerTitle(value: string, row: any): boolean {
                     </span>
                 </template>
             </el-dialog>
-            <el-dialog v-model="from.batchdialog" title="批量查询: 请输入IP/网段/域名(MAX 100)" width="40%" center>
-                <el-input v-model="from.batchURL" type="textarea" rows="10"></el-input>
+            <!-- 批量查询 -->
+            <el-dialog v-model="form.batchdialog" title="批量查询: 请输入IP/网段/域名(MAX 100)" width="40%" center>
+                <el-input v-model="form.batchURL" type="textarea" rows="10"></el-input>
                 <template #footer>
                     <span>
                         <el-button type="primary" @click="BatchSearch">
@@ -298,19 +302,34 @@ function filterHandlerTitle(value: string, row: any): boolean {
                     </span>
                 </template>
             </el-dialog>
+            <!-- 代理池爬取 -->
+            <el-dialog v-model="form.socksdialog" width="50%" :before-close="handleClose" :show-close="false">
+                <template #header="{ close }">
+                    <div class="my-header">
+                        <span style="font-size: large;">代理池爬取</span>
+                        <el-button-group class="ml-4">
+                            <el-button type="primary" :icon="Search">搜索</el-button>
+                            <el-button type="primary" :icon="Search">清理存活</el-button>
+                        </el-button-group>
+                        
+                    </div>
+                </template>
+                <el-input type="textarea" rows="10" resize="none" class="log-textarea"></el-input>
+            </el-dialog>
+
         </el-form-item>
     </el-form>
     <div class="nkmode">
         <div>
-            <el-checkbox size="large" v-model="from.fraud">排除干扰(专业版)</el-checkbox>
-            <el-checkbox size="large" v-model="from.cert">证书(个人版)</el-checkbox>
+            <el-checkbox size="large" v-model="form.fraud">排除干扰(专业版)</el-checkbox>
+            <el-checkbox size="large" v-model="form.cert">证书(个人版)</el-checkbox>
         </div>
-        <el-link @click="from.dialog = true"><el-icon>
+        <el-link @click="form.syntaxdialog = true"><el-icon>
                 <ChatLineRound />
             </el-icon>查询语法</el-link>
-        <el-dialog v-model="from.dialog" title="查询语法参考" width="80%" center>
+        <el-dialog v-model="form.syntaxdialog" title="查询语法参考" width="80%" center>
             <div class="demo-image__lazy">
-                <el-image v-for="url in from.fofaImg" :key="url" :src="url" lazy></el-image>
+                <el-image v-for="url in form.fofaImg" :key="url" :src="url" lazy></el-image>
             </div>
         </el-dialog>
     </div>
@@ -342,7 +361,7 @@ function filterHandlerTitle(value: string, row: any): boolean {
                 </el-table-column>
             </el-table>
             <div class="nkmode" style="margin-top: 10px;">
-                <span style="color: cornflowerblue;">{{ from.tips }}</span>
+                <span style="color: cornflowerblue;">{{ form.tips }}</span>
                 <el-pagination :page-size="100" :page-sizes="[100, 500, 1000]" layout="sizes, prev, pager, next"
                     @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange" :total="item.total" />
             </div>
@@ -352,6 +371,12 @@ function filterHandlerTitle(value: string, row: any): boolean {
 </template>
 
 <style scoped>
+.my-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
 .demo-image__lazy {
     height: 400px;
     overflow-y: auto;

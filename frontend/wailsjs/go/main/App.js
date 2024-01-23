@@ -126,6 +126,10 @@ export function SelectFile() {
   return window['go']['main']['App']['SelectFile']();
 }
 
+export function Sock5UnauthScan(arg1, arg2, arg3) {
+  return window['go']['main']['App']['Sock5UnauthScan'](arg1, arg2, arg3);
+}
+
 export function Subdomain(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Subdomain'](arg1, arg2, arg3, arg4);
 }

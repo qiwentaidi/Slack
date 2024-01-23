@@ -473,6 +473,22 @@ func (a *App) FofaSearch(query, pageSzie, pageNum, email, api string, fraud, cer
 	return space.FofaApiSearch(query, pageSzie, pageNum, email, api, fraud, cert)
 }
 
+func (a *App) Sock5UnauthScan(ip string, port, timeout int) bool {
+	client, err := clients.SelectProxy(&clients.Proxy{
+		Enabled:  true,
+		Mode:     "SOCK5",
+		Address:  ip,
+		Port:     port,
+		Username: "",
+		Password: "",
+	}, clients.DefaultClient())
+	if err != nil {
+		return false
+	}
+	_, _, err = clients.NewRequest("GET", "http://www.baidu.com/", nil, nil, timeout, client)
+	return err == nil
+}
+
 func (a *App) IconHash(target string) string {
 	_, b, err := clients.NewRequest("GET", target, nil, nil, 10, clients.DefaultClient())
 	if err != nil {
