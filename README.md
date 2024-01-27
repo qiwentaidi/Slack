@@ -30,9 +30,7 @@ cd Slack
 
 wails dev // 调试
 
-wails build // 编译，首次编译会执行出错，通过下面命令下载CSS高亮主题再次编译即可
-
-curl -o .\frontend\node_modules\prismjs\themes\prism-base16-ateliersulphurpool.light.css https://raw.githubusercontent.com/PrismJS/prism-themes/master/themes/prism-base16-ateliersulphurpool.light.css
+wails build // 编译
 
 编译完的应用在 build/bin 目录下
 ```
