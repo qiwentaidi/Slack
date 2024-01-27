@@ -19,6 +19,7 @@ export const routes: Array<RouteRecordRaw> = [
   { path: '/Asset/Ipdomain', component: () => import('../views/Asset/Ipdomain.vue') },
   { path: '/SpaceEngine/Fofa', component: Fofa },
   { path: '/SpaceEngine/Hunter', component: Hunter },
+  { path: '/SpaceEngine/AgentPool', component: () => import('../views/SpaceEngine/AgentPool.vue') },
   { path: '/Tools/Codec', component: () => import('../views/Tools/Codec.vue') },
   { path: '/Tools/System', component: () => import('../views/Tools/System.vue') },
   { path: '/Tools/Fscan', component: () => import('../views/Tools/Fscan.vue') },

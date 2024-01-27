@@ -57,7 +57,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <el-card class="box-card">
+  <el-card>
     <template #header>
       <div class="card-header">
         <span>时间戳转换</span>
@@ -107,7 +107,5 @@ onUnmounted(() => {
 </template>
 
 <style>
-.box-card {
-  width: 480px;
-}
+
 </style>

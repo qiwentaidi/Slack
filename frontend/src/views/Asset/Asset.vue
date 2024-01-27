@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import { QuestionFilled, Tickets } from '@element-plus/icons-vue';
+import { QuestionFilled, Tickets, DocumentChecked } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { AssetWechat, AssetSubcompany, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
 import global from "../../global"
@@ -196,11 +196,6 @@ function sleep(time: number) {
             <el-input v-model="from.company" type="textarea" :rows=from.rows @focus="from.rows = 4" @blur="from.rows = 1"
                 resize="none" style="width: 50%;"></el-input>
             <el-button type="primary" @click="Collect" style="margin-left: 10px;">开始查询</el-button>
-            <el-tooltip placement="left">
-                <template
-                    #content>需要控股企业查询的资产数量>=1<br />查询公司名或者域名在鹰图中的资产数量，一次查询消耗1积分<br />对应的鹰图查询语句为icp.name=""和domain.suffix=""</template>
-                <el-button color="#fbcdef" @click="huntersearch" style="margin-left: 10px;">查询鹰图资产数量</el-button>
-            </el-tooltip>
         </el-form-item>
         <el-form-item label="查询条件:">
             <div>
@@ -227,47 +222,73 @@ function sleep(time: number) {
                 </el-tooltip>
             </template>
             <el-input v-model="from.token" style="width: 50%;"></el-input>
-            <el-button color="#abcdef" @click="ExportAssetToXlsx(su, we, hu)" style="margin-left: 10px;">数据导出</el-button>
         </el-form-item>
     </el-form>
-    <el-tabs v-model="from.activeName" type="card">
-        <el-tab-pane label="控股企业" name="subcompany">
-            <el-table :data="su" height="60vh" border style="width: 100%">
-                <el-table-column type="index" width="60px" />
-                <el-table-column prop="company" label="公司名称" show-overflow-tooltip="true" />
-                <el-table-column prop="ratio" label="股权比例" show-overflow-tooltip="true" />
-                <el-table-column prop="sunums" label="投资数额" show-overflow-tooltip="true" />
-                <el-table-column prop="domains" label="域名" show-overflow-tooltip="true" />
-            </el-table>
-        </el-tab-pane>
+    <div style="position: relative;">
+        <el-tabs v-model="from.activeName" type="card">
+            <el-tab-pane label="控股企业" name="subcompany">
+                <el-table :data="su" height="60vh" border style="width: 100%">
+                    <el-table-column type="index" width="60px" />
+                    <el-table-column prop="company" label="公司名称" show-overflow-tooltip="true" />
+                    <el-table-column prop="ratio" label="股权比例" show-overflow-tooltip="true" />
+                    <el-table-column prop="sunums" label="投资数额" show-overflow-tooltip="true" />
+                    <el-table-column prop="domains" label="域名" show-overflow-tooltip="true" />
+                </el-table>
+            </el-tab-pane>
 
-        <el-tab-pane label="公众号" name="wechat">
-            <el-table :data="we" height="60vh" border style="width: 100%">
-                <el-table-column type="index" width="60px" />
-                <el-table-column prop="weName" label="公众号名称" show-overflow-tooltip="true" />
-                <el-table-column prop="weNums" label="微信号" show-overflow-tooltip="true" />
-                <el-table-column prop="logo" label="Logo" show-overflow-tooltip="true" />
-                <el-table-column prop="qrcode" label="二维码" show-overflow-tooltip="true" />
-                <el-table-column prop="introduction" label="简介" show-overflow-tooltip="true" />
-            </el-table>
-        </el-tab-pane>
-        <el-tab-pane label="鹰图资产数量" name="hunter">
-            <el-table :data="hu" height="60vh" border style="width: 100%">
-                <el-table-column type="index" width="60px" />
-                <el-table-column prop="name" label="公司域名或ICP名称" show-overflow-tooltip="true" />
-                <el-table-column prop="hunums" label="资产数量"
-                    :sort-method="(a: any, b: any) => { return a.hunums - b.hunums }" sortable
-                    show-overflow-tooltip="true" />
-            </el-table>
-        </el-tab-pane>
-        <el-tab-pane>
-            <template #label>
-                <el-icon>
-                    <Tickets />
-                </el-icon>
-                <span>运行日志</span>
-            </template>
-            <el-input class="log-textarea" v-model="from.log" type="textarea" rows="20" readonly></el-input>
-        </el-tab-pane>
-    </el-tabs>
+            <el-tab-pane label="公众号" name="wechat">
+                <el-table :data="we" height="60vh" border style="width: 100%">
+                    <el-table-column type="index" width="60px" />
+                    <el-table-column prop="weName" label="公众号名称" show-overflow-tooltip="true" />
+                    <el-table-column prop="weNums" label="微信号" show-overflow-tooltip="true" />
+                    <el-table-column prop="logo" label="Logo" show-overflow-tooltip="true" />
+                    <el-table-column prop="qrcode" label="二维码" show-overflow-tooltip="true" />
+                    <el-table-column prop="introduction" label="简介" show-overflow-tooltip="true" />
+                </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="鹰图资产数量" name="hunter">
+                <el-table :data="hu" height="60vh" border style="width: 100%">
+                    <el-table-column type="index" width="60px" />
+                    <el-table-column prop="name" label="公司域名或ICP名称" show-overflow-tooltip="true" />
+                    <el-table-column prop="hunums" label="资产数量"
+                        :sort-method="(a: any, b: any) => { return a.hunums - b.hunums }" sortable
+                        show-overflow-tooltip="true" />
+                </el-table>
+            </el-tab-pane>
+            <el-tab-pane>
+                <template #label>
+                    <el-icon>
+                        <Tickets />
+                    </el-icon>
+                    <span>运行日志</span>
+                </template>
+                <el-input class="log-textarea" v-model="from.log" type="textarea" rows="20" readonly></el-input>
+            </el-tab-pane>
+        </el-tabs>
+    </div>
+    <el-space class="custom_asset_eltabs_titlebar">
+        <el-button @click="huntersearch">
+            查询鹰图资产数量
+            <el-popover placement="left-start" :width="350" trigger="hover">
+                ①需要控股企业查询的<b>资产数量>=1</b><br /><br />
+                ②查询公司名或者域名在鹰图中的资产数量<br /><br />
+                ③一次查询消耗1积分对应的鹰图查询语句为<b>icp.name=""</b>和<b>domain.suffix=""</b>
+                <template #reference>
+                    <el-icon>
+                        <QuestionFilled size="24" />
+                    </el-icon>
+                </template>
+            </el-popover>
+        </el-button>
+        <el-button :icon="DocumentChecked" @click="ExportAssetToXlsx(su, we, hu)">数据导出</el-button>
+    </el-space>
 </template>
+
+<style>
+.custom_asset_eltabs_titlebar {
+    position: absolute;
+    right: 15px;
+    top: 176px;
+}
+</style>

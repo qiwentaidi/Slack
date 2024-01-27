@@ -1,15 +1,14 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown, Filter } from '@element-plus/icons-vue';
+import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown } from '@element-plus/icons-vue';
 import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt, TableTabs, ApiSyntaxCheck } from '../../util'
 import {
     FofaTips,
     FofaSearch,
     IconHash,
-    Sock5UnauthScan
 } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import global from "../../global"
 const form = reactive({
     query: '',
@@ -32,7 +31,9 @@ const form = reactive({
     hashURL: '',
     batchURL: '',
     socksLogger: '',
-    max: 100,
+    socksMax: 1,
+    socksNum: 1,
+    percentage: 0,
 })
 const loading = ref(false)
 
@@ -231,41 +232,6 @@ function filterHandlerProtocol(value: string, row: any): boolean {
 function filterHandlerTitle(value: string, row: any): boolean {
     return row.Title === value;
 }
-
-const handleClose = (done: () => void) => {
-    ElMessageBox.confirm('关闭会影响结果显示，是否确认退出?')
-        .then(() => {
-            done()
-        })
-        .catch(() => {
-            // catch error
-        })
-}
-
-async function NewSock5Crawl(step: number) {
-    let query = `protocol=="socks5" && "Version:5 Method:No Authentication(0x00)" && after="2021"  && country="CN" && region!="HK" && region!="TW"`
-    let sc = new Socks5Crawling()
-    let date = new Date()
-    if (step == 0) {
-        form.socksLogger += date.toLocaleString() + " 正在查询数据量中...\n"
-        form.max = await sc.SearchTotal(query)
-    }else if (step == 1) {
-        
-    }
-}
-
-class Socks5Crawling {
-    public async SearchTotal(query: string) {
-        let result = await FofaSearch(query, "1", "1", global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
-        form.socksLogger += result.Message + " 共查询到数据:" + result.Total + "条\n"
-        return Number(result.Total)
-    }
-
-    public TargetExtraction(total: number) {
-        
-    }
-}
-
 </script>
 
 <template>
@@ -281,7 +247,6 @@ class Socks5Crawling {
                                 <el-dropdown-menu :hide-on-click="true">
                                     <el-dropdown-item @click="form.icondialog = true">icon搜索</el-dropdown-item>
                                     <el-dropdown-item @click="form.batchdialog = true">批量查询</el-dropdown-item>
-                                    <el-dropdown-item @click="form.socksdialog = true">代理池爬取</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
@@ -321,25 +286,9 @@ class Socks5Crawling {
                     <el-button type="primary" @click="BatchSearch">搜索</el-button>
                 </template>
             </el-dialog>
-            <!-- 代理池爬取 -->
-            <el-dialog v-model="form.socksdialog" width="50%" :before-close="handleClose" :show-close="false">
-                <template #header>
-                    <div class="my-header">
-                        <span style="font-size: large;">代理池爬取</span>
-                        <div style="display: flex;">
-                            <el-button-group style="display: flex;">
-                                <el-button :icon="Search" @click="NewSock5Crawl(0)">查询数据量</el-button>
-                                <el-button :icon="Filter" @click="NewSock5Crawl(1)">测试存活</el-button>
-                            </el-button-group>
-                            <el-input-number v-model="form.max" :min="1" :max="form.max" controls-position="right" style="width: 100px;"></el-input-number>
-                        </div>
-                    </div>
-                </template>
-                <el-input v-model="form.socksLogger" type="textarea" rows="10" resize="none" class="log-textarea"></el-input>
-            </el-dialog>
         </el-form-item>
     </el-form>
-    <div class="nkmode">
+    <div class="my-header">
         <div>
             <el-checkbox size="large" v-model="form.fraud">排除干扰(专业版)</el-checkbox>
             <el-checkbox size="large" v-model="form.cert">证书(个人版)</el-checkbox>
@@ -380,7 +329,7 @@ class Socks5Crawling {
                     </template>
                 </el-table-column>
             </el-table>
-            <div class="nkmode" style="margin-top: 10px;">
+            <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
                 <el-pagination :page-size="100" :page-sizes="[100, 500, 1000]" layout="sizes, prev, pager, next"
                     @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange" :total="item.total" />
@@ -391,12 +340,6 @@ class Socks5Crawling {
 </template>
 
 <style scoped>
-.my-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-}
-
 .demo-image__lazy {
     height: 400px;
     overflow-y: auto;

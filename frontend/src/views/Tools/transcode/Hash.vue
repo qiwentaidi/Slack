@@ -65,7 +65,7 @@ const cmd5 = "https://www.cmd5.com"
 </script>
 
 <template>
-    <el-card class="box-card">
+    <el-card>
         <template #header>
             <div class="card-header">
                 <span>Hash</span>

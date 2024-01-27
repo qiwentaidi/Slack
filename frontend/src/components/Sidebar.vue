@@ -216,6 +216,7 @@ const download = {
       <el-menu-item index="/SpaceEngine/Fofa" @click="$router.push('/SpaceEngine/Fofa')">FOFA</el-menu-item>
       <el-menu-item index="/SpaceEngine/Hunter" @click="$router.push('/SpaceEngine/Hunter')">鹰图</el-menu-item>
       <el-menu-item index="3-3">360夸克(没做)</el-menu-item>
+      <el-menu-item index="/SpaceEngine/AgentPool" @click="$router.push('/SpaceEngine/AgentPool')">代理池</el-menu-item>
     </el-sub-menu>
 
     <el-sub-menu index="4">

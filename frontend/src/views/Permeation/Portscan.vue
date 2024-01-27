@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
 import { ExportToXlsx, CopyURLs, SplitTextArea } from '../../util'
 import async from 'async';
@@ -12,7 +12,6 @@ import {
     PortBrute,
 } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
-import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(() => {
     table.pageContent = []

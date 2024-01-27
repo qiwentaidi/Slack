@@ -73,12 +73,13 @@ html {
   width: 100%;
 }
 
-.nkmode {
-  display: flex;
-  justify-content: space-between;
- }
-
 .log-textarea .el-textarea__inner {
   background-color: black;
   color: rgb(52, 228, 52);
+}
+
+.my-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }

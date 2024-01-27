@@ -398,7 +398,7 @@ async function SaveData(mode: number) {
             </div>
         </el-form-item>
     </el-form>
-    <div class="nkmode">
+    <div class="my-header">
         <el-space>
             <el-select v-model="form.defaultTime" style="width: 120px;">
                 <el-option v-for="item in form.optionsTime" :key="item.value" :label="item.label" :value="item.value"
@@ -469,7 +469,7 @@ async function SaveData(mode: number) {
                 <el-table-column prop="Position" label="地理位置" width="120" show-overflow-tooltip="true" />
                 <el-table-column prop="UpdateTime" label="更新时间" width="150" show-overflow-tooltip="true" />
             </el-table>
-            <div class="nkmode" style="margin-top: 10px;">
+            <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
                 <el-pagination :page-size="10" :page-sizes="[10, 50, 100]" layout="sizes, prev, pager, next"
                     @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange" :total="item.total" />

@@ -2,7 +2,6 @@ import * as XLSX from "xlsx";
 import { ElMessage } from "element-plus";
 import global from "./global";
 import { CheckTarget } from "../wailsjs/go/main/App";
-import { CheckFileStat, UserHomeDir, InitConfig } from "../wailsjs/go/main/File";
 // 单sheet导出
 export function ExportToXlsx(
   headers: string[],
@@ -38,6 +37,24 @@ export function ExportAssetToXlsx(r1: {}[], r2: {}[], r3: {}[]) {
   XLSX.utils.book_append_sheet(wb, ws3, "鹰图资产数量");
   // 将工作簿写入到一个新的Excel文件中
   XLSX.writeFile(wb, "asset.xlsx");
+}
+
+export function ExportTXT(filename: string, result: string[]) {
+  //文件内容
+  var text = "";
+  for (const item of result) {
+    text += item + "\n"
+  }
+  var pom = document.createElement('a');
+  pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  pom.setAttribute('download', filename);
+  if (document.createEvent) {
+    var event = document.createEvent('MouseEvents');
+    event.initEvent('click', true, true);
+    pom.dispatchEvent(event);
+  } else {
+    pom.click();
+  }
 }
 
 // 复制端口扫描中的所有HTTP链接
@@ -136,7 +153,7 @@ export async function formatURL(host: string): Promise<string[]> {
   for (var item of temp) {
     if (item.slice(-1) !== "/") {
       urls.push(item += "/")
-    }else {
+    } else {
       urls.push(item)
     }
   }
