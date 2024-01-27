@@ -29,26 +29,35 @@ const aes = reactive({
         switch (aes.currentMode) {
             case "ECB":
                 options.mode = CryptoJS.mode.ECB
+                break
             case "CBC":
                 options.mode = CryptoJS.mode.CBC
+                break
             case "CTR":
                 options.mode = CryptoJS.mode.CTR
+                break
             case "OFB":
                 options.mode = CryptoJS.mode.OFB
+                break
             case "CFB":
                 options.mode = CryptoJS.mode.CFB
         }
         switch (aes.currentPadding) {
             case "PKCS7":
                 options.padding = CryptoJS.pad.Pkcs7
+                break
             case "Ansix923":
                 options.padding = CryptoJS.pad.AnsiX923
+                break
             case "ISO10126":
                 options.padding = CryptoJS.pad.Iso10126
+                break
             case "ZeroPadding":
                 options.padding = CryptoJS.pad.ZeroPadding
+                break
             case "ISO97971":
                 options.padding = CryptoJS.pad.Iso97971
+                break
             case "None":
                 options.padding = CryptoJS.pad.NoPadding
         }
@@ -67,6 +76,7 @@ const aes = reactive({
             }
         }else {
             if (mode == 0) {
+                alert(key)
                 let encryptedData = CryptoJS.DES.encrypt(aes.encryptedMessage, key, options);
                 aes.decryptedMessage = encryptedData.toString();
             } else {

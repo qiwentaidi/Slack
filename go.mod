@@ -1,6 +1,8 @@
 module slack-wails
 
-go 1.20
+go 1.21
+
+toolchain go1.21.6
 
 require (
 	github.com/Mzack9999/go-http-digest-auth-client v0.6.1-0.20220414142836-eb8883508809

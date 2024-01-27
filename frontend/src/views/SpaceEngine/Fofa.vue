@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown } from '@element-plus/icons-vue';
+import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown, Filter } from '@element-plus/icons-vue';
 import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt, TableTabs, ApiSyntaxCheck } from '../../util'
 import {
     FofaTips,
     FofaSearch,
-    IconHash
+    IconHash,
+    Sock5UnauthScan
 } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -30,6 +31,8 @@ const form = reactive({
     socksdialog: false,
     hashURL: '',
     batchURL: '',
+    socksLogger: '',
+    max: 100,
 })
 const loading = ref(false)
 
@@ -239,6 +242,30 @@ const handleClose = (done: () => void) => {
         })
 }
 
+async function NewSock5Crawl(step: number) {
+    let query = `protocol=="socks5" && "Version:5 Method:No Authentication(0x00)" && after="2021"  && country="CN" && region!="HK" && region!="TW"`
+    let sc = new Socks5Crawling()
+    let date = new Date()
+    if (step == 0) {
+        form.socksLogger += date.toLocaleString() + " 正在查询数据量中...\n"
+        form.max = await sc.SearchTotal(query)
+    }else if (step == 1) {
+        
+    }
+}
+
+class Socks5Crawling {
+    public async SearchTotal(query: string) {
+        let result = await FofaSearch(query, "1", "1", global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        form.socksLogger += result.Message + " 共查询到数据:" + result.Total + "条\n"
+        return Number(result.Total)
+    }
+
+    public TargetExtraction(total: number) {
+        
+    }
+}
+
 </script>
 
 <template>
@@ -284,39 +311,32 @@ const handleClose = (done: () => void) => {
             <el-dialog v-model="form.icondialog" title="输入目标favicon地址会自动计算并搜索相关资产" width="50%" center>
                 <el-input v-model="form.hashURL"></el-input>
                 <template #footer>
-                    <span>
-                        <el-button type="primary" @click="IconHashSearch">
-                            搜索
-                        </el-button>
-                    </span>
+                    <el-button type="primary" @click="IconHashSearch">搜索</el-button>
                 </template>
             </el-dialog>
             <!-- 批量查询 -->
             <el-dialog v-model="form.batchdialog" title="批量查询: 请输入IP/网段/域名(MAX 100)" width="40%" center>
                 <el-input v-model="form.batchURL" type="textarea" rows="10"></el-input>
                 <template #footer>
-                    <span>
-                        <el-button type="primary" @click="BatchSearch">
-                            搜索
-                        </el-button>
-                    </span>
+                    <el-button type="primary" @click="BatchSearch">搜索</el-button>
                 </template>
             </el-dialog>
             <!-- 代理池爬取 -->
             <el-dialog v-model="form.socksdialog" width="50%" :before-close="handleClose" :show-close="false">
-                <template #header="{ close }">
+                <template #header>
                     <div class="my-header">
                         <span style="font-size: large;">代理池爬取</span>
-                        <el-button-group class="ml-4">
-                            <el-button type="primary" :icon="Search">搜索</el-button>
-                            <el-button type="primary" :icon="Search">清理存活</el-button>
-                        </el-button-group>
-                        
+                        <div style="display: flex;">
+                            <el-button-group style="display: flex;">
+                                <el-button :icon="Search" @click="NewSock5Crawl(0)">查询数据量</el-button>
+                                <el-button :icon="Filter" @click="NewSock5Crawl(1)">测试存活</el-button>
+                            </el-button-group>
+                            <el-input-number v-model="form.max" :min="1" :max="form.max" controls-position="right" style="width: 100px;"></el-input-number>
+                        </div>
                     </div>
                 </template>
-                <el-input type="textarea" rows="10" resize="none" class="log-textarea"></el-input>
+                <el-input v-model="form.socksLogger" type="textarea" rows="10" resize="none" class="log-textarea"></el-input>
             </el-dialog>
-
         </el-form-item>
     </el-form>
     <div class="nkmode">

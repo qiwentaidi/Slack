@@ -198,7 +198,6 @@ const download = {
       <el-menu-item index="/Permeation/Portscan" @click="$router.push('/Permeation/Portscan')">主机扫描</el-menu-item>
       <!-- <el-menu-item index="1-3">漏洞利用</el-menu-item> -->
       <el-menu-item index="/Permeation/Dirsearch" @click="$router.push('/Permeation/Dirsearch')">目录扫描</el-menu-item>
-      <el-menu-item index="/Permeation/Postman" @click="$router.push('/Permeation/Postman')">Postman(未完成)</el-menu-item>
       <el-menu-item index="/Permeation/Pocdetail" @click="$router.push('/Permeation/Pocdetail')">漏洞详情</el-menu-item>
     </el-sub-menu>
     <el-sub-menu index="2">
