@@ -13,6 +13,7 @@ require (
 	github.com/google/cel-go v0.18.2
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/lib/pq v1.10.9
+	github.com/mattn/go-sqlite3 v1.14.20
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/miekg/dns v1.1.57
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed

@@ -6,10 +6,6 @@ export function CheckFileStat(arg1) {
   return window['go']['main']['File']['CheckFileStat'](arg1);
 }
 
-export function CreateTable() {
-  return window['go']['main']['File']['CreateTable']();
-}
-
 export function GetFileContent(arg1) {
   return window['go']['main']['File']['GetFileContent'](arg1);
 }

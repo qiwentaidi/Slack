@@ -1,9 +1,6 @@
 package main
 
 import (
-	// "database/sql"
-
-	"database/sql"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,20 +9,13 @@ import (
 	"slack-wails/lib/util"
 
 	"github.com/wailsapp/wails/v2/pkg/logger"
-	// _ "github.com/glebarez/go-sqlite"
 )
 
 // File struct 文件操作
-type File struct {
-	DB *sql.DB
-}
+type File struct{}
 
 func NewFile() *File {
-	dp := util.HomeDir() + "/slack/config.db"
-	db, _ := sql.Open("sqlite", dp)
-	return &File{
-		DB: db,
-	}
+	return &File{}
 }
 
 // 开始就要检测
@@ -99,12 +89,3 @@ func (f *File) Restart() {
 func (f *File) InitConfig() bool {
 	return update.InitConfig()
 }
-
-// func (f *File) CreateTable() bool {
-// 	sql := `CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );`
-// 	if _, err := f.DB.Exec(sql); err != nil {
-// 		fmt.Printf("err: %v\n", err)
-// 		return false
-// 	}
-// 	return true
-// }

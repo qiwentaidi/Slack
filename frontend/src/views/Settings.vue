@@ -4,10 +4,10 @@
       <el-main>
         <el-collapse model-value="1">
           <el-collapse-item name="1"><template #title>
-              <h2>扫描设置</h2>
+              <h2>DNS Server</h2>
             </template>
             <el-form :model="global.scan" label-width="110px" label-position="top">
-              <el-form-item label="DNS Server:">
+              <el-form-item>
                 <el-row :gutter="20">
                   <el-col :span="12">
                     <el-input v-model="global.scan.dns1" placeholder="DNS1"><template #append>:53</template></el-input>

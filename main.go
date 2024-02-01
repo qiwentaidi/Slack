@@ -16,6 +16,7 @@ func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 	file := NewFile()
+	db := NewDatabase()
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "slack-wails",
@@ -32,13 +33,11 @@ func main() {
 		Bind: []interface{}{
 			app,
 			file,
+			db,
 		},
 		Windows: &windows.Options{
 			WebviewBrowserPath: "", // 可以让windows使用默认浏览器打开链接
 		},
-		// Mac: &mac.Options{
-		// 	TitleBar: mac.TitleBarHiddenInset(),
-		// },
 	})
 	if err != nil {
 		println("Error:", err.Error())

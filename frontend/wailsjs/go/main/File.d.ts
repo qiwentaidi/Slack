@@ -3,8 +3,6 @@
 
 export function CheckFileStat(arg1:string):Promise<boolean>;
 
-export function CreateTable():Promise<boolean>;
-
 export function GetFileContent(arg1:string):Promise<string>;
 
 export function InitConfig():Promise<boolean>;

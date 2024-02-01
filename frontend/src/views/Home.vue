@@ -14,7 +14,7 @@ onMounted(() => {
       <a @click="BrowserOpenURL('https://github.com/qiwentaidi/Slack')" title="前往Github仓库">
         <img src="/slack.svg" class="logo" />
       </a>
-      <h2>Slack 信安人员集成化工具平台</h2>
+      <h2>{{$t('aside.slogan')}}</h2>
     </el-space>
   </el-container>
 </template>

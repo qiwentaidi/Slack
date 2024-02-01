@@ -76,7 +76,6 @@ const aes = reactive({
             }
         }else {
             if (mode == 0) {
-                alert(key)
                 let encryptedData = CryptoJS.DES.encrypt(aes.encryptedMessage, key, options);
                 aes.decryptedMessage = encryptedData.toString();
             } else {

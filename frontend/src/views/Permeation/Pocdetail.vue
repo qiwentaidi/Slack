@@ -148,8 +148,7 @@ function handleCurrentChange(val: any) {
                     </el-descriptions>
                 </template>
             </el-table-column>
-            <el-table-column prop="names" label="名称">
-            </el-table-column>
+            <el-table-column prop="names" label="名称" />
         </el-table>
         <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
             :current-page="table.currentPage" :page-sizes="[10, 20, 30]" :page-size="table.pageSize"
