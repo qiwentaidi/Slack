@@ -39,15 +39,15 @@ wails build // 编译
 
 ## 网站扫描
 
-![image-20231212193659420](assets/image-20231212193659420.png)
+![image-20240204164748870](/Users/qwtd/Code/Slack/assets/image-20240204164748870.png)
 
 ## 主机扫描
 
-![image-20231226143037447](assets/image-20231226143037447.png)
+![image-20240204165900175](/Users/qwtd/Code/Slack/assets/image-20240204165900175.png)
 
 ## 目录扫描
 
-![image-20231226143213368](assets/image-20231226143213368.png)
+![image-20240204165832344](/Users/qwtd/Code/Slack/assets/image-20240204165832344.png)
 
 # 资产收集
 

@@ -155,7 +155,7 @@ const update = ({
 
 const version = reactive({
   LocalPoc: "",
-  LocalClient: "1.4.6",
+  LocalClient: "1.4.7",
   RemotePoc: "",
   RemoteClient: "",
   PocUpdateContent: "",
