@@ -12,10 +12,14 @@ import (
 )
 
 // File struct 文件操作
-type File struct{}
+type File struct {
+	configPath string
+}
 
 func NewFile() *File {
-	return &File{}
+	return &File{
+		configPath: util.HomeDir() + "/slack/",
+	}
 }
 
 // 开始就要检测
@@ -63,7 +67,7 @@ func (f *File) GetFileContent(filename string) string {
 }
 
 func (f *File) UpdatePocFile() string {
-	if err := update.UpdatePoc(); err != nil {
+	if err := update.UpdatePoc(f.configPath); err != nil {
 		return err.Error()
 	}
 	return ""
@@ -87,5 +91,5 @@ func (f *File) Restart() {
 }
 
 func (f *File) InitConfig() bool {
-	return update.InitConfig()
+	return update.InitConfig(f.configPath)
 }

@@ -76,8 +76,8 @@ func LookupCNAMEWithServer(domain, domainServer string, timeout int) ([]string, 
 	return CNAMES, nil
 }
 
-func ReadCDNFile() map[string][]string {
-	yamlData, err := os.ReadFile(util.HomeDir() + "/slack/cdn.yaml")
+func ReadCDNFile(cdnFile string) map[string][]string {
+	yamlData, err := os.ReadFile(util.HomeDir() + cdnFile)
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}

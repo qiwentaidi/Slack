@@ -26,8 +26,8 @@ var (
 )
 
 // 初始化IP纯真库
-func InitQqwry() {
-	fs, err := os.OpenFile(util.HomeDir()+"/slack/qqwry.dat", os.O_RDONLY, 0400)
+func InitQqwry(qqwryFile string) {
+	fs, err := os.OpenFile(util.HomeDir()+qqwryFile, os.O_RDONLY, 0777)
 	if err != nil {
 		logger.NewDefaultLogger().Debug("qqwry open err:" + err.Error())
 		return
@@ -41,8 +41,10 @@ func InitQqwry() {
 }
 
 // 采用递归判断暴破层级
-func BurstSubdomain(subdomains string, servers []string, cdndata map[string][]string, timeout int) *SubdomainResult {
-	onec.Do(InitQqwry)
+func BurstSubdomain(subdomains string, servers []string, cdndata map[string][]string, timeout int, qqwryFile string) *SubdomainResult {
+	onec.Do(func() {
+		InitQqwry(qqwryFile)
+	})
 	var sr SubdomainResult
 	addrs, cnames, err := Resolution(subdomains, servers, timeout)
 	if err == nil {

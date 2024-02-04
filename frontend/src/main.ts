@@ -13,7 +13,9 @@ declare global {
   var ActivePathPoc: string
   var AFGPathPoc: string
   var PocVersion: string
-  var LocalPocVersion: string
+  var LocalPocVersionFile: string
+  var ConfigPath: string
+  var HomePath: string
 }
 
 

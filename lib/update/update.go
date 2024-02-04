@@ -22,13 +22,12 @@ const (
 )
 
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
-func UpdatePoc() error {
-	LocalConfig, _ := os.UserHomeDir()
-	if err := os.RemoveAll(LocalConfig + "/slack"); err != nil {
+func UpdatePoc(configPath string) error {
+	if err := os.RemoveAll(configPath + "config"); err != nil {
 		return err
 	}
 	time.Sleep(time.Second * 2)
-	if !InitConfig() {
+	if !InitConfig(configPath) {
 		return errors.New("update poc failed")
 	}
 	return nil
@@ -96,22 +95,22 @@ func doUpdate(url string) error {
 	return err
 }
 
-func InitConfig() bool {
+func InitConfig(configPath string) bool {
+	os.Mkdir(util.HomeDir()+"/slack", 0777)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
-	LocalConfig, _ := os.UserHomeDir()
 	_, b, err := clients.NewRequest("GET", latestConfigVersion, nil, nil, 10, http.DefaultClient)
 	if err != nil {
 		return false
 	}
-	configFile := lastestPocUrl + "v" + string(b) + "/slack.zip"
-	fileName, err := download(configFile, LocalConfig+"/")
+	configFileZip := lastestPocUrl + "v" + string(b) + "/config.zip"
+	fileName, err := download(configFileZip, configPath)
 	if err != nil {
 		return false
 	}
 	uz := util.NewUnzip()
-	if _, err := uz.Extract(LocalConfig+"/"+fileName, LocalConfig); err != nil {
+	if _, err := uz.Extract(configPath+fileName, configPath); err != nil {
 		return false
 	}
-	os.Remove(LocalConfig + "/slack.zip")
+	os.Remove(configPath + "/config.zip")
 	return true
 }

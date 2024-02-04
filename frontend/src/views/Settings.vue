@@ -20,46 +20,46 @@
             </el-form>
           </el-collapse-item>
           <el-collapse-item name="2"><template #title>
-              <h2>代理配置(仅适用网站扫描)</h2>
+              <h2>{{ $t('setting.proxy') }}</h2>
             </template>
             <el-form :model="global.proxy" label-width="80px">
-              <el-form-item label="开启代理:">
+              <el-form-item :label="$t('setting.enable')">
                 <el-switch v-model="global.proxy.enabled" />
               </el-form-item>
               <div v-if="global.proxy.enabled">
-                <el-form-item label="代理模式:">
+                <el-form-item :label="$t('setting.mode')">
                   <el-select v-model="global.proxy.mode">
                     <el-option label="HTTP" value="HTTP" />
                     <el-option label="SOCK5" value="SOCK5" />
                   </el-select>
                 </el-form-item>
-                <el-form-item label="代理地址:">
+                <el-form-item :label="$t('setting.address')">
                   <el-input v-model="global.proxy.address" clearable></el-input>
                 </el-form-item>
-                <el-form-item label="代理端口:">
+                <el-form-item :label="$t('setting.port')">
                   <el-input-number controls-position="right" v-model="global.proxy.port" :min="1" :max="65535" />
                 </el-form-item>
-                <el-form-item label="用户名:">
+                <el-form-item :label="$t('setting.username')">
                   <el-input v-model="global.proxy.username" clearable></el-input>
                 </el-form-item>
-                <el-form-item label="密码:">
+                <el-form-item :label="$t('setting.password')">
                   <el-input v-model="global.proxy.password" clearable></el-input>
                 </el-form-item>
               </div>
             </el-form>
           </el-collapse-item>
           <el-collapse-item name="3"><template #title>
-              <h2>资产测绘</h2>
+              <h2>{{ $t('aside.space_engine') }}</h2>
             </template>
-            <el-form :model="global.space" label-width="80px">
-              <el-form-item label="FOFA:" style="margin-top: 10px;">
-                <el-input v-model="global.space.fofaemail" placeholder="邮箱" clearable></el-input>
+            <el-form :model="global.space" label-width="100px">
+              <el-form-item label="FOFA" style="margin-top: 10px;">
+                <el-input v-model="global.space.fofaemail" placeholder="Email" clearable></el-input>
                 <el-input v-model="global.space.fofakey" placeholder="key" clearable style="margin-top: 5px;"></el-input>
               </el-form-item>
-              <el-form-item label="鹰图: ">
+              <el-form-item :label="$t('aside.hunter')">
                 <el-input v-model="global.space.hunterkey" placeholder="key" clearable></el-input>
               </el-form-item>
-              <el-form-item label="夸克: ">
+              <el-form-item :label="$t('aside.360quake')">
                 <el-input v-model="global.space.quakekey" placeholder="key" clearable></el-input>
               </el-form-item>
             </el-form>

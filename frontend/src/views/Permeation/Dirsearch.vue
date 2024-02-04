@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { GoFetch, InitDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
-import { GetFileContent, OpenFolder, UserHomeDir } from "../../../wailsjs/go/main/File";
+import { GetFileContent, OpenFolder } from "../../../wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import async from 'async';
 import { QuestionFilled, FolderOpened, Loading } from '@element-plus/icons-vue';
@@ -57,7 +57,7 @@ async function handleFileChange() {
 }
 
 async function Open() {
-    OpenFolder(await UserHomeDir() + "/slack/dirsearch")
+    OpenFolder(window.HomePath + window.ConfigPath + "/dirsearch")
 }
 
 async function dirscan() {
@@ -96,7 +96,7 @@ class Dirsearch {
             from.url += "/"
         }
         if (from.paths.length === 0) {
-            await InitDict(from.exts.split(',')).then(result => {
+            await InitDict(window.ConfigPath + "/dirsearch", from.exts.split(',')).then(result => {
                 from.paths = result;
                 from.tips = `loaded default (${from.paths.length} dicts)`;
             });

@@ -5,7 +5,7 @@ import {
     LocalWalkFiles,
     ReadPocDetail
 } from '../../../wailsjs/go/main/App'
-import { UserHomeDir, PathBase } from '../../../wailsjs/go/main/File'
+import { PathBase } from '../../../wailsjs/go/main/File'
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(async () => {
@@ -41,7 +41,7 @@ const pd = reactive({
 })
 
 async function LoadPocList(filepath: string) {
-    let poclist = LocalWalkFiles(await UserHomeDir() + filepath)
+    let poclist = LocalWalkFiles(window.HomePath + filepath)
     let index = 0
     table.result = []
     for (const fullpath of await poclist) {

@@ -74,8 +74,8 @@ export function IconHash(arg1) {
   return window['go']['main']['App']['IconHash'](arg1);
 }
 
-export function InitDict(arg1) {
-  return window['go']['main']['App']['InitDict'](arg1);
+export function InitDict(arg1, arg2) {
+  return window['go']['main']['App']['InitDict'](arg1, arg2);
 }
 
 export function InitIPResolved() {
@@ -90,8 +90,8 @@ export function InitTycHeader(arg1) {
   return window['go']['main']['App']['InitTycHeader'](arg1);
 }
 
-export function LoadSubDict() {
-  return window['go']['main']['App']['LoadSubDict']();
+export function LoadSubDict(arg1) {
+  return window['go']['main']['App']['LoadSubDict'](arg1);
 }
 
 export function LocalWalkFiles(arg1) {

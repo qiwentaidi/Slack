@@ -31,5 +31,14 @@ export default {
         'about': '关于',
         'suggestions': '工具目前存在内存GC问题，如有改善意见或其他问题可以通过vx或者issue联系，联系方式可点击首页LOGO处前往项目地址获取',
         'technology': '技术栈',
+    },
+    setting: {
+        'username': '用户名',
+        'password': '密码',
+        'enable': '启用',
+        'mode': '模式',
+        'address': '地址',
+        'port': '端口',
+        'proxy': '代理配置(仅适用网站扫描)'
     }
 }

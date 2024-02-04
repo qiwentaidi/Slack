@@ -11,7 +11,7 @@ export default {
         'asset_from_company': 'Asset From CompanyName',
         'subdomain_brute_force': 'Subdomain Brute Force',
         'search_domain_info': 'Search Domain Info',
-        'space_engine': 'Space Engine',
+        'space_engine': 'Space Search Engine',
         'hunter': 'Hunter',
         '360quake': '360 Quake',
         'agent_pool': 'Agent Pool',
@@ -31,5 +31,14 @@ export default {
         'about': 'About',
         'suggestions': 'If you have any improvement suggestions or other questions, you can contact us through wechat or issue. The contact information can be obtained by clicking on the logo on the homepage to go to the project address',
         'technology': 'technology',
+    },
+    setting: {
+        'username': 'Username',
+        'password': 'Password',
+        'enable': 'Enabled',
+        'mode': 'Mode',
+        'address': 'Address',
+        'port': 'Port',
+        'proxy': 'Proxy (only applicable for webscan)',
     }
 }

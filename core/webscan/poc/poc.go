@@ -130,13 +130,11 @@ type VulnerabilityDetails struct {
 	Solutions   string
 }
 
-var pocsWorkflower = util.HomeDir() + "/slack/workflow.yaml"
-
 // 输入目标指纹，返回对应指纹的POC路径
-func FingerPocFilepath(fingerpirnts []string) ([]string, error) {
+func FingerPocFilepath(fingerpirnts []string, workflowFile string) ([]string, error) {
 	files := []string{}
 	data := make(map[string][]string)
-	yamlData, err := os.ReadFile(pocsWorkflower)
+	yamlData, err := os.ReadFile(util.HomeDir() + workflowFile)
 	if err != nil {
 		return files, err
 	}

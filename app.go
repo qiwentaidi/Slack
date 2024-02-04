@@ -34,12 +34,23 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx           context.Context
+	workflowFile  string
+	webfingerFile string
+	afrogPathPoc  string
+	cdnFile       string
+	qqwryFile     string
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{
+		workflowFile:  "/slack/config/workflow.yaml",
+		webfingerFile: "/slack/config/webfinger.yaml",
+		afrogPathPoc:  "/slack/config/afrog-pocs",
+		cdnFile:       "/slack/config/cdn.yaml",
+		qqwryFile:     "/slack/config/qqwry.dat",
+	}
 }
 
 // startup is called when the app starts. The context is saved
@@ -196,7 +207,7 @@ outerLoop:
 	for _, domain := range util.RemoveDuplicates[string](util.RegDomain.FindAllString(input, -1)) {
 		ips, cnames, err := core.Resolution(domain, []string{dns1 + ":53", dns2 + ":53"}, 5)
 		if err == nil {
-			for name, cdns := range core.ReadCDNFile() {
+			for name, cdns := range core.ReadCDNFile(a.cdnFile) {
 				for _, cdn := range cdns {
 					for _, cname := range cnames {
 						if strings.Contains(cname, cdn) { // 识别到cdn
@@ -222,14 +233,19 @@ func (a *App) InitIPResolved() {
 	core.IPResolved = make(map[string]int)
 }
 
+// subodomain
+func (a *App) LoadSubDict(configPath string) []string {
+	return util.LoadSubdomainDict(util.HomeDir()+configPath, "/dicc.txt")
+}
+
 var onec sync.Once
 
 func (a *App) Subdomain(subdomain, dns1, dns2 string, timeout int) []string {
 	var data map[string][]string
 	onec.Do(func() {
-		data = core.ReadCDNFile()
+		data = core.ReadCDNFile(a.cdnFile)
 	})
-	sr := core.BurstSubdomain(subdomain, []string{dns1 + ":53", dns2 + "53"}, data, timeout)
+	sr := core.BurstSubdomain(subdomain, []string{dns1 + ":53", dns2 + "53"}, data, timeout, a.qqwryFile)
 	return []string{sr.Subdomain, strings.Join(sr.Cname, " | "), strings.Join(sr.Ips, " | "), sr.Notes}
 }
 
@@ -295,12 +311,8 @@ func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
 
 // dirsearch
 
-func (a *App) InitDict(newExts []string) []string {
-	return util.LoadDirsearchDict(util.HomeDir()+"/slack/dirsearch", "/dicc.txt", "%EXT%", newExts)
-}
-
-func (a *App) LoadSubDict() []string {
-	return util.LoadSubdomainDict(util.HomeDir()+"/slack/subdomain", "/dicc.txt")
+func (a *App) InitDict(configPath string, newExts []string) []string {
+	return util.LoadDirsearchDict(util.HomeDir()+configPath, "/dicc.txt", "%EXT%", newExts)
 }
 
 type PathData struct {
@@ -536,7 +548,7 @@ var RuleData map[string]map[string]string
 
 // 仅在执行时调用一次
 func (a *App) InitRule() {
-	yamlData, err := os.ReadFile(util.HomeDir() + "/slack/webfinger.yaml")
+	yamlData, err := os.ReadFile(util.HomeDir() + a.webfingerFile)
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
@@ -598,11 +610,11 @@ type WebResult struct {
 
 func (a *App) PocNums(severity, keyword string) int {
 	o := runner.NewOptions("", keyword, severity, "")
-	return len(o.CreatePocList(a.LocalWalkFiles(util.HomeDir() + "/slack/afrog-pocs")))
+	return len(o.CreatePocList(a.LocalWalkFiles(util.HomeDir() + a.afrogPathPoc)))
 }
 
 func (a *App) GetFingerPoc(fingerprints []string) []string {
-	s, err := poc.FingerPocFilepath(fingerprints)
+	s, err := poc.FingerPocFilepath(fingerprints, a.workflowFile)
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
