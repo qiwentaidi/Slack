@@ -77,10 +77,10 @@ class Scanner {
         if (config.changeIp === false) {
             form.portsList = await PortParse(form.portlist)
             form.ips = await IPParse(form.target)
-            if (form.portlist.length == 0 || form.ips.length == 0) {
+            if (form.portlist.length == 0 || form.ips == null) {
                 ElMessage({
                     showClose: true,
-                    message: '目标或端口为空',
+                    message: '可用目标或端口为空',
                     type: 'warning',
                 })
                 return
