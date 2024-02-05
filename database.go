@@ -35,18 +35,12 @@ func NewDatabase() *Database {
 }
 
 func (d *Database) Check() bool {
-	if d.DB == nil {
-		return false
-	}
-	return true
+	return d.DB == nil
 }
 
 func (d *Database) CreateTable() bool {
 	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS agent_pool ( hots TEXT );`)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func (d *Database) InsertAgentPool(host string) bool {
@@ -66,10 +60,7 @@ func (d *Database) InsertAgentPool(host string) bool {
 	}
 
 	err = tx.Commit()
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func (d *Database) SearchAgentPool() (hosts []string) {
@@ -104,8 +95,5 @@ func (d *Database) DeleteAgentPoolField(host string) bool {
 func (d *Database) DeleteAllField(tableName string) bool {
 	deleteStmt := fmt.Sprintf("DELETE FROM %v;", tableName)
 	_, err := d.DB.Exec(deleteStmt, tableName)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }

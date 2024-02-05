@@ -3,7 +3,6 @@ import Home from '../views/Home.vue'
 import Webscan from '../views/Permeation/Webscan.vue'
 import Portscan from '../views/Permeation/Portscan.vue'
 import Dirsearch from '../views/Permeation/Dirsearch.vue'
-import Asset from '../views/Asset/Asset.vue'
 import Fofa from '../views/SpaceEngine/Fofa.vue'
 import Hunter from '../views/SpaceEngine/Hunter.vue'
 import Setting from '../views/Settings.vue'
@@ -14,7 +13,7 @@ export const routes: Array<RouteRecordRaw> = [
   { path: '/Permeation/Portscan', component: Portscan },
   { path: '/Permeation/Dirsearch', component: Dirsearch },
   { path: '/Permeation/Pocdetail', component: () => import('../views/Permeation/Pocdetail.vue') },
-  { path: '/Asset/Asset', component: Asset },
+  { path: '/Asset/Asset', component: () => import('../views/Asset/Asset.vue') },
   { path: '/Asset/Subdomain', component: () => import('../views/Asset/Subdomain.vue') },
   { path: '/Asset/Ipdomain', component: () => import('../views/Asset/Ipdomain.vue') },
   { path: '/SpaceEngine/Fofa', component: Fofa },

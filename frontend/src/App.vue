@@ -21,7 +21,6 @@ import Sidebar from './components/Sidebar.vue'
 
 <style>
 .el-aside {
-  width: 70px;
-  height: 100vh;
+  width: 64px;
 }
 </style>

@@ -2,7 +2,7 @@ export default {
     aside: {
         'slogan': "Slack 信安人员集成化工具平台",
         'home': '首页',
-        'penetration_test': '渗透测试',
+        'penetration': '渗透测试',
         'webscan': '网站扫描',
         'portscan': '端口扫描',
         'dirscan': '目录扫描',

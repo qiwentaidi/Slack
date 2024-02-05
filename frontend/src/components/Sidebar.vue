@@ -10,14 +10,9 @@ import { useI18n } from "vue-i18n";
 
 const { locale } = useI18n()
 
-const changeEN = () => {
-  localStorage.setItem('language', 'en')
-  locale.value = 'en'
-
-};
-const changeZH = () => {
-  localStorage.setItem('language', 'zh')
-  locale.value = 'zh'
+const changeLanguage = (area: string) => {
+  localStorage.setItem('language', area)
+  locale.value = area
 };
 
 onMounted(async () => {
@@ -27,7 +22,7 @@ onMounted(async () => {
   window.ActivePathPoc = window.ConfigPath + "/active-detect"
   window.AFGPathPoc = window.ConfigPath + "/afrog-pocs"
   window.PocVersion = window.ConfigPath + "/afrog-pocs/version"
-  window.LocalPocVersionFile = window.HomePath  + window.PocVersion
+  window.LocalPocVersionFile = window.HomePath + window.PocVersion
   let cfg = await CheckFileStat(window.HomePath + "/slack")
   if (!cfg) {
     ElNotification({
@@ -178,8 +173,13 @@ const download = {
 </script>
 
 <template>
-  <div>
-    <el-menu :collapse="true" route style="height: 100vh;">
+  <el-menu class="my-menu"
+    :collapse="true"
+    route
+    active-text-color="#fff"
+    background-color="#F2F3F5"
+    text-color="#000"
+>
       <el-menu-item index="/" @click="$router.push('/')">
         <el-icon>
           <HomeFilled />
@@ -187,71 +187,79 @@ const download = {
         <template #title><span>{{ $t('aside.home') }}</span></template>
       </el-menu-item>
       <el-sub-menu index="1">
-        <template #title><span>{{ $t('aside.penetration_test') }}</span><el-icon>
+        <template #title>
+          <el-icon>
             <Smoking />
-          </el-icon></template>
-        <el-menu-item index="/Permeation/Webscan"
-          @click="$router.push('/Permeation/Webscan')">{{ $t('aside.webscan') }}</el-menu-item>
-        <el-menu-item index="/Permeation/Portscan"
-          @click="$router.push('/Permeation/Portscan')">{{ $t('aside.portscan') }}</el-menu-item>
+          </el-icon>
+          <span>{{ $t('aside.penetration') }}</span>
+        </template>
+        <el-menu-item index="/Permeation/Webscan" @click="$router.push('/Permeation/Webscan')">{{ $t('aside.webscan')
+        }}</el-menu-item>
+        <el-menu-item index="/Permeation/Portscan" @click="$router.push('/Permeation/Portscan')">{{ $t('aside.portscan')
+        }}</el-menu-item>
         <!-- <el-menu-item index="1-3">漏洞利用</el-menu-item> -->
-        <el-menu-item index="/Permeation/Dirsearch"
-          @click="$router.push('/Permeation/Dirsearch')">{{ $t('aside.dirscan') }}</el-menu-item>
-        <el-menu-item index="/Permeation/Pocdetail"
-          @click="$router.push('/Permeation/Pocdetail')">{{ $t('aside.pocdetail') }}</el-menu-item>
+        <el-menu-item index="/Permeation/Dirsearch" @click="$router.push('/Permeation/Dirsearch')">{{ $t('aside.dirscan')
+        }}</el-menu-item>
+        <el-menu-item index="/Permeation/Pocdetail" @click="$router.push('/Permeation/Pocdetail')">{{
+          $t('aside.pocdetail') }}</el-menu-item>
       </el-sub-menu>
       <el-sub-menu index="2">
-        <template #title><span>{{ $t('aside.asset_collection') }}</span><el-icon>
+        <template #title>
+          <el-icon>
             <OfficeBuilding />
-          </el-icon></template>
-        <el-menu-item index="/Asset/Asset"
-          @click="$router.push('/Asset/Asset')">{{ $t('aside.asset_from_company') }}</el-menu-item>
-        <el-menu-item index="/Asset/Subdomain"
-          @click="$router.push('/Asset/Subdomain')">{{ $t('aside.subdomain_brute_force') }}</el-menu-item>
-        <el-menu-item index="/Asset/Ipdomain"
-          @click="$router.push('/Asset/Ipdomain')">{{ $t('aside.search_domain_info') }}</el-menu-item>
+          </el-icon>
+          <span>{{ $t('aside.asset_collection') }}</span>
+        </template>
+        <el-menu-item index="/Asset/Asset" @click="$router.push('/Asset/Asset')">{{ $t('aside.asset_from_company')
+        }}</el-menu-item>
+        <el-menu-item index="/Asset/Subdomain" @click="$router.push('/Asset/Subdomain')">{{
+          $t('aside.subdomain_brute_force') }}</el-menu-item>
+        <el-menu-item index="/Asset/Ipdomain" @click="$router.push('/Asset/Ipdomain')">{{ $t('aside.search_domain_info')
+        }}</el-menu-item>
       </el-sub-menu>
 
       <el-sub-menu index="3">
-        <template #title><span>{{ $t('aside.space_engine') }}</span><el-icon>
+        <template #title>
+          <el-icon>
             <Monitor />
-          </el-icon></template>
+          </el-icon>
+          <span>{{ $t('aside.space_engine') }}</span>
+        </template>
         <el-menu-item index="/SpaceEngine/Fofa" @click="$router.push('/SpaceEngine/Fofa')">FOFA</el-menu-item>
-        <el-menu-item index="/SpaceEngine/Hunter"
-          @click="$router.push('/SpaceEngine/Hunter')">{{ $t('aside.hunter') }}</el-menu-item>
+        <el-menu-item index="/SpaceEngine/Hunter" @click="$router.push('/SpaceEngine/Hunter')">{{ $t('aside.hunter')
+        }}</el-menu-item>
         <!-- <el-menu-item index="3-3">{{ $t('aside.360quake') }}</el-menu-item> -->
-        <el-menu-item index="/SpaceEngine/AgentPool"
-          @click="$router.push('/SpaceEngine/AgentPool')">{{ $t('aside.agent_pool') }}</el-menu-item>
+        <el-menu-item index="/SpaceEngine/AgentPool" @click="$router.push('/SpaceEngine/AgentPool')">{{
+          $t('aside.agent_pool') }}</el-menu-item>
       </el-sub-menu>
-
-      <el-sub-menu index="4">
-        <template #title><span>{{ $t('aside.tools') }}</span><el-icon>
+      <el-sub-menu index="4" style="max-height: 56px;">
+        <template #title>
+          <el-icon>
             <Tools />
-          </el-icon></template>
-        <el-menu-item index="/Tools/Codec" @click="$router.push('/Tools/Codec')">{{ $t('aside.en_and_de') }}</el-menu-item>
-        <el-menu-item index="/Tools/System"
-          @click="$router.push('/Tools/System')">{{ $t('aside.systeminfo') }}</el-menu-item>
+          </el-icon>
+          <span>{{ $t('aside.tools') }}</span>
+        </template>
+        <el-menu-item index="/Tools/Codec" @click="$router.push('/Tools/Codec')">{{ $t('aside.en_and_de')
+        }}</el-menu-item>
+        <el-menu-item index="/Tools/System" @click="$router.push('/Tools/System')">{{ $t('aside.systeminfo')
+        }}</el-menu-item>
         <el-menu-item index="/Tools/Fscan" @click="$router.push('/Tools/Fscan')">{{ $t('aside.fscan') }}</el-menu-item>
-        <el-menu-item index="/Tools/Reverse"
-          @click="$router.push('/Tools/Reverse')">{{ $t('aside.memorandum') }}</el-menu-item>
-        <el-menu-item index="/Tools/Thinkdict"
-          @click="$router.push('/Tools/Thinkdict')">{{ $t('aside.associate_dictionary_generator') }}</el-menu-item>
-        <el-menu-item index="/Tools/Wxappid"
-          @click="$router.push('/Tools/Wxappid')">{{ $t('aside.wechat_appid') }}</el-menu-item>
+        <el-menu-item index="/Tools/Reverse" @click="$router.push('/Tools/Reverse')">{{ $t('aside.memorandum')
+        }}</el-menu-item>
+        <el-menu-item index="/Tools/Thinkdict" @click="$router.push('/Tools/Thinkdict')">{{
+          $t('aside.associate_dictionary_generator') }}</el-menu-item>
+        <el-menu-item index="/Tools/Wxappid" @click="$router.push('/Tools/Wxappid')">{{ $t('aside.wechat_appid')
+        }}</el-menu-item>
       </el-sub-menu>
-    </el-menu>
-  </div>
-
-  <div class="bottom-align">
-    <el-menu :collapse="true" route>
-      <el-menu-item index="5" @click="version.updateDialogVisible = true">
+      <el-menu-item index="/update" @click="version.updateDialogVisible = true">
         <el-icon>
           <Refresh />
         </el-icon>
         <template #title><span>{{ $t('aside.update') }}</span></template>
         <el-badge is-dot v-if="version.ClientStatus == true || version.PocStatus == true" />
       </el-menu-item>
-      <el-menu-item index="/Settings" @click="$router.push('/Settings')">
+
+      <el-menu-item index="/settings" @click="$router.push('/Settings')">
         <el-icon>
           <setting />
         </el-icon>
@@ -266,13 +274,15 @@ const download = {
         </template>
         <el-sub-menu index="language">
           <template #title><span>{{ $t('aside.language') }}</span></template>
-          <el-menu-item index="cn" @click="changeZH">{{ $t('aside.zh') }}</el-menu-item>
-          <el-menu-item index="en" @click="changeEN">{{ $t('aside.en') }}</el-menu-item>
+          <el-menu-item index="cn" @click="changeLanguage('zh')">{{ $t('aside.zh') }}</el-menu-item>
+          <el-menu-item index="en" @click="changeLanguage('en')">{{ $t('aside.en') }}</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="about" @click="version.helpDialogVisible = true">{{ $t('aside.about') }}</el-menu-item>
       </el-sub-menu>
-    </el-menu>
-  </div>
+  </el-menu>
+
+
+
 
   <!-- 更新界面 -->
   <el-dialog v-model="version.updateDialogVisible" title="更新通知" width="50%">
@@ -309,17 +319,20 @@ const download = {
 </template>
 
 <style>
-.setting {
-  flex-grow: 1;
-}
-
 .el-badge {
   margin-bottom: 70px;
 }
-
-.bottom-align {
-  width: 100%;
-  position: absolute;
-  bottom: 0;
+.my-menu {
+ display: grid;
+ grid-template-rows: auto auto auto auto 1fr;
+ height: 100vh;
+}
+/* 暗色css */
+.el-sub-menu.is-active .el-sub-menu__title i{
+  color: #3875F6;
+}
+.el-menu-item.is-active {
+  background-color: #3875F6;
+  border-radius: 12px;
 }
 </style>

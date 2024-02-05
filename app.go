@@ -498,10 +498,7 @@ func (a *App) Sock5UnauthScan(ip string, port, timeout int) bool {
 		return false
 	}
 	_, _, err = clients.NewRequest("GET", "http://www.baidu.com/", nil, nil, timeout, client)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func (a *App) IconHash(target string) string {

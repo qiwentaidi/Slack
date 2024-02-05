@@ -2,7 +2,7 @@ export default {
     aside: {
         'slogan': "Slack integrated tool platform",
         'home': 'Home',
-        'penetration_test': 'Penetration Test',
+        'penetration': 'Penetration Test',
         'webscan': 'Web Scan',
         'portscan': 'Port Scan',
         'dirscan': 'Directory Scan',
