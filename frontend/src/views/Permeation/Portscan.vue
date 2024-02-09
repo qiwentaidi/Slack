@@ -3,14 +3,8 @@ import { reactive, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
 import { ExportToXlsx, CopyURLs, SplitTextArea } from '../../util'
 import async from 'async';
-import { QuestionFilled, ArrowDown, Promotion, ChromeFilled, Tickets } from '@element-plus/icons-vue';
-import {
-    PortParse,
-    IPParse,
-    PortCheck,
-    HostAlive,
-    PortBrute,
-} from '../../../wailsjs/go/main/App'
+import { QuestionFilled, DocumentChecked, DocumentCopy, ChromeFilled, Tickets } from '@element-plus/icons-vue';
+import { PortParse, IPParse, PortCheck, HostAlive, PortBrute } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 // 初始化时调用
 onMounted(() => {
@@ -74,69 +68,44 @@ class Scanner {
     }
     public async PortScanner() {
         this.init()
-        if (config.changeIp === false) {
-            form.portsList = await PortParse(form.portlist)
-            form.ips = await IPParse(form.target)
-            if (form.portlist.length == 0 || form.ips == null) {
-                ElMessage({
-                    showClose: true,
-                    message: '可用目标或端口为空',
-                    type: 'warning',
-                })
-                return
+        var count = 0
+        const lines = SplitTextArea(form.target)
+        let specialTarget = [] as string[]
+        let conventionTarget = [] as string[]
+        // 处理目标 192.168.1.1:6379 与其他形式
+        for (const line of lines) {
+            if (line.includes(":")) {
+                specialTarget.push(line)
+            } else {
+                conventionTarget.push(line)
             }
-            if (config.alive === true) {
-                HostAlive((form.ips as any), config.alive).then(
-                    result => {
-                        form.ips = result
-                    }
-                )
-            }
-            const count = (form.ips.length * form.portsList.length)
-            async.eachSeries(form.ips, (ip: string, callback: () => void) => {
-                form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
-                async.eachLimit(form.portsList, config.thread, (port: number, callback: () => void) => {
-                    if (ctrl.exit === true) {
-                        return
-                    }
-                    PortCheck(ip as string, port, config.timeout).then(result => {
-                        if (result.Status) {
-                            form.log += `[+] Portscan ${ip}:${port} is open!\n`
-                            table.result.push({
-                                host: ip,
-                                port: port,
-                                fingerprint: result.Server,
-                                link: result.Link,
-                                title: result.HttpTitle,
-                            })
-                            table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
-                        }
-                        form.id++;
-                        form.percentage = Number(((form.id / count) * 100).toFixed(2));
-                        callback();
-                    });
-                }, (err: any) => {
-                    if (config.burte === true) {
-                        this.burteport()
-                    }
-                    if (err) {
-                        ElMessage.error(err)
-                    } else {
-                        ctrl.exit = false
-                        form.log += "[END] 端口扫描任务已完成\n"
-                    }
-                    callback();
-                });
-            });
+        }
+        form.portsList = await PortParse(form.portlist)
+        form.ips = await IPParse(conventionTarget)
+        if (form.ips == null) {
+            count = specialTarget.length
         } else {
-            const lines = SplitTextArea(form.target)
-            for (const line of lines) {
-                if (ctrl.exit === true) {
-                    return
+            count = form.ips.length * form.portsList.length + specialTarget.length
+        }
+        if (count == 0) {
+            ElMessage({
+                showClose: true,
+                message: '可用目标或端口为空',
+                type: 'warning',
+            })
+            return
+        }
+        if (config.alive === true) {
+            HostAlive((form.ips as any), config.alive).then(
+                result => {
+                    form.ips = result
                 }
-                form.id++;
-                form.percentage = Number(((form.id / lines.length) * 100).toFixed(2));
-                let temp = line.split(":")
+            )
+        }
+        if (specialTarget.length != 0) {
+            form.log += "[INFO] 存在 192.168.1.1:6379 此类特殊目标优先执行扫描\n"
+            async.eachSeries(specialTarget, (ipport: string, callback: () => void) => {
+                let temp = ipport.split(":")
                 PortCheck(temp[0], Number(temp[1]), config.timeout).then((result) => {
                     if (result.Status) {
                         table.result.push({
@@ -148,9 +117,53 @@ class Scanner {
                         })
                         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
                     }
-                });
-            }
+                    form.id++;
+                    form.percentage = Number(((form.id / count) * 100).toFixed(2));
+                    callback();
+                }, (err: any) => {
+                    if (err) {
+                        ElMessage.error(err)
+                    } else {
+                        form.log += "[INFO] 特殊目标扫描已完成\n"
+                    }
+                })
+            })
         }
+        async.eachSeries(form.ips, (ip: string, callback: () => void) => {
+            form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
+            async.eachLimit(form.portsList, config.thread, (port: number, callback: () => void) => {
+                if (ctrl.exit === true) {
+                    return
+                }
+                PortCheck(ip as string, port, config.timeout).then(result => {
+                    if (result.Status) {
+                        form.log += `[+] Portscan ${ip}:${port} is open!\n`
+                        table.result.push({
+                            host: ip,
+                            port: port,
+                            fingerprint: result.Server,
+                            link: result.Link,
+                            title: result.HttpTitle,
+                        })
+                        table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+                    }
+                    form.id++;
+                    form.percentage = Number(((form.id / count) * 100).toFixed(2));
+                    callback();
+                });
+            }, (err: any) => {
+                if (config.burte === true) {
+                    this.burteport()
+                }
+                if (err) {
+                    ElMessage.error(err)
+                } else {
+                    ctrl.exit = false
+                    form.log += "[END] 端口扫描任务已完成\n"
+                }
+                callback();
+            });
+        });
     }
     public burteport() {
         table.burteResult = []
@@ -185,7 +198,6 @@ class Scanner {
                 form.log += "[END] All target port brute have been completed\n"
             }
         });
-
     }
 }
 
@@ -277,183 +289,162 @@ function handleSizeChange(val: any) {
     table.currentPage = 1;
     table.pageContent = table.result.slice(0, val)
 }
+
 function handleCurrentChange(val: any) {
     table.currentPage = val;
     table.pageContent = table.result.slice((val - 1) * table.pageSize, (val - 1) * table.pageSize + table.pageSize)
 }
-
 </script>
 
 
 <template>
-    <el-tabs v-model="form.activeName" type="card">
-        <el-tab-pane label="端口扫描控制台" name="1">
-            <el-form :model="form" label-width="20%">
-                <el-form-item>
-                    <template #label>IP:
-                        <el-tooltip placement="right-end">
-                            <template #content>
-                                目标支持换行分割,IP支持如下格式:<br />
-                                192.168.1.1<br />
-                                192.168.1.1/8<br />
-                                192.168.1.1/16<br />
-                                192.168.1.1/24<br />
-                                192.168.1.1,192.168.1.2<br />
-                                192.168.1.1-192.168.255.255<br />
-                                192.168.1.1-255<br />
-                                <br />
-                                排除IP可以在可支持输入的IP格式前加!:<br />
-                                !192.168.1.6/28<br />
-                                ...<br />
-                                <br />
-                                如果端口遗漏多请在配置中调高端口超时时间
-                            </template>
-                            <el-icon>
-                                <QuestionFilled size="24" />
-                            </el-icon>
-                        </el-tooltip>
+    <el-form :model="form" label-width="35%" style="width: 75%;">
+        <el-form-item>
+            <template #label>IP:
+                <el-tooltip placement="right-end">
+                    <template #content>
+                        目标支持换行分割,IP支持如下格式:<br />
+                        192.168.1.1<br />
+                        192.168.1.1/8<br />
+                        192.168.1.1/16<br />
+                        192.168.1.1/24<br />
+                        192.168.1.1,192.168.1.2<br />
+                        192.168.1.1-192.168.255.255<br />
+                        192.168.1.1-255<br /><br />
+                        如果IP输入模式为192.168.0.1:6379此类形式，则只扫描该端口<br />
+                        <br />
+                        排除IP可以在可支持输入的IP格式前加!:<br />
+                        !192.168.1.6/28<br />
+                        ...<br />
+                        <br />
+                        如果端口遗漏多请在配置中调高端口超时时间
                     </template>
-                    <el-input type="textarea" rows="3" v-model="form.target" style="width: 70%;" />
-                    <div>
-                        <el-button type="primary" class="left" @click="NewScanner">开始扫描</el-button>
-                        <el-button type="primary" class="left" @click="ctrl.stop">停止</el-button>
-                    </div>
-                </el-form-item>
-                <el-form-item label="预设端口:">
-                    <el-radio-group v-model="radio" @change="updatePorts">
-                        <el-radio label=1>数据库端口</el-radio>
-                        <el-radio label=2>企业端口</el-radio>
-                        <el-radio label=3>高危端口</el-radio>
-                        <el-radio label=4>全端口</el-radio>
-                        <el-radio label=5>自定义</el-radio>
-                    </el-radio-group>
-                </el-form-item>
-                <el-form-item label="端口列表:">
-                    <el-input type="textarea" rows="3" v-model="form.portlist" style="width: 70%;" />
-                </el-form-item>
-                <el-form-item>
-                    <template #label>
-                        功能:
-                    </template>
-                    <el-space>
-                        <el-button color="#DEACBD" @click="CopyURLs">复制全部URL目标</el-button>
-                        <el-button color="#7FEDF9"
-                            @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">导出Excle</el-button>
-
-                        <el-dropdown>
-                            <el-button :icon="Promotion" color="#A29EDE">
-                                联动<el-icon class="el-icon--right"><arrow-down /></el-icon>
-                            </el-button>
-                            <template #dropdown>
-                                <el-dropdown-menu>
-                                    <el-dropdown-item>发送到网站扫描(没做)</el-dropdown-item>
-                                </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
-                        <el-tag type="success">端口超时: {{ config.timeout }}s</el-tag>
-                        <el-link type="primary" @click="ctrl.drawer = true">更多参数</el-link>
-                        <el-checkbox v-model="config.changeIp" label="更改IP输入模式" />
-                        <el-tooltip placement="right">
-                            <template #content>更改IP输入模式为192.168.0.1:6379此类形式<br />仅支持换行分割，开启后端口列表无效且扫描为单线程模式</template>
-                            <el-icon>
-                                <QuestionFilled size="24" />
-                            </el-icon>
-                        </el-tooltip>
-                    </el-space>
-                    <el-drawer v-model="ctrl.drawer" title="设置高级参数">
-                        <el-form label-width="100px">
-                            <el-form-item label="存活探测:" class="bottom">
-                                <el-checkbox v-model="config.alive" label="开启" />
-                                <el-switch v-model="config.ping" active-text="ICMP" inactive-text="Ping" v-if="config.alive"
-                                    style="margin-left: 10px;" />
-                            </el-form-item>
-                            <el-form-item label="线程数量:" class="bottom">
-                                <el-input-number controls-position="right" v-model="config.thread" :min="1" :max="30000" />
-                            </el-form-item>
-                            <el-form-item label="超时时长(s):" class="bottom">
-                                <el-input-number controls-position="right" v-model="config.timeout" :min="1" />
-                            </el-form-item>
-                            <el-form-item label="口令猜测:" class="bottom">
-                                <el-switch v-model="config.burte" />
-                            </el-form-item>
-                            <div v-if="config.burte === true">
-                                <el-descriptions title="用户名字典管理" :column="2" border>
-                                    <el-descriptions-item v-for="item in ctrl.dict" :label="item.name" :span="2">
-                                        <el-button @click="ctrl.innerDrawer = true; ctrl.currentDic = item.dic.join('\n')">
-                                            口令字典
-                                        </el-button>
-                                    </el-descriptions-item>
-                                </el-descriptions>
-                                <el-descriptions title="密码管理(全协议通用)" :column="2" border>
-                                    <el-descriptions-item label="Password" :span="2">
-                                        <el-button
-                                            @click="ctrl.innerDrawer = true; ctrl.currentDic = ctrl.passwords.join('\n')">
-                                            口令字典
-                                        </el-button>
-                                    </el-descriptions-item>
-                                </el-descriptions>
-                            </div>
-                            <el-drawer v-model="ctrl.innerDrawer" title="账号管理" :append-to-body="true">
-                                <el-input type="textarea" rows="20" v-model="ctrl.currentDic"></el-input>
-                                <!-- <el-button type="primary" style="margin-top: 10px;">保存</el-button> -->
-                            </el-drawer>
-                        </el-form>
-                    </el-drawer>
-                </el-form-item>
-            </el-form>
-            <el-table :data="table.pageContent" border style="height: 45vh;">
-                <el-table-column type="selection" width="55px" />
-                <el-table-column prop="host" label="主机" />
-                <el-table-column prop="port" label="端口" width="100px" />
-                <el-table-column prop="fingerprint" label="指纹" />
-                <el-table-column prop="link" label="目标" />
-                <el-table-column prop="title" label="网站标题" />
-                <el-table-column fixed="right" label="操作" width="55px">
-                    <template #default="scope">
-                        <el-tooltip content="打开链接" placement="left">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)">
-                            </el-button>
-                        </el-tooltip>
-                    </template>
-                </el-table-column>
-            </el-table>
-            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                :current-page="table.currentPage" :page-sizes="[10, 20, 50]" :page-size="table.pageSize"
-                layout="total, sizes, prev, pager, next" :total="table.result.length"
-                style="margin-top: 5px; float: right;">
-            </el-pagination>
-            <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage"
-                style="margin-top: 11px; width: 50%;" />
-        </el-tab-pane>
-        <el-tab-pane label="脆弱账号" name="2">
-            <el-table :data="table.burteResult" border style="width: 100%; height: 80vh;">
-                <el-table-column type="index" width="60px" label="#" />
-                <el-table-column prop="host" label="主机" />
-                <el-table-column prop="protocol" label="协议" />
-                <el-table-column prop="username" label="用户名" />
-                <el-table-column prop="password" label="密码" />
-                <el-table-column prop="time" label="扫描时间" />
-            </el-table>
-        </el-tab-pane>
-        <el-tab-pane name="3">
-            <template #label>
-                <el-icon>
-                    <Tickets />
-                </el-icon>
-                <span>运行日志</span>
+                    <el-icon>
+                        <QuestionFilled size="24" />
+                    </el-icon>
+                </el-tooltip>
             </template>
-            <el-input class="log-textarea" v-model="form.log" type="textarea" rows="20" readonly></el-input>
-        </el-tab-pane>
-    </el-tabs>
+            <el-input type="textarea" rows="3" v-model="form.target" resize="none" />
+
+        </el-form-item>
+        <el-form-item label="预设端口:">
+            <el-radio-group v-model="radio" @change="updatePorts">
+                <el-radio label=1>数据库端口</el-radio>
+                <el-radio label=2>企业端口</el-radio>
+                <el-radio label=3>高危端口</el-radio>
+                <el-radio label=4>全端口</el-radio>
+                <el-radio label=5>自定义</el-radio>
+            </el-radio-group>
+        </el-form-item>
+        <el-form-item label="端口列表:">
+            <el-input type="textarea" rows="3" v-model="form.portlist" resize="none" />
+        </el-form-item>
+        <el-form-item label="功能:">
+            <el-space>
+                <el-button type="primary" @click="NewScanner">开始扫描</el-button>
+                <el-button type="danger" @click="ctrl.stop">停止</el-button>
+                <el-link type="primary" @click="ctrl.drawer = true">更多参数</el-link>
+            </el-space>
+        </el-form-item>
+    </el-form>
+    <el-drawer v-model="ctrl.drawer" title="设置高级参数">
+        <el-form label-width="30%">
+            <el-form-item label="存活探测:">
+                <el-checkbox v-model="config.alive" />
+                <el-switch v-model="config.ping" active-text="ICMP" inactive-text="Ping" v-if="config.alive"
+                    style="margin-left: 10px;" />
+            </el-form-item>
+            <el-form-item label="线程数量:">
+                <el-input-number controls-position="right" v-model="config.thread" :min="1" :max="30000" />
+            </el-form-item>
+            <el-form-item label="超时时长(s):">
+                <el-input-number controls-position="right" v-model="config.timeout" :min="1" />
+            </el-form-item>
+            <el-form-item label="口令猜测:">
+                <el-switch v-model="config.burte" />
+            </el-form-item>
+        </el-form>
+        <div v-if="config.burte === true">
+            <el-descriptions title="用户名字典管理" :column="2" border>
+                <el-descriptions-item v-for="item in ctrl.dict" :label="item.name" :span="2">
+                    <el-button @click="ctrl.innerDrawer = true; ctrl.currentDic = item.dic.join('\n')">
+                        口令字典
+                    </el-button>
+                </el-descriptions-item>
+            </el-descriptions>
+            <el-descriptions title="密码管理(全协议通用)" :column="2" border>
+                <el-descriptions-item label="Password" :span="2">
+                    <el-button @click="ctrl.innerDrawer = true; ctrl.currentDic = ctrl.passwords.join('\n')">
+                        口令字典
+                    </el-button>
+                </el-descriptions-item>
+            </el-descriptions>
+        </div>
+        <el-drawer v-model="ctrl.innerDrawer" title="账号管理" :append-to-body="true">
+            <el-input type="textarea" rows="20" v-model="ctrl.currentDic"></el-input>
+            <!-- <el-button type="primary" style="margin-top: 10px;">保存</el-button> -->
+        </el-drawer>
+    </el-drawer>
+
+    <div style="position: relative;">
+        <el-tabs v-model="form.activeName" type="card">
+            <el-tab-pane label="端口扫描控制台" name="1">
+                <el-table :data="table.pageContent" border style="height: 45vh;">
+                    <el-table-column type="selection" width="55px" />
+                    <el-table-column prop="host" label="主机" />
+                    <el-table-column prop="port" label="端口" width="100px" />
+                    <el-table-column prop="fingerprint" label="指纹" />
+                    <el-table-column prop="link" label="目标" />
+                    <el-table-column prop="title" label="网站标题" />
+                    <el-table-column fixed="right" label="操作" width="55px">
+                        <template #default="scope">
+                            <el-tooltip content="打开链接" placement="left">
+                                <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)">
+                                </el-button>
+                            </el-tooltip>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <div class="my-header" style="margin-top: 5px;">
+                    <el-progress :text-inside="true" :stroke-width="20" :percentage="form.percentage" color="#5DC4F7"
+                        style="width: 70%;" />
+                    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                        :current-page="table.currentPage" :page-sizes="[10, 20, 50]" :page-size="table.pageSize"
+                        layout="total, sizes, prev, pager, next" :total="table.result.length">
+                    </el-pagination>
+                </div>
+            </el-tab-pane>
+            <el-tab-pane label="脆弱账号" name="2">
+                <el-table :data="table.burteResult" border style="height: 45vh;">
+                    <el-table-column type="index" width="60px" label="#" />
+                    <el-table-column prop="host" label="主机" />
+                    <el-table-column prop="protocol" label="协议" />
+                    <el-table-column prop="username" label="用户名" />
+                    <el-table-column prop="password" label="密码" />
+                    <el-table-column prop="time" label="扫描时间" />
+                </el-table>
+            </el-tab-pane>
+            <el-tab-pane name="3">
+                <template #label>
+                    <el-icon>
+                        <Tickets />
+                    </el-icon>
+                    <span>运行日志</span>
+                </template>
+                <el-input class="log-textarea" v-model="form.log" type="textarea" rows="16" readonly></el-input>
+            </el-tab-pane>
+        </el-tabs>
+        <el-button-group class="custom_eltabs_titlebar" v-if="form.activeName == '1'">
+            <el-button :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL目标</el-button>
+            <el-button :icon="DocumentChecked"
+                @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">导出</el-button>
+        </el-button-group>
+    </div>
 </template>
 
 
 <style>
-.left {
-    margin-left: 10px;
-}
-
-.bottom {
-    margin-bottom: 20px;
+.el-drawer__header {
+    margin-bottom: 0px;
 }
 </style>

@@ -59,7 +59,13 @@ export function ExportTXT(filename: string, result: string[]) {
 
 // 复制端口扫描中的所有HTTP链接
 export function CopyURLs(result: {}[]) {
-  if (result.length === 0) {
+  // 避免控制台报错
+  if (result.length <= 1) {
+    ElMessage({
+      showClose: true,
+      message: "复制内容条数需大于1",
+      type: "warning",
+    });
     return;
   }
   const temp = [];

@@ -92,12 +92,12 @@ async function NewSock5Crawl(step: number) {
                     let host = temp.IP + ":" + temp.Port
                     form.socksLogger += `[+] ${host} is unauthorized!\n`
                     tempHosts.push(host)
-                }  
+                }
             })
         }
         if (form.pool.length > 0) {
             await DeleteAllField("agent_pool")
-            form.pool= []
+            form.pool = []
         }
         for (const host of tempHosts) {
             form.pool.push({ Host: host })
@@ -176,7 +176,7 @@ async function Delelte(host: string) {
 
 <template>
     <div style="position: relative;">
-        <el-tabs v-model="form.currentTableName" type="border-card">
+        <el-tabs v-model="form.currentTableName" type="card">
             <el-tab-pane name="0">
                 <template #label>
                     代理池爬取<el-popover placement="right-end" title="此模块需要配置FOFA Email+key" :width="350" trigger="hover">
@@ -198,7 +198,7 @@ async function Delelte(host: string) {
                 <el-input v-model="form.socksLogger" type="textarea" rows="20" resize="none" readonly
                     class="log-textarea"></el-input>
                 <el-progress :percentage="form.percentage" :stroke-width="15" striped striped-flow :duration="20"
-                    style="margin-top: 5px" />
+                    style="margin-top: 5px" color="#5DC4F7" />
             </el-tab-pane>
             <el-tab-pane label="历史记录" name="1">
                 <el-table :data="form.pool" border>
@@ -221,25 +221,16 @@ async function Delelte(host: string) {
                     controls-position="right" style="width: 100px;"></el-input-number>
                 <span>存储阈值:</span><el-input-number v-model="form.socksThreshold" :min="1" controls-position="right"
                     style="width: 100px;"></el-input-number>
-                <el-button-group>
-                    <el-tooltip content="查询数据量" placement="left">
-                        <el-button :icon="Search" type="primary" @click="NewSock5Crawl(0)"></el-button>
-                    </el-tooltip>
-                    <el-tooltip content="筛选存活" placement="left">
-                        <el-button :icon="Filter" type="primary" @click="NewSock5Crawl(1)"></el-button>
-                    </el-tooltip>
-                </el-button-group>
             </el-space>
+            <el-button-group>
+                <el-tooltip content="查询数据量" placement="left">
+                    <el-button :icon="Search" type="primary" @click="NewSock5Crawl(0)"></el-button>
+                </el-tooltip>
+                <el-tooltip content="筛选存活" placement="left">
+                    <el-button :icon="Filter" type="primary" @click="NewSock5Crawl(1)"></el-button>
+                </el-tooltip>
+            </el-button-group>
         </div>
-        <el-button type="primary" @click="NewSock5Crawl(2)" class="custom_eltabs_titlebar" style="margin-right: 8px;"
-            v-else>导出存活目标</el-button>
+        <el-button type="primary" @click="NewSock5Crawl(2)" class="custom_eltabs_titlebar" v-else>导出存活目标</el-button>
     </div>
 </template>
-
-<style>
-.custom_eltabs_titlebar {
-    position: absolute;
-    right: 0px;
-    top: 4px;
-}
-</style>

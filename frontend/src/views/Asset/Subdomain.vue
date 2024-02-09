@@ -141,5 +141,5 @@ async function handleFileChange() {
             </el-table>
         </el-form-item>
     </el-form>
-    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" />
+    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" color="#5DC4F7" />
 </template>

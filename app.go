@@ -76,6 +76,17 @@ func (a *App) SelectFile() string {
 	return selection
 }
 
+func (a *App) SaveFile(filename string) string {
+	selection, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "保存文件",
+		DefaultFilename: filename,
+	})
+	if err != nil {
+		return fmt.Sprintf("err %s!", err)
+	}
+	return selection
+}
+
 type Response struct {
 	Error  bool
 	Proto  string
@@ -348,8 +359,8 @@ func (a *App) PathRequest(method, url string, timeout int, bodyExclude string, r
 
 // portscan
 
-func (a *App) IPParse(text string) []string {
-	return util.ParseIPs(text)
+func (a *App) IPParse(ipList []string) []string {
+	return util.ParseIPs(ipList)
 }
 
 func (a *App) PortParse(text string) []int {

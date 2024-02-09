@@ -209,7 +209,7 @@ const config = reactive({
                 <el-select v-model=from.defaultOption value=options style="width: 20vh;">
                     <el-option v-for="item in from.options" :value="item" :label="item" />
                 </el-select>
-                <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 10px; width: 100%;" />
+                <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 5px; width: 100%;" />
                 <el-button type="primary" @click="dirscan">开始扫描</el-button>
                 <el-button type="danger" @click="control.stop">停止</el-button>
             </div>
@@ -286,7 +286,7 @@ const config = reactive({
             </el-drawer>
         </el-form-item>
     </el-form>
-    <el-table :data="dir" height="75vh" border style="width: 100%">
+    <el-table :data="dir" border style="width: 100%; height: 79vh;">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="status" width="100px" label="状态码"
             :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable show-overflow-tooltip="true" />
@@ -296,5 +296,5 @@ const config = reactive({
         <el-table-column prop="location" label="跳转路径" show-overflow-tooltip="true" />
     </el-table>
     <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
-        style="margin-top: 10px;" />
+    color="#5DC4F7" style="margin-top: 10px;" />
 </template>

@@ -1,9 +1,9 @@
 <template>
-    <el-form :model="form" label-width="100px" >
-      <el-form-item label="wx_appid">
+    <el-form :model="form"  >
+      <el-form-item label="appid">
         <el-input v-model="form.appid" />
       </el-form-item>
-      <el-form-item label="wx_secert">
+      <el-form-item label="secert">
         <el-input v-model="form.secert" />
       </el-form-item>
       <el-form-item label="result">

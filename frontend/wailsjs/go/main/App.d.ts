@@ -38,7 +38,7 @@ export function HunterSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg
 
 export function HunterTips(arg1:string):Promise<space.HunterTipsResult>;
 
-export function IPParse(arg1:string):Promise<Array<string>>;
+export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 
 export function IconHash(arg1:string):Promise<string>;
 
@@ -65,6 +65,8 @@ export function PortCheck(arg1:string,arg2:number,arg3:number):Promise<main.Port
 export function PortParse(arg1:string):Promise<Array<number>>;
 
 export function ReadPocDetail(arg1:string):Promise<poc.VulnerabilityDetails>;
+
+export function SaveFile(arg1:string):Promise<string>;
 
 export function SelectFile():Promise<string>;
 

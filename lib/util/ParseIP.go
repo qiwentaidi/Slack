@@ -10,16 +10,14 @@ import (
 
 var ipv4Regex = `^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
 
-func ParseIPs(ipString string) (ips []string) {
+func ParseIPs(ipList []string) (ips []string) {
 	var noip, temp []string
 	r, _ := regexp.Compile(ipv4Regex)
-	if ipString != "" {
-		for _, line := range ParseTarget(ipString) {
-			if strings.Contains(line, "!") {
-				noip = append(noip, ParseIP(line[1:])...)
-			} else {
-				temp = append(ips, ParseIP(line)...)
-			}
+	for _, line := range ipList {
+		if strings.Contains(line, "!") {
+			noip = append(noip, ParseIP(line[1:])...)
+		} else {
+			temp = append(ips, ParseIP(line)...)
 		}
 	}
 	for _, np := range noip {

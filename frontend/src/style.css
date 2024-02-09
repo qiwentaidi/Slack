@@ -83,3 +83,9 @@ html {
   flex-direction: row;
   justify-content: space-between;
 }
+
+.custom_eltabs_titlebar {
+  position: absolute;
+  right: 0px;
+  top: 4px;
+}

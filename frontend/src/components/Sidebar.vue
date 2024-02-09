@@ -251,6 +251,7 @@ const download = {
         <el-menu-item index="/Tools/Wxappid" @click="$router.push('/Tools/Wxappid')">{{ $t('aside.wechat_appid')
         }}</el-menu-item>
       </el-sub-menu>
+
       <el-menu-item index="/update" @click="version.updateDialogVisible = true">
         <el-icon>
           <Refresh />
@@ -310,7 +311,7 @@ const download = {
     <h3 v-else>当前客户端已是最新版本{{ "v" + version.RemoteClient + ":)" }}</h3>
   </el-dialog>
 
-  <!-- 弹窗界面 -->
+  <!-- about -->
   <el-dialog v-model="version.helpDialogVisible" :title="$t('aside.about')" width="36%" center>
     <h3>{{ $t('aside.suggestions') }}</h3>
     <br />
