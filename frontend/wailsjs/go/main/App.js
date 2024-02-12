@@ -161,3 +161,7 @@ export function Webscan(arg1, arg2, arg3, arg4, arg5) {
 export function WechatAppid(arg1, arg2) {
   return window['go']['main']['App']['WechatAppid'](arg1, arg2);
 }
+
+export function WriteFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['WriteFile'](arg1, arg2, arg3);
+}

@@ -1,9 +1,9 @@
 import * as XLSX from "xlsx";
 import { ElMessage } from "element-plus";
 import global from "./global";
-import { CheckTarget } from "../wailsjs/go/main/App";
+import { CheckTarget, SaveFile, WriteFile } from "../wailsjs/go/main/App";
 // 单sheet导出
-export function ExportToXlsx(
+export async function ExportToXlsx(
   headers: string[],
   sheetName: string,
   filename: string,
@@ -15,11 +15,12 @@ export function ExportToXlsx(
   // 将工作表添加到工作簿中
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
   // 将工作簿写入到一个新的Excel文件中
-  XLSX.writeFile(wb, filename + ".xlsx");
+  const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+  await ExportFile("base64", filename + ".xlsx", b64)
 }
 
 // 资产导出
-export function ExportAssetToXlsx(r1: {}[], r2: {}[], r3: {}[]) {
+export async function ExportAssetToXlsx(r1: {}[], r2: {}[], r3: {}[]) {
   // 创建一个新的工作簿
   let wb = XLSX.utils.book_new();
   // 自定义表头
@@ -35,25 +36,34 @@ export function ExportAssetToXlsx(r1: {}[], r2: {}[], r3: {}[]) {
   XLSX.utils.book_append_sheet(wb, ws1, "子公司");
   XLSX.utils.book_append_sheet(wb, ws2, "公众号");
   XLSX.utils.book_append_sheet(wb, ws3, "鹰图资产数量");
-  // 将工作簿写入到一个新的Excel文件中
-  XLSX.writeFile(wb, "asset.xlsx");
+  const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+  await ExportFile("base64", "asset.xlsx", b64)
 }
 
-export function ExportTXT(filename: string, result: string[]) {
+export async function ExportTXT(filename: string, result: string[]) {
   //文件内容
   var text = "";
   for (const item of result) {
     text += item + "\n"
   }
-  var pom = document.createElement('a');
-  pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-  pom.setAttribute('download', filename);
-  if (document.createEvent) {
-    var event = document.createEvent('MouseEvents');
-    event.initEvent('click', true, true);
-    pom.dispatchEvent(event);
-  } else {
-    pom.click();
+  await ExportFile("txt", filename + ".txt", text)
+}
+
+export async function ExportFile(filetype: string,filename: string, content: string) {
+  const path = await SaveFile(filename)
+  const result = await WriteFile(filetype ,path, content)
+  if (result) {
+    ElMessage({
+      showClose: true,
+      message: "数据保存成功，路径为:"+ path,
+      type: "success",
+    });
+  }else {
+    ElMessage({
+      showClose: true,
+      message: "数据导出失败!",
+      type: "warning",
+    });
   }
 }
 

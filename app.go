@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -76,15 +77,29 @@ func (a *App) SelectFile() string {
 	return selection
 }
 
+// selection会返回保存的文件路径+文件名 例如/Users/xxx/Downloads/test.xlsx
 func (a *App) SaveFile(filename string) string {
 	selection, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
 		Title:           "保存文件",
 		DefaultFilename: filename,
 	})
 	if err != nil {
-		return fmt.Sprintf("err %s!", err)
+		return ""
 	}
 	return selection
+}
+
+func (a *App) WriteFile(filetype, path, content string) bool {
+	var buf []byte
+	switch filetype {
+	case "base64":
+		buf, _ = base64.StdEncoding.DecodeString(content)
+	// txt
+	default:
+		buf = []byte(content)
+	}
+	err := os.WriteFile(path, buf, 0644)
+	return err == nil
 }
 
 type Response struct {
