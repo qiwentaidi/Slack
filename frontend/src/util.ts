@@ -51,6 +51,9 @@ export async function ExportTXT(filename: string, result: string[]) {
 
 export async function ExportFile(filetype: string,filename: string, content: string) {
   const path = await SaveFile(filename)
+  if (path == "") {
+    return
+  }
   const result = await WriteFile(filetype ,path, content)
   if (result) {
     ElMessage({
