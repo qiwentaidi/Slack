@@ -4,10 +4,10 @@ import async from 'async';
 import { ExportToXlsx } from '../../util'
 import { reactive, ref } from "vue";
 import { Subdomain, InitIPResolved, LoadSubDict, SelectFile } from "../../../wailsjs/go/main/App";
-import { GetFileContent, OpenFolder } from "../../../wailsjs/go/main/File";
+import { GetFileContent } from "../../../wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import { onMounted } from 'vue';
-import { FolderOpened, Loading } from '@element-plus/icons-vue';
+import { Loading } from '@element-plus/icons-vue';
 
 // 初始化时调用
 onMounted(() => {
@@ -113,19 +113,8 @@ async function handleFileChange() {
                     <el-input-number v-model="from.timeout" :min="1" :max="20" controls-position="right">
                     </el-input-number>
                 </div>
-                <div style="display: flex;">
-                    <el-button-group>
-                        <el-tooltip class="box-item" effect="dark" placement="top">
-                            <template #content>
-                                默认加载/config/subdomain/dicc.txt<br />
-                                部分MacOS用户无法进行文件选择，可以通过修改默认字典实现字典更改
-                            </template>
-                            <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
-                            }}</el-button>
-                        </el-tooltip>
-                        <el-button type="primary" :icon="FolderOpened" @click="OpenFolder('/config/subdomain')"></el-button>
-                    </el-button-group>
-                </div>
+                <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
+                }}</el-button>
             </el-space>
             <el-button type="primary" style="margin-left: auto;" text
                 @click="ExportToXlsx(['子域名', 'CNAME', 'IPS', '备注'], '子域名暴破', 'subdomain', sbr)"
@@ -140,6 +129,5 @@ async function handleFileChange() {
                 <el-table-column prop="notes" label="备注" show-overflow-tooltip="true" />
             </el-table>
         </el-form-item>
-    </el-form>
-    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" color="#5DC4F7" />
+    </el-form>    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" color="#5DC4F7" />
 </template>

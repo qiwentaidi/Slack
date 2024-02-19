@@ -7,9 +7,13 @@ export function GetFileContent(arg1:string):Promise<string>;
 
 export function InitConfig():Promise<boolean>;
 
+export function InitMemo(arg1:string,arg2:string):Promise<boolean>;
+
 export function OpenFolder(arg1:string):Promise<string>;
 
 export function PathBase(arg1:string):Promise<string>;
+
+export function ReadMemo(arg1:string):Promise<{[key: string]: string}>;
 
 export function Restart():Promise<void>;
 

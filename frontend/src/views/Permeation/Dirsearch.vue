@@ -20,7 +20,7 @@ const from = reactive({
     paths: [] as string[],
     percentage: 0,
     id: 0,
-    tips: '选择字典',
+    tips: '选择字典(默认加载dicc.txt)',
     currentRate: 0,
     errorCounts: 0,
     redirectClient: false,
@@ -56,10 +56,6 @@ async function handleFileChange() {
     }
 }
 
-async function Open() {
-    OpenFolder(window.HomePath + window.ConfigPath + "/dirsearch")
-}
-
 async function dirscan() {
     let ds = new Dirsearch()
     if (await ds.checkURL()) {
@@ -79,7 +75,7 @@ class Dirsearch {
             return false
         }
         if (!from.alive) {
-            let result = await GoFetch("GET",from.url, "", [{}], 10, null);
+            let result = await GoFetch("GET", from.url, "", [{}], 10, null);
             if (result.Error) {
                 ElMessage({
                     showClose: true,
@@ -267,20 +263,8 @@ const config = reactive({
                         <el-input v-model="from.header" placeholder="仅支持单行请求头以键:值形式输入" type="textarea" rows="3"></el-input>
                     </el-form-item>
                     <el-form-item label="自定义字典:" style="margin-bottom: 10px;">
-                        <div style="display: flex;">
-                            <el-button-group>
-                                <el-tooltip class="box-item" effect="dark" placement="top">
-                                    <template #content>
-                                        默认加载配置文件中/dirsearch/dicc.txt<br />
-                                        部分MacOS用户无法进行文件选择，可以通过修改默认字典实现字典更改
-                                    </template>
-                                    <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
-                                    }}</el-button>
-                                </el-tooltip>
-                                <el-button type="primary" :icon="FolderOpened"
-                                    @click="Open"></el-button>
-                            </el-button-group>
-                        </div>
+                        <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
+                        }}</el-button>
                     </el-form-item>
                 </el-form>
             </el-drawer>
@@ -296,5 +280,5 @@ const config = reactive({
         <el-table-column prop="location" label="跳转路径" show-overflow-tooltip="true" />
     </el-table>
     <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
-    color="#5DC4F7" style="margin-top: 10px;" />
+        color="#5DC4F7" style="margin-top: 10px;" />
 </template>

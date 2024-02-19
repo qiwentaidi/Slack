@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slack-wails/lib/update"
 	"slack-wails/lib/util"
+	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/logger"
 )
@@ -92,4 +94,46 @@ func (f *File) Restart() {
 
 func (f *File) InitConfig() bool {
 	return update.InitConfig(f.configPath)
+}
+
+func (*File) InitMemo(filepath, content string) bool {
+	f, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return false
+	}
+	_, err = f.WriteString(content)
+	return err == nil
+}
+
+func (*File) ReadMemo(filepath string) map[string]string {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	var key string
+	var value strings.Builder
+	keyValueMap := make(map[string]string)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			// This is a key line
+			if key != "" {
+				// Save the previous key-value pair
+				keyValueMap[key] = value.String()
+				value.Reset()
+			}
+			key = line[1 : len(line)-1] // Remove brackets
+		} else {
+			// This is a value line
+			value.WriteString(line + "\n")
+		}
+	}
+	// Save the last key-value pair
+	if key != "" {
+		keyValueMap[key] = value.String()
+	}
+	return keyValueMap
 }

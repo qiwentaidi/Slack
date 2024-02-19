@@ -14,12 +14,20 @@ export function InitConfig() {
   return window['go']['main']['File']['InitConfig']();
 }
 
+export function InitMemo(arg1, arg2) {
+  return window['go']['main']['File']['InitMemo'](arg1, arg2);
+}
+
 export function OpenFolder(arg1) {
   return window['go']['main']['File']['OpenFolder'](arg1);
 }
 
 export function PathBase(arg1) {
   return window['go']['main']['File']['PathBase'](arg1);
+}
+
+export function ReadMemo(arg1) {
+  return window['go']['main']['File']['ReadMemo'](arg1);
 }
 
 export function Restart() {
