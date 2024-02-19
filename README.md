@@ -2,10 +2,11 @@
 
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/qiwentaidi/Slack?filename=go.mod">
-<img src="https://img.shields.io/badge/wails-v2.7.1-blue">
+<img src="https://img.shields.io/badge/wails-v2.8.0-blue">
 <a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/v/release/qiwentaidi/Slack">
 <a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/downloads/qiwentaidi/Slack/total">
 </p>
+
 
 
 
@@ -15,9 +16,7 @@
 
 Fyne版本已停止更新，可以通过fyne分支中获取到该模块代码。
 
-# 运行
-
-可以通过[wails](https://wails.io/zh-Hans/docs/gettingstarted/installation/)官网查看支持运行的客户端以及运行前条件，详细功能介绍及拓展等信息见[Wiki](https://github.com/qiwentaidi/Slack/wiki)
+# 运行	可以通过[wails](https://wails.io/zh-Hans/docs/gettingstarted/installation/)官网查看支持运行的客户端以及运行前条件，详细功能介绍及拓展等信息见[Wiki](https://github.com/qiwentaidi/Slack/wiki)
 
 ```shell
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -28,9 +27,9 @@ git clone https://github.com/qiwentaidi/Slack.git
 
 cd Slack
 
-wails dev // 调试
+sudo wails dev // 调试
 
-wails build // 编译
+sudo wails build // 编译
 
 编译完的应用在 build/bin 目录下
 ```
@@ -106,12 +105,6 @@ wails build // 编译
 > 1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
 > 2、需要安装GCC环境
 > ```
-
-
-
-> Q：Mac系统下编译成功后更新POC异常或者找不到POC文件夹等
->
-> A：由于Mac系统下打包完成为.app文件，需要将其slack-wails.app下面的/Contents/MacOS/slack-wails文件移动到程序根目录下并通过命令行./启动即可正常使用
 
 # 联系方式
 
