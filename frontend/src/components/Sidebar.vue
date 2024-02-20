@@ -19,11 +19,12 @@ onMounted(async () => {
   // 初始赋值
   window.HomePath = await UserHomeDir()
   window.ConfigPath = "/slack/config"
-  window.ActivePathPoc = window.ConfigPath + "/active-detect"
-  window.AFGPathPoc = window.ConfigPath + "/afrog-pocs"
-  window.PocVersion = window.ConfigPath + "/afrog-pocs/version"
-  window.LocalPocVersionFile = window.HomePath + window.PocVersion
-  let cfg = await CheckFileStat(window.HomePath + "/slack")
+  window.ActivePathPoc = ConfigPath + "/active-detect"
+  window.AFGPathPoc = ConfigPath + "/afrog-pocs"
+  window.PocVersion = ConfigPath + "/afrog-pocs/version"
+  window.LocalPocVersionFile = HomePath + PocVersion
+  window.PortBurstPath = HomePath + "/slack/portburte"
+  let cfg = await CheckFileStat(HomePath + "/slack")
   if (!cfg) {
     ElNotification({
       duration: 0,
@@ -55,13 +56,13 @@ onMounted(async () => {
 const check = ({
   // poc
   poc: async function () {
-    let pcfg = await CheckFileStat(window.LocalPocVersionFile)
+    let pcfg = await CheckFileStat(LocalPocVersionFile)
     if (!pcfg) {
       version.LocalPoc = "版本文件不存在"
       version.PocStatus = false
       return
     } else {
-      version.LocalPoc = await GetFileContent(window.LocalPocVersionFile)
+      version.LocalPoc = await GetFileContent(LocalPocVersionFile)
     }
     let resp = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
     if (resp.Error == true) {

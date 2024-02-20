@@ -27,9 +27,9 @@ git clone https://github.com/qiwentaidi/Slack.git
 
 cd Slack
 
-sudo wails dev // 调试
+wails dev // 调试
 
-sudo wails build // 编译
+wails build // 编译
 
 编译完的应用在 build/bin 目录下
 ```

@@ -16,6 +16,7 @@ declare global {
   var LocalPocVersionFile: string
   var ConfigPath: string
   var HomePath: string
+  var PortBurstPath: string
 }
 
 

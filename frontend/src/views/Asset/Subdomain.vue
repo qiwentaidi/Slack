@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import global from "../../global";
 import async from 'async';
-import { ExportToXlsx } from '../../util'
+import { ExportToXlsx, ReadLine } from '../../util'
 import { reactive, ref } from "vue";
 import { Subdomain, InitIPResolved, LoadSubDict, SelectFile } from "../../../wailsjs/go/main/App";
-import { GetFileContent } from "../../../wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import { onMounted } from 'vue';
 import { Loading } from '@element-plus/icons-vue';
@@ -30,7 +29,7 @@ async function BurstSubdomain() {
     from.id = 0;
     InitIPResolved();
     if (from.subs.length === 0) {
-        from.subs = await LoadSubDict(window.ConfigPath + "/subdomain")
+        from.subs = await LoadSubDict(ConfigPath + "/subdomain")
         from.tips = `loaded ${from.subs.length} dicts`
     }
     async.eachLimit(from.subs, from.thread, (sub: string, callback: () => void) => {
@@ -75,20 +74,8 @@ function stop() {
 
 async function handleFileChange() {
     let path = await SelectFile()
-    let res = await GetFileContent(path)
-    if (res.length == 0) {
-        ElMessage({
-            showClose: true,
-            message: '不能上传空文件',
-            type: 'warning',
-        })
-        return
-    }
-    if (res !== "文件不存在") {
-        const result = res.replace(/\r\n/g, '\n'); // 避免windows unix系统差异
-        from.subs = Array.from(result.split('\n'))
-        from.tips = `loaded ${from.subs.length} dicts`;
-    }
+    from.subs = (await ReadLine(path))!
+    from.tips = `loaded ${from.subs.length} dicts`;
 }
 </script>
 

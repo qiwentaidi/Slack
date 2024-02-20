@@ -175,7 +175,7 @@ class Scanner {
             count++
             if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
                 dashboard.logger += `[END] 指纹探测已结束\n`
-                form.currentLoadPath = await LocalWalkFiles(window.HomePath + window.ActivePathPoc) // 初始化主动指纹目录
+                form.currentLoadPath = await LocalWalkFiles(HomePath + ActivePathPoc) // 初始化主动指纹目录
                 count = 0
                 dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
                 callback();
@@ -294,7 +294,7 @@ class Scanner {
                 }
             })
         } else if (form.currentModule == "全部漏洞扫描") {
-            form.currentLoadPath = await LocalWalkFiles(window.HomePath + window.AFGPathPoc)
+            form.currentLoadPath = await LocalWalkFiles(HomePath + AFGPathPoc)
             dashboard.logger += `[INFO] 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
             let count = 0
             async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {

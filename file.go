@@ -140,7 +140,7 @@ func (*File) ReadMemo(filepath string) map[string]string {
 }
 
 func (*File) Mkdir(dir string) bool {
-	return os.Mkdir(dir, 0644) == nil
+	return os.Mkdir(dir, 0777) == nil
 }
 
 func (*File) WriteFile(filetype, path, content string) bool {

@@ -2,7 +2,7 @@ import * as XLSX from "xlsx";
 import { ElMessage } from "element-plus";
 import global from "./global";
 import { CheckTarget, SaveFile } from "../wailsjs/go/main/App";
-import { WriteFile } from "../wailsjs/go/main/File";
+import { GetFileContent, WriteFile } from "../wailsjs/go/main/File";
 // 单sheet导出
 export async function ExportToXlsx(
   headers: string[],
@@ -17,7 +17,7 @@ export async function ExportToXlsx(
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
   // 将工作簿写入到一个新的Excel文件中
   const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-  await ExportFile("base64", filename + ".xlsx", b64)
+  await ExportFile("base64", filename + ".xlsx", b64);
 }
 
 // 资产导出
@@ -38,31 +38,35 @@ export async function ExportAssetToXlsx(r1: {}[], r2: {}[], r3: {}[]) {
   XLSX.utils.book_append_sheet(wb, ws2, "公众号");
   XLSX.utils.book_append_sheet(wb, ws3, "鹰图资产数量");
   const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-  await ExportFile("base64", "asset.xlsx", b64)
+  await ExportFile("base64", "asset.xlsx", b64);
 }
 
 export async function ExportTXT(filename: string, result: string[]) {
   //文件内容
   var text = "";
   for (const item of result) {
-    text += item + "\n"
+    text += item + "\n";
   }
-  await ExportFile("txt", filename + ".txt", text)
+  await ExportFile("txt", filename + ".txt", text);
 }
 
-export async function ExportFile(filetype: string,filename: string, content: string) {
-  const path = await SaveFile(filename)
+export async function ExportFile(
+  filetype: string,
+  filename: string,
+  content: string
+) {
+  const path = await SaveFile(filename);
   if (path == "") {
-    return
+    return;
   }
-  const result = await WriteFile(filetype ,path, content)
+  const result = await WriteFile(filetype, path, content);
   if (result) {
     ElMessage({
       showClose: true,
-      message: "数据保存成功，路径为:"+ path,
+      message: "数据保存成功，路径为:" + path,
       type: "success",
     });
-  }else {
+  } else {
     ElMessage({
       showClose: true,
       message: "数据导出失败!",
@@ -172,9 +176,9 @@ export async function formatURL(host: string): Promise<string[]> {
   }
   for (var item of temp) {
     if (item.slice(-1) !== "/") {
-      urls.push(item += "/")
+      urls.push((item += "/"));
     } else {
-      urls.push(item)
+      urls.push(item);
     }
   }
   return urls;
@@ -224,7 +228,7 @@ export function ApiSyntaxCheck(
         message: "请在设置处填写FOFA Email和Key",
         type: "error",
       });
-      return false
+      return false;
     }
   } else {
     if (key == "") {
@@ -242,7 +246,23 @@ export function ApiSyntaxCheck(
       message: "请输入正确的查询语法",
       type: "warning",
     });
-    return false
+    return false;
   }
-  return true
+  return true;
+}
+
+export async function ReadLine(filepath: string) {
+  let res = await GetFileContent(filepath);
+  if (res.length == 0) {
+    ElMessage({
+      showClose: true,
+      message: "读取文件不能为空",
+      type: "warning",
+    });
+    return;
+  }
+  if (res !== "文件不存在") {
+    const result = res.replace(/\r\n/g, "\n"); // 避免windows unix系统差异
+    return Array.from(result.split("\n"));
+  }
 }

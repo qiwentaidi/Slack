@@ -35,7 +35,7 @@
         </el-tabs>
         <div style="width: 70%; margin-left: 20px;">
             <pre class="pre-wrap"><code>{{reverse.show}}</code></pre>
-            <el-button type="primary" style="float: right; margin-top: 10px;">复制</el-button>
+            <el-button type="primary" style="float: right; margin-top: 10px;" @click="ClipboardSetText(reverse.show)">复制</el-button>
         </div>
     </div>
     <el-dialog title="添加" v-model="dialog" width="500">
@@ -62,10 +62,11 @@
 import { reactive, watch, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
 import { CheckFileStat, InitMemo, ReadMemo } from '../../../wailsjs/go/main/File';
+import { ClipboardSetText } from '../../../wailsjs/runtime';
 
 onMounted(async () => {
     handleChange(data.memo[0])
-    let fp = window.HomePath + "/slack/memo.txt"
+    let fp = HomePath + "/slack/memo.txt"
     if (await CheckFileStat(fp)) {
         let kv = await ReadMemo(fp)
         data.memo = Object.entries(kv).map(([label, value]) => ({
@@ -218,7 +219,7 @@ async function save() {
             temp += `[${item.label}]\n${item.value}`
         }
     });
-    if (await InitMemo(window.HomePath + "/slack/memo.txt", temp)) {
+    if (await InitMemo(HomePath + "/slack/memo.txt", temp)) {
         ElMessage({
             showClose: true,
             message: "保存成功！",

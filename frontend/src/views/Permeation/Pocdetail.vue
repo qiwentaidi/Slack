@@ -9,17 +9,17 @@ import { PathBase } from '../../../wailsjs/go/main/File'
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(async () => {
-    LoadPocList(window.AFGPathPoc);
+    LoadPocList(AFGPathPoc);
 });
 
 var from = reactive({
-    value: window.AFGPathPoc,
+    value: AFGPathPoc,
     pocOptions: [{
         label: "通用POC",
-        value: window.AFGPathPoc
+        value: AFGPathPoc
     }, {
         label: "主动目录探测",
-        value: window.ActivePathPoc
+        value: ActivePathPoc
     }],
     keyword: '',
     expands: [],
@@ -41,7 +41,7 @@ const pd = reactive({
 })
 
 async function LoadPocList(filepath: string) {
-    let poclist = LocalWalkFiles(window.HomePath + filepath)
+    let poclist = LocalWalkFiles(HomePath + filepath)
     let index = 0
     table.result = []
     for (const fullpath of await poclist) {

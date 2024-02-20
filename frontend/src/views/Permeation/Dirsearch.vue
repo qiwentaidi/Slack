@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { GoFetch, LoadDirsearchDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
-import { GetFileContent } from "../../../wailsjs/go/main/File";
+import { ReadLine } from '../../util'
 import { ElMessage } from 'element-plus'
 import async from 'async';
 import { QuestionFilled, Loading } from '@element-plus/icons-vue';
@@ -30,30 +30,20 @@ const dir = ref([{}])
 
 async function handleFileChange() {
     let path = await SelectFile()
-    let res = await GetFileContent(path)
-    if (res.length == 0) {
-        ElMessage({
-            showClose: true,
-            message: '不能上传空文件',
-            type: 'warning',
-        })
-        return
-    }
-    if (res !== "文件不存在") {
-        const result = res.replace(/\r\n/g, '\n'); // 避免windows unix系统差异
-        const extensions = from.exts.split(',');
-        for (const line of result.split('\n')) {
-            if (line.includes("%EXT%")) {
-                for (const ext of extensions) {
-                    from.paths.push(line.replace('%EXT%', ext))
-                }
-            } else {
-                from.paths.push(line)
+    let result = (await ReadLine(path))!
+    const extensions = from.exts.split(',');
+    for (const line of result) {
+        if (line.includes("%EXT%")) {
+            for (const ext of extensions) {
+                from.paths.push(line.replace('%EXT%', ext))
             }
+        } else {
+            from.paths.push(line)
         }
-        from.paths = Array.from(new Set(from.paths))
-        from.tips = `loaded ${from.paths.length} dicts`;
     }
+    from.paths = Array.from(new Set(from.paths))
+    from.tips = `loaded ${from.paths.length} dicts`;
+
 }
 
 async function dirscan() {
@@ -92,7 +82,7 @@ class Dirsearch {
             from.url += "/"
         }
         if (from.paths.length === 0) {
-            await LoadDirsearchDict(window.ConfigPath + "/dirsearch", from.exts.split(',')).then(result => {
+            await LoadDirsearchDict(ConfigPath + "/dirsearch", from.exts.split(',')).then(result => {
                 from.paths = result;
                 from.tips = `loaded default (${from.paths.length} dicts)`;
             });

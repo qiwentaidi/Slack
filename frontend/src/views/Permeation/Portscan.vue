@@ -1,16 +1,15 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
-import { ExportToXlsx, CopyURLs, SplitTextArea } from '../../util'
+import { ExportToXlsx, CopyURLs, SplitTextArea, ReadLine } from '../../util'
 import async from 'async';
 import { QuestionFilled, DocumentChecked, DocumentCopy, ChromeFilled, Tickets } from '@element-plus/icons-vue';
 import { PortParse, IPParse, PortCheck, HostAlive, PortBrute } from '../../../wailsjs/go/main/App'
-import { Mkdir, WriteFile, CheckFileStat } from '../../../wailsjs/go/main/File'
+import { Mkdir, WriteFile, CheckFileStat, GetFileContent } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 onMounted(async () => {
-    let bp = HomePath + "/slack/portburte"
-    if (!(await CheckFileStat(bp))) {
-        InitBurteDict(bp)
+    if (!(await CheckFileStat(PortBurstPath))) {
+        InitBurteDict()
     }
     table.pageContent = []
     table.burteResult = []
@@ -49,7 +48,7 @@ const options = [{
 },
 ]
 
-const dict = ({
+var dict = ({
     usernames: [
         {
             name: "FTP",
@@ -95,14 +94,36 @@ const dict = ({
     passwords: ["123456", "admin", "admin123", "root", "", "pass123", "pass@123", "password", "123123", "654321", "111111", "123", "1", "admin@123", "Admin@123", "admin123!@#", "{user}", "{user}1", "{user}111", "{user}123", "{user}@123", "{user}_123", "{user}#123", "{user}@111", "{user}@2019", "{user}@123#4", "P@ssw0rd!", "P@ssw0rd", "Passw0rd", "qwe123", "1234567", "12345678", "test", "test123", "123qwe", "123qwe!@#", "123456789", "123321", "666666", "a123456.", "123456~a", "123456!a", "000000", "1234567890", "8888888", "!QAZ2wsx", "1qaz2wsx", "abc123", "abc123456", "1qaz@WSX", "a11111", "a12345", "Aa1234", "Aa1234.", "Aa12345", "a123456", "a123123", "Aa123123", "Aa123456", "Aa12345.", "sysadmin", "system", "1qaz!QAZ", "2wsx@WSX", "qwe123!@#", "Aa123456!", "A123456s!", "sa123456", "1q2w3e", "Charge123", "Aa123456789"],
 })
 
-async function InitBurteDict(bp: string) {
-    if (await Mkdir(bp)) {
-        Mkdir(bp + "/username")
-        Mkdir(bp + "/password")
+// 初始化字典
+async function InitBurteDict() {
+    if (await Mkdir(PortBurstPath)) {
+        Mkdir(PortBurstPath + "/username")
+        Mkdir(PortBurstPath + "/password")
         for (const item of dict.usernames) {
-            WriteFile("txt", `${bp}/username/${item.name}.txt` , item.dic.join("\n"))
+            WriteFile("txt", `${PortBurstPath}/username/${item.name}.txt`, item.dic.join("\n"))
         }
-        WriteFile("txt", `${bp}/password/password.txt`, dict.passwords.join("\n"))
+        WriteFile("txt", `${PortBurstPath}/password/password.txt`, dict.passwords.join("\n"))
+    }
+}
+
+async function ReadDict(path: string) {
+    ctrl.currentDic = await GetFileContent(PortBurstPath + path)
+}
+
+async function SaveFile(path: string) {
+    let r = await WriteFile('txt', PortBurstPath + path, ctrl.currentDic)
+    if (r) {
+        ElMessage({
+            showClose: true,
+            message: 'success',
+            type: 'success',
+        })
+    } else {
+        ElMessage({
+            showClose: true,
+            message: 'failed',
+            type: 'error',
+        })
     }
 }
 
@@ -227,16 +248,20 @@ class Scanner {
             });
         });
     }
-    public burteport() {
+    public async burteport() {
         table.burteResult = []
         var date = new Date();
+        dict.passwords = (await ReadLine(PortBurstPath + "/password/password.txt"))!
+        for (var item of dict.usernames) {
+            item.dic = (await ReadLine(PortBurstPath + "/username/" + item.name + ".txt"))!
+        }
         async.eachLimit(getColumnData("link"), 20, (target: string, callback: () => void) => {
             if (ctrl.exit === true) {
                 return
             }
             dict.usernames.forEach(ele => {
-                let pro = target.split("://")[0]
-                if (ele.name.toLowerCase() === pro) {
+                let protocol = target.split("://")[0]
+                if (ele.name.toLowerCase() === protocol) {
                     form.log += "[INF] Start burte " + target + "\n"
                     PortBrute(target, ele.dic, dict.passwords).then((result) => {
                         if (result !== undefined && result.Status !== false) {
@@ -283,6 +308,7 @@ const ctrl = reactive({
         }
     },
     currentDic: '',
+    currentPath: ''
 })
 
 const table = reactive({
@@ -363,8 +389,8 @@ function handleCurrentChange(val: any) {
             </el-space>
         </el-form-item>
     </el-form>
-    <el-drawer v-model="ctrl.drawer" title="设置高级参数" size="50%">
-        <el-form label-width="18%">
+    <el-drawer v-model="ctrl.drawer" title="设置高级参数" size="30%">
+        <el-form label-width="30%">
             <el-form-item label="存活探测:">
                 <el-checkbox v-model="config.alive" />
                 <el-switch v-model="config.ping" active-text="ICMP" inactive-text="Ping" v-if="config.alive"
@@ -381,20 +407,25 @@ function handleCurrentChange(val: any) {
             </el-form-item>
         </el-form>
         <div v-if="config.burte === true">
-            <el-descriptions title="用户名字典管理" :column="2" border>
+            <el-descriptions title="字典管理" :column="2" border>
                 <el-descriptions-item v-for="item in dict.usernames" :label="item.name" :span="2">
-                    <el-button @click="ctrl.innerDrawer = true; ctrl.currentDic = item.dic.join('\n')">
-                        口令字典
+                    <el-button
+                        @click="ctrl.innerDrawer = true; ctrl.currentPath = '/username/' + item.name + '.txt'; ReadDict('/username/' + item.name + '.txt')">
+                        用户名
                     </el-button>
-                    <el-button @click="ctrl.innerDrawer = true; ctrl.currentDic = dict.passwords.join('\n')">
-                        密码字典
+                </el-descriptions-item>
+                <el-descriptions-item label="密码(所有协议通用)" :span="2">
+                    <el-button
+                        @click="ctrl.innerDrawer = true; ctrl.currentPath = '/password/password.txt'; ReadDict('/password/password.txt')">
+                        密码
                     </el-button>
                 </el-descriptions-item>
             </el-descriptions>
         </div>
-        <el-drawer v-model="ctrl.innerDrawer" title="账号管理" :append-to-body="true">
+        <el-drawer v-model="ctrl.innerDrawer" title="字典管理" :append-to-body="true">
             <el-input type="textarea" rows="20" v-model="ctrl.currentDic"></el-input>
-            <!-- <el-button type="primary" style="margin-top: 10px;">保存</el-button> -->
+            <el-button type="primary" style="margin-top: 10px; float: right;"
+                @click="SaveFile(ctrl.currentPath)">保存</el-button>
         </el-drawer>
     </el-drawer>
 
@@ -446,11 +477,11 @@ function handleCurrentChange(val: any) {
                 <el-input class="log-textarea" v-model="form.log" type="textarea" rows="16" readonly></el-input>
             </el-tab-pane>
         </el-tabs>
-        <el-button-group class="custom_eltabs_titlebar" v-if="form.activeName == '1'">
-            <el-button :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL目标</el-button>
-            <el-button :icon="DocumentChecked"
+        <div class="custom_eltabs_titlebar" v-if="form.activeName == '1'">
+            <el-button text :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL</el-button>
+            <el-button text :icon="DocumentChecked"
                 @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">导出</el-button>
-        </el-button-group>
+        </div>
     </div>
 </template>
 
