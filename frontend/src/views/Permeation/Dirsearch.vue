@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { GoFetch, InitDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
-import { GetFileContent, OpenFolder } from "../../../wailsjs/go/main/File";
+import { GoFetch, LoadDirsearchDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
+import { GetFileContent } from "../../../wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import async from 'async';
-import { QuestionFilled, FolderOpened, Loading } from '@element-plus/icons-vue';
+import { QuestionFilled, Loading } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(() => {
@@ -92,7 +92,7 @@ class Dirsearch {
             from.url += "/"
         }
         if (from.paths.length === 0) {
-            await InitDict(window.ConfigPath + "/dirsearch", from.exts.split(',')).then(result => {
+            await LoadDirsearchDict(window.ConfigPath + "/dirsearch", from.exts.split(',')).then(result => {
                 from.paths = result;
                 from.tips = `loaded default (${from.paths.length} dicts)`;
             });

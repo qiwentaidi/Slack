@@ -1,7 +1,8 @@
 import * as XLSX from "xlsx";
 import { ElMessage } from "element-plus";
 import global from "./global";
-import { CheckTarget, SaveFile, WriteFile } from "../wailsjs/go/main/App";
+import { CheckTarget, SaveFile } from "../wailsjs/go/main/App";
+import { WriteFile } from "../wailsjs/go/main/File";
 // 单sheet导出
 export async function ExportToXlsx(
   headers: string[],

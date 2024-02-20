@@ -74,10 +74,6 @@ export function IconHash(arg1) {
   return window['go']['main']['App']['IconHash'](arg1);
 }
 
-export function InitDict(arg1, arg2) {
-  return window['go']['main']['App']['InitDict'](arg1, arg2);
-}
-
 export function InitIPResolved() {
   return window['go']['main']['App']['InitIPResolved']();
 }
@@ -88,6 +84,10 @@ export function InitRule() {
 
 export function InitTycHeader(arg1) {
   return window['go']['main']['App']['InitTycHeader'](arg1);
+}
+
+export function LoadDirsearchDict(arg1, arg2) {
+  return window['go']['main']['App']['LoadDirsearchDict'](arg1, arg2);
 }
 
 export function LoadSubDict(arg1) {
@@ -160,8 +160,4 @@ export function Webscan(arg1, arg2, arg3, arg4, arg5) {
 
 export function WechatAppid(arg1, arg2) {
   return window['go']['main']['App']['WechatAppid'](arg1, arg2);
-}
-
-export function WriteFile(arg1, arg2, arg3) {
-  return window['go']['main']['App']['WriteFile'](arg1, arg2, arg3);
 }

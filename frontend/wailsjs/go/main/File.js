@@ -18,6 +18,10 @@ export function InitMemo(arg1, arg2) {
   return window['go']['main']['File']['InitMemo'](arg1, arg2);
 }
 
+export function Mkdir(arg1) {
+  return window['go']['main']['File']['Mkdir'](arg1);
+}
+
 export function OpenFolder(arg1) {
   return window['go']['main']['File']['OpenFolder'](arg1);
 }
@@ -44,4 +48,8 @@ export function UpdatePocFile() {
 
 export function UserHomeDir() {
   return window['go']['main']['File']['UserHomeDir']();
+}
+
+export function WriteFile(arg1, arg2, arg3) {
+  return window['go']['main']['File']['WriteFile'](arg1, arg2, arg3);
 }

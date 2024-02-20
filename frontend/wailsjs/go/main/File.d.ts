@@ -9,6 +9,8 @@ export function InitConfig():Promise<boolean>;
 
 export function InitMemo(arg1:string,arg2:string):Promise<boolean>;
 
+export function Mkdir(arg1:string):Promise<boolean>;
+
 export function OpenFolder(arg1:string):Promise<string>;
 
 export function PathBase(arg1:string):Promise<string>;
@@ -22,3 +24,5 @@ export function UpdateClinetFile(arg1:string):Promise<string>;
 export function UpdatePocFile():Promise<string>;
 
 export function UserHomeDir():Promise<string>;
+
+export function WriteFile(arg1:string,arg2:string,arg3:string):Promise<boolean>;

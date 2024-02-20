@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/base64"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -136,4 +137,21 @@ func (*File) ReadMemo(filepath string) map[string]string {
 		keyValueMap[key] = value.String()
 	}
 	return keyValueMap
+}
+
+func (*File) Mkdir(dir string) bool {
+	return os.Mkdir(dir, 0644) == nil
+}
+
+func (*File) WriteFile(filetype, path, content string) bool {
+	var buf []byte
+	switch filetype {
+	case "base64":
+		buf, _ = base64.StdEncoding.DecodeString(content)
+	// txt
+	default:
+		buf = []byte(content)
+	}
+	err := os.WriteFile(path, buf, 0644)
+	return err == nil
 }

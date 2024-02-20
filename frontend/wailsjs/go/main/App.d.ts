@@ -42,13 +42,13 @@ export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 
 export function IconHash(arg1:string):Promise<string>;
 
-export function InitDict(arg1:string,arg2:Array<string>):Promise<Array<string>>;
-
 export function InitIPResolved():Promise<void>;
 
 export function InitRule():Promise<void>;
 
 export function InitTycHeader(arg1:string):Promise<void>;
+
+export function LoadDirsearchDict(arg1:string,arg2:Array<string>):Promise<Array<string>>;
 
 export function LoadSubDict(arg1:string):Promise<Array<string>>;
 
@@ -85,5 +85,3 @@ export function WebIconMd5(arg1:string):Promise<string>;
 export function Webscan(arg1:string,arg2:string,arg3:string,arg4:Array<string>,arg5:clients.Proxy):Promise<any>;
 
 export function WechatAppid(arg1:string,arg2:string):Promise<string>;
-
-export function WriteFile(arg1:string,arg2:string,arg3:string):Promise<boolean>;

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -87,19 +86,6 @@ func (a *App) SaveFile(filename string) string {
 		return ""
 	}
 	return selection
-}
-
-func (a *App) WriteFile(filetype, path, content string) bool {
-	var buf []byte
-	switch filetype {
-	case "base64":
-		buf, _ = base64.StdEncoding.DecodeString(content)
-	// txt
-	default:
-		buf = []byte(content)
-	}
-	err := os.WriteFile(path, buf, 0644)
-	return err == nil
 }
 
 type Response struct {
@@ -337,7 +323,7 @@ func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
 
 // dirsearch
 
-func (a *App) InitDict(configPath string, newExts []string) []string {
+func (a *App) LoadDirsearchDict(configPath string, newExts []string) []string {
 	return util.LoadDirsearchDict(util.HomeDir()+configPath, "/dicc.txt", "%EXT%", newExts)
 }
 
@@ -460,8 +446,7 @@ func (a *App) PortBrute(host string, usernames, passwords []string) *portscan.Bu
 	if err != nil {
 		return nil
 	}
-	protocol := strings.Split(host, "://")[0]
-	switch protocol {
+	switch u.Scheme {
 	case "ftp":
 		return portscan.FtpScan(u.Host, usernames, passwords)
 	case "ssh":
@@ -487,7 +472,7 @@ func (a *App) PortBrute(host string, usernames, passwords []string) *portscan.Bu
 	case "memcached":
 		return portscan.MemcachedScan(u.Host)
 	case "mongodb":
-		portscan.MongodbScan(u.Host)
+		return portscan.MongodbScan(u.Host)
 	}
 	return nil
 }

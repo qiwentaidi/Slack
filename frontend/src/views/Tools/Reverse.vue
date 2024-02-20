@@ -33,7 +33,10 @@
                 </el-table>
             </el-tab-pane>
         </el-tabs>
-        <pre class="pre-wrap"><code>{{reverse.show}}</code></pre>
+        <div style="width: 70%; margin-left: 20px;">
+            <pre class="pre-wrap"><code>{{reverse.show}}</code></pre>
+            <el-button type="primary" style="float: right; margin-top: 10px;">复制</el-button>
+        </div>
     </div>
     <el-dialog title="添加" v-model="dialog" width="500">
         <el-form>
@@ -61,6 +64,7 @@ import { ElMessage } from 'element-plus'
 import { CheckFileStat, InitMemo, ReadMemo } from '../../../wailsjs/go/main/File';
 
 onMounted(async () => {
+    handleChange(data.memo[0])
     let fp = window.HomePath + "/slack/memo.txt"
     if (await CheckFileStat(fp)) {
         let kv = await ReadMemo(fp)
@@ -207,9 +211,13 @@ function onAddItem() {
 
 async function save() {
     let temp = ''
-    for (const item of data.memo) {
-        temp += `[${item.label}]\n${item.value}\n`
-    }
+    data.memo.forEach((item, index) => {
+        if (index != data.memo.length) {
+            temp += `[${item.label}]\n${item.value}\n`
+        }else {
+            temp += `[${item.label}]\n${item.value}`
+        }
+    });
     if (await InitMemo(window.HomePath + "/slack/memo.txt", temp)) {
         ElMessage({
             showClose: true,
@@ -228,8 +236,6 @@ async function save() {
     word-break: break-all;
     overflow-wrap: break-word;
     margin: 0;
-    margin-left: 20px;
-    width: 70%;
     outline: auto;
     font-size: 1em;
 }
