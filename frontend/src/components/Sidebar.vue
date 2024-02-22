@@ -18,7 +18,7 @@ const changeLanguage = (area: string) => {
 
 const version = reactive({
   LocalPoc: "",
-  LocalClient: '1.4.7',
+  LocalClient: '1.4.8',
   RemotePoc: "",
   RemoteClient: "",
   PocUpdateContent: "",
