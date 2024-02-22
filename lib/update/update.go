@@ -54,9 +54,8 @@ func download(target, dest string) (string, error) {
 
 const (
 	BinaryFile_Windows      = "slack-wails.exe"
-	BinaryFile_Linux        = "slack-wails_linux_amd64"
-	BinaryFile_Darwin_AMD64 = "slack-wails_darwin_amd64.app"
-	BinaryFile_Darwin_ARM64 = "slack-wails_darwin_arm64.app"
+	BinaryFile_Darwin_AMD64 = "slack-wails_darwin_amd64.zip"
+	BinaryFile_Darwin_ARM64 = "slack-wails_darwin_arm64.zip"
 )
 
 func UpdateClinet(latestVersion string) error {
@@ -64,8 +63,6 @@ func UpdateClinet(latestVersion string) error {
 	switch runtime.GOOS {
 	case "windows":
 		binaryFileName = BinaryFile_Windows
-	case "linux":
-		binaryFileName = BinaryFile_Linux
 	case "darwin":
 		if runtime.GOARCH == "arm64" {
 			binaryFileName = BinaryFile_Darwin_ARM64

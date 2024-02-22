@@ -58,6 +58,8 @@ wails build // 编译
 
 ## 子域名暴破
 
+![image-20240222154726647](assets/image-20240222154726647.png)
+
 ## 域名信息查询
 
 ![image-20231124155438993](assets/image-20231124155438993.png)
@@ -76,13 +78,11 @@ wails build // 编译
 
 # 小工具
 
-## 加解密模块等
+<img src="assets/image-20240222155132016.png" alt="image-20240222155132016" style="zoom:55%;" />
 
-![image-20231125184445970](assets/image-20231125184445970.png)
 
-![image-20231208110624124](assets/image-20231208110624124.png)
 
-# 常见问题
+## 常见问题
 
 > Q：Windows grdp库无法打包，出现如下报错
 >

@@ -250,14 +250,8 @@ func (a *App) LoadSubDict(configPath string) []string {
 	return util.LoadSubdomainDict(util.HomeDir()+configPath, "/dicc.txt")
 }
 
-var onec sync.Once
-
 func (a *App) Subdomain(subdomain, dns1, dns2 string, timeout int) []string {
-	var data map[string][]string
-	onec.Do(func() {
-		data = core.ReadCDNFile(a.cdnFile)
-	})
-	sr := core.BurstSubdomain(subdomain, []string{dns1 + ":53", dns2 + "53"}, data, timeout, a.qqwryFile)
+	sr := core.BurstSubdomain(subdomain, []string{dns1 + ":53", dns2 + "53"}, timeout, a.qqwryFile, a.cdnFile)
 	return []string{sr.Subdomain, strings.Join(sr.Cname, " | "), strings.Join(sr.Ips, " | "), sr.Notes}
 }
 

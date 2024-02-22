@@ -22,6 +22,7 @@ var (
 	IPResolved map[string]int
 	mutex      sync.Mutex
 	database   *qqwry.QQwry
+	cdndata    map[string][]string
 	onec       sync.Once
 )
 
@@ -41,8 +42,9 @@ func InitQqwry(qqwryFile string) {
 }
 
 // 采用递归判断暴破层级
-func BurstSubdomain(subdomains string, servers []string, cdndata map[string][]string, timeout int, qqwryFile string) *SubdomainResult {
+func BurstSubdomain(subdomains string, servers []string, timeout int, qqwryFile, cdnFile string) *SubdomainResult {
 	onec.Do(func() {
+		cdndata = ReadCDNFile(cdnFile)
 		InitQqwry(qqwryFile)
 	})
 	var sr SubdomainResult

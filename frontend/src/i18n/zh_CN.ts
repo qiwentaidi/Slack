@@ -29,8 +29,9 @@ export default {
         'zh': '简体中文',
         'en': '英文',
         'about': '关于',
-        'suggestions': '工具目前存在内存GC问题，如有改善意见或其他问题可以通过vx或者issue联系，联系方式可点击首页LOGO处前往项目地址获取',
-        'technology': '技术栈',
+        'source_code': '源码地址',
+        'update_log': '更新日志',
+        'issue': '提出问题'
     },
     setting: {
         'username': '用户名',

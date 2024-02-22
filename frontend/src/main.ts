@@ -14,9 +14,9 @@ declare global {
   var AFGPathPoc: string
   var PocVersion: string
   var LocalPocVersionFile: string
-  var ConfigPath: string
   var HomePath: string
   var PortBurstPath: string
+  var ConfigPath: string
 }
 
 

@@ -29,8 +29,9 @@ export default {
         'zh': 'Simplified Chinese',
         'en': 'English',
         'about': 'About',
-        'suggestions': 'If you have any improvement suggestions or other questions, you can contact us through wechat or issue. The contact information can be obtained by clicking on the logo on the homepage to go to the project address',
-        'technology': 'technology',
+        'source_code': 'Source Code',
+        'update_log': 'Update Log',
+        'issue': 'New Issue'
     },
     setting: {
         'username': 'Username',
