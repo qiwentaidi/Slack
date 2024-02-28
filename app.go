@@ -376,9 +376,21 @@ type PortResult struct {
 func (a *App) PortCheck(ip string, port, timeout int) PortResult {
 	var pr PortResult
 	scanner := gonmap.New()
-	_, response := scanner.ScanTimeout(ip, port, time.Second*time.Duration(timeout))
-	if response != nil {
+	status, response := scanner.ScanTimeout(ip, port, time.Second*time.Duration(timeout))
+	if status != gonmap.Closed {
 		pr.Status = true
+	}
+	switch status {
+	case gonmap.Closed:
+		pr.Status = false
+	// filter 未知状态
+	case gonmap.Unknown:
+		pr.Status = true
+		pr.Server = "filter"
+	default:
+		pr.Status = true
+	}
+	if response != nil {
 		if response.FingerPrint.Service != "" {
 			pr.Server = response.FingerPrint.Service
 		} else {

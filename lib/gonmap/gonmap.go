@@ -124,6 +124,11 @@ func customNMAPMatch() {
 	nmap.AddMatch("TCP_NULL", `ftp m|^220 H3C Small-FTP Server Version ([\d.]+).* | p/H3C Small-FTP/ v/$1/`)
 	nmap.AddMatch("TCP_NULL", `ftp m|^421[- ]Service not available..*|`)
 	nmap.AddMatch("TCP_NULL", `ftp m|^220[- ].*filezilla.*|i p/FileZilla/`)
+	nmap.AddMatch("TCP_NULL", `sqlserver m|.*Microsoft SQL Server.*| p/Microsoft SQL Server/`)
+	nmap.AddMatch("TCP_NULL", `sqlserver m|.*SQL Server.*| p/Microsoft SQL Server/`)
+	nmap.AddMatch("TCP_NULL", `sqlserver m|.*SQL Server ([\d.]+).*| p/Microsoft SQL Server/ v/$1/`)
+	nmap.AddMatch("TCP_NULL", `sqlserver m|.*Login failed for user '.*'| p/Microsoft SQL Server/`)
+
 	nmap.AddMatch("TCP_TerminalServerCookie", `ms-wbt-server m|^\x03\0\0\x13\x0e\xd0\0\0\x124\0\x02.*\0\x02\0\0\0| p/Microsoft Terminal Services/ o/Windows/ cpe:/o:microsoft:windows/a`)
 	nmap.AddMatch("TCP_redis-server", `redis m|^.*redis_version:([.\d]+)\n|s p/Redis key-value store/ v/$1/ cpe:/a:redislabs:redis:$1/`)
 	nmap.AddMatch("TCP_redis-server", `redis m|^-NOAUTH Authentication required.|s p/Redis key-value store/`)
