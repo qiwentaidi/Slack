@@ -127,6 +127,15 @@ const table = reactive({
             form.tips = result.message + " 共查询到数据:" + result.data.total + "条," + result.data.rest_quota
             const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
             tab.content!.pop()
+            if (result.data.arr == null) {
+                ElMessage({
+                    showClose: true,
+                    message: "暂未查询到相关数据",
+                    type: "warning",
+                });
+                loading.value = false
+                return
+            }
             result.data.arr.forEach((item: any) => {
                 tab.content?.push({
                     URL: item.url,
@@ -338,7 +347,7 @@ async function SaveData(mode: number) {
 </script>
 
 <template>
-    <el-form v-model="form">
+    <el-form v-model="form" @submit.native.prevent="table.addTab(form.query)">
         <el-form-item label="查询条件">
             <div class="head">
                 <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"

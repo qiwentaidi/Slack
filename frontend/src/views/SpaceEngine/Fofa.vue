@@ -235,7 +235,7 @@ function filterHandlerTitle(value: string, row: any): boolean {
 </script>
 
 <template>
-    <el-form :model="form">
+    <el-form :model="form" @submit.native.prevent="table.addTab(form.query)">
         <el-form-item label="查询条件">
             <div class="head">
                 <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
@@ -307,7 +307,13 @@ function filterHandlerTitle(value: string, row: any): boolean {
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="URL" label="URL" width="200" show-overflow-tooltip="true" />
+                <el-table-column prop="URL" label="URL" width="200" show-overflow-tooltip="true">
+                    <template #default="scope">
+                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)">
+                        </el-button>
+                        {{ scope.row.URL }}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
                     :filter-method="filterHandlerTitle" width="150" show-overflow-tooltip="true" />
                 <el-table-column prop="IP" label="IP" width="150" show-overflow-tooltip="true" />
@@ -320,14 +326,6 @@ function filterHandlerTitle(value: string, row: any): boolean {
                 <el-table-column prop="Region" label="省份" show-overflow-tooltip="true" />
                 <el-table-column prop="City" label="城市" show-overflow-tooltip="true" />
                 <el-table-column prop="ICP" label="备案号" width="150" show-overflow-tooltip="true" />
-                <el-table-column fixed="right" label="操作" width="55px">
-                    <template #default="scope">
-                        <el-tooltip content="打开链接" placement="left">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)">
-                            </el-button>
-                        </el-tooltip>
-                    </template>
-                </el-table-column>
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
