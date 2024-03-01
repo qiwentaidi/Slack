@@ -3,8 +3,9 @@ import { reactive, ref } from 'vue';
 import { GoFetch, LoadDirsearchDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
 import { ReadLine } from '../../util'
 import { ElMessage } from 'element-plus'
+import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import async from 'async';
-import { QuestionFilled, Loading } from '@element-plus/icons-vue';
+import { QuestionFilled, Loading, ChromeFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(() => {
@@ -25,6 +26,7 @@ const from = reactive({
     errorCounts: 0,
     redirectClient: false,
     alive: false,
+    runningStatus: false
 })
 const dir = ref([{}])
 
@@ -43,13 +45,15 @@ async function handleFileChange() {
     }
     from.paths = Array.from(new Set(from.paths))
     from.tips = `loaded ${from.paths.length} dicts`;
-
 }
 
 async function dirscan() {
-    let ds = new Dirsearch()
-    if (await ds.checkURL()) {
-        ds.scanner()
+    // true is in running 
+    if (!from.runningStatus) {
+        let ds = new Dirsearch()
+        if (await ds.checkURL()) {
+            ds.scanner()
+        }
     }
 }
 
@@ -99,7 +103,7 @@ class Dirsearch {
         if (from.redirectClient) {
             redirect = true
         }
-
+        from.runningStatus = true
         async.eachLimit(from.paths, config.thread, (path: string, callback: (err?: Error) => void) => {
             from.id++;
             from.currentRate = Math.round(from.id / ((Date.now() - startTime) / 1000));
@@ -144,6 +148,7 @@ class Dirsearch {
                     message: `${from.url}目录扫描结束`,
                     type: 'success',
                 });
+                from.runningStatus = false
             }
         });
     }
@@ -154,6 +159,7 @@ const control = reactive({
     stop: function () {
         if (control.exit === false) {
             control.exit = true
+            from.runningStatus = false
         }
     },
     format: function (percentage: any) {
@@ -196,8 +202,8 @@ const config = reactive({
                     <el-option v-for="item in from.options" :value="item" :label="item" />
                 </el-select>
                 <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 5px; width: 100%;" />
-                <el-button type="primary" @click="dirscan">开始扫描</el-button>
-                <el-button type="danger" @click="control.stop">停止</el-button>
+                <el-button type="primary" @click="dirscan" v-if="!from.runningStatus">开始扫描</el-button>
+                <el-button type="danger" @click="control.stop" v-else>停止扫描</el-button>
             </div>
         </el-form-item>
         <el-form-item>
@@ -266,7 +272,13 @@ const config = reactive({
             :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable show-overflow-tooltip="true" />
         <el-table-column prop="length" width="100px" label="长度"
             :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable show-overflow-tooltip="true" />
-        <el-table-column prop="path" label="完整目录路径" show-overflow-tooltip="true" />
+        <el-table-column prop="path" label="完整目录路径" show-overflow-tooltip="true">
+            <template #default="scope">
+                <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.path)">
+                </el-button>
+                {{ scope.row.path }}
+            </template>
+        </el-table-column>
         <el-table-column prop="location" label="跳转路径" show-overflow-tooltip="true" />
     </el-table>
     <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
