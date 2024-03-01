@@ -335,8 +335,10 @@ func (a *App) PathRequest(method, url string, timeout int, bodyExclude string, r
 	}
 	var header http.Header
 	if customHeader != "" {
-		temp := strings.Split(customHeader, ":")
-		header.Set(temp[0], temp[1])
+		for _, single := range strings.Split(customHeader, "\n") {
+			temp := strings.Split(single, ":")
+			header.Set(temp[0], temp[1])
+		}
 	}
 	resp, body, err := clients.NewRequest(method, url, header, nil, timeout, client)
 	if err != nil {

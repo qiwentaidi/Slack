@@ -17,7 +17,6 @@ const from = reactive({
     defaultOption: 'GET',
     exts: 'php,aspx,asp,jsp,html,js',
     statusFilter: '',
-    header: '',
     paths: [] as string[],
     percentage: 0,
     id: 0,
@@ -256,7 +255,7 @@ const config = reactive({
                         <el-input v-model="from.statusFilter" placeholder="支持200,300 | 200-300,400-500"></el-input>
                     </el-form-item>
                     <el-form-item label="自定义请求头:" style="margin-bottom: 10px;">
-                        <el-input v-model="from.header" placeholder="仅支持单行请求头以键:值形式输入" type="textarea" rows="3"></el-input>
+                        <el-input v-model="config.headers" placeholder="以键:值形式输入，多行请用换行分割" type="textarea" rows="3"></el-input>
                     </el-form-item>
                     <el-form-item label="自定义字典:" style="margin-bottom: 10px;">
                         <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
