@@ -389,7 +389,8 @@ function handleCurrentChange(val: any) {
             </el-space>
         </el-form-item>
     </el-form>
-    <el-drawer v-model="ctrl.drawer" title="设置高级参数" size="30%">
+    <el-drawer v-model="ctrl.drawer" size="30%">
+        <template #title><h4>设置高级参数</h4></template>
         <el-form label-width="30%">
             <el-form-item label="存活探测:">
                 <el-checkbox v-model="config.alive" />

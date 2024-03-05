@@ -59,16 +59,16 @@
               <el-form-item :label="$t('aside.hunter')">
                 <el-input v-model="global.space.hunterkey" placeholder="key" clearable></el-input>
               </el-form-item>
-              <el-form-item :label="$t('aside.360quake')">
+              <!-- <el-form-item :label="$t('aside.360quake')">
                 <el-input v-model="global.space.quakekey" placeholder="key" clearable></el-input>
-              </el-form-item>
+              </el-form-item> -->
             </el-form>
           </el-collapse-item>
         </el-collapse>
       </el-main>
     </el-scrollbar>
     <el-footer>
-      <el-button type="primary" @click="saveConfig">保存</el-button>
+      <el-button type="primary" @click="saveConfig">{{ $t('setting.save') }}</el-button>
     </el-footer>
   </el-container>
 </template>

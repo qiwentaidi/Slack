@@ -40,6 +40,7 @@ export default {
         'mode': '模式',
         'address': '地址',
         'port': '端口',
-        'proxy': '代理配置(仅适用网站扫描)'
+        'proxy': '代理配置(仅适用网站扫描)',
+        'save': '保存'
     }
 }

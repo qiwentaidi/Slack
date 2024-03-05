@@ -10,7 +10,7 @@ import Sidebar from './components/Sidebar.vue'
     </el-aside>
     <el-main>
       <!-- 一定要使用插槽否则keey-alive不会生效 -->
-      <router-view v-slot="{ Component }"> 
+      <router-view v-slot="{ Component }">
         <keep-alive>
           <component :is="Component"></component>
         </keep-alive>

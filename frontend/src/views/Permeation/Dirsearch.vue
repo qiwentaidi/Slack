@@ -283,3 +283,9 @@ const config = reactive({
     <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
         color="#5DC4F7" style="margin-top: 10px;" />
 </template>
+
+<style>
+.el-drawer__header {
+    margin-bottom: 0px;
+}
+</style>

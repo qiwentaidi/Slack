@@ -41,5 +41,6 @@ export default {
         'address': 'Address',
         'port': 'Port',
         'proxy': 'Proxy (only applicable for webscan)',
+        'save': 'Save'
     }
 }

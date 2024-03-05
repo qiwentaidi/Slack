@@ -18,7 +18,6 @@ require (
 	github.com/miekg/dns v1.1.57
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/mozillazg/go-pinyin v0.20.0
-	github.com/panjf2000/ants/v2 v2.9.0
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d
 	github.com/sijms/go-ora/v2 v2.8.6
 	github.com/spaolacci/murmur3 v1.1.0
