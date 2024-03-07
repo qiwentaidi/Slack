@@ -40,7 +40,6 @@ func (c *CustomLib) RunEval(expression string, variablemap map[string]any) (ref.
 	resp := make(chan int)
 	go func() {
 		defer close(resp)
-
 		env, err := c.NewCelEnv()
 		if err != nil {
 			resp <- 9

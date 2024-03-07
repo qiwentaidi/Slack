@@ -92,11 +92,11 @@ func InitClientPool(options *PoolOptions) error {
 		return nil
 	}
 
-	// if len(options.Proxy) > 0 {
-	// 	if err := LoadProxyServers(options.Proxy); err != nil {
-	// 		return err
-	// 	}
-	// }
+	if len(options.Proxy) > 0 {
+		if err := LoadProxyServers(options.Proxy); err != nil {
+			return err
+		}
+	}
 
 	forceMaxRedirects = options.MaxRedirects
 
@@ -316,16 +316,14 @@ func wrappedGet(options *PoolOptions) (*Client, error) {
 		dc := dialer.(interface {
 			DialContext(ctx context.Context, network, addr string) (net.Conn, error)
 		})
-		if proxyErr == nil {
-			transport.DialContext = dc.DialContext
-			transport.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-				// upgrade proxy connection to tls
-				conn, err := dc.DialContext(ctx, network, addr)
-				if err != nil {
-					return nil, err
-				}
-				return tls.Client(conn, tlsConfig), nil
+		transport.DialContext = dc.DialContext
+		transport.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			// upgrade proxy connection to tls
+			conn, err := dc.DialContext(ctx, network, addr)
+			if err != nil {
+				return nil, err
 			}
+			return tls.Client(conn, tlsConfig), nil
 		}
 	}
 
@@ -404,15 +402,15 @@ func makeCheckRedirectFunc(redirectType RedirectFlow, maxRedirects int) checkRed
 				// Tell the http client to not follow redirect
 				return http.ErrUseLastResponse
 			}
-			return checkMaxRedirects(req, via, maxRedirects)
+			return checkMaxRedirects(via, maxRedirects)
 		case FollowAllRedirect:
-			return checkMaxRedirects(req, via, maxRedirects)
+			return checkMaxRedirects(via, maxRedirects)
 		}
 		return nil
 	}
 }
 
-func checkMaxRedirects(req *http.Request, via []*http.Request, maxRedirects int) error {
+func checkMaxRedirects(via []*http.Request, maxRedirects int) error {
 	if maxRedirects == 0 {
 		if len(via) > defaultMaxRedirects {
 			return http.ErrUseLastResponse

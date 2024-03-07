@@ -9,6 +9,9 @@ import (
 	"strings"
 )
 
+// 代理过滤器，防止在走代理扫描时将不存活的网站由于走了代理导致状态码变成200
+var filter = []string{"Burp Suite Professional"}
+
 // response
 type CheckDatas struct {
 	StatusCode  int    // 状态码
@@ -38,6 +41,12 @@ func RecvResponse(url string, client *http.Client) *CheckDatas {
 		}
 		checkdatas.FaviconHash = FaviconHash(url, client)
 	}
+	for _, v := range filter {
+		if checkdatas.Title == v {
+			checkdatas.StatusCode = 0
+		}
+	}
+
 	return &checkdatas
 }
 

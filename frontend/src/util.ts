@@ -1,7 +1,7 @@
 import * as XLSX from "xlsx";
 import { ElMessage } from "element-plus";
 import global from "./global";
-import { CheckTarget, SaveFile } from "../wailsjs/go/main/App";
+import { CheckTarget, SaveFile, GoFetch } from "../wailsjs/go/main/App";
 import { GetFileContent, WriteFile } from "../wailsjs/go/main/File";
 // 单sheet导出
 export async function ExportToXlsx(
@@ -265,4 +265,20 @@ export async function ReadLine(filepath: string) {
     const result = res.replace(/\r\n/g, "\n"); // 避免windows unix系统差异
     return Array.from(result.split("\n"));
   }
+}
+
+export async function TestProxy() {
+  const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port
+  if (global.proxy.enabled) {
+    let resp = await GoFetch("GET", proxyURL, "", [{}], 10, null)
+    if (resp.Error == true) {
+      ElMessage({
+        showClose: true,
+        message: "代理地址不可达",
+        type: "warning",
+      });
+      return false
+    }
+  }
+  return true
 }

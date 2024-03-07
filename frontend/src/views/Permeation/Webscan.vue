@@ -10,10 +10,9 @@ import {
     GetFingerPoc,
     FofaSearch,
     HunterSearch,
-    GoFetch
 } from '../../../wailsjs/go/main/App'
 import { ElMessage } from 'element-plus';
-import { formatURL, ApiSyntaxCheck, splitInt } from '../../util'
+import { formatURL, ApiSyntaxCheck, splitInt, TestProxy } from '../../util'
 import async from 'async';
 import global from "../../global"
 import { onMounted } from 'vue';
@@ -68,7 +67,7 @@ const dashboard = reactive({
     medium: 0,
     low: 0,
     info: 0,
-    runningStatus: "" as string,
+    currentModule: "" as string,
     count: 0,
     logger: '',
     request: '',
@@ -84,13 +83,17 @@ const ctrl = reactive({
 async function startScan() {
     let ws = new Scanner
     form.newscanner = false
-    ws.initData()
+    ws.init()
     await ws.infoScanner()
 }
 
 function stopScan() {
     if (ctrl.exit === false) {
         ctrl.exit = true
+        ElMessage({
+            showClose: true,
+            message: "任务已停止",
+        });
     }
 }
 
@@ -105,7 +108,7 @@ interface WebResult {
 
 class Scanner {
     urls = [] as string[]
-    public initData() {
+    public init() {
         form.urlFingerMap = [] as uf[]
         form.fingerResult = []
         form.vulResult = []
@@ -115,28 +118,21 @@ class Scanner {
         dashboard.low = 0
         dashboard.info = 0
         dashboard.reqErrorURLs = []
-        dashboard.runningStatus = ""
+        dashboard.currentModule = ""
         dashboard.logger = ''
-        return
     }
 
     public async infoScanner() {
         // 检查先行条件
+        if (!await TestProxy()) {
+            return
+        }
         this.urls = await formatURL(form.url)
         dashboard.count = this.urls.length
         if (this.urls.length == 0) {
             ElMessage({
                 showClose: true,
                 message: "可用目标为空",
-                type: "warning",
-            });
-            return
-        }
-        const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port
-        if (global.proxy.enabled && (await GoFetch("GET", proxyURL, "", [{}], 10, null))) {
-            ElMessage({
-                showClose: true,
-                message: "代理地址不可达",
                 type: "warning",
             });
             return
@@ -151,11 +147,11 @@ class Scanner {
         dashboard.logger += `${date.toLocaleString()} 已加载任务目标: ${this.urls.length}个\n`
         dashboard.logger += '[INFO] 正在进行指纹扫描\n'
         let count = 0
+        dashboard.currentModule = form.currentModule
         async.eachLimit(this.urls, form.thread, async (target: string, callback: () => void) => {
             if (ctrl.exit === true) {
                 return
             }
-            dashboard.runningStatus = target
             let result = await FingerScan(target, global.proxy)
             if (result.StatusCode == 0) {
                 dashboard.reqErrorURLs.push(target)
@@ -175,21 +171,20 @@ class Scanner {
             count++
             if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
                 dashboard.logger += `[END] 指纹探测已结束\n`
-                form.currentLoadPath = await LocalWalkFiles(HomePath + ActivePathPoc) // 初始化主动指纹目录
                 count = 0
-                dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
                 callback();
             }
-        }, (err: any) => {
+        },async (err: any) => {
             if (form.currentModule !== "仅指纹扫描") {
+                form.currentLoadPath = await LocalWalkFiles(HomePath + ActivePathPoc) // 初始化主动指纹目录
+                dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
                 // 主动指纹探测
-                async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {
+                async.eachSeries(form.urlFingerMap, (ufm: uf, callback: () => void) => {
                     if (ctrl.exit === true) {
                         return
                     }
-                    dashboard.logger += `[INFO] ${target}，正在进行主动指纹探测\n`
-                    dashboard.runningStatus = target
-                    Webscan(target, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
+                    dashboard.logger += `[INFO] ${ufm.url}，正在进行主动指纹探测\n`
+                    Webscan(ufm.url, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
                         if (Array.isArray(result)) {
                             for (const item of result) {
                                 switch (item.Severity) {
@@ -218,7 +213,7 @@ class Scanner {
                                 })
                                 if (item.Severity == "INFO") {
                                     for (let i = 0; i < form.urlFingerMap.length; i++) {
-                                        if (form.urlFingerMap[i].url === target) {
+                                        if (form.urlFingerMap[i].url === ufm.url) {
                                             form.urlFingerMap[i].finger.push(item.VulName.split("-")[0]);
                                             break;
                                         }
@@ -226,13 +221,15 @@ class Scanner {
                                 }
                             }
                         }
-                    })
-                    count++
-                    if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
-                        dashboard.logger += `[END] 主动指纹探测已结束\n`
                         callback();
-                    }
+                    })
+                    // count++
+                    // if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
+                    //     dashboard.logger += `[END] 主动指纹探测已结束\n`
+                    //     callback();
+                    // }
                 }, (err: any) => {
+                    dashboard.logger += `[END] 主动指纹探测已结束\n`
                     this.webScanner()
                 })
             }
@@ -249,14 +246,13 @@ class Scanner {
                     count++
                 } 
             }
-            async.eachLimit(form.urlFingerMap, 5, async (ufm: uf, callback: () => void) => {
+            async.eachSeries(form.urlFingerMap, async (ufm: uf, callback: () => void) => {
                 if (ctrl.exit === true) {
                     return
                 }
                 if (ufm.finger.length > 0) {
                     form.currentLoadPath = await GetFingerPoc(ufm.finger)
                     dashboard.logger += `[INFO] ${ufm.url}，已加载漏洞: ${form.currentLoadPath.length}个\n`
-                    dashboard.runningStatus = ufm.url
                     Webscan(ufm.url, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
                         if (Array.isArray(result)) {
                             for (const item of result) {
@@ -286,6 +282,7 @@ class Scanner {
                                 })
                             }
                         }
+                        callback();
                     })
                     count--
                     if (count == 0) {
@@ -297,12 +294,11 @@ class Scanner {
             form.currentLoadPath = await LocalWalkFiles(HomePath + AFGPathPoc)
             dashboard.logger += `[INFO] 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
             let count = 0
-            async.eachLimit(this.urls, form.thread, (target: string, callback: () => void) => {
+            async.eachSeries(this.urls, (target: string, callback: () => void) => {
                 if (ctrl.exit === true) {
                     return
                 }
                 Webscan(target, form.risk.join(","), form.keyword, form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
-                    dashboard.runningStatus = target
                     for (const item of result) {
                         switch (item.Severity) {
                             case "CRITICAL":
@@ -329,6 +325,7 @@ class Scanner {
                             extInfo: item.ExtInfo
                         })
                     }
+                    callback();
                 })
                 count++
                 if (count == this.urls.length) {
@@ -480,8 +477,10 @@ function getClassBySeverity(row: any) {
                     <template #title>
                         <div style="display: inline-flex; align-items: center">
                             请求失败目标
-                            <el-popover placement="left" title="可能是由于无法识别到协议而无法扫描的地址" :width="350" trigger="hover">
-                                    <el-input v-model="dashboard.reqErrorURLs" type="textarea" rows="5"></el-input>
+                            <el-popover placement="left" :width="350" trigger="hover">
+                                <el-scrollbar height="150px">
+                                    <p v-for="u in dashboard.reqErrorURLs" class="scrollbar-demo-item">{{ u }}</p>
+                                </el-scrollbar>
                                 <template #reference>
                                     <el-icon style="margin-left: 4px" :size="12">
                                         <ZoomIn />
@@ -494,7 +493,7 @@ function getClassBySeverity(row: any) {
             </el-col>
             <el-divider direction="vertical" style="height: 7vh;" />
             <el-col :span="7">
-                <el-statistic title="当前目标" :value="dashboard.runningStatus" />
+                <el-statistic title="扫描模式" :value="dashboard.currentModule" />
             </el-col>
         </el-row>
     </el-card>
@@ -691,5 +690,17 @@ function getClassBySeverity(row: any) {
 
 .severity-info {
     color: green;
+}
+
+.scrollbar-demo-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  margin: 10px;
+  text-align: center;
+  border-radius: 4px;
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
 }
 </style>
