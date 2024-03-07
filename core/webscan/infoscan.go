@@ -34,6 +34,12 @@ func RecvResponse(url string, client *http.Client) *CheckDatas {
 		} else {
 			checkdatas.Title = ""
 		}
+		for _, v := range filter {
+			if checkdatas.Title == v {
+				checkdatas.StatusCode = 0
+				return &checkdatas
+			}
+		}
 		checkdatas.Body = body
 		checkdatas.StatusCode = resp.StatusCode
 		for key, value := range resp.Header {
@@ -41,12 +47,6 @@ func RecvResponse(url string, client *http.Client) *CheckDatas {
 		}
 		checkdatas.FaviconHash = FaviconHash(url, client)
 	}
-	for _, v := range filter {
-		if checkdatas.Title == v {
-			checkdatas.StatusCode = 0
-		}
-	}
-
 	return &checkdatas
 }
 
