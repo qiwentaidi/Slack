@@ -539,7 +539,7 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *AliveTarget {
 	if proxy.Enabled {
 		client, _ = clients.SelectProxy(&proxy, client)
 	}
-	protocalURL, err := clients.CheckProtocol(host, client)
+	protocolURL, err := clients.CheckProtocol(host, client)
 	if err != nil {
 		return &AliveTarget{
 			Status:      false,
@@ -548,7 +548,7 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *AliveTarget {
 	}
 	return &AliveTarget{
 		Status:      true,
-		ProtocolURL: protocalURL,
+		ProtocolURL: protocolURL,
 	}
 }
 

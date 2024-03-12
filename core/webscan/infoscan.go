@@ -67,7 +67,7 @@ func MatchRule(rule, str string) bool {
 	if strings.Contains(rule, "||") && !strings.Contains(rule, "&&") && !strings.Contains(rule, "(") { // 只存在 ||
 		conditions := strings.Split(rule, " || ")
 		for _, condition := range conditions {
-			if strings.Contains(str, condition) {
+			if ToLowerContains(str, condition) {
 				return true
 			}
 		}
@@ -76,7 +76,7 @@ func MatchRule(rule, str string) bool {
 		id := 0
 		conditions := strings.Split(rule, " && ")
 		for _, condition := range conditions {
-			if strings.Contains(str, condition) {
+			if ToLowerContains(str, condition) {
 				id++
 			}
 		}
@@ -95,7 +95,7 @@ func MatchRule(rule, str string) bool {
 				id := 0
 				cond := strings.Split(condition, " && ")
 				for _, c1 := range cond {
-					if strings.Contains(str, c1) {
+					if ToLowerContains(str, c1) {
 						id++
 					}
 				}
@@ -103,7 +103,7 @@ func MatchRule(rule, str string) bool {
 					return true
 				}
 			} else { // 仅需要 || 符一项为真
-				if strings.Contains(str, condition) {
+				if ToLowerContains(str, condition) {
 					return true
 				}
 			}
@@ -111,8 +111,12 @@ func MatchRule(rule, str string) bool {
 		return false
 	}
 	// 不存在运算符时
-	if strings.Contains(str, rule) {
+	if ToLowerContains(str, rule) {
 		return true
 	}
 	return false
+}
+
+func ToLowerContains(s, substr string) bool {
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }

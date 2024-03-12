@@ -247,7 +247,7 @@ const download = {
       }}</el-menu-item>
     </el-sub-menu>
 
-    <el-menu-item class="noactive" index="/update" @click="version.updateDialogVisible = true">
+    <el-menu-item class="custom-menu-item" index="/update" @click="version.updateDialogVisible = true">
       <el-icon>
         <Refresh />
       </el-icon>
@@ -255,7 +255,7 @@ const download = {
       <el-badge is-dot v-if="version.ClientStatus == true || version.PocStatus == true" />
     </el-menu-item>
 
-    <el-menu-item index="/settings" @click="$router.push('/Settings')">
+    <el-menu-item class="custom-menu-item" index="/settings" @click="$router.push('/Settings')">
       <el-icon>
         <setting />
       </el-icon>
@@ -368,4 +368,17 @@ const download = {
   /*  色块的颜色 */
   border-radius: 0 3px 3px 0;
   /* 轨道的形状 */
-}</style>
+} 
+
+.custom-menu-item:hover {
+ /* 定义鼠标悬停时的样式 */
+ background-color: #f5f5f5; /* 例如，使用一个浅灰色作为背景 */
+ color: #3875F6;
+}
+
+.custom-menu-item.is-active::before {
+ /* 定义激活状态时的样式 */
+ background-color: inherit; /* 使用继承的背景颜色 */
+ color: inherit; /* 使用继承的文本颜色 */
+}
+</style>

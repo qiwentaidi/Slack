@@ -175,10 +175,16 @@ export async function formatURL(host: string): Promise<string[]> {
     temp.push(target);
   }
   for (var item of temp) {
-    if (item.slice(-1) !== "/") {
-      urls.push((item += "/"));
-    } else {
+    const urlObj = new URL(item)
+    // 存在路径就不交验/
+    if (urlObj.pathname.length > 1) {
       urls.push(item);
+    } else {
+      if (item.slice(-1) !== "/") {
+        urls.push((item += "/"));
+      } else {
+        urls.push(item);
+      }
     }
   }
   return urls;

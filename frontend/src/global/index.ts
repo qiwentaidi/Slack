@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 var space = reactive({
+    fofaapi: 'https://fofa.info/',
     fofaemail: '',
     fofakey: '',
     hunterkey: '',

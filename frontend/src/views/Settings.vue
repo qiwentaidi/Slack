@@ -51,9 +51,10 @@
           <el-collapse-item name="3"><template #title>
               <h2>{{ $t('aside.space_engine') }}</h2>
             </template>
-            <el-form :model="global.space" label-width="100px">
+            <el-form :model="global.space" label-width="100px" label-position="top">
               <el-form-item label="FOFA" style="margin-top: 10px;">
-                <el-input v-model="global.space.fofaemail" placeholder="Email" clearable></el-input>
+                <el-input v-model="global.space.fofaapi" placeholder="api address" clearable></el-input>
+                <el-input v-model="global.space.fofaemail" placeholder="email" clearable style="margin-top: 5px;"></el-input>
                 <el-input v-model="global.space.fofakey" placeholder="key" clearable style="margin-top: 5px;"></el-input>
               </el-form-item>
               <el-form-item :label="$t('aside.hunter')">
@@ -78,6 +79,7 @@ import global from "../global"
 import { ElMessage } from 'element-plus';
 
 const saveConfig = () => {
+  global.space.fofaapi = global.space.fofaapi.replace(/[\r\n\s]/g, '');
   global.space.fofaemail = global.space.fofaemail.replace(/[\r\n\s]/g, '');
   global.space.fofakey = global.space.fofakey.replace(/[\r\n\s]/g, '');
   global.space.hunterkey = global.space.hunterkey.replace(/[\r\n\s]/g, '');
