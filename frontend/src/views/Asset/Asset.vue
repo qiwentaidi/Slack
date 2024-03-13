@@ -2,15 +2,13 @@
 import { reactive, ref } from "vue";
 import { QuestionFilled, Tickets, DocumentChecked } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
-import { AssetWechat, AssetSubcompany, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
+import { CompanyAssetInfo, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
 import global from "../../global"
 import { ExportAssetToXlsx } from '../../util'
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(() => {
-    su.value = [];
-    hu.value = [];
-    we.value = [];
+    Init()
 });
 const from = reactive({
     subcompany: false,
@@ -34,6 +32,13 @@ const from = reactive({
 const su = ref([{}])
 const hu = ref([{}])
 const we = ref([{}])
+
+function Init() {
+    su.value = [];
+    hu.value = [];
+    we.value = [];
+}
+
 function Collect() {
     if (from.company === "") {
         ElMessage({
@@ -63,14 +68,14 @@ function Collect() {
         })
         return
     }
+    Init()
     if (from.subcompany) {
-        su.value = [];
         const promises = from.companys.map(async companyName => {
             from.log += `[INF] 正在收集${companyName}的子公司信息\n`
             if (typeof companyName === 'string') {
-                const result = await AssetSubcompany(companyName, from.defaultHold);
-                if (result.Shareholding.length > 0) {
-                    const mappedResult = result.Shareholding.map((item: any) => {
+                const result = await CompanyAssetInfo(0 ,companyName, from.defaultHold);
+                if (result.Asset.length > 0) {
+                    const mappedResult = result.Asset.map((item: any) => {
                         return {
                             company: item[0],
                             ratio: item[1],
@@ -90,13 +95,12 @@ function Collect() {
         });
     }
     if (from.wechat) {
-        we.value = [];
         const promises = from.companys.map(async companyName => {
             from.log += `[INF] 正在收集${companyName}的微信公众号资产\n`
             if (typeof companyName === 'string') {
-                const result = await AssetWechat(companyName);
-                if (result.OfficialAccounts.length > 0) {
-                    const mappedResult = result.OfficialAccounts.map((item: any) => {
+                const result = await CompanyAssetInfo(1, companyName,0);
+                if (result.Asset.length > 0) {
+                    const mappedResult = result.Asset.map((item: any) => {
                         return {
                             weName: item[0],
                             weNums: item[1],
@@ -135,7 +139,6 @@ async function huntersearch() {
         return
     }
     // 初始化要查询的目标
-    hu.value = []
     from.correctName = from.getColumnData("company")
     from.domains = []
     from.getColumnData("domains").forEach(dms => {

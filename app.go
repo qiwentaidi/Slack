@@ -259,29 +259,35 @@ func (a *App) InitTycHeader(token string) {
 	info.InitHEAD(token)
 }
 
-type SubcompanyInfo struct {
-	Shareholding [][]string
-	Prompt       string
+type TycAssetResult struct {
+	Asset  [][]string
+	Prompt string
 }
 
-func (*App) AssetSubcompany(companyName string, ratio int) SubcompanyInfo {
-	asset, logs := info.SearchSubsidiary(companyName, ratio)
-	return SubcompanyInfo{
-		Shareholding: asset,
-		Prompt:       logs,
+// mode 0 = 查询子公司 . mode 1 = 查询公众号
+func (*App) CompanyAssetInfo(searchMode int, companyName string, ratio int) TycAssetResult {
+	var isFuzz string
+	companyId, fuzzName := info.GetCompanyID(companyName) // 获得到一个模糊匹配后，关联度最高的名称
+	if companyName != fuzzName {                          // 如果传进来的名称与模糊匹配的不相同
+		isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
 	}
-}
-
-type WechatInfo struct {
-	OfficialAccounts [][]string
-	Prompt           string
-}
-
-func (*App) AssetWechat(companyName string) WechatInfo {
-	asset, info := info.WeChatOfficialAccounts(companyName)
-	return WechatInfo{
-		OfficialAccounts: asset,
-		Prompt:           info,
+	if searchMode == 0 {
+		asset, logs := info.SearchSubsidiary(fuzzName, companyId, ratio)
+		if isFuzz == "" {
+			logs = isFuzz + logs
+		}
+		return TycAssetResult{
+			Asset:  asset,
+			Prompt: logs,
+		}
+	}
+	asset, logs := info.WeChatOfficialAccounts(fuzzName, companyId)
+	if isFuzz == "" {
+		logs = isFuzz + logs
+	}
+	return TycAssetResult{
+		Asset:  asset,
+		Prompt: logs,
 	}
 }
 

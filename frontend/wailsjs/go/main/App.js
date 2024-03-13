@@ -6,20 +6,16 @@ export function AssetHunter(arg1, arg2, arg3) {
   return window['go']['main']['App']['AssetHunter'](arg1, arg2, arg3);
 }
 
-export function AssetSubcompany(arg1, arg2) {
-  return window['go']['main']['App']['AssetSubcompany'](arg1, arg2);
-}
-
-export function AssetWechat(arg1) {
-  return window['go']['main']['App']['AssetWechat'](arg1);
-}
-
 export function CheckCdn(arg1, arg2, arg3) {
   return window['go']['main']['App']['CheckCdn'](arg1, arg2, arg3);
 }
 
 export function CheckTarget(arg1, arg2) {
   return window['go']['main']['App']['CheckTarget'](arg1, arg2);
+}
+
+export function CompanyAssetInfo(arg1, arg2, arg3) {
+  return window['go']['main']['App']['CompanyAssetInfo'](arg1, arg2, arg3);
 }
 
 export function DomainInfo(arg1) {

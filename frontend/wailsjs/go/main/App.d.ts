@@ -8,13 +8,11 @@ import {poc} from '../models';
 
 export function AssetHunter(arg1:number,arg2:string,arg3:string):Promise<main.HunterSearch>;
 
-export function AssetSubcompany(arg1:string,arg2:number):Promise<main.SubcompanyInfo>;
-
-export function AssetWechat(arg1:string):Promise<main.WechatInfo>;
-
 export function CheckCdn(arg1:string,arg2:string,arg3:string):Promise<string>;
 
 export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
+
+export function CompanyAssetInfo(arg1:number,arg2:string,arg3:number):Promise<main.TycAssetResult>;
 
 export function DomainInfo(arg1:string):Promise<string>;
 

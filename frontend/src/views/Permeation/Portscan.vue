@@ -130,7 +130,6 @@ async function SaveFile(path: string) {
 const config = reactive({
     thread: 1000,
     timeout: 12,
-    changeIp: false,
     alive: false,
     ping: false,
     burte: false,
@@ -296,6 +295,7 @@ const ctrl = reactive({
     drawer: false,
     innerDrawer: false,
     exit: false,
+    runningStatus: false,
     stop: function () {
         if (ctrl.exit === false) {
             ctrl.exit = true
@@ -367,7 +367,6 @@ function handleCurrentChange(val: any) {
                 </el-tooltip>
             </template>
             <el-input type="textarea" rows="3" v-model="form.target" resize="none" />
-
         </el-form-item>
         <el-form-item label="预设端口:">
             <el-radio-group v-model="radio" @change="updatePorts">
@@ -383,8 +382,10 @@ function handleCurrentChange(val: any) {
         </el-form-item>
         <el-form-item label="功能:">
             <el-space>
-                <el-button type="primary" @click="NewScanner">开始扫描</el-button>
-                <el-button type="danger" @click="ctrl.stop">停止</el-button>
+                <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
+                <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
+                <el-tag type="info">线程:{{ config.thread }}</el-tag>
+                <el-tag type="info">超时:{{ config.timeout }}s</el-tag>
                 <el-link type="primary" @click="ctrl.drawer = true">更多参数</el-link>
             </el-space>
         </el-form-item>
@@ -479,9 +480,11 @@ function handleCurrentChange(val: any) {
             </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar" v-if="form.activeName == '1'">
-            <el-button text :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL</el-button>
-            <el-button text :icon="DocumentChecked"
+            <el-button-group>
+                <el-button text :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL</el-button>
+                <el-button text :icon="DocumentChecked"
                 @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">导出</el-button>
+            </el-button-group>
         </div>
     </div>
 </template>

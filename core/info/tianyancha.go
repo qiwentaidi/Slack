@@ -155,10 +155,9 @@ func GetCompanyID(company string) (string, string) {
 }
 
 // 返回查询公司的名称和子公司的名称
-func SearchSubsidiary(company string, ratio int) (holdasset [][]string, logs string) {
-	var fuzzname string
+func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset [][]string, logs string) {
 	data := make(map[string]interface{})
-	data["gid"], fuzzname = GetCompanyID(company) // 获得到一个模糊匹配后，关联度最高的名称
+	data["gid"] = companyId
 	data["pageSize"] = 100
 	data["pageNum"] = 1
 	data["province"] = "-100"
@@ -171,12 +170,10 @@ func SearchSubsidiary(company string, ratio int) (holdasset [][]string, logs str
 	}
 	var qr TycResult
 	json.Unmarshal(b, &qr)
-	if company != fuzzname { // 如果传进来的名称与模糊匹配的不相同
-		logs = fmt.Sprintf("%v——天眼查模糊匹配名称为——%v,正在以新名称替换查询目标...", company, fuzzname)
-	}
 	// 获取到本公司对应的域名
-	domains := ICP2Domain(fuzzname)
-	holdasset = append(holdasset, []string{fuzzname, "本公司", "", strings.Join(util.RemoveDuplicates[string](domains), " | ")})
+	domains := ICP2Domain(companyName)
+	holdasset = append(holdasset, []string{companyName, "本公司", "", strings.Join(util.RemoveDuplicates[string](domains), " | ")})
+	fmt.Printf("qr.Data.Result: %v\n", qr.Data.Result)
 	for _, result := range qr.Data.Result {
 		gq, _ := strconv.Atoi(strings.TrimSuffix(result.Percent, "%"))
 		if gq <= 100 && gq >= ratio { // 提取在控股范围内的子公司
@@ -264,31 +261,27 @@ type OfficialAccounts struct {
 }
 
 // 获取微信公众号信息
-func WeChatOfficialAccounts(companyName string) (asset [][]string, info string) {
-	companyid, fuzzname := GetCompanyID(companyName)
-	if companyName != fuzzname { // 如果传进来的名称与模糊匹配的不相同
-		info = fmt.Sprintf("正在查询微信公众号信息，天眼查模糊匹配名称为%v ——> %v,公众号信息会以模糊匹配后的公司为准", companyName, fuzzname)
-	}
-	_, b, err := clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyid+"&pageSize=1&pageNum=1", gethead, nil, 10, clients.DefaultClient())
+func WeChatOfficialAccounts(companyName, companyId string) (asset [][]string, logs string) {
+	_, b, err := clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize=1&pageNum=1", gethead, nil, 10, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
-		return nil, info
+		return nil, logs
 	}
 	var oa OfficialAccounts
 	json.Unmarshal(b, &oa)
 	if oa.ErrorCode != 0 || oa.Data.Count == 0 {
-		info = "公众号查询出现错误或不存在公众号资产,公司名称: " + companyName
-		return nil, info
+		logs = "公众号查询出现错误或不存在公众号资产,公司名称: " + companyName
+		return nil, logs
 	}
 
-	_, b, err = clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyid+"&pageSize="+fmt.Sprint(oa.Data.Count)+"&pageNum=1", gethead, nil, 10, clients.DefaultClient())
+	_, b, err = clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize="+fmt.Sprint(oa.Data.Count)+"&pageNum=1", gethead, nil, 10, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
-		return nil, info
+		return nil, logs
 	}
 	json.Unmarshal(b, &oa)
 	for _, result := range oa.Data.ResultList {
 		asset = append(asset, []string{result.Title, result.PublicNum, result.TitleImgURL, result.CodeImg, result.Recommend})
 	}
-	return asset, info
+	return asset, logs
 }
