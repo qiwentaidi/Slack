@@ -31,6 +31,7 @@ type Nmap struct {
 //扫描类
 
 func (n *Nmap) ScanTimeout(ip string, port int, timeout time.Duration) (status Status, response *Response) {
+	n.timeout = timeout
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	var resChan = make(chan bool)
 
@@ -76,7 +77,7 @@ func (n *Nmap) Scan(ip string, port int) (status Status, response *Response) {
 		return status, response
 	}
 	otherProbes := probeNames[1:]
-	return n.getRealResponse(ip, port, 2*time.Second, otherProbes...)
+	return n.getRealResponse(ip, port, n.timeout, otherProbes...)
 }
 
 func (n *Nmap) getRealResponse(host string, port int, timeout time.Duration, probes ...string) (status Status, response *Response) {
@@ -227,10 +228,6 @@ func (n *Nmap) convResponse(s1 string) string {
 }
 
 //配置类
-
-func (n *Nmap) SetTimeout(timeout time.Duration) {
-	n.timeout = timeout
-}
 
 func (n *Nmap) OpenDeepIdentify() {
 	//-sV参数深度解析

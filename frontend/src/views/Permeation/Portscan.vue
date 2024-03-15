@@ -129,7 +129,7 @@ async function SaveFile(path: string) {
 
 const config = reactive({
     thread: 1000,
-    timeout: 12,
+    timeout: 10,
     alive: false,
     ping: false,
     burte: false,
@@ -137,6 +137,8 @@ const config = reactive({
 const radio = ref('2')
 
 function NewScanner() {
+    var date = new Date();
+    form.log +=  `${date.toLocaleString()} Task is loading\n`
     const ps = new Scanner()
     ps.PortScanner()
 }
@@ -145,7 +147,7 @@ class Scanner {
     public init() {
         table.result = []
         table.pageContent = []
-        ctrl.exit = false
+        ctrl.runningStatus = true
         form.id = 0
     }
     public async PortScanner() {
@@ -188,7 +190,7 @@ class Scanner {
             form.log += "[INFO] 存在 192.168.1.1:6379 此类特殊目标优先执行扫描\n"
             async.eachSeries(specialTarget, (ipport: string, callback: () => void) => {
                 let temp = ipport.split(":")
-                PortCheck(temp[0], Number(temp[1]), config.timeout).then((result) => {
+                PortCheck(temp[0], Number(temp[1]), config.timeout).then(result => {
                     if (result.Status) {
                         table.result.push({
                             host: temp[0],
@@ -202,24 +204,24 @@ class Scanner {
                     form.id++;
                     form.percentage = Number(((form.id / count) * 100).toFixed(2));
                     callback();
-                }, (err: any) => {
-                    if (err) {
-                        ElMessage.error(err)
-                    } else {
-                        form.log += "[INFO] 特殊目标扫描已完成\n"
-                    }
                 })
+            }, (err: any) => {
+                if (err) {
+                    ElMessage.error(err)
+                } else {
+                    form.log += "[INFO] 特殊目标扫描已完成\n"
+                }
             })
         }
         async.eachSeries(form.ips, (ip: string, callback: () => void) => {
             form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
-            async.eachLimit(form.portsList, config.thread, (port: number, callback: () => void) => {
-                if (ctrl.exit === true) {
+            async.eachLimit(form.portsList, config.thread, (port: number, portCallback: () => void) => {
+                if (!ctrl.runningStatus) {
                     return
                 }
                 PortCheck(ip as string, port, config.timeout).then(result => {
                     if (result.Status) {
-                        form.log += `[+] Portscan ${ip}:${port} is open!\n`
+                        form.log += `[+] ${ip}:${port} is open!\n`
                         table.result.push({
                             host: ip,
                             port: port,
@@ -231,20 +233,18 @@ class Scanner {
                     }
                     form.id++;
                     form.percentage = Number(((form.id / count) * 100).toFixed(2));
-                    callback();
+                    portCallback();
                 });
             }, (err: any) => {
-                if (config.burte === true) {
-                    this.burteport()
-                }
-                if (err) {
-                    ElMessage.error(err)
-                } else {
-                    ctrl.exit = false
-                    form.log += "[END] 端口扫描任务已完成\n"
-                }
                 callback();
             });
+        }, (err: any) => {
+            ctrl.runningStatus = false
+            var date = new Date()
+            form.log += `${date.toLocaleString()} Task is ending\n`
+            if (config.burte === true) {
+                this.burteport()
+            }
         });
     }
     public async burteport() {
@@ -255,7 +255,7 @@ class Scanner {
             item.dic = (await ReadLine(PortBurstPath + "/username/" + item.name + ".txt"))!
         }
         async.eachLimit(getColumnData("link"), 20, (target: string, callback: () => void) => {
-            if (ctrl.exit === true) {
+            if (!ctrl.runningStatus) {
                 return
             }
             dict.usernames.forEach(ele => {
@@ -294,17 +294,15 @@ function getColumnData(prop: string): any[] {
 const ctrl = reactive({
     drawer: false,
     innerDrawer: false,
-    exit: false,
     runningStatus: false,
     stop: function () {
-        if (ctrl.exit === false) {
-            ctrl.exit = true
+        if (ctrl.runningStatus) {
+            ctrl.runningStatus = false
             ElMessage({
                 showClose: true,
                 message: '已停止任务',
                 type: 'warning',
             })
-            form.log += "[STOP] 已停止扫描任务\n"
         }
     },
     currentDic: '',
@@ -391,7 +389,9 @@ function handleCurrentChange(val: any) {
         </el-form-item>
     </el-form>
     <el-drawer v-model="ctrl.drawer" size="30%">
-        <template #title><h4>设置高级参数</h4></template>
+        <template #title>
+            <h4>设置高级参数</h4>
+        </template>
         <el-form label-width="30%">
             <el-form-item label="存活探测:">
                 <el-checkbox v-model="config.alive" />
@@ -439,16 +439,14 @@ function handleCurrentChange(val: any) {
                     <el-table-column prop="host" label="主机" />
                     <el-table-column prop="port" label="端口" width="100px" />
                     <el-table-column prop="fingerprint" label="指纹" />
-                    <el-table-column prop="link" label="目标" />
-                    <el-table-column prop="title" label="网站标题" />
-                    <el-table-column fixed="right" label="操作" width="55px">
+                    <el-table-column prop="link" label="目标">
                         <template #default="scope">
-                            <el-tooltip content="打开链接" placement="left">
-                                <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)">
-                                </el-button>
-                            </el-tooltip>
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)">
+                            </el-button>
+                            {{ scope.row.link }}
                         </template>
                     </el-table-column>
+                    <el-table-column prop="title" label="网站标题" />
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
                     <el-progress :text-inside="true" :stroke-width="20" :percentage="form.percentage" color="#5DC4F7"
@@ -483,7 +481,7 @@ function handleCurrentChange(val: any) {
             <el-button-group>
                 <el-button text :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL</el-button>
                 <el-button text :icon="DocumentChecked"
-                @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">导出</el-button>
+                    @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">导出</el-button>
             </el-button-group>
         </div>
     </div>

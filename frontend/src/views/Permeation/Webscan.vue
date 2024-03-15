@@ -223,11 +223,6 @@ class Scanner {
                         }
                         callback();
                     })
-                    // count++
-                    // if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
-                    //     dashboard.logger += `[END] 主动指纹探测已结束\n`
-                    //     callback();
-                    // }
                 }, (err: any) => {
                     dashboard.logger += `[END] 主动指纹探测已结束\n`
                     this.webScanner()

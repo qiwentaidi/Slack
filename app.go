@@ -385,9 +385,6 @@ func (a *App) PortCheck(ip string, port, timeout int) PortResult {
 	var pr PortResult
 	scanner := gonmap.New()
 	status, response := scanner.ScanTimeout(ip, port, time.Second*time.Duration(timeout))
-	if status != gonmap.Closed {
-		pr.Status = true
-	}
 	switch status {
 	case gonmap.Closed:
 		pr.Status = false
