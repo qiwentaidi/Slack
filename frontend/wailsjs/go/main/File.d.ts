@@ -17,10 +17,6 @@ export function PathBase(arg1:string):Promise<string>;
 
 export function ReadMemo(arg1:string):Promise<{[key: string]: string}>;
 
-export function Restart():Promise<void>;
-
-export function UpdateClinetFile(arg1:string):Promise<string>;
-
 export function UpdatePocFile():Promise<string>;
 
 export function UserHomeDir():Promise<string>;

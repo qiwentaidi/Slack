@@ -3,17 +3,13 @@ package update
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path"
-	"runtime"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/util"
 	"time"
-
-	update "github.com/fynelabs/selfupdate"
 )
 
 const (
@@ -50,46 +46,6 @@ func download(target, dest string) (string, error) {
 	writer := bufio.NewWriter(file)
 	io.Copy(writer, reader)
 	return fileName, nil
-}
-
-const (
-	BinaryFile_Windows      = "slack-wails.exe"
-	BinaryFile_Darwin_AMD64 = "slack-wails_darwin_amd64.zip"
-	BinaryFile_Darwin_ARM64 = "slack-wails_darwin_arm64.zip"
-)
-
-func UpdateClinet(latestVersion string) error {
-	var binaryFileName string
-	switch runtime.GOOS {
-	case "windows":
-		binaryFileName = BinaryFile_Windows
-	case "darwin":
-		if runtime.GOARCH == "arm64" {
-			binaryFileName = BinaryFile_Darwin_ARM64
-		} else {
-			binaryFileName = BinaryFile_Darwin_AMD64
-		}
-	}
-	temp := lastestClinetUrl + latestVersion + "/" + binaryFileName
-	if err := doUpdate(temp); err != nil {
-		return err
-	}
-	return nil
-}
-
-func doUpdate(url string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	err = update.Apply(resp.Body, update.Options{})
-	if err != nil {
-		if rerr := update.RollbackError(err); rerr != nil {
-			fmt.Printf("Failed to rollback from bad update: %v", rerr)
-		}
-	}
-	return err
 }
 
 func InitConfig(configPath string) bool {

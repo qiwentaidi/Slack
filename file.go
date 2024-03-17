@@ -10,8 +10,6 @@ import (
 	"slack-wails/lib/update"
 	"slack-wails/lib/util"
 	"strings"
-
-	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
 // File struct 文件操作
@@ -74,23 +72,6 @@ func (f *File) UpdatePocFile() string {
 		return err.Error()
 	}
 	return ""
-}
-
-func (f *File) UpdateClinetFile(latestVersion string) string {
-	if err := update.UpdateClinet(latestVersion); err != nil {
-		return err.Error()
-	}
-	return ""
-}
-
-func (f *File) Restart() {
-	cmd := exec.Command(os.Args[0])
-	err := cmd.Start()
-	if err != nil {
-		logger.NewDefaultLogger().Fatal(err.Error())
-	}
-	// 退出当前的进程
-	os.Exit(0)
 }
 
 func (f *File) InitConfig() bool {

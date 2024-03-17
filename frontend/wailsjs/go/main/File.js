@@ -34,14 +34,6 @@ export function ReadMemo(arg1) {
   return window['go']['main']['File']['ReadMemo'](arg1);
 }
 
-export function Restart() {
-  return window['go']['main']['File']['Restart']();
-}
-
-export function UpdateClinetFile(arg1) {
-  return window['go']['main']['File']['UpdateClinetFile'](arg1);
-}
-
 export function UpdatePocFile() {
   return window['go']['main']['File']['UpdatePocFile']();
 }

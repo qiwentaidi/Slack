@@ -22,9 +22,10 @@
           <el-collapse-item name="2"><template #title>
               <h2>{{ $t('setting.proxy') }}</h2>
             </template>
-            <el-form :model="global.proxy" label-width="80px">
+            <el-form :inline="true" :model="global.proxy" label-width="80px" class="demo-form-inline">
               <el-form-item :label="$t('setting.enable')">
                 <el-switch v-model="global.proxy.enabled" />
+                <el-button type="primary" style="margin-left: 20px;" v-if="global.proxy.enabled">测试代理</el-button>
               </el-form-item>
               <div v-if="global.proxy.enabled">
                 <el-form-item :label="$t('setting.mode')">
@@ -37,7 +38,7 @@
                   <el-input v-model="global.proxy.address" clearable></el-input>
                 </el-form-item>
                 <el-form-item :label="$t('setting.port')">
-                  <el-input-number controls-position="right" v-model="global.proxy.port" :min="1" :max="65535" />
+                  <el-input v-model="global.proxy.port" />
                 </el-form-item>
                 <el-form-item :label="$t('setting.username')">
                   <el-input v-model="global.proxy.username" clearable></el-input>
@@ -77,6 +78,7 @@
 <script lang="ts" setup>
 import global from "../global"
 import { ElMessage } from 'element-plus';
+import { GoFetch } from "../../wailsjs/go/main/App";
 
 const saveConfig = () => {
   global.space.fofaapi = global.space.fofaapi.replace(/[\r\n\s]/g, '');
@@ -92,6 +94,7 @@ const saveConfig = () => {
     type: 'success',
   })
 };
+
 </script>
 
 <style>
@@ -102,5 +105,13 @@ const saveConfig = () => {
 }
 .mf {
   margin-right: 5px;
+}
+
+.demo-form-inline .el-input {
+  --el-input-width: 220px;
+}
+
+.demo-form-inline .el-select {
+  --el-select-width: 220px;
 }
 </style>

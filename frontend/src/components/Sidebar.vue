@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { OfficeBuilding, Tools, Refresh, Monitor, Smoking, Menu, HomeFilled, Setting, Download } from "@element-plus/icons-vue";
 import { GoFetch } from "../../wailsjs/go/main/App";
-import { CheckFileStat, GetFileContent, UpdatePocFile, UpdateClinetFile, Restart, UserHomeDir, InitConfig } from "../../wailsjs/go/main/File";
+import { CheckFileStat, GetFileContent, UpdatePocFile, UserHomeDir, InitConfig } from "../../wailsjs/go/main/File";
 import { onMounted, reactive } from "vue";
-import { ElNotification, ElMessageBox } from "element-plus";
+import { ElNotification } from "element-plus";
 import { compareVersion } from "../util"
 import Loading from "./Loading.vue";
 import { useI18n } from "vue-i18n";
@@ -124,38 +124,6 @@ const update = ({
       ElNotification({
         title: "POC更新失败",
         message: err,
-        type: "error",
-      });
-    }
-  },
-  client: async function () {
-    ElNotification({
-      title: "提示",
-      message: "客户端后台自动下载中~",
-      type: "info",
-    });
-    let err = await UpdateClinetFile("v" + version.RemoteClient)
-    if (err == "") {
-      ElMessageBox.confirm(
-        '更新成功，是否重新启动?',
-        {
-          confirmButtonText: '确认',
-          cancelButtonText: '取消',
-          type: 'success',
-          center: true,
-        }
-      )
-        .then(() => {
-          Restart()
-        })
-        .catch((action) => {
-          // 在这里处理用户取消或者其他非 "OK" 的选项被点击时的操作
-          console.log('User cancelled or chose another option.')
-        })
-    } else {
-      ElNotification({
-        title: "Error",
-        message: "客户端更新失败！！",
         type: "error",
       });
     }
@@ -303,7 +271,7 @@ const download = {
             <span style="font-weight: bold;">客户端{{ version.RemoteClient }}</span>
             <br />当前{{ "v" + version.LocalClient }}
           </el-text>
-          <el-button class="button" :icon="Download" text @click="update.client"
+          <el-button class="button" :icon="Download" text @click="BrowserOpenURL('https://github.com/qiwentaidi/Slack/releases')"
             v-if="version.ClientStatus">立即下载</el-button>
           <span v-else>{{ version.ClientUpdateContent }}</span>
         </div>

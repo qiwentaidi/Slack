@@ -8,7 +8,6 @@ require (
 	github.com/Mzack9999/go-http-digest-auth-client v0.6.1-0.20220414142836-eb8883508809
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/dlclark/regexp2 v1.10.0
-	github.com/fynelabs/selfupdate v0.2.0
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/google/cel-go v0.18.2
 	github.com/jlaffaye/ftp v0.2.0
