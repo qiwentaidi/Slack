@@ -141,7 +141,7 @@ class Scanner {
         //         
         // 
         await InitRule()
-        global.Logger.value += `${currentTime} 网站扫描任务已加载，目标数量: ${this.urls.length}\n`
+        global.Logger.value += `${currentTime()} 网站扫描任务已加载，目标数量: ${this.urls.length}\n`
         global.Logger.value += '正在进行指纹扫描 ...\n'
         let count = 0
         dashboard.currentModule = form.currentModule
@@ -167,14 +167,14 @@ class Scanner {
             }
             count++
             if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
-                global.Logger.value += `${currentTime} 指纹扫描已完成\n`
+                global.Logger.value += `${currentTime()} 指纹扫描已完成\n`
                 count = 0
                 callback();
             }
         },async (err: any) => {
             if (form.currentModule !== "仅指纹扫描") {
                 form.currentLoadPath = await LocalWalkFiles(HomePath + ActivePathPoc) // 初始化主动指纹目录
-                global.Logger.value += `${currentTime} 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
+                global.Logger.value += `${currentTime()} 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
                 // 主动指纹探测
                 async.eachSeries(form.urlFingerMap, (ufm: uf, callback: () => void) => {
                     if (ctrl.exit === true) {
@@ -221,7 +221,7 @@ class Scanner {
                         callback();
                     })
                 }, (err: any) => {
-                    global.Logger.value += `${currentTime} 主动指纹探测已结束\n`
+                    global.Logger.value += `${currentTime()} 主动指纹探测已结束\n`
                     this.webScanner()
                 })
             }
@@ -231,7 +231,7 @@ class Scanner {
 
     public async webScanner() {
         if (form.currentModule == "指纹漏洞扫描") {
-            global.Logger.value += `${currentTime} 正在进行指纹漏洞扫描\n`
+            global.Logger.value += `${currentTime()} 正在进行指纹漏洞扫描\n`
             let count = 0
             for (const uf of form.urlFingerMap) { // 统计能扫到指纹的目标数量
                 if (uf.finger.length > 0) {
@@ -278,13 +278,13 @@ class Scanner {
                     })
                     count--
                     if (count == 0) {
-                        global.Logger.value += `${currentTime} 指纹漏洞扫描已结束 :)\n`
+                        global.Logger.value += `${currentTime()} 指纹漏洞扫描已结束 :)\n`
                     }
                 }
             })
         } else if (form.currentModule == "全部漏洞扫描") {
             form.currentLoadPath = await LocalWalkFiles(HomePath + AFGPathPoc)
-            global.Logger.value += `${currentTime} 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
+            global.Logger.value += `${currentTime()} 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
             let count = 0
             async.eachSeries(this.urls, (target: string, callback: () => void) => {
                 if (ctrl.exit === true) {
@@ -321,7 +321,7 @@ class Scanner {
                 })
                 count++
                 if (count == this.urls.length) {
-                    global.Logger.value += `${currentTime} 全部漏洞扫描结束 :)\n`
+                    global.Logger.value += `${currentTime()} 全部漏洞扫描结束 :)\n`
                 }
             })
         }

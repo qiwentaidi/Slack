@@ -110,8 +110,8 @@ function cidrToRange(cidr: string): string {
 
 <template>
     <div>
-        <el-input type="textarea" v-model="from.input" rows="13" :placeholder="info"></el-input>
-        <div class="func">
+        <el-input type="textarea" v-model="from.input" rows="10" :placeholder="info" style="height: 45vh;"></el-input>
+        <div class="my-header" style="margin-top: 10px; margin-bottom: 10px;">
             <el-space>
                 <el-button type="primary" @click="cdncheck">域名解析(CDN查询)</el-button>
                 <el-button type="primary" @click="searchdomain">域名备案&whois查询</el-button>
@@ -124,15 +124,12 @@ function cidrToRange(cidr: string): string {
                 </el-select>
             </el-space>
         </div>
-        <el-input type="textarea" v-model="from.result" rows="15" readonly></el-input>
+        <el-input type="textarea" v-model="from.result" rows="10" readonly style="height: 45vh;"></el-input>
     </div>
 </template>
 
-<style scoped>
-.func {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between
+<style>
+.el-textarea__inner {
+  height: 100%;
 }
 </style>

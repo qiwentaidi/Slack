@@ -91,7 +91,7 @@ const config = reactive({
 const radio = ref('2')
 
 async function NewScanner() {
-    global.Logger.value +=  `${currentTime} Portscan task is loading\n`
+    global.Logger.value +=  `${currentTime()} Portscan task is loading\n`
     const ps = new Scanner()
     await ps.PortScanner()
     if (config.burte) {
@@ -196,7 +196,7 @@ class Scanner {
             });
         }, (err: any) => {
             ctrl.runningStatus = false
-            global.Logger.value += `${currentTime} Task is ending\n`
+            global.Logger.value += `${currentTime()} Task is ending\n`
         });
     }
     public async Burte() {
@@ -221,7 +221,7 @@ class Scanner {
                                 protocol: result.Protocol,
                                 username: result.Username,
                                 password: result.Password,
-                                time: currentTime,
+                                time: currentTime(),
                             })
                         }
                         callback();
