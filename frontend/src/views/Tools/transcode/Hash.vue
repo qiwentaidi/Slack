@@ -5,7 +5,7 @@ import { sm3 } from 'sm-crypto';
 import { BrowserOpenURL } from '../../../../wailsjs/runtime'
 const hashcode = reactive({
     currentMode: 'MD5',
-    options: ["MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512", "SHA3", "SM3"],
+    options: ["MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512", "SHA3", "SM3", "HmacSHA1"],
     et: '',
     ct: ''
 })
@@ -38,6 +38,9 @@ function encrypt() {
         case 'SM3':
             hashcode.ct = sm3(hashcode.et);
             break;  
+        case 'HmacSHA1':
+            let temp = CryptoJS.HmacSHA1(hashcode.et, "P3Tm7eKROjaWMkoHl0iULPeGWgiobvsj");
+            hashcode.ct = CryptoJS.enc.Base64.stringify(temp)
     }
 }
 

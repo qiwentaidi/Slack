@@ -4,6 +4,7 @@ import {
     System
 } from '../../../wailsjs/go/main/App'
 import { onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
 // 初始化时调用
 onMounted(() => {
     avlist.value = [];
@@ -12,11 +13,11 @@ onMounted(() => {
 function checksystem(mode: number) {
     System(textarea.value, mode).then(
         result => {
-            if (result.length == 0) {
+            if (result == null) {
                 if (mode == 0) {
-                    alert('并未识别到杀软')
+                    ElMessage('未识别到杀软')
                 } else {
-                    alert('并未查询到提权补丁')
+                    ElMessage('未查询到提权补丁')
                 }
             } else {
                 if (mode == 0) {
@@ -53,7 +54,7 @@ const patch = ref([{}])
 </script>
 
 <template>
-    <div style="display: flex; margin-bottom: 20px;">
+    <div class="my-header">
         <el-input v-model="textarea" :rows="5" type="textarea" placeholder="tasklist /svc or systeminfo" />
         <div>
             <el-col :span="2" style="margin-left: 10px;">
@@ -64,9 +65,9 @@ const patch = ref([{}])
             </el-col>
         </div>
     </div>
-    <el-tabs v-model="activeName" class="demo-tabs" type="border-card">
+    <el-tabs v-model="activeName" type="border-card" style="margin-top: 10px; height: 82%;">
         <el-tab-pane label="杀软识别" name="1">
-            <el-table :data="avlist" style="width: 100%; height: 60vh;" v-if="avlist.length >= 1">
+            <el-table :data="avlist" style="height: 70vh;" v-if="avlist.length >= 1">
                 <el-table-column type="index" width="60px" />
                 <el-table-column prop="p_name" label="进程名称" />
                 <el-table-column prop="pid" label="PID" />
@@ -75,7 +76,7 @@ const patch = ref([{}])
             <el-empty description="暂无数据" v-else />
         </el-tab-pane>
         <el-tab-pane label="补丁检测" name="2">
-            <el-table :data="patch" style="width: 100%; height: 60vh;" v-if="patch.length >= 1">
+            <el-table :data="patch" style="height: 70vh;" v-if="patch.length >= 1">
                 <el-table-column type="index" width="60px" />
                 <el-table-column prop="msid" label="微软编号" />
                 <el-table-column prop="kbid" label="补丁编号" />
@@ -87,12 +88,3 @@ const patch = ref([{}])
         </el-tab-pane>
     </el-tabs>
 </template>
-
-<style>
-.demo-tabs>.el-tabs__content {
-    padding: 32px;
-    color: #6b778c;
-    font-size: 32px;
-    font-weight: 600;
-}
-</style>

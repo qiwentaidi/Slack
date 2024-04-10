@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { OfficeBuilding, Tools, Refresh, Monitor, Smoking, Menu, HomeFilled, Setting, Download } from "@element-plus/icons-vue";
+import { OfficeBuilding, Tools, Refresh, Monitor, Smoking, Setting, Download } from "@element-plus/icons-vue";
 import { GoFetch } from "../../wailsjs/go/main/App";
 import { CheckFileStat, GetFileContent, UpdatePocFile, UserHomeDir, InitConfig } from "../../wailsjs/go/main/File";
-import { onMounted, reactive } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { ElNotification } from "element-plus";
 import { compareVersion } from "../util"
 import Loading from "./Loading.vue";
 import { useI18n } from "vue-i18n";
 import { BrowserOpenURL } from "../../wailsjs/runtime/runtime";
+import global from "../global"
 
 const { locale } = useI18n()
 
@@ -18,7 +19,7 @@ const changeLanguage = (area: string) => {
 
 const version = reactive({
   LocalPoc: "",
-  LocalClient: '1.4.9',
+  LocalClient: '1.5.0',
   RemotePoc: "",
   RemoteClient: "",
   PocUpdateContent: "",
@@ -139,14 +140,16 @@ const download = {
   ClientUpdateCentent: 'https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update',
 };
 
+const showLogger =  ref(false)
 </script>
 
 <template>
   <el-menu class="my-menu" :collapse="true" route active-text-color="#fff" background-color="#F2F3F5" text-color="#000">
     <el-menu-item index="/" @click="$router.push('/')">
-      <el-icon>
-        <HomeFilled />
-      </el-icon>
+      <svg class="bi bi-house" width="100%" height="18px" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M2 13.5V7h1v6.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V7h1v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5zm11-11V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z"/>
+        <path fill-rule="evenodd" d="M7.293 1.5a1 1 0 0 1 1.414 0l6.647 6.646a.5.5 0 0 1-.708.708L8 2.207 1.354 8.854a.5.5 0 1 1-.708-.708L7.293 1.5z"/>
+      </svg>
       <template #title><span>{{ $t('aside.home') }}</span></template>
     </el-menu-item>
     <el-sub-menu index="1">
@@ -163,6 +166,7 @@ const download = {
       <!-- <el-menu-item index="1-3">漏洞利用</el-menu-item> -->
       <el-menu-item index="/Permeation/Dirsearch" @click="$router.push('/Permeation/Dirsearch')">{{ $t('aside.dirscan')
       }}</el-menu-item>
+      <el-menu-item index="/Permeation/Jsfinder" @click="$router.push('/Permeation/Jsfinder')">JSFinder</el-menu-item>
       <el-menu-item index="/Permeation/Pocdetail" @click="$router.push('/Permeation/Pocdetail')">{{
         $t('aside.pocdetail') }}</el-menu-item>
     </el-sub-menu>
@@ -215,6 +219,16 @@ const download = {
       }}</el-menu-item>
     </el-sub-menu>
 
+    <el-menu-item class="custom-menu-item" index="/console" @click="showLogger = true">
+      <svg class="bi bi-file-earmark-ruled" width="100%" height="18px" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M13 9H3V8h10v1zm0 3H3v-1h10v1z"/>
+        <path fill-rule="evenodd" d="M5 14V9h1v5H5z"/>
+        <path d="M4 1h5v1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6h1v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2z"/>
+        <path d="M9 4.5V1l5 5h-3.5A1.5 1.5 0 0 1 9 4.5z"/>
+      </svg>
+      <template #title><span>{{ $t('aside.yx_log') }}</span></template>
+    </el-menu-item>
+
     <el-menu-item class="custom-menu-item" index="/update" @click="version.updateDialogVisible = true">
       <el-icon>
         <Refresh />
@@ -231,9 +245,9 @@ const download = {
     </el-menu-item>
     <el-sub-menu index="7">
       <template #title>
-        <el-icon>
-          <Menu />
-        </el-icon>
+        <svg class="bi bi-list" width="100%" height="1.5em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M2.5 11.5A.5.5 0 0 1 3 11h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+        </svg>
         <span>{{ $t('aside.more') }}</span>
       </template>
       <el-sub-menu index="language">
@@ -302,6 +316,18 @@ const download = {
       </el-space>
     </div>
   </el-dialog>
+
+  <!-- running logs -->
+  <el-drawer
+    v-model="showLogger"
+    direction="ltr"
+    size="30%"
+  >
+  <template #title>
+    <h4>运行日志</h4>
+  </template>
+  <el-input class="log-textarea" v-model="global.Logger.value" type="textarea" style="height: 100%;" resize="none"></el-input>
+  </el-drawer>
 </template>
 
 <style>

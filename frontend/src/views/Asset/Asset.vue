@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import { QuestionFilled, Tickets, DocumentChecked } from '@element-plus/icons-vue';
+import { QuestionFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { CompanyAssetInfo, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
 import global from "../../global"
@@ -259,13 +259,7 @@ function sleep(time: number) {
                         show-overflow-tooltip="true" />
                 </el-table>
             </el-tab-pane>
-            <el-tab-pane>
-                <template #label>
-                    <el-icon>
-                        <Tickets />
-                    </el-icon>
-                    <span>运行日志</span>
-                </template>
+            <el-tab-pane label="运行日志">
                 <el-input class="log-textarea" v-model="from.log" type="textarea" rows="20" readonly></el-input>
             </el-tab-pane>
         </el-tabs>
@@ -284,7 +278,7 @@ function sleep(time: number) {
                 </template>
             </el-popover>
         </el-button>
-        <el-button :icon="DocumentChecked" @click="ExportAssetToXlsx(su, we, hu)">数据导出</el-button>
+        <el-button @click="ExportAssetToXlsx(su, we, hu)">数据导出</el-button>
     </el-space>
 </template>
 

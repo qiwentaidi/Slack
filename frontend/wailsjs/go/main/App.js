@@ -30,8 +30,8 @@ export function FingerScan(arg1, arg2) {
   return window['go']['main']['App']['FingerScan'](arg1, arg2);
 }
 
-export function FofaSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
-  return window['go']['main']['App']['FofaSearch'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+export function FofaSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+  return window['go']['main']['App']['FofaSearch'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
 export function FofaTips(arg1) {
@@ -82,6 +82,10 @@ export function InitTycHeader(arg1) {
   return window['go']['main']['App']['InitTycHeader'](arg1);
 }
 
+export function JSFind(arg1, arg2) {
+  return window['go']['main']['App']['JSFind'](arg1, arg2);
+}
+
 export function LoadDirsearchDict(arg1, arg2) {
   return window['go']['main']['App']['LoadDirsearchDict'](arg1, arg2);
 }
@@ -126,8 +130,8 @@ export function SelectFile() {
   return window['go']['main']['App']['SelectFile']();
 }
 
-export function Sock5UnauthScan(arg1, arg2, arg3) {
-  return window['go']['main']['App']['Sock5UnauthScan'](arg1, arg2, arg3);
+export function Sock5Connect(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['Sock5Connect'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function Subdomain(arg1, arg2, arg3, arg4) {
@@ -144,10 +148,6 @@ export function ThinkDict(arg1, arg2, arg3, arg4, arg5) {
 
 export function Transcoding(arg1, arg2, arg3) {
   return window['go']['main']['App']['Transcoding'](arg1, arg2, arg3);
-}
-
-export function WebIconMd5(arg1) {
-  return window['go']['main']['App']['WebIconMd5'](arg1);
 }
 
 export function Webscan(arg1, arg2, arg3, arg4, arg5) {

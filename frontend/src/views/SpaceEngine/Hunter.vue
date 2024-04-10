@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage } from "element-plus";
-import { Menu, Search, ChatLineRound, ArrowDown, ChromeFilled } from '@element-plus/icons-vue';
-import { TableTabs, ApiSyntaxCheck, ExportToXlsx, splitInt, SplitTextArea, validateIP, validateDomain } from '../../util'
+import { Menu, Search, ChatLineRound, ArrowDown, ChromeFilled, CopyDocument, Share } from '@element-plus/icons-vue';
+import { TableTabs, ApiSyntaxCheck, ExportToXlsx, splitInt, SplitTextArea, validateIP, validateDomain, Copy } from '../../util'
 import global from "../../global"
 import {
+    GoFetch,
     HunterSearch,
     HunterTips,
-    WebIconMd5
 } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 const form = reactive({
@@ -63,14 +63,14 @@ interface EntryTips {
 let timeout: ReturnType<typeof setTimeout>
 const entry = reactive({
     querySearchAsync: (queryString: string, cb: (arg: any) => void) => {
-        entry.getTips()
+        entry.getTips(queryString)
         clearTimeout(timeout)
         timeout = setTimeout(() => {
             cb(form.loadAll)
-        }, 1000 * Math.random())
+        }, 2000 * Math.random())
     },
-    getTips: function () {
-        HunterTips(form.query).then(result => {
+    getTips: function (queryString: string) {
+        HunterTips(queryString).then(result => {
             form.loadAll = []
             if (result.code == 200) {
                 for (const item of result.data.app) {
@@ -267,8 +267,8 @@ const table = reactive({
 const loading = ref(false)
 
 async function IconHashSearch() {
-    let hash = await WebIconMd5(form.hashURL)
-    if (hash == "") {
+    let response = await GoFetch("GET", form.hashURL, "", [{}], 10, null)
+    if (response.Error == true) {
         ElMessage({
             showClose: true,
             message: "目标不可达",
@@ -276,8 +276,8 @@ async function IconHashSearch() {
         });
         return
     }
-    let query = `web.icon=="${hash}"`
-    table.addTab(query)
+    let hash = CryptoJS.MD5(response.Body).toString()
+    table.addTab(`web.icon=="${hash}"`)
 }
 
 function BatchSearch() {
@@ -344,14 +344,35 @@ async function SaveData(mode: number) {
     }
 }
 
+// 0 当前页 1 100条
+async function CopyURL(mode: number) {
+    if (table.editableTabs.length != 0) {
+        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        var temp = [];
+        if (mode == 0) {
+            for (const line of tab.content!) {
+                temp.push((line as any)["URL"])
+            }
+        } else {
+            await HunterSearch(global.space.hunterkey, tab.title, "100", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
+                result.data.arr.forEach((item: any) => {
+                    temp.push(item.url)
+                })
+            })
+        }
+        Copy(temp.join("\n"))
+        temp = []
+    }
+}
 </script>
 
 <template>
     <el-form v-model="form" @submit.native.prevent="table.addTab(form.query)">
         <el-form-item label="查询条件">
             <div class="head">
-                <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                    @select="entry.handleSelect" :trigger-on-focus="false" debounce="1000" style="width: 100%;">
+                <el-autocomplete v-model="form.query" placeholder="Search..."
+                    :fetch-suggestions="entry.querySearchAsync" @select="entry.handleSelect" :trigger-on-focus="false"
+                    debounce="1000" style="width: 100%;">
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />
@@ -395,12 +416,14 @@ async function SaveData(mode: number) {
                     style="margin-left: 10px; margin-right: 10px;">查询</el-button>
                 <el-dropdown>
                     <el-button color="#A29EDE">
-                        数据导出<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                        数据导出/复制<el-icon class="el-icon--right"><arrow-down /></el-icon>
                     </el-button>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                            <el-dropdown-item @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                            <el-dropdown-item :icon="Share" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                            <el-dropdown-item :icon="Share" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                            <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
+                            <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -454,17 +477,17 @@ async function SaveData(mode: number) {
                     <template #default="scope">
                         <el-space>
                             <el-tag v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">{{
-                                scope.row.Component[0].name + scope.row.Component[0].version }}</el-tag>
+        scope.row.Component[0].name + scope.row.Component[0].version }}</el-tag>
                             <el-popover placement="bottom" :width="350" trigger="hover">
                                 <template #reference>
                                     <el-button round size="small"
                                         v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">共{{
-                                            scope.row.Component.length }}条</el-button>
+        scope.row.Component.length }}条</el-button>
                                 </template>
                                 <template #default>
                                     <div style="display: flex; flex-direction: column;">
                                         <el-tag v-for="component in scope.row.Component">{{ component.name +
-                                            component.version }}</el-tag>
+        component.version }}</el-tag>
                                     </div>
                                 </template>
                             </el-popover>
@@ -481,7 +504,8 @@ async function SaveData(mode: number) {
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
                 <el-pagination :page-size="10" :page-sizes="[10, 50, 100]" layout="sizes, prev, pager, next"
-                    @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange" :total="item.total" />
+                    @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange"
+                    :total="item.total" />
             </div>
         </el-tab-pane>
         <el-image class="center" src="/loading.gif" alt="loading" v-else></el-image>

@@ -1,13 +1,16 @@
 package gonmap
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/miekg/dns"
 )
+
+// Open 是端口开放，没有返回报文，没识别出协议
+// Matched 是端口开放，且识别出协议
+// NotMatched 是端口开放，有返回报文，但是没有识别出协议
 
 type Nmap struct {
 	exclude      PortList
@@ -30,37 +33,38 @@ type Nmap struct {
 
 //扫描类
 
-func (n *Nmap) ScanTimeout(ip string, port int, timeout time.Duration) (status Status, response *Response) {
+// func (n *Nmap) ScanTimeout(ip string, port int, timeout time.Duration) (status Status, response *Response) {
+// 	n.timeout = timeout
+// 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+// 	var resChan = make(chan bool)
+
+// 	defer func() {
+// 		close(resChan)
+// 		cancel()
+// 	}()
+
+// 	go func() {
+// 		defer func() {
+// 			if r := recover(); r != nil {
+// 				if fmt.Sprint(r) != "send on closed channel" {
+// 					panic(r)
+// 				}
+// 			}
+// 		}()
+// 		status, response = n.Scan(ip, port)
+// 		resChan <- true
+// 	}()
+
+// 	select {
+// 	case <-ctx.Done():
+// 		return Closed, nil
+// 	case <-resChan:
+// 		return status, response
+// 	}
+// }
+
+func (n *Nmap) Scan(ip string, port int, timeout time.Duration) (status Status, response *Response) {
 	n.timeout = timeout
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	var resChan = make(chan bool)
-
-	defer func() {
-		close(resChan)
-		cancel()
-	}()
-
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				if fmt.Sprint(r) != "send on closed channel" {
-					panic(r)
-				}
-			}
-		}()
-		status, response = n.Scan(ip, port)
-		resChan <- true
-	}()
-
-	select {
-	case <-ctx.Done():
-		return Closed, nil
-	case <-resChan:
-		return status, response
-	}
-}
-
-func (n *Nmap) Scan(ip string, port int) (status Status, response *Response) {
 	var probeNames ProbeList
 	if n.bypassAllProbePort.exist(port) {
 		probeNames = append(n.portProbeMap[port], n.allProbeMap...)
@@ -77,7 +81,7 @@ func (n *Nmap) Scan(ip string, port int) (status Status, response *Response) {
 		return status, response
 	}
 	otherProbes := probeNames[1:]
-	return n.getRealResponse(ip, port, n.timeout, otherProbes...)
+	return n.getRealResponse(ip, port, time.Second*2, otherProbes...)
 }
 
 func (n *Nmap) getRealResponse(host string, port int, timeout time.Duration, probes ...string) (status Status, response *Response) {

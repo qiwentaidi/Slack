@@ -3,6 +3,7 @@
 import {main} from '../models';
 import {clients} from '../models';
 import {space} from '../models';
+import {jsfind} from '../models';
 import {portscan} from '../models';
 import {poc} from '../models';
 
@@ -20,7 +21,7 @@ export function ExtractIP(arg1:string):Promise<string>;
 
 export function FingerScan(arg1:string,arg2:clients.Proxy):Promise<main.InfoResult>;
 
-export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:boolean,arg7:boolean):Promise<space.FofaSearchResult>;
+export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean):Promise<space.FofaSearchResult>;
 
 export function FofaTips(arg1:string):Promise<space.TipsResult>;
 
@@ -46,6 +47,8 @@ export function InitRule():Promise<void>;
 
 export function InitTycHeader(arg1:string):Promise<void>;
 
+export function JSFind(arg1:string,arg2:string):Promise<jsfind.FindSomething>;
+
 export function LoadDirsearchDict(arg1:string,arg2:Array<string>):Promise<Array<string>>;
 
 export function LoadSubDict(arg1:string):Promise<Array<string>>;
@@ -68,7 +71,7 @@ export function SaveFile(arg1:string):Promise<string>;
 
 export function SelectFile():Promise<string>;
 
-export function Sock5UnauthScan(arg1:string,arg2:number,arg3:number):Promise<boolean>;
+export function Sock5Connect(arg1:string,arg2:number,arg3:number,arg4:string,arg5:string):Promise<boolean>;
 
 export function Subdomain(arg1:string,arg2:string,arg3:string,arg4:number):Promise<Array<string>>;
 
@@ -77,8 +80,6 @@ export function System(arg1:string,arg2:number):Promise<Array<any>>;
 export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<Array<string>>;
 
 export function Transcoding(arg1:Array<string>,arg2:string,arg3:number):Promise<string>;
-
-export function WebIconMd5(arg1:string):Promise<string>;
 
 export function Webscan(arg1:string,arg2:string,arg3:string,arg4:Array<string>,arg5:clients.Proxy):Promise<any>;
 

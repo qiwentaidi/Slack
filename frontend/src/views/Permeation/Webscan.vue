@@ -12,7 +12,7 @@ import {
     HunterSearch,
 } from '../../../wailsjs/go/main/App'
 import { ElMessage } from 'element-plus';
-import { formatURL, ApiSyntaxCheck, splitInt, TestProxy } from '../../util'
+import { formatURL, ApiSyntaxCheck, splitInt, TestProxy, currentTime } from '../../util'
 import async from 'async';
 import global from "../../global"
 import { onMounted } from 'vue';
@@ -69,7 +69,6 @@ const dashboard = reactive({
     info: 0,
     currentModule: "" as string,
     count: 0,
-    logger: '',
     request: '',
     response: '',
     extInfo: '',
@@ -119,12 +118,11 @@ class Scanner {
         dashboard.info = 0
         dashboard.reqErrorURLs = []
         dashboard.currentModule = ""
-        dashboard.logger = ''
     }
 
     public async infoScanner() {
         // 检查先行条件
-        if (!await TestProxy()) {
+        if (!await TestProxy(1)) {
             return
         }
         this.urls = await formatURL(form.url)
@@ -137,15 +135,14 @@ class Scanner {
             });
             return
         }
-        var date = new Date();
         // 
         // 
         // 指纹扫描 =====================================
         //         
         // 
         await InitRule()
-        dashboard.logger += `${date.toLocaleString()} 已加载任务目标: ${this.urls.length}个\n`
-        dashboard.logger += '[INFO] 正在进行指纹扫描\n'
+        global.Logger.value += `${currentTime} 网站扫描任务已加载，目标数量: ${this.urls.length}\n`
+        global.Logger.value += '正在进行指纹扫描 ...\n'
         let count = 0
         dashboard.currentModule = form.currentModule
         async.eachLimit(this.urls, form.thread, async (target: string, callback: () => void) => {
@@ -170,20 +167,20 @@ class Scanner {
             }
             count++
             if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
-                dashboard.logger += `[END] 指纹探测已结束\n`
+                global.Logger.value += `${currentTime} 指纹扫描已完成\n`
                 count = 0
                 callback();
             }
         },async (err: any) => {
             if (form.currentModule !== "仅指纹扫描") {
                 form.currentLoadPath = await LocalWalkFiles(HomePath + ActivePathPoc) // 初始化主动指纹目录
-                dashboard.logger += `[INFO] 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
+                global.Logger.value += `${currentTime} 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
                 // 主动指纹探测
                 async.eachSeries(form.urlFingerMap, (ufm: uf, callback: () => void) => {
                     if (ctrl.exit === true) {
                         return
                     }
-                    dashboard.logger += `[INFO] ${ufm.url}，正在进行主动指纹探测\n`
+                    global.Logger.value += `${ufm.url} 正在进行主动指纹探测\n`
                     Webscan(ufm.url, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
                         if (Array.isArray(result)) {
                             for (const item of result) {
@@ -224,7 +221,7 @@ class Scanner {
                         callback();
                     })
                 }, (err: any) => {
-                    dashboard.logger += `[END] 主动指纹探测已结束\n`
+                    global.Logger.value += `${currentTime} 主动指纹探测已结束\n`
                     this.webScanner()
                 })
             }
@@ -234,7 +231,7 @@ class Scanner {
 
     public async webScanner() {
         if (form.currentModule == "指纹漏洞扫描") {
-            dashboard.logger += `[INFO] 正在进行指纹漏洞扫描\n`
+            global.Logger.value += `${currentTime} 正在进行指纹漏洞扫描\n`
             let count = 0
             for (const uf of form.urlFingerMap) { // 统计能扫到指纹的目标数量
                 if (uf.finger.length > 0) {
@@ -247,7 +244,7 @@ class Scanner {
                 }
                 if (ufm.finger.length > 0) {
                     form.currentLoadPath = await GetFingerPoc(ufm.finger)
-                    dashboard.logger += `[INFO] ${ufm.url}，已加载漏洞: ${form.currentLoadPath.length}个\n`
+                    global.Logger.value += `${ufm.url}，已加载漏洞: ${form.currentLoadPath.length}个\n`
                     Webscan(ufm.url, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
                         if (Array.isArray(result)) {
                             for (const item of result) {
@@ -281,13 +278,13 @@ class Scanner {
                     })
                     count--
                     if (count == 0) {
-                        dashboard.logger += `[END] 指纹漏洞扫描已结束 :)\n`
+                        global.Logger.value += `${currentTime} 指纹漏洞扫描已结束 :)\n`
                     }
                 }
             })
         } else if (form.currentModule == "全部漏洞扫描") {
             form.currentLoadPath = await LocalWalkFiles(HomePath + AFGPathPoc)
-            dashboard.logger += `[INFO] 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
+            global.Logger.value += `${currentTime} 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
             let count = 0
             async.eachSeries(this.urls, (target: string, callback: () => void) => {
                 if (ctrl.exit === true) {
@@ -324,7 +321,7 @@ class Scanner {
                 })
                 count++
                 if (count == this.urls.length) {
-                    dashboard.logger += `[END] 全部漏洞扫描结束 :)\n`
+                    global.Logger.value += `${currentTime} 全部漏洞扫描结束 :)\n`
                 }
             })
         }
@@ -346,7 +343,7 @@ const coordination = reactive({
         if (ApiSyntaxCheck(0, global.space.fofaemail, global.space.fofakey, form.query) === false) {
             return
         }
-        FofaSearch(form.query, form.fofaNum.toString(), "1", global.space.fofaemail, global.space.fofakey, true, true).then(result => {
+        FofaSearch(form.query, form.fofaNum.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true).then(result => {
             if (result.Status == false) {
                 return
             }
@@ -472,7 +469,7 @@ function getClassBySeverity(row: any) {
                     <template #title>
                         <div style="display: inline-flex; align-items: center">
                             请求失败目标
-                            <el-popover placement="left" :width="350" trigger="hover">
+                            <el-popover placement="left" :width="350" trigger="hover" v-if="dashboard.reqErrorURLs.length >= 1">
                                 <el-scrollbar height="150px">
                                     <p v-for="u in dashboard.reqErrorURLs" class="scrollbar-demo-item">{{ u }}</p>
                                 </el-scrollbar>
@@ -533,9 +530,6 @@ function getClassBySeverity(row: any) {
                     </template>
                 </el-table-column>
             </el-table>
-        </el-tab-pane>
-        <el-tab-pane label="日志">
-            <el-input class="log-textarea" v-model="dashboard.logger" type="textarea" rows="20" readonly></el-input>
         </el-tab-pane>
     </el-tabs>
 

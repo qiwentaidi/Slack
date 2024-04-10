@@ -31,6 +31,7 @@ export default {
         'about': '关于',
         'source_code': '源码地址',
         'update_log': '更新日志',
+        'yx_log': '运行日志',
         'issue': '提出问题'
     },
     setting: {
@@ -41,6 +42,7 @@ export default {
         'address': '地址',
         'port': '端口',
         'proxy': '代理配置(仅适用网站扫描)',
-        'save': '保存'
+        'save': '保存',
+        'test_agent': '测试代理'
     }
 }

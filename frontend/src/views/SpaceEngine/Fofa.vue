@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown } from '@element-plus/icons-vue';
-import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt, TableTabs, ApiSyntaxCheck } from '../../util'
+import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown, CopyDocument, Share } from '@element-plus/icons-vue';
+import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt, TableTabs, ApiSyntaxCheck, Copy } from '../../util'
 import {
     FofaTips,
     FofaSearch,
     IconHash,
 } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 import global from "../../global"
 const form = reactive({
     query: '',
@@ -46,14 +46,14 @@ interface LinkItem {
 let timeout: ReturnType<typeof setTimeout>
 const entry = reactive({
     querySearchAsync: (queryString: string, cb: (arg: any) => void) => {
-        entry.getTips()
+        entry.getTips(queryString)
         clearTimeout(timeout)
         timeout = setTimeout(() => {
             cb(form.loadAll)
-        }, 1000 * Math.random())
+        }, 2000 * Math.random())
     },
-    getTips: function () {
-        FofaTips(form.query).then(result => {
+    getTips: function (queryString: string) {
+        FofaTips(queryString).then(result => {
             form.loadAll = []
             if (result.code == 0) {
                 for (const item of result.data) {
@@ -81,7 +81,7 @@ const table = reactive({
         }
         const newTabName = `${++table.tabIndex}`
         loading.value = true
-        let result = await FofaSearch(query, "100", "1", global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(query, "100", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
         if (!result.Status) {
             ElMessage({
                 showClose: true,
@@ -125,7 +125,7 @@ const table = reactive({
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         loading.value = true
-        FofaSearch(form.query, val.toString(), "1", global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+        FofaSearch(form.query, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
             form.tips = result.Message + " 共查询到数据:" + result.Total + "条"
             if (result.Status == false) {
                 return
@@ -139,7 +139,7 @@ const table = reactive({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         loading.value = true
-        FofaSearch(form.query, tab.pageSize.toString(), val.toString(), global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+        FofaSearch(form.query, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
             form.tips = result.Message + " 共查询到数据:" + result.Total + "条"
             if (result.Status == false) {
                 return
@@ -162,8 +162,7 @@ async function IconHashSearch() {
         });
         return
     }
-    let query = `icon_hash="${hash}"`
-    table.addTab(query)
+    table.addTab(`icon_hash="${hash}"`)
 }
 
 function BatchSearch() {
@@ -196,16 +195,12 @@ async function SaveData(mode: number) {
         } else {
             let temp = [{}]
             temp.pop()
-            ElMessage({
-                showClose: true,
-                message: "正在进行全数据导出，API每页最大查询限度10000，请稍后。",
-                type: "info",
-            });
+            ElNotification("正在进行全数据导出，API每页最大查询限度10000，请稍后。");
             let index = 0
             for (const num of splitInt(tab.total, 10000)) {
                 index += 1
                 ElMessage("正在导出第" + index.toString() + "页");
-                await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+                await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
                     if (result.Status == false) {
                         return
                     }
@@ -231,6 +226,18 @@ function filterHandlerProtocol(value: string, row: any): boolean {
 
 function filterHandlerTitle(value: string, row: any): boolean {
     return row.Title === value;
+}
+
+async function CopyURL() {
+    if (table.editableTabs.length != 0) {
+        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        var temp = [];
+        for (const line of tab.content!) {
+            temp.push((line as any)["URL"])
+        }
+        Copy(temp.join("\n"))
+        temp = []
+    }
 }
 </script>
 
@@ -262,12 +269,13 @@ function filterHandlerTitle(value: string, row: any): boolean {
                     style="margin-left: 10px; margin-right: 10px;">查询</el-button>
                 <el-dropdown>
                     <el-button color="#A29EDE">
-                        数据导出<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                        数据导出/复制<el-icon class="el-icon--right"><arrow-down /></el-icon>
                     </el-button>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                            <el-dropdown-item @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                            <el-dropdown-item :icon="Share" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                            <el-dropdown-item :icon="Share" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                            <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>

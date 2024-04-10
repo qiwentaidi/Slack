@@ -90,10 +90,10 @@ type TycResult struct {
 var (
 	company_name string
 	company_id   string
-	tycTotal     = regexp.MustCompile(`beian-name">(\d+)`)
-	reg          = regexp.MustCompile(`(?s)ranking-keys">.*?<span class="ranking-ym" rel="nofollow">.*?</span>`) // 包含公司名称以及域名
-	regCompany   = regexp.MustCompile(`keys">(.*?)</a>`)                                                         // 公司名
-	regDomain    = regexp.MustCompile(`nofollow">(.*?)</span>`)                                                  // 域名
+	// tycTotal     = regexp.MustCompile(`beian-name">(\d+)`)
+	// reg          = regexp.MustCompile(`(?s)ranking-keys">.*?<span class="ranking-ym" rel="nofollow">.*?</span>`) // 包含公司名称以及域名
+	// regCompany   = regexp.MustCompile(`keys">(.*?)</a>`)                                                         // 公司名
+	// regDomain    = regexp.MustCompile(`nofollow">(.*?)</span>`)                                                  // 域名
 )
 
 var (
@@ -171,13 +171,12 @@ func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset [][]s
 	var qr TycResult
 	json.Unmarshal(b, &qr)
 	// 获取到本公司对应的域名
-	domains := ICP2Domain(companyName)
+	domains := Beianx(companyName)
 	holdasset = append(holdasset, []string{companyName, "本公司", "", strings.Join(util.RemoveDuplicates[string](domains), " | ")})
-	fmt.Printf("qr.Data.Result: %v\n", qr.Data.Result)
 	for _, result := range qr.Data.Result {
 		gq, _ := strconv.Atoi(strings.TrimSuffix(result.Percent, "%"))
 		if gq <= 100 && gq >= ratio { // 提取在控股范围内的子公司
-			subsidiaryDomains := ICP2Domain(result.Name)
+			subsidiaryDomains := Beianx(result.Name)
 			if len(subsidiaryDomains) > 0 {
 				holdasset = append(holdasset, []string{result.Name, result.Percent, result.Amount, strings.Join(util.RemoveDuplicates[string](subsidiaryDomains), " | ")})
 			} else { // 没查到域名的子公司也要显示
@@ -189,57 +188,58 @@ func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset [][]s
 }
 
 // 返回对应域名组
-func ICP2Domain(company string) (domains []string) {
-	var pages int
-	_, b, err := clients.NewRequest("GET", "https://beian.tianyancha.com/search/"+url.QueryEscape(company), gethead, nil, 10, clients.DefaultClient())
-	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
-	}
-	t := tycTotal.FindStringSubmatch(string(b))
-	if len(t) > 0 {
-		if total, _ := strconv.Atoi(t[1]); total <= 20 {
-			pages = 1
-		} else {
-			pages = total/20 + 1
-		}
-	} else {
-		pages = 1
-	}
-	for _, v := range reg.FindAllString(string(b), -1) {
-		companyName := regCompany.FindStringSubmatch(v)
-		domain := regDomain.FindStringSubmatch(v)
-		companyNames := strings.ReplaceAll(strings.ReplaceAll(companyName[1], "<em>", ""), "</em>", "")
-		if companyNames == company {
-			domains = append(domains, domain[1])
-			d := Beianx(company)
-			if len(d) > 0 {
-				domains = append(domains, d...)
-			}
-		}
-	}
-	// 查询页码大于1时需要对其他页码也进行筛选
-	if pages > 1 {
-		for i := 2; i <= pages; i++ {
-			_, b, err := clients.NewRequest("GET", fmt.Sprintf(`https://beian.tianyancha.com/search/%v/p%d`, url.QueryEscape(company), i), gethead, nil, 10, clients.DefaultClient())
-			if err != nil {
-				logger.NewDefaultLogger().Debug(err.Error())
-			}
-			for _, v := range reg.FindAllString(string(b), -1) {
-				companyName := regCompany.FindStringSubmatch(v)
-				domain := regDomain.FindStringSubmatch(v)
-				companyNames := strings.ReplaceAll(strings.ReplaceAll(companyName[1], "<em>", ""), "</em>", "")
-				if companyNames == company {
-					domains = append(domains, domain[1])
-					d := Beianx(company)
-					if len(d) > 0 {
-						domains = append(domains, d...)
-					}
-				}
-			}
-		}
-	}
-	return domains
-}
+// func ICP2Domain(company string) (domains []string) {
+// 	var pages int
+// 	_, b, err := clients.NewRequest("GET", "https://beian.tianyancha.com/search/"+url.QueryEscape(company), gethead, nil, 10, clients.DefaultClient())
+// 	if err != nil {
+// 		logger.NewDefaultLogger().Debug(err.Error())
+// 	}
+// 	fmt.Printf("string(b): %v\n", string(b))
+// 	t := tycTotal.FindStringSubmatch(string(b))
+// 	if len(t) > 0 {
+// 		if total, _ := strconv.Atoi(t[1]); total <= 20 {
+// 			pages = 1
+// 		} else {
+// 			pages = total/20 + 1
+// 		}
+// 	} else {
+// 		pages = 1
+// 	}
+// 	for _, v := range reg.FindAllString(string(b), -1) {
+// 		companyName := regCompany.FindStringSubmatch(v)
+// 		domain := regDomain.FindStringSubmatch(v)
+// 		companyNames := strings.ReplaceAll(strings.ReplaceAll(companyName[1], "<em>", ""), "</em>", "")
+// 		if companyNames == company {
+// 			domains = append(domains, domain[1])
+// 			d := Beianx(company)
+// 			if len(d) > 0 {
+// 				domains = append(domains, d...)
+// 			}
+// 		}
+// 	}
+// 	// 查询页码大于1时需要对其他页码也进行筛选
+// 	if pages > 1 {
+// 		for i := 2; i <= pages; i++ {
+// 			_, b, err := clients.NewRequest("GET", fmt.Sprintf(`https://beian.tianyancha.com/search/%v/p%d`, url.QueryEscape(company), i), gethead, nil, 10, clients.DefaultClient())
+// 			if err != nil {
+// 				logger.NewDefaultLogger().Debug(err.Error())
+// 			}
+// 			for _, v := range reg.FindAllString(string(b), -1) {
+// 				companyName := regCompany.FindStringSubmatch(v)
+// 				domain := regDomain.FindStringSubmatch(v)
+// 				companyNames := strings.ReplaceAll(strings.ReplaceAll(companyName[1], "<em>", ""), "</em>", "")
+// 				if companyNames == company {
+// 					domains = append(domains, domain[1])
+// 					d := Beianx(company)
+// 					if len(d) > 0 {
+// 						domains = append(domains, d...)
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return domains
+// }
 
 type OfficialAccounts struct {
 	State      string `json:"state"`

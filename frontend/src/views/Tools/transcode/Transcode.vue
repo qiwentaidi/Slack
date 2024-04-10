@@ -6,6 +6,7 @@ import Nokey from './Nokey.vue';
 import CryptoJS from 'crypto-js';
 import JSEncrypt from 'jsencrypt';
 import { sm2, sm4 } from 'sm-crypto';
+import { ExportTXT, SplitTextArea } from '../../../util';
 const yk = reactive({
     mode: 'AES',
     options: ["AES", "DES", "RSA", "SM2", "SM4"],
@@ -124,7 +125,7 @@ const sm = reactive({
     sm2publicKey: '',
     sm2privateKey: '',
     sm2CurrentMode: 'C1C2C3',
-    sm2Mode: [ 'C1C2C3','C1C3C2',],
+    sm2Mode: ['C1C2C3','C1C3C2'],
     sm2ende(mode: number){
         if (mode == 0) {
             try {
@@ -171,12 +172,6 @@ const sm = reactive({
 // mode 0 encode 1 decode
 function handleButtonClick(mode: number) {
     switch (yk.mode) {
-        case "AES":
-            aes.ende(mode)
-            break;
-        case "DES":
-            aes.ende(mode)
-            break;
         case "RSA":
             rsa.ende(mode)
             break;
@@ -186,7 +181,61 @@ function handleButtonClick(mode: number) {
         case "SM2":
             sm.sm2ende(mode)
             break;
+        default:
+            aes.ende(mode)
+            break;
     }
+}
+
+function BatchEncrypt() {
+    let options = {
+            iv: CryptoJS.enc.Utf8.parse(aes.iv),
+            mode: CryptoJS.mode.ECB,
+            padding: CryptoJS.pad.Pkcs7
+        };
+        switch (aes.currentMode) {
+            case "ECB":
+                options.mode = CryptoJS.mode.ECB
+                break
+            case "CBC":
+                options.mode = CryptoJS.mode.CBC
+                break
+            case "CTR":
+                options.mode = CryptoJS.mode.CTR
+                break
+            case "OFB":
+                options.mode = CryptoJS.mode.OFB
+                break
+            case "CFB":
+                options.mode = CryptoJS.mode.CFB
+        }
+        switch (aes.currentPadding) {
+            case "PKCS7":
+                options.padding = CryptoJS.pad.Pkcs7
+                break
+            case "Ansix923":
+                options.padding = CryptoJS.pad.AnsiX923
+                break
+            case "ISO10126":
+                options.padding = CryptoJS.pad.Iso10126
+                break
+            case "ZeroPadding":
+                options.padding = CryptoJS.pad.ZeroPadding
+                break
+            case "ISO97971":
+                options.padding = CryptoJS.pad.Iso97971
+                break
+            case "None":
+                options.padding = CryptoJS.pad.NoPadding
+        }
+        let key = CryptoJS.enc.Utf8.parse(aes.key);
+        let dicts = SplitTextArea(aes.encryptedMessage)
+        let temp = []
+        for (const dict of dicts) {
+            let encryptedData = CryptoJS.DES.encrypt(encodeURI(dict), key, options);
+            temp.push(encryptedData.toString());
+        }
+        ExportTXT("dict", temp)
 }
 </script>
 
@@ -207,7 +256,10 @@ function handleButtonClick(mode: number) {
                     <el-select class="choose" v-model="yk.mode">
                         <el-option v-for="item in yk.options" :value="item" :label="item" />
                     </el-select>
-                    <el-button color="#40CEED" :icon="MagicStick" @click="handleButtonClick(0)">加密</el-button>
+                    <el-button-group>
+                        <el-button color="#40CEED" :icon="MagicStick" @click="handleButtonClick(0)">加密</el-button>
+                        <el-button color="#40CEED" @click="BatchEncrypt">批量加密</el-button>
+                    </el-button-group>
                     <el-button color="#59EDAF" :icon="Key" @click="handleButtonClick(1)">解密</el-button>
                     <el-tooltip content="加密或者解密均是从内容到结果，RSA加解密失败会出现false" placement="right-start">
                         <el-icon>

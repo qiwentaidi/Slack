@@ -3,7 +3,7 @@ import async from 'async';
 import { Search, Filter, QuestionFilled } from '@element-plus/icons-vue';
 import { splitInt, ExportTXT } from '../../util'
 import { reactive, onMounted } from 'vue';
-import { Sock5UnauthScan, FofaSearch } from '../../../wailsjs/go/main/App'
+import { Sock5Connect, FofaSearch } from '../../../wailsjs/go/main/App'
 import global from "../../global"
 import { Check, CreateTable, InsertAgentPool, SearchAgentPool, DeleteAgentPoolField, DeleteAllField } from '../../../wailsjs/go/main/Database';
 import { ElMessage } from 'element-plus';
@@ -51,7 +51,7 @@ async function NewSock5Crawl(step: number) {
             form.socksLogger += "正在验证数据库代理存活数量...\n"
             await async.eachLimit(form.pool, 50, async (temp: HostCotent, callback: (err?: Error) => void) => {
                 let t = temp.Host.split(":")
-                if (await Sock5UnauthScan(t[0], Number(t[1]), 3)) {
+                if (await Sock5Connect(t[0], Number(t[1]), 3, "", "")) {
                     form.socksLogger += `[+] ${t[0]}:${t[1]} is alive!\n`
                     tempHosts.push(t[0] + ":" + t[1])
                 }
@@ -88,7 +88,7 @@ async function NewSock5Crawl(step: number) {
                 if (tempHosts.length >= form.socksThreshold) {
                     return
                 }
-                if (await Sock5UnauthScan(temp.IP, Number(temp.Port), 3)) {
+                if (await Sock5Connect(temp.IP, Number(temp.Port), 3, "", "")) {
                     let host = temp.IP + ":" + temp.Port
                     form.socksLogger += `[+] ${host} is unauthorized!\n`
                     tempHosts.push(host)
@@ -119,7 +119,7 @@ interface Hosts {
 
 class Socks5Crawling {
     public async SearchTotal(query: string) {
-        let result = await FofaSearch(query, "1", "1", global.space.fofaemail, global.space.fofakey, true, false)
+        let result = await FofaSearch(query, "1", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, false)
         form.socksLogger += "共查询到数据:" + result.Total + "条" + result.Message + "\n"
         return Number(result.Total)
     }
@@ -129,7 +129,7 @@ class Socks5Crawling {
         let temps = [] as Hosts[]
         for (const num of splitInt(form.socksNum, 10000)) {
             index += 1
-            let result = await FofaSearch(query, num.toString(), index.toString(), global.space.fofaemail, global.space.fofakey, true, false)
+            let result = await FofaSearch(query, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, false)
             if (result.Status == false) {
                 form.socksLogger += "查询异常，已退出存活测试" + result.Message + "\n"
                 return
@@ -147,7 +147,7 @@ class Socks5Crawling {
 
 async function TestConnection(host: string) {
     let t = host.split(":")
-    let result = await Sock5UnauthScan(t[0], Number(t[1]), 5)
+    let result = await Sock5Connect(t[0], Number(t[1]), 5, "", "")
     if (result) {
         ElMessage({
             message: 'This proxy is reachable',
@@ -201,7 +201,7 @@ async function Delelte(host: string) {
                     style="margin-top: 5px" color="#5DC4F7" />
             </el-tab-pane>
             <el-tab-pane label="历史记录" name="1">
-                <el-table :data="form.pool" border>
+                <el-table :data="form.pool" border style="height: 8vh;">
                     <el-table-column type="index" width="50" label="#" align="center" />
                     <el-table-column prop="Host" label="主机地址" />
                     <el-table-column fixed="right" label="操作" width="120" align="center">

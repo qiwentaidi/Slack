@@ -20,11 +20,11 @@ const from = reactive({
     subs: [] as string[],
     percentage: 0,
     id: 0,
+    runningStatus: false,
 });
 const sbr = ref([{}]);
-const exit = ref(false)
 async function BurstSubdomain() {
-    exit.value = false
+    from.runningStatus = true
     sbr.value = [];
     from.id = 0;
     InitIPResolved();
@@ -35,7 +35,7 @@ async function BurstSubdomain() {
     async.eachLimit(from.subs, from.thread, (sub: string, callback: () => void) => {
         from.id++;
         from.percentage = Number(((from.id / from.subs.length) * 100).toFixed(2));
-        if (exit.value) {
+        if (!from.runningStatus) {
             return
         }
         Subdomain(sub + "." + from.domain, global.scan.dns1, global.scan.dns2, from.timeout).then((result) => {
@@ -59,11 +59,12 @@ async function BurstSubdomain() {
                 type: 'success',
             })
         }
+        from.runningStatus = false
     });
 }
 function stop() {
-    if (exit.value === false) {
-        exit.value = true
+    if (from.runningStatus == true) {
+        from.runningStatus = false
         ElMessage({
             showClose: true,
             message: '已停止任务',
@@ -83,9 +84,9 @@ async function handleFileChange() {
     <el-form :model="from">
         <el-form-item>
             <div class="head">
-                <el-input v-model="from.domain" placeholder="请输入域名,仅支持单域名" />
-                <el-button type="primary" style="margin-left: 10px" @click="BurstSubdomain">开始暴破</el-button>
-                <el-button type="primary" style="margin-left: 10px" @click="stop">停止</el-button>
+                <el-input v-model="from.domain" placeholder="请输入域名,仅支持单域名" style="margin-right: 10px;"/>
+                <el-button type="primary" @click="BurstSubdomain" v-if="!from.runningStatus">开始任务</el-button>
+                <el-button type="danger" @click="stop" v-else>停止任务</el-button>
             </div>
         </el-form-item>
         <el-form-item>
@@ -107,14 +108,16 @@ async function handleFileChange() {
                 @click="ExportToXlsx(['子域名', 'CNAME', 'IPS', '备注'], '子域名暴破', 'subdomain', sbr)"
                 :disabled="sbr.length < 2">数据导出</el-button>
         </el-form-item>
-        <el-form-item>
-            <el-table :data="sbr" border max-height="calc(100vh - 220px)">
-                <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="subdomains" label="子域名" show-overflow-tooltip="true" />
-                <el-table-column prop="cname" label="CNAME" show-overflow-tooltip="true" />
-                <el-table-column prop="ips" label="IPs" show-overflow-tooltip="true" />
-                <el-table-column prop="notes" label="备注" show-overflow-tooltip="true" />
-            </el-table>
-        </el-form-item>
-    </el-form>    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" color="#5DC4F7" />
+    </el-form>
+    <el-table :data="sbr" border style="height: 79vh; margin-bottom: 10px;">
+        <el-table-column type="index" label="#" width="60px" />
+        <el-table-column prop="subdomains" label="子域名" show-overflow-tooltip="true" />
+        <el-table-column prop="cname" label="CNAME" show-overflow-tooltip="true" />
+        <el-table-column prop="ips" label="IPs" show-overflow-tooltip="true" />
+        <el-table-column prop="notes" label="备注" show-overflow-tooltip="true" />
+        <template #empty>
+            <el-empty description="点击开始任务获取数据"></el-empty>
+        </template>
+    </el-table>
+    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" color="#5DC4F7" />
 </template>

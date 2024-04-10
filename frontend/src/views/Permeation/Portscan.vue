@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
-import { ExportToXlsx, CopyURLs, SplitTextArea, ReadLine } from '../../util'
+import { ExportToXlsx, CopyURLs, SplitTextArea, ReadLine, currentTime } from '../../util'
 import async from 'async';
-import { QuestionFilled, DocumentChecked, DocumentCopy, ChromeFilled, Tickets } from '@element-plus/icons-vue';
+import { QuestionFilled, DocumentChecked, DocumentCopy, ChromeFilled } from '@element-plus/icons-vue';
 import { PortParse, IPParse, PortCheck, HostAlive, PortBrute } from '../../../wailsjs/go/main/App'
 import { Mkdir, WriteFile, CheckFileStat, GetFileContent } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
+import global from '../../global'
 onMounted(async () => {
     if (!(await CheckFileStat(PortBurstPath))) {
         InitBurteDict()
@@ -23,7 +24,6 @@ const form = reactive({
     portsList: [{}],
     percentage: 0,
     id: 0,
-    log: '',
 })
 
 const options = [{
@@ -48,61 +48,15 @@ const options = [{
 },
 ]
 
-var dict = ({
-    usernames: [
-        {
-            name: "FTP",
-            dic: ["ftp", "admin", "www", "web", "root", "db", "wwwroot", "data"],
-        },
-        {
-            name: "SSH",
-            dic: ["root", "admin"]
-        },
-        {
-            name: "Telnet",
-            dic: ["root", "admin"]
-        },
-        {
-            name: "SMB",
-            dic: ["administrator", "admin", "guest"]
-        },
-        {
-            name: "Mssql",
-            dic: ["sa", "sql"]
-        },
-        {
-            name: "Oracle",
-            dic: ["sys", "system", "admin", "test", "web", "orcl"]
-        },
-        {
-            name: "Mysql",
-            dic: ["root", "mysql"]
-        },
-        {
-            name: "RDP",
-            dic: ["administrator", "admin", "guest"]
-        },
-        {
-            name: "Postgresql",
-            dic: ["postgres", "admin"]
-        },
-        {
-            name: "VNC",
-            dic: ["admin", "administrator", "root"]
-        },
-    ],
-    passwords: ["123456", "admin", "admin123", "root", "", "pass123", "pass@123", "password", "123123", "654321", "111111", "123", "1", "admin@123", "Admin@123", "admin123!@#", "{user}", "{user}1", "{user}111", "{user}123", "{user}@123", "{user}_123", "{user}#123", "{user}@111", "{user}@2019", "{user}@123#4", "P@ssw0rd!", "P@ssw0rd", "Passw0rd", "qwe123", "1234567", "12345678", "test", "test123", "123qwe", "123qwe!@#", "123456789", "123321", "666666", "a123456.", "123456~a", "123456!a", "000000", "1234567890", "8888888", "!QAZ2wsx", "1qaz2wsx", "abc123", "abc123456", "1qaz@WSX", "a11111", "a12345", "Aa1234", "Aa1234.", "Aa12345", "a123456", "a123123", "Aa123123", "Aa123456", "Aa12345.", "sysadmin", "system", "1qaz!QAZ", "2wsx@WSX", "qwe123!@#", "Aa123456!", "A123456s!", "sa123456", "1q2w3e", "Charge123", "Aa123456789"],
-})
-
 // 初始化字典
 async function InitBurteDict() {
     if (await Mkdir(PortBurstPath)) {
         Mkdir(PortBurstPath + "/username")
         Mkdir(PortBurstPath + "/password")
-        for (const item of dict.usernames) {
+        for (const item of global.dict.usernames) {
             WriteFile("txt", `${PortBurstPath}/username/${item.name}.txt`, item.dic.join("\n"))
         }
-        WriteFile("txt", `${PortBurstPath}/password/password.txt`, dict.passwords.join("\n"))
+        WriteFile("txt", `${PortBurstPath}/password/password.txt`, global.dict.passwords.join("\n"))
     }
 }
 
@@ -129,18 +83,20 @@ async function SaveFile(path: string) {
 
 const config = reactive({
     thread: 1000,
-    timeout: 10,
+    timeout: 7,
     alive: false,
     ping: false,
     burte: false,
 })
 const radio = ref('2')
 
-function NewScanner() {
-    var date = new Date();
-    form.log +=  `${date.toLocaleString()} Task is loading\n`
+async function NewScanner() {
+    global.Logger.value +=  `${currentTime} Portscan task is loading\n`
     const ps = new Scanner()
-    ps.PortScanner()
+    await ps.PortScanner()
+    if (config.burte) {
+        ps.Burte()
+    }
 }
 
 class Scanner {
@@ -187,7 +143,7 @@ class Scanner {
             )
         }
         if (specialTarget.length != 0) {
-            form.log += "[INFO] 存在 192.168.1.1:6379 此类特殊目标优先执行扫描\n"
+            global.Logger.value += "[INFO] 存在 192.168.1.1:6379 此类特殊目标优先执行扫描\n"
             async.eachSeries(specialTarget, (ipport: string, callback: () => void) => {
                 let temp = ipport.split(":")
                 PortCheck(temp[0], Number(temp[1]), config.timeout).then(result => {
@@ -209,19 +165,19 @@ class Scanner {
                 if (err) {
                     ElMessage.error(err)
                 } else {
-                    form.log += "[INFO] 特殊目标扫描已完成\n"
+                    global.Logger.value += "[INFO] 特殊目标扫描已完成\n"
                 }
             })
         }
         async.eachSeries(form.ips, (ip: string, callback: () => void) => {
-            form.log += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
+            global.Logger.value += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
             async.eachLimit(form.portsList, config.thread, (port: number, portCallback: () => void) => {
                 if (!ctrl.runningStatus) {
                     return
                 }
                 PortCheck(ip as string, port, config.timeout).then(result => {
                     if (result.Status) {
-                        form.log += `[+] ${ip}:${port} is open!\n`
+                        global.Logger.value += `[+] ${ip}:${port} is open!\n`
                         table.result.push({
                             host: ip,
                             port: port,
@@ -240,37 +196,32 @@ class Scanner {
             });
         }, (err: any) => {
             ctrl.runningStatus = false
-            var date = new Date()
-            form.log += `${date.toLocaleString()} Task is ending\n`
-            if (config.burte === true) {
-                this.burteport()
-            }
+            global.Logger.value += `${currentTime} Task is ending\n`
         });
     }
-    public async burteport() {
+    public async Burte() {
         table.burteResult = []
-        var date = new Date();
-        dict.passwords = (await ReadLine(PortBurstPath + "/password/password.txt"))!
-        for (var item of dict.usernames) {
+        global.dict.passwords = (await ReadLine(PortBurstPath + "/password/password.txt"))!
+        for (var item of global.dict.usernames) {
             item.dic = (await ReadLine(PortBurstPath + "/username/" + item.name + ".txt"))!
         }
         async.eachLimit(getColumnData("link"), 20, (target: string, callback: () => void) => {
             if (!ctrl.runningStatus) {
                 return
             }
-            dict.usernames.forEach(ele => {
+            global.dict.usernames.forEach(ele => {
                 let protocol = target.split("://")[0]
                 if (ele.name.toLowerCase() === protocol) {
-                    form.log += "[INF] Start burte " + target + "\n"
-                    PortBrute(target, ele.dic, dict.passwords).then((result) => {
+                    global.Logger.value += "[INF] Start burte " + target + "\n"
+                    PortBrute(target, ele.dic, global.dict.passwords).then((result) => {
                         if (result !== undefined && result.Status !== false) {
-                            form.log += `[++] ${target} ${result.Username}:${result.Password}\n`
+                            global.Logger.value += `[++] ${target} ${result.Username}:${result.Password}\n`
                             table.burteResult.push({
                                 host: result.Host,
                                 protocol: result.Protocol,
                                 username: result.Username,
                                 password: result.Password,
-                                time: date.toLocaleString(),
+                                time: currentTime,
                             })
                         }
                         callback();
@@ -281,7 +232,7 @@ class Scanner {
             if (err) {
                 ElMessage.error(err)
             } else {
-                form.log += "[END] All target port brute have been completed\n"
+                global.Logger.value += "[END] All target port brute have been completed\n"
             }
         });
     }
@@ -383,7 +334,6 @@ function handleCurrentChange(val: any) {
                 <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
                 <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
                 <el-tag type="info">线程:{{ config.thread }}</el-tag>
-                <el-tag type="info">超时:{{ config.timeout }}s</el-tag>
                 <el-link type="primary" @click="ctrl.drawer = true">更多参数</el-link>
             </el-space>
         </el-form-item>
@@ -392,7 +342,7 @@ function handleCurrentChange(val: any) {
         <template #title>
             <h4>设置高级参数</h4>
         </template>
-        <el-form label-width="30%">
+        <el-form label-width="auto">
             <el-form-item label="存活探测:">
                 <el-checkbox v-model="config.alive" />
                 <el-switch v-model="config.ping" active-text="ICMP" inactive-text="Ping" v-if="config.alive"
@@ -401,7 +351,7 @@ function handleCurrentChange(val: any) {
             <el-form-item label="线程数量:">
                 <el-input-number controls-position="right" v-model="config.thread" :min="1" :max="30000" />
             </el-form-item>
-            <el-form-item label="超时时长(s):">
+            <el-form-item label="指纹超时时长(s):">
                 <el-input-number controls-position="right" v-model="config.timeout" :min="1" />
             </el-form-item>
             <el-form-item label="口令猜测:">
@@ -410,7 +360,7 @@ function handleCurrentChange(val: any) {
         </el-form>
         <div v-if="config.burte === true">
             <el-descriptions title="字典管理" :column="2" border>
-                <el-descriptions-item v-for="item in dict.usernames" :label="item.name" :span="2">
+                <el-descriptions-item v-for="item in global.dict.usernames" :label="item.name" :span="2">
                     <el-button
                         @click="ctrl.innerDrawer = true; ctrl.currentPath = '/username/' + item.name + '.txt'; ReadDict('/username/' + item.name + '.txt')">
                         用户名
@@ -466,15 +416,6 @@ function handleCurrentChange(val: any) {
                     <el-table-column prop="password" label="密码" />
                     <el-table-column prop="time" label="扫描时间" />
                 </el-table>
-            </el-tab-pane>
-            <el-tab-pane name="3">
-                <template #label>
-                    <el-icon>
-                        <Tickets />
-                    </el-icon>
-                    <span>运行日志</span>
-                </template>
-                <el-input class="log-textarea" v-model="form.log" type="textarea" rows="16" readonly></el-input>
             </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar" v-if="form.activeName == '1'">

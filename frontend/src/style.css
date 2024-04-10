@@ -75,7 +75,25 @@ html {
 
 .log-textarea .el-textarea__inner {
   background-color: black;
-  color: rgb(52, 228, 52);
+  /* color: rgb(52, 228, 52); */
+  color: rgb(211, 209, 217);
+  height: 100%; /* 设置 textarea 高度为父元素高度 */
+}
+
+.log-textarea .el-textarea__inner::-webkit-scrollbar{
+  width: 6px ;
+  height: 6px ;
+}
+/* 设置滚动条样式 */
+.log-textarea .el-textarea__inner::-webkit-scrollbar-thumb {
+   border-radius: 3px ;
+   -moz-border-radius: 3px ;
+   -webkit-border-radius: 3px ;
+   background-color: #797777 ;
+}
+.log-textarea .el-textarea__inner::-webkit-scrollbar-track {
+ background-color: transparent ;
+
 }
 
 .my-header {

@@ -31,6 +31,7 @@ export default {
         'about': 'About',
         'source_code': 'Source Code',
         'update_log': 'Update Log',
+        'yx_log': 'Logs',
         'issue': 'New Issue'
     },
     setting: {
@@ -41,6 +42,7 @@ export default {
         'address': 'Address',
         'port': 'Port',
         'proxy': 'Proxy (only applicable for webscan)',
-        'save': 'Save'
+        'save': 'Save',
+        'test_agent': 'Test Agent'
     }
 }

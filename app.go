@@ -3,17 +3,15 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"slack-wails/core"
 	"slack-wails/core/info"
+	"slack-wails/core/jsfind"
 	"slack-wails/core/portscan"
 	"slack-wails/core/space"
 	"slack-wails/core/webscan"
@@ -384,7 +382,7 @@ type PortResult struct {
 func (a *App) PortCheck(ip string, port, timeout int) PortResult {
 	var pr PortResult
 	scanner := gonmap.New()
-	status, response := scanner.ScanTimeout(ip, port, time.Second*time.Duration(timeout))
+	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout))
 	switch status {
 	case gonmap.Closed:
 		pr.Status = false
@@ -503,18 +501,18 @@ func (a *App) FofaTips(query string) *space.TipsResult {
 	return &ts
 }
 
-func (a *App) FofaSearch(query, pageSzie, pageNum, email, api string, fraud, cert bool) *space.FofaSearchResult {
-	return space.FofaApiSearch(query, pageSzie, pageNum, email, api, fraud, cert)
+func (a *App) FofaSearch(query, pageSzie, pageNum, address, email, key string, fraud, cert bool) *space.FofaSearchResult {
+	return space.FofaApiSearch(query, pageSzie, pageNum, address, email, key, fraud, cert)
 }
 
-func (a *App) Sock5UnauthScan(ip string, port, timeout int) bool {
+func (a *App) Sock5Connect(ip string, port, timeout int, username, password string) bool {
 	client, err := clients.SelectProxy(&clients.Proxy{
 		Enabled:  true,
 		Mode:     "SOCK5",
 		Address:  ip,
 		Port:     port,
-		Username: "",
-		Password: "",
+		Username: username,
+		Password: password,
 	}, clients.DefaultClient())
 	if err != nil {
 		return false
@@ -711,12 +709,50 @@ func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, d
 	return space.HunterApiSearch(api, query, pageSize, pageNum, times, asset, deduplication)
 }
 
-func (a *App) WebIconMd5(target string) string {
-	_, b, err := clients.NewRequest("GET", target, nil, nil, 10, clients.DefaultClient())
-	if err != nil {
-		return ""
+func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
+	jsLinks := jsfind.ExtractJS(target)
+	fs = jsfind.FindInfo(target)
+	u, _ := url.Parse(target)
+	fs.JS = *jsfind.AppendSource(target, jsLinks)
+	host := ""
+	if customPrefix != "" {
+		host = customPrefix
+	} else {
+		host = u.Scheme + "://" + u.Host
 	}
-	hash := md5.New()
-	io.WriteString(hash, string(b))
-	return hex.EncodeToString(hash.Sum(nil))
+	for _, js := range jsLinks {
+		newURL := host + "/" + js
+		fs2 := jsfind.FindInfo(newURL)
+		fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
+		fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
+		fs.ChinesePhone = append(fs.ChinesePhone, fs2.ChinesePhone...)
+		fs.SensitiveField = append(fs.SensitiveField, fs2.SensitiveField...)
+		fs.APIRoute = append(fs.APIRoute, fs2.APIRoute...)
+	}
+	// outloop:
+	// 	for _, link := range fs.IP_URL {
+	// 		for _, domain := range whiteList {
+	// 			if strings.HasSuffix(link.Filed, domain) {
+	// 				break outloop
+	// 			}
+	// 		}
+	// 		if !strings.HasPrefix(link.Filed, "http") || !strings.HasPrefix(link.Filed, "ws") {
+	// 			at := a.CheckTarget(link.Filed, clients.Proxy{})
+	// 			if at.Status {
+	// 				link.Filed = at.ProtocolURL
+	// 			}
+	// 		}
+	// 		fs2 := jsfind.FindInfo(link.Filed)
+	// 		fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
+	// 		fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
+	// 		fs.ChinesePhone = append(fs.ChinesePhone, fs2.ChinesePhone...)
+	// 		fs.SensitiveField = append(fs.SensitiveField, fs2.SensitiveField...)
+	// 		fs.APIRoute = append(fs.APIRoute, fs2.APIRoute...)
+	// 	}
+	fs.APIRoute = jsfind.RemoveDuplicatesInfoSource(fs.APIRoute)
+	fs.ChineseIDCard = jsfind.RemoveDuplicatesInfoSource(fs.ChineseIDCard)
+	fs.ChinesePhone = jsfind.RemoveDuplicatesInfoSource(fs.ChinesePhone)
+	fs.SensitiveField = jsfind.RemoveDuplicatesInfoSource(fs.SensitiveField)
+	fs.IP_URL = jsfind.RemoveDuplicatesInfoSource(fs.IP_URL)
+	return fs
 }

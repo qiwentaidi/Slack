@@ -7,5 +7,3 @@ declare module "*.vue" {
 }
 
 declare module "async";
-declare module "prismjs";
-declare module "splitpanes";

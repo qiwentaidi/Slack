@@ -108,9 +108,9 @@ type FofaSearchResult struct {
 	}
 }
 
-func FofaApiSearch(search, pageSize, pageNum, email, api string, fraud, cert bool) *FofaSearchResult {
+func FofaApiSearch(search, pageSize, pageNum, addr, email, key string, fraud, cert bool) *FofaSearchResult {
 	var fs FofaSearchResult
-	address := "https://fofa.info/api/v1/search/all?email=" + email + "&key=" + api + "&qbase64=" +
+	address := addr + "api/v1/search/all?email=" + email + "&key=" + key + "&qbase64=" +
 		FOFABaseEncode(search) + "&cert.is_valid" + fmt.Sprint(cert) + fmt.Sprintf("&is_fraud=%v&is_honeypot=%v", fmt.Sprint(fraud), fmt.Sprint(fraud)) +
 		"&page=" + pageNum + "&size=" + pageSize + "&fields=host,title,ip,domain,port,protocol,country_name,region,city,icp"
 	_, b, err := clients.NewRequest("GET", address, nil, nil, 10, http.DefaultClient)

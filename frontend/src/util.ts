@@ -1,8 +1,9 @@
 import * as XLSX from "xlsx";
-import { ElMessage } from "element-plus";
+import { ElNotification } from "element-plus";
 import global from "./global";
-import { CheckTarget, SaveFile, GoFetch } from "../wailsjs/go/main/App";
+import { CheckTarget, SaveFile, GoFetch, Sock5Connect } from "../wailsjs/go/main/App";
 import { GetFileContent, WriteFile } from "../wailsjs/go/main/File";
+import Loading from "./components/Loading.vue";
 // 单sheet导出
 export async function ExportToXlsx(
   headers: string[],
@@ -61,14 +62,12 @@ export async function ExportFile(
   }
   const result = await WriteFile(filetype, path, content);
   if (result) {
-    ElMessage({
-      showClose: true,
+    ElNotification({
       message: "数据保存成功，路径为:" + path,
       type: "success",
     });
   } else {
-    ElMessage({
-      showClose: true,
+    ElNotification({
       message: "数据导出失败!",
       type: "warning",
     });
@@ -79,10 +78,10 @@ export async function ExportFile(
 export function CopyURLs(result: {}[]) {
   // 避免控制台报错
   if (result.length <= 1) {
-    ElMessage({
-      showClose: true,
+    ElNotification({
       message: "复制内容条数需大于1",
       type: "warning",
+      position: 'bottom-right',
     });
     return;
   }
@@ -92,33 +91,43 @@ export function CopyURLs(result: {}[]) {
       temp.push((line as any)["link"]);
     }
   }
+  Copy(temp.join("\n"))
+}
 
-  navigator.clipboard.writeText(temp.join("\n")).then(
+export function Copy(content: string) {
+  navigator.clipboard.writeText(content).then(
     function () {
-      ElMessage({
-        showClose: true,
-        message: "复制成功",
+      ElNotification({
+        message: "Copy Finished",
         type: "success",
+        position: 'bottom-right',
       });
     },
     function (err) {
-      ElMessage({
-        showClose: true,
-        message: "复制失败" + err,
+      ElNotification({
+        message: "Copy Failed: " + err,
         type: "error",
+        position: 'bottom-right',
       });
     }
   );
 }
 
+export function CopyALL(filed: string[]) {
+  if (filed.length == 0) {
+    ElNotification({
+      message: "Copy data can't be empty",
+      type: "warning",
+      position: 'bottom-right',
+    });
+    return
+  }
+  Copy(filed.join("\n"))
+}
+
 export function SplitTextArea(textarea: string) {
   let lines = textarea.split(/[(\r\n)\r\n]+/); // 根据换行或者回车进行识别
-  lines.forEach((item, index) => {
-    // 删除空项
-    if (!item) {
-      lines.splice(index, 1);
-    }
-  });
+  lines = lines.filter(item => item.trim() !== ''); // 删除空项并去除左右空格
   lines = Array.from(new Set(lines)); // 去重
   return lines;
 }
@@ -165,7 +174,6 @@ export async function formatURL(host: string): Promise<string[]> {
   let temp: Array<string> = [];
   let urls: Array<string> = [];
   for (var target of SplitTextArea(host)) {
-    target = target.trim();
     if (target.slice(0, 4) !== "http") {
       const result = await CheckTarget(host, global.proxy);
       if (result.Status === true) {
@@ -229,27 +237,24 @@ export function ApiSyntaxCheck(
 ) {
   if (mode == 0) {
     if (email == "" || key == "") {
-      ElMessage({
-        showClose: true,
+      ElNotification({
         message: "请在设置处填写FOFA Email和Key",
-        type: "error",
+        type: "warning",
       });
       return false;
     }
   } else {
     if (key == "") {
-      ElMessage({
-        showClose: true,
+      ElNotification({
         message: "请在设置处填写Hunter Key",
-        type: "error",
+        type: "warning",
       });
       return false;
     }
   }
   if (RegCompliance.test(query) === false) {
-    ElMessage({
-      showClose: true,
-      message: "请输入正确的查询语法",
+    ElNotification({
+      message: "Syntax error",
       type: "warning",
     });
     return false;
@@ -260,9 +265,8 @@ export function ApiSyntaxCheck(
 export async function ReadLine(filepath: string) {
   let res = await GetFileContent(filepath);
   if (res.length == 0) {
-    ElMessage({
-      showClose: true,
-      message: "读取文件不能为空",
+    ElNotification({
+      message: "Reading file cannot be empty",
       type: "warning",
     });
     return;
@@ -273,18 +277,52 @@ export async function ReadLine(filepath: string) {
   }
 }
 
-export async function TestProxy() {
+// mode 0 is button click
+export async function TestProxy(mode: number) {
   const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port
   if (global.proxy.enabled) {
-    let resp = await GoFetch("GET", proxyURL, "", [{}], 10, null)
-    if (resp.Error == true) {
-      ElMessage({
-        showClose: true,
-        message: "代理地址不可达",
-        type: "warning",
+    if (global.proxy.mode == "HTTP") {
+      let resp = await GoFetch("GET", proxyURL, "", [{}], 10, null)
+      if (resp.Error == true) {
+        ElNotification({
+          message: "The proxy is unreachable",
+          type: "warning",
+        });
+        return false
+      }
+      if (mode == 0) {
+        ElNotification({
+          message: "The proxy is enabled",
+          type: "success",
+        });
+      }
+    } else {
+      ElNotification({
+        duration: 0,
+        message: 'Connecting to http://www.baidu.com',
+        icon: Loading,
       });
-      return false
+      let resp = await Sock5Connect(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password)
+      if (!resp) {
+        ElNotification.closeAll()
+        ElNotification({
+          message: "Connect to http://www.baidu.com is timeout",
+          type: "error",
+        });
+        return false
+      }
+      ElNotification.closeAll()
+      ElNotification({
+        title: 'Success',
+        message: "Connect to http://www.baidu.com is success",
+        type: "success",
+      });
     }
   }
   return true
+}
+
+export function currentTime() {
+  var date = new Date();
+  return date.toLocaleString()
 }

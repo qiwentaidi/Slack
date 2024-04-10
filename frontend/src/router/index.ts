@@ -5,6 +5,7 @@ export const routes: Array<RouteRecordRaw> = [
   { path: '/Permeation/Webscan', component: () => import('../views/Permeation/Webscan.vue') },
   { path: '/Permeation/Portscan', component: () => import('../views/Permeation/Portscan.vue') },
   { path: '/Permeation/Dirsearch', component: () => import('../views/Permeation/Dirsearch.vue') },
+  { path: '/Permeation/Jsfinder', component: () => import('../views/Permeation/Jsfinder.vue') },
   { path: '/Permeation/Pocdetail', component: () => import('../views/Permeation/Pocdetail.vue') },
   { path: '/Asset/Asset', component: () => import('../views/Asset/Asset.vue') },
   { path: '/Asset/Subdomain', component: () => import('../views/Asset/Subdomain.vue') },
