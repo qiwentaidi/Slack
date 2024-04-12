@@ -116,13 +116,15 @@ function cidrToRange(cidr: string): string {
                 <el-button type="primary" @click="cdncheck">域名解析(CDN查询)</el-button>
                 <el-button type="primary" @click="searchdomain">域名备案&whois查询</el-button>
             </el-space>
-            <el-space>
-                <el-button color="#5FF5B6" @click="extract">IP筛选统计</el-button>
-                <el-button color="#5FF5B6" @click="format">IP转换</el-button>
+            <div>
+                <el-space>
+                    <el-button color="#5FF5B6" @click="extract">IP筛选统计</el-button>
+                    <el-button color="#5FF5B6" @click="format">IP转换</el-button>
+                </el-space>
                 <el-select v-model="from.current" style="width: 350px;">
                     <el-option v-for="item in from.options" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
-            </el-space>
+            </div>
         </div>
         <el-input type="textarea" v-model="from.result" rows="10" readonly style="height: 45vh;"></el-input>
     </div>

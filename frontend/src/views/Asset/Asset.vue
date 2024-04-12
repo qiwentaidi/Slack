@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import { QuestionFilled } from '@element-plus/icons-vue';
+import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { CompanyAssetInfo, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
 import global from "../../global"
@@ -22,7 +22,7 @@ const from = reactive({
 
     companys: [{}],
     log: '',
-
+    runningStatus: false,
     domains: [{}],
     correctName: [{}],
     getColumnData(prop: string): any[] {
@@ -102,6 +102,7 @@ function Collect() {
                 if (result.Asset.length > 0) {
                     const mappedResult = result.Asset.map((item: any) => {
                         return {
+                            companyName: companyName,
                             weName: item[0],
                             weNums: item[1],
                             logo: item[2],
@@ -198,10 +199,11 @@ function sleep(time: number) {
         <el-form-item label="公司名称:">
             <el-input v-model="from.company" type="textarea" :rows=from.rows @focus="from.rows = 4" @blur="from.rows = 1"
                 resize="none" style="width: 50%;"></el-input>
-            <el-button type="primary" @click="Collect" style="margin-left: 10px;">开始查询</el-button>
+            <el-button type="primary" :icon="Search" @click="Collect" style="margin-left: 10px;" v-if="!from.runningStatus">开始查询</el-button>
+            <el-button type="danger" loading style="margin-left: 10px;" v-else>正在查询</el-button>
         </el-form-item>
         <el-form-item label="查询条件:">
-            <div>
+            <div style="display: flex;">
                 <el-checkbox v-model="from.subcompany" label="查询子公司并反查域名" />
                 <el-tooltip placement="left">
                     <template #content>控股率>=(%)</template>
@@ -218,7 +220,8 @@ function sleep(time: number) {
             <template #label>
                 Token:
                 <el-tooltip placement="right">
-                    <template #content>由于天眼查登录校验机制，为了确保数据准确，需要在此处填入网页登录后Cookie头中的 X-Auth-Token 字段或者 auth_token 字段</template>
+                    <template #content>由于天眼查登录校验机制，为了确保公众号爬取数据准确<br />
+                        需要在此处填入网页登录后Cookie头中auth_token字段</template>
                     <el-icon>
                         <QuestionFilled size="24" />
                     </el-icon>
@@ -240,12 +243,30 @@ function sleep(time: number) {
             </el-tab-pane>
 
             <el-tab-pane label="公众号" name="wechat">
-                <el-table :data="we" height="60vh" border style="width: 100%">
+                <el-table :data="we" height="60vh" border :cell-style="{height: '23px'}">
                     <el-table-column type="index" width="60px" />
-                    <el-table-column prop="weName" label="公众号名称" show-overflow-tooltip="true" />
+                    <el-table-column prop="companyName" label="公司名称" width="180px" />
+                    <el-table-column prop="weName" label="公众号名称">
+                        <template #default="scope">
+                            <div style="display: flex;">
+                                <img :src="scope.row.logo" style="width: 25px; height: 25px; margin-right: 10px;">
+                                <span>{{ scope.row.weName }}</span>
+                            </div>
+                        </template>
+                    </el-table-column>
                     <el-table-column prop="weNums" label="微信号" show-overflow-tooltip="true" />
-                    <el-table-column prop="logo" label="Logo" show-overflow-tooltip="true" />
-                    <el-table-column prop="qrcode" label="二维码" show-overflow-tooltip="true" />
+                    <el-table-column prop="qrcode" width="80px" label="二维码" align="center">
+                        <template #default="scope">
+                            <el-popover :width="180" placement="left">
+                                <template #reference>
+                                    <svg t="1712903814884" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2765" width="1.5em" height="1.5em"><path d="M468 128H160c-17.7 0-32 14.3-32 32v308c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V136c0-4.4-3.6-8-8-8z m-56 284H192V192h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m194 210H136c-4.4 0-8 3.6-8 8v308c0 17.7 14.3 32 32 32h308c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8z m-56 284H192V612h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m590-630H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V160c0-17.7-14.3-32-32-32z m-32 284H612V192h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m194 210h-48c-4.4 0-8 3.6-8 8v134h-78V556c0-4.4-3.6-8-8-8H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V644h78v102c0 4.4 3.6 8 8 8h190c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8zM746 832h-48c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z m142 0h-48c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z" fill="#1296DB" p-id="2766"></path></svg>
+                                </template>
+                                <template #default>
+                                    <img :src="scope.row.qrcode" style="width: 150px; height: 150px">
+                                </template>
+                            </el-popover>
+                        </template>
+                    </el-table-column>
                     <el-table-column prop="introduction" label="简介" show-overflow-tooltip="true" />
                 </el-table>
             </el-tab-pane>
@@ -287,5 +308,8 @@ function sleep(time: number) {
     position: absolute;
     right: 15px;
     top: 176px;
+}
+.cell {
+    height: 23px;
 }
 </style>

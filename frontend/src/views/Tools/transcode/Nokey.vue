@@ -60,16 +60,16 @@ function handleInputChange() {
         <div style="width: 100%; margin-left: 15px;">
             <el-input type="textarea" v-model="transcode.Encrypt" rows="10" resize='none'
                 @input="handleInputChange" style="margin-bottom: 10px;"></el-input>
-            <el-space class="nkmode">
+            <div class="my-header">
                 <el-button color="#626aef" :icon="Plus" @click="addDiv">添加</el-button>
-                <el-space>
+                <div style="display: flex;">
                     <el-checkbox v-model="autoEncrypt" label="自动加密" border />
-                    <el-button-group class="ml-4">
+                    <el-button-group style="margin-left: 5px;">
                         <el-button type="primary" :icon="ArrowDownBold" @click="handleButtonClick(0)">加密</el-button>
                         <el-button type="primary" :icon="ArrowDownBold" @click="handleButtonClick(1)">解密</el-button>
                     </el-button-group>
-                </el-space>
-            </el-space>
+                </div>
+            </div>
             <el-input type="textarea" v-model="transcode.Decrypt" rows="10" resize='none'
                 style="margin-top: 10px;"></el-input>
         </div>

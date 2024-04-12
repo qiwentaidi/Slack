@@ -12,6 +12,12 @@ import (
 	"time"
 )
 
+// type HTTP_OPTIONS struct {
+// 	HTTPS    bool
+// 	Redirect bool
+// 	Proxys   Proxy
+// }
+
 // 跟随页面跳转最多10次
 func DefaultClient() *http.Client {
 	return &http.Client{

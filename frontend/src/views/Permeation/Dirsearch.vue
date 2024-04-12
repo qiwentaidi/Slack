@@ -138,15 +138,6 @@ class Dirsearch {
                                 });
                             }
                         }
-                    } else {
-                        if (statuscodeFilter.find(number => number === result.Status) != undefined) {
-                            dir.value.push({
-                                status: result.Status,
-                                length: result.Length,
-                                path: from.url + path,
-                                location: result.Location,
-                            });
-                        }
                     }
                 }
                 callback()
@@ -374,7 +365,7 @@ const config = reactive({
             <template #default="scope">
                 <el-button type="primary" link @click.prevent="Copy(scope.row.path)">复制</el-button>
                 <el-divider direction="vertical" />
-                <el-button type="primary" link @click.prevent=" BrowserOpenURL(scope.row.path)">打开</el-button>
+                <el-button type="primary" link @click.prevent="BrowserOpenURL(scope.row.path)">打开</el-button>
                 <el-divider direction="vertical" />
                 <el-button type="primary" link @click.prevent="GetResponse(scope.row.path)">查看</el-button>
             </template>
@@ -383,7 +374,7 @@ const config = reactive({
             <el-empty description="点击开始扫描获取数据"></el-empty>
         </template>
     </el-table>
-    <el-dialog v-model="from.respDialog" title="Response" :before-close="from.content = ''" width="800">
+    <el-dialog v-model="from.respDialog" title="Response" width="800">
         <pre class="pretty"><code>{{ from.content }}</code></pre>
     </el-dialog>
     <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
