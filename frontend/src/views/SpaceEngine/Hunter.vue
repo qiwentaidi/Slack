@@ -108,28 +108,33 @@ const table = reactive({
         loading.value = true
         HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
-                if (result.code == 40205) {
-                    ElNotification({
-                        title: "提示",
-                        message: result.message,
-                        type: "info",
-                    });
-                } else {
-                    ElNotification({
-                        title: "提示",
-                        message: result.message,
-                        type: "error",
-                    });
-                    loading.value = false
-                    return
+                switch (result.code) {
+                    case 0:
+                        ElNotification({
+                            message: '请求超时',
+                            type: "error",
+                        });
+                        loading.value = false
+                        return
+                    case 40205:
+                        ElNotification({
+                            message: result.message,
+                            type: "info",
+                        });
+                    default:
+                        ElNotification({
+                            message: result.message,
+                            type: "error",
+                        });
+                        loading.value = false
+                        return
                 }
             }
             form.tips = result.message + " 共查询到数据:" + result.data.total + "条," + result.data.rest_quota
             const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
             tab.content!.pop()
             if (result.data.arr == null) {
-                ElMessage({
-                    showClose: true,
+                ElNotification({
                     message: "暂未查询到相关数据",
                     type: "warning",
                 });
@@ -269,8 +274,7 @@ const loading = ref(false)
 async function IconHashSearch() {
     let response = await GoFetch("GET", form.hashURL, "", [{}], 10, null)
     if (response.Error == true) {
-        ElMessage({
-            showClose: true,
+        ElNotification({
             message: "目标不可达",
             type: "warning",
         });
@@ -284,15 +288,14 @@ function BatchSearch() {
     const lines = SplitTextArea(form.batchURL)
     var temp = ''
     for (const line of lines) {
-        if (validateIP(line) === true) {
+        if (validateIP(line)) {
             temp += `ip="${line}"||`
-        } else if (validateDomain(line) === true) {
+        } else if (validateDomain(line)) {
             temp += `domain.suffix="${line}"||`
         }
     }
     if (temp == '') {
-        ElMessage({
-            showClose: true,
+        ElNotification({
             message: "目标为空",
             type: "warning",
         });
@@ -402,7 +405,7 @@ async function CopyURL(mode: number) {
                         </span>
                     </template>
                 </el-dialog>
-                <el-dialog v-model="form.batchdialog" title="批量查询: 请输入IP/网段/域名(MAX 100)" width="40%" center>
+                <el-dialog v-model="form.batchdialog" title="批量查询: 请输入IP/网段/域名(MAX 5)" width="40%" center>
                     <el-input v-model="form.batchURL" type="textarea" rows="10"></el-input>
                     <template #footer>
                         <span>
@@ -422,7 +425,8 @@ async function CopyURL(mode: number) {
                         <el-dropdown-menu>
                             <el-dropdown-item :icon="Share" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
                             <el-dropdown-item :icon="Share" @click="SaveData(1)">导出全部数据</el-dropdown-item>
-                            <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
+                            <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)"
+                                divided>复制当前页URL</el-dropdown-item>
                             <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
@@ -459,8 +463,7 @@ async function CopyURL(mode: number) {
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" width="200" show-overflow-tooltip="true">
                     <template #default="scope">
-                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)">
-                        </el-button>
+                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.URL != ''" />
                         {{ scope.row.URL }}
                     </template>
 
@@ -511,3 +514,30 @@ async function CopyURL(mode: number) {
         <el-image class="center" src="/loading.gif" alt="loading" v-else></el-image>
     </el-tabs>
 </template>
+
+<style>
+.el-tabs__item {
+    position: relative;
+    display: inline-block;
+    max-width: 300px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    .el-tooltip {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .el-icon-close {
+        position: absolute !important;
+        top: 13px !important;
+        right: 3px !important;
+    }
+}
+
+.el-tabs__nav {
+    line-height: 230%;
+}
+</style>

@@ -1,4 +1,5 @@
 import { reactive, ref } from 'vue'
+
 var space = reactive({
     fofaapi: 'https://fofa.info/',
     fofaemail: '',
@@ -21,6 +22,21 @@ var proxy = reactive({
 })
 
 const Logger = ref("")
+
+const LOCAL_VERSION = "1.5.0"
+
+var PATH = {
+    ConfigPath: "/slack/config",
+    ActivePathPoc: "/slack/config/active-detect",
+    AFGPathPoc: "/slack/config/afrog-pocs",
+    LocalPocVersionFile: "/slack/config/afrog-pocs/version",
+    PortBurstPath: "/slack/portburte"
+}
+
+var UPDATE = {
+    PocStatus: false,
+    ClientStatus: false,
+}
 
 var dict = ({
     usernames: [
@@ -74,4 +90,7 @@ export default {
     proxy,
     dict,
     Logger,
+    LOCAL_VERSION,
+    PATH,
+    UPDATE
 };

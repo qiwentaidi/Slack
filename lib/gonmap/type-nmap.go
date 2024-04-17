@@ -81,7 +81,7 @@ func (n *Nmap) Scan(ip string, port int, timeout time.Duration) (status Status, 
 		return status, response
 	}
 	otherProbes := probeNames[1:]
-	return n.getRealResponse(ip, port, time.Second*2, otherProbes...)
+	return n.getRealResponse(ip, port, n.timeout, otherProbes...)
 }
 
 func (n *Nmap) getRealResponse(host string, port int, timeout time.Duration, probes ...string) (status Status, response *Response) {

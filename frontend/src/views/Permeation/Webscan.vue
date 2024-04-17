@@ -173,7 +173,7 @@ class Scanner {
             }
         },async (err: any) => {
             if (form.currentModule !== "仅指纹扫描") {
-                form.currentLoadPath = await LocalWalkFiles(HomePath + ActivePathPoc) // 初始化主动指纹目录
+                form.currentLoadPath = await LocalWalkFiles(global.PATH.ActivePathPoc) // 初始化主动指纹目录
                 global.Logger.value += `${currentTime()} 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
                 // 主动指纹探测
                 async.eachSeries(form.urlFingerMap, (ufm: uf, callback: () => void) => {
@@ -283,7 +283,7 @@ class Scanner {
                 }
             })
         } else if (form.currentModule == "全部漏洞扫描") {
-            form.currentLoadPath = await LocalWalkFiles(HomePath + AFGPathPoc)
+            form.currentLoadPath = await LocalWalkFiles(global.PATH.AFGPathPoc)
             global.Logger.value += `${currentTime()} 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
             let count = 0
             async.eachSeries(this.urls, (target: string, callback: () => void) => {

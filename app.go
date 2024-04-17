@@ -38,6 +38,7 @@ type App struct {
 	afrogPathPoc  string
 	cdnFile       string
 	qqwryFile     string
+	avFile        string
 }
 
 // NewApp creates a new App application struct
@@ -48,6 +49,7 @@ func NewApp() *App {
 		afrogPathPoc:  "/slack/config/afrog-pocs",
 		cdnFile:       "/slack/config/cdn.yaml",
 		qqwryFile:     "/slack/config/qqwry.dat",
+		avFile:        "/slack/config/antivirues.yaml",
 	}
 }
 
@@ -142,11 +144,6 @@ func (a *App) GoFetch(method, target, body string, headers []map[string]string, 
 	}
 }
 
-// wx
-func (a *App) WechatAppid(appid, secert string) string {
-	return core.CheckSecert(appid, secert)
-}
-
 // fscan
 func (a *App) Fscan2Txt(content string) string {
 	var result string
@@ -164,11 +161,10 @@ func (a *App) ThinkDict(p_name, c_name, c_domain, p_birthday, p_worknum string) 
 
 func (a *App) System(content string, mode int) [][]string {
 	if mode == 0 { // tasklist
-		datas, _ := core.AntivirusIdentify(content)
+		datas, _ := core.AntivirusIdentify(content, a.avFile)
 		return datas
 	} else { // systeminfo
-		datas := core.Patch(content)
-		return datas
+		return core.Patch(content)
 	}
 }
 
@@ -214,23 +210,25 @@ func (a *App) CheckCdn(input, dns1, dns2 string) string {
 	var result string
 	result += "---域名解析(CDN查询)---:\n"
 outerLoop:
-	for _, domain := range util.RemoveDuplicates[string](util.RegDomain.FindAllString(input, -1)) {
-		ips, cnames, err := core.Resolution(domain, []string{dns1 + ":53", dns2 + ":53"}, 5)
+	for _, domain := range util.RemoveDuplicates(util.RegDomain.FindAllString(input, -1)) {
+		ips, cnames, err := core.Resolution(domain, []string{dns1 + ":53", dns2 + ":53"}, 10)
 		if err == nil {
-			for name, cdns := range core.ReadCDNFile(a.cdnFile) {
-				for _, cdn := range cdns {
-					for _, cname := range cnames {
-						if strings.Contains(cname, cdn) { // 识别到cdn
-							result += fmt.Sprintf("域名: %v 识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v\n", domain, cname, name, strings.Join(ips, " | "))
-							break outerLoop
-						} else if strings.Contains(cname, "cdn") {
-							result += fmt.Sprintf("域名: %v CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v \n", domain, cname, strings.Join(ips, " | "))
-							break outerLoop
+			if len(cnames) != 0 {
+				for name, cdns := range core.ReadCDNFile(a.cdnFile) {
+					for _, cdn := range cdns {
+						for _, cname := range cnames {
+							if strings.Contains(cname, cdn) { // 识别到cdn
+								result += fmt.Sprintf("域名: %v 识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v\n", domain, cname, name, strings.Join(ips, " | "))
+								break outerLoop
+							} else if strings.Contains(cname, "cdn") {
+								result += fmt.Sprintf("域名: %v CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v \n", domain, cname, strings.Join(ips, " | "))
+								break outerLoop
+							}
 						}
 					}
 				}
 			}
-			result += fmt.Sprintf("域名: %v 解析到IP为: %v\n", domain, strings.Join(ips, ","))
+			result += fmt.Sprintf("域名: %v 解析到IP为: %v CNAME: %v\n", domain, strings.Join(ips, ","), cnames)
 		} else {
 			result = fmt.Sprintf("域名: %v 解析失败,%v\n", domain, err)
 		}
@@ -418,7 +416,7 @@ func (a *App) PortCheck(ip string, port, timeout int) PortResult {
 // 遍历文件夹下的yaml或者yml文件，获取所有绝对路径
 func (a *App) LocalWalkFiles(folderPath string) []string {
 	fileList := []string{}
-	filepath.Walk(folderPath, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(util.HomeDir()+folderPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

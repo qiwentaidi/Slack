@@ -18,7 +18,7 @@ Fyne版本已停止更新，可以通过fyne分支中获取到该模块代码。
 
 # 运行	可以通过[wails](https://wails.io/zh-Hans/docs/gettingstarted/installation/)官网查看支持运行的客户端以及运行前条件，详细功能介绍及拓展等信息见[Wiki](https://github.com/qiwentaidi/Slack/wiki)
 
-```shell
+```sh
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
 wails doctor // 检测是否安装成功

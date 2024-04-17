@@ -15,7 +15,7 @@ import (
 func Resolution(domain string, servers []string, timeout int) (ips, cname []string, err error) {
 	cname, err = LookupCNAME(domain, servers, timeout)
 	ips, _ = LookupHost(domain, servers, timeout)
-	return util.RemoveDuplicates[string](ips), cname, err
+	return util.RemoveDuplicates(ips), cname, err
 }
 
 func LookupHost(domain string, domainServers []string, timeout int) (ips []string, err error) {

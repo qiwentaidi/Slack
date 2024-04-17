@@ -16,7 +16,7 @@ var (
 		"Memcached": {"[+] Memcached"},
 		"MS17-010":  {"[+] MS17-010"},
 		"POC":       {"poc"},
-		"DC":        {"[+]DC"},
+		"DC INFO":   {"DC"},
 		"INFO":      {"[+] InfoScan"},
 		"Vcenter":   {"ID_VC_Welcome"},
 		"Camera":    {"len:2512", "len:600", "len:481", "len:480"},

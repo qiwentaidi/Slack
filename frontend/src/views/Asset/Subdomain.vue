@@ -29,7 +29,7 @@ async function BurstSubdomain() {
     from.id = 0;
     InitIPResolved();
     if (from.subs.length === 0) {
-        from.subs = await LoadSubDict(ConfigPath + "/subdomain")
+        from.subs = await LoadSubDict(global.PATH.ConfigPath + "/subdomain")
         from.tips = `loaded ${from.subs.length} dicts`
     }
     async.eachLimit(from.subs, from.thread, (sub: string, callback: () => void) => {

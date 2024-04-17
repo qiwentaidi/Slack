@@ -4,7 +4,14 @@
             <el-tab-pane label="备忘录">
                 <el-button-group style="margin-bottom: 10px; width: 100%;">
                     <el-button type="primary" style="width: 50%;" @click="dialog = true">添加</el-button>
-                    <el-button type="primary" style="width: 50%;" @click="save">保存</el-button>
+                    <el-button type="primary" style="width: 50%;" @click="
+                    save()
+                    ElNotification({
+                        message: 'Save successfully',
+                        type: 'success',
+                        position: 'bottom-right',
+                    });
+                    ">保存</el-button>
                 </el-button-group>
                 <el-table :data="data.memo" border highlight-current-row :show-header="false" @current-change="handleChange"
                     style="height: 80vh;">
@@ -34,7 +41,7 @@
             </el-tab-pane>
         </el-tabs>
         <div style="width: 70%; margin-left: 20px;">
-            <pre class="pre-wrap"><code>{{reverse.show}}</code></pre>
+            <pre class="pretty-response" style="margin: 0; height: auto;"><code>{{reverse.show}}</code></pre>
             <el-button type="primary" style="float: right; margin-top: 10px;" @click="ClipboardSetText(reverse.show)">复制</el-button>
         </div>
     </div>
@@ -60,13 +67,13 @@
   
 <script lang="ts" setup>
 import { reactive, watch, ref, onMounted } from 'vue';
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 import { CheckFileStat, InitMemo, ReadMemo } from '../../../wailsjs/go/main/File';
 import { ClipboardSetText } from '../../../wailsjs/runtime';
-
+import { UserHomeDir } from '../../../wailsjs/go/main/File';
 onMounted(async () => {
     handleChange(data.memo[0])
-    let fp = HomePath + "/slack/memo.txt"
+    let fp = await UserHomeDir() + "/slack/memo.txt"
     if (await CheckFileStat(fp)) {
         let kv = await ReadMemo(fp)
         data.memo = Object.entries(kv).map(([label, value]) => ({
@@ -219,25 +226,6 @@ async function save() {
             temp += `[${item.label}]\n${item.value}`
         }
     });
-    if (await InitMemo(HomePath + "/slack/memo.txt", temp)) {
-        ElMessage({
-            showClose: true,
-            message: "保存成功！",
-            type: 'success',
-        });
-    }
-    
+    InitMemo(await UserHomeDir() + "/slack/memo.txt", temp)
 }
 </script>
-
-<style>
-.pre-wrap {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: break-all;
-    overflow-wrap: break-word;
-    margin: 0;
-    outline: auto;
-    font-size: 1em;
-}
-</style>

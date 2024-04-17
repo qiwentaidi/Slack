@@ -153,7 +153,3 @@ export function Transcoding(arg1, arg2, arg3) {
 export function Webscan(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['Webscan'](arg1, arg2, arg3, arg4, arg5);
 }
-
-export function WechatAppid(arg1, arg2) {
-  return window['go']['main']['App']['WechatAppid'](arg1, arg2);
-}

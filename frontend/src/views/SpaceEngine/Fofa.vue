@@ -360,5 +360,29 @@ async function CopyURL() {
 .demo-image__lazy .el-image:last-child {
     margin-bottom: 0;
 }
-</style>
 
+.el-tabs__item {
+    position: relative;
+    display: inline-block;
+    max-width: 300px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    .el-tooltip {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .el-icon-close {
+        position: absolute !important;
+        top: 13px !important;
+        right: 3px !important;
+    }
+}
+
+.el-tabs__nav {
+    line-height: 230%;
+}
+</style>

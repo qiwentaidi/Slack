@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	regJS  []*regexp.Regexp
 	JsLink = []string{
 		"(https{0,1}:[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 		"[\"'‘“`]\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
@@ -47,6 +48,12 @@ type FindSomething struct {
 	SensitiveField []InfoSource
 }
 
+func init() {
+	for _, reg := range JsLink {
+		regJS = append(regJS, regexp.MustCompile(reg))
+	}
+}
+
 func ExtractJS(url string) (allJS []string) {
 	_, body, err := clients.NewRequest("GET", url, nil, nil, 10, clients.DefaultClient())
 	if err != nil || body == nil {
@@ -54,9 +61,8 @@ func ExtractJS(url string) (allJS []string) {
 		return
 	}
 	content := string(body)
-	for _, reg := range JsLink {
-		regJS := regexp.MustCompile(reg)
-		for _, item := range regJS.FindAllString(content, -1) {
+	for _, reg := range regJS {
+		for _, item := range reg.FindAllString(content, -1) {
 			item = strings.TrimLeft(item, "=")
 			item = strings.Trim(item, "\"")
 			item = strings.TrimLeft(item, ".")

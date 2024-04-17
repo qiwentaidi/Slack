@@ -68,9 +68,9 @@ var AuthPatchs = []AuthPatch{
 	{"MS03-026", "KB823980", "BufferOverrunInRPCInterface", "/NT/2000/XP/2003", "https://github.com/SecWiki/windows-kernel-exploits/tree/master/MS03-026"},
 }
 
-func AntivirusIdentify(tasklist string) ([][]string, error) {
+func AntivirusIdentify(tasklist, avFile string) ([][]string, error) {
 	var AntivirusResult [][]string
-	yamlData, err := os.ReadFile(util.HomeDir() + "/slack/antivirues.yaml")
+	yamlData, err := os.ReadFile(util.HomeDir() + avFile)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import async from 'async';
 import { Loading, QuestionFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
+import global from '../../global';
 // 初始化时调用
 onMounted(() => {
     dir.value = []
@@ -86,7 +87,7 @@ class Dirsearch {
         if (config.customDict != "") {
             from.paths = SplitTextArea(config.customDict)
         } else {
-            await LoadDirsearchDict(ConfigPath + "/dirsearch", from.exts.split(',')).then(result => {
+            await LoadDirsearchDict(global.PATH.ConfigPath + "/dirsearch", from.exts.split(',')).then(result => {
                 from.paths = result;
             });
         }
@@ -375,7 +376,7 @@ const config = reactive({
         </template>
     </el-table>
     <el-dialog v-model="from.respDialog" title="Response" width="800">
-        <pre class="pretty"><code>{{ from.content }}</code></pre>
+        <pre class="pretty-response"><code>{{ from.content }}</code></pre>
     </el-dialog>
     <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
         color="#5DC4F7" style="margin-top: 10px;" />
@@ -388,13 +389,5 @@ const config = reactive({
 
 .el-margin {
     margin-top: 18px;
-}
-
-.pretty {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: break-all;
-    overflow-x: auto;
-    height: 60vh;
 }
 </style>

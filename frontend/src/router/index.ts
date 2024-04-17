@@ -16,9 +16,9 @@ export const routes: Array<RouteRecordRaw> = [
   { path: '/Tools/Codec', component: () => import('../views/Tools/Codec.vue') },
   { path: '/Tools/System', component: () => import('../views/Tools/System.vue') },
   { path: '/Tools/Fscan', component: () => import('../views/Tools/Fscan.vue') },
-  { path: '/Tools/Reverse', component: () => import('../views/Tools/Reverse.vue') },
+  { path: '/Tools/Memo', component: () => import('../views/Tools/Memo.vue') },
   { path: '/Tools/Thinkdict', component: () => import('../views/Tools/Thinkdict.vue') },
-  { path: '/Tools/Wxappid', component: () => import('../views/Tools/Wxappid.vue') },
+  { path: '/Tools/AKSK', component: () => import('../views/Tools/AKSK.vue') },
   { path: '/Settings', component: () => import('../views/Settings.vue') },
 ];
 

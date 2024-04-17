@@ -21,7 +21,7 @@ export default {
         'fscan': 'Fscan Content Extraction',
         'memorandum': 'Memorandum',
         'associate_dictionary_generator': 'Associate Dictionary Generator',
-        'wechat_appid': 'WeChat Appid Detection',
+        'aksk': 'Wechat/DingDing',
         'update': 'Update',
         'setting': 'Settings',
         'more': 'More',

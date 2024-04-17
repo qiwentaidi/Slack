@@ -21,7 +21,7 @@ export default {
         'fscan': 'Fscan内容提取',
         'memorandum': '备忘录',
         'associate_dictionary_generator': '联想字典生成器',
-        'wechat_appid': '微信AppId校验',
+        'aksk': '微信/钉钉',
         'update': '更新',
         'setting': '设置',
         'more': '更多',

@@ -2,19 +2,44 @@
 import { LoadConfig } from '../util'
 import { onMounted } from 'vue';
 import { BrowserOpenURL } from '../../wailsjs/runtime'
+import { CheckFileStat, InitConfig, UserHomeDir } from '../../wailsjs/go/main/File';
+import { ElNotification } from 'element-plus';
+import Loading from '../components/Loading.vue';
 // 初始化时调用
-onMounted(() => {
+onMounted(async () => {
   LoadConfig() // 加载配置信息
+  let cfg = await CheckFileStat(await UserHomeDir() + "/slack")
+  if (!cfg) {
+    ElNotification({
+      duration: 0,
+      message: '未检测到配置文件，正在初始化...',
+      icon: Loading,
+    });
+    if (await InitConfig()) {
+      ElNotification.closeAll()
+      ElNotification({
+        message: "配置文件初始化成功!",
+        type: "success",
+      });
+    } else {
+      ElNotification.closeAll()
+      ElNotification({
+        title: "无法下载配置文件",
+        message: "请自行到https://gitee.com/the-temperature-is-too-low/slack-poc/releases/下载slack.zip并解压到用户根目录!",
+        type: "warning",
+      });
+    }
+  }
 });
 </script>
 
 <template>
   <el-container class="el-main">
-    <el-space  direction="vertical">
+    <el-space direction="vertical">
       <a @click="BrowserOpenURL('https://github.com/qiwentaidi/Slack')" title="前往Github仓库">
         <img src="/slack.svg" class="logo" />
       </a>
-      <h2>{{$t('aside.slogan')}}</h2>
+      <h2>{{ $t('aside.slogan') }}</h2>
     </el-space>
   </el-container>
 </template>

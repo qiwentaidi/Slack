@@ -5,11 +5,12 @@ import { ExportToXlsx, CopyURLs, SplitTextArea, ReadLine, currentTime } from '..
 import async from 'async';
 import { QuestionFilled, DocumentChecked, DocumentCopy, ChromeFilled } from '@element-plus/icons-vue';
 import { PortParse, IPParse, PortCheck, HostAlive, PortBrute } from '../../../wailsjs/go/main/App'
-import { Mkdir, WriteFile, CheckFileStat, GetFileContent } from '../../../wailsjs/go/main/File'
+import { Mkdir, WriteFile, CheckFileStat, GetFileContent, UserHomeDir } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import global from '../../global'
 onMounted(async () => {
-    if (!(await CheckFileStat(PortBurstPath))) {
+    global.PATH.PortBurstPath = await UserHomeDir() + global.PATH.PortBurstPath
+    if (!(await CheckFileStat(global.PATH.PortBurstPath))) {
         InitBurteDict()
     }
     table.pageContent = []
@@ -50,22 +51,22 @@ const options = [{
 
 // 初始化字典
 async function InitBurteDict() {
-    if (await Mkdir(PortBurstPath)) {
-        Mkdir(PortBurstPath + "/username")
-        Mkdir(PortBurstPath + "/password")
+    if (await Mkdir(global.PATH.PortBurstPath)) {
+        Mkdir(global.PATH.PortBurstPath + "/username")
+        Mkdir(global.PATH.PortBurstPath + "/password")
         for (const item of global.dict.usernames) {
-            WriteFile("txt", `${PortBurstPath}/username/${item.name}.txt`, item.dic.join("\n"))
+            WriteFile("txt", `${global.PATH.PortBurstPath}/username/${item.name}.txt`, item.dic.join("\n"))
         }
-        WriteFile("txt", `${PortBurstPath}/password/password.txt`, global.dict.passwords.join("\n"))
+        WriteFile("txt", `${global.PATH.PortBurstPath}/password/password.txt`, global.dict.passwords.join("\n"))
     }
 }
 
 async function ReadDict(path: string) {
-    ctrl.currentDic = await GetFileContent(PortBurstPath + path)
+    ctrl.currentDic = await GetFileContent(global.PATH.PortBurstPath + path)
 }
 
 async function SaveFile(path: string) {
-    let r = await WriteFile('txt', PortBurstPath + path, ctrl.currentDic)
+    let r = await WriteFile('txt', global.PATH.PortBurstPath + path, ctrl.currentDic)
     if (r) {
         ElMessage({
             showClose: true,
@@ -201,9 +202,9 @@ class Scanner {
     }
     public async Burte() {
         table.burteResult = []
-        global.dict.passwords = (await ReadLine(PortBurstPath + "/password/password.txt"))!
+        global.dict.passwords = (await ReadLine(global.PATH.PortBurstPath + "/password/password.txt"))!
         for (var item of global.dict.usernames) {
-            item.dic = (await ReadLine(PortBurstPath + "/username/" + item.name + ".txt"))!
+            item.dic = (await ReadLine(global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
         }
         async.eachLimit(getColumnData("link"), 20, (target: string, callback: () => void) => {
             if (!ctrl.runningStatus) {
