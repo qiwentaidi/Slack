@@ -1,6 +1,9 @@
 package core
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 var (
 	FscanRegs = map[string][]string{
@@ -21,6 +24,7 @@ var (
 		"Vcenter":   {"ID_VC_Welcome"},
 		"Camera":    {"len:2512", "len:600", "len:481", "len:480"},
 	}
+	NetInfoReg = regexp.MustCompile(`\[\*]((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}(\s+\[\-\>](\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|[a-zA-Z0-9\-]+))+`)
 )
 
 func MatchLine(name string, contains, lines []string) string {

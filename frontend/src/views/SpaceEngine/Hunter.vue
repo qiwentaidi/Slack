@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { ExportToXlsx } from '../../export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage } from "element-plus";
 import { Menu, Search, ChatLineRound, ArrowDown, ChromeFilled, CopyDocument, Share } from '@element-plus/icons-vue';
-import { TableTabs, ApiSyntaxCheck, ExportToXlsx, splitInt, SplitTextArea, validateIP, validateDomain, Copy } from '../../util'
+import { TableTabs, ApiSyntaxCheck, splitInt, SplitTextArea, validateIP, validateDomain, Copy } from '../../util'
 import global from "../../global"
 import {
-    GoFetch,
+    WebIconMd5,
     HunterSearch,
     HunterTips,
 } from '../../../wailsjs/go/main/App'
@@ -63,11 +64,13 @@ interface EntryTips {
 let timeout: ReturnType<typeof setTimeout>
 const entry = reactive({
     querySearchAsync: (queryString: string, cb: (arg: any) => void) => {
-        entry.getTips(queryString)
-        clearTimeout(timeout)
-        timeout = setTimeout(() => {
-            cb(form.loadAll)
-        }, 2000 * Math.random())
+        if (!queryString.includes("=")) {
+            entry.getTips(queryString)
+            clearTimeout(timeout)
+            timeout = setTimeout(() => {
+                cb(form.loadAll)
+            }, 2000 * Math.random())
+        }
     },
     getTips: function (queryString: string) {
         HunterTips(queryString).then(result => {
@@ -272,15 +275,15 @@ const table = reactive({
 const loading = ref(false)
 
 async function IconHashSearch() {
-    let response = await GoFetch("GET", form.hashURL, "", [{}], 10, null)
-    if (response.Error == true) {
+    let hash = await WebIconMd5(form.hashURL.trim())
+    if (hash == "") {
         ElNotification({
-            message: "目标不可达",
+            message: "目标不可达或者URL格式错误",
             type: "warning",
         });
         return
     }
-    let hash = CryptoJS.MD5(response.Body).toString()
+    form.icondialog = false
     table.addTab(`web.icon=="${hash}"`)
 }
 
@@ -524,20 +527,15 @@ async function CopyURL(mode: number) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
 
-    .el-tooltip {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .el-icon-close {
+.el-tabs__item .el-icon {
         position: absolute !important;
         top: 13px !important;
         right: 3px !important;
     }
-}
 
 .el-tabs__nav {
-    line-height: 230%;
+    line-height: 255%;
 }
 </style>

@@ -18,7 +18,7 @@ export default {
         'tools': 'Tools',
         'en_and_de': 'Encryption And Decryption',
         'systeminfo': 'AV/Patch Detection',
-        'fscan': 'Fscan Content Extraction',
+        'data_handing': 'Data Handing',
         'memorandum': 'Memorandum',
         'associate_dictionary_generator': 'Associate Dictionary Generator',
         'aksk': 'Wechat/DingDing',
@@ -32,7 +32,9 @@ export default {
         'source_code': 'Source Code',
         'update_log': 'Update Log',
         'yx_log': 'Logs',
-        'issue': 'New Issue'
+        'issue': 'New Issue',
+        'jsfinder': 'JSFinder',
+        'fofa': 'FOFA'
     },
     setting: {
         'username': 'Username',

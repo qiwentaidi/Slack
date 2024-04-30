@@ -1,7 +1,5 @@
 <template>
-  <el-container>
-    <el-scrollbar max-height="85vh">
-      <el-main>
+    <el-scrollbar max-height="85vh" style="height: 85vh;">
         <el-collapse model-value="3">
           <el-collapse-item name="1"><template #title>
               <h2>DNS Server</h2>
@@ -53,7 +51,7 @@
           <el-collapse-item name="3"><template #title>
               <h2>{{ $t('aside.space_engine') }}</h2>
             </template>
-            <el-form :model="global.space" label-width="100px" label-position="top">
+            <el-form :model="global.space" label-width="auto">
               <el-form-item label="FOFA" style="margin-top: 10px;">
                 <el-input v-model="global.space.fofaapi" placeholder="api address" clearable></el-input>
                 <el-input v-model="global.space.fofaemail" placeholder="email" clearable
@@ -64,18 +62,11 @@
               <el-form-item :label="$t('aside.hunter')">
                 <el-input v-model="global.space.hunterkey" placeholder="key" clearable></el-input>
               </el-form-item>
-              <!-- <el-form-item :label="$t('aside.360quake')">
-                <el-input v-model="global.space.quakekey" placeholder="key" clearable></el-input>
-              </el-form-item> -->
             </el-form>
           </el-collapse-item>
         </el-collapse>
-      </el-main>
     </el-scrollbar>
-    <el-footer>
-      <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
-    </el-footer>
-  </el-container>
+  <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
 </template>
 
 <script lang="ts" setup>

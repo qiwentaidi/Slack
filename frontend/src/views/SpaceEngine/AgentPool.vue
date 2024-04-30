@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import async from 'async';
 import { Search, Filter, QuestionFilled } from '@element-plus/icons-vue';
-import { splitInt, ExportTXT } from '../../util'
+import { splitInt } from '../../util'
+import { ExportTXT } from '../../export'
 import { reactive, onMounted } from 'vue';
 import { Sock5Connect, FofaSearch } from '../../../wailsjs/go/main/App'
 import global from "../../global"
@@ -179,7 +180,7 @@ async function Delelte(host: string) {
         <el-tabs v-model="form.currentTableName" type="card">
             <el-tab-pane name="0">
                 <template #label>
-                    代理池爬取<el-popover placement="right-end" title="此模块需要配置FOFA Email+key" :width="350" trigger="hover">
+                    <el-popover placement="right-end" title="此模块需要配置FOFA Email+key" :width="350" trigger="hover">
                         ①<b>检测数量</b>表示拉取和需要验证的目标数量<br /><br />
                         ②<b>存储阈值</b>表示数据库中存储的上限数量，如果超出立刻停止检测<br /><br />
                         ③点击
@@ -194,10 +195,11 @@ async function Delelte(host: string) {
                             </el-icon>
                         </template>
                     </el-popover>
+                    代理池爬取
                 </template>
                 <el-input v-model="form.socksLogger" type="textarea" rows="20" resize="none" readonly
                     class="log-textarea"></el-input>
-                <el-progress :percentage="form.percentage" :stroke-width="15" striped striped-flow :duration="20"
+                <el-progress :percentage="form.percentage" :text-inside="true" :stroke-width="20"
                     style="margin-top: 5px" color="#5DC4F7" />
             </el-tab-pane>
             <el-tab-pane label="历史记录" name="1">

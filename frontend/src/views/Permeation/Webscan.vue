@@ -1,23 +1,33 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
-import { Monitor, ArrowDown, Search, QuestionFilled, Plus, ZoomIn } from '@element-plus/icons-vue';
+import { VideoPause, Search, QuestionFilled, Plus, ZoomIn, CopyDocument, Link, Operation } from '@element-plus/icons-vue';
 import {
-    FingerScan,
     InitRule,
-    LocalWalkFiles,
-    Webscan,
-    PocNums,
-    GetFingerPoc,
     FofaSearch,
     HunterSearch,
+    FingerLength,
+    FingerScan,
+    ActiveFingerScan
 } from '../../../wailsjs/go/main/App'
 import { ElMessage } from 'element-plus';
-import { formatURL, ApiSyntaxCheck, splitInt, TestProxy, currentTime } from '../../util'
+import { formatURL, ApiSyntaxCheck, splitInt, TestProxy, currentTime, Copy } from '../../util'
+import { ExportWebScanToXlsx } from '../../export'
 import async from 'async';
 import global from "../../global"
 import { onMounted } from 'vue';
+import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
 // 初始化时调用
-onMounted(() => {
+onMounted(async () => {
+    let err = await InitRule()
+    if (err == "") {
+        dashboard.fingerLength = await FingerLength()
+    } else {
+        ElMessage({
+            showClose: true,
+            message: "初始化指纹规则失败，请检查配置文件",
+            type: "error"
+        })
+    }
     form.fingerResult = []
 });
 
@@ -38,14 +48,13 @@ const form = reactive({
     riskOptions: ["critical", "high", "medium", "low", "info"],
     pocnums: '',
     newscanner: false,
-    currentModule: '仅指纹扫描',
-    module: ["仅指纹扫描", "仅指纹扫描+主动目录探测", "指纹漏洞扫描", "全部漏洞扫描"],
+    currentModule: '指纹扫描',
+    module: ["指纹扫描", "指纹+敏感目录扫描", "指纹漏洞扫描", "全部漏洞扫描"],
     thread: 50,
     vulResult: [] as Vulnerability[],
     fingerResult: [{}],
     urlFingerMap: [] as uf[],
     numTips: '筛选当前条件下的POC数量',
-    dialogVisible: false,
     currentLoadPath: [] as string[],
     fofaDialog: false,
     fofaNum: 1000,
@@ -53,6 +62,7 @@ const form = reactive({
     hunterNum: ["10", "20", "50", "100", "1000"],
     defaultNum: "100",
     query: '',
+    runnningStatus: false,
 })
 
 interface uf {
@@ -62,16 +72,16 @@ interface uf {
 
 const dashboard = reactive({
     reqErrorURLs: [] as string[],
-    critical: 0,
-    high: 0,
-    medium: 0,
-    low: 0,
-    info: 0,
-    currentModule: "" as string,
+    riskLevel: {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        info: 0,
+    },
+    currentModule: "",
     count: 0,
-    request: '',
-    response: '',
-    extInfo: '',
+    fingerLength: 0,
 })
 
 const ctrl = reactive({
@@ -81,7 +91,7 @@ const ctrl = reactive({
 
 async function startScan() {
     let ws = new Scanner
-    form.newscanner = false
+    form.newscanner = false // 隐藏界面
     ws.init()
     await ws.infoScanner()
 }
@@ -96,26 +106,17 @@ function stopScan() {
     }
 }
 
-interface WebResult {
-    VulName: string
-    Severity: string
-    VulURL: string
-    Request: string
-    Response: string
-    ExtInfo: string
-}
-
 class Scanner {
     urls = [] as string[]
     public init() {
         form.urlFingerMap = [] as uf[]
         form.fingerResult = []
         form.vulResult = []
-        dashboard.critical = 0
-        dashboard.high = 0
-        dashboard.medium = 0
-        dashboard.low = 0
-        dashboard.info = 0
+        dashboard.riskLevel.critical = 0
+        dashboard.riskLevel.high = 0
+        dashboard.riskLevel.medium = 0
+        dashboard.riskLevel.low = 0
+        dashboard.riskLevel.info = 0
         dashboard.reqErrorURLs = []
         dashboard.currentModule = ""
     }
@@ -135,12 +136,7 @@ class Scanner {
             });
             return
         }
-        // 
-        // 
-        // 指纹扫描 =====================================
-        //         
-        // 
-        await InitRule()
+        // 指纹扫描      
         global.Logger.value += `${currentTime()} 网站扫描任务已加载，目标数量: ${this.urls.length}\n`
         global.Logger.value += '正在进行指纹扫描 ...\n'
         let count = 0
@@ -162,8 +158,10 @@ class Scanner {
                     status: result.StatusCode,
                     length: result.Length,
                     title: result.Title,
+                    detect: "Default",
                     fingerprint: result.Fingerprints,
                 })
+
             }
             count++
             if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
@@ -171,169 +169,38 @@ class Scanner {
                 count = 0
                 callback();
             }
-        },async (err: any) => {
-            if (form.currentModule !== "仅指纹扫描") {
-                form.currentLoadPath = await LocalWalkFiles(global.PATH.ActivePathPoc) // 初始化主动指纹目录
-                global.Logger.value += `${currentTime()} 正在初始化主动指纹探测任务，已加载主动指纹: ${form.currentLoadPath.length}个\n`
-                // 主动指纹探测
-                async.eachSeries(form.urlFingerMap, (ufm: uf, callback: () => void) => {
+        }, async () => {
+            if (form.currentModule == "指纹+敏感目录扫描") {
+                async.eachLimit(form.urlFingerMap, form.thread, async (ufm: uf, callback2: () => void) => {
                     if (ctrl.exit === true) {
                         return
                     }
-                    global.Logger.value += `${ufm.url} 正在进行主动指纹探测\n`
-                    Webscan(ufm.url, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
-                        if (Array.isArray(result)) {
-                            for (const item of result) {
-                                switch (item.Severity) {
-                                    case "CRITICAL":
-                                        dashboard.critical += 1
-                                        break
-                                    case "HIGH":
-                                        dashboard.high += 1
-                                        break
-                                    case "MEDIUM":
-                                        dashboard.medium += 1
-                                        break
-                                    case "LOW":
-                                        dashboard.low += 1
-                                        break
-                                    case "INFO":
-                                        dashboard.info += 1
-                                }
-                                form.vulResult.push({
-                                    vulName: item.VulName,
-                                    severity: item.Severity,
-                                    vulURL: item.VulURL,
-                                    request: item.Request,
-                                    response: item.Response,
-                                    extInfo: item.ExtInfo
-                                })
-                                if (item.Severity == "INFO") {
-                                    for (let i = 0; i < form.urlFingerMap.length; i++) {
-                                        if (form.urlFingerMap[i].url === ufm.url) {
-                                            form.urlFingerMap[i].finger.push(item.VulName.split("-")[0]);
-                                            break;
-                                        }
-                                    }
+                    let activeResult = await ActiveFingerScan(ufm.url, global.proxy)
+                    if (activeResult.length > 0) {
+                        activeResult.forEach(item => {
+                            form.fingerResult.push({
+                                url: item.URL,
+                                status: item.StatusCode,
+                                length: item.Length,
+                                title: item.Title,
+                                detect: "Active",
+                                fingerprint: item.Fingerprints,
+                            })
+                            for (const fm of form.urlFingerMap) {
+                                if (fm.url == item.URL) {
+                                    fm.finger = Array.from(new Set(item.Fingerprints.push(fm.finger)))
                                 }
                             }
                         }
-                        callback();
-                    })
-                }, (err: any) => {
-                    global.Logger.value += `${currentTime()} 主动指纹探测已结束\n`
-                    this.webScanner()
-                })
-            }
-        });
-
-    }
-
-    public async webScanner() {
-        if (form.currentModule == "指纹漏洞扫描") {
-            global.Logger.value += `${currentTime()} 正在进行指纹漏洞扫描\n`
-            let count = 0
-            for (const uf of form.urlFingerMap) { // 统计能扫到指纹的目标数量
-                if (uf.finger.length > 0) {
-                    count++
-                } 
-            }
-            async.eachSeries(form.urlFingerMap, async (ufm: uf, callback: () => void) => {
-                if (ctrl.exit === true) {
-                    return
-                }
-                if (ufm.finger.length > 0) {
-                    form.currentLoadPath = await GetFingerPoc(ufm.finger)
-                    global.Logger.value += `${ufm.url}，已加载漏洞: ${form.currentLoadPath.length}个\n`
-                    Webscan(ufm.url, "", "", form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
-                        if (Array.isArray(result)) {
-                            for (const item of result) {
-                                switch (item.Severity) {
-                                    case "CRITICAL":
-                                        dashboard.critical += 1
-                                        break
-                                    case "HIGH":
-                                        dashboard.high += 1
-                                        break
-                                    case "MEDIUM":
-                                        dashboard.medium += 1
-                                        break
-                                    case "LOW":
-                                        dashboard.low += 1
-                                        break
-                                    case "INFO":
-                                        dashboard.info += 1
-                                }
-                                form.vulResult.push({
-                                    vulName: item.VulName,
-                                    severity: item.Severity,
-                                    vulURL: item.VulURL,
-                                    request: item.Request,
-                                    response: item.Response,
-                                    extInfo: item.ExtInfo
-                                })
-                            }
-                        }
-                        callback();
-                    })
-                    count--
-                    if (count == 0) {
-                        global.Logger.value += `${currentTime()} 指纹漏洞扫描已结束 :)\n`
+                        )
                     }
-                }
-            })
-        } else if (form.currentModule == "全部漏洞扫描") {
-            form.currentLoadPath = await LocalWalkFiles(global.PATH.AFGPathPoc)
-            global.Logger.value += `${currentTime()} 正在初始化全漏洞扫描任务，已加载POC: ${form.currentLoadPath.length}个\n`
-            let count = 0
-            async.eachSeries(this.urls, (target: string, callback: () => void) => {
-                if (ctrl.exit === true) {
-                    return
-                }
-                Webscan(target, form.risk.join(","), form.keyword, form.currentLoadPath, global.proxy).then((result: WebResult[]) => {
-                    for (const item of result) {
-                        switch (item.Severity) {
-                            case "CRITICAL":
-                                dashboard.critical += 1
-                                break
-                            case "HIGH":
-                                dashboard.high += 1
-                                break
-                            case "MEDIUM":
-                                dashboard.medium += 1
-                                break
-                            case "LOW":
-                                dashboard.low += 1
-                                break
-                            case "INFO":
-                                dashboard.info += 1
-                        }
-                        form.vulResult.push({
-                            vulName: item.VulName,
-                            severity: item.Severity,
-                            vulURL: item.VulURL,
-                            request: item.Request,
-                            response: item.Response,
-                            extInfo: item.ExtInfo
-                        })
-                    }
-                    callback();
-                })
-                count++
-                if (count == this.urls.length) {
-                    global.Logger.value += `${currentTime()} 全部漏洞扫描结束 :)\n`
-                }
-            })
-        }
-    }
-}
 
-// 显示信息
-function showInfo(row: any) {
-    form.dialogVisible = true
-    dashboard.request = row.request
-    dashboard.response = row.response
-    dashboard.extInfo = row.extInfo
+                })
+
+
+            }
+        })
+    }
 }
 
 // 联动空间引擎
@@ -402,12 +269,7 @@ const coordination = reactive({
     }
 })
 
-async function countPocNums() {
-    ctrl.buttonDisabled = true
-    form.numTips = (await PocNums(form.risk.join(","), form.keyword)).toString()
-    ctrl.buttonDisabled = false
-}
-
+// 排序
 const levelMap: Record<string, number> = {
     'critical': 1,
     'high': 2,
@@ -420,6 +282,7 @@ const sortMethod = (a: any, b: any) => {
     return levelMap[a.level as keyof typeof levelMap] - levelMap[b.level as keyof typeof levelMap];
 };
 
+// 设置css样式
 function getClassBySeverity(row: any) {
     switch (row.severity) {
         case 'CRITICAL':
@@ -440,36 +303,29 @@ function getClassBySeverity(row: any) {
     <el-card style="margin-bottom: 10px;">
         <template #header>
             <div class="card-header">
-                <span>仪表盘</span>
-                <el-button type="primary" :icon="Plus" @click="form.newscanner = true">新建任务</el-button>
+                <span>Dashboard</span>
+                <div>
+                    <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
+                        v-if="!form.runnningStatus">新建任务</el-button>
+                    <el-button type="danger" :icon="VideoPause" @click="stopScan" v-else>停止任务</el-button>
+                </div>
             </div>
         </template>
         <el-row>
-            <el-col :span="2">
-                <el-statistic title="紧急" :value="dashboard.critical" />
-            </el-col>
-            <el-col :span="2">
-                <el-statistic title="高危" :value="dashboard.high" />
-            </el-col>
-            <el-col :span="2">
-                <el-statistic title="中危" :value="dashboard.medium" />
-            </el-col>
-            <el-col :span="2">
-                <el-statistic title="低危" :value="dashboard.low" />
-            </el-col>
-            <el-col :span="2">
-                <el-statistic title="信息" :value="dashboard.info" />
+            <el-col :span="2" v-for="(total, risk) in dashboard.riskLevel">
+                <el-statistic :title="risk.toLocaleUpperCase()" :value="total" />
             </el-col>
             <el-divider direction="vertical" style="height: 7vh;" />
             <el-col :span="3">
-                <el-statistic title="目标总数" :value="dashboard.count" />
+                <el-statistic title="已加载指纹数量" :value="dashboard.fingerLength" />
             </el-col>
-            <el-col :span="3">
+            <el-col :span="4">
                 <el-statistic :value="dashboard.reqErrorURLs.length">
                     <template #title>
                         <div style="display: inline-flex; align-items: center">
-                            请求失败目标
-                            <el-popover placement="left" :width="350" trigger="hover" v-if="dashboard.reqErrorURLs.length >= 1">
+                            失败数/目标数
+                            <el-popover placement="left" :width="350" trigger="hover"
+                                v-if="dashboard.reqErrorURLs.length >= 1">
                                 <el-scrollbar height="150px">
                                     <p v-for="u in dashboard.reqErrorURLs" class="scrollbar-demo-item">{{ u }}</p>
                                 </el-scrollbar>
@@ -481,109 +337,141 @@ function getClassBySeverity(row: any) {
                             </el-popover>
                         </div>
                     </template>
+                    <template #suffix>/{{ dashboard.count }}</template>
                 </el-statistic>
             </el-col>
             <el-divider direction="vertical" style="height: 7vh;" />
-            <el-col :span="7">
+            <el-col :span="6">
                 <el-statistic title="扫描模式" :value="dashboard.currentModule" />
             </el-col>
         </el-row>
     </el-card>
-    <el-tabs type="card" tab-position="left">
-        <el-tab-pane label="指纹">
-            <el-table :data="form.fingerResult" border height="65vh" :cell-style="{ textAlign: 'center' }"
-                :header-cell-style="{ 'text-align': 'center' }">
-                <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="url" label="网站地址" />
-                <el-table-column prop="status" width="100px" label="状态码"
-                    :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
-                    :show-overflow-tooltip="true" />
-                <el-table-column prop="length" width="100px" label="长度"
-                    :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
-                    :show-overflow-tooltip="true" />
-                <el-table-column prop="title" label="标题" width="300px" />
-                <el-table-column prop="fingerprint" label="指纹">
-                    <template #default="scope">
-                        <div style="flex-wrap: wrap; display: flex;">
-                            <el-tag v-for="finger in scope.row.fingerprint" style="margin: 3px;">{{ finger }}</el-tag>
-                        </div>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </el-tab-pane>
-        <el-tab-pane label="漏洞">
-            <el-table :data="form.vulResult" border height="65vh" :cell-style="{ textAlign: 'center' }"
-                :header-cell-style="{ 'text-align': 'center' }">
-                <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="vulName" label="漏洞名称" width="250px" :show-overflow-tooltip="true" />
-                <el-table-column prop="severity" width="150px" label="风险等级" :sort-method="sortMethod" sortable
-                    :show-overflow-tooltip="true">
-                    <template #default="scope">
-                        <span :class="getClassBySeverity(scope.row)">{{ scope.row.severity }}</span>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="vulURL" label="漏洞地址" :show-overflow-tooltip="true" />
-                <el-table-column fixed="right" label="详情" width="55px">
-                    <template #default="scope">
-                        <el-button link :icon="ZoomIn" @click.prevent="showInfo(scope.row)">
-                        </el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </el-tab-pane>
-    </el-tabs>
+    <div style="position: relative;">
+        <el-tabs type="card">
+            <el-tab-pane label="指纹">
+                <el-table :data="form.fingerResult" border height="63vh" :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ 'text-align': 'center' }">
+                    <el-table-column fixed type="index" label="#" width="60px" />
+                    <el-table-column fixed prop="url" label="URL" width="300px">
+                        <template #default="scope">
+                            <el-popover placement="bottom" trigger="click">
+                                <template #reference>
+                                    <el-link :underline="false">{{ scope.row.url }}</el-link>
+                                </template>
+                                <template #default>
+                                    <div class="context-menu">
+                                        <div class="click-div" @click="Copy(scope.row.url)" style="width: 100%;">
+                                            <el-text class="align">
+                                                <el-icon>
+                                                    <CopyDocument />
+                                                </el-icon>
+                                                复制
+                                            </el-text>
+                                        </div>
+                                        <div class="click-div" @click="BrowserOpenURL(scope.row.url)"
+                                            style="width: 100%">
+                                            <el-text class="align">
+                                                <el-icon>
+                                                    <Link />
+                                                </el-icon>
+                                                打开链接
+                                            </el-text>
+                                        </div>
+                                    </div>
+                                </template>
+                            </el-popover>
 
-    <el-drawer v-model="form.newscanner">
-        <template #header>
-            <span>新建扫描任务</span>
-            <el-dropdown>
-                <el-button :icon="Monitor" size="small">联动<el-icon><arrow-down /></el-icon>
-                </el-button>
-                <template #dropdown>
-                    <el-dropdown-menu>
-                        <el-dropdown-item @click="form.fofaDialog = true">FOFA</el-dropdown-item>
-                        <el-dropdown-item @click="form.hunterDialog = true">鹰图</el-dropdown-item>
-                    </el-dropdown-menu>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="status" width="100px" label="Code"
+                        :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
+                        :show-overflow-tooltip="true" />
+                    <el-table-column prop="length" width="100px" label="Length"
+                        :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
+                        :show-overflow-tooltip="true" />
+                    <el-table-column prop="title" label="Title" width="300px" />
+                    <el-table-column prop="detect" sortable width="150px">
+                        <template #header>
+                            <el-tooltip placement="left">
+                                <template #content>
+                                    Active: 表示为敏感目录扫描到的指纹<br />
+                                </template>
+                                <el-icon>
+                                    <QuestionFilled size="24" />
+                                </el-icon>
+                            </el-tooltip>
+                            Detection
+                        </template>
+                    </el-table-column>
+                    <el-table-column fixed="right" prop="fingerprint" label="Fingerprint" width="350px">
+                        <template #default="scope">
+                            <div style="flex-wrap: wrap; display: flex;">
+                                <el-tag v-for="finger in scope.row.fingerprint" style="margin: 3px;">{{ finger
+                                    }}</el-tag>
+                            </div>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-tab-pane>
+            <el-tab-pane label="漏洞">
+                <el-table :data="form.vulResult" border height="63vh" :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ 'text-align': 'center' }">
+                    <el-table-column type="expand">
+                        <template #default="props">
+                            <h4>拓展信息: {{ props.row.extInfo }}</h4>
+                            <el-space>
+                                <div class="pretty-response" wrap="off" style="width: 63vh; height: 50%;">{{
+                            props.row.request }}</div>
+                                <div class="pretty-response" wrap="off" style="width: 63vh; height: 50%;">{{
+                            props.row.response }}</div>
+                            </el-space>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="vulName" label="Name" width="250px" :show-overflow-tooltip="true" />
+                    <el-table-column prop="severity" width="150px" label="Risk" :sort-method="sortMethod" sortable
+                        :show-overflow-tooltip="true">
+                        <template #default="scope">
+                            <span :class="getClassBySeverity(scope.row)">{{ scope.row.severity }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="vulURL" label="URL" :show-overflow-tooltip="true" />
+                </el-table>
+            </el-tab-pane>
+        </el-tabs>
+        <div class="custom_eltabs_titlebar">
+            <el-popover placement="left" :width="200" trigger="click">
+                <template #reference>
+                    <el-button text bg :icon="Operation" style="margin-right: -5px;"></el-button>
                 </template>
-            </el-dropdown>
+            </el-popover>
+
+            <el-button @click="ExportWebScanToXlsx(form.fingerResult, form.vulResult)">
+                <template #icon>
+                    <img src="/excle.svg" width="16">
+                </template>
+                导出Excle</el-button>
+        </div>
+    </div>
+
+
+    <el-drawer v-model="form.newscanner" size="44%">
+        <template #header>
+            <h4>新建扫描任务</h4>
+            <el-button link @click="form.fofaDialog = true">
+                <template #icon>
+                    <img src="/fofa.ico">
+                </template>
+                FOFA
+            </el-button>
+            <el-divider direction="vertical" />
+            <el-button link @click="form.hunterDialog = true">
+                <template #icon>
+                    <img src="/hunter.ico" style="width: 16px; height: 16px;">
+                </template>
+                Hunter
+            </el-button>
         </template>
-        <el-dialog v-model="form.fofaDialog" title="导入FOFA目标(MAX 10000)" width="50%" center>
-            <el-form :model="form" label-width="70px">
-                <el-form-item label="查询条件">
-                    <el-input v-model="form.query"></el-input>
-                </el-form-item>
-                <el-form-item label="导入数量">
-                    <el-input-number v-model="form.fofaNum" :min="1" :max="10000" />
-                </el-form-item>
-            </el-form>
-            <template #footer>
-                <span>
-                    <el-button type="primary" @click="coordination.fofa">
-                        导入
-                    </el-button>
-                </span>
-            </template>
-        </el-dialog>
-        <el-dialog v-model="form.hunterDialog" title="导入鹰图目标(API单次查询最大100，导入1000条数据需等待)" width="50%" center>
-            <el-form :model="form" label-width="70px">
-                <el-form-item label="查询条件">
-                    <el-input v-model="form.query"></el-input>
-                </el-form-item>
-                <el-form-item label="导入数量">
-                    <el-select v-model="form.defaultNum" style="width: 150px;">
-                        <el-option v-for="item in form.hunterNum" :label="item" :value="item" />
-                    </el-select>
-                </el-form-item>
-            </el-form>
-            <template #footer>
-                <span>
-                    <el-button type="primary" @click="coordination.hunter">
-                        导入
-                    </el-button>
-                </span>
-            </template>
-        </el-dialog>
-        <el-form label-width="80px" style="margin-top: auto;">
+        <el-form label-width="auto">
             <el-form-item>
                 <template #label>目标:
                     <el-tooltip placement="left">
@@ -604,20 +492,17 @@ function getClassBySeverity(row: any) {
                 <template #label>模式:
                     <el-tooltip placement="left">
                         <template #content>
-                            1、仅指纹扫描: 只扫指纹，不会进行敏感目录探测<br />
-                            2、指纹POC扫描: 会进行敏感目录探测，且打指纹POC<br />
-                            2、主动指纹探测: 勾选仅指纹扫描之后会出现，开启会在指纹扫描基础上增加主动敏感目录探测，例如Nacos、报错页面信息判断指纹等<br />
-                            4、FastJson: 由于默认是不会进行通用FastJson漏洞扫描如果需要进行FastJson漏洞检测请输入关键字fastjson-1`<br />
-                            5、全部漏洞扫描模式下具有更多的参数支持自定义<br />
+                            1、指纹扫描: 只进行指纹，不会探测敏感目录<br />
+                            2、指纹漏洞扫描: 指纹+敏感目录探测，扫描完成后扫描指纹对于POC<br />
+                            3、敏感目录扫描: 会在指纹扫描基础上增加主动敏感目录探测，例如Nacos、报错页面信息判断指纹等<br />
+                            4、全部漏洞扫描模式下具有更多的参数支持自定义<br />
                         </template>
                         <el-icon>
                             <QuestionFilled size="24" />
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-select v-model="form.currentModule" style="width: 100%;">
-                    <el-option v-for="item in form.module" :label="item" :value="item" />
-                </el-select>
+                <el-segmented v-model="form.currentModule" :options="form.module" size="default" />
             </el-form-item>
             <div v-if="form.currentModule == '全部漏洞扫描'">
                 <el-form-item label="关键字:" class="bottom">
@@ -625,34 +510,61 @@ function getClassBySeverity(row: any) {
                 </el-form-item>
                 <el-form-item label="风险等级:" class="bottom">
                     <el-select v-model="form.risk" placeholder="未选择即默认不进行筛选" multiple clearable style="width: 100%;">
-                        <el-option v-for="item in form.riskOptions" :label="item" :value="item" />
+                        <el-option v-for="item in form.riskOptions" :label="item.toLocaleUpperCase()" :value="item" />
                     </el-select>
                 </el-form-item>
                 <el-form-item label="POC数量:">
                     <el-text style="width: 80%; text-align: center;">
                         {{ form.numTips }}
                     </el-text>
-                    <el-button :icon="Search" circle style="margin-left: auto;" @click="countPocNums"
+                    <el-button :icon="Search" circle style="margin-left: auto;" @click=""
                         :disabled="ctrl.buttonDisabled" />
                 </el-form-item>
             </div>
             <el-form-item label="指纹线程:">
                 <el-input-number controls-position="right" v-model="form.thread" :min="1" :max="2000" />
             </el-form-item>
-            <div style="margin-top: 10px;">
-                <el-button type="primary" @click="startScan">开始任务</el-button>
-                <el-button type="danger" @click="stopScan">停止任务</el-button>
-            </div>
         </el-form>
+        <div>
+            <el-button type="primary" @click="startScan"
+                style="left: 45%;bottom: 10px; position: absolute;">开始任务</el-button>
+        </div>
     </el-drawer>
-    <el-dialog v-model="form.dialogVisible" title="数据包详情" width="80%">
-        <h4>拓展信息: {{ dashboard.extInfo }}</h4>
-        <el-space>
-            <el-input v-model="dashboard.request" :rows="20" type="textarea" resize="none" wrap="off"
-                style="width: 63vh;" />
-            <el-input v-model="dashboard.response" :rows="20" type="textarea" resize="none" wrap="off"
-                style="width: 63vh;" />
-        </el-space>
+    <el-dialog v-model="form.fofaDialog" title="导入FOFA目标(MAX 10000)" width="50%" center>
+        <el-form :model="form" label-width="auto">
+            <el-form-item label="查询条件">
+                <el-input v-model="form.query"></el-input>
+            </el-form-item>
+            <el-form-item label="导入数量">
+                <el-input-number v-model="form.fofaNum" :min="1" :max="10000" />
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span>
+                <el-button type="primary" @click="coordination.fofa">
+                    导入
+                </el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <el-dialog v-model="form.hunterDialog" title="导入鹰图目标(API单次查询最大100，导入1000条数据需等待)" width="50%" center>
+        <el-form :model="form" label-width="auto">
+            <el-form-item label="查询条件">
+                <el-input v-model="form.query"></el-input>
+            </el-form-item>
+            <el-form-item label="导入数量">
+                <el-select v-model="form.defaultNum" style="width: 150px;">
+                    <el-option v-for="item in form.hunterNum" :label="item" :value="item" />
+                </el-select>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span>
+                <el-button type="primary" @click="coordination.hunter">
+                    导入
+                </el-button>
+            </span>
+        </template>
     </el-dialog>
 </template>
 
@@ -662,7 +574,7 @@ function getClassBySeverity(row: any) {
 }
 
 .severity-critical {
-    color: purple;
+    color: #AF63F6;
 }
 
 .severity-high {
@@ -682,14 +594,24 @@ function getClassBySeverity(row: any) {
 }
 
 .scrollbar-demo-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 50px;
-  margin: 10px;
-  text-align: center;
-  border-radius: 4px;
-  background: var(--el-color-primary-light-9);
-  color: var(--el-color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    margin: 10px;
+    text-align: center;
+    border-radius: 4px;
+    background: var(--el-color-primary-light-9);
+    color: var(--el-color-primary);
+}
+
+.align {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+.align .el-icon {
+    margin-right: 5px;
 }
 </style>

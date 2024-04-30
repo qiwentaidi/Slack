@@ -7,7 +7,7 @@ import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import "element-plus/theme-chalk/el-message.css";
 import "element-plus/theme-chalk/el-message-box.css";
 import "element-plus/theme-chalk/el-notification.css";
-
+import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 
 export default (app: App<Element>) => {
   // 全局配置
@@ -17,4 +17,10 @@ export default (app: App<Element>) => {
   app.use(ElNotification);
 };
 
-createApp(AppComponent).use(router).use(i18n).mount("#app");
+const app = createApp(AppComponent)
+// 使得comonent 可以正确渲染el-icon
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+
+app.use(router).use(i18n).mount("#app");

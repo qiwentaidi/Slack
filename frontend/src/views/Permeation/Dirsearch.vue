@@ -255,7 +255,7 @@ const config = reactive({
         </el-form-item>
     </el-form>
     <el-drawer v-model="config.drawer" size="50%">
-        <template #title>
+        <template #header>
             <h3>设置高级参数</h3>
         </template>
         <el-form label-width="auto">
@@ -335,7 +335,7 @@ const config = reactive({
             </el-form-item>
         </el-form>
     </el-drawer>
-    <el-table :data="dir" border style="height: 79vh;">
+    <el-table :data="dir" border style="height: 74vh;">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="status" width="100px" label="状态码"
             :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable />

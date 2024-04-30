@@ -18,7 +18,7 @@ export default {
         'tools': '小工具',
         'en_and_de': '加解密模块',
         'systeminfo': '杀软识别/提权补丁',
-        'fscan': 'Fscan内容提取',
+        'data_handing': '数据处理',
         'memorandum': '备忘录',
         'associate_dictionary_generator': '联想字典生成器',
         'aksk': '微信/钉钉',
@@ -32,7 +32,9 @@ export default {
         'source_code': '源码地址',
         'update_log': '更新日志',
         'yx_log': '运行日志',
-        'issue': '提出问题'
+        'issue': '提出问题',
+        'jsfinder': "JSFinder",
+        'fofa': "FOFA",
     },
     setting: {
         'username': '用户名',

@@ -6,7 +6,8 @@ import Nokey from './Nokey.vue';
 import CryptoJS from 'crypto-js';
 import JSEncrypt from 'jsencrypt';
 import { sm2, sm4 } from 'sm-crypto';
-import { ExportTXT, SplitTextArea } from '../../../util';
+import { SplitTextArea } from '../../../util';
+import { ExportTXT } from '../../../export';
 const yk = reactive({
     mode: 'AES',
     options: ["AES", "DES", "RSA", "SM2", "SM4"],

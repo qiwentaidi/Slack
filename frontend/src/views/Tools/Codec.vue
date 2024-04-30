@@ -5,7 +5,7 @@ import Transcode from './transcode/Transcode.vue';
 </script>
 
 <template>
-    <div style="display: flex;">
+    <div class="flex-box">
         <div>
             <Timestamp></Timestamp>
             <Hash style="margin-top: 10px;"></Hash>

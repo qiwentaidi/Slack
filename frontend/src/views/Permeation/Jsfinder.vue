@@ -1,30 +1,76 @@
 <script lang="ts" setup>
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { CopyALL, SplitTextArea } from '../../util';
 import { JSFind } from '../../../wailsjs/go/main/App';
-import { Link, QuestionFilled, Search } from '@element-plus/icons-vue';
+import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import async from 'async';
-import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
 import global from "../../global";
 import { ElNotification } from 'element-plus';
-import Loading from "../../components/Loading.vue";
+import ContextMenu from '../../components/ContextMenu.vue';
 const config = reactive({
   urls: "",
   loading: false,
   otherURL: false,
-  thread: 10,
   drawer: false,
   perfixURL: '',
 })
 
-const dashboard = reactive({
-  jslink: [] as LinkSource[],
-  phone: [] as LinkSource[],
-  idcard: [] as LinkSource[],
-  sensitive: [] as LinkSource[],
-  apipath: [] as LinkSource[],
-  urls: [] as LinkSource[],
-})
+const typeOptions = [
+  'primary',
+  'success',
+  'info',
+  'warning',
+  'danger',
+]
+
+var dashboardItems = [
+  {
+    title: 'JS路径',
+    icon: 'InfoFilled',
+    tagType: ref(global.jsfind.defaultType[0]),
+    data: ref([] as LinkSource[]),
+  },
+  {
+    title: '敏感字段',
+    icon: 'WarningFilled',
+    tagType: ref(global.jsfind.defaultType[3]),
+    data: ref([] as LinkSource[]),
+    children: [
+      {
+        title: '手机号',
+        icon: 'WarningFilled',
+        tagType: ref(global.jsfind.defaultType[1]),
+        data: ref([] as LinkSource[]),
+      },
+      {
+        title: '身份证',
+        icon: 'WarningFilled',
+        tagType: ref(global.jsfind.defaultType[2]),
+        data: ref([] as LinkSource[]),
+      },
+    ]
+  },
+  {
+    title: 'API接口',
+    icon: 'SuccessFilled',
+    tagType: ref(global.jsfind.defaultType[4]),
+    data: ref([] as LinkSource[]),
+  },
+  {
+    title: 'IP或URL',
+    icon: 'InfoFilled',
+    tagType: ref(global.jsfind.defaultType[5]),
+    data: ref([] as LinkSource[]),
+  },
+]
+
+interface dashboardItem {
+  title: string;
+  icon: string;
+  tagType: any;
+  data: any;
+  children?: any | undefined | null;
+}
 
 interface LinkSource {
   Filed: string;
@@ -34,47 +80,72 @@ interface LinkSource {
 function JSFinder() {
   var urls = [] as string[]
   urls = SplitTextArea(config.urls)
-  ElNotification({
-    duration: 0,
-    message: '正在进行JS信息爬取...',
-    icon: Loading,
-  });
+  config.loading = true
   async.eachLimit(urls, 10, (url: string) => {
     JSFind(url, config.perfixURL).then(result => {
-      dashboard.jslink = result.JS
-      dashboard.apipath = result.APIRoute
-      dashboard.sensitive = result.SensitiveField
-      dashboard.phone = result.ChinesePhone
-      dashboard.idcard = result.ChineseIDCard
-      dashboard.urls = result.IP_URL
+      dashboardItems[0].data.value = result.JS
+      dashboardItems[2].data.value = result.APIRoute
+      dashboardItems[1].data.value = result.SensitiveField
+      dashboardItems[1].children![0].data.value = result.ChinesePhone
+      dashboardItems[1].children![1].data.value = result.ChineseIDCard
+      dashboardItems[3].data.value = result.IP_URL
       if (config.otherURL) {
         async.eachLimit(result.IP_URL, 10, (url2: string) => {
-          for (const whitedomain of global.scan.whiteList.split("\n")) {
+          for (const whitedomain of global.jsfind.whiteList.split("\n")) {
             if (!url2.includes(whitedomain)) {
-              JSFind(url, config.perfixURL).then(result => {
-                dashboard.jslink.push(result.JS)
-                dashboard.apipath.push(result.APIRoute)
-                dashboard.sensitive.push(result.SensitiveField)
-                dashboard.phone.push(result.ChinesePhone)
-                dashboard.idcard.push(result.ChineseIDCard)
-                dashboard.urls.push(result.IP_URL)
+              JSFind(url, config.perfixURL).then((result: any) => {
+                dashboardItems[0].data.value.push(result.JS)
+                dashboardItems[2].data.value.push(result.APIRoute)
+                dashboardItems[1].data.value.push(result.SensitiveField)
+                dashboardItems[1].children![0].data.value.push(result.ChinesePhone)
+                dashboardItems[1].children![1].data.value.push(result.ChineseIDCard)
+                dashboardItems[3].data.value.push(result.IP_URL)
               })
             }
           }
         })
       }
-      ElNotification.closeAll()
+      ElNotification({
+        type: "success",
+        message: 'JSFind Finished!',
+        position: "bottom-right"
+      });
+      config.loading = false
     });
   })
 }
 
 const saveConfig = () => {
-  localStorage.setItem('scan', JSON.stringify(global.scan));
+  localStorage.setItem('jsfind', JSON.stringify(global.jsfind));
   ElNotification({
     message: 'Save successful',
     type: 'success',
     position: 'bottom-right'
   })
+}
+
+function changeType(item: dashboardItem) {
+  console.log(item.title)
+  switch (item.title) {
+    case "JS路径":
+      global.jsfind.defaultType[0] = item.tagType.value
+      break
+    case "敏感字段":
+      global.jsfind.defaultType[3] = item.tagType.value
+      break
+    case "手机号":
+      global.jsfind.defaultType[1] = item.tagType.value
+      break
+    case "API接口":
+      global.jsfind.defaultType[4] = item.tagType.value
+      break
+    case "IP或URL":
+      global.jsfind.defaultType[5] = item.tagType.value
+      break
+    default:
+      global.jsfind.defaultType[2] = item.tagType.value
+  }
+  console.log(global.jsfind.defaultType)
 }
 </script>
 <template>
@@ -103,8 +174,48 @@ const saveConfig = () => {
       </div>
     </el-form-item>
   </el-form>
-  <el-drawer v-model="config.drawer" size="50%">
-    <template #title>
+  <!-- content -->
+  <el-card style="height: 90%;">
+    <el-scrollbar style="height: 80vh">
+      <div v-for="item in dashboardItems">
+        <!-- HEADER -->
+        <div class="my-header">
+          <div>
+            <el-icon>
+              <component :is="item.icon" />
+            </el-icon>
+            <span style="font-weight: bold; margin-right: 5px;">{{ item.title }}: {{ item.data.value.length }}</span>
+          </div>
+          <el-button round type="primary" size="small" @click="CopyALL(item.data.value.map(item => item.Filed))">Copy
+            ALL</el-button>
+        </div>
+        <!-- CONTENT -->
+        <div class="tag-container">
+          <el-popover placement="right-end" trigger="contextmenu" v-for="(ls, index) in item.data.value" :key="index">
+            <template #reference>
+              <el-tag :type="item.tagType.value">{{ ls.Filed }}</el-tag>
+            </template>
+            <template #default>
+              <ContextMenu :data="ls"/>
+            </template>
+          </el-popover>
+          <div class="tag-container" style="margin-top: 0;" v-if="item.children && item.children.length > 0" v-for="(child, index) in item.children" :key="index">
+            <el-popover placement="right-end" trigger="contextmenu" v-for="ls in child.data.value">
+              <template #reference>
+                <el-tag :type="child.tagType.value">{{ ls.Filed }}</el-tag>
+              </template>
+              <template #default>
+                <ContextMenu :data="ls"/>
+              </template>
+            </el-popover>
+          </div>
+        </div>
+      </div>
+    </el-scrollbar>
+  </el-card>
+  <!-- adv -->
+  <el-drawer v-model="config.drawer" size="56%">
+    <template #header>
       <h3>设置高级参数</h3>
     </template>
     <el-form label-width="auto">
@@ -112,125 +223,44 @@ const saveConfig = () => {
         <template #label>
           <span>JS路径拼接前缀:</span>
           <el-tooltip placement="left">
-              <template #content>示例: 比如你在爬取二级目录时<br />页面中获取的JS路径需要拼接一级目录访问</template>
-              <el-icon>
-                  <QuestionFilled size="24" />
-              </el-icon>
+            <template #content>示例: 比如你在爬取二级目录时<br />页面中获取的JS路径需要拼接一级目录访问</template>
+            <el-icon>
+              <QuestionFilled size="24" />
+            </el-icon>
           </el-tooltip>
         </template>
         <el-input v-model="config.perfixURL" />
-      </el-form-item>
-      <el-form-item label="爬取线程:" class="el-margin">
-        <el-input-number v-model="config.thread" :min="1" :max="500" controls-position="right"></el-input-number>
       </el-form-item>
       <el-form-item label="是否开启URL爬取:" class="el-margin">
         <el-switch v-model="config.otherURL" inline-prompt active-text="关闭" inactive-text="开启"></el-switch>
       </el-form-item>
       <el-form-item label="白名单域名:" class="el-margin" v-show="config.otherURL">
-        <el-input v-model="global.scan.whiteList" type="textarea" rows="5"></el-input>
+        <el-input v-model="global.jsfind.whiteList" type="textarea" rows="5"></el-input>
       </el-form-item>
-      <el-button type="primary" style="float: right;" v-show="config.otherURL" @click="saveConfig">保存</el-button>
+      <el-form-item label="标记颜色:">
+        <div>
+          <el-descriptions :column="1" border>
+            <div v-for="(item, index) in dashboardItems" :key="index">
+              <el-descriptions-item :label="item.title">
+                <div class="flex-box" style="gap: 8px">
+                  <el-segmented v-model="item.tagType.value" :options="typeOptions" @click="changeType(item)" />
+                  <el-tag :type="item.tagType.value" size="large">example</el-tag>
+                </div>
+              </el-descriptions-item>
+              <el-descriptions-item v-if="item.children && item.children.length > 0" v-for="item2 in item.children"
+                :label="item2.title" @click="changeType(item2)">
+                <div class="flex-box" style="gap: 8px">
+                  <el-segmented v-model="item2.tagType.value" :options="typeOptions" />
+                  <el-tag :type="item2.tagType.value" size="large">example</el-tag>
+                </div>
+              </el-descriptions-item>
+            </div>
+          </el-descriptions>
+          <el-button type="primary" @click="saveConfig" style="float: right; margin-top: 10px;">保存</el-button>
+        </div>
+      </el-form-item>
     </el-form>
   </el-drawer>
-  <el-row>
-    <el-col :sm="12" :lg="6">
-      <el-result>
-        <template #title>
-          <el-text><span style="font-weight: bold; margin-right: 5px;">JS路径: {{ dashboard.jslink.length }}</span>
-            <el-button round type="primary" size="small"
-              @click="CopyALL(dashboard.jslink.map(item => item.Filed))">Copy</el-button></el-text>
-        </template>
-        <template #extra>
-          <el-card class="js-card">
-            <el-scrollbar height="53vh">
-              <div v-for="ls in dashboard.jslink">
-                <el-text line-clamp="1">
-                  <el-button link :icon="Link" @click="BrowserOpenURL(ls.Source)"></el-button>
-                  {{ ls.Filed }}
-                </el-text>
-              </div>
-            </el-scrollbar>
-          </el-card>
-        </template>
-      </el-result>
-    </el-col>
-    <el-col :sm="12" :lg="6">
-      <el-result icon="warning">
-        <template #title>
-          <el-text style="font-weight: bold;">敏感信息: {{ dashboard.sensitive.length }}</el-text>
-        </template>
-        <template #extra>
-          <el-card class="js-card" style="margin-top: 2px;">
-            <el-scrollbar height="53vh">
-              <span style="font-weight: bold;">Phone:</span><br />
-              <div v-for="ls in dashboard.phone">
-                <el-text line-clamp="1">
-                  <el-button link :icon="Link" @click="BrowserOpenURL(ls.Source)"></el-button>
-                  {{ ls.Filed }}
-                </el-text>
-              </div>
-              <span style="font-weight: bold;">IDCard:</span><br />
-              <div v-for="ls in dashboard.idcard">
-                <el-text line-clamp="1">
-                  <el-button link :icon="Link" @click="BrowserOpenURL(ls.Source)"></el-button>
-                  {{ ls.Filed }}
-                </el-text>
-              </div>
-              <span style="font-weight: bold;">Sensitive:</span><br />
-              <div v-for="ls in dashboard.sensitive">
-                <el-text line-clamp="1">
-                  <el-button link :icon="Link" @click="BrowserOpenURL(ls.Source)"></el-button>
-                  {{ ls.Filed }}
-                </el-text>
-              </div>
-            </el-scrollbar>
-          </el-card>
-        </template>
-      </el-result>
-    </el-col>
-    <el-col :sm="12" :lg="6">
-      <el-result icon="success">
-        <template #title>
-          <el-text><span style="font-weight: bold; margin-right: 5px;">API接口: {{ dashboard.apipath.length }}</span>
-            <el-button round type="primary" size="small"
-              @click="CopyALL(dashboard.apipath.map(item => item.Filed))">Copy</el-button></el-text>
-        </template>
-        <template #extra>
-          <el-card class="js-card">
-            <el-scrollbar height="53vh">
-              <div v-for="ls in dashboard.apipath">
-                <el-text line-clamp="1">
-                  <el-button link :icon="Link" @click="BrowserOpenURL(ls.Source)"></el-button>
-                  {{ ls.Filed }}
-                </el-text>
-              </div>
-            </el-scrollbar>
-          </el-card>
-        </template>
-      </el-result>
-    </el-col>
-    <el-col :sm="12" :lg="6">
-      <el-result>
-        <template #title>
-          <el-text><span style="font-weight: bold; margin-right: 5px;">IP或URL: {{ dashboard.urls.length }}</span>
-            <el-button round type="primary" size="small"
-              @click="CopyALL(dashboard.urls.map(item => item.Filed))">Copy</el-button></el-text>
-        </template>
-        <template #extra>
-          <el-card class="js-card">
-            <el-scrollbar height="53vh">
-              <div v-for="ls in dashboard.urls">
-                <el-text line-clamp="1">
-                  <el-button link :icon="Link" @click="BrowserOpenURL(ls.Source)"></el-button>
-                  {{ ls.Filed }}
-                </el-text>
-              </div>
-            </el-scrollbar>
-          </el-card>
-        </template>
-      </el-result>
-    </el-col>
-  </el-row>
 </template>
 
 <style>
@@ -238,9 +268,17 @@ const saveConfig = () => {
   margin-bottom: 0px;
 }
 
-.js-card {
-  width: 37vh;
-  height: 65vh;
-  text-align: left;
+.tag-container {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  /* This allows the tags to wrap to a new line */
+  gap: 8px;
+  /* Adjust the gap between tags as needed */
+}
+
+.el-popper.is-light.el-popover {
+  padding: 8px;
 }
 </style>

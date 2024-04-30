@@ -2,66 +2,45 @@ package webscan
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"slack-wails/lib/clients"
+	"slack-wails/lib/util"
+	"strings"
 	"testing"
-
-	"github.com/google/cel-go/cel"
-	"github.com/google/cel-go/checker/decls"
 )
 
 func TestInfoscan(t *testing.T) {
-	// 使用http.Get获取网页内容
-	resp, err := http.Get("https://www.baidu.com")
-	if err != nil {
-		fmt.Printf("Error fetching URL: %v\n", err)
-		return
+	InitFingprintDB(util.HomeDir() + "/slack/config/webfinger.yaml")
+	title := ""
+	server := ""
+	ct := ""
+	banner := ""
+	resp, body, _ := clients.NewRequest("GET", "https://oa.shanghai-cjsw.com/", nil, nil, 10, clients.DefaultClient())
+	if match := util.RegTitle.FindSubmatch(body); len(match) > 1 {
+		title = util.Str2UTF8(string(match[1]))
 	}
-	defer resp.Body.Close()
-
-	// 读取响应体
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("Error reading response body: %v\n", err)
-		return
+	for k, v := range resp.Header {
+		if k == "Server" {
+			server = strings.Join(v, ";")
+		}
+		if k == "Content-Type" {
+			ct = strings.Join(v, ";")
+		}
 	}
+	headers, _, _ := DumpResponseHeadersAndRaw(resp)
 
-	// 将body转换为字符串
-	bodyStr := string(body)
-
-	// 创建CEL环境
-	env, err := cel.NewEnv(
-		cel.Declarations(
-			decls.NewVar("body", decls.String),
-		),
-	)
-	if err != nil {
-		fmt.Printf("Error creating CEL environment: %v\n", err)
-		return
-	}
-
-	// 编译CEL表达式
-	ast, iss := env.Compile(`body.contains('baidu')`)
-	if iss.Err() != nil {
-		fmt.Printf("Error compiling CEL expression: %v\n", iss.Err())
-		return
-	}
-
-	// 创建CEL程序
-	program, err := env.Program(ast)
-	if err != nil {
-		fmt.Printf("Error creating CEL program: %v\n", err)
-		return
-	}
-
-	// 执行CEL程序
-	out, _, err := program.Eval(map[string]interface{}{
-		"body": bodyStr,
-	})
-	if err != nil {
-		fmt.Printf("Error evaluating CEL program: %v\n", err)
-		return
-	}
-
-	fmt.Println("Check if body contains 'baidu':", out)
+	result := FingerScan(&TargetINFO{
+		HeadeString:   string(headers),
+		ContentType:   ct,
+		Cert:          GetTLSString("https", "oa.shanghai-cjsw.com:443"),
+		BodyString:    string(body),
+		Path:          "/",
+		Title:         title,
+		Server:        server,
+		ContentLength: len(body),
+		Port:          443,
+		IconHash:      FaviconHash("https://oa.shanghai-cjsw.com/", clients.DefaultClient()),
+		StatusCode:    resp.StatusCode,
+		Banner:        banner,
+	}, FingerprintDB)
+	fmt.Printf("result: %v\n", result)
 }

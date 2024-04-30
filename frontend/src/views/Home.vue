@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LoadConfig } from '../util'
+import global from "../global";
 import { onMounted } from 'vue';
 import { BrowserOpenURL } from '../../wailsjs/runtime'
 import { CheckFileStat, InitConfig, UserHomeDir } from '../../wailsjs/go/main/File';
@@ -31,6 +31,27 @@ onMounted(async () => {
     }
   }
 });
+
+function LoadConfig() {
+  const savedScan = localStorage.getItem("scan");
+  const savedProxy = localStorage.getItem("proxy");
+  const savedSpace = localStorage.getItem("space");
+  const savedjsfind = localStorage.getItem("jsfind");
+  if (savedScan) {
+    Object.assign(global.scan, JSON.parse(savedScan));
+  }
+
+  if (savedProxy) {
+    Object.assign(global.proxy, JSON.parse(savedProxy));
+  }
+
+  if (savedSpace) {
+    Object.assign(global.space, JSON.parse(savedSpace));
+  }
+  if (savedjsfind) {
+    Object.assign(global.jsfind, JSON.parse(savedjsfind));
+  }
+}
 </script>
 
 <template>

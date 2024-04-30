@@ -62,18 +62,18 @@ async function LoadPocList(filepath: string) {
 }
 
 function readpoc(row: any) {
-    ReadPocDetail(row.fullPath).then(
-        result => {
-            pd.names = result.Name;
-            pd.risk = result.Risk;
-            pd.author = result.Author;
-            pd.tags = result.Tags;
-            pd.description = result.Description;
-            pd.reference = result.Reference;
-            pd.affected = result.Affected;
-            pd.solutions = result.Solutions;
-        }
-    )
+    // ReadPocDetail(row.fullPath).then(
+    //     result => {
+    //         pd.names = result.Name;
+    //         pd.risk = result.Risk;
+    //         pd.author = result.Author;
+    //         pd.tags = result.Tags;
+    //         pd.description = result.Description;
+    //         pd.reference = result.Reference;
+    //         pd.affected = result.Affected;
+    //         pd.solutions = result.Solutions;
+    //     }
+    // )
 }
 
 // expandedRows 为展开的所有列

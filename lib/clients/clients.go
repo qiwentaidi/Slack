@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slack-wails/lib/util"
 	"strings"
 	"time"
 )
@@ -55,7 +56,7 @@ func NewRequest(method, url string, headers http.Header, body io.Reader, timeout
 	if headers != nil {
 		r.Header = headers
 	} else {
-		r.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
+		r.Header.Set("User-Agent", util.RandomUA())
 	}
 	resp, err := client.Do(r.WithContext(ctx))
 	if err != nil {

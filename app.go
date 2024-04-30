@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,41 +17,38 @@ import (
 	"slack-wails/core/portscan"
 	"slack-wails/core/space"
 	"slack-wails/core/webscan"
-	"slack-wails/core/webscan/poc"
-	"slack-wails/core/webscan/runner"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gonmap"
-	"slack-wails/lib/report"
 	"slack-wails/lib/util"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"gopkg.in/yaml.v2"
 )
 
 // App struct
 type App struct {
-	ctx           context.Context
-	workflowFile  string
-	webfingerFile string
-	afrogPathPoc  string
-	cdnFile       string
-	qqwryFile     string
-	avFile        string
+	ctx              context.Context
+	workflowFile     string
+	webfingerFile    string
+	activefingerFile string
+	afrogPathPoc     string
+	cdnFile          string
+	qqwryFile        string
+	avFile           string
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{
-		workflowFile:  "/slack/config/workflow.yaml",
-		webfingerFile: "/slack/config/webfinger.yaml",
-		afrogPathPoc:  "/slack/config/afrog-pocs",
-		cdnFile:       "/slack/config/cdn.yaml",
-		qqwryFile:     "/slack/config/qqwry.dat",
-		avFile:        "/slack/config/antivirues.yaml",
+		workflowFile:     "/slack/config/workflow.yaml",
+		webfingerFile:    "/slack/config/webfinger.yaml",
+		activefingerFile: "/slack/config/dir.yaml",
+		afrogPathPoc:     "/slack/config/afrog-pocs",
+		cdnFile:          "/slack/config/cdn.yaml",
+		qqwryFile:        "/slack/config/qqwry.dat",
+		avFile:           "/slack/config/antivirues.yaml",
 	}
 }
 
@@ -114,10 +113,7 @@ func (a *App) GoFetch(method, target, body string, headers []map[string]string, 
 			hhhhheaders.Set(k, v)
 		}
 	}
-	// if body != "" {
-	// 	bytes.NewReader()
-	// }
-	resp, b, err := clients.NewRequest(method, target, hhhhheaders, nil, 10, client)
+	resp, b, err := clients.NewRequest(method, target, hhhhheaders, bytes.NewReader([]byte(body)), 10, client)
 	if err != nil {
 		return &Response{
 			Error:  true,
@@ -147,6 +143,11 @@ func (a *App) GoFetch(method, target, body string, headers []map[string]string, 
 // fscan
 func (a *App) Fscan2Txt(content string) string {
 	var result string
+	result += "[NetInfo]\n"
+	for _, netinfo := range core.NetInfoReg.FindAllString(content, -1) {
+		result += netinfo + "\n"
+	}
+	result += "\n"
 	lines := strings.Split(content, "\n")
 	for name, reg := range core.FscanRegs {
 		result += core.MatchLine(name, reg, lines)
@@ -206,32 +207,26 @@ DNS: %v
 状态: %v`, s, s2, s3, s4, s5, s6, s7, s8, s9)
 }
 
-func (a *App) CheckCdn(input, dns1, dns2 string) string {
+func (a *App) CheckCdn(domain, dns1, dns2 string) string {
 	var result string
-	result += "---域名解析(CDN查询)---:\n"
-outerLoop:
-	for _, domain := range util.RemoveDuplicates(util.RegDomain.FindAllString(input, -1)) {
-		ips, cnames, err := core.Resolution(domain, []string{dns1 + ":53", dns2 + ":53"}, 10)
-		if err == nil {
-			if len(cnames) != 0 {
-				for name, cdns := range core.ReadCDNFile(a.cdnFile) {
-					for _, cdn := range cdns {
-						for _, cname := range cnames {
-							if strings.Contains(cname, cdn) { // 识别到cdn
-								result += fmt.Sprintf("域名: %v 识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v\n", domain, cname, name, strings.Join(ips, " | "))
-								break outerLoop
-							} else if strings.Contains(cname, "cdn") {
-								result += fmt.Sprintf("域名: %v CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v \n", domain, cname, strings.Join(ips, " | "))
-								break outerLoop
-							}
+	ips, cnames, err := core.Resolution(domain, []string{dns1 + ":53", dns2 + ":53"}, 10)
+	if err == nil {
+		if len(cnames) != 0 {
+			for name, cdns := range core.ReadCDNFile(a.cdnFile) {
+				for _, cdn := range cdns {
+					for _, cname := range cnames {
+						if strings.Contains(cname, cdn) { // 识别到cdn
+							return fmt.Sprintf("域名: %v 识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v\n", domain, cname, name, strings.Join(ips, " | "))
+						} else if strings.Contains(cname, "cdn") {
+							return fmt.Sprintf("域名: %v CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v \n", domain, cname, strings.Join(ips, " | "))
 						}
 					}
 				}
 			}
-			result += fmt.Sprintf("域名: %v 解析到IP为: %v CNAME: %v\n", domain, strings.Join(ips, ","), cnames)
-		} else {
-			result = fmt.Sprintf("域名: %v 解析失败,%v\n", domain, err)
 		}
+		result = fmt.Sprintf("域名: %v 解析到IP为: %v CNAME: %v\n", domain, strings.Join(ips, ","), cnames)
+	} else {
+		result = fmt.Sprintf("域名: %v 解析失败,%v\n", domain, err)
 	}
 	return result
 }
@@ -430,21 +425,8 @@ func (a *App) LocalWalkFiles(folderPath string) []string {
 	return fileList
 }
 
-func (a *App) ReadPocDetail(absolutePath string) poc.VulnerabilityDetails {
-	p, err := poc.LocalReadPocByPath(absolutePath)
-	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
-	}
-	return poc.VulnerabilityDetails{
-		Name:        p.Info.Name,
-		Risk:        p.Info.Severity,
-		Author:      p.Info.Author,
-		Tags:        p.Info.Tags,
-		Description: p.Info.Description,
-		Reference:   strings.Join(p.Info.Reference, "\n"),
-		Affected:    p.Info.Affected,
-		Solutions:   p.Info.Solutions,
-	}
+func (a *App) ReadPocDetail(absolutePath string) {
+
 }
 
 // 端口暴破
@@ -559,135 +541,107 @@ type InfoResult struct {
 	Fingerprints []string
 }
 
-var RuleData map[string]map[string]string
-
 // 仅在执行时调用一次
-func (a *App) InitRule() {
-	yamlData, err := os.ReadFile(util.HomeDir() + a.webfingerFile)
-	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+func (a *App) InitRule() string {
+	webscan.FingerprintDB = nil
+	if err := webscan.InitFingprintDB(util.HomeDir() + a.webfingerFile); err != nil {
+		return err.Error()
 	}
-	RuleData = make(map[string]map[string]string)
-	if err := yaml.Unmarshal(yamlData, &RuleData); err != nil {
-		logger.NewDefaultLogger().Debug("Failed to unmarshal YAML: " + err.Error())
+	if err := webscan.InitActiveScanPath(util.HomeDir() + a.activefingerFile); err != nil {
+		return err.Error()
 	}
-}
-
-func (a *App) FingerScan(url string, proxy clients.Proxy) *InfoResult {
-	var ir InfoResult
-	var fingerprints []string
-	var matched bool // 判断指纹匹配状态
-	var client = clients.DefaultClient()
-	if proxy.Enabled {
-		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
-	}
-	data := webscan.RecvResponse(url, client)
-	ir.URL = url
-	ir.StatusCode = data.StatusCode
-	if data.StatusCode != 0 { // 响应正常
-		for name, ruleType := range RuleData {
-			for types, rule := range ruleType {
-				switch types {
-				case "header":
-					matched = webscan.MatchRule(rule, data.Headers)
-				case "iconhash":
-					matched = webscan.MatchRule(rule, data.FaviconHash)
-				case "title":
-					matched = webscan.MatchRule(rule, data.Title)
-				default:
-					matched = webscan.MatchRule(rule, util.Str2UTF8(string(data.Body)))
-				}
-				// 每个应用有一组指纹,一组指纹中只需要匹配一个即代表匹配
-				if matched {
-					fingerprints = append(fingerprints, name)
-					matched = false
-					continue
-				}
-			}
-		}
-		ir.Fingerprints = util.RemoveDuplicates[string](fingerprints)
-		ir.Length = len(data.Body)
-		ir.Title = data.Title
-	}
-	return &ir
+	return ""
 }
 
 // webscan
 
-type WebResult struct {
-	VulName  string
-	Severity string
-	VulURL   string
-	Request  string
-	Response string
-	ExtInfo  string
+func (a *App) FingerLength() int {
+	return len(webscan.FingerprintDB)
 }
 
-func (a *App) PocNums(severity, keyword string) int {
-	o := runner.NewOptions("", keyword, severity, "")
-	return len(o.CreatePocList(a.LocalWalkFiles(util.HomeDir() + a.afrogPathPoc)))
-}
-
-func (a *App) GetFingerPoc(fingerprints []string) []string {
-	s, err := poc.FingerPocFilepath(fingerprints, a.workflowFile)
-	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+func (a *App) FingerScan(target string, proxy clients.Proxy) *InfoResult {
+	var client = clients.DefaultClient()
+	if proxy.Enabled {
+		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
 	}
-	return s
-}
-
-func (a *App) Webscan(url, severity, keyword string, pocpathList []string, pr clients.Proxy) *[]WebResult {
-	var proxys string
-	var wr []WebResult
-	if pr.Enabled {
-		proxys = fmt.Sprintf("%v://%v:%v", strings.ToLower(pr.Mode), pr.Address, pr.Port)
-	}
-	options := runner.NewOptions(url, keyword, severity, proxys)
-	r, err := runner.NewRunner(options, pocpathList)
-	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
-	}
-	var lock = sync.Mutex{}
-	r.OnResult = func(result *report.Result) {
-		if result.IsVul {
-			lock.Lock()
-			extinfo := "" // 输出拓展信息
-			if len(result.Extractor) > 0 {
-				for _, v := range result.Extractor {
-					switch value := v.Value.(type) {
-					case map[string]string:
-					case string:
-						extinfo += "," + v.Key.(string) + "=\"" + fmt.Sprintf("%v", value) + "\""
-					}
-				}
-				extinfo = "[" + strings.TrimLeft(extinfo, ",") + "]"
-			}
-			var req, resp string
-			for i, v := range result.AllPocResult {
-				if i != len(result.AllPocResult)-1 {
-					req += fmt.Sprintf("Request%d\n\n%v\n\n========================================", i+1, string(v.ResultRequest.Raw))
-					resp += fmt.Sprintf("Response%d\n\n%v\n\n========================================", i+1, v.ReadFullResultResponseInfo())
-				} else {
-					req += fmt.Sprintf("Request%d\n\n%v", i+1, string(v.ResultRequest.Raw))
-					resp += fmt.Sprintf("Response%d\n\n%v", i+1, v.ReadFullResultResponseInfo())
-				}
-			}
-			wr = append(wr, WebResult{
-				VulName:  result.PocInfo.Id,
-				Severity: strings.ToUpper(result.PocInfo.Info.Severity),
-				VulURL:   result.FullTarget,
-				Request:  req,
-				Response: resp,
-				ExtInfo:  extinfo,
-			})
-
-			// r.Report.SetResult(result)
-			// r.Report.Append(fmt.Sprint(number))
-			lock.Unlock()
+	u := webscan.HostPort(target)
+	banner := webscan.GetBanner(&u)
+	resp, body, _ := clients.NewRequest("GET", target, nil, nil, 10, client)
+	if resp == nil {
+		return &InfoResult{
+			URL:        target,
+			StatusCode: 0,
 		}
 	}
-	r.Execute(url, pocpathList)
-	return &wr
+	title, server, content_type := webscan.GetHeaderInfo(body, resp)
+	headers, _, _ := webscan.DumpResponseHeadersAndRaw(resp)
+	ti := &webscan.TargetINFO{
+		HeadeString:   string(headers),
+		ContentType:   content_type,
+		Cert:          webscan.GetTLSString(u.Protocol, fmt.Sprintf("%s:%d", u.Host, u.Port)),
+		BodyString:    string(body),
+		Path:          u.Path,
+		Title:         title,
+		Server:        server,
+		ContentLength: len(body),
+		Port:          u.Port,
+		IconHash:      webscan.FaviconHash(target, clients.DefaultClient()),
+		StatusCode:    resp.StatusCode,
+		Banner:        banner,
+	}
+	return &InfoResult{
+		URL:          target,
+		StatusCode:   ti.StatusCode,
+		Length:       ti.ContentLength,
+		Title:        ti.Title,
+		Fingerprints: webscan.FingerScan(ti, webscan.FingerprintDB),
+	}
+}
+
+func (a *App) ActiveFingerScan(target string, proxy clients.Proxy) []InfoResult {
+	var irs []InfoResult
+	var client = clients.DefaultClient()
+	if proxy.Enabled {
+		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
+	}
+	u := webscan.HostPort(target)
+	for fingername, paths := range webscan.Sensitive {
+		for _, path := range paths {
+			resp, body, _ := clients.NewRequest("GET", target+path, nil, nil, 10, client)
+			if resp == nil {
+				return nil
+			}
+			title, server, content_type := webscan.GetHeaderInfo(body, resp)
+			headers, _, _ := webscan.DumpResponseHeadersAndRaw(resp)
+			ti := &webscan.TargetINFO{
+				HeadeString:   string(headers),
+				ContentType:   content_type,
+				Cert:          "",
+				BodyString:    string(body),
+				Path:          u.Path,
+				Title:         title,
+				Server:        server,
+				ContentLength: len(body),
+				Port:          u.Port,
+				IconHash:      "",
+				StatusCode:    resp.StatusCode,
+				Banner:        "",
+			}
+			result := webscan.FingerScan(ti, webscan.ActiveFingerprintDB)
+			// 多路径匹配时如果某一路径匹配到就立刻停止
+			if len(result) > 0 && fingername == result[0] {
+				irs = append(irs, InfoResult{
+					URL:          target + path,
+					StatusCode:   ti.StatusCode,
+					Length:       ti.ContentLength,
+					Title:        ti.Title,
+					Fingerprints: []string{fingername},
+				})
+				break
+			}
+		}
+	}
+	return irs
 }
 
 // hunter
@@ -709,7 +663,14 @@ func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, d
 
 func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
 	jsLinks := jsfind.ExtractJS(target)
-	fs = jsfind.FindInfo(target)
+	var wg sync.WaitGroup
+	limiter := make(chan bool, 100)
+	wg.Add(1)
+	limiter <- true
+	go func() {
+		fs = jsfind.FindInfo(target, limiter, &wg)
+	}()
+	wg.Wait()
 	u, _ := url.Parse(target)
 	fs.JS = *jsfind.AppendSource(target, jsLinks)
 	host := ""
@@ -718,39 +679,38 @@ func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
 	} else {
 		host = u.Scheme + "://" + u.Host
 	}
-	for _, js := range jsLinks {
-		newURL := host + "/" + js
-		fs2 := jsfind.FindInfo(newURL)
-		fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
-		fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
-		fs.ChinesePhone = append(fs.ChinesePhone, fs2.ChinesePhone...)
-		fs.SensitiveField = append(fs.SensitiveField, fs2.SensitiveField...)
-		fs.APIRoute = append(fs.APIRoute, fs2.APIRoute...)
+	for _, jslink := range jsLinks {
+		wg.Add(1)
+		limiter <- true
+		go func(js string) {
+			newURL := host + "/" + js
+			fs2 := jsfind.FindInfo(newURL, limiter, &wg)
+			fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
+			fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
+			fs.ChinesePhone = append(fs.ChinesePhone, fs2.ChinesePhone...)
+			fs.SensitiveField = append(fs.SensitiveField, fs2.SensitiveField...)
+			fs.APIRoute = append(fs.APIRoute, fs2.APIRoute...)
+		}(jslink)
 	}
-	// outloop:
-	// 	for _, link := range fs.IP_URL {
-	// 		for _, domain := range whiteList {
-	// 			if strings.HasSuffix(link.Filed, domain) {
-	// 				break outloop
-	// 			}
-	// 		}
-	// 		if !strings.HasPrefix(link.Filed, "http") || !strings.HasPrefix(link.Filed, "ws") {
-	// 			at := a.CheckTarget(link.Filed, clients.Proxy{})
-	// 			if at.Status {
-	// 				link.Filed = at.ProtocolURL
-	// 			}
-	// 		}
-	// 		fs2 := jsfind.FindInfo(link.Filed)
-	// 		fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
-	// 		fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
-	// 		fs.ChinesePhone = append(fs.ChinesePhone, fs2.ChinesePhone...)
-	// 		fs.SensitiveField = append(fs.SensitiveField, fs2.SensitiveField...)
-	// 		fs.APIRoute = append(fs.APIRoute, fs2.APIRoute...)
-	// 	}
+	wg.Wait()
 	fs.APIRoute = jsfind.RemoveDuplicatesInfoSource(fs.APIRoute)
 	fs.ChineseIDCard = jsfind.RemoveDuplicatesInfoSource(fs.ChineseIDCard)
 	fs.ChinesePhone = jsfind.RemoveDuplicatesInfoSource(fs.ChinesePhone)
 	fs.SensitiveField = jsfind.RemoveDuplicatesInfoSource(fs.SensitiveField)
-	fs.IP_URL = jsfind.RemoveDuplicatesInfoSource(fs.IP_URL)
+	fs.IP_URL = jsfind.FilterExt(jsfind.RemoveDuplicatesInfoSource(fs.IP_URL))
 	return fs
+}
+
+func (a *App) WebIconMd5(target string) string {
+	if _, err := url.Parse(target); err != nil {
+		return ""
+	}
+	_, body, err := clients.NewRequest("GET", target, nil, nil, 10, clients.DefaultClient())
+	if err != nil {
+		return ""
+	}
+	hasher := md5.New()
+	hasher.Write(body)
+	sum := hasher.Sum(nil)
+	return hex.EncodeToString(sum)
 }

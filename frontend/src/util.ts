@@ -1,78 +1,10 @@
-import * as XLSX from "xlsx";
+
 import { ElNotification } from "element-plus";
 import global from "./global";
-import { CheckTarget, SaveFile, GoFetch, Sock5Connect } from "../wailsjs/go/main/App";
-import { GetFileContent, WriteFile } from "../wailsjs/go/main/File";
+import { CheckTarget, GoFetch, Sock5Connect } from "../wailsjs/go/main/App";
+import { CheckFileStat, GetFileContent, UserHomeDir } from "../wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
-// 单sheet导出
-export async function ExportToXlsx(
-  headers: string[],
-  sheetName: string,
-  filename: string,
-  result: {}[]
-) {
-  let wb = XLSX.utils.book_new();
-  let ws = XLSX.utils.json_to_sheet(result);
-  XLSX.utils.sheet_add_aoa(ws, [headers], { origin: "A1" });
-  // 将工作表添加到工作簿中
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  // 将工作簿写入到一个新的Excel文件中
-  const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-  await ExportFile("base64", filename + ".xlsx", b64);
-}
 
-// 资产导出
-export async function ExportAssetToXlsx(r1: {}[], r2: {}[], r3: {}[]) {
-  // 创建一个新的工作簿
-  let wb = XLSX.utils.book_new();
-  // 自定义表头
-  let suheaders = ["公司名称", "股权比例", "投资数额", "域名"];
-  let weheaders = ["公众号名称", "微信号", "Logo", "二维码", "简介"];
-  let huheaders = ["公司域名或ICP名称", "资产数量"];
-  let ws1 = XLSX.utils.json_to_sheet(r1);
-  let ws2 = XLSX.utils.json_to_sheet(r2);
-  let ws3 = XLSX.utils.json_to_sheet(r3);
-  XLSX.utils.sheet_add_aoa(ws1, [suheaders], { origin: "A1" });
-  XLSX.utils.sheet_add_aoa(ws2, [weheaders], { origin: "A1" });
-  XLSX.utils.sheet_add_aoa(ws3, [huheaders], { origin: "A1" });
-  XLSX.utils.book_append_sheet(wb, ws1, "子公司");
-  XLSX.utils.book_append_sheet(wb, ws2, "公众号");
-  XLSX.utils.book_append_sheet(wb, ws3, "鹰图资产数量");
-  const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-  await ExportFile("base64", "asset.xlsx", b64);
-}
-
-export async function ExportTXT(filename: string, result: string[]) {
-  //文件内容
-  var text = "";
-  for (const item of result) {
-    text += item + "\n";
-  }
-  await ExportFile("txt", filename + ".txt", text);
-}
-
-export async function ExportFile(
-  filetype: string,
-  filename: string,
-  content: string
-) {
-  const path = await SaveFile(filename);
-  if (path == "") {
-    return;
-  }
-  const result = await WriteFile(filetype, path, content);
-  if (result) {
-    ElNotification({
-      message: "数据保存成功，路径为:" + path,
-      type: "success",
-    });
-  } else {
-    ElNotification({
-      message: "数据导出失败!",
-      type: "warning",
-    });
-  }
-}
 
 // 复制端口扫描中的所有HTTP链接
 export function CopyURLs(result: {}[]) {
@@ -132,23 +64,6 @@ export function SplitTextArea(textarea: string) {
   return lines;
 }
 
-export function LoadConfig() {
-  const savedScan = localStorage.getItem("scan");
-  const savedProxy = localStorage.getItem("proxy");
-  const savedSpace = localStorage.getItem("space");
-  if (savedScan) {
-    Object.assign(global.scan, JSON.parse(savedScan));
-  }
-
-  if (savedProxy) {
-    Object.assign(global.proxy, JSON.parse(savedProxy));
-  }
-
-  if (savedSpace) {
-    Object.assign(global.space, JSON.parse(savedSpace));
-  }
-}
-
 export function validateIP(ip: string): boolean {
   const regex =
     /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -174,7 +89,7 @@ export async function formatURL(host: string): Promise<string[]> {
   let temp: Array<string> = [];
   let urls: Array<string> = [];
   for (var target of SplitTextArea(host)) {
-    if (target.slice(0, 4) !== "http") {
+    if (!target.startsWith("http")) {
       const result = await CheckTarget(host, global.proxy);
       if (result.Status === true) {
         target = result.ProtocolURL;
@@ -326,3 +241,57 @@ export function currentTime() {
   var date = new Date();
   return date.toLocaleString()
 }
+
+const download = {
+  RemotePocVersion:
+      "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version",
+  RemoteClientVersion:
+      "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/version",
+  PocUpdateCentent: 'https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/update',
+  ClientUpdateCentent: 'https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update',
+};
+
+export const check = ({
+  // poc
+  poc: async function () {
+      let pcfg = await CheckFileStat(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+      if (!pcfg) {
+          global.UPDATE.LocalPocVersion = "版本文件不存在"
+          global.UPDATE.PocStatus = false
+          return
+      } else {
+          global.UPDATE.LocalPocVersion  = await GetFileContent(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+      }
+      let resp = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
+      if (resp.Error == true) {
+          global.UPDATE.PocContent = "检测更新失败"
+          global.UPDATE.PocStatus = false
+      } else {
+          global.UPDATE.RemotePocVersion = resp.Body
+          if (compareVersion(global.UPDATE.LocalPocVersion, global.UPDATE.RemotePocVersion) == -1) {
+              global.UPDATE.PocContent  = (await GoFetch("GET", download.PocUpdateCentent, "", [{}], 10, null)).Body
+              global.UPDATE.PocStatus = true
+          } else {
+              global.UPDATE.PocContent  = "已是最新版本"
+              global.UPDATE.PocStatus = false
+          }
+      }
+  },
+  // client
+  client: async function () {
+      let resp = await GoFetch("GET", download.RemoteClientVersion, "", [{}], 10, null)
+      if (resp.Error) {
+          global.UPDATE.RemoteClientVersion = "检测更新失败"
+          global.UPDATE.ClientStatus = false
+      } else {
+          global.UPDATE.RemoteClientVersion = resp.Body
+          if (compareVersion(global.LOCAL_VERSION, global.UPDATE.RemoteClientVersion) == -1) {
+              global.UPDATE.ClientContent = (await GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, null)).Body
+              global.UPDATE.ClientStatus = true
+          } else {
+              global.UPDATE.ClientContent = "已是最新版本"
+              global.UPDATE.ClientStatus = false
+          }
+      }
+  }
+})

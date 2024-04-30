@@ -4,7 +4,7 @@ import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { CompanyAssetInfo, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
 import global from "../../global"
-import { ExportAssetToXlsx } from '../../util'
+import { ExportAssetToXlsx } from '../../export'
 import { onMounted } from 'vue';
 // 初始化时调用
 onMounted(() => {
@@ -17,7 +17,6 @@ const from = reactive({
     company: '',
     defaultHold: 100,
     token: '',
-    rows: 1,
     activeName: 'subcompany',
 
     companys: [{}],
@@ -73,7 +72,7 @@ function Collect() {
         const promises = from.companys.map(async companyName => {
             from.log += `[INF] 正在收集${companyName}的子公司信息\n`
             if (typeof companyName === 'string') {
-                const result = await CompanyAssetInfo(0 ,companyName, from.defaultHold);
+                const result = await CompanyAssetInfo(0, companyName, from.defaultHold);
                 if (result.Asset.length > 0) {
                     const mappedResult = result.Asset.map((item: any) => {
                         return {
@@ -98,7 +97,7 @@ function Collect() {
         const promises = from.companys.map(async companyName => {
             from.log += `[INF] 正在收集${companyName}的微信公众号资产\n`
             if (typeof companyName === 'string') {
-                const result = await CompanyAssetInfo(1, companyName,0);
+                const result = await CompanyAssetInfo(1, companyName, 0);
                 if (result.Asset.length > 0) {
                     const mappedResult = result.Asset.map((item: any) => {
                         return {
@@ -197,13 +196,13 @@ function sleep(time: number) {
 <template>
     <el-form :model="from" label-width="30%">
         <el-form-item label="公司名称:">
-            <el-input v-model="from.company" type="textarea" :rows=from.rows @focus="from.rows = 4" @blur="from.rows = 1"
-                resize="none" style="width: 50%;"></el-input>
-            <el-button type="primary" :icon="Search" @click="Collect" style="margin-left: 10px;" v-if="!from.runningStatus">开始查询</el-button>
+            <el-input v-model="from.company" type="textarea" :rows="1" style="width: 50%;"></el-input>
+            <el-button type="primary" :icon="Search" @click="Collect" style="margin-left: 10px;"
+                v-if="!from.runningStatus">开始查询</el-button>
             <el-button type="danger" loading style="margin-left: 10px;" v-else>正在查询</el-button>
         </el-form-item>
         <el-form-item label="查询条件:">
-            <div style="display: flex;">
+            <div class="flex-box">
                 <el-checkbox v-model="from.subcompany" label="查询子公司并反查域名" />
                 <el-tooltip placement="left">
                     <template #content>控股率>=(%)</template>
@@ -233,7 +232,7 @@ function sleep(time: number) {
     <div style="position: relative;">
         <el-tabs v-model="from.activeName" type="card">
             <el-tab-pane label="控股企业" name="subcompany">
-                <el-table :data="su" height="60vh" border style="width: 100%">
+                <el-table :data="su" height="60vh" border>
                     <el-table-column type="index" width="60px" />
                     <el-table-column prop="company" label="公司名称" show-overflow-tooltip="true" />
                     <el-table-column prop="ratio" label="股权比例" show-overflow-tooltip="true" />
@@ -243,12 +242,12 @@ function sleep(time: number) {
             </el-tab-pane>
 
             <el-tab-pane label="公众号" name="wechat">
-                <el-table :data="we" height="60vh" border :cell-style="{height: '23px'}">
+                <el-table :data="we" height="60vh" border :cell-style="{ height: '23px' }">
                     <el-table-column type="index" width="60px" />
                     <el-table-column prop="companyName" label="公司名称" width="180px" />
                     <el-table-column prop="weName" label="公众号名称">
                         <template #default="scope">
-                            <div style="display: flex;">
+                            <div class="flex-box">
                                 <img :src="scope.row.logo" style="width: 25px; height: 25px; margin-right: 10px;">
                                 <span>{{ scope.row.weName }}</span>
                             </div>
@@ -259,7 +258,12 @@ function sleep(time: number) {
                         <template #default="scope">
                             <el-popover :width="180" placement="left">
                                 <template #reference>
-                                    <svg t="1712903814884" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2765" width="1.5em" height="1.5em"><path d="M468 128H160c-17.7 0-32 14.3-32 32v308c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V136c0-4.4-3.6-8-8-8z m-56 284H192V192h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m194 210H136c-4.4 0-8 3.6-8 8v308c0 17.7 14.3 32 32 32h308c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8z m-56 284H192V612h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m590-630H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V160c0-17.7-14.3-32-32-32z m-32 284H612V192h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m194 210h-48c-4.4 0-8 3.6-8 8v134h-78V556c0-4.4-3.6-8-8-8H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V644h78v102c0 4.4 3.6 8 8 8h190c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8zM746 832h-48c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z m142 0h-48c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z" fill="#1296DB" p-id="2766"></path></svg>
+                                    <svg t="1712903814884" viewBox="0 0 1024 1024" version="1.1"
+                                        xmlns="http://www.w3.org/2000/svg" p-id="2765" width="1.5em" height="1.5em">
+                                        <path
+                                            d="M468 128H160c-17.7 0-32 14.3-32 32v308c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V136c0-4.4-3.6-8-8-8z m-56 284H192V192h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m194 210H136c-4.4 0-8 3.6-8 8v308c0 17.7 14.3 32 32 32h308c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8z m-56 284H192V612h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m590-630H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V160c0-17.7-14.3-32-32-32z m-32 284H612V192h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m194 210h-48c-4.4 0-8 3.6-8 8v134h-78V556c0-4.4-3.6-8-8-8H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V644h78v102c0 4.4 3.6 8 8 8h190c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8zM746 832h-48c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z m142 0h-48c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z"
+                                            fill="#1296DB" p-id="2766"></path>
+                                    </svg>
                                 </template>
                                 <template #default>
                                     <img :src="scope.row.qrcode" style="width: 150px; height: 150px">
@@ -272,7 +276,7 @@ function sleep(time: number) {
             </el-tab-pane>
 
             <el-tab-pane label="鹰图资产数量" name="hunter">
-                <el-table :data="hu" height="60vh" border style="width: 100%">
+                <el-table :data="hu" height="60vh" border>
                     <el-table-column type="index" width="60px" />
                     <el-table-column prop="name" label="公司域名或ICP名称" show-overflow-tooltip="true" />
                     <el-table-column prop="hunums" label="资产数量"
@@ -284,32 +288,30 @@ function sleep(time: number) {
                 <el-input class="log-textarea" v-model="from.log" type="textarea" rows="20" readonly></el-input>
             </el-tab-pane>
         </el-tabs>
+        <div class="custom_eltabs_titlebar">
+            <el-button-group>
+                <el-button @click="huntersearch">
+                    <template #icon>
+                        <img src="/hunter.ico" width="16">
+                    </template>
+                    测绘资产数量
+                    <el-popover placement="left-start" :width="350" trigger="hover">
+                        ①需要控股企业查询的<b>资产数量>=1</b><br /><br />
+                        ②查询公司名或者域名在鹰图中的资产数量<br /><br />
+                        ③一次查询消耗1积分对应的鹰图查询语句为<b>icp.name=""</b>和<b>domain.suffix=""</b>
+                        <template #reference>
+                            <el-icon>
+                                <QuestionFilled size="24" />
+                            </el-icon>
+                        </template>
+                    </el-popover>
+                </el-button>
+                <el-button @click="ExportAssetToXlsx(su, we, hu)">
+                    <template #icon>
+                        <img src="/excle.svg" width="16">
+                    </template>导出Excle</el-button>
+            </el-button-group>
+        </div>
     </div>
-    <el-space class="custom_asset_eltabs_titlebar">
-        <el-button @click="huntersearch">
-            查询鹰图资产数量
-            <el-popover placement="left-start" :width="350" trigger="hover">
-                ①需要控股企业查询的<b>资产数量>=1</b><br /><br />
-                ②查询公司名或者域名在鹰图中的资产数量<br /><br />
-                ③一次查询消耗1积分对应的鹰图查询语句为<b>icp.name=""</b>和<b>domain.suffix=""</b>
-                <template #reference>
-                    <el-icon>
-                        <QuestionFilled size="24" />
-                    </el-icon>
-                </template>
-            </el-popover>
-        </el-button>
-        <el-button @click="ExportAssetToXlsx(su, we, hu)">数据导出</el-button>
-    </el-space>
-</template>
 
-<style>
-.custom_asset_eltabs_titlebar {
-    position: absolute;
-    right: 15px;
-    top: 176px;
-}
-.cell {
-    height: 23px;
-}
-</style>
+</template>

@@ -54,7 +54,7 @@ function OACrypt(input: string, mode: string) {
     <div style="margin-bottom: 10px;">
         <span>致远OA datasourceCtp.properties 密码解密，示例：/1.0/UWJ0dHgxc2U=</span>
     </div>
-    <div style="display: flex;">
+    <div class="flex-box">
         <el-input v-model="oa.encrypt" resize='none' placeholder="请输入需要解密的密码"></el-input>
         <el-col :span="2" style="text-align: center;">
             <span class="text-gray-500">=></span>

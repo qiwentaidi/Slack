@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import global from "../../global";
 import async from 'async';
-import { ExportToXlsx, ReadLine } from '../../util'
+import { ReadLine } from '../../util'
+import { ExportToXlsx } from '../../export'
 import { reactive, ref } from "vue";
 import { Subdomain, InitIPResolved, LoadSubDict, SelectFile } from "../../../wailsjs/go/main/App";
 import { ElMessage } from 'element-plus'
@@ -109,7 +110,7 @@ async function handleFileChange() {
                 :disabled="sbr.length < 2">数据导出</el-button>
         </el-form-item>
     </el-form>
-    <el-table :data="sbr" border style="height: 79vh; margin-bottom: 10px;">
+    <el-table :data="sbr" border style="height: 75vh; margin-bottom: 10px;">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="subdomains" label="子域名" show-overflow-tooltip="true" />
         <el-table-column prop="cname" label="CNAME" show-overflow-tooltip="true" />

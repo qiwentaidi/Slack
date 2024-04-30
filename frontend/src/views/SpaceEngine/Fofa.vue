@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown, CopyDocument, Share } from '@element-plus/icons-vue';
-import { SplitTextArea, validateIP, validateDomain, ExportToXlsx, splitInt, TableTabs, ApiSyntaxCheck, Copy } from '../../util'
+import { SplitTextArea, validateIP, validateDomain, splitInt, TableTabs, ApiSyntaxCheck, Copy } from '../../util'
+import { ExportToXlsx } from '../../export'
 import {
     FofaTips,
     FofaSearch,
@@ -46,11 +47,13 @@ interface LinkItem {
 let timeout: ReturnType<typeof setTimeout>
 const entry = reactive({
     querySearchAsync: (queryString: string, cb: (arg: any) => void) => {
-        entry.getTips(queryString)
-        clearTimeout(timeout)
-        timeout = setTimeout(() => {
-            cb(form.loadAll)
-        }, 2000 * Math.random())
+        if (!queryString.includes("=")) {
+            entry.getTips(queryString)
+            clearTimeout(timeout)
+            timeout = setTimeout(() => {
+                cb(form.loadAll)
+            }, 2000 * Math.random())
+        }
     },
     getTips: function (queryString: string) {
         FofaTips(queryString).then(result => {

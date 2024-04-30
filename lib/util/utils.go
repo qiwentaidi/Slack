@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"slack-wails/core/webscan/proto"
 
 	"strings"
 	"time"
@@ -32,54 +31,6 @@ func IsURL(input string) bool {
 	}
 
 	return true
-}
-
-func UrlTypeToString(u *proto.UrlType) string {
-	var buf strings.Builder
-	if u.Scheme != "" {
-		buf.WriteString(u.Scheme)
-		buf.WriteByte(':')
-	}
-	if u.Scheme != "" || u.Host != "" {
-		if u.Host != "" || u.Path != "" {
-			buf.WriteString("//")
-		}
-		if h := u.Host; h != "" {
-			buf.WriteString(u.Host)
-		}
-	}
-	path := u.Path
-	if path != "" && path[0] != '/' && u.Host != "" {
-		buf.WriteByte('/')
-	}
-	if buf.Len() == 0 {
-		if i := strings.IndexByte(path, ':'); i > -1 && strings.IndexByte(path[:i], '/') == -1 {
-			buf.WriteString("./")
-		}
-	}
-	buf.WriteString(path)
-
-	if u.Query != "" {
-		buf.WriteByte('?')
-		buf.WriteString(u.Query)
-	}
-	if u.Fragment != "" {
-		buf.WriteByte('#')
-		buf.WriteString(u.Fragment)
-	}
-	return buf.String()
-}
-
-func ParseUrl(u *url.URL) *proto.UrlType {
-	nu := &proto.UrlType{}
-	nu.Scheme = u.Scheme
-	nu.Domain = u.Hostname()
-	nu.Host = u.Host
-	nu.Port = u.Port()
-	nu.Path = u.EscapedPath()
-	nu.Query = u.RawQuery
-	nu.Fragment = u.Fragment
-	return nu
 }
 
 func ReverseString(s string) string {
@@ -113,4 +64,13 @@ func Str2UTF8(str string) string {
 		return string(utf8Bytes)
 	}
 	return str
+}
+
+func GetItemInArray(a []string, s string) int {
+	for index, v := range a {
+		if v == s {
+			return index
+		}
+	}
+	return -1
 }

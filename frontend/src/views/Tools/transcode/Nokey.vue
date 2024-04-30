@@ -45,10 +45,10 @@ function handleInputChange() {
 
 
 <template>
-    <div style="display: flex;">
+    <div class="flex-box">
         <div style="width: 235px;">
             <el-scrollbar height="460px" style="margin-top: 5px;">
-                <div style="display: flex;" v-for="(div, index) in transcode.divs"
+                <div class="flex-box" v-for="(div, index) in transcode.divs"
                     :key="index">
                     <el-select v-model="div.nkMode">
                         <el-option v-for="item in div.nkOptions" :value="item" :label="item" />
@@ -62,7 +62,7 @@ function handleInputChange() {
                 @input="handleInputChange" style="margin-bottom: 10px;"></el-input>
             <div class="my-header">
                 <el-button color="#626aef" :icon="Plus" @click="addDiv">添加</el-button>
-                <div style="display: flex;">
+                <div class="flex-box">
                     <el-checkbox v-model="autoEncrypt" label="自动加密" border />
                     <el-button-group style="margin-left: 5px;">
                         <el-button type="primary" :icon="ArrowDownBold" @click="handleButtonClick(0)">加密</el-button>

@@ -5,13 +5,15 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/util"
 	"strings"
+	"sync"
 
 	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
 var (
-	regJS  []*regexp.Regexp
-	JsLink = []string{
+	regJS     []*regexp.Regexp
+	regFilter []*regexp.Regexp
+	JsLink    = []string{
 		"(https{0,1}:[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 		"[\"'‘“`]\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 		"=\\s{0,6}[\",',’,”]{0,1}\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
@@ -31,7 +33,7 @@ var (
 		// password-filed
 		`((|'|")(|[\w]{1,10})([p](ass|wd|asswd|assword))(|[\w]{1,10})(|'|")(:|=)( |)('|")(.*?)('|")(|,))`,
 	}
-	Filter = []string{".vue", ".jpeg", ".png", ".jpg", ".ts", "gif", ".css", ".svg", ".scss"}
+	Filter = []string{".vue", ".jpeg", ".png", ".jpg", ".ts", ".gif", ".css", ".svg", ".scss"}
 )
 
 type InfoSource struct {
@@ -51,6 +53,9 @@ type FindSomething struct {
 func init() {
 	for _, reg := range JsLink {
 		regJS = append(regJS, regexp.MustCompile(reg))
+	}
+	for _, f := range Filter {
+		regFilter = append(regFilter, regexp.MustCompile(f))
 	}
 }
 
@@ -75,7 +80,8 @@ func ExtractJS(url string) (allJS []string) {
 }
 
 // setp 0 first need deep js
-func FindInfo(url string) *FindSomething {
+func FindInfo(url string, limiter chan bool, wg *sync.WaitGroup) *FindSomething {
+	defer wg.Done()
 	var fs FindSomething
 	_, body, err := clients.NewRequest("GET", url, nil, nil, 10, clients.DefaultClient())
 	if err != nil || body == nil {
@@ -84,7 +90,8 @@ func FindInfo(url string) *FindSomething {
 	} else {
 		content := string(body)
 		// 先匹配其他信息
-		urls, apis := urlInfoSeparate(util.RegLink.FindAllString(content, -1))
+		urls, apis, js := urlInfoSeparate(util.RegLink.FindAllString(content, -1))
+		fs.JS = *AppendSource(url, js)
 		fs.APIRoute = *AppendSource(url, apis)
 		fs.IP_URL = *AppendSource(url, append(util.RegIP_PORT.FindAllString(content, -1), urls...))
 		fs.ChineseIDCard = *AppendSource(url, util.RegIDCard.FindAllString(content, -1))
@@ -96,6 +103,7 @@ func FindInfo(url string) *FindSomething {
 			}
 		}
 	}
+	<-limiter
 	return &fs
 }
 
@@ -119,16 +127,22 @@ func RemoveDuplicatesInfoSource(iss []InfoSource) []InfoSource {
 	return result
 }
 
-func urlInfoSeparate(links []string) (urls, apis []string) {
+func urlInfoSeparate(links []string) (urls, apis, js []string) {
 	for _, link := range links {
 		link = strings.Trim(link, "\"")
+		link = strings.Trim(link, "'")
 		if strings.HasPrefix(link, "http") || strings.HasPrefix(link, "ws") {
 			urls = append(urls, link)
 		} else {
 			matched := false
-			for _, f := range Filter {
-				if strings.HasSuffix(link, f) {
+			for _, r := range regFilter {
+				if strings.Contains(link, ".js") {
+					js = append(js, link)
 					matched = true
+					break
+				}
+				if r.MatchString(link) {
+					matched = true // 匹配到过滤器后缀需要屏蔽
 					break
 				}
 			}
@@ -137,5 +151,22 @@ func urlInfoSeparate(links []string) (urls, apis []string) {
 			}
 		}
 	}
-	return urls, apis
+	return urls, apis, js
+}
+
+func FilterExt(iss []InfoSource) (news []InfoSource) {
+	for _, link := range iss {
+		matched := false
+		for _, r := range regFilter {
+			if r.MatchString(link.Filed) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			news = append(news, link)
+		}
+
+	}
+	return news
 }

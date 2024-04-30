@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
-import { ExportToXlsx, CopyURLs, SplitTextArea, ReadLine, currentTime } from '../../util'
+import { CopyURLs, SplitTextArea, ReadLine, currentTime } from '../../util'
+import { ExportToXlsx} from '../../export'
 import async from 'async';
-import { QuestionFilled, DocumentChecked, DocumentCopy, ChromeFilled } from '@element-plus/icons-vue';
+import { QuestionFilled, DocumentCopy, ChromeFilled } from '@element-plus/icons-vue';
 import { PortParse, IPParse, PortCheck, HostAlive, PortBrute } from '../../../wailsjs/go/main/App'
 import { Mkdir, WriteFile, CheckFileStat, GetFileContent, UserHomeDir } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
@@ -92,7 +93,7 @@ const config = reactive({
 const radio = ref('2')
 
 async function NewScanner() {
-    global.Logger.value +=  `${currentTime()} Portscan task is loading\n`
+    global.Logger.value += `${currentTime()} Portscan task is loading\n`
     const ps = new Scanner()
     await ps.PortScanner()
     if (config.burte) {
@@ -340,7 +341,7 @@ function handleCurrentChange(val: any) {
         </el-form-item>
     </el-form>
     <el-drawer v-model="ctrl.drawer" size="30%">
-        <template #title>
+        <template #header>
             <h4>设置高级参数</h4>
         </template>
         <el-form label-width="auto">
@@ -385,7 +386,7 @@ function handleCurrentChange(val: any) {
     <div style="position: relative;">
         <el-tabs v-model="form.activeName" type="card">
             <el-tab-pane label="端口扫描控制台" name="1">
-                <el-table :data="table.pageContent" border style="height: 45vh;">
+                <el-table :data="table.pageContent" border style="height: 42vh;">
                     <el-table-column type="selection" width="55px" />
                     <el-table-column prop="host" label="主机" />
                     <el-table-column prop="port" label="端口" width="100px" />
@@ -421,9 +422,12 @@ function handleCurrentChange(val: any) {
         </el-tabs>
         <div class="custom_eltabs_titlebar" v-if="form.activeName == '1'">
             <el-button-group>
-                <el-button text :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL</el-button>
-                <el-button text :icon="DocumentChecked"
-                    @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">导出</el-button>
+                <el-button :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL</el-button>
+                <el-button @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">
+                    <template #icon>
+                        <img src="/excle.svg" width="16">
+                    </template>
+                    导出Excle</el-button>
             </el-button-group>
         </div>
     </div>

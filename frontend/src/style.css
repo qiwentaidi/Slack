@@ -119,3 +119,35 @@ html {
   border: 1px solid #ccc;
   padding: 10px;
 }
+
+.console-log {
+  height: 25px; 
+  background-color: #F2F3F5;
+  position: absolute;
+  width: calc(100% - 64px);
+  bottom: 0;
+}
+
+.console-log div {
+  display: flex; 
+  align-items: center; 
+  height: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.click-div:hover {
+  background-color: #F3F3F5;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.flex-box {
+  display: flex;
+}
+
+.context-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

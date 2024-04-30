@@ -1,4 +1,4 @@
-<h4 align="center">由Go Wails实现的GUI工具，功能涵盖网站扫描、端口扫描、企业信息收集、子域名暴破、空间引擎搜索、CDN识别等多功能的工具</h4>
+<h4 align="center">一款安服集成化工具平台，希望能让你少开几个应用测试</h4>
 
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/qiwentaidi/Slack?filename=go.mod">
@@ -9,29 +9,24 @@
 
 
 
+## 运行
 
+```
+前置条件
 
-
-# 使用须知
-
-Fyne版本已停止更新，可以通过fyne分支中获取到该模块代码。
-
-# 运行	可以通过[wails](https://wails.io/zh-Hans/docs/gettingstarted/installation/)官网查看支持运行的客户端以及运行前条件，详细功能介绍及拓展等信息见[Wiki](https://github.com/qiwentaidi/Slack/wiki)
-
-```sh
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
 wails doctor // 检测是否安装成功
+
+windows 和 linux 需要安装 gcc 环境
 
 git clone https://github.com/qiwentaidi/Slack.git
 
 cd Slack
 
-wails dev // 调试
+wails dev // 情况一，调试模式运行
 
-wails build // 编译
-
-编译完的应用在 build/bin 目录下
+wails build // 情况二，编译应用打包成功后在 build/bin 路径下
 ```
 
 # 渗透测试
@@ -47,6 +42,12 @@ wails build // 编译
 ## 目录扫描
 
 ![image-20240410135353422](assets/image-20240410135353422.png)
+
+## JSFinder
+
+![image-20240425150345629](assets/image-20240425150345629.png)
+
+![image-20240425150407430](assets/image-20240425150407430.png)
 
 # 资产收集
 

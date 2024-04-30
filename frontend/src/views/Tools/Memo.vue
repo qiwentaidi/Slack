@@ -1,5 +1,5 @@
 <template>
-    <div style="display: flex;">
+    <div class="flex-box">
         <el-tabs type="border-card" style="width: 50vh;" stretch="true">
             <el-tab-pane label="备忘录">
                 <el-button-group style="margin-bottom: 10px; width: 100%;">
@@ -14,7 +14,7 @@
                     ">保存</el-button>
                 </el-button-group>
                 <el-table :data="data.memo" border highlight-current-row :show-header="false" @current-change="handleChange"
-                    style="height: 80vh;">
+                    style="height: 75vh;">
                     <el-table-column prop="label" @current-change="handleChange" />
                     <el-table-column align="center" width="80">
                         <template #default="scope">
@@ -35,7 +35,7 @@
                     </el-input>
                 </div>
                 <el-table :data="data.reverse" border highlight-current-row :show-header="false"
-                    @current-change="handleChange" style="height: 80vh;">
+                    @current-change="handleChange" style="height: 75vh;">
                     <el-table-column prop="label" @current-change="handleChange" />
                 </el-table>
             </el-tab-pane>
@@ -220,10 +220,10 @@ function onAddItem() {
 async function save() {
     let temp = ''
     data.memo.forEach((item, index) => {
-        if (index != data.memo.length) {
-            temp += `[${item.label}]\n${item.value}\n`
+        if (index != data.memo.length-1) {
+            temp += `[${item.label}]\n${item.value.trim()}\n`
         }else {
-            temp += `[${item.label}]\n${item.value}`
+            temp += `[${item.label}]\n${item.value.trim()}`
         }
     });
     InitMemo(await UserHomeDir() + "/slack/memo.txt", temp)
