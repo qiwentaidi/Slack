@@ -7,7 +7,8 @@ import {
     HunterSearch,
     FingerLength,
     FingerScan,
-    ActiveFingerScan
+    ActiveFingerScan,
+    IsHighRisk
 } from '../../../wailsjs/go/main/App'
 import { ElMessage } from 'element-plus';
 import { formatURL, ApiSyntaxCheck, splitInt, TestProxy, currentTime, Copy } from '../../util'
@@ -28,7 +29,6 @@ onMounted(async () => {
             type: "error"
         })
     }
-    form.fingerResult = []
 });
 
 interface Vulnerability {
@@ -38,6 +38,20 @@ interface Vulnerability {
     request: string
     response: string
     extInfo: string
+}
+
+interface FingerprintTable {
+    url: string
+    status: string
+    length: string
+    title: string
+    detect: string
+    fingerprint: FingerLevel[]
+}
+
+interface FingerLevel {
+    name: string
+    level: number // level 0 is default , level 1 is high risk
 }
 
 const form = reactive({
@@ -52,7 +66,7 @@ const form = reactive({
     module: ["指纹扫描", "指纹+敏感目录扫描", "指纹漏洞扫描", "全部漏洞扫描"],
     thread: 50,
     vulResult: [] as Vulnerability[],
-    fingerResult: [{}],
+    fingerResult: [] as FingerprintTable[],
     urlFingerMap: [] as uf[],
     numTips: '筛选当前条件下的POC数量',
     currentLoadPath: [] as string[],
@@ -91,6 +105,7 @@ const ctrl = reactive({
 
 async function startScan() {
     let ws = new Scanner
+    form.runnningStatus = true
     form.newscanner = false // 隐藏界面
     ws.init()
     await ws.infoScanner()
@@ -119,6 +134,24 @@ class Scanner {
         dashboard.riskLevel.info = 0
         dashboard.reqErrorURLs = []
         dashboard.currentModule = ""
+    }
+
+    public async sortFinger(Fingerprints: any) {
+        const temp = [] as FingerLevel[]
+        for (const finger of Fingerprints) {
+            if (await IsHighRisk(finger)) {
+                temp.push({
+                    name: finger,
+                    level: 1
+                })
+            } else {
+                temp.push({
+                    name: finger,
+                    level: 0
+                })
+            }
+        }
+        return temp
     }
 
     public async infoScanner() {
@@ -153,15 +186,15 @@ class Scanner {
                     url: result.URL,
                     finger: result.Fingerprints
                 })
+                let temp = await this.sortFinger(result.Fingerprints)
                 form.fingerResult.push({
                     url: result.URL,
                     status: result.StatusCode,
                     length: result.Length,
                     title: result.Title,
                     detect: "Default",
-                    fingerprint: result.Fingerprints,
+                    fingerprint: temp,
                 })
-
             }
             count++
             if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
@@ -177,14 +210,15 @@ class Scanner {
                     }
                     let activeResult = await ActiveFingerScan(ufm.url, global.proxy)
                     if (activeResult.length > 0) {
-                        activeResult.forEach(item => {
+                        activeResult.forEach(async item => {
+                            let temp = await this.sortFinger(item.Fingerprints)
                             form.fingerResult.push({
                                 url: item.URL,
                                 status: item.StatusCode,
                                 length: item.Length,
                                 title: item.Title,
                                 detect: "Active",
-                                fingerprint: item.Fingerprints,
+                                fingerprint: temp,
                             })
                             for (const fm of form.urlFingerMap) {
                                 if (fm.url == item.URL) {
@@ -199,6 +233,7 @@ class Scanner {
 
 
             }
+            form.runnningStatus = false
         })
     }
 }
@@ -360,7 +395,7 @@ function getClassBySeverity(row: any) {
                                 </template>
                                 <template #default>
                                     <div class="context-menu">
-                                        <div class="click-div" @click="Copy(scope.row.url)" style="width: 100%;">
+                                        <div class="click-div" @click="Copy(scope.row.url)">
                                             <el-text class="align">
                                                 <el-icon>
                                                     <CopyDocument />
@@ -390,23 +425,25 @@ function getClassBySeverity(row: any) {
                         :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
                         :show-overflow-tooltip="true" />
                     <el-table-column prop="title" label="Title" width="300px" />
-                    <el-table-column prop="detect" sortable width="150px">
+                    <el-table-column prop="detect" label="Detection" sortable width="120px" />
+                    <el-table-column fixed="right" prop="fingerprint" width="350px">
                         <template #header>
                             <el-tooltip placement="left">
                                 <template #content>
-                                    Active: 表示为敏感目录扫描到的指纹<br />
+                                    · 普通指纹会呈现浅蓝色，workflow中存在漏洞的指纹会呈现浅红色<br />
+                                    · 若指纹标签会呈现填充红色，表示该指纹为敏感目录扫描得到<br />
                                 </template>
                                 <el-icon>
                                     <QuestionFilled size="24" />
                                 </el-icon>
                             </el-tooltip>
-                            Detection
+                            Fingerprint
                         </template>
-                    </el-table-column>
-                    <el-table-column fixed="right" prop="fingerprint" label="Fingerprint" width="350px">
                         <template #default="scope">
-                            <div style="flex-wrap: wrap; display: flex;">
-                                <el-tag v-for="finger in scope.row.fingerprint" style="margin: 3px;">{{ finger
+                            <div class="finger-container">
+                                <el-tag v-for="finger in scope.row.fingerprint" :key="finger.name"
+                                    :type="finger.level === 1 ? 'danger' : 'default'"
+                                    :effect="scope.row.detect === 'Default' ? 'light' : 'dark'">{{ finger.name
                                     }}</el-tag>
                             </div>
                         </template>
@@ -442,6 +479,18 @@ function getClassBySeverity(row: any) {
             <el-popover placement="left" :width="200" trigger="click">
                 <template #reference>
                     <el-button text bg :icon="Operation" style="margin-right: -5px;"></el-button>
+                </template>
+                <template #default>
+                    <div class="context-menu">
+                        <div class="click-div" @click="">
+                            <el-text class="align">
+                                <el-icon>
+                                    <CopyDocument />
+                                </el-icon>
+                                复制全部URL链接
+                            </el-text>
+                        </div>
+                    </div>
                 </template>
             </el-popover>
 
@@ -613,5 +662,11 @@ function getClassBySeverity(row: any) {
 
 .align .el-icon {
     margin-right: 5px;
+}
+
+.finger-container {
+    flex-wrap: wrap;
+    display: flex;
+    gap: 5px;
 }
 </style>

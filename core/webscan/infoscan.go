@@ -33,9 +33,6 @@ type TargetINFO struct {
 	Cert          string // TLS证书
 }
 
-// 代理过滤器，防止在走代理扫描时将不存活的网站由于走了代理导致状态码变成200
-// var filter = []string{"Burp Suite Professional"}
-
 // DumpResponseHeadersAndRaw returns http headers and response as strings
 func DumpResponseHeadersAndRaw(resp *http.Response) (headers, fullresp []byte, err error) {
 	// httputil.DumpResponse does not work with websockets
@@ -192,7 +189,7 @@ func FingerScan(ti *TargetINFO, targetDB []FingerPEntity) []string {
 
 // 获取favicon hash值
 func FaviconHash(url string, client *http.Client) string {
-	resp, body, err := clients.NewRequest("GET", url+"favicon.ico", nil, nil, 10, client)
+	resp, body, err := clients.NewRequest("GET", url+"/favicon.ico", nil, nil, 10, client)
 	if err != nil {
 		return ""
 	}

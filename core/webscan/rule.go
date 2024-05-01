@@ -94,6 +94,36 @@ func InitActiveScanPath(activefingerFile string) error {
 	return nil
 }
 
+type FingerPoc struct {
+	URL      string
+	PocFiles []string
+}
+
+func TargetBindFingerPocs(target string, fingerprints []string) FingerPoc {
+	var fp FingerPoc
+	fp.URL = target
+	for fn1, we := range WorkFlowDB {
+		for _, fn2 := range fingerprints {
+			if fn1 == fn2 {
+				fp.PocFiles = append(fp.PocFiles, FullPocName(we.PocsName)...)
+			}
+		}
+	}
+	return fp
+}
+
+func FullPocName(pocs []string) []string {
+	var news []string
+	for _, poc := range pocs {
+		if !strings.HasSuffix(poc, ".yaml") {
+			poc = poc + ".yaml"
+		}
+		poc = util.HomeDir() + "/slack/config/pocs/" + poc
+		news = append(news, poc)
+	}
+	return news
+}
+
 func ParseRule(rule string) []RuleData {
 	var result []RuleData
 	empty := RuleData{}
@@ -343,4 +373,66 @@ func dataCheckInt(op int16, dataSource int, dataRule int) bool {
 		}
 	}
 	return false
+}
+
+type WorkFlowEntity struct {
+	RootType bool
+	DirType  bool
+	BaseType bool
+	PocsName []string
+}
+
+var WorkFlowDB map[string]WorkFlowEntity
+
+func InitWorkflow(workflowFile string) error {
+	WorkFlowDB = make(map[string]WorkFlowEntity)
+	data, err := os.ReadFile(workflowFile)
+	if err != nil {
+		return err
+	}
+	fps := make(map[string]map[string][]string)
+	err = yaml.Unmarshal(data, &fps)
+	if err != nil {
+		return err
+	}
+	for productName, rulesInterface := range fps {
+		_, ok := WorkFlowDB[productName]
+		if ok {
+			we := WorkFlowDB[productName]
+			types := rulesInterface["type"]
+			pocs := rulesInterface["pocs"]
+			for _, v := range types {
+				if strings.ToLower(v) == "root" {
+					we.RootType = true
+				} else if strings.ToLower(v) == "dir" {
+					we.DirType = true
+				} else if strings.ToLower(v) == "base" {
+					we.BaseType = true
+				}
+			}
+			for _, v := range pocs {
+				if util.GetItemInArray(we.PocsName, v) == -1 {
+					we.PocsName = append(we.PocsName, v)
+				}
+			}
+			WorkFlowDB[productName] = we
+		} else {
+			var workflowEntity WorkFlowEntity
+			types := rulesInterface["type"]
+			pocs := rulesInterface["pocs"]
+			for _, v := range types {
+				if strings.ToLower(v) == "root" {
+					workflowEntity.RootType = true
+				} else if strings.ToLower(v) == "dir" {
+					workflowEntity.DirType = true
+				} else if strings.ToLower(v) == "base" {
+					workflowEntity.BaseType = true
+				}
+			}
+			workflowEntity.PocsName = append(workflowEntity.PocsName, pocs...)
+			workflowEntity.PocsName = util.RemoveDuplicates(workflowEntity.PocsName)
+			WorkFlowDB[productName] = workflowEntity
+		}
+	}
+	return nil
 }

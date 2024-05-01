@@ -1,15 +1,22 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue';
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 import { CopyURLs, SplitTextArea, ReadLine, currentTime } from '../../util'
 import { ExportToXlsx} from '../../export'
 import async from 'async';
-import { QuestionFilled, DocumentCopy, ChromeFilled } from '@element-plus/icons-vue';
-import { PortParse, IPParse, PortCheck, HostAlive, PortBrute } from '../../../wailsjs/go/main/App'
+import { QuestionFilled, CopyDocument, ChromeFilled } from '@element-plus/icons-vue';
+import { PortParse, IPParse, PortCheck, HostAlive, PortBrute, IsRoot } from '../../../wailsjs/go/main/App'
 import { Mkdir, WriteFile, CheckFileStat, GetFileContent, UserHomeDir } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import global from '../../global'
 onMounted(async () => {
+    if (!await IsRoot()) {
+        ElNotification({
+            title: "提示",
+            message: "当前应用非ROOT模式启动，无法调用SYN扫描模式",
+            type: "warning",
+        });
+    }
     global.PATH.PortBurstPath = await UserHomeDir() + global.PATH.PortBurstPath
     if (!(await CheckFileStat(global.PATH.PortBurstPath))) {
         InitBurteDict()
@@ -26,6 +33,10 @@ const form = reactive({
     portsList: [{}],
     percentage: 0,
     id: 0,
+    aliveOptions: ["None", "ICMP", "Ping"],
+    currentAliveMoudle: "None",
+    scanModuleOptions: ["CONNECT", "SYN"],
+    currentScanMoudle: "CONNECT",
 })
 
 const options = [{
@@ -86,7 +97,6 @@ async function SaveFile(path: string) {
 const config = reactive({
     thread: 1000,
     timeout: 7,
-    alive: false,
     ping: false,
     burte: false,
 })
@@ -137,8 +147,9 @@ class Scanner {
             })
             return
         }
-        if (config.alive === true) {
-            HostAlive((form.ips as any), config.alive).then(
+        if (form.currentAliveMoudle != "None") {
+            form.currentAliveMoudle === 'ICMP' ? config.ping = false : config.ping = true
+            HostAlive((form.ips as any), config.ping).then(
                 result => {
                     form.ips = result
                 }
@@ -331,24 +342,25 @@ function handleCurrentChange(val: any) {
         <el-form-item label="端口列表:">
             <el-input type="textarea" rows="3" v-model="form.portlist" resize="none" />
         </el-form-item>
-        <el-form-item label="功能:">
+        <el-form-item>
             <el-space>
-                <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
-                <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
+                <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus" size="small">开始扫描</el-button>
+                <el-button type="danger" @click="ctrl.stop" v-else size="small">停止扫描</el-button>
                 <el-tag type="info">线程:{{ config.thread }}</el-tag>
                 <el-link type="primary" @click="ctrl.drawer = true">更多参数</el-link>
             </el-space>
         </el-form-item>
     </el-form>
-    <el-drawer v-model="ctrl.drawer" size="30%">
+    <el-drawer v-model="ctrl.drawer" size="40%">
         <template #header>
             <h4>设置高级参数</h4>
         </template>
         <el-form label-width="auto">
+            <el-form-item label="扫描模式:">
+                <el-segmented v-model="form.currentScanMoudle" :options="form.scanModuleOptions" block style="width: 100%;" />
+            </el-form-item>
             <el-form-item label="存活探测:">
-                <el-checkbox v-model="config.alive" />
-                <el-switch v-model="config.ping" active-text="ICMP" inactive-text="Ping" v-if="config.alive"
-                    style="margin-left: 10px;" />
+                <el-segmented v-model="form.currentAliveMoudle" :options="form.aliveOptions" block style="width: 100%;" />
             </el-form-item>
             <el-form-item label="线程数量:">
                 <el-input-number controls-position="right" v-model="config.thread" :min="1" :max="30000" />
@@ -422,7 +434,7 @@ function handleCurrentChange(val: any) {
         </el-tabs>
         <div class="custom_eltabs_titlebar" v-if="form.activeName == '1'">
             <el-button-group>
-                <el-button :icon="DocumentCopy" @click="CopyURLs(table.result)">复制全部URL</el-button>
+                <el-button :icon="CopyDocument" @click="CopyURLs(table.result)">复制全部URL</el-button>
                 <el-button @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">
                     <template #icon>
                         <img src="/excle.svg" width="16">

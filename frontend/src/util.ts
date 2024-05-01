@@ -86,7 +86,6 @@ export function splitInt(n: number, slice: number): number[] {
 }
 
 export async function formatURL(host: string): Promise<string[]> {
-  let temp: Array<string> = [];
   let urls: Array<string> = [];
   for (var target of SplitTextArea(host)) {
     if (!target.startsWith("http")) {
@@ -95,22 +94,16 @@ export async function formatURL(host: string): Promise<string[]> {
         target = result.ProtocolURL;
       }
     }
-    temp.push(target);
-  }
-  for (var item of temp) {
-    const urlObj = new URL(item)
-    // 存在路径就不交验/
-    if (urlObj.pathname.length > 1) {
-      urls.push(item);
-    } else {
-      if (item.slice(-1) !== "/") {
-        urls.push((item += "/"));
-      } else {
-        urls.push(item);
-      }
-    }
+    urls.push(TrimRightSubString(target, "/"))
   }
   return urls;
+}
+
+function TrimRightSubString(str: string, sub: string) {
+  if (str.endsWith(sub)) {
+    return str.slice(0, -sub.length);
+  }
+  return str;
 }
 
 export function compareVersion(version1: string, version2: string) {

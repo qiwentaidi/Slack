@@ -86,6 +86,14 @@ export function InitTycHeader(arg1) {
   return window['go']['main']['App']['InitTycHeader'](arg1);
 }
 
+export function IsHighRisk(arg1) {
+  return window['go']['main']['App']['IsHighRisk'](arg1);
+}
+
+export function IsRoot() {
+  return window['go']['main']['App']['IsRoot']();
+}
+
 export function JSFind(arg1, arg2) {
   return window['go']['main']['App']['JSFind'](arg1, arg2);
 }

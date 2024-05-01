@@ -87,6 +87,10 @@ func (a *App) SaveFile(filename string) string {
 	return selection
 }
 
+func (a *App) IsRoot() bool {
+	return os.Getuid() == 0
+}
+
 type Response struct {
 	Error  bool
 	Proto  string
@@ -544,10 +548,15 @@ type InfoResult struct {
 // 仅在执行时调用一次
 func (a *App) InitRule() string {
 	webscan.FingerprintDB = nil
+	webscan.WorkFlowDB = nil
 	if err := webscan.InitFingprintDB(util.HomeDir() + a.webfingerFile); err != nil {
 		return err.Error()
 	}
 	if err := webscan.InitActiveScanPath(util.HomeDir() + a.activefingerFile); err != nil {
+		return err.Error()
+	}
+
+	if err := webscan.InitWorkflow(util.HomeDir() + a.workflowFile); err != nil {
 		return err.Error()
 	}
 	return ""
@@ -642,6 +651,15 @@ func (a *App) ActiveFingerScan(target string, proxy clients.Proxy) []InfoResult 
 		}
 	}
 	return irs
+}
+
+func (a *App) IsHighRisk(fingerprint string) bool {
+	for name, wfe := range webscan.WorkFlowDB {
+		if fingerprint == name {
+			return len(wfe.PocsName) > 0
+		}
+	}
+	return false
 }
 
 // hunter

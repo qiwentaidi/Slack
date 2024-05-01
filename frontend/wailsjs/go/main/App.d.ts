@@ -48,6 +48,10 @@ export function InitRule():Promise<string>;
 
 export function InitTycHeader(arg1:string):Promise<void>;
 
+export function IsHighRisk(arg1:string):Promise<boolean>;
+
+export function IsRoot():Promise<boolean>;
+
 export function JSFind(arg1:string,arg2:string):Promise<jsfind.FindSomething>;
 
 export function LoadDirsearchDict(arg1:string,arg2:Array<string>):Promise<Array<string>>;
