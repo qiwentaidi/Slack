@@ -318,7 +318,7 @@ async function CopyURL() {
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="URL" label="URL" width="200" show-overflow-tooltip="true">
+                <el-table-column prop="URL" label="URL" width="200" :show-overflow-tooltip="true">
                     <template #default="scope">
                         <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)">
                         </el-button>
@@ -326,17 +326,17 @@ async function CopyURL() {
                     </template>
                 </el-table-column>
                 <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
-                    :filter-method="filterHandlerTitle" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="IP" label="IP" width="150" show-overflow-tooltip="true" />
+                    :filter-method="filterHandlerTitle" width="150" :show-overflow-tooltip="true" />
+                <el-table-column prop="IP" label="IP" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Port" label="端口" width="100"
-                    :sort-method="(a: any, b: any) => { return a.Port - b.Port }" sortable show-overflow-tooltip="true" />
-                <el-table-column prop="Domain" label="域名" width="150" show-overflow-tooltip="true" />
+                    :sort-method="(a: any, b: any) => { return a.Port - b.Port }" sortable :show-overflow-tooltip="true" />
+                <el-table-column prop="Domain" label="域名" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Protocol" label="协议" :filters='getColumnData("Protocol")'
-                    :filter-method="filterHandlerProtocol" width="100" show-overflow-tooltip="true" />
-                <el-table-column prop="Country" label="国家" show-overflow-tooltip="true" />
-                <el-table-column prop="Region" label="省份" show-overflow-tooltip="true" />
-                <el-table-column prop="City" label="城市" show-overflow-tooltip="true" />
-                <el-table-column prop="ICP" label="备案号" width="150" show-overflow-tooltip="true" />
+                    :filter-method="filterHandlerProtocol" width="100" :show-overflow-tooltip="true" />
+                <el-table-column prop="Country" label="国家" :show-overflow-tooltip="true" />
+                <el-table-column prop="Region" label="省份" :show-overflow-tooltip="true" />
+                <el-table-column prop="City" label="城市" :show-overflow-tooltip="true" />
+                <el-table-column prop="ICP" label="备案号" width="150" :show-overflow-tooltip="true" />
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>

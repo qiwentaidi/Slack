@@ -1,6 +1,6 @@
 export default {
     aside: {
-        'slogan': "Slack integrated tool platform",
+        'slogan': "An integrated security and service tool platform",
         'home': 'Home',
         'penetration': 'Penetration Test',
         'webscan': 'Web Scan',
@@ -39,12 +39,15 @@ export default {
     setting: {
         'username': 'Username',
         'password': 'Password',
-        'enable': 'Enabled',
+        'enable': 'Test Engine',
         'mode': 'Mode',
         'address': 'Address',
         'port': 'Port',
-        'proxy': 'Proxy (only applicable for webscan)',
+        'proxy': 'Proxy',
         'save': 'Save',
-        'test_agent': 'Test Agent'
+        'test_agent': 'Test Agent',
+        'engine': 'Nulcei Engine',
+        "nuclei_placeholder1": "When there is no environment variable for Nuclei, it needs to be configured here. If it exists, it does not need to be filled in",
+        "nuclei_placeholder2": "Please fill in the complete path of Nuclei",
     }
 }

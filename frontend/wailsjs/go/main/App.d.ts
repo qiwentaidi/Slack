@@ -4,6 +4,7 @@ import {clients} from '../models';
 import {main} from '../models';
 import {space} from '../models';
 import {jsfind} from '../models';
+import {webscan} from '../models';
 import {portscan} from '../models';
 
 export function ActiveFingerScan(arg1:string,arg2:clients.Proxy):Promise<Array<main.InfoResult>>;
@@ -13,8 +14,6 @@ export function AssetHunter(arg1:number,arg2:string,arg3:string):Promise<main.Hu
 export function CheckCdn(arg1:string,arg2:string,arg3:string):Promise<string>;
 
 export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
-
-export function CompanyAssetInfo(arg1:number,arg2:string,arg3:number):Promise<main.TycAssetResult>;
 
 export function DomainInfo(arg1:string):Promise<string>;
 
@@ -44,7 +43,7 @@ export function IconHash(arg1:string):Promise<string>;
 
 export function InitIPResolved():Promise<void>;
 
-export function InitRule():Promise<string>;
+export function InitRule():Promise<boolean>;
 
 export function InitTycHeader(arg1:string):Promise<void>;
 
@@ -59,6 +58,10 @@ export function LoadDirsearchDict(arg1:string,arg2:Array<string>):Promise<Array<
 export function LoadSubDict(arg1:string):Promise<Array<string>>;
 
 export function LocalWalkFiles(arg1:string):Promise<Array<string>>;
+
+export function NucleiEnabled(arg1:string):Promise<boolean>;
+
+export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:string,arg6:boolean,arg7:Array<string>):Promise<Array<webscan.VulnerabilityInfo>>;
 
 export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string,arg5:boolean,arg6:string):Promise<main.PathData>;
 
@@ -78,6 +81,8 @@ export function Sock5Connect(arg1:string,arg2:number,arg3:number,arg4:string,arg
 
 export function Subdomain(arg1:string,arg2:string,arg3:string,arg4:number):Promise<Array<string>>;
 
+export function SubsidiariesAndDomains(arg1:string,arg2:number):Promise<main.TycAssetResult>;
+
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
 
 export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<Array<string>>;
@@ -85,3 +90,7 @@ export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:s
 export function Transcoding(arg1:Array<string>,arg2:string,arg3:number):Promise<string>;
 
 export function WebIconMd5(arg1:string):Promise<string>;
+
+export function WebPocLength():Promise<number>;
+
+export function WechatOfficial(arg1:string):Promise<main.WechatAssetResult>;

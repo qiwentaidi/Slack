@@ -154,8 +154,15 @@ func GetCompanyID(company string) (string, string) {
 	}
 }
 
+type CompanyInfo struct {
+	CompanyName string
+	Holding     string
+	Investment  string
+	Domains     []string
+}
+
 // 返回查询公司的名称和子公司的名称
-func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset [][]string, logs string) {
+func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset []CompanyInfo, logs string) {
 	data := make(map[string]interface{})
 	data["gid"] = companyId
 	data["pageSize"] = 100
@@ -172,15 +179,15 @@ func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset [][]s
 	json.Unmarshal(b, &qr)
 	// 获取到本公司对应的域名
 	domains := Beianx(companyName)
-	holdasset = append(holdasset, []string{companyName, "本公司", "", strings.Join(util.RemoveDuplicates[string](domains), " | ")})
+	holdasset = append(holdasset, CompanyInfo{companyName, "本公司", "", util.RemoveDuplicates(domains)})
 	for _, result := range qr.Data.Result {
 		gq, _ := strconv.Atoi(strings.TrimSuffix(result.Percent, "%"))
 		if gq <= 100 && gq >= ratio { // 提取在控股范围内的子公司
 			subsidiaryDomains := Beianx(result.Name)
 			if len(subsidiaryDomains) > 0 {
-				holdasset = append(holdasset, []string{result.Name, result.Percent, result.Amount, strings.Join(util.RemoveDuplicates[string](subsidiaryDomains), " | ")})
+				holdasset = append(holdasset, CompanyInfo{result.Name, result.Percent, result.Amount, util.RemoveDuplicates(subsidiaryDomains)})
 			} else { // 没查到域名的子公司也要显示
-				holdasset = append(holdasset, []string{result.Name, result.Percent, result.Amount, ""})
+				holdasset = append(holdasset, CompanyInfo{result.Name, result.Percent, result.Amount, []string{}})
 			}
 		}
 	}

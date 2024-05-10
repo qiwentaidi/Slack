@@ -341,7 +341,7 @@ const config = reactive({
             :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable />
         <el-table-column prop="length" width="100px" label="长度"
             :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable />
-        <el-table-column prop="path" label="目录路径" show-overflow-tooltip="true">
+        <el-table-column prop="path" label="目录路径" :show-overflow-tooltip="true">
             <template #default="scope">
                 <el-tooltip placement="top">
                     <template #content>Redirect to {{ scope.row.location }}</template>

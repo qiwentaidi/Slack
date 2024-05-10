@@ -18,10 +18,6 @@ export function CheckTarget(arg1, arg2) {
   return window['go']['main']['App']['CheckTarget'](arg1, arg2);
 }
 
-export function CompanyAssetInfo(arg1, arg2, arg3) {
-  return window['go']['main']['App']['CompanyAssetInfo'](arg1, arg2, arg3);
-}
-
 export function DomainInfo(arg1) {
   return window['go']['main']['App']['DomainInfo'](arg1);
 }
@@ -110,6 +106,14 @@ export function LocalWalkFiles(arg1) {
   return window['go']['main']['App']['LocalWalkFiles'](arg1);
 }
 
+export function NucleiEnabled(arg1) {
+  return window['go']['main']['App']['NucleiEnabled'](arg1);
+}
+
+export function NucleiScanner(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+  return window['go']['main']['App']['NucleiScanner'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+}
+
 export function PathRequest(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['PathRequest'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
@@ -146,6 +150,10 @@ export function Subdomain(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Subdomain'](arg1, arg2, arg3, arg4);
 }
 
+export function SubsidiariesAndDomains(arg1, arg2) {
+  return window['go']['main']['App']['SubsidiariesAndDomains'](arg1, arg2);
+}
+
 export function System(arg1, arg2) {
   return window['go']['main']['App']['System'](arg1, arg2);
 }
@@ -160,4 +168,12 @@ export function Transcoding(arg1, arg2, arg3) {
 
 export function WebIconMd5(arg1) {
   return window['go']['main']['App']['WebIconMd5'](arg1);
+}
+
+export function WebPocLength() {
+  return window['go']['main']['App']['WebPocLength']();
+}
+
+export function WechatOfficial(arg1) {
+  return window['go']['main']['App']['WechatOfficial'](arg1);
 }

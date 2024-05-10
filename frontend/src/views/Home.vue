@@ -37,6 +37,7 @@ function LoadConfig() {
   const savedProxy = localStorage.getItem("proxy");
   const savedSpace = localStorage.getItem("space");
   const savedjsfind = localStorage.getItem("jsfind");
+  const savedwebscan = localStorage.getItem("webscan");
   if (savedScan) {
     Object.assign(global.scan, JSON.parse(savedScan));
   }
@@ -50,6 +51,9 @@ function LoadConfig() {
   }
   if (savedjsfind) {
     Object.assign(global.jsfind, JSON.parse(savedjsfind));
+  }
+  if (savedwebscan) {
+    Object.assign(global.webscan, JSON.parse(savedwebscan));
   }
 }
 </script>

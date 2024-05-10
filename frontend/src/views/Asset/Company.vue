@@ -2,7 +2,7 @@
 import { reactive, ref } from "vue";
 import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
-import { CompanyAssetInfo, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
+import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
 import global from "../../global"
 import { ExportAssetToXlsx } from '../../export'
 import { onMounted } from 'vue';
@@ -25,15 +25,23 @@ const from = reactive({
     domains: [{}],
     correctName: [{}],
     getColumnData(prop: string): any[] {
-        return su.value.map((item: any) => item[prop]);
+        return su.map((item: any) => item[prop]);
     }
 })
-const su = ref([{}])
+
+interface CompanyInfo {
+    CompanyName: string
+    Holding: string
+    Investment: string
+    Domains: string[]
+}
+
+var su = [] as CompanyInfo[]
 const hu = ref([{}])
 const we = ref([{}])
 
 function Init() {
-    su.value = [];
+    su = [];
     hu.value = [];
     we.value = [];
 }
@@ -72,17 +80,17 @@ function Collect() {
         const promises = from.companys.map(async companyName => {
             from.log += `[INF] 正在收集${companyName}的子公司信息\n`
             if (typeof companyName === 'string') {
-                const result = await CompanyAssetInfo(0, companyName, from.defaultHold);
-                if (result.Asset.length > 0) {
-                    const mappedResult = result.Asset.map((item: any) => {
-                        return {
-                            company: item[0],
-                            ratio: item[1],
-                            sunums: item[2],
-                            domains: item[3],
-                        };
-                    });
-                    su.value.push(...mappedResult);
+                const result = await SubsidiariesAndDomains(companyName, from.defaultHold);
+                if (Array.isArray(result.Asset) && result.Asset.length > 0) {
+                    for (const item of result.Asset) {
+                        su.push({
+                            CompanyName: item.CompanyName,
+                            Holding: item.Holding,
+                            Investment: item.Investment,
+                            Domains: item.Domains,
+                           
+                        })
+                    }
                 }
                 if (result.Prompt.length > 0) { // 处理字符串
                     from.log += `[INF] ${result.Prompt}\n`;
@@ -97,7 +105,7 @@ function Collect() {
         const promises = from.companys.map(async companyName => {
             from.log += `[INF] 正在收集${companyName}的微信公众号资产\n`
             if (typeof companyName === 'string') {
-                const result = await CompanyAssetInfo(1, companyName, 0);
+                const result = await WechatOfficial(companyName);
                 if (result.Asset.length > 0) {
                     const mappedResult = result.Asset.map((item: any) => {
                         return {
@@ -130,7 +138,7 @@ async function huntersearch() {
         })
         return
     }
-    if (su.value.length <= 1) {
+    if (su.length <= 1) {
         ElMessage({
             showClose: true,
             message: '请先查询控股企业信息再继续资产数量查询',
@@ -156,7 +164,7 @@ async function huntersearch() {
     });
     // 查询icp
     for (let target of from.correctName) {
-        await sleep(2000);
+        await sleep(2500);
         AssetHunter(0, target as string, global.space.hunterkey).then(
             result => {
                 hu.value.push(
@@ -171,7 +179,7 @@ async function huntersearch() {
     }
     // 查询domain
     for (let target of from.domains) {
-        await sleep(2000);
+        await sleep(2500);
         AssetHunter(1, target as string, global.space.hunterkey).then(
             result => {
                 hu.value.push(
@@ -210,8 +218,8 @@ function sleep(time: number) {
                         <QuestionFilled />
                     </el-icon>
                 </el-tooltip>
-                <el-input-number v-model="from.defaultHold" controls-position="right" :min="1" :max="100"
-                    style="margin-left: 10px;" v-if="from.subcompany"></el-input-number>
+                <el-input-number v-model="from.defaultHold" size="small" :min="1" :max="100" style="margin-left: 10px;"
+                    v-if="from.subcompany"></el-input-number>
             </div>
             <el-checkbox v-model="from.wechat" label="查询公众号" style="margin-right: 20px; margin-left: 20px;" />
         </el-form-item>
@@ -234,10 +242,18 @@ function sleep(time: number) {
             <el-tab-pane label="控股企业" name="subcompany">
                 <el-table :data="su" height="60vh" border>
                     <el-table-column type="index" width="60px" />
-                    <el-table-column prop="company" label="公司名称" show-overflow-tooltip="true" />
-                    <el-table-column prop="ratio" label="股权比例" show-overflow-tooltip="true" />
-                    <el-table-column prop="sunums" label="投资数额" show-overflow-tooltip="true" />
-                    <el-table-column prop="domains" label="域名" show-overflow-tooltip="true" />
+                    <el-table-column prop="CompanyName" label="公司名称" :show-overflow-tooltip="true" />
+                    <el-table-column prop="Holding" label="股权比例" :show-overflow-tooltip="true" />
+                    <el-table-column prop="Investment" label="投资数额" :show-overflow-tooltip="true" />
+                    <el-table-column prop="Domains" label="域名">
+                        <template #default="scope">
+                            <div class="finger-container">
+                                <el-tag v-if="scope.row.Domains.length > 0"
+                                    v-for="domain in scope.row.Domains" :key="domain">{{ domain
+                                    }}</el-tag>
+                            </div>
+                        </template>
+                    </el-table-column>
                 </el-table>
             </el-tab-pane>
 
@@ -253,7 +269,7 @@ function sleep(time: number) {
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="weNums" label="微信号" show-overflow-tooltip="true" />
+                    <el-table-column prop="weNums" label="微信号" :show-overflow-tooltip="true" />
                     <el-table-column prop="qrcode" width="80px" label="二维码" align="center">
                         <template #default="scope">
                             <el-popover :width="180" placement="left">
@@ -271,17 +287,16 @@ function sleep(time: number) {
                             </el-popover>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="introduction" label="简介" show-overflow-tooltip="true" />
+                    <el-table-column prop="introduction" label="简介" :show-overflow-tooltip="true" />
                 </el-table>
             </el-tab-pane>
 
             <el-tab-pane label="鹰图资产数量" name="hunter">
                 <el-table :data="hu" height="60vh" border>
                     <el-table-column type="index" width="60px" />
-                    <el-table-column prop="name" label="公司域名或ICP名称" show-overflow-tooltip="true" />
+                    <el-table-column prop="name" label="公司域名或ICP名称" :show-overflow-tooltip="true" />
                     <el-table-column prop="hunums" label="资产数量"
-                        :sort-method="(a: any, b: any) => { return a.hunums - b.hunums }" sortable
-                        show-overflow-tooltip="true" />
+                        :sort-method="(a: any, b: any) => { return a.hunums - b.hunums }" sortable />
                 </el-table>
             </el-tab-pane>
             <el-tab-pane label="运行日志">

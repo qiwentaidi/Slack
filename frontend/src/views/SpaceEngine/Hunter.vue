@@ -464,21 +464,21 @@ async function CopyURL(mode: number) {
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column type="index" fixed label="#" width="60px" />
-                <el-table-column prop="URL" fixed label="URL" width="200" show-overflow-tooltip="true">
+                <el-table-column prop="URL" fixed label="URL" width="200" :show-overflow-tooltip="true">
                     <template #default="scope">
                         <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.URL != ''" />
                         {{ scope.row.URL }}
                     </template>
 
                 </el-table-column>
-                <el-table-column prop="IP" fixed label="IP" width="150" show-overflow-tooltip="true" />
+                <el-table-column prop="IP" fixed label="IP" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Port" fixed label="端口/服务" width="120">
                     <template #default="scope">
                         {{ scope.row.Port }}
                         <el-tag type="info">{{ scope.row.Protocol }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="Domain" label="域名" width="150" show-overflow-tooltip="true" />
+                <el-table-column prop="Domain" label="域名" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Component" label="应用/组件" width="210xp">
                     <template #default="scope">
                         <el-space>
@@ -500,12 +500,12 @@ async function CopyURL(mode: number) {
                         </el-space>
                     </template>
                 </el-table-column>
-                <el-table-column prop="Title" label="标题" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="Status" label="状态码" show-overflow-tooltip="true" />
-                <el-table-column prop="ICP" label="备案号" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="ISP" label="运营商" width="150" show-overflow-tooltip="true" />
-                <el-table-column prop="Position" label="地理位置" width="120" show-overflow-tooltip="true" />
-                <el-table-column prop="UpdateTime" label="更新时间" width="150" show-overflow-tooltip="true" />
+                <el-table-column prop="Title" label="标题" width="150" :show-overflow-tooltip="true" />
+                <el-table-column prop="Status" label="状态码" :show-overflow-tooltip="true" />
+                <el-table-column prop="ICP" label="备案号" width="150" :show-overflow-tooltip="true" />
+                <el-table-column prop="ISP" label="运营商" width="150" :show-overflow-tooltip="true" />
+                <el-table-column prop="Position" label="地理位置" width="120" :show-overflow-tooltip="true" />
+                <el-table-column prop="UpdateTime" label="更新时间" width="150" :show-overflow-tooltip="true" />
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>

@@ -65,7 +65,7 @@ const patch = ref([{}])
             </el-col>
         </div>
     </div>
-    <el-tabs v-model="activeName" type="border-card" style="margin-top: 10px; height: 82%;">
+    <el-tabs v-model="activeName" type="border-card" style="margin-top: 10px; height: 80%;">
         <el-tab-pane label="杀软识别" name="1">
             <el-table :data="avlist" style="height: 70vh;" v-if="avlist.length >= 1">
                 <el-table-column type="index" width="60px" />

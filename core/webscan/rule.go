@@ -99,17 +99,12 @@ type FingerPoc struct {
 	PocFiles []string
 }
 
-func TargetBindFingerPocs(target string, fingerprints []string) FingerPoc {
-	var fp FingerPoc
-	fp.URL = target
-	for fn1, we := range WorkFlowDB {
-		for _, fn2 := range fingerprints {
-			if fn1 == fn2 {
-				fp.PocFiles = append(fp.PocFiles, FullPocName(we.PocsName)...)
-			}
-		}
+func ALLPoc() []string {
+	news := []string{}
+	for _, we := range WorkFlowDB {
+		news = append(news, we.PocsName...)
 	}
-	return fp
+	return util.RemoveDuplicates(FullPocName(news))
 }
 
 func FullPocName(pocs []string) []string {

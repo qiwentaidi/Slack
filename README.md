@@ -3,8 +3,7 @@
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/qiwentaidi/Slack?filename=go.mod">
 <img src="https://img.shields.io/badge/wails-v2.8.0-blue">
-<a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/v/release/qiwentaidi/Slack">
-<a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/downloads/qiwentaidi/Slack/total">
+<a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/v/release/qiwentaidi/Slack"><a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/downloads/qiwentaidi/Slack/total">
 </p>
 
 
@@ -33,7 +32,9 @@ wails build // 情况二，编译应用打包成功后在 build/bin 路径下
 
 ## 网站扫描
 
-![image-20240204164748870](assets/image-20240204164748870.png)
+![image-20240510214011206](assets/image-20240510214011206.png)
+
+![image-20240510214144484](assets/image-20240510214144484.png)
 
 ## 主机扫描
 

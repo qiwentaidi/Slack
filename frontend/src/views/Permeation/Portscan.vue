@@ -9,6 +9,7 @@ import { PortParse, IPParse, PortCheck, HostAlive, PortBrute, IsRoot } from '../
 import { Mkdir, WriteFile, CheckFileStat, GetFileContent, UserHomeDir } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import global from '../../global'
+import { text } from 'stream/consumers';
 onMounted(async () => {
     if (!await IsRoot()) {
         ElNotification({
@@ -54,6 +55,10 @@ const options = [{
 {
     text: "全端口",
     value: "1-65535"
+},
+{
+    text: "三高一弱",
+    value: "21,22,23,25,53,69,110,111,135,139,143,161,389,445,873,1025,1433,1158,1521,3306,3389,3690,5432,5900,5901,6379,7001,7002,9000,9043,9200,9300,27017,27018,28017,50030,50060,50070,1099,2049,2181,2222,2375,2379,2888,3128,3888,4000,4040,4440,4848,4899,5000,5005,5601,5631,5632,5984,6123,7051,7077,7180,7182,7848,8019,8020,8042,8048,8051,8069,8080,8081,8083,8086,8088,8161,8443,8649,8848,8880,8888,9001,9042,9083,9092,9100,9990,10000,11000,11111,11211,18080,19888,20880,25000,25010,50000,50090,60000,60010,60030"
 },
 {
     text: "自定义",
@@ -332,11 +337,11 @@ function handleCurrentChange(val: any) {
         </el-form-item>
         <el-form-item label="预设端口:">
             <el-radio-group v-model="radio" @change="updatePorts">
-                <el-radio label=1>数据库端口</el-radio>
-                <el-radio label=2>企业端口</el-radio>
-                <el-radio label=3>高危端口</el-radio>
-                <el-radio label=4>全端口</el-radio>
-                <el-radio label=5>自定义</el-radio>
+                <el-radio value="1">数据库端口</el-radio>
+                <el-radio value="2">企业端口</el-radio>
+                <el-radio value="3">高危端口</el-radio>
+                <el-radio value="4">全端口</el-radio>
+                <el-radio value="5">自定义</el-radio>
             </el-radio-group>
         </el-form-item>
         <el-form-item label="端口列表:">

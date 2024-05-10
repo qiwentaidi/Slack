@@ -85,7 +85,7 @@ async function handleFileChange() {
     <el-form :model="from">
         <el-form-item>
             <div class="head">
-                <el-input v-model="from.domain" placeholder="请输入域名,仅支持单域名" style="margin-right: 10px;"/>
+                <el-input v-model="from.domain" placeholder="请输入域名,仅支持单域名" style="margin-right: 10px;" />
                 <el-button type="primary" @click="BurstSubdomain" v-if="!from.runningStatus">开始任务</el-button>
                 <el-button type="danger" @click="stop" v-else>停止任务</el-button>
             </div>
@@ -103,19 +103,22 @@ async function handleFileChange() {
                     </el-input-number>
                 </div>
                 <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
-                }}</el-button>
+                    }}</el-button>
             </el-space>
-            <el-button type="primary" style="margin-left: auto;" text
-                @click="ExportToXlsx(['子域名', 'CNAME', 'IPS', '备注'], '子域名暴破', 'subdomain', sbr)"
-                :disabled="sbr.length < 2">数据导出</el-button>
+            <el-button style="margin-left: auto;"
+                @click="ExportToXlsx(['子域名', 'CNAME', 'IPS', '备注'], '子域名暴破', 'subdomain', sbr)">
+                <template #icon>
+                    <img src="/excle.svg" width="16">
+                </template>
+                导出Excle</el-button>
         </el-form-item>
     </el-form>
     <el-table :data="sbr" border style="height: 75vh; margin-bottom: 10px;">
         <el-table-column type="index" label="#" width="60px" />
-        <el-table-column prop="subdomains" label="子域名" show-overflow-tooltip="true" />
-        <el-table-column prop="cname" label="CNAME" show-overflow-tooltip="true" />
-        <el-table-column prop="ips" label="IPs" show-overflow-tooltip="true" />
-        <el-table-column prop="notes" label="备注" show-overflow-tooltip="true" />
+        <el-table-column prop="subdomains" label="子域名" :show-overflow-tooltip="true" />
+        <el-table-column prop="cname" label="CNAME" :show-overflow-tooltip="true" />
+        <el-table-column prop="ips" label="IPs" :show-overflow-tooltip="true" />
+        <el-table-column prop="notes" label="备注" :show-overflow-tooltip="true" />
         <template #empty>
             <el-empty description="点击开始任务获取数据"></el-empty>
         </template>

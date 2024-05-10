@@ -1,7 +1,7 @@
 
 import { ElNotification } from "element-plus";
 import global from "./global";
-import { CheckTarget, GoFetch, Sock5Connect } from "../wailsjs/go/main/App";
+import { CheckTarget, GoFetch, NucleiEnabled, Sock5Connect } from "../wailsjs/go/main/App";
 import { CheckFileStat, GetFileContent, UserHomeDir } from "../wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
 
@@ -230,9 +230,32 @@ export async function TestProxy(mode: number) {
   return true
 }
 
+export async function TestNuclei() {
+  NucleiEnabled(global.webscan.nucleiEngine).then(result => {
+    if (result) {
+      ElNotification({
+        message: "Nuclei engine is enabled",
+        type: "success",
+        duration: 2000,
+      });
+    }else {
+      ElNotification({
+        type: 'error',
+        message: "Nuclei engine is disable",
+        duration: 2000,
+      });
+    }
+  })
+}
+
 export function currentTime() {
   var date = new Date();
   return date.toLocaleString()
+}
+
+export function currentTimestamp() {
+  const now = new Date();
+  return Math.floor(now.getTime() / 1000).toString();
 }
 
 const download = {

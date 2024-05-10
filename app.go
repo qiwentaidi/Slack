@@ -255,32 +255,44 @@ func (a *App) InitTycHeader(token string) {
 }
 
 type TycAssetResult struct {
-	Asset  [][]string
+	Asset  []info.CompanyInfo
 	Prompt string
 }
 
 // mode 0 = 查询子公司 . mode 1 = 查询公众号
-func (*App) CompanyAssetInfo(searchMode int, companyName string, ratio int) TycAssetResult {
+func (*App) SubsidiariesAndDomains(companyName string, ratio int) TycAssetResult {
 	var isFuzz string
 	companyId, fuzzName := info.GetCompanyID(companyName) // 获得到一个模糊匹配后，关联度最高的名称
 	if companyName != fuzzName {                          // 如果传进来的名称与模糊匹配的不相同
 		isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
 	}
-	if searchMode == 0 {
-		asset, logs := info.SearchSubsidiary(fuzzName, companyId, ratio)
-		if isFuzz == "" {
-			logs = isFuzz + logs
-		}
-		return TycAssetResult{
-			Asset:  asset,
-			Prompt: logs,
-		}
+	asset, logs := info.SearchSubsidiary(fuzzName, companyId, ratio)
+	if isFuzz == "" {
+		logs = isFuzz + logs
+	}
+	return TycAssetResult{
+		Asset:  asset,
+		Prompt: logs,
+	}
+
+}
+
+type WechatAssetResult struct {
+	Asset  [][]string
+	Prompt string
+}
+
+func (a *App) WechatOfficial(companyName string) WechatAssetResult {
+	var isFuzz string
+	companyId, fuzzName := info.GetCompanyID(companyName) // 获得到一个模糊匹配后，关联度最高的名称
+	if companyName != fuzzName {                          // 如果传进来的名称与模糊匹配的不相同
+		isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
 	}
 	asset, logs := info.WeChatOfficialAccounts(fuzzName, companyId)
 	if isFuzz == "" {
 		logs = isFuzz + logs
 	}
-	return TycAssetResult{
+	return WechatAssetResult{
 		Asset:  asset,
 		Prompt: logs,
 	}
@@ -334,7 +346,7 @@ func (a *App) PathRequest(method, url string, timeout int, bodyExclude string, r
 	if redirect {
 		client = clients.DefaultClient()
 	}
-	var header http.Header
+	var header = http.Header{}
 	if customHeader != "" {
 		for _, single := range strings.Split(customHeader, "\n") {
 			temp := strings.Split(single, ":")
@@ -546,20 +558,20 @@ type InfoResult struct {
 }
 
 // 仅在执行时调用一次
-func (a *App) InitRule() string {
+func (a *App) InitRule() bool {
 	webscan.FingerprintDB = nil
 	webscan.WorkFlowDB = nil
 	if err := webscan.InitFingprintDB(util.HomeDir() + a.webfingerFile); err != nil {
-		return err.Error()
+		return false
 	}
 	if err := webscan.InitActiveScanPath(util.HomeDir() + a.activefingerFile); err != nil {
-		return err.Error()
+		return false
 	}
 
 	if err := webscan.InitWorkflow(util.HomeDir() + a.workflowFile); err != nil {
-		return err.Error()
+		return false
 	}
-	return ""
+	return true
 }
 
 // webscan
@@ -660,6 +672,34 @@ func (a *App) IsHighRisk(fingerprint string) bool {
 		}
 	}
 	return false
+}
+
+// 在漏扫开始时，需要轮询结果
+// mode = 0  表示扫指纹漏洞， mode = 1 表示扫全漏洞
+func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucleiPath, reportName string, interactsh bool, keywords []string) []webscan.VulnerabilityInfo {
+	nc := webscan.NewNucleiCaller(nucleiPath, reportName, interactsh)
+	if err := nc.ReportDirStat(); err != nil {
+		return []webscan.VulnerabilityInfo{}
+	}
+	if mode == 0 {
+		pe := nc.TargetBindFingerPocs(target, fingerprints)
+		return nc.CallerFP(pe)
+	} else {
+		return nc.CallerAP(target, keywords)
+	}
+	// go func(ctx context.Context) {
+	// 	for {
+	// 		runtime.EventsEmit(ctx, "callback_nuclei_scanner", "")
+	// 	}
+	// }(a.ctx)
+}
+
+func (a *App) NucleiEnabled(nucleiPath string) bool {
+	return webscan.NewNucleiCaller(nucleiPath, "", false).Enabled()
+}
+
+func (a *App) WebPocLength() int {
+	return len(webscan.ALLPoc())
 }
 
 // hunter

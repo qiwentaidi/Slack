@@ -1,6 +1,6 @@
 export default {
     aside: {
-        'slogan': "Slack 信安人员集成化工具平台",
+        'slogan': "安服集成化工具平台，希望能让你少开几个应用测试",
         'home': '首页',
         'penetration': '渗透测试',
         'webscan': '网站扫描',
@@ -39,12 +39,15 @@ export default {
     setting: {
         'username': '用户名',
         'password': '密码',
-        'enable': '启用',
+        'enable': '检测引擎',
         'mode': '模式',
         'address': '地址',
         'port': '端口',
-        'proxy': '代理配置(仅适用网站扫描)',
+        'proxy': '代理配置',
         'save': '保存',
-        'test_agent': '测试代理'
+        'test_agent': '测试代理',
+        'engine': 'Nulcei引擎',
+        "nuclei_placeholder1": "当不存在Nuclei的环境变量时需要配置此处，存在无需填写",
+        "nuclei_placeholder2": "请填写Nuclei的完整路径",
     }
 }

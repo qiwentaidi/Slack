@@ -1,8 +1,6 @@
 package webscan
 
 import (
-	"fmt"
-	"slack-wails/lib/util"
 	"testing"
 )
 
@@ -41,7 +39,13 @@ func TestInfoscan(t *testing.T) {
 	// 	Banner:        banner,
 	// }, FingerprintDB)
 	// fmt.Printf("result: %v\n", result)
-	InitWorkflow(util.HomeDir() + "/slack/config/workflow.yaml")
-	pe := TargetBindFingerPocs("https://www.baidu.com", []string{"Jeecg-Boot"})
-	fmt.Printf("pe: %v\n", pe)
+	// InitWorkflow(util.HomeDir() + "/slack/config/workflow.yaml")
+	// pe := TargetBindFingerPocs("https://sg.smt528.com/", []string{"layer.js", "Bootstrap", "Apache-Tomcat",
+	// 	"Jeecg-Boot",
+	// 	"JSP",
+	// 	"Oracle-JAVA",
+	// 	"jQuery"})
+	// cmd := exec.Command("nuclei", "-duc", "-u", pe.URL, "-t", strings.Join(pe.PocFiles, ","))
+	// out, _ := cmd.CombinedOutput()
+	// fmt.Printf("string(out): %v\n", string(out))
 }

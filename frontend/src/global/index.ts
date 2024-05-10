@@ -20,15 +20,20 @@ var proxy = reactive({
     password: '',
 })
 
+var webscan = reactive({
+    nucleiEngine: ""
+})
+
 const Logger = ref("")
 
-const LOCAL_VERSION = "1.5.0"
+const LOCAL_VERSION = "1.5.1"
+
 
 var PATH = {
     ConfigPath: "/slack/config",
     ActivePathPoc: "/slack/config/active-detect",
     AFGPathPoc: "/slack/config/afrog-pocs",
-    LocalPocVersionFile: "/slack/config/afrog-pocs/version",
+    LocalPocVersionFile: "/slack/config/version",
     PortBurstPath: "/slack/portburte"
 }
 
@@ -102,5 +107,6 @@ export default {
     LOCAL_VERSION,
     PATH,
     UPDATE,
-    jsfind
+    jsfind,
+    webscan
 };

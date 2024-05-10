@@ -1,6 +1,6 @@
 <template>
     <el-scrollbar max-height="85vh" style="height: 85vh;">
-        <el-collapse model-value="3">
+        <el-collapse model-value="2">
           <el-collapse-item name="1"><template #title>
               <h2>DNS Server</h2>
             </template>
@@ -18,10 +18,24 @@
             </el-form>
           </el-collapse-item>
           <el-collapse-item name="2"><template #title>
-              <h2>{{ $t('setting.proxy') }}</h2>
+              <h2>{{ $t('aside.webscan') }}</h2>
             </template>
-            <el-form :inline="true" :model="global.proxy" label-width="80px" class="demo-form-inline">
-              <el-form-item :label="$t('setting.enable')">
+            <el-form :inline="true" :model="global.proxy" label-width="auto" class="demo-form-inline">
+              <el-form-item>
+                <template #label>{{ $t('setting.engine') }}
+                    <el-tooltip placement="left">
+                        <template #content>
+                           {{ $t('setting.nuclei_placeholder1') }}
+                        </template>
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-input v-model="global.webscan.nucleiEngine" :placeholder="$t('setting.nuclei_placeholder2')" clearable style="width: 120vh;"></el-input>
+                <el-button type="primary" style="margin-left: 10px;" @click="TestNuclei()">{{ $t('setting.enable') }}</el-button>
+              </el-form-item>
+              <el-form-item :label="$t('setting.proxy')">
                 <el-switch v-model="global.proxy.enabled" />
                 <el-button type="primary" size="small" @click="TestProxy(0)" style="margin-left: 20px;"
                     v-if="global.proxy.enabled">{{ $t('setting.test_agent') }}</el-button>
@@ -72,9 +86,9 @@
 <script lang="ts" setup>
 import global from "../global"
 import { ElNotification } from 'element-plus';
-import { TestProxy } from "../util";
+import { TestProxy, TestNuclei } from "../util";
 
-const saveConfig = () => {
+function saveConfig() {
   global.space.fofaapi = global.space.fofaapi.replace(/[\r\n\s]/g, '');
   global.space.fofaemail = global.space.fofaemail.replace(/[\r\n\s]/g, '');
   global.space.fofakey = global.space.fofakey.replace(/[\r\n\s]/g, '');
@@ -83,6 +97,7 @@ const saveConfig = () => {
   localStorage.setItem('scan', JSON.stringify(global.scan));
   localStorage.setItem('proxy', JSON.stringify(global.proxy));
   localStorage.setItem('space', JSON.stringify(global.space));
+  localStorage.setItem('webscan', JSON.stringify(global.webscan));
   ElNotification({
     message: 'Save successful',
     type: 'success',

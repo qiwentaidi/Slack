@@ -151,3 +151,11 @@ html {
   flex-direction: column;
   gap: 10px;
 }
+
+.vulnerability-details {
+  height: 60vh;
+  background: #F2F2F2;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
