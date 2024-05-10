@@ -102,10 +102,6 @@ export function LoadSubDict(arg1) {
   return window['go']['main']['App']['LoadSubDict'](arg1);
 }
 
-export function LocalWalkFiles(arg1) {
-  return window['go']['main']['App']['LocalWalkFiles'](arg1);
-}
-
 export function NucleiEnabled(arg1) {
   return window['go']['main']['App']['NucleiEnabled'](arg1);
 }
@@ -128,10 +124,6 @@ export function PortCheck(arg1, arg2, arg3) {
 
 export function PortParse(arg1) {
   return window['go']['main']['App']['PortParse'](arg1);
-}
-
-export function ReadPocDetail(arg1) {
-  return window['go']['main']['App']['ReadPocDetail'](arg1);
 }
 
 export function SaveFile(arg1) {

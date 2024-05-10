@@ -57,8 +57,6 @@ export function LoadDirsearchDict(arg1:string,arg2:Array<string>):Promise<Array<
 
 export function LoadSubDict(arg1:string):Promise<Array<string>>;
 
-export function LocalWalkFiles(arg1:string):Promise<Array<string>>;
-
 export function NucleiEnabled(arg1:string):Promise<boolean>;
 
 export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:string,arg6:boolean,arg7:Array<string>):Promise<Array<webscan.VulnerabilityInfo>>;
@@ -70,8 +68,6 @@ export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Pro
 export function PortCheck(arg1:string,arg2:number,arg3:number):Promise<main.PortResult>;
 
 export function PortParse(arg1:string):Promise<Array<number>>;
-
-export function ReadPocDetail(arg1:string):Promise<void>;
 
 export function SaveFile(arg1:string):Promise<string>;
 
