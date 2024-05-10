@@ -49,7 +49,7 @@ func download(target, dest string) (string, error) {
 }
 
 func InitConfig(configPath string) bool {
-	os.Mkdir(util.HomeDir()+"/slack", 0777)
+	os.MkdirAll(util.HomeDir()+"/slack/config", 0777)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
 	_, b, err := clients.NewRequest("GET", latestConfigVersion, nil, nil, 10, http.DefaultClient)
 	if err != nil {

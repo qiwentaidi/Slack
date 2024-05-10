@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"slack-wails/core"
 	"slack-wails/core/info"
 	"slack-wails/core/jsfind"
@@ -33,7 +32,6 @@ type App struct {
 	workflowFile     string
 	webfingerFile    string
 	activefingerFile string
-	afrogPathPoc     string
 	cdnFile          string
 	qqwryFile        string
 	avFile           string
@@ -45,7 +43,6 @@ func NewApp() *App {
 		workflowFile:     "/slack/config/workflow.yaml",
 		webfingerFile:    "/slack/config/webfinger.yaml",
 		activefingerFile: "/slack/config/dir.yaml",
-		afrogPathPoc:     "/slack/config/afrog-pocs",
 		cdnFile:          "/slack/config/cdn.yaml",
 		qqwryFile:        "/slack/config/qqwry.dat",
 		avFile:           "/slack/config/antivirues.yaml",
@@ -420,29 +417,6 @@ func (a *App) PortCheck(ip string, port, timeout int) PortResult {
 		}
 	}
 	return pr
-}
-
-// 漏洞详情
-
-// 遍历文件夹下的yaml或者yml文件，获取所有绝对路径
-func (a *App) LocalWalkFiles(folderPath string) []string {
-	fileList := []string{}
-	filepath.Walk(util.HomeDir()+folderPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// 检查是否为文件且以 .yaml 或 .yml 扩展名结尾
-		if !info.IsDir() && (strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml")) {
-			fileList = append(fileList, path)
-		}
-
-		return nil
-	})
-	return fileList
-}
-
-func (a *App) ReadPocDetail(absolutePath string) {
-
 }
 
 // 端口暴破

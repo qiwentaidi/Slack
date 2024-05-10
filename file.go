@@ -19,7 +19,7 @@ type File struct {
 
 func NewFile() *File {
 	return &File{
-		configPath: util.HomeDir() + "/slack/",
+		configPath: util.HomeDir() + "/slack/config/",
 	}
 }
 

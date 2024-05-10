@@ -35,13 +35,6 @@ export const routes: Array<RouteRecordRaw> = [
       title: "Jsfinder",
     },
   },
-  {
-    path: "/Permeation/Pocdetail",
-    component: () => import("../views/Permeation/Pocdetail.vue"),
-    meta: {
-      title: "Pocdetail",
-    },
-  },
   { path: "/Asset/Company", 
     component: () => import("../views/Asset/Company.vue"),
     meta: {

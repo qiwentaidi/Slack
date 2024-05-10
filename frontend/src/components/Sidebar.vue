@@ -57,9 +57,9 @@ const dg = reactive({
         $t("aside.dirscan")
       }}</el-menu-item>
         <el-menu-item index="/Permeation/Jsfinder">JSFinder</el-menu-item>
-        <el-menu-item index="/Permeation/Pocdetail">{{
+        <!-- <el-menu-item index="/Permeation/Pocdetail">{{
         $t("aside.pocdetail")
-      }}</el-menu-item>
+      }}</el-menu-item> -->
       </el-sub-menu>
       <el-sub-menu index="2">
         <template #title>
