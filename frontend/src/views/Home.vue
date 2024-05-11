@@ -25,7 +25,7 @@ onMounted(async () => {
       ElNotification.closeAll()
       ElNotification({
         title: "无法下载配置文件",
-        message: "请自行到https://gitee.com/the-temperature-is-too-low/slack-poc/releases/下载slack.zip并解压到用户根目录!",
+        message: "请自行到https://gitee.com/the-temperature-is-too-low/slack-poc/releases/下载config.zip并解压到用户根目录下的/slack/文件夹下!",
         type: "warning",
       });
     }

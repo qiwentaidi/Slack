@@ -80,7 +80,13 @@ wails build // 情况二，编译应用打包成功后在 build/bin 路径下
 
 # 小工具
 
-<img src="assets/image-20240222155132016.png" alt="image-20240222155132016" style="zoom:55%;" />
+## 数据处理
+
+![image-20240512003549512](assets/image-20240512003549512.png)
+
+## WeChat
+
+![image-20240512003433659](assets/image-20240512003433659.png)
 
 
 
