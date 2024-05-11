@@ -510,7 +510,7 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *AliveTarget {
 	if proxy.Enabled {
 		client, _ = clients.SelectProxy(&proxy, client)
 	}
-	protocolURL, err := clients.CheckProtocol(host, client)
+	protocolURL, err := clients.IsWeb(host, client)
 	if err != nil {
 		return &AliveTarget{
 			Status:      false,
@@ -558,6 +558,16 @@ func (a *App) FingerScan(target string, proxy clients.Proxy) *InfoResult {
 	var client = clients.DefaultClient()
 	if proxy.Enabled {
 		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
+	}
+	if strings.HasPrefix(target, "http") {
+		if fulltarget, err := clients.IsWeb(target, client); err != nil {
+			return &InfoResult{
+				URL:        target,
+				StatusCode: 0,
+			}
+		} else {
+			target = fulltarget
+		}
 	}
 	u := webscan.HostPort(target)
 	banner := webscan.GetBanner(&u)

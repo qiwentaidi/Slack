@@ -210,7 +210,10 @@ type URLINFO struct {
 func HostPort(target string) URLINFO {
 	var host string
 	var port int
-	u, _ := url.Parse(target)
+	u, err := url.Parse(target)
+	if err != nil {
+		return URLINFO{}
+	}
 	if strings.Contains(u.Host, ":") {
 		host = strings.Split(u.Host, ":")[0]
 		port, _ = strconv.Atoi(strings.Split(u.Host, ":")[1])

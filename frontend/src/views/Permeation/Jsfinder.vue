@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { CopyALL, SplitTextArea } from '../../util';
+import { CopyALL, formatURL } from '../../util';
 import { JSFind } from '../../../wailsjs/go/main/App';
 import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import async from 'async';
 import global from "../../global";
-import { ElNotification } from 'element-plus';
+import { ElNotification, ElMessage } from 'element-plus';
 import ContextMenu from '../../components/ContextMenu.vue';
 const config = reactive({
   urls: "",
@@ -77,9 +77,17 @@ interface LinkSource {
   Source: string;
 }
 
-function JSFinder() {
+async function JSFinder() {
   var urls = [] as string[]
-  urls = SplitTextArea(config.urls)
+  urls = await formatURL(config.urls)
+  if (urls.length == 0) {
+    ElMessage({
+      showClose: true,
+      message: "可用目标为空",
+      type: "warning",
+    });
+    return
+  }
   config.loading = true
   async.eachLimit(urls, 10, (url: string) => {
     JSFind(url, config.perfixURL).then(result => {
@@ -196,16 +204,17 @@ function changeType(item: dashboardItem) {
               <el-tag :type="item.tagType.value">{{ ls.Filed }}</el-tag>
             </template>
             <template #default>
-              <ContextMenu :data="ls"/>
+              <ContextMenu :data="ls" />
             </template>
           </el-popover>
-          <div class="tag-container" style="margin-top: 0;" v-if="item.children && item.children.length > 0" v-for="(child, index) in item.children" :key="index">
+          <div class="tag-container" style="margin-top: 0;" v-if="item.children && item.children.length > 0"
+            v-for="(child, index) in item.children" :key="index">
             <el-popover placement="right-end" trigger="contextmenu" v-for="ls in child.data.value">
               <template #reference>
                 <el-tag :type="child.tagType.value">{{ ls.Filed }}</el-tag>
               </template>
               <template #default>
-                <ContextMenu :data="ls"/>
+                <ContextMenu :data="ls" />
               </template>
             </el-popover>
           </div>

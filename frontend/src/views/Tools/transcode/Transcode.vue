@@ -64,7 +64,7 @@ const aes = reactive({
                 options.padding = CryptoJS.pad.NoPadding
         }
         let key = CryptoJS.enc.Utf8.parse(aes.key);
-        if (yk.mode == "AES"){
+        if (yk.mode == "AES") {
             if (mode == 0) {
                 let encryptedData = CryptoJS.AES.encrypt(aes.encryptedMessage, key, options);
                 aes.decryptedMessage = encryptedData.toString();
@@ -76,7 +76,7 @@ const aes = reactive({
                     aes.decryptedMessage = "无法解密";
                 }
             }
-        }else {
+        } else {
             if (mode == 0) {
                 let encryptedData = CryptoJS.DES.encrypt(aes.encryptedMessage, key, options);
                 aes.decryptedMessage = encryptedData.toString();
@@ -97,7 +97,7 @@ const rsa = reactive({
     encryptedMessage: '',
     decryptedMessage: '',
     ende(mode: number) {
-        if (mode == 0){
+        if (mode == 0) {
             try {
                 // 创建一个 JSEncrypt 实例
                 const encryptor = new JSEncrypt();
@@ -108,7 +108,7 @@ const rsa = reactive({
             } catch (error: any) {
                 rsa.decryptedMessage = "加密失败" + error.message;
             }
-        }else {
+        } else {
             try {
                 const encryptor = new JSEncrypt();
                 encryptor.setPrivateKey(this.privateKey);
@@ -126,24 +126,24 @@ const sm = reactive({
     sm2publicKey: '',
     sm2privateKey: '',
     sm2CurrentMode: 'C1C2C3',
-    sm2Mode: ['C1C2C3','C1C3C2'],
-    sm2ende(mode: number){
+    sm2Mode: ['C1C2C3', 'C1C3C2'],
+    sm2ende(mode: number) {
         if (mode == 0) {
             try {
-                if (this.sm2CurrentMode == 'C1C2C3'){
-                    sm.sm2decrypt = sm2.doEncrypt(sm.sm2encrypt,sm.sm2publicKey,0);
-                }else {
-                    sm.sm2decrypt = sm2.doEncrypt(sm.sm2encrypt,sm.sm2publicKey,1);
+                if (this.sm2CurrentMode == 'C1C2C3') {
+                    sm.sm2decrypt = sm2.doEncrypt(sm.sm2encrypt, sm.sm2publicKey, 0);
+                } else {
+                    sm.sm2decrypt = sm2.doEncrypt(sm.sm2encrypt, sm.sm2publicKey, 1);
                 }
             } catch (error) {
                 sm.sm2decrypt = "加密失败";
             }
         } else {
             try {
-                if (this.sm2CurrentMode == 'C1C2C3'){
-                    sm.sm2decrypt = sm2.doDecrypt(sm.sm2encrypt, sm.sm2privateKey,0);
-                }else {
-                    sm.sm2decrypt = sm2.doDecrypt(sm.sm2encrypt,sm.sm2publicKey,1);
+                if (this.sm2CurrentMode == 'C1C2C3') {
+                    sm.sm2decrypt = sm2.doDecrypt(sm.sm2encrypt, sm.sm2privateKey, 0);
+                } else {
+                    sm.sm2decrypt = sm2.doDecrypt(sm.sm2encrypt, sm.sm2publicKey, 1);
                 }
             } catch (error) {
                 sm.sm2decrypt = "解密失败";
@@ -190,53 +190,53 @@ function handleButtonClick(mode: number) {
 
 function BatchEncrypt() {
     let options = {
-            iv: CryptoJS.enc.Utf8.parse(aes.iv),
-            mode: CryptoJS.mode.ECB,
-            padding: CryptoJS.pad.Pkcs7
-        };
-        switch (aes.currentMode) {
-            case "ECB":
-                options.mode = CryptoJS.mode.ECB
-                break
-            case "CBC":
-                options.mode = CryptoJS.mode.CBC
-                break
-            case "CTR":
-                options.mode = CryptoJS.mode.CTR
-                break
-            case "OFB":
-                options.mode = CryptoJS.mode.OFB
-                break
-            case "CFB":
-                options.mode = CryptoJS.mode.CFB
-        }
-        switch (aes.currentPadding) {
-            case "PKCS7":
-                options.padding = CryptoJS.pad.Pkcs7
-                break
-            case "Ansix923":
-                options.padding = CryptoJS.pad.AnsiX923
-                break
-            case "ISO10126":
-                options.padding = CryptoJS.pad.Iso10126
-                break
-            case "ZeroPadding":
-                options.padding = CryptoJS.pad.ZeroPadding
-                break
-            case "ISO97971":
-                options.padding = CryptoJS.pad.Iso97971
-                break
-            case "None":
-                options.padding = CryptoJS.pad.NoPadding
-        }
-        let key = CryptoJS.enc.Utf8.parse(aes.key);
-        let dicts = SplitTextArea(aes.encryptedMessage)
-        let temp = []
-        for (const dict of dicts) {
-            let encryptedData = CryptoJS.DES.encrypt(encodeURI(dict), key, options);
-            temp.push(encryptedData.toString());
-        }
-        ExportTXT("dict", temp)
+        iv: CryptoJS.enc.Utf8.parse(aes.iv),
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7
+    };
+    switch (aes.currentMode) {
+        case "ECB":
+            options.mode = CryptoJS.mode.ECB
+            break
+        case "CBC":
+            options.mode = CryptoJS.mode.CBC
+            break
+        case "CTR":
+            options.mode = CryptoJS.mode.CTR
+            break
+        case "OFB":
+            options.mode = CryptoJS.mode.OFB
+            break
+        case "CFB":
+            options.mode = CryptoJS.mode.CFB
+    }
+    switch (aes.currentPadding) {
+        case "PKCS7":
+            options.padding = CryptoJS.pad.Pkcs7
+            break
+        case "Ansix923":
+            options.padding = CryptoJS.pad.AnsiX923
+            break
+        case "ISO10126":
+            options.padding = CryptoJS.pad.Iso10126
+            break
+        case "ZeroPadding":
+            options.padding = CryptoJS.pad.ZeroPadding
+            break
+        case "ISO97971":
+            options.padding = CryptoJS.pad.Iso97971
+            break
+        case "None":
+            options.padding = CryptoJS.pad.NoPadding
+    }
+    let key = CryptoJS.enc.Utf8.parse(aes.key);
+    let dicts = SplitTextArea(aes.encryptedMessage)
+    let temp = []
+    for (const dict of dicts) {
+        let encryptedData = CryptoJS.DES.encrypt(encodeURI(dict), key, options);
+        temp.push(encryptedData.toString());
+    }
+    ExportTXT("dict", temp)
 }
 </script>
 
@@ -294,18 +294,20 @@ function BatchEncrypt() {
                 <div style="width: 100%;" v-else-if="yk.mode == 'RSA'">
                     <el-form v-model="rsa">
                         <el-form-item label="公钥">
-                            <el-input  class="form-inline" v-model="rsa.publicKey" type="textarea" placeholder="-----BEGIN PUBLIC KEY-----
+                            <el-input class="form-inline" v-model="rsa.publicKey" type="textarea" placeholder="-----BEGIN PUBLIC KEY-----
 -----END PUBLIC KEY-----" resize='none' rows="2"></el-input>
                         </el-form-item>
                         <el-form-item label="私钥">
-                            <el-input  class="form-inline" v-model="rsa.privateKey" type="textarea" placeholder="-----BEGIN RSA PRIVATE KEY-----
+                            <el-input class="form-inline" v-model="rsa.privateKey" type="textarea" placeholder="-----BEGIN RSA PRIVATE KEY-----
 -----END RSA PRIVATE KEY-----" resize='none' rows="2"></el-input>
                         </el-form-item>
                         <el-form-item label="内容">
-                            <el-input class="form-inline" v-model="rsa.encryptedMessage" type="textarea" resize='none' rows="7"></el-input>
+                            <el-input class="form-inline" v-model="rsa.encryptedMessage" type="textarea" resize='none'
+                                rows="7"></el-input>
                         </el-form-item>
                         <el-form-item label="结果">
-                            <el-input  class="form-inline" v-model="rsa.decryptedMessage" type="textarea" resize='none' rows="7"></el-input>
+                            <el-input class="form-inline" v-model="rsa.decryptedMessage" type="textarea" resize='none'
+                                rows="7"></el-input>
                         </el-form-item>
                     </el-form>
                 </div>
@@ -325,13 +327,13 @@ function BatchEncrypt() {
                 <div style="width: 100%;" v-else-if="yk.mode == 'SM2'">
                     <el-form :model="sm">
                         <el-form-item label="内容：">
-                            <el-input type="textarea" v-model="sm.sm2encrypt" rows="6" resize='none'/>
+                            <el-input type="textarea" v-model="sm.sm2encrypt" rows="6" resize='none' />
                         </el-form-item>
                         <el-form-item label="公钥：">
-                            <el-input v-model="sm.sm2publicKey"/>
+                            <el-input v-model="sm.sm2publicKey" />
                         </el-form-item>
                         <el-form-item label="私钥：">
-                            <el-input v-model="sm.sm2privateKey"/>
+                            <el-input v-model="sm.sm2privateKey" />
                         </el-form-item>
                         <el-form-item label="模式：">
                             <el-select v-model="sm.sm2CurrentMode" placeholder="Select">
@@ -339,7 +341,7 @@ function BatchEncrypt() {
                             </el-select>
                         </el-form-item>
                         <el-form-item label="结果：">
-                            <el-input type="textarea" v-model="sm.sm2decrypt" rows="7" resize='none'/>
+                            <el-input type="textarea" v-model="sm.sm2decrypt" rows="7" resize='none' />
                         </el-form-item>
                     </el-form>
                 </div>
@@ -354,6 +356,6 @@ function BatchEncrypt() {
 
 <style scoped>
 .form-inline {
-  width: 100%;
+    width: 100%;
 }
 </style>

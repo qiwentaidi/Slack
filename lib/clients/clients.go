@@ -80,7 +80,7 @@ var (
 
 // return error if host is not living
 // or if host is live return http(s) url
-func CheckProtocol(host string, client *http.Client) (string, error) {
+func IsWeb(host string, client *http.Client) (string, error) {
 	var result string
 	if len(strings.TrimSpace(host)) == 0 {
 		return result, fmt.Errorf("host %q is empty", host)
