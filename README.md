@@ -17,14 +17,19 @@ Linux/Debian
 ```sh
 # need install Go 1.20+
 sudo apt install golang-go
+
 # need install nodejs 15+
 sudo apt install nodejs npm
+
 # install gcc && webkit
 sudo apt install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
+
 # install wails to run app
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
 git clone https://github.com/qiwentaidi/Slack.git
 cd Slack
+
 # choose one, successfully packaged on build/bin
 wails dev || wails build
 ```
@@ -34,9 +39,12 @@ Windows
 ```sh
 # need install Go 1.20+ && nodejs 15+
 # download gcc(https://sourceforge.net/projects/mingw-w64/) and configure environment variables
+
+# install wails to run app
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 git clone https://github.com/qiwentaidi/Slack.git
 cd Slack
+
 # choose one, successfully packaged on build/bin
 wails dev || wails build
 ```
