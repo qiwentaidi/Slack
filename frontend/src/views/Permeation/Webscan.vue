@@ -45,6 +45,7 @@ onMounted(() => {
 });
 
 interface Vulnerability {
+    vulID: string
     vulName: string
     protocoltype: string
     severity: string
@@ -52,6 +53,8 @@ interface Vulnerability {
     request: string
     response: string
     extInfo: string
+    reference: string
+    description: string
 }
 
 interface FingerprintTable {
@@ -71,9 +74,8 @@ interface FingerLevel {
 const form = reactive({
     url: '',
     keyword: '',
-    keywords: [] as string[],
-    risk: [],
-    riskOptions: ["critical", "high", "medium", "low", "info"],
+    risk: [] as string[],
+    riskOptions: ["critical", "high", "medium", "low"],
     newscanner: false,
     currentModule: 0,
     module: [
@@ -294,21 +296,23 @@ class Scanner {
                         if (!form.runnningStatus) {
                             return
                         }
-                        form.keywords = form.keyword.split(",")
-                        let nucleiResult = await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, currentTimestamp(), form.noInteractsh, form.keywords)
+                        let nucleiResult = await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, currentTimestamp(), form.noInteractsh, form.keyword, form.risk.join(","))
                         global.Logger.value += `${currentTime()} ${ufm.url} 漏洞已检测完毕结束\n`
                         if (Array.isArray(nucleiResult) && nucleiResult.length > 0) {
                             for (const result of nucleiResult) {
                                 const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
                                 dashboard.riskLevel[riskLevelKey]++;
                                 form.vulResult.push({
+                                    vulID: result.ID,
                                     vulName: result.Name,
                                     protocoltype: result.Type.toLocaleUpperCase(),
                                     severity: result.Risk.toLocaleUpperCase(),
                                     vulURL: result.URL,
                                     request: result.Request,
                                     response: result.Response,
-                                    extInfo: result.Extract
+                                    extInfo: result.Extract,
+                                    description: result.Description,
+                                    reference: result.Reference,
                                 })
                             }
                         }
@@ -340,19 +344,22 @@ class Scanner {
                 return
             }
 
-            let nucleiResult = await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, currentTimestamp(), form.noInteractsh, form.keywords)
+            let nucleiResult = await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, currentTimestamp(), form.noInteractsh, form.keyword, form.risk.join(","))
             console.log(nucleiResult)
             for (const result of nucleiResult) {
                 const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
                 dashboard.riskLevel[riskLevelKey]++;
                 form.vulResult.push({
+                    vulID: result.ID,
                     vulName: result.Name,
                     protocoltype: result.Type.toLocaleUpperCase(),
                     severity: result.Risk.toLocaleUpperCase(),
                     vulURL: result.URL,
                     request: result.Request,
                     response: result.Response,
-                    extInfo: result.Extract
+                    extInfo: result.Extract,
+                    description: result.Description,
+                    reference: result.Reference,
                 })
             }
             count++
@@ -373,7 +380,7 @@ class Scanner {
 
 // 联动空间引擎
 
-const uncover = reactive({
+const uncover = {
     fofa: function () {
         if (ApiSyntaxCheck(0, global.space.fofaemail, global.space.fofakey, form.query) === false) {
             return
@@ -412,7 +419,7 @@ const uncover = reactive({
         })
         form.hunterDialog = false
     }
-})
+}
 
 // 排序
 const levelMap: Record<string, number> = {
@@ -571,21 +578,28 @@ function getClassBySeverity(severity: string) {
                     <el-table-column type="expand">
                         <template #default="props">
                             <div>
-                                <el-descriptions :column="1" border style="margin-bottom: 10px;">
-                                    <el-descriptions-item label="拓展信息:">{{ props.row.extInfo }}</el-descriptions-item>
+                                <el-descriptions :column="2" border style="margin-bottom: 10px;">
+                                    <el-descriptions-item label="Name:">{{ props.row.vulName }}</el-descriptions-item>
+                                    <el-descriptions-item label="Extracted:">{{ props.row.extInfo }}</el-descriptions-item>
+                                    <el-descriptions-item label="Description:" :span="2">{{ props.row.description }}</el-descriptions-item>
+                                    <el-descriptions-item label="Reference:" :span="2" label-class-name="description">
+                                        <div v-for="item in props.row.reference.split(',')">
+                                            {{ item }}
+                                        </div>
+                                    </el-descriptions-item>
                                 </el-descriptions>
 
                                 <el-space>
                                     <div class="pretty-response" style="width: 80vh; height: 50vh;">{{
                         props.row.request }}</div>
-                                    <div class="pretty-response" style="width: 100%; height: 50vh;">{{
+                                    <div class="pretty-response" style="width: fit-content; height: 50vh;">{{
                         props.row.response }}</div>
                                 </el-space>
                             </div>
 
                         </template>
                     </el-table-column>
-                    <el-table-column prop="vulName" label="Name" width="250px" :show-overflow-tooltip="true" />
+                    <el-table-column prop="vulID" label="ID" width="250px" :show-overflow-tooltip="true" />
                     <el-table-column prop="protocoltype" label="Type" width="150px" />
                     <el-table-column prop="severity" width="150px" label="Risk" :sort-method="sortMethod" sortable>
                         <template #default="scope">
@@ -670,17 +684,17 @@ function getClassBySeverity(severity: string) {
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-segmented v-model="form.currentModule" :options="form.module" size="default" />
+                <el-segmented v-model="form.currentModule" :options="form.module" style="width: 100%;" />
             </el-form-item>
             <div v-if="form.currentModule == 3">
                 <el-form-item label="关键字:" class="bottom">
                     <el-input v-model="form.keyword" placeholder="根据id判断','分割关键字" clearable></el-input>
                 </el-form-item>
-                <!-- <el-form-item label="风险等级:" class="bottom">
+                <el-form-item label="风险等级:" class="bottom">
                     <el-select v-model="form.risk" placeholder="未选择即默认不进行筛选" multiple clearable style="width: 100%;">
                         <el-option v-for="item in form.riskOptions" :label="item.toLocaleUpperCase()" :value="item" />
                     </el-select>
-                </el-form-item> -->
+                </el-form-item>
             </div>
             <el-form-item label="指纹线程:">
                 <el-input-number controls-position="right" v-model="form.thread" :min="1" :max="2000" />
@@ -728,7 +742,7 @@ function getClassBySeverity(severity: string) {
     </el-dialog>
 </template>
 
-<style scoped>
+<style>
 .el-col {
     text-align: center;
 }
@@ -779,5 +793,8 @@ function getClassBySeverity(severity: string) {
     flex-wrap: wrap;
     display: flex;
     gap: 7px;
+}
+.description {
+    width: 100px;
 }
 </style>

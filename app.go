@@ -559,7 +559,7 @@ func (a *App) FingerScan(target string, proxy clients.Proxy) *InfoResult {
 	if proxy.Enabled {
 		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
 	}
-	if strings.HasPrefix(target, "http") {
+	if !strings.HasPrefix(target, "http") {
 		if fulltarget, err := clients.IsWeb(target, client); err != nil {
 			return &InfoResult{
 				URL:        target,
@@ -660,8 +660,8 @@ func (a *App) IsHighRisk(fingerprint string) bool {
 
 // 在漏扫开始时，需要轮询结果
 // mode = 0  表示扫指纹漏洞， mode = 1 表示扫全漏洞
-func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucleiPath, reportName string, interactsh bool, keywords []string) []webscan.VulnerabilityInfo {
-	nc := webscan.NewNucleiCaller(nucleiPath, reportName, interactsh)
+func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucleiPath, reportName string, interactsh bool, keywords, severity string) []webscan.VulnerabilityInfo {
+	nc := webscan.NewNucleiCaller(nucleiPath, reportName, interactsh, severity)
 	if err := nc.ReportDirStat(); err != nil {
 		return []webscan.VulnerabilityInfo{}
 	}
@@ -669,7 +669,8 @@ func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucl
 		pe := nc.TargetBindFingerPocs(target, fingerprints)
 		return nc.CallerFP(pe)
 	} else {
-		return nc.CallerAP(target, keywords)
+		keys := strings.Split(keywords, ",")
+		return nc.CallerAP(target, keys)
 	}
 	// go func(ctx context.Context) {
 	// 	for {
@@ -679,7 +680,7 @@ func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucl
 }
 
 func (a *App) NucleiEnabled(nucleiPath string) bool {
-	return webscan.NewNucleiCaller(nucleiPath, "", false).Enabled()
+	return webscan.NewNucleiCaller(nucleiPath, "", false, "").Enabled()
 }
 
 func (a *App) WebPocLength() int {

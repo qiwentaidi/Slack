@@ -33,28 +33,34 @@ onMounted(async () => {
 });
 
 function LoadConfig() {
-  const savedScan = localStorage.getItem("scan");
-  const savedProxy = localStorage.getItem("proxy");
-  const savedSpace = localStorage.getItem("space");
-  const savedjsfind = localStorage.getItem("jsfind");
-  const savedwebscan = localStorage.getItem("webscan");
-  if (savedScan) {
-    Object.assign(global.scan, JSON.parse(savedScan));
-  }
-
-  if (savedProxy) {
-    Object.assign(global.proxy, JSON.parse(savedProxy));
-  }
-
-  if (savedSpace) {
-    Object.assign(global.space, JSON.parse(savedSpace));
-  }
-  if (savedjsfind) {
-    Object.assign(global.jsfind, JSON.parse(savedjsfind));
-  }
-  if (savedwebscan) {
-    Object.assign(global.webscan, JSON.parse(savedwebscan));
-  }
+  const allLocaolStorage = [
+    {
+      key: "scan",
+      value: global.scan,
+    },
+    {
+      key: "proxy",
+      value: global.proxy,
+    },
+    {
+      key: "space",
+      value: global.space,
+    },
+    {
+      key: "jsfind",
+      value: global.jsfind,
+    },
+    {
+      key: "webscan",
+      value: global.webscan,
+    }
+  ];
+  allLocaolStorage.forEach(item => {
+    const v = localStorage.getItem(item.key)
+    if (v) {
+      Object.assign(item.value, JSON.parse(v));
+    }
+  });
 }
 </script>
 

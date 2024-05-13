@@ -230,9 +230,10 @@ const config = reactive({
                 <el-select v-model=from.defaultOption value=options style="width: 20vh;">
                     <el-option v-for="item in from.options" :value="item" :label="item" />
                 </el-select>
-                <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 5px; width: 100%;" />
+                <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 5px;" />
                 <el-button type="primary" @click="dirscan" v-if="!control.runningStatus">开始扫描</el-button>
                 <el-button type="danger" @click="control.stop" v-else>停止扫描</el-button>
+                <el-button color="rgb(194, 194, 196)" @click="config.drawer = true" style="margin-left: 5px;">参数设置</el-button>
             </div>
         </el-form-item>
         <el-form-item>
@@ -245,7 +246,6 @@ const config = reactive({
                     <span>初始不判断存活：</span>
                     <el-switch v-model="from.alive" inline-prompt active-text="关闭" inactive-text="开启" />
                 </div>
-                <el-link type="primary" @click="config.drawer = true">更多参数</el-link>
                 <el-tag>字典大小:{{ from.paths.length }}</el-tag>
                 <el-tag>线程:{{ config.thread }}</el-tag>
                 <el-tooltip placement="bottom" content="请求失败数量">

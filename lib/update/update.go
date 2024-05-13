@@ -12,10 +12,7 @@ import (
 	"time"
 )
 
-const (
-	lastestPocUrl    = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
-	lastestClinetUrl = "https://gitee.com/the-temperature-is-too-low/Slack/releases/download/"
-)
+const lastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
 
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
 func UpdatePoc(configPath string) error {
@@ -64,6 +61,6 @@ func InitConfig(configPath string) bool {
 	if _, err := uz.Extract(configPath+fileName, configPath); err != nil {
 		return false
 	}
-	os.Remove(configPath + "/config.zip")
+	os.Remove(util.HomeDir() + "/slack/config.zip")
 	return true
 }

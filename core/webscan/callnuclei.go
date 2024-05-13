@@ -18,6 +18,7 @@ type NucleiResult []struct {
 		Author      []string `json:"author"`
 		Tags        []string `json:"tags"`
 		Description string   `json:"description"`
+		Reference   []string `json:"reference"`
 		Severity    string   `json:"severity"`
 		Metadata    struct {
 			MaxRequest int `json:"max-request"`
@@ -42,35 +43,45 @@ type NucleiResult []struct {
 }
 
 type VulnerabilityInfo struct {
-	Name     string
-	Type     string
-	Risk     string
-	URL      string
-	Request  string
-	Response string
-	Extract  string
+	ID          string
+	Name        string
+	Description string
+	Reference   string
+	Type        string
+	Risk        string
+	URL         string
+	Request     string
+	Response    string
+	Extract     string
 }
 
 type NucleiCalller struct {
-	NucleiPath string
-	ReportName string
-	Interactsh bool
+	CommandLine []string
+	NucleiPath  string
+	ReportName  string
+	Interactsh  string
+	Severity    string
 }
 
 const reportTemp = "/slack/web_report/"
 
-func NewNucleiCaller(path, reportName string, interactsh bool) *NucleiCalller {
-	var nucleiPath string
+func NewNucleiCaller(path, reportName string, interactsh bool, severity string) *NucleiCalller {
+	var nucleiPath, ni string
 	// 存在环境变量
 	if path == "" {
 		nucleiPath = "nuclei"
 	} else {
 		nucleiPath = path
 	}
+	// 判断反连
+	if interactsh {
+		ni = "-ni"
+	}
 	return &NucleiCalller{
 		NucleiPath: nucleiPath,
 		ReportName: reportName,
-		Interactsh: interactsh,
+		Interactsh: ni,
+		Severity:   severity,
 	}
 }
 
@@ -115,13 +126,16 @@ func (nc *NucleiCalller) ReadNucleiJson(reportName string) []VulnerabilityInfo {
 	json.Unmarshal(b, &nr)
 	for _, result := range nr {
 		vis = append(vis, VulnerabilityInfo{
-			URL:      result.MatchedAt,
-			Request:  result.Request,
-			Response: result.Response,
-			Extract:  strings.Join(result.ExtractedResults, " | "),
-			Name:     result.TemplateID,
-			Type:     result.Type,
-			Risk:     result.Info.Severity,
+			ID:          result.TemplateID,
+			Name:        result.Info.Name,
+			Description: result.Info.Description,
+			Reference:   strings.Join(result.Info.Reference, ","),
+			URL:         result.MatchedAt,
+			Request:     result.Request,
+			Response:    result.Response,
+			Extract:     strings.Join(result.ExtractedResults, " | "),
+			Type:        result.Type,
+			Risk:        result.Info.Severity,
 		})
 	}
 	return vis
@@ -129,12 +143,9 @@ func (nc *NucleiCalller) ReadNucleiJson(reportName string) []VulnerabilityInfo {
 
 // Finger POC
 func (nc *NucleiCalller) CallerFP(pe FingerPoc) []VulnerabilityInfo {
-	ni := ""
-	if nc.Interactsh {
-		ni = "-ni"
-	}
-
-	cmd := exec.Command(nc.NucleiPath, "-duc", "-u", pe.URL, "-t", strings.Join(pe.PocFiles, ","), "-je", util.HomeDir()+reportTemp+"temp.json", ni)
+	result := util.HomeDir() + reportTemp + "temp.json"
+	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", strings.Join(pe.PocFiles, ","), "-je", result, nc.Interactsh}
+	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("err: %v\n", err)
 		return []VulnerabilityInfo{}
@@ -144,17 +155,21 @@ func (nc *NucleiCalller) CallerFP(pe FingerPoc) []VulnerabilityInfo {
 
 // ALL POC
 func (nc *NucleiCalller) CallerAP(target string, keywords []string) []VulnerabilityInfo {
-	ni := ""
-	if nc.Interactsh {
-		ni = "-ni"
-	}
 	var pocs []string
 	if len(keywords) == 0 {
 		pocs = ALLPoc()
 	} else {
 		pocs = nc.FilterPoc(ALLPoc(), keywords)
 	}
-	cmd := exec.Command(nc.NucleiPath, "-duc", "-u", target, "-t", strings.Join(pocs, ","), "-je", util.HomeDir()+reportTemp+"temp.json", ni)
+	result := util.HomeDir() + reportTemp + "temp.json"
+	nc.CommandLine = []string{"-duc", "-u", target, "-je", result, nc.Interactsh}
+	// 风险等级筛选
+	if nc.Severity != "" {
+		nc.CommandLine = append(nc.CommandLine, []string{"-s", nc.Severity}...)
+	} else {
+		nc.CommandLine = append(nc.CommandLine, []string{"-t", strings.Join(pocs, ",")}...)
+	}
+	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("err: %v\n", err)
 		return []VulnerabilityInfo{}

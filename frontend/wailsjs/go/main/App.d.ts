@@ -59,7 +59,7 @@ export function LoadSubDict(arg1:string):Promise<Array<string>>;
 
 export function NucleiEnabled(arg1:string):Promise<boolean>;
 
-export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:string,arg6:boolean,arg7:Array<string>):Promise<Array<webscan.VulnerabilityInfo>>;
+export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:string,arg6:boolean,arg7:string,arg8:string):Promise<Array<webscan.VulnerabilityInfo>>;
 
 export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string,arg5:boolean,arg6:string):Promise<main.PathData>;
 
