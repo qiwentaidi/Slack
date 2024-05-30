@@ -104,7 +104,6 @@ func ALLPoc() []string {
 	for _, we := range WorkFlowDB {
 		news = append(news, we.PocsName...)
 	}
-	fmt.Printf("news: %v\n", news)
 	return util.RemoveDuplicates(FullPocName(news))
 }
 

@@ -2,10 +2,11 @@
 
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/qiwentaidi/Slack?filename=go.mod">
-<img src="https://img.shields.io/badge/wails-v2.8.0-blue">
+<img src="https://img.shields.io/badge/wails-v2.8.2-blue">
 <a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/v/release/qiwentaidi/Slack"></a>
 <a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/downloads/qiwentaidi/Slack/total"></a>
 </p>
+
 
 
 
@@ -21,8 +22,8 @@ sudo apt install golang-go
 # need install nodejs 15+
 sudo apt install nodejs npm
 
-# install gcc && webkit
-sudo apt install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev
+# install gcc && webkit && libpcap
+sudo apt install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev libpcap-dev 
 
 # install wails to run app
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -108,6 +109,10 @@ wails dev || wails build
 
 # 小工具
 
+## 编码转换
+
+
+
 ## 数据处理
 
 ![image-20240512003549512](assets/image-20240512003549512.png)
@@ -128,11 +133,11 @@ wails dev || wails build
 > Executing: go mod tidy
 > • Generating bindings: 
 > ERROR  
->     package slack-wails
->           imports slack-wails/core/portscan
->           imports github.com/tomatome/grdp/protocol/pdu
->           imports github.com/tomatome/grdp/protocol/t125/gcc
->           imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
+>  package slack-wails
+>        imports slack-wails/core/portscan
+>        imports github.com/tomatome/grdp/protocol/pdu
+>        imports github.com/tomatome/grdp/protocol/t125/gcc
+>        imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
 > ```
 >
 > A：
@@ -141,6 +146,34 @@ wails dev || wails build
 > 1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
 > 2、需要安装GCC环境
 > ```
+> Q: Linux gopacket打包失败
+>
+> ``````
+> # Building target: linux/amd64
+> 
+>   • Generating bindings:   ERROR   
+>           # github.com/google/gopacket/pcap
+>           /root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
+>              34 | #include <pcap.h>
+>                 |          ^~~~~~~~
+>           compilation terminated.
+>           
+>           exit status 1
+> 
+>   ERROR   
+>           # github.com/google/gopacket/pcap
+>           /root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
+>              34 | #include <pcap.h>
+>                 |          ^~~~~~~~
+>           compilation terminated.
+>           
+>           exit status 1
+>  ♥   If Wails is useful to you or your company, please consider sponsoring the project:                                                                   
+> https://github.com/sponsors/leaanthony
+> ``````
+>
+> A：
+>
 > Q: Mac 启动出现安装包损坏
 >
 > A: 

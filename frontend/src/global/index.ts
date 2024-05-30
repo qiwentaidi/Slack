@@ -276,6 +276,11 @@ var onlineOptions = [
                 icon: "/navigation/butian.png"
             },
             {
+                name: "FREEBUF",
+                url: "https://www.freebuf.com/",
+                icon: "/navigation/freebuf.ico"
+            },
+            {
                 name: "跳跳糖",
                 url: "https://tttang.com/",
                 icon: "/navigation/ttt.png"

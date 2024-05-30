@@ -45,8 +45,8 @@ const MenuList = [
           path: "/Asset/Subdomain",
         },
         {
-          name: "aside.dirscan",
-          path: "/Asset/search_domain_info",
+          name: "aside.search_domain_info",
+          path: "/Asset/Ipdomain",
         },
       ]
     },
@@ -65,7 +65,7 @@ const MenuList = [
         },
         {
           name: "aside.agent_pool",
-          path: "/Asset/AgentPool",
+          path: "/SpaceEngine/AgentPool",
         },
       ]
     },
