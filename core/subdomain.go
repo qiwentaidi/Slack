@@ -28,7 +28,7 @@ var (
 
 // 初始化IP纯真库
 func InitQqwry(qqwryFile string) {
-	fs, err := os.OpenFile(util.HomeDir()+qqwryFile, os.O_RDONLY, 0777)
+	fs, err := os.OpenFile(qqwryFile, os.O_RDONLY, 0777)
 	if err != nil {
 		logger.NewDefaultLogger().Debug("qqwry open err:" + err.Error())
 		return

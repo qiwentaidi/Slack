@@ -5,6 +5,7 @@ go 1.21
 toolchain go1.21.6
 
 require (
+	github.com/XinRoom/go-portScan v1.4.2
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jlaffaye/ftp v0.2.0
@@ -13,19 +14,39 @@ require (
 	github.com/miekg/dns v1.1.57
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/mozillazg/go-pinyin v0.20.0
+	github.com/panjf2000/ants/v2 v2.9.1
 	github.com/sijms/go-ora/v2 v2.8.6
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stacktitan/smb v0.0.0-20190531122847-da9a425dceb8
 	github.com/tomatome/grdp v0.1.0
-	github.com/wailsapp/wails/v2 v2.8.0
+	github.com/wailsapp/wails/v2 v2.8.2
 	github.com/zmap/zcrypto v0.0.0-20231219022726-a1f61fb1661c
-	golang.org/x/crypto v0.22.0
-	golang.org/x/net v0.24.0
-	golang.org/x/text v0.14.0
+	golang.org/x/crypto v0.23.0
+	golang.org/x/net v0.25.0
+	golang.org/x/text v0.15.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
+	github.com/andybalholm/cascadia v1.3.2 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/google/gopacket v1.1.19 // indirect
+	github.com/gorilla/css v1.0.0 // indirect
+	github.com/jackpal/gateway v1.0.15 // indirect
+	github.com/libp2p/go-netroute v0.2.1 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.23 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/projectdiscovery/stringsutil v0.0.2 // indirect
+	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/twmb/murmur3 v1.1.8 // indirect
+	golang.org/x/time v0.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+require (
+	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
@@ -60,7 +81,7 @@ require (
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

@@ -136,3 +136,93 @@ func (*File) WriteFile(filetype, path, content string) bool {
 	err := os.WriteFile(path, buf, 0644)
 	return err == nil
 }
+
+// type Records struct {
+// 	Fields []string
+// }
+
+// func (*File) HunterRemoveDuplicates(filename string) bool {
+// 	// 打开 CSV 文件
+// 	file, err := os.Open(filename)
+// 	if err != nil {
+// 		fmt.Printf("Cannot access file %s: %v\n", filename, err)
+// 		return false
+// 	}
+// 	defer file.Close()
+
+// 	// 创建 CSV 读取器
+// 	reader := csv.NewReader(file)
+
+// 	// 读取 CSV 文件头
+// 	headers, err := reader.Read()
+// 	if err != nil {
+// 		fmt.Printf("Error reading headers: %v\n", err)
+// 		return false
+// 	}
+// 	// 使用 map 去重
+// 	urlRecords := make(map[string]Records)
+// 	for {
+// 		record, err := reader.Read()
+// 		if err != nil {
+// 			if err.Error() == "EOF" {
+// 				break
+// 			}
+// 			fmt.Printf("Error reading record: %v\n", err)
+// 		}
+// 		// 获取URL字段进行初步去重
+// 		url := record[4]
+// 		urls = append(urls, url)
+// 		if _, exists := urlRecords[url]; !exists {
+// 			urlRecords[url] = Records{
+// 				Fields: record,
+// 			}
+// 		}
+// 	}
+
+// 	// 第二轮去重，按 ip-port-title
+// 	uniqueRecords := make(map[string]Records)
+// 	for _, record := range urlRecords {
+// 		fields := record.Fields
+// 		ip, port, title := fields[0], fields[1], fields[5]
+// 		key := fmt.Sprintf("%s-%s-%s", ip, port, title)
+// 		ips = append(ips, ip)
+// 		if _, exists := uniqueRecords[key]; !exists {
+// 			uniqueRecords[key] = Records{
+// 				Fields: fields,
+// 			}
+// 		}
+// 	}
+
+// 	// 创建输出文件
+// 	outFile, err := os.Create(getOutputFilename(filename))
+// 	if err != nil {
+// 		fmt.Printf("err: %v\n", err)
+// 		return false
+// 	}
+// 	defer outFile.Close()
+
+// 	// 创建 CSV 写入器
+// 	writer := csv.NewWriter(outFile)
+// 	defer writer.Flush()
+
+// 	// 写入 CSV 文件头
+// 	if err := writer.Write(headers); err != nil {
+// 		fmt.Printf("Error writing headers: %v\n", err)
+// 		return false
+// 	}
+
+// 	// 写入唯一记录
+// 	for _, record := range uniqueRecords {
+// 		if err := writer.Write(record.Fields); err != nil {
+// 			fmt.Printf("Error writing record: %v\n", err)
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
+
+// func getOutputFilename(inputFile string) string {
+// 	ext := filepath.Ext(inputFile)
+// 	name := strings.TrimSuffix(inputFile, ext)
+// 	return fmt.Sprintf("%s_removeDuplicates%s", name, ext)
+// }

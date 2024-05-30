@@ -6,6 +6,7 @@ import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, AssetHunter } fr
 import global from "../../global"
 import { ExportAssetToXlsx } from '../../export'
 import { onMounted } from 'vue';
+import { sleep } from "../../util";
 // 初始化时调用
 onMounted(() => {
     Init()
@@ -25,7 +26,7 @@ const from = reactive({
     domains: [{}],
     correctName: [{}],
     getColumnData(prop: string): any[] {
-        return su.map((item: any) => item[prop]);
+        return su.value.map((item: any) => item[prop]);
     }
 })
 
@@ -36,12 +37,12 @@ interface CompanyInfo {
     Domains: string[]
 }
 
-var su = [] as CompanyInfo[]
+var su = ref([] as CompanyInfo[])
 const hu = ref([{}])
 const we = ref([{}])
 
 function Init() {
-    su = [];
+    su.value = [];
     hu.value = [];
     we.value = [];
 }
@@ -81,14 +82,14 @@ function Collect() {
             from.log += `[INF] 正在收集${companyName}的子公司信息\n`
             if (typeof companyName === 'string') {
                 const result = await SubsidiariesAndDomains(companyName, from.defaultHold);
+                console.log(result)
                 if (Array.isArray(result.Asset) && result.Asset.length > 0) {
                     for (const item of result.Asset) {
-                        su.push({
+                        su.value.push({
                             CompanyName: item.CompanyName,
                             Holding: item.Holding,
                             Investment: item.Investment,
                             Domains: item.Domains,
-                           
                         })
                     }
                 }
@@ -138,7 +139,7 @@ async function huntersearch() {
         })
         return
     }
-    if (su.length <= 1) {
+    if (su.value.length <= 1) {
         ElMessage({
             showClose: true,
             message: '请先查询控股企业信息再继续资产数量查询',
@@ -193,12 +194,6 @@ async function huntersearch() {
         )
     }
 }
-
-function sleep(time: number) {
-    return new Promise((resolve) => setTimeout(resolve, time));
-}
-
-
 </script>
 
 <template>
@@ -247,9 +242,8 @@ function sleep(time: number) {
                     <el-table-column prop="Investment" label="投资数额" :show-overflow-tooltip="true" />
                     <el-table-column prop="Domains" label="域名">
                         <template #default="scope">
-                            <div class="finger-container">
-                                <el-tag v-if="scope.row.Domains.length > 0"
-                                    v-for="domain in scope.row.Domains" :key="domain">{{ domain
+                            <div class="finger-container" v-if="scope.row.Domains.length > 0">
+                                <el-tag v-for="domain in scope.row.Domains" :key="domain">{{ domain
                                     }}</el-tag>
                             </div>
                         </template>

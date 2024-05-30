@@ -118,17 +118,19 @@ func GetCompanyID(company string) (string, string) {
 	data := make(map[string]interface{})
 	data["keyword"] = company
 	bytesData, _ := json.Marshal(data)
-	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-tempest/search/suggest/v3", posthead, bytes.NewReader(bytesData), 10, clients.DefaultClient())
+	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-tempest/search/suggest/v3", posthead, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
 	var qs TycSearchID
-	json.Unmarshal([]byte(string(b)), &qs)
+	if err = json.Unmarshal(b, &qs); err != nil {
+		logger.NewDefaultLogger().Debug(err.Error())
+	}
 	time.Sleep(time.Second * 2)
 	if len(qs.Data) > 0 { // 先走接口不会进行模糊匹配,如果匹配不到值那就走模糊查询
 		return qs.Data[0].GraphID, qs.Data[0].ComName
 	} else {
-		_, b, err := clients.NewRequest("GET", "https://www.tianyancha.com/search?key="+url.QueryEscape(company), gethead, nil, 10, clients.DefaultClient())
+		_, b, err := clients.NewRequest("GET", "https://www.tianyancha.com/search?key="+url.QueryEscape(company), gethead, nil, 10, true, clients.DefaultClient())
 		if err != nil {
 			logger.NewDefaultLogger().Debug(err.Error())
 		}
@@ -171,7 +173,7 @@ func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset []Com
 	data["percentLevel"] = "-100"
 	data["category"] = "-100"
 	bytesData, _ := json.Marshal(data)
-	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-company-background/company/investListV2", posthead, bytes.NewReader(bytesData), 10, clients.DefaultClient())
+	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-company-background/company/investListV2", posthead, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
@@ -191,6 +193,7 @@ func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset []Com
 			}
 		}
 	}
+	fmt.Printf("holdasset: %v\n", holdasset)
 	return holdasset, logs
 }
 
@@ -269,7 +272,7 @@ type OfficialAccounts struct {
 
 // 获取微信公众号信息
 func WeChatOfficialAccounts(companyName, companyId string) (asset [][]string, logs string) {
-	_, b, err := clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize=1&pageNum=1", gethead, nil, 10, clients.DefaultClient())
+	_, b, err := clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize=1&pageNum=1", gethead, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 		return nil, logs
@@ -281,7 +284,7 @@ func WeChatOfficialAccounts(companyName, companyId string) (asset [][]string, lo
 		return nil, logs
 	}
 
-	_, b, err = clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize="+fmt.Sprint(oa.Data.Count)+"&pageNum=1", gethead, nil, 10, clients.DefaultClient())
+	_, b, err = clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize="+fmt.Sprint(oa.Data.Count)+"&pageNum=1", gethead, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 		return nil, logs

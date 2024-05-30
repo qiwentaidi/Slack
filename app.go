@@ -11,13 +11,15 @@ import (
 	"net/url"
 	"os"
 	"slack-wails/core"
+	alibaba "slack-wails/core/druid"
 	"slack-wails/core/info"
 	"slack-wails/core/jsfind"
 	"slack-wails/core/portscan"
 	"slack-wails/core/space"
+	"slack-wails/core/waf"
 	"slack-wails/core/webscan"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/gonmap"
+	"slack-wails/lib/update"
 	"slack-wails/lib/util"
 	"strings"
 	"sync"
@@ -35,17 +37,20 @@ type App struct {
 	cdnFile          string
 	qqwryFile        string
 	avFile           string
+	defaultPath      string
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
+	home := util.HomeDir()
 	return &App{
-		workflowFile:     "/slack/config/workflow.yaml",
-		webfingerFile:    "/slack/config/webfinger.yaml",
-		activefingerFile: "/slack/config/dir.yaml",
-		cdnFile:          "/slack/config/cdn.yaml",
-		qqwryFile:        "/slack/config/qqwry.dat",
-		avFile:           "/slack/config/antivirues.yaml",
+		workflowFile:     home + "/slack/config/workflow.yaml",
+		webfingerFile:    home + "/slack/config/webfinger.yaml",
+		activefingerFile: home + "/slack/config/dir.yaml",
+		cdnFile:          home + "/slack/config/cdn.yaml",
+		qqwryFile:        home + "/slack/config/qqwry.dat",
+		avFile:           home + "/slack/config/antivirues.yaml",
+		defaultPath:      home + "/slack",
 	}
 }
 
@@ -104,17 +109,13 @@ func (a *App) GoFetch(method, target, body string, headers []map[string]string, 
 			Body:   "",
 		}
 	}
-	client := clients.DefaultClient()
-	if proxy.Enabled {
-		client, _ = clients.SelectProxy(&proxy, client)
-	}
 	hhhhheaders := http.Header{}
 	for _, head := range headers {
 		for k, v := range head {
 			hhhhheaders.Set(k, v)
 		}
 	}
-	resp, b, err := clients.NewRequest(method, target, hhhhheaders, bytes.NewReader([]byte(body)), 10, client)
+	resp, b, err := clients.NewRequest(method, target, hhhhheaders, bytes.NewReader([]byte(body)), 10, true, clients.JudgeClient(proxy))
 	if err != nil {
 		return &Response{
 			Error:  true,
@@ -170,14 +171,25 @@ func (a *App) System(content string, mode int) [][]string {
 	}
 }
 
-func (a *App) Transcoding(crypt []string, input string, mode int) string {
-	var result string
-	if mode == 0 { // 加密
-		core.RecursiveEncrypt(crypt, input, &result)
-	} else {
-		core.RecursiveDecrypt(crypt, input, &result)
-	}
-	return result
+func (a *App) CyberChefLocalServer() {
+	go func() {
+		// 定义要服务的目录
+		dir := util.HomeDir() + "/slack/CyberChef/"
+		// 创建文件服务器
+		fs := http.FileServer(http.Dir(dir))
+
+		// 设置路由，将所有请求重定向到文件服务器
+		http.Handle("/", fs)
+		// port, err := freeport.GetFreePort()
+		// if err != nil {
+		// 	return
+		// }
+		// 指定一个随机端口, 启动HTTP服务器
+		err := http.ListenAndServe(fmt.Sprintf(":%d", 8731), nil)
+		if err != nil {
+			return
+		}
+	}()
 }
 
 func (a *App) ExtractIP(text string) string {
@@ -225,7 +237,7 @@ func (a *App) CheckCdn(domain, dns1, dns2 string) string {
 				}
 			}
 		}
-		result = fmt.Sprintf("域名: %v 解析到IP为: %v CNAME: %v\n", domain, strings.Join(ips, ","), cnames)
+		result = fmt.Sprintf("域名: %v 解析到IP为: %v CNAME: %v\n", domain, strings.Join(ips, ","), strings.Join(cnames, ","))
 	} else {
 		result = fmt.Sprintf("域名: %v 解析失败,%v\n", domain, err)
 	}
@@ -350,7 +362,7 @@ func (a *App) PathRequest(method, url string, timeout int, bodyExclude string, r
 			header.Set(temp[0], temp[1])
 		}
 	}
-	resp, body, err := clients.NewRequest(method, url, header, nil, timeout, client)
+	resp, body, err := clients.NewRequest(method, url, header, nil, timeout, true, client)
 	if err != nil {
 		return pd
 	}
@@ -378,45 +390,13 @@ func (a *App) HostAlive(targets []string, Ping bool) []string {
 	return portscan.CheckLive(targets, Ping)
 }
 
-type PortResult struct {
-	Status    bool
-	Server    string
-	Link      string
-	HttpTitle string
+func (a *App) PortCheck(ip string, port, timeout int) portscan.PortResult {
+	return portscan.Connect(ip, port, timeout)
 }
 
-func (a *App) PortCheck(ip string, port, timeout int) PortResult {
-	var pr PortResult
-	scanner := gonmap.New()
-	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout))
-	switch status {
-	case gonmap.Closed:
-		pr.Status = false
-	// filter 未知状态
-	case gonmap.Unknown:
-		pr.Status = true
-		pr.Server = "filter"
-	default:
-		pr.Status = true
-	}
-	if response != nil {
-		if response.FingerPrint.Service != "" {
-			pr.Server = response.FingerPrint.Service
-		} else {
-			pr.Server = "unknow"
-		}
-		pr.Link = fmt.Sprintf("%v://%v:%v", pr.Server, ip, port)
-		if pr.Server == "http" || pr.Server == "https" {
-			if _, b, err := clients.NewRequest("GET", pr.Link, nil, nil, 10, clients.DefaultClient()); err == nil {
-				if match := util.RegTitle.FindSubmatch(b); len(match) > 1 {
-					pr.HttpTitle = util.Str2UTF8(string(match[1]))
-				} else {
-					pr.HttpTitle = "-"
-				}
-			}
-		}
-	}
-	return pr
+func (a *App) SynPortCheck(ips []string, ports []int, timeout int) {
+	portscan.SynScan(a.ctx, ips, util.IntArrayToUint16Array(ports), timeout)
+	runtime.EventsEmit(a.ctx, "synScanComplete", "done")
 }
 
 // 端口暴破
@@ -467,7 +447,7 @@ func (a *App) FofaTips(query string) *space.TipsResult {
 	if err != nil {
 		return &ts
 	}
-	json.Unmarshal([]byte(string(b)), &ts)
+	json.Unmarshal(b, &ts)
 	return &ts
 }
 
@@ -487,12 +467,12 @@ func (a *App) Sock5Connect(ip string, port, timeout int, username, password stri
 	if err != nil {
 		return false
 	}
-	_, _, err = clients.NewRequest("GET", "http://www.baidu.com/", nil, nil, timeout, client)
+	_, _, err = clients.NewRequest("GET", "http://www.baidu.com/", nil, nil, timeout, true, client)
 	return err == nil
 }
 
 func (a *App) IconHash(target string) string {
-	_, b, err := clients.NewRequest("GET", target, nil, nil, 10, clients.DefaultClient())
+	_, b, err := clients.NewSimpleGetRequest(target, clients.DefaultClient())
 	if err != nil {
 		return ""
 	}
@@ -506,11 +486,7 @@ type AliveTarget struct {
 }
 
 func (a *App) CheckTarget(host string, proxy clients.Proxy) *AliveTarget {
-	client := clients.DefaultClient()
-	if proxy.Enabled {
-		client, _ = clients.SelectProxy(&proxy, client)
-	}
-	protocolURL, err := clients.IsWeb(host, client)
+	protocolURL, err := clients.IsWeb(host, clients.JudgeClient(proxy))
 	if err != nil {
 		return &AliveTarget{
 			Status:      false,
@@ -529,23 +505,13 @@ type InfoResult struct {
 	Length       int
 	Title        string
 	Fingerprints []string
+	IsWAF        bool
+	WAF          string
 }
 
 // 仅在执行时调用一次
 func (a *App) InitRule() bool {
-	webscan.FingerprintDB = nil
-	webscan.WorkFlowDB = nil
-	if err := webscan.InitFingprintDB(util.HomeDir() + a.webfingerFile); err != nil {
-		return false
-	}
-	if err := webscan.InitActiveScanPath(util.HomeDir() + a.activefingerFile); err != nil {
-		return false
-	}
-
-	if err := webscan.InitWorkflow(util.HomeDir() + a.workflowFile); err != nil {
-		return false
-	}
-	return true
+	return webscan.InitAll(a.webfingerFile, a.activefingerFile, a.workflowFile)
 }
 
 // webscan
@@ -555,10 +521,7 @@ func (a *App) FingerLength() int {
 }
 
 func (a *App) FingerScan(target string, proxy clients.Proxy) *InfoResult {
-	var client = clients.DefaultClient()
-	if proxy.Enabled {
-		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
-	}
+	client := clients.JudgeClient(proxy)
 	if !strings.HasPrefix(target, "http") {
 		if fulltarget, err := clients.IsWeb(target, client); err != nil {
 			return &InfoResult{
@@ -571,7 +534,7 @@ func (a *App) FingerScan(target string, proxy clients.Proxy) *InfoResult {
 	}
 	u := webscan.HostPort(target)
 	banner := webscan.GetBanner(&u)
-	resp, body, _ := clients.NewRequest("GET", target, nil, nil, 10, client)
+	resp, body, _ := clients.NewSimpleGetRequest(target, client)
 	if resp == nil {
 		return &InfoResult{
 			URL:        target,
@@ -583,16 +546,17 @@ func (a *App) FingerScan(target string, proxy clients.Proxy) *InfoResult {
 	ti := &webscan.TargetINFO{
 		HeadeString:   string(headers),
 		ContentType:   content_type,
-		Cert:          webscan.GetTLSString(u.Protocol, fmt.Sprintf("%s:%d", u.Host, u.Port)),
+		Cert:          webscan.GetTLSString(u.Scheme, fmt.Sprintf("%s:%d", u.Host, u.Port)),
 		BodyString:    string(body),
 		Path:          u.Path,
 		Title:         title,
 		Server:        server,
 		ContentLength: len(body),
 		Port:          u.Port,
-		IconHash:      webscan.FaviconHash(target, clients.DefaultClient()),
+		IconHash:      webscan.FaviconHash(u.Scheme, target, clients.DefaultClient()),
 		StatusCode:    resp.StatusCode,
 		Banner:        banner,
+		Waf:           *waf.IsWAF(u.Host),
 	}
 	return &InfoResult{
 		URL:          target,
@@ -600,19 +564,18 @@ func (a *App) FingerScan(target string, proxy clients.Proxy) *InfoResult {
 		Length:       ti.ContentLength,
 		Title:        ti.Title,
 		Fingerprints: webscan.FingerScan(ti, webscan.FingerprintDB),
+		IsWAF:        ti.Waf.Exsits,
+		WAF:          ti.Waf.Name,
 	}
 }
 
 func (a *App) ActiveFingerScan(target string, proxy clients.Proxy) []InfoResult {
 	var irs []InfoResult
-	var client = clients.DefaultClient()
-	if proxy.Enabled {
-		client, _ = clients.SelectProxy(&proxy, clients.DefaultClient())
-	}
+	client := clients.JudgeClient(proxy)
 	u := webscan.HostPort(target)
 	for fingername, paths := range webscan.Sensitive {
 		for _, path := range paths {
-			resp, body, _ := clients.NewRequest("GET", target+path, nil, nil, 10, client)
+			resp, body, _ := clients.NewSimpleGetRequest(target+path, client)
 			if resp == nil {
 				return nil
 			}
@@ -669,14 +632,12 @@ func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucl
 		pe := nc.TargetBindFingerPocs(target, fingerprints)
 		return nc.CallerFP(pe)
 	} else {
-		keys := strings.Split(keywords, ",")
+		keys := []string{}
+		if keywords != "" {
+			keys = strings.Split(keywords, ",")
+		}
 		return nc.CallerAP(target, keys)
 	}
-	// go func(ctx context.Context) {
-	// 	for {
-	// 		runtime.EventsEmit(ctx, "callback_nuclei_scanner", "")
-	// 	}
-	// }(a.ctx)
 }
 
 func (a *App) NucleiEnabled(nucleiPath string) bool {
@@ -690,18 +651,13 @@ func (a *App) WebPocLength() int {
 // hunter
 
 func (a *App) HunterTips(query string) *space.HunterTipsResult {
-	var ts space.HunterTipsResult
-	bs64 := space.HunterBaseEncode(query)
-	_, b, err := clients.NewRequest("GET", "https://hunter.qianxin.com/api/recommend?keyword="+bs64, nil, nil, 10, clients.DefaultClient())
-	if err != nil {
-		return &ts
-	}
-	json.Unmarshal([]byte(string(b)), &ts)
-	return &ts
+	return space.SearchHunterTips(query)
 }
 
 func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, deduplication bool) *space.HunterResult {
-	return space.HunterApiSearch(api, query, pageSize, pageNum, times, asset, deduplication)
+	hr := space.HunterApiSearch(api, query, pageSize, pageNum, times, asset, deduplication)
+	time.Sleep(time.Second * 2)
+	return hr
 }
 
 func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
@@ -748,7 +704,7 @@ func (a *App) WebIconMd5(target string) string {
 	if _, err := url.Parse(target); err != nil {
 		return ""
 	}
-	_, body, err := clients.NewRequest("GET", target, nil, nil, 10, clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(target, clients.DefaultClient())
 	if err != nil {
 		return ""
 	}
@@ -756,4 +712,29 @@ func (a *App) WebIconMd5(target string) string {
 	hasher.Write(body)
 	sum := hasher.Sum(nil)
 	return hex.EncodeToString(sum)
+}
+
+func (a *App) UseDruid(target string, attackType int, proxy clients.Proxy) (result []string) {
+	druid := alibaba.NewDruid()
+	if attackType == 1 {
+		result, _ = druid.LoginBrute(target, clients.JudgeClient(proxy))
+	} else {
+		result, _ = druid.GetSession(target, clients.JudgeClient(proxy))
+	}
+	return
+}
+
+func (a *App) DownloadCyberChef(url string) error {
+	cyber := "/slack/CyberChef.zip"
+	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath)
+	if err != nil {
+		return err
+	}
+	runtime.EventsEmit(a.ctx, "downloadComplete", fileName)
+	uz := util.NewUnzip()
+	if _, err := uz.Extract(util.HomeDir()+cyber, a.defaultPath); err != nil {
+		return err
+	}
+	os.Remove(util.HomeDir() + cyber)
+	return nil
 }

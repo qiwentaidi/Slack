@@ -17,12 +17,12 @@ const form = reactive({
     cert: false,
     tips: '',
     fofaImg: [
-        'fofa1.png',
-        'fofa2.png',
-        'fofa3.png',
-        'fofa4.png',
-        'fofa5.png',
-        'fofa6.png',
+        '/fofa_syntax/fofa1.png',
+        '/fofa_syntax/fofa2.png',
+        '/fofa_syntax/fofa3.png',
+        '/fofa_syntax/fofa4.png',
+        '/fofa_syntax/fofa5.png',
+        '/fofa_syntax/fofa6.png',
     ],
     loadAll: [] as LinkItem[],
     syntaxdialog: false,
@@ -128,7 +128,7 @@ const table = reactive({
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         loading.value = true
-        FofaSearch(form.query, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+        FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
             form.tips = result.Message + " 共查询到数据:" + result.Total + "条"
             if (result.Status == false) {
                 return
@@ -142,7 +142,7 @@ const table = reactive({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         loading.value = true
-        FofaSearch(form.query, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+        FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
             form.tips = result.Message + " 共查询到数据:" + result.Total + "条"
             if (result.Status == false) {
                 return
@@ -249,7 +249,7 @@ async function CopyURL() {
         <el-form-item label="查询条件">
             <div class="head">
                 <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                    @select="entry.handleSelect" :trigger-on-focus="false" debounce="1000" style="width: 100%;">
+                    @select="entry.handleSelect" :trigger-on-focus="false" :debounce="1000" style="width: 100%;">
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />

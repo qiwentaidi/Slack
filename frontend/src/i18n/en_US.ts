@@ -34,7 +34,17 @@ export default {
         'yx_log': 'Logs',
         'issue': 'New Issue',
         'jsfinder': 'JSFinder',
-        'fofa': 'FOFA'
+        'fofa': 'FOFA',
+        'navigation': 'Online Navigation',
+        'app_navigation': 'Application Navigation',
+        'exp': 'Vulnerability Exploitation',
+    },
+    navigator: {
+        'enterprise': 'Enterprise and filing information inquiry',
+        'domaininfo': 'IP domain name information query',
+        'threat_intelligence': 'Threat Intelligence Query',
+        'technical_forum': 'Technical Forum',
+        'dnslog': 'Dnslog',
     },
     setting: {
         'username': 'Username',
@@ -46,7 +56,7 @@ export default {
         'proxy': 'Proxy',
         'save': 'Save',
         'test_agent': 'Test Agent',
-        'engine': 'Nulcei Engine',
+        'engine': 'Nuclei Engine',
         "nuclei_placeholder1": "When there is no environment variable for Nuclei, it needs to be configured here. If it exists, it does not need to be filled in",
         "nuclei_placeholder2": "Please fill in the complete path of Nuclei",
     }

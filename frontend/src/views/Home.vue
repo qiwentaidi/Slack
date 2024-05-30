@@ -1,96 +1,74 @@
 <script setup lang="ts">
+import { InitConfigFile } from "../config";
 import global from "../global";
-import { onMounted } from 'vue';
-import { BrowserOpenURL } from '../../wailsjs/runtime'
-import { CheckFileStat, InitConfig, UserHomeDir } from '../../wailsjs/go/main/File';
-import { ElNotification } from 'element-plus';
-import Loading from '../components/Loading.vue';
+import { onMounted, ref, computed } from 'vue';
+import Navigation from './Navigation.vue'
+import { Search } from "@element-plus/icons-vue";
+import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
 // 初始化时调用
 onMounted(async () => {
-  LoadConfig() // 加载配置信息
-  let cfg = await CheckFileStat(await UserHomeDir() + "/slack")
-  if (!cfg) {
-    ElNotification({
-      duration: 0,
-      message: '未检测到配置文件，正在初始化...',
-      icon: Loading,
-    });
-    if (await InitConfig()) {
-      ElNotification.closeAll()
-      ElNotification({
-        message: "配置文件初始化成功!",
-        type: "success",
-      });
-    } else {
-      ElNotification.closeAll()
-      ElNotification({
-        title: "无法下载配置文件",
-        message: "请自行到https://gitee.com/the-temperature-is-too-low/slack-poc/releases/下载config.zip并解压到用户根目录下的/slack/文件夹下!",
-        type: "warning",
-      });
-    }
-  }
+  await InitConfigFile()
 });
 
-function LoadConfig() {
-  const allLocaolStorage = [
-    {
-      key: "scan",
-      value: global.scan,
-    },
-    {
-      key: "proxy",
-      value: global.proxy,
-    },
-    {
-      key: "space",
-      value: global.space,
-    },
-    {
-      key: "jsfind",
-      value: global.jsfind,
-    },
-    {
-      key: "webscan",
-      value: global.webscan,
-    }
-  ];
-  allLocaolStorage.forEach(item => {
-    const v = localStorage.getItem(item.key)
-    if (v) {
-      Object.assign(item.value, JSON.parse(v));
-    }
-  });
-}
+const searchFilter = ref('')
+const activeCard = ref('local')
+
+const filteredOptions = computed(() => {
+  if (!searchFilter.value) {
+    return global.onlineOptions;
+  }
+  return global.onlineOptions.map(group => ({
+    ...group,
+    value: group.value.filter(item => item.name.toLowerCase().includes(searchFilter.value.toLowerCase()))
+  }));
+});
+
 </script>
 
 <template>
-  <el-container class="el-main">
-    <el-space direction="vertical">
-      <a @click="BrowserOpenURL('https://github.com/qiwentaidi/Slack')" title="前往Github仓库">
-        <img src="/slack.svg" class="logo" />
-      </a>
-      <h2>{{ $t('aside.slogan') }}</h2>
-    </el-space>
-  </el-container>
+  <div style="position: relative;">
+    <el-tabs v-model="activeCard">
+      <el-tab-pane :label="$t('aside.app_navigation')" name="local">
+        <Navigation />
+      </el-tab-pane>
+      <!-- 在线导航 -->
+      <el-tab-pane :label="$t('aside.navigation')" name="online">
+        <el-scrollbar height="85vh">
+          <div v-for="groups in filteredOptions" style="margin-top: 10px; width: 99%;">
+            <el-card style="width: 100%">
+              <div style="margin-bottom: 10px;"><span style="font-weight: bold;">{{ $t(groups.label) }}</span></div>
+              <el-row>
+                <el-col :lg="4" v-for="item in groups.value">
+                  <el-tooltip :content="item.url" placement="top">
+                    <el-result :title="item.name" @click="BrowserOpenURL(item.url)">
+                      <template #icon>
+                        <el-image class="onlineNavIcon" :src="item.icon" />
+                      </template>
+                    </el-result>
+                  </el-tooltip>
+                </el-col>
+              </el-row>
+            </el-card>
+          </div>
+        </el-scrollbar>
+
+      </el-tab-pane>
+    </el-tabs>
+    <div class="custom_eltabs_titlebar" v-if="activeCard == 'online'">
+      <el-input class="input-filter" :suffix-icon="Search" v-model="searchFilter" @input="filteredOptions"
+        placeholder="Filter search"></el-input>
+    </div>
+  </div>
+
 </template>
 
-<style scoped>
-.el-main {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+<style>
+.input-filter {
+  width: 240px;
+  margin-right: 1%;
 }
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.onlineNavIcon .el-image__inner {
+    height: 25px;
+    width: 25px;
 }
 </style>

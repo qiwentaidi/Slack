@@ -15,7 +15,11 @@ export function CheckCdn(arg1:string,arg2:string,arg3:string):Promise<string>;
 
 export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
 
+export function CyberChefLocalServer():Promise<void>;
+
 export function DomainInfo(arg1:string):Promise<string>;
+
+export function DownloadCyberChef(arg1:string):Promise<void>;
 
 export function ExtractIP(arg1:string):Promise<string>;
 
@@ -65,7 +69,7 @@ export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string,arg5
 
 export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Promise<portscan.Burte>;
 
-export function PortCheck(arg1:string,arg2:number,arg3:number):Promise<main.PortResult>;
+export function PortCheck(arg1:string,arg2:number,arg3:number):Promise<portscan.PortResult>;
 
 export function PortParse(arg1:string):Promise<Array<number>>;
 
@@ -79,11 +83,13 @@ export function Subdomain(arg1:string,arg2:string,arg3:string,arg4:number):Promi
 
 export function SubsidiariesAndDomains(arg1:string,arg2:number):Promise<main.TycAssetResult>;
 
+export function SynPortCheck(arg1:Array<string>,arg2:Array<number>,arg3:number):Promise<void>;
+
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
 
 export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<Array<string>>;
 
-export function Transcoding(arg1:Array<string>,arg2:string,arg3:number):Promise<string>;
+export function UseDruid(arg1:string,arg2:number,arg3:clients.Proxy):Promise<Array<string>>;
 
 export function WebIconMd5(arg1:string):Promise<string>;
 

@@ -2,7 +2,7 @@
 import { reactive } from 'vue'
 import { ExtractIP, Fscan2Txt, SelectFile } from '../../../wailsjs/go/main/App'
 import { GetFileContent } from '../../../wailsjs/go/main/File'
-import { Delete, Files, Switch, Setting } from '@element-plus/icons-vue';
+import { Delete, Files } from '@element-plus/icons-vue';
 import { ElNotification } from 'element-plus';
 
 const form = reactive({
@@ -47,59 +47,6 @@ async function ReadFile() {
     }
 }
 
-function convertCIDR(ip: string): string {
-    const regex = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/;
-    const matches = ip.match(regex);
-    if (matches) {
-        const ipAddress = matches[1];
-        const subnetMask = matches[2];
-        const cidr = maskToCidr(subnetMask);
-        return `${ip} => ${ipAddress}/${cidr}`;
-    }
-    return ip;
-}
-
-function maskToCidr(mask: string): number {
-    let maskArray = mask.split(".");
-    // 将每个数字转换成二进制字符串，并拼接成一个32位的二进制字符串
-    let maskBinary = maskArray.map((num) => parseInt(num).toString(2).padStart(8, "0")).join("");
-    // 统计二进制字符串中1的个数，即为cidr的值
-    let cidr = maskBinary.split("").filter((bit) => bit === "1").length;
-    // 返回cidr的值
-    return cidr;
-}
-
-function cidrToRange(cidr: string): string {
-    let [network, prefix] = cidr.split("/");
-    let networkArray = network.split(".");
-    // 将每个数字转换成二进制字符串，并拼接成一个32位的二进制字符串
-    let networkBinary = networkArray.map((num) => parseInt(num).toString(2).padStart(8, "0")).join("");
-    // 根据网络前缀长度，将网络地址的二进制字符串分为网络部分和主机部分
-    let networkPart = networkBinary.slice(0, parseInt(prefix));
-    let hostPart = networkBinary.slice(parseInt(prefix));
-    // 计算主机部分的取值范围，即从全0到全1
-    let minHost = hostPart.replace(/./g, "0");
-    let maxHost = hostPart.replace(/./g, "1");
-    // 将网络部分和主机部分的最小值和最大值拼接起来，得到子网中的最小地址和最大地址的二进制字符串
-    let minBinary = networkPart + minHost;
-    let maxBinary = networkPart + maxHost;
-    // 将最小地址和最大地址的二进制字符串按每8位分割，然后转换成十进制数字，并用点连接起来，得到子网中的最小地址和最大地址的点分十进制形式
-    let minDecimal = minBinary.match(/.{8}/g)!.map((num) => parseInt(num, 2)).join(".");
-    let maxDecimal = maxBinary.match(/.{8}/g)!.map((num) => parseInt(num, 2)).join(".");
-    let range = minDecimal + "-" + maxDecimal;
-    return `${cidr} => ${range}`;
-}
-
-function format() {
-    if (form.input != "") {
-        if (form.current == 0) {
-            form.result = convertCIDR(form.input)
-        } else {
-            form.result = cidrToRange(form.input)
-        }
-    }
-}
-
 function extract() {
     if (form.input != "") {
         ExtractIP(form.input).then(
@@ -129,6 +76,19 @@ function Deduplication() {
     })
     form.result = uniqueArray.join('\n')
 }
+
+// async function HunterCSVremoveDuplicates() {
+//     let filepath = await SelectFile()
+//     let result = await HunterRemoveDuplicates(filepath)
+//     if (result) {
+//         ElNotification({
+//             message: `已去重数据${result.length}条`,
+//             type: 'success'
+//         })
+//     }
+// }
+
+
 </script>
 
 
@@ -155,27 +115,26 @@ function Deduplication() {
                 Fscan结果提取
             </el-button>
 
-            <el-button-group>
-                <el-button @click="extract" style="width: 125px">
-                    <template #icon>
-                        <el-tooltip placement="right">
-                            <template #content>IP提取:
-                                <br />输入任意内容会自动匹配IPV4地址会进行提取并统计C段数量</template>
-                            <QuestionFilled />
-                        </el-tooltip>
-                    </template>
-                    IP提取
-                </el-button>
-                <el-popover placement="left" :width="375" trigger="click">
-                    <template #reference>
-                        <el-button :icon="Switch" style="width: 125px;">IP转换</el-button>
-                    </template>
-                    <el-select v-model="form.current">
-                        <el-option v-for="item in form.options" :key="item.value" :label="item.label"
-                            :value="item.value" @click="format" />
-                    </el-select>
-                </el-popover>
-            </el-button-group>
+            <el-button @click="extract" style="width: 250px">
+                <template #icon>
+                    <el-tooltip placement="right">
+                        <template #content>IP提取:
+                            <br />输入任意内容会自动匹配IPV4地址会进行提取并统计C段数量</template>
+                        <QuestionFilled />
+                    </el-tooltip>
+                </template>
+                IP提取
+            </el-button>
+            <!-- <el-button @click="HunterCSVremoveDuplicates" style="width: 250px">
+                <template #icon>
+                    <el-tooltip placement="right">
+                        <template #content>去重Hunter从WEB端导出的CSV数据
+                            <br />通过IP+端口+网站标题确定唯一性</template>
+                        <QuestionFilled />
+                    </el-tooltip>
+                </template>
+                Hunter资产去重
+            </el-button> -->
             <div style="display: flex;">
                 <el-button @click="Deduplication" style="width: 125px;">
                     <template #icon>
@@ -203,7 +162,7 @@ function Deduplication() {
             </el-space>
         </el-space>
     </div>
-    <el-input v-model="form.result" :rows="5" type="textarea" resize="none" style="height: 75%; margin-top: 10px;" />
+    <el-input v-model="form.result" :rows="5" type="textarea" resize="none" style="height: 70%; margin-top: 10px;" />
 </template>
 <style>
 .el-textarea__inner {

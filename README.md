@@ -42,12 +42,19 @@ Windows
 
 # install wails to run app
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
 git clone https://github.com/qiwentaidi/Slack.git
 cd Slack
 
 # choose one, successfully packaged on build/bin
 wails dev || wails build
 ```
+
+# 首页
+
+![image-20240510214011206](assets/image-20240530185056848.png)
+
+![image-20240510214011206](assets/image-20240530185121324.png)
 
 # 渗透测试
 
@@ -121,11 +128,11 @@ wails dev || wails build
 > Executing: go mod tidy
 > • Generating bindings: 
 > ERROR  
->        package slack-wails
->              imports slack-wails/core/portscan
->              imports github.com/tomatome/grdp/protocol/pdu
->              imports github.com/tomatome/grdp/protocol/t125/gcc
->              imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
+>     package slack-wails
+>           imports slack-wails/core/portscan
+>           imports github.com/tomatome/grdp/protocol/pdu
+>           imports github.com/tomatome/grdp/protocol/t125/gcc
+>           imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
 > ```
 >
 > A：
@@ -134,6 +141,14 @@ wails dev || wails build
 > 1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
 > 2、需要安装GCC环境
 > ```
+> Q: Mac 启动出现安装包损坏
+>
+> A: 
+>
+> ``````
+> 1、在隐私和安全性处运行安装应用为任意来源
+> 2、执行 xattr -c slack-wails_darwin.app
+> ``````
 
 # 联系方式
 

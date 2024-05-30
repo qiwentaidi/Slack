@@ -12,6 +12,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var DnsServers = []string{"223.5.5.5:53", "114.114.114.114:53"}
+
 func Resolution(domain string, servers []string, timeout int) (ips, cname []string, err error) {
 	cname, err = LookupCNAME(domain, servers, timeout)
 	ips, _ = LookupHost(domain, servers, timeout)
@@ -77,7 +79,7 @@ func LookupCNAMEWithServer(domain, domainServer string, timeout int) ([]string, 
 }
 
 func ReadCDNFile(cdnFile string) map[string][]string {
-	yamlData, err := os.ReadFile(util.HomeDir() + cdnFile)
+	yamlData, err := os.ReadFile(cdnFile)
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}

@@ -52,6 +52,15 @@ func ArrayContains[T comparable](t T, array []T) bool {
 	return false
 }
 
+// IntArrayToUint16Array 将 int 数组转换为 uint16 数组
+func IntArrayToUint16Array(intArray []int) []uint16 {
+	uint16Array := make([]uint16, len(intArray))
+	for i, v := range intArray {
+		uint16Array[i] = uint16(v)
+	}
+	return uint16Array
+}
+
 type Pair struct {
 	Key   string
 	Value int

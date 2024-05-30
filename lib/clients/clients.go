@@ -19,6 +19,15 @@ import (
 // 	Proxys   Proxy
 // }
 
+func TestErrorClient() *http.Client {
+	client, _ := SelectProxy(&Proxy{
+		Enabled: true,
+		Mode:    "HTTP",
+		Address: "127.0.0.1",
+		Port:    8080}, DefaultClient())
+	return client
+}
+
 // 跟随页面跳转最多10次
 func DefaultClient() *http.Client {
 	return &http.Client{
@@ -46,8 +55,9 @@ func NotFollowClient() *http.Client {
 	}
 }
 
-func NewRequest(method, url string, headers http.Header, body io.Reader, timeout int, client *http.Client) (*http.Response, []byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+func NewRequest(method, url string, headers http.Header, body io.Reader, timeout int, closeRespBody bool, client *http.Client) (*http.Response, []byte, error) {
+	requestTimeout := time.Duration(timeout) * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 	r, err := http.NewRequest(method, url, body)
 	if err != nil {
@@ -62,15 +72,21 @@ func NewRequest(method, url string, headers http.Header, body io.Reader, timeout
 	if err != nil {
 		return nil, nil, err
 	}
-	if resp != nil {
-		defer resp.Body.Close()
-		if b, err := io.ReadAll(resp.Body); err == nil {
-			return resp, b, nil
-		} else {
-			return nil, nil, err
-		}
+	if resp == nil {
+		return nil, nil, errors.New("response is nil, possible network error or timeout")
 	}
-	return nil, nil, errors.New("resp is nil")
+	if closeRespBody {
+		defer resp.Body.Close()
+	}
+	if b, err := io.ReadAll(resp.Body); err == nil {
+		return resp, b, nil
+	} else {
+		return nil, nil, err
+	}
+}
+
+func NewSimpleGetRequest(url string, client *http.Client) (*http.Response, []byte, error) {
+	return NewRequest("GET", url, nil, nil, 10, true, client)
 }
 
 var (
@@ -92,13 +108,13 @@ func IsWeb(host string, client *http.Client) (string, error) {
 	parsePort := u.Port()
 	switch {
 	case parsePort == "80":
-		_, _, err := NewRequest("GET", HTTP_PREFIX+host, nil, nil, 10, client)
+		_, _, err := NewSimpleGetRequest(HTTP_PREFIX+host, client)
 		if err != nil {
 			return result, err
 		}
 		return HTTP_PREFIX + host, nil
 	case parsePort == "443":
-		_, _, err := NewRequest("GET", HTTPS_PREFIX+host, nil, nil, 10, client)
+		_, _, err := NewSimpleGetRequest(HTTPS_PREFIX+host, client)
 		if err != nil {
 			return result, err
 		}
@@ -106,12 +122,12 @@ func IsWeb(host string, client *http.Client) (string, error) {
 		return HTTPS_PREFIX + host, nil
 
 	default:
-		_, _, err := NewRequest("GET", HTTPS_PREFIX+host, nil, nil, 10, client)
+		_, _, err := NewSimpleGetRequest(HTTPS_PREFIX+host, client)
 		if err == nil {
 			return HTTPS_PREFIX + host, err
 		}
 
-		_, body, err := NewRequest("GET", HTTP_PREFIX+host, nil, nil, 10, client)
+		_, body, err := NewSimpleGetRequest(HTTP_PREFIX+host, client)
 		if err == nil {
 			if strings.Contains(string(body), "<title>400 The plain HTTP request was sent to HTTPS port</title>") {
 				return HTTPS_PREFIX + host, nil

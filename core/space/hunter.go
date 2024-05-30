@@ -64,32 +64,33 @@ func HunterApiSearch(api, query, pageSize, page, startTime, asset string, dedupl
 	}
 	address := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(query) + "&page=" +
 		page + "&page_size=" + pageSize + "&is_web=" + asset + "&port_filter=" + fmt.Sprint(deduplication) + "&start_time=" + hunterStartTime + "&end_time=" + time.Now().Format("2006-01-02")
-	_, b, err := clients.NewRequest("GET", address, nil, nil, 10, clients.DefaultClient())
+	var hr HunterResult
+	_, b, err := clients.NewSimpleGetRequest(address, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
+		return &hr
 	}
-	var hr HunterResult
-	json.Unmarshal([]byte(string(b)), &hr)
-	time.Sleep(time.Second * 2)
+	json.Unmarshal(b, &hr)
 	return &hr
 }
 
-func SearchTotal(api, search string) (int64, string) {
+func SearchTotal(api, search string) (total int64, message string) {
 	current_time := time.Now()
 	before_time := current_time.AddDate(0, -1, 0)
 	addr := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(search) +
 		"&page=1&page_size=1&is_web=3&port_filter=false&start_time=" + before_time.Format("2006-01-02") + "&end_time=" + current_time.Format("2006-01-02")
-	_, b, err := clients.NewRequest("GET", addr, nil, nil, 10, clients.DefaultClient())
+	_, b, err := clients.NewSimpleGetRequest(addr, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
+		return
 	}
 	var hr HunterResult
-	json.Unmarshal([]byte(string(b)), &hr)
-	if hr.Code != 200 {
-		return 0, fmt.Sprintf("%v", hr)
-	} else {
-		return hr.Data.Total, hr.Data.RestQuota
+	json.Unmarshal(b, &hr)
+	if hr.Code == 200 {
+		total = hr.Data.Total
+		message = hr.Data.RestQuota
 	}
+	return total, message
 }
 
 // hunter base64加密接口
@@ -108,4 +109,14 @@ type HunterTipsResult struct {
 		Collect []interface{} `json:"collect"`
 	} `json:"data"`
 	Message string `json:"message"`
+}
+
+func SearchHunterTips(query string) *HunterTipsResult {
+	var ts HunterTipsResult
+	_, b, err := clients.NewSimpleGetRequest("https://hunter.qianxin.com/api/recommend?keyword="+HunterBaseEncode(query), clients.DefaultClient())
+	if err != nil {
+		return &ts
+	}
+	json.Unmarshal(b, &ts)
+	return &ts
 }

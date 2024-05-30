@@ -33,8 +33,8 @@ function cdncheck() {
         domainRegex.test(domain) ? domains.push(domain) : console.log(domain + ' is not a domain')
     }
     from.result += "---域名解析(CDN查询)---:\n"
-    async.eachLimit(domains, 100, (domain: string) => {
-        let result = CheckCdn(from.input, global.scan.dns1, global.scan.dns2)
+    async.eachLimit(domains, 100, async (domain: string) => {
+        let result = await CheckCdn(from.input, global.scan.dns1, global.scan.dns2)
         from.result += result + "\n"
     })
 }

@@ -3,7 +3,6 @@ package core
 import (
 	"os"
 	"regexp"
-	"slack-wails/lib/util"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -70,7 +69,7 @@ var AuthPatchs = []AuthPatch{
 
 func AntivirusIdentify(tasklist, avFile string) ([][]string, error) {
 	var AntivirusResult [][]string
-	yamlData, err := os.ReadFile(util.HomeDir() + avFile)
+	yamlData, err := os.ReadFile(avFile)
 	if err != nil {
 		return nil, err
 	}

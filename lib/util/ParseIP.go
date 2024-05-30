@@ -11,24 +11,24 @@ import (
 var ipv4Regex = `^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
 
 func ParseIPs(ipList []string) (ips []string) {
-	var noip, temp []string
+	var excludeip, temp []string
 	r, _ := regexp.Compile(ipv4Regex)
 	for _, line := range ipList {
 		if strings.Contains(line, "!") {
-			noip = append(noip, ParseIP(line[1:])...)
+			excludeip = append(excludeip, line)
 		} else {
-			temp = append(ips, ParseIP(line)...)
+			ips = append(ips, ParseIP(line)...)
 		}
 	}
-	for _, np := range noip {
-		temp = RemoveElement(ips, np)
+	for _, ep := range excludeip {
+		ips = RemoveElement(ips, ep)
 	}
-	for _, ip := range temp {
+	for _, ip := range ips {
 		if r.MatchString(ip) {
-			ips = append(ips, ip)
+			temp = append(temp, ip)
 		}
 	}
-	return ips
+	return temp
 }
 
 func ParseTarget(text string) []string {

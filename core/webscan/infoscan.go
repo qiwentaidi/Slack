@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"runtime"
+	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/util"
@@ -15,7 +16,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
+
+var iconRels = []string{"icon", "shortcut icon", "apple-touch-icon", "mask-icon"}
 
 type TargetINFO struct {
 	Protocol      string
@@ -31,6 +36,7 @@ type TargetINFO struct {
 	ContentLength int
 	Banner        string // tcp指纹
 	Cert          string // TLS证书
+	Waf           waf.WAF
 }
 
 // DumpResponseHeadersAndRaw returns http headers and response as strings
@@ -187,24 +193,58 @@ func FingerScan(ti *TargetINFO, targetDB []FingerPEntity) []string {
 	return util.RemoveDuplicates(fingerPrintResults)
 }
 
+// parseIcons 解析HTML文档head中的<link>标签中rel属性包含icon信息的href链接
+func parseIcons(doc *goquery.Document) []string {
+	var icons []string
+	doc.Find("head link").Each(func(i int, s *goquery.Selection) {
+		href, exists := s.Attr("href")
+		if exists {
+			// 匹配ICON链接
+			if rel, exists := s.Attr("rel"); exists && util.ArrayContains(rel, iconRels) {
+				icons = append(icons, href)
+			}
+		}
+	})
+	// 找不到自定义icon链接就使用默认的favicon地址
+	if len(icons) == 0 {
+		icons = append(icons, "favicon.ico")
+	}
+	return icons
+}
+
 // 获取favicon hash值
-func FaviconHash(url string, client *http.Client) string {
-	resp, body, err := clients.NewRequest("GET", url+"/favicon.ico", nil, nil, 10, client)
+func FaviconHash(scheme, url string, client *http.Client) string {
+	_, body, err := clients.NewRequest("GET", url, nil, nil, 10, false, client)
 	if err != nil {
 		return ""
 	}
-	if resp.StatusCode == 200 {
-		return util.Mmh3Hash32(util.Base64Encode(body))
-	} else {
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
+	if err != nil {
 		return ""
 	}
+	iconLink := parseIcons(doc)[0]
+	var finalLink string
+	// 如果是完整的链接，则直接请求
+	if strings.HasPrefix(iconLink, "http") {
+		finalLink = iconLink
+		// 如果为 // 开头采用与网站同协议
+	} else if strings.HasPrefix(iconLink, "//") {
+		finalLink = scheme + ":" + iconLink
+	} else {
+		finalLink = url + iconLink
+	}
+	resp, body, err := clients.NewSimpleGetRequest(finalLink, client)
+	if err == nil && resp.StatusCode == 200 {
+		return util.Mmh3Hash32(util.Base64Encode(body))
+	}
+	return ""
 }
 
 type URLINFO struct {
-	Protocol string
-	Host     string
-	Port     int
-	Path     string
+	Scheme string
+	Host   string
+	Port   int
+	Path   string
 }
 
 func HostPort(target string) URLINFO {
@@ -222,15 +262,15 @@ func HostPort(target string) URLINFO {
 		port = 80
 	}
 	return URLINFO{
-		Protocol: u.Scheme,
-		Host:     host,
-		Port:     port,
-		Path:     u.Path,
+		Scheme: u.Scheme,
+		Host:   host,
+		Port:   port,
+		Path:   u.Path,
 	}
 }
 
 func GetBanner(u *URLINFO) string {
-	if strings.HasPrefix(u.Protocol, "http") {
+	if strings.HasPrefix(u.Scheme, "http") {
 		return ""
 	}
 	scanner := gonmap.New()

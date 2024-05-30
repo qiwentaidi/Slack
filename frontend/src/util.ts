@@ -1,5 +1,5 @@
 
-import { ElNotification } from "element-plus";
+import { ElMessage, ElNotification } from "element-plus";
 import global from "./global";
 import { CheckTarget, GoFetch, NucleiEnabled, Sock5Connect } from "../wailsjs/go/main/App";
 import { CheckFileStat, GetFileContent, UserHomeDir } from "../wailsjs/go/main/File";
@@ -27,6 +27,14 @@ export function CopyURLs(result: {}[]) {
 }
 
 export function Copy(content: string) {
+  if (content == "") {
+    ElNotification({
+      message: "Copy data can't be empty",
+      type: "warning",
+      position: 'bottom-right',
+    });
+    return;
+  }
   navigator.clipboard.writeText(content).then(
     function () {
       ElNotification({
@@ -46,14 +54,6 @@ export function Copy(content: string) {
 }
 
 export function CopyALL(filed: string[]) {
-  if (filed.length == 0) {
-    ElNotification({
-      message: "Copy data can't be empty",
-      type: "warning",
-      position: 'bottom-right',
-    });
-    return
-  }
   Copy(filed.join("\n"))
 }
 
@@ -75,6 +75,16 @@ export function validateDomain(domain: string): boolean {
   return regex.test(domain);
 }
 
+export function validateURL(url: string): boolean {
+  try {
+    new URL(url)
+    return true
+  } catch (e) {
+    ElMessage("请输入正确的URL")
+    return false
+  }
+}
+
 export function splitInt(n: number, slice: number): number[] {
   let res: number[] = [];
   while (n > slice) {
@@ -94,16 +104,16 @@ export async function formatURL(host: string): Promise<string[]> {
         target = result.ProtocolURL;
       }
     }
-    urls.push(TrimRightSubString(target, "/"))
+    urls.push(AddRightSubString(target, "/"))
   }
   return urls;
 }
 
-function TrimRightSubString(str: string, sub: string) {
+function AddRightSubString(str: string, sub: string) {
   if (str.endsWith(sub)) {
-    return str.slice(0, -sub.length);
+    return str
   }
-  return str;
+  return str + sub
 }
 
 export function compareVersion(version1: string, version2: string) {
@@ -238,7 +248,7 @@ export async function TestNuclei() {
         type: "success",
         duration: 2000,
       });
-    }else {
+    } else {
       ElNotification({
         type: 'error',
         message: "Nuclei engine is disable",
@@ -260,9 +270,9 @@ export function currentTimestamp() {
 
 const download = {
   RemotePocVersion:
-      "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version",
+    "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version",
   RemoteClientVersion:
-      "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/version",
+    "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/version",
   PocUpdateCentent: 'https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/update',
   ClientUpdateCentent: 'https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update',
 };
@@ -270,44 +280,48 @@ const download = {
 export const check = ({
   // poc
   poc: async function () {
-      let pcfg = await CheckFileStat(await UserHomeDir() + global.PATH.LocalPocVersionFile)
-      if (!pcfg) {
-          global.UPDATE.LocalPocVersion = "版本文件不存在"
-          global.UPDATE.PocStatus = false
-          return
+    let pcfg = await CheckFileStat(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+    if (!pcfg) {
+      global.UPDATE.LocalPocVersion = "版本文件不存在"
+      global.UPDATE.PocStatus = false
+      return
+    } else {
+      global.UPDATE.LocalPocVersion = await GetFileContent(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+    }
+    let resp = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
+    if (resp.Error == true) {
+      global.UPDATE.PocContent = "检测更新失败"
+      global.UPDATE.PocStatus = false
+    } else {
+      global.UPDATE.RemotePocVersion = resp.Body
+      if (compareVersion(global.UPDATE.LocalPocVersion, global.UPDATE.RemotePocVersion) == -1) {
+        global.UPDATE.PocContent = (await GoFetch("GET", download.PocUpdateCentent, "", [{}], 10, null)).Body
+        global.UPDATE.PocStatus = true
       } else {
-          global.UPDATE.LocalPocVersion  = await GetFileContent(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+        global.UPDATE.PocContent = "已是最新版本"
+        global.UPDATE.PocStatus = false
       }
-      let resp = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
-      if (resp.Error == true) {
-          global.UPDATE.PocContent = "检测更新失败"
-          global.UPDATE.PocStatus = false
-      } else {
-          global.UPDATE.RemotePocVersion = resp.Body
-          if (compareVersion(global.UPDATE.LocalPocVersion, global.UPDATE.RemotePocVersion) == -1) {
-              global.UPDATE.PocContent  = (await GoFetch("GET", download.PocUpdateCentent, "", [{}], 10, null)).Body
-              global.UPDATE.PocStatus = true
-          } else {
-              global.UPDATE.PocContent  = "已是最新版本"
-              global.UPDATE.PocStatus = false
-          }
-      }
+    }
   },
   // client
   client: async function () {
-      let resp = await GoFetch("GET", download.RemoteClientVersion, "", [{}], 10, null)
-      if (resp.Error) {
-          global.UPDATE.RemoteClientVersion = "检测更新失败"
-          global.UPDATE.ClientStatus = false
+    let resp = await GoFetch("GET", download.RemoteClientVersion, "", [{}], 10, null)
+    if (resp.Error) {
+      global.UPDATE.RemoteClientVersion = "检测更新失败"
+      global.UPDATE.ClientStatus = false
+    } else {
+      global.UPDATE.RemoteClientVersion = resp.Body
+      if (compareVersion(global.LOCAL_VERSION, global.UPDATE.RemoteClientVersion) == -1) {
+        global.UPDATE.ClientContent = (await GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, null)).Body
+        global.UPDATE.ClientStatus = true
       } else {
-          global.UPDATE.RemoteClientVersion = resp.Body
-          if (compareVersion(global.LOCAL_VERSION, global.UPDATE.RemoteClientVersion) == -1) {
-              global.UPDATE.ClientContent = (await GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, null)).Body
-              global.UPDATE.ClientStatus = true
-          } else {
-              global.UPDATE.ClientContent = "已是最新版本"
-              global.UPDATE.ClientStatus = false
-          }
+        global.UPDATE.ClientContent = "已是最新版本"
+        global.UPDATE.ClientStatus = false
       }
+    }
   }
 })
+
+export function sleep(time: number) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}

@@ -18,8 +18,16 @@ export function CheckTarget(arg1, arg2) {
   return window['go']['main']['App']['CheckTarget'](arg1, arg2);
 }
 
+export function CyberChefLocalServer() {
+  return window['go']['main']['App']['CyberChefLocalServer']();
+}
+
 export function DomainInfo(arg1) {
   return window['go']['main']['App']['DomainInfo'](arg1);
+}
+
+export function DownloadCyberChef(arg1) {
+  return window['go']['main']['App']['DownloadCyberChef'](arg1);
 }
 
 export function ExtractIP(arg1) {
@@ -146,6 +154,10 @@ export function SubsidiariesAndDomains(arg1, arg2) {
   return window['go']['main']['App']['SubsidiariesAndDomains'](arg1, arg2);
 }
 
+export function SynPortCheck(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SynPortCheck'](arg1, arg2, arg3);
+}
+
 export function System(arg1, arg2) {
   return window['go']['main']['App']['System'](arg1, arg2);
 }
@@ -154,8 +166,8 @@ export function ThinkDict(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['ThinkDict'](arg1, arg2, arg3, arg4, arg5);
 }
 
-export function Transcoding(arg1, arg2, arg3) {
-  return window['go']['main']['App']['Transcoding'](arg1, arg2, arg3);
+export function UseDruid(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UseDruid'](arg1, arg2, arg3);
 }
 
 export function WebIconMd5(arg1) {

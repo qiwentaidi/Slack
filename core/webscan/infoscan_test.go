@@ -1,6 +1,8 @@
 package webscan
 
 import (
+	"fmt"
+	"slack-wails/lib/clients"
 	"testing"
 )
 
@@ -48,4 +50,7 @@ func TestInfoscan(t *testing.T) {
 	// cmd := exec.Command("nuclei", "-duc", "-u", pe.URL, "-t", strings.Join(pe.PocFiles, ","))
 	// out, _ := cmd.CombinedOutput()
 	// fmt.Printf("string(out): %v\n", string(out))
+	url := "https://oa.shanghai-cjsw.com/"
+	hash := FaviconHash("https", url, clients.DefaultClient())
+	fmt.Printf("hash: %v\n", hash)
 }

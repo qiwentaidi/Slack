@@ -4,16 +4,8 @@ import global from "./global";
 import Sidebar from "./components/Sidebar.vue";
 import { ArrowRight } from '@element-plus/icons-vue';
 import { useRoute } from "vue-router";
-import { EventsOn } from "../wailsjs/runtime/runtime";
-import { onMounted } from "vue";
 const route = useRoute();
 const showLogger = ref(false);
-const cpu = ref();
-
-onMounted(() => {
-  AddEvent()
-})
-
 
 function breadcrumbItems(label: string) {
   switch (label) {
@@ -24,11 +16,6 @@ function breadcrumbItems(label: string) {
     default:
       return label.slice(1).split('/');
   }
-}
-function AddEvent() {
-  EventsOn("sysInfoPublish", (data) => {
-    cpu.value = data
-  })
 }
 </script>
 

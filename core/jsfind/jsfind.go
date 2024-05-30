@@ -60,7 +60,7 @@ func init() {
 }
 
 func ExtractJS(url string) (allJS []string) {
-	_, body, err := clients.NewRequest("GET", url, nil, nil, 10, clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(url, clients.DefaultClient())
 	if err != nil || body == nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 		return
@@ -83,7 +83,7 @@ func ExtractJS(url string) (allJS []string) {
 func FindInfo(url string, limiter chan bool, wg *sync.WaitGroup) *FindSomething {
 	defer wg.Done()
 	var fs FindSomething
-	_, body, err := clients.NewRequest("GET", url, nil, nil, 10, clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(url, clients.DefaultClient())
 	if err != nil || body == nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 		return &fs

@@ -30,7 +30,7 @@ func WhoisChinaz(domain string) (string, string, string, string, string, string)
 	h := http.Header{}
 	h.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.97")
 	h.Add("Content-Type", "text/html; charset=utf-8")
-	_, b, err := clients.NewRequest("GET", "https://whois.chinaz.com/"+domain, h, nil, 10, clients.DefaultClient())
+	_, b, err := clients.NewRequest("GET", "https://whois.chinaz.com/"+domain, h, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
@@ -67,7 +67,7 @@ func SeoChinaz(domain string) (string, string, string) {
 	h := http.Header{}
 	h.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.97")
 	h.Add("Content-Type", "text/html; charset=utf-8")
-	_, b, err := clients.NewRequest("GET", "https://seo.chinaz.com/"+domain, h, nil, 10, clients.DefaultClient())
+	_, b, err := clients.NewRequest("GET", "https://seo.chinaz.com/"+domain, h, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}

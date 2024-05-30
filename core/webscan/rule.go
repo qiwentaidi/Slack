@@ -104,6 +104,7 @@ func ALLPoc() []string {
 	for _, we := range WorkFlowDB {
 		news = append(news, we.PocsName...)
 	}
+	fmt.Printf("news: %v\n", news)
 	return util.RemoveDuplicates(FullPocName(news))
 }
 
@@ -379,6 +380,21 @@ type WorkFlowEntity struct {
 
 var WorkFlowDB map[string]WorkFlowEntity
 
+func InitAll(webfinger, activefinger, workflow string) bool {
+	FingerprintDB = nil
+	WorkFlowDB = nil
+	if err := InitFingprintDB(webfinger); err != nil {
+		return false
+	}
+	if err := InitActiveScanPath(activefinger); err != nil {
+		return false
+	}
+
+	if err := InitWorkflow(workflow); err != nil {
+		return false
+	}
+	return true
+}
 func InitWorkflow(workflowFile string) error {
 	WorkFlowDB = make(map[string]WorkFlowEntity)
 	data, err := os.ReadFile(workflowFile)

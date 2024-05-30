@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { GoFetch, LoadDirsearchDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
-import { ReadLine, SplitTextArea, Copy } from '../../util'
+import { ReadLine, SplitTextArea, Copy, sleep } from '../../util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 import async from 'async';
-import { Loading, QuestionFilled } from '@element-plus/icons-vue';
+import { QuestionFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '../../global';
 // 初始化时调用
@@ -122,7 +122,7 @@ class Dirsearch {
                         statusCounts[result.Length] = (statusCounts[result.Length] || 0) + 1;
                         if (statusCounts[result.Length] <= config.times) {
                             if (statuscodeFilter.length > 0) {
-                                if (statuscodeFilter.find(number => number === result.Status) != undefined) {
+                                if (statuscodeFilter.find(number => number != result.Status) != undefined) {
                                     dir.value.push({
                                         status: result.Status,
                                         length: result.Length,
@@ -142,6 +142,7 @@ class Dirsearch {
                     }
                 }
                 callback()
+                sleep(config.interval * 1000)
             })
         }, (err: any) => {
             if (err) {
@@ -215,6 +216,7 @@ const config = reactive({
     drawer: false,
     thread: 50,
     timeout: 8,
+    interval: 0,
     times: 5,
     failedCounts: 0,
     exclude: "",
@@ -262,10 +264,13 @@ const config = reactive({
             <el-form-item label="线程(MAX 500):">
                 <el-input-number v-model="config.thread" :min="1" :max="500" />
             </el-form-item>
-            <el-form-item label="超时时长(s):" class="el-margin">
+            <el-form-item label="超时时长(s):">
                 <el-input-number v-model="config.timeout" :min="1" :max="20" />
             </el-form-item>
-            <el-form-item class="el-margin">
+            <el-form-item label="请求间隔(s):">
+                <el-input-number v-model="config.interval" :min="0" :max="60" />
+            </el-form-item>
+            <el-form-item>
                 <template #label>
                     <span>过滤长度重复数据:</span>
                     <el-tooltip placement="left">
@@ -277,7 +282,7 @@ const config = reactive({
                 </template>
                 <el-input-number v-model="config.times" :min="1" :max="10000" />
             </el-form-item>
-            <el-form-item class="el-margin">
+            <el-form-item>
                 <template #label>
                     <span>失败阈值:</span>
                     <el-tooltip placement="left">
@@ -289,7 +294,7 @@ const config = reactive({
                 </template>
                 <el-input-number v-model="config.failedCounts" :min="0" />
             </el-form-item>
-            <el-form-item class="el-margin">
+            <el-form-item>
                 <template #label>
                     <span>扩展名:</span>
                     <el-tooltip placement="left">
@@ -301,7 +306,7 @@ const config = reactive({
                 </template>
                 <el-input v-model="from.exts"></el-input>
             </el-form-item>
-            <el-form-item class="el-margin">
+            <el-form-item>
                 <template #label>
                     <span>过滤响应体:</span>
                     <el-tooltip placement="left">
@@ -313,13 +318,13 @@ const config = reactive({
                 </template>
                 <el-input v-model="config.exclude"></el-input>
             </el-form-item>
-            <el-form-item label="状态码过滤:" class="el-margin">
+            <el-form-item label="状态码过滤:">
                 <el-input v-model="from.statusFilter" placeholder="支持200,300 | 200-300,400-500"></el-input>
             </el-form-item>
-            <el-form-item label="自定义请求头:" class="el-margin">
+            <el-form-item label="自定义请求头:">
                 <el-input v-model="config.headers" placeholder="以键:值形式输入，多行请用换行分割" type="textarea" rows="3"></el-input>
             </el-form-item>
-            <el-form-item class="el-margin">
+            <el-form-item>
                 <template #label>
                     <span>自定义字典:</span>
                     <el-tooltip placement="left">
@@ -330,7 +335,7 @@ const config = reactive({
                     </el-tooltip>
                 </template>
                 <el-input v-model="config.customDict" type="textarea" rows="5"></el-input>
-                <el-button type="primary" :icon="Loading" @click="handleFileChange()"
+                <el-button link @click="handleFileChange()"
                     style="margin-top: 10px;">选择字典(不选择加载默认字典)</el-button>
             </el-form-item>
         </el-form>
@@ -385,9 +390,5 @@ const config = reactive({
 <style>
 .el-drawer__header {
     margin-bottom: 0px;
-}
-
-.el-margin {
-    margin-top: 18px;
 }
 </style>

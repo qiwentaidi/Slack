@@ -2,14 +2,44 @@
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { CopyURLs, SplitTextArea, ReadLine, currentTime } from '../../util'
-import { ExportToXlsx} from '../../export'
+import { ExportToXlsx } from '../../export'
 import async from 'async';
 import { QuestionFilled, CopyDocument, ChromeFilled } from '@element-plus/icons-vue';
-import { PortParse, IPParse, PortCheck, HostAlive, PortBrute, IsRoot } from '../../../wailsjs/go/main/App'
+import { PortParse, IPParse, PortCheck, HostAlive, PortBrute, IsRoot, SynPortCheck } from '../../../wailsjs/go/main/App'
 import { Mkdir, WriteFile, CheckFileStat, GetFileContent, UserHomeDir } from '../../../wailsjs/go/main/File'
-import { BrowserOpenURL } from '../../../wailsjs/runtime'
+import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import global from '../../global'
-import { text } from 'stream/consumers';
+interface PortScanData {
+    Status: boolean
+    IP: string
+    Port: number
+    Server: string
+    Link: string
+    HttpTitle: string
+}
+onMounted(() => {
+    EventsOn("synPortScanLoading", (p: PortScanData) => {
+        table.result.push({
+            host: p.IP,
+            port: p.Port,
+            fingerprint: p.Server,
+            link: p.Link,
+            title: p.HttpTitle,
+        })
+        table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+    });
+    EventsOn("synProgressID", (id: number) => {
+        form.percentage = Number(((id / form.count) * 100).toFixed(2));
+    });
+    EventsOn("synScanComplete", (log: any) => {
+        form.percentage = 100
+        ctrl.runningStatus = false
+    });
+    return () => {
+        EventsOff("synPortScanLoading");
+        EventsOff("synScanComplete");
+    };
+});
 onMounted(async () => {
     if (!await IsRoot()) {
         ElNotification({
@@ -29,42 +59,17 @@ onMounted(async () => {
 const form = reactive({
     activeName: '1',
     target: '',
-    ips: [{}],
     portlist: '',
-    portsList: [{}],
     percentage: 0,
     id: 0,
+    count: 0,
     aliveOptions: ["None", "ICMP", "Ping"],
     currentAliveMoudle: "None",
     scanModuleOptions: ["CONNECT", "SYN"],
     currentScanMoudle: "CONNECT",
 })
 
-const options = [{
-    text: "数据库端口",
-    value: "1433,1521,3306,5432,6379,9200,11211,27017",
-},
-{
-    text: "企业端口",
-    value: "21,22,80,81,135,139,443,445,1433,1521,3306,5432,6379,7001,8000,8080,8089,9000,9200,11211,27017,80,81,82,83,84,85,86,87,88,89,90,91,92,98,99,443,800,801,808,880,888,889,1000,1010,1080,1081,1082,1099,1118,1888,2008,2020,2100,2375,2379,3000,3008,3128,3505,5555,6080,6648,6868,7000,7001,7002,7003,7004,7005,7007,7008,7070,7071,7074,7078,7080,7088,7200,7680,7687,7688,7777,7890,8000,8001,8002,8003,8004,8006,8008,8009,8010,8011,8012,8016,8018,8020,8028,8030,8038,8042,8044,8046,8048,8053,8060,8069,8070,8080,8081,8082,8083,8084,8085,8086,8087,8088,8089,8090,8091,8092,8093,8094,8095,8096,8097,8098,8099,8100,8101,8108,8118,8161,8172,8180,8181,8200,8222,8244,8258,8280,8288,8300,8360,8443,8448,8484,8800,8834,8838,8848,8858,8868,8879,8880,8881,8888,8899,8983,8989,9000,9001,9002,9008,9010,9043,9060,9080,9081,9082,9083,9084,9085,9086,9087,9088,9089,9090,9091,9092,9093,9094,9095,9096,9097,9098,9099,9100,9200,9443,9448,9800,9981,9986,9988,9998,9999,10000,10001,10002,10004,10008,10010,10250,12018,12443,14000,16080,18000,18001,18002,18004,18008,18080,18082,18088,18090,18098,19001,20000,20720,21000,21501,21502,28018,20880",
-},
-{
-    text: "高危端口",
-    value: "21,22,23,53,80,443,8080,8000,139,445,3389,1521,3306,6379,7001,2375,27017,11211",
-},
-{
-    text: "全端口",
-    value: "1-65535"
-},
-{
-    text: "三高一弱",
-    value: "21,22,23,25,53,69,110,111,135,139,143,161,389,445,873,1025,1433,1158,1521,3306,3389,3690,5432,5900,5901,6379,7001,7002,9000,9043,9200,9300,27017,27018,28017,50030,50060,50070,1099,2049,2181,2222,2375,2379,2888,3128,3888,4000,4040,4440,4848,4899,5000,5005,5601,5631,5632,5984,6123,7051,7077,7180,7182,7848,8019,8020,8042,8048,8051,8069,8080,8081,8083,8086,8088,8161,8443,8649,8848,8880,8888,9001,9042,9083,9092,9100,9990,10000,11000,11111,11211,18080,19888,20880,25000,25010,50000,50090,60000,60010,60030"
-},
-{
-    text: "自定义",
-    value: ""
-},
-]
+
 
 // 初始化字典
 async function InitBurteDict() {
@@ -108,24 +113,22 @@ const config = reactive({
 const radio = ref('2')
 
 async function NewScanner() {
-    global.Logger.value += `${currentTime()} Portscan task is loading\n`
+    global.Logger.value += `[INF]${currentTime()} Portscan ${form.currentScanMoudle} moudle is loading\n`
     const ps = new Scanner()
     await ps.PortScanner()
-    if (config.burte) {
-        ps.Burte()
-    }
 }
 
 class Scanner {
     public init() {
         table.result = []
         table.pageContent = []
-        ctrl.runningStatus = true
         form.id = 0
+        form.count = 0
     }
     public async PortScanner() {
         this.init()
-        var count = 0
+        var ips = [] as string[]
+        var portsList = [] as number[]
         const lines = SplitTextArea(form.target)
         let specialTarget = [] as string[]
         let conventionTarget = [] as string[]
@@ -137,14 +140,14 @@ class Scanner {
                 conventionTarget.push(line)
             }
         }
-        form.portsList = await PortParse(form.portlist)
-        form.ips = await IPParse(conventionTarget)
-        if (form.ips == null) {
-            count = specialTarget.length
+        portsList = await PortParse(form.portlist)
+        ips = await IPParse(conventionTarget)
+        if (ips == null) {
+            form.count = specialTarget.length
         } else {
-            count = form.ips.length * form.portsList.length + specialTarget.length
+            form.count = ips.length * portsList.length + specialTarget.length
         }
-        if (count == 0) {
+        if (form.count == 0) {
             ElMessage({
                 showClose: true,
                 message: '可用目标或端口为空',
@@ -152,13 +155,10 @@ class Scanner {
             })
             return
         }
+        ctrl.runningStatus = true
         if (form.currentAliveMoudle != "None") {
             form.currentAliveMoudle === 'ICMP' ? config.ping = false : config.ping = true
-            HostAlive((form.ips as any), config.ping).then(
-                result => {
-                    form.ips = result
-                }
-            )
+            ips = await HostAlive((ips as any), config.ping)
         }
         if (specialTarget.length != 0) {
             global.Logger.value += "[INFO] 存在 192.168.1.1:6379 此类特殊目标优先执行扫描\n"
@@ -176,7 +176,7 @@ class Scanner {
                         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
                     }
                     form.id++;
-                    form.percentage = Number(((form.id / count) * 100).toFixed(2));
+                    form.percentage = Number(((form.id / form.count) * 100).toFixed(2));
                     callback();
                 })
             }, (err: any) => {
@@ -187,9 +187,13 @@ class Scanner {
                 }
             })
         }
-        async.eachSeries(form.ips, (ip: string, callback: () => void) => {
-            global.Logger.value += "[INFO] Portscan " + ip + "，port count " + form.portsList.length + "\n"
-            async.eachLimit(form.portsList, config.thread, (port: number, portCallback: () => void) => {
+        if (form.currentScanMoudle == "SYN") {
+            await SynPortCheck(ips, portsList, 10)
+            return
+        }
+        async.eachSeries(ips, (ip: string, callback: () => void) => {
+            global.Logger.value += "[INFO] Portscan " + ip + "，port count " + portsList.length + "\n"
+            async.eachLimit(portsList, config.thread, (port: number, portCallback: () => void) => {
                 if (!ctrl.runningStatus) {
                     return
                 }
@@ -206,14 +210,19 @@ class Scanner {
                         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
                     }
                     form.id++;
-                    form.percentage = Number(((form.id / count) * 100).toFixed(2));
+                    form.percentage = Number(((form.id / form.count) * 100).toFixed(2));
                     portCallback();
                 });
             }, (err: any) => {
                 callback();
             });
         }, (err: any) => {
+            if (config.burte) {
+                this.Burte()
+            }
             ctrl.runningStatus = false
+            ips = []
+            portsList = []
             global.Logger.value += `${currentTime()} Task is ending\n`
         });
     }
@@ -252,6 +261,7 @@ class Scanner {
             } else {
                 global.Logger.value += "[END] All target port brute have been completed\n"
             }
+            ctrl.runningStatus = false
         });
     }
 }
@@ -288,8 +298,8 @@ const table = reactive({
 
 function updatePorts() {
     const index = Number(radio.value) - 1;
-    if (index >= 0 && index < options.length) {
-        form.portlist = options[index].value;
+    if (index >= 0 && index < global.portGroup.length) {
+        form.portlist = global.portGroup[index].value;
     }
 }
 
@@ -341,7 +351,7 @@ function handleCurrentChange(val: any) {
                 <el-radio value="2">企业端口</el-radio>
                 <el-radio value="3">高危端口</el-radio>
                 <el-radio value="4">全端口</el-radio>
-                <el-radio value="5">自定义</el-radio>
+                <el-radio value="5">三高一弱</el-radio>
             </el-radio-group>
         </el-form-item>
         <el-form-item label="端口列表:">
@@ -362,10 +372,12 @@ function handleCurrentChange(val: any) {
         </template>
         <el-form label-width="auto">
             <el-form-item label="扫描模式:">
-                <el-segmented v-model="form.currentScanMoudle" :options="form.scanModuleOptions" block style="width: 100%;" />
+                <el-segmented v-model="form.currentScanMoudle" :options="form.scanModuleOptions" block
+                    style="width: 100%;" />
             </el-form-item>
             <el-form-item label="存活探测:">
-                <el-segmented v-model="form.currentAliveMoudle" :options="form.aliveOptions" block style="width: 100%;" />
+                <el-segmented v-model="form.currentAliveMoudle" :options="form.aliveOptions" block
+                    style="width: 100%;" />
             </el-form-item>
             <el-form-item label="线程数量:">
                 <el-input-number controls-position="right" v-model="config.thread" :min="1" :max="30000" />
@@ -410,7 +422,8 @@ function handleCurrentChange(val: any) {
                     <el-table-column prop="fingerprint" label="指纹" />
                     <el-table-column prop="link" label="目标">
                         <template #default="scope">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)">
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)"
+                                v-show="scope.row.link != ''">
                             </el-button>
                             {{ scope.row.link }}
                         </template>
@@ -419,8 +432,8 @@ function handleCurrentChange(val: any) {
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
                     <el-progress :text-inside="true" :stroke-width="20" :percentage="form.percentage" color="#5DC4F7"
-                        style="width: 70%;" />
-                    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                        style="width: 50%;" />
+                    <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange"
                         :current-page="table.currentPage" :page-sizes="[10, 20, 50]" :page-size="table.pageSize"
                         layout="total, sizes, prev, pager, next" :total="table.result.length">
                     </el-pagination>
@@ -437,7 +450,7 @@ function handleCurrentChange(val: any) {
                 </el-table>
             </el-tab-pane>
         </el-tabs>
-        <div class="custom_eltabs_titlebar" v-if="form.activeName == '1'">
+        <div class="custom_eltabs_titlebar">
             <el-button-group>
                 <el-button :icon="CopyDocument" @click="CopyURLs(table.result)">复制全部URL</el-button>
                 <el-button @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">

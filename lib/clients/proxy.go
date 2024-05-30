@@ -56,3 +56,11 @@ func SelectProxy(pr *Proxy, client *http.Client) (*http.Client, error) {
 	}
 	return client, nil
 }
+
+func JudgeClient(proxy Proxy) *http.Client {
+	client := DefaultClient()
+	if proxy.Enabled {
+		client, _ = SelectProxy(&proxy, client)
+	}
+	return client
+}

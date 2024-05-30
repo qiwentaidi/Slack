@@ -5,12 +5,12 @@ import { useI18n } from "vue-i18n";
 import about from "./About.vue";
 import updateUI from "./Update.vue";
 import global from "../global";
+import menus from "../router/menu";
 import { check } from "../util";
 onMounted(() => {
   check.client();
   check.poc();
 });
-
 
 const { locale } = useI18n();
 
@@ -29,97 +29,28 @@ const dg = reactive({
   <div class="flex-box-v">
     <el-menu :collapse="true" :router="true" :default-active="$route.path" active-text-color="#fff"
       background-color="#F2F3F5" text-color="#000">
-      <el-menu-item index="/">
-        <el-icon>
-          <svg class="bi bi-house" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd"
-              d="M2 13.5V7h1v6.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V7h1v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5zm11-11V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z" />
-            <path fill-rule="evenodd"
-              d="M7.293 1.5a1 1 0 0 1 1.414 0l6.647 6.646a.5.5 0 0 1-.708.708L8 2.207 1.354 8.854a.5.5 0 1 1-.708-.708L7.293 1.5z" />
-          </svg>
-        </el-icon>
-        <template #title><span>{{ $t("aside.home") }}</span></template>
-      </el-menu-item>
-      <el-sub-menu index="1">
-        <template #title>
+      <template v-for="menu in menus">
+        <el-menu-item v-if="!menu.children" :index="menu.path">
           <el-icon>
-            <Smoking />
+            <img :src="menu.icon" class="custom-svg">
           </el-icon>
-          <span>{{ $t("aside.penetration") }}</span>
-        </template>
-        <el-menu-item index="/Permeation/Webscan">{{
-      $t("aside.webscan")
-    }}</el-menu-item>
-        <el-menu-item index="/Permeation/Portscan">{{
-        $t("aside.portscan")
-      }}</el-menu-item>
-        <el-menu-item index="/Permeation/Dirsearch">{{
-        $t("aside.dirscan")
-      }}</el-menu-item>
-        <el-menu-item index="/Permeation/Jsfinder">JSFinder</el-menu-item>
-        <!-- <el-menu-item index="/Permeation/Pocdetail">{{
-        $t("aside.pocdetail")
-      }}</el-menu-item> -->
-      </el-sub-menu>
-      <el-sub-menu index="2">
-        <template #title>
-          <el-icon>
-            <OfficeBuilding />
-          </el-icon>
-          <span>{{ $t("aside.asset_collection") }}</span>
-        </template>
-        <el-menu-item index="/Asset/Company">{{
-      $t("aside.asset_from_company")
-    }}</el-menu-item>
-        <el-menu-item index="/Asset/Subdomain">{{
-        $t("aside.subdomain_brute_force")
-      }}</el-menu-item>
-        <el-menu-item index="/Asset/Ipdomain">{{
-        $t("aside.search_domain_info")
-      }}</el-menu-item>
-      </el-sub-menu>
-
-      <el-sub-menu index="3">
-        <template #title>
-          <el-icon>
-            <Monitor />
-          </el-icon>
-          <span>{{ $t("aside.space_engine") }}</span>
-        </template>
-        <el-menu-item index="/SpaceEngine/FOFA">FOFA</el-menu-item>
-        <el-menu-item index="/SpaceEngine/Hunter">{{
-      $t("aside.hunter")
-    }}</el-menu-item>
-        <el-menu-item index="/SpaceEngine/AgentPool">{{
-        $t("aside.agent_pool")
-      }}</el-menu-item>
-      </el-sub-menu>
-      <el-sub-menu index="4" style="max-height: 56px">
-        <template #title>
-          <el-icon>
-            <Tools />
-          </el-icon>
-          <span>{{ $t("aside.tools") }}</span>
-        </template>
-        <el-menu-item index="/Tools/Codec">{{
-      $t("aside.en_and_de")
-    }}</el-menu-item>
-        <el-menu-item index="/Tools/System">{{
-        $t("aside.systeminfo")
-      }}</el-menu-item>
-        <el-menu-item index="/Tools/DataHanding">{{
-        $t("aside.data_handing")
-      }}</el-menu-item>
-        <el-menu-item index="/Tools/Memo">{{
-        $t("aside.memorandum")
-      }}</el-menu-item>
-        <el-menu-item index="/Tools/Thinkdict">{{
-        $t("aside.associate_dictionary_generator")
-      }}</el-menu-item>
-        <el-menu-item index="/Tools/AKSK">{{ $t("aside.aksk") }}</el-menu-item>
-      </el-sub-menu>
+          <template #title><span>{{ $t(menu.name) }}</span></template>
+        </el-menu-item>
+        <el-sub-menu :index="menu.path" v-else>
+          <template #title>
+            <el-icon>
+              <component :is="menu.icon" />
+            </el-icon>
+            <span>{{ $t(menu.name) }}</span>
+          </template>
+          <el-menu-item v-for="item in menu.children" :key="item.path" :index="item.path">{{ $t(item.name)
+            }}</el-menu-item>
+        </el-sub-menu>
+      </template>
     </el-menu>
+
     <div class="copy-menu"></div>
+
     <el-menu :collapse="true" active-text-color="#fff" background-color="#F2F3F5" text-color="#000">
       <el-menu-item class="custom-menu-item" index="/update" @click="dg.updateDialogVisible = true">
         <el-icon>
@@ -131,7 +62,7 @@ const dg = reactive({
       " />
       </el-menu-item>
 
-      <el-menu-item class="custom-menu-item" index="/settings" @click="$router.push('/settings')">
+      <el-menu-item class="custom-menu-item" @click="$router.push('/settings')">
         <el-icon>
           <setting />
         </el-icon>
@@ -140,12 +71,7 @@ const dg = reactive({
       <el-sub-menu index="7">
         <template #title>
           <el-icon>
-            <svg style="width: 22px" t="1713366512233" class="icon" viewBox="0 0 1366 1024" version="1.1"
-              xmlns="http://www.w3.org/2000/svg" p-id="5910">
-              <path
-                d="M1309.745268 0H56.12297a55.802067 55.802067 0 0 0 0 112.245537h1253.622298a55.802067 55.802067 0 1 0 0-112.245537zM1309.745268 455.877231H56.12297a55.802067 55.802067 0 0 0 0 112.245538h1253.622298a55.802067 55.802067 0 1 0 0-112.245538zM1309.745268 911.754463H56.12297a55.802067 55.802067 0 1 0 0 112.245537h1253.622298a55.802067 55.802067 0 0 0 0-112.245537z"
-                fill="#4D4D4D" p-id="5911"></path>
-            </svg>
+            <img src="/more.svg" class="custom-svg">
           </el-icon>
           <span>{{ $t("aside.more") }}</span>
         </template>
@@ -233,6 +159,11 @@ const dg = reactive({
 .el-icon svg {
   height: 1.5em;
   width: 1.5em;
+}
+
+.custom-svg {
+  height: 1.5em;
+  width: 24px;
 }
 
 .flex-box-v {

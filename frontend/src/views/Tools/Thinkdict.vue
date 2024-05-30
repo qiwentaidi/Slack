@@ -2,7 +2,7 @@
     <el-container class="el-main">
         <el-row :gutter="20">
             <el-col :span="200">
-                <el-form model="dict" label-position="top">
+                <el-form :model="dict" label-position="top">
                     <el-form-item  class="field" label="姓名">
                         <el-input v-model="dict.p_name" />
                     </el-form-item>
@@ -24,7 +24,7 @@
                 </el-form>
             </el-col>
             <el-col :span="200">
-                <el-form model="dict" label-position="top">
+                <el-form :model="dict" label-position="top">
                     <el-form-item label="结果">
                         <el-input type="textarea" rows="19" v-model="r.result" />
                     </el-form-item>
@@ -38,7 +38,7 @@
 <script lang="ts" setup>
 import {reactive} from 'vue'
 import {ThinkDict} from '../../../wailsjs/go/main/App'
-const dict = reactive ({
+const dict = reactive({
     p_name: '',
     c_name: '',
     c_domain: '',

@@ -14,14 +14,14 @@ func Beianx(company string) []string {
 	var ddddomain []string
 	h := http.Header{}
 	h.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
-	_, body, err := clients.NewRequest("GET", "https://www.beianx.cn/search/"+company, h, nil, 10, http.DefaultClient)
+	_, body, err := clients.NewRequest("GET", "https://www.beianx.cn/search/"+company, h, nil, 10, true, http.DefaultClient)
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
 	reg := regexp.MustCompile(`info/\d+`)
 	links := reg.FindAllString(string(body), -1)
 	for _, link := range links {
-		_, b, err := clients.NewRequest("GET", "https://www.beianx.cn/"+link, nil, nil, 10, clients.DefaultClient())
+		_, b, err := clients.NewSimpleGetRequest("https://www.beianx.cn/"+link, clients.DefaultClient())
 		if err != nil {
 			logger.NewDefaultLogger().Debug(err.Error())
 		}

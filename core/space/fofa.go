@@ -113,13 +113,13 @@ func FofaApiSearch(search, pageSize, pageNum, addr, email, key string, fraud, ce
 	address := addr + "api/v1/search/all?email=" + email + "&key=" + key + "&qbase64=" +
 		FOFABaseEncode(search) + "&cert.is_valid" + fmt.Sprint(cert) + fmt.Sprintf("&is_fraud=%v&is_honeypot=%v", fmt.Sprint(fraud), fmt.Sprint(fraud)) +
 		"&page=" + pageNum + "&size=" + pageSize + "&fields=host,title,ip,domain,port,protocol,country_name,region,city,icp"
-	_, b, err := clients.NewRequest("GET", address, nil, nil, 10, http.DefaultClient)
+	_, b, err := clients.NewSimpleGetRequest(address, http.DefaultClient)
 	if err != nil {
 		fs.Status = false
 		fs.Message = "请求失败"
 	}
 	var fr FofaResult
-	if err = json.Unmarshal([]byte(string(b)), &fr); err != nil {
+	if err = json.Unmarshal(b, &fr); err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 	}
 	fs.Total = fr.Size

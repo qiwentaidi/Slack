@@ -14,7 +14,7 @@ import { BrowserOpenURL } from '../../../wailsjs/runtime'
 const form = reactive({
     query: '',
     syntaxDialog: false,
-    hunterImg: 'hunter.png',
+    hunterImg: 'hunter_syntax.png',
     optionsTime: [
         {
             value: '0',
@@ -185,7 +185,7 @@ const table = reactive({
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         loading.value = true
-        HunterSearch(global.space.hunterkey, form.query, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
+        HunterSearch(global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
                     ElNotification({
@@ -230,7 +230,7 @@ const table = reactive({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         loading.value = true
-        HunterSearch(global.space.hunterkey, form.query, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
+        HunterSearch(global.space.hunterkey, tab.title, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
                     ElNotification({
@@ -378,7 +378,7 @@ async function CopyURL(mode: number) {
             <div class="head">
                 <el-autocomplete v-model="form.query" placeholder="Search..."
                     :fetch-suggestions="entry.querySearchAsync" @select="entry.handleSelect" :trigger-on-focus="false"
-                    debounce="1000" style="width: 100%;">
+                    :debounce="1000" style="width: 100%;">
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />
@@ -509,7 +509,7 @@ async function CopyURL(mode: number) {
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
-                <el-pagination :page-size="10" :page-sizes="[10, 50, 100]" layout="sizes, prev, pager, next"
+                <el-pagination background :page-size="10" :page-sizes="[10, 50, 100]" layout="sizes, prev, pager, next"
                     @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange"
                     :total="item.total" />
             </div>

@@ -1,7 +1,8 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 // 懒加载
 export const routes: Array<RouteRecordRaw> = [
-  { path: "/", 
+  { 
+    path: "/", 
     component: () => import("../views/Home.vue"),
     meta: {
       title: "Home",
@@ -35,6 +36,13 @@ export const routes: Array<RouteRecordRaw> = [
       title: "Jsfinder",
     },
   },
+  {
+    path: "/Permeation/Exploitation",
+    component: () => import("../views/Permeation/Exploitation.vue"),
+    meta: {
+      title: "Jsfinder",
+    },
+  },
   { path: "/Asset/Company", 
     component: () => import("../views/Asset/Company.vue"),
     meta: {
@@ -57,9 +65,9 @@ export const routes: Array<RouteRecordRaw> = [
   },
   {
     path: "/SpaceEngine/Fofa",
-    component: () => import("../views/SpaceEngine/Fofa.vue"),
+    component: () => import("../views/SpaceEngine/FOFA.vue"),
     meta: {
-      title: "Fofa",
+      title: "FOFA",
     },
   },
   {

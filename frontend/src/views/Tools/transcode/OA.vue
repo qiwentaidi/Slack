@@ -64,6 +64,3 @@ function OACrypt(input: string, mode: string) {
             style="margin-left: 10px;">解密</el-button>
     </div>
 </template>
-
-<style>
-</style>

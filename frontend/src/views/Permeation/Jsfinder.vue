@@ -133,7 +133,6 @@ const saveConfig = () => {
 }
 
 function changeType(item: dashboardItem) {
-  console.log(item.title)
   switch (item.title) {
     case "JS路径":
       global.jsfind.defaultType[0] = item.tagType.value
@@ -153,7 +152,6 @@ function changeType(item: dashboardItem) {
     default:
       global.jsfind.defaultType[2] = item.tagType.value
   }
-  console.log(global.jsfind.defaultType)
 }
 </script>
 <template>

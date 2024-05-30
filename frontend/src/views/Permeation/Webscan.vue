@@ -63,6 +63,8 @@ interface FingerprintTable {
     length: string
     title: string
     detect: string
+    existsWaf: boolean
+    waf: string
     fingerprint: FingerLevel[]
 }
 
@@ -209,6 +211,7 @@ class Scanner {
             return
         }
         this.urls = await formatURL(form.url)
+        this.urls = Array.from(new Set(this.urls))
         dashboard.count = this.urls.length
         if (this.urls.length == 0) {
             ElMessage({
@@ -242,6 +245,8 @@ class Scanner {
                     length: result.Length,
                     title: result.Title,
                     detect: "Default",
+                    existsWaf: result.IsWAF,
+                    waf: result.WAF,
                     fingerprint: temp,
                 })
             }
@@ -268,6 +273,8 @@ class Scanner {
                                 length: item.Length,
                                 title: item.Title,
                                 detect: "Active",
+                                existsWaf: item.IsWAF,
+                                waf: item.WAF,
                                 fingerprint: temp,
                             })
                             for (const fm of form.urlFingerMap) {
@@ -292,43 +299,7 @@ class Scanner {
                     if (form.currentModule == 3) {
                         mode = 1
                     }
-                    async.eachLimit(form.urlFingerMap, 1, async (ufm: uf, callback: () => void) => {
-                        if (!form.runnningStatus) {
-                            return
-                        }
-                        let nucleiResult = await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, currentTimestamp(), form.noInteractsh, form.keyword, form.risk.join(","))
-                        global.Logger.value += `${currentTime()} ${ufm.url} 漏洞已检测完毕结束\n`
-                        if (Array.isArray(nucleiResult) && nucleiResult.length > 0) {
-                            for (const result of nucleiResult) {
-                                const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
-                                dashboard.riskLevel[riskLevelKey]++;
-                                form.vulResult.push({
-                                    vulID: result.ID,
-                                    vulName: result.Name,
-                                    protocoltype: result.Type.toLocaleUpperCase(),
-                                    severity: result.Risk.toLocaleUpperCase(),
-                                    vulURL: result.URL,
-                                    request: result.Request,
-                                    response: result.Response,
-                                    extInfo: result.Extract,
-                                    description: result.Description,
-                                    reference: result.Reference,
-                                })
-                            }
-                        }
-                        count++
-                        if (count == form.urlFingerMap.length) {
-                            callback()
-                        }
-                    }, () => {
-                        global.Logger.value += `${currentTime()} 漏洞扫描已扫描结束\n`
-                        ElNotification({
-                            message: "Scanner Finished",
-                            type: "success",
-                            position: "bottom-right",
-                        })
-                        form.runnningStatus = false
-                    })
+                    this.webScanner(mode)
                 })
             } else {
                 form.runnningStatus = false
@@ -345,7 +316,6 @@ class Scanner {
             }
 
             let nucleiResult = await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, currentTimestamp(), form.noInteractsh, form.keyword, form.risk.join(","))
-            console.log(nucleiResult)
             for (const result of nucleiResult) {
                 const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
                 dashboard.riskLevel[riskLevelKey]++;
@@ -537,7 +507,6 @@ function getClassBySeverity(severity: string) {
                                     </div>
                                 </template>
                             </el-popover>
-
                         </template>
                     </el-table-column>
                     <el-table-column prop="status" width="100px" label="Code"
@@ -547,13 +516,14 @@ function getClassBySeverity(severity: string) {
                         :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
                         :show-overflow-tooltip="true" />
                     <el-table-column prop="title" label="Title" />
-                    <!-- <el-table-column prop="detect" label="Detection" sortable width="120px" /> -->
+                    <!-- <el-table-column prop="waf" label="WAF" width="120px" /> -->
                     <el-table-column fixed="right" prop="fingerprint" width="350px">
                         <template #header>
                             <el-tooltip placement="left">
                                 <template #content>
                                     · 普通指纹会呈现浅蓝色，workflow中存在漏洞的指纹会呈现浅红色<br />
                                     · 若指纹标签会呈现填充红色，表示该指纹为敏感目录扫描得到<br />
+                                    · 盾牌图标显示存在WAF，鼠标移入会显示WAF信息<br />
                                 </template>
                                 <el-icon>
                                     <QuestionFilled size="24" />
@@ -567,6 +537,9 @@ function getClassBySeverity(severity: string) {
                                     :type="finger.level === 1 ? 'danger' : 'primary'"
                                     :effect="scope.row.detect === 'Default' ? 'light' : 'dark'">{{ finger.name
                                     }}</el-tag>
+                                <a :title="scope.row.waf" v-if="scope.row.existsWaf">
+                                    <el-image src="/shield.png" style="width: 24px;"></el-image>
+                                </a>
                             </div>
                         </template>
                     </el-table-column>
@@ -580,8 +553,10 @@ function getClassBySeverity(severity: string) {
                             <div>
                                 <el-descriptions :column="2" border style="margin-bottom: 10px;">
                                     <el-descriptions-item label="Name:">{{ props.row.vulName }}</el-descriptions-item>
-                                    <el-descriptions-item label="Extracted:">{{ props.row.extInfo }}</el-descriptions-item>
-                                    <el-descriptions-item label="Description:" :span="2">{{ props.row.description }}</el-descriptions-item>
+                                    <el-descriptions-item label="Extracted:">{{ props.row.extInfo
+                                        }}</el-descriptions-item>
+                                    <el-descriptions-item label="Description:" :span="2">{{ props.row.description
+                                        }}</el-descriptions-item>
                                     <el-descriptions-item label="Reference:" :span="2" label-class-name="description">
                                         <div v-for="item in props.row.reference.split(',')">
                                             {{ item }}
@@ -794,7 +769,14 @@ function getClassBySeverity(severity: string) {
     display: flex;
     gap: 7px;
 }
+
 .description {
     width: 100px;
+}
+
+.el-text {
+    display: flex;
+    align-items: center;
+    text-align: center
 }
 </style>

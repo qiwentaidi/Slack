@@ -203,7 +203,7 @@ async function Delelte(host: string) {
                     style="margin-top: 5px" color="#5DC4F7" />
             </el-tab-pane>
             <el-tab-pane label="历史记录" name="1">
-                <el-table :data="form.pool" border style="height: 8vh;">
+                <el-table :data="form.pool" border style="height: 85vh;">
                     <el-table-column type="index" width="50" label="#" align="center" />
                     <el-table-column prop="Host" label="主机地址" />
                     <el-table-column fixed="right" label="操作" width="120" align="center">
@@ -217,13 +217,11 @@ async function Delelte(host: string) {
                 </el-table>
             </el-tab-pane>
         </el-tabs>
-        <div class="custom_eltabs_titlebar" v-if="form.currentTableName == '0'">
-            <el-space>
-                <span>检测数量:</span><el-input-number v-model="form.socksNum" :min="1" :max="form.socksMax"
-                    controls-position="right" style="width: 100px;"></el-input-number>
-                <span>存储阈值:</span><el-input-number v-model="form.socksThreshold" :min="1" controls-position="right"
-                    style="width: 100px;"></el-input-number>
-            </el-space>
+        <el-space class="custom_eltabs_titlebar" v-if="form.currentTableName == '0'" >
+            <span>检测数量:</span><el-input-number v-model="form.socksNum" :min="1" :max="form.socksMax"
+                controls-position="right" style="width: 100px;"></el-input-number>
+            <span>存储阈值:</span><el-input-number v-model="form.socksThreshold" :min="1" controls-position="right"
+                style="width: 100px;"></el-input-number>
             <el-button-group>
                 <el-tooltip content="查询数据量" placement="left">
                     <el-button :icon="Search" type="primary" @click="NewSock5Crawl(0)"></el-button>
@@ -232,7 +230,7 @@ async function Delelte(host: string) {
                     <el-button :icon="Filter" type="primary" @click="NewSock5Crawl(1)"></el-button>
                 </el-tooltip>
             </el-button-group>
-        </div>
+        </el-space>
         <el-button type="primary" @click="NewSock5Crawl(2)" class="custom_eltabs_titlebar" v-else>导出存活目标</el-button>
     </div>
 </template>

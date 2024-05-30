@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 105.07 75.29">
+        <defs>
+            <style>
+                .cls-1 {
+                    fill: url(#未命名的渐变_5);
+                }
+
+                .cls-2 {
+                    fill: url(#未命名的渐变_5-2);
+                }
+
+                .cls-3 {
+                    fill: url(#未命名的渐变_5-3);
+                }
+
+                .cls-4 {
+                    fill: url(#未命名的渐变_5-4);
+                }
+
+                .cls-5 {
+                    fill: url(#未命名的渐变_5-5);
+                }
+            </style>
+            <linearGradient id="未命名的渐变_5" x1="16.11" y1="85" x2="101.69" y2="3.61"
+                gradientTransform="matrix(1, 0, 0, -1, 0, 78)" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#0b0a53" />
+                <stop offset="0.5" stop-color="#1b65fa" />
+                <stop offset="1" stop-color="#199fff" />
+            </linearGradient>
+            <linearGradient id="未命名的渐变_5-2" x1="29.62" y1="99.2" x2="115.19" y2="17.82" xlink:href="#未命名的渐变_5" />
+            <linearGradient id="未命名的渐变_5-3" x1="-5.35" y1="62.43" x2="80.23" y2="-18.96" xlink:href="#未命名的渐变_5" />
+            <linearGradient id="未命名的渐变_5-4" x1="13.43" y1="82.18" x2="99.01" y2="0.8" xlink:href="#未命名的渐变_5" />
+            <linearGradient id="未命名的渐变_5-5" x1="7.56" y1="76.01" x2="93.14" y2="-5.37" xlink:href="#未命名的渐变_5" />
+        </defs>
+        <g id="图层_2" data-name="图层 2">
+            <g id="图层_1-2" data-name="图层 1">
+                <path class="cls-1"
+                    d="M102.05,64v-.19A12.88,12.88,0,0,1,90.76,52.52h-.19A12.88,12.88,0,0,1,79.28,63.81V64A12.88,12.88,0,0,1,90.57,75.29h.19A12.9,12.9,0,0,1,102.05,64Z" />
+                <path class="cls-2"
+                    d="M90.4,9.13v0a67.91,67.91,0,0,0-24.83,54.4A27.31,27.31,0,0,0,90.4,36.35V33.13C90.4,10.36,105.07,0,105.07,0A53.33,53.33,0,0,0,90.4,9.13Z" />
+                <rect class="cls-3" y="20.45" width="8.69" height="8.69" />
+                <path class="cls-4"
+                    d="M44.13,12.06v8.4H26.75V37.84H18.06v8.69h8.69v8.69H18.06v8.69h8.69v-.06l16.75-.11-.13,0c6.59.06,10-9.18,11.88-15.38.26-1,.55-1.94.85-2.9l.06-.22v0A67.75,67.75,0,0,1,90.4,5.33C70.16,12.89,50.28,12.43,44.13,12.06Z" />
+                <polygon class="cls-5"
+                    points="26.75 11.76 18.06 11.76 18.06 20.45 19.86 20.45 26.75 20.45 26.75 11.81 26.75 11.76" />
+            </g>
+        </g>
+    </svg>

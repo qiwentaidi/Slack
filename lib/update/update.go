@@ -2,14 +2,18 @@ package update
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/util"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 const lastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
@@ -48,7 +52,7 @@ func download(target, dest string) (string, error) {
 func InitConfig(configPath string) bool {
 	os.MkdirAll(util.HomeDir()+"/slack/config", 0777)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
-	_, b, err := clients.NewRequest("GET", latestConfigVersion, nil, nil, 10, http.DefaultClient)
+	_, b, err := clients.NewSimpleGetRequest(latestConfigVersion, http.DefaultClient)
 	if err != nil {
 		return false
 	}
@@ -63,4 +67,49 @@ func InitConfig(configPath string) bool {
 	}
 	os.Remove(util.HomeDir() + "/slack/config.zip")
 	return true
+}
+
+// 带前端下载动画
+func NewDownload(ctx context.Context, target, dest string) (string, error) {
+	fileName := path.Base(target)
+	res, err := http.Get(target)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	totalSize := res.ContentLength
+	downloadedSize := int64(0)
+
+	reader := bufio.NewReaderSize(res.Body, 32*1024)
+	file, err := os.Create(dest + fileName)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	buf := make([]byte, 32*1024)
+	for {
+		n, err := reader.Read(buf)
+		if n > 0 {
+			writer.Write(buf[:n])
+			downloadedSize += int64(n)
+			progress := float64(downloadedSize) / float64(totalSize) * 100
+			roundedProgress := roundToTwoDecimals(progress)
+			runtime.EventsEmit(ctx, "downloadProgress", roundedProgress)
+		}
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", err
+		}
+	}
+	writer.Flush()
+	return fileName, nil
+}
+
+func roundToTwoDecimals(value float64) float64 {
+	return math.Round(value*100) / 100
 }

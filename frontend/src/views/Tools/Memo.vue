@@ -1,6 +1,6 @@
 <template>
     <div class="flex-box">
-        <el-tabs type="border-card" style="width: 50vh;" stretch="true">
+        <el-tabs type="border-card" style="width: 50vh;" :stretch="true">
             <el-tab-pane label="备忘录">
                 <el-button-group style="margin-bottom: 10px; width: 100%;">
                     <el-button type="primary" style="width: 50%;" @click="dialog = true">添加</el-button>
