@@ -116,3 +116,8 @@ html {
   flex-direction: column;
   gap: 10px;
 }
+
+.dropdown_icon {
+  width: 16px;
+  height: 16px;
+}

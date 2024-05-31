@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { Menu, Search, ChatLineRound, ChromeFilled, ArrowDown, CopyDocument, Share } from '@element-plus/icons-vue';
+import { Menu, Search, ChatLineRound, ChromeFilled, CopyDocument, Share } from '@element-plus/icons-vue';
 import { SplitTextArea, validateIP, validateDomain, splitInt, TableTabs, ApiSyntaxCheck, Copy } from '../../util'
 import { ExportToXlsx } from '../../export'
 import {
@@ -271,8 +271,12 @@ async function CopyURL() {
                 <el-button type="primary" :icon="Search" @click="table.addTab(form.query)"
                     style="margin-left: 10px; margin-right: 10px;">查询</el-button>
                 <el-dropdown>
-                    <el-button color="#A29EDE">
-                        数据导出/复制<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                    <el-button>
+                        <template #icon>
+                            <el-icon>
+                                <img src="/more.svg" class="dropdown_icon">
+                            </el-icon>
+                        </template>
                     </el-button>
                     <template #dropdown>
                         <el-dropdown-menu>
