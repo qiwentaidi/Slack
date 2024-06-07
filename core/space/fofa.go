@@ -130,9 +130,9 @@ func FofaApiSearch(search, pageSize, pageNum, addr, email, key string, fraud, ce
 		if fr.Size == 0 {
 			fs.Message = "未查询到数据"
 		} else {
-			var temp string
 			fs.Status = true
 			for i := 0; i < len(fr.Results); i++ {
+				var temp string
 				if !strings.Contains(fr.Results[i][0], "://") && (fr.Results[i][5] == "http" || fr.Results[i][5] == "https") {
 					temp = fr.Results[i][5] + "://" + fr.Results[i][0]
 				} else {

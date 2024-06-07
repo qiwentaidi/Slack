@@ -1,27 +1,28 @@
 package portscan
 
 import (
+	"context"
+	"fmt"
+	"slack-wails/lib/gologger"
 	"strings"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MongodbScan(host string) *Burte {
+func MongodbScan(ctx context.Context, host string) {
 	_, err := MongodbUnauth(host)
 	if err != nil {
-		return &Burte{
+		runtime.EventsEmit(ctx, "bruteResult", Burte{
 			Status:   false,
 			Host:     host,
 			Protocol: "mongodb",
 			Username: "",
 			Password: "",
-		}
-	}
-	return &Burte{
-		Status:   true,
-		Host:     host,
-		Protocol: "mongodb",
-		Username: "unauthorized",
-		Password: "",
+		})
+		return
+	} else {
+		gologger.Info(ctx, fmt.Sprintf("mongodb://%s is no unauthorized access", host))
 	}
 }
 

@@ -69,8 +69,7 @@ function loadRemote() {
 async function loadLocal() {
     await CyberChefLocalServer()
     isRemote.value = false;
-    showIframe.value = true;
-    
+    showIframe.value = true;  
 }
 </script>
 
@@ -98,8 +97,7 @@ async function loadLocal() {
         </el-result>
     </div>
     <div class="external-page" v-if="showIframe">
-        <iframe :src="isRemote ? 'https://gchq.github.io/CyberChef/' : 'http://127.0.0.1:8731/'"
-            style="width:100%; height:100%; border:none;"></iframe>
+        <iframe :src="isRemote ? 'https://gchq.github.io/CyberChef/' : 'http://127.0.0.1:8731/'" class="iframe"></iframe>
     </div>
     <el-progress class="download-progress" :percentage="progress" v-if="progress > 0 && progress < 100"></el-progress>
 </template>

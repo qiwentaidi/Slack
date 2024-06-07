@@ -32,10 +32,6 @@ export async function InitConfigFile() {
 function LoadConfig() {
     const allLocaolStorage = [
       {
-        key: "scan",
-        value: global.scan,
-      },
-      {
         key: "proxy",
         value: global.proxy,
       },

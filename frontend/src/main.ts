@@ -8,6 +8,8 @@ import "element-plus/theme-chalk/el-message.css";
 import "element-plus/theme-chalk/el-message-box.css";
 import "element-plus/theme-chalk/el-notification.css";
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
+import { Splitpanes, Pane } from 'splitpanes'
+import 'splitpanes/dist/splitpanes.css'
 
 export default (app: App<Element>) => {
   // 全局配置
@@ -22,5 +24,8 @@ const app = createApp(AppComponent)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
+app.component('Splitpanes', Splitpanes);
+app.component('Pane', Pane);
 
 app.use(router).use(i18n).mount("#app");

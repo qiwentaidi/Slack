@@ -1,11 +1,16 @@
 package portscan
 
 import (
+	"context"
+	"fmt"
+	"slack-wails/lib/gologger"
 	"strings"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MemcachedScan(host string) *Burte {
+func MemcachedScan(ctx context.Context, host string) {
 	client, err := WrapperTcpWithTimeout("tcp", host, 10*time.Second)
 	defer func() {
 		if client != nil {
@@ -21,23 +26,19 @@ func MemcachedScan(host string) *Burte {
 				n, err := client.Read(rev)
 				if err == nil {
 					if strings.Contains(string(rev[:n]), "STAT") {
-						return &Burte{
+						runtime.EventsEmit(ctx, "bruteResult", Burte{
 							Status:   true,
 							Host:     host,
 							Protocol: "memcached",
 							Username: "unauthorized",
 							Password: "",
-						}
+						})
+						return
 					}
+				} else {
+					gologger.Info(ctx, fmt.Sprintf("memcached://%s is no unauthorized access", host))
 				}
 			}
 		}
-	}
-	return &Burte{
-		Status:   false,
-		Host:     host,
-		Protocol: "memcached",
-		Username: "",
-		Password: "",
 	}
 }

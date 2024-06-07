@@ -1,41 +1,45 @@
 package portscan
 
 import (
+	"context"
 	"fmt"
+	"slack-wails/lib/gologger"
 	"strings"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func RedisScan(host string, passwords []string) *Burte {
+func RedisScan(ctx context.Context, host string, passwords []string) {
 	flag, err := RedisUnauth(host)
 	if flag && err == nil {
-		return &Burte{
+		runtime.EventsEmit(ctx, "bruteResult", Burte{
 			Status:   true,
 			Host:     host,
 			Protocol: "redis",
 			Username: "unauthorized",
 			Password: "",
-		}
+		})
+		gologger.Success(ctx, fmt.Sprintf("redis://%s is unauthorized access", host))
+		return
+	} else {
+		gologger.Info(ctx, fmt.Sprintf("redis://%s is no unauthorized access", host))
 	}
 	for _, pass := range passwords {
 		pass = strings.Replace(pass, "{user}", "redis", -1)
 		flag, err := RedisConn(host, pass)
 		if flag && err == nil {
-			return &Burte{
+			runtime.EventsEmit(ctx, "bruteResult", Burte{
 				Status:   true,
 				Host:     host,
 				Protocol: "redis",
 				Username: "",
 				Password: pass,
-			}
+			})
+			return
+		} else {
+			gologger.Info(ctx, fmt.Sprintf("redis://%s %s is login failed", host, pass))
 		}
-	}
-	return &Burte{
-		Status:   false,
-		Host:     host,
-		Protocol: "redis",
-		Username: "",
-		Password: "",
 	}
 }
 

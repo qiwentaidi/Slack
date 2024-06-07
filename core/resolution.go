@@ -14,9 +14,9 @@ import (
 
 var DnsServers = []string{"223.5.5.5:53", "114.114.114.114:53"}
 
-func Resolution(domain string, servers []string, timeout int) (ips, cname []string, err error) {
-	cname, err = LookupCNAME(domain, servers, timeout)
-	ips, _ = LookupHost(domain, servers, timeout)
+func Resolution(domain string, timeout int) (ips, cname []string, err error) {
+	cname, err = LookupCNAME(domain, DnsServers, timeout)
+	ips, _ = LookupHost(domain, DnsServers, timeout)
 	return util.RemoveDuplicates(ips), cname, err
 }
 

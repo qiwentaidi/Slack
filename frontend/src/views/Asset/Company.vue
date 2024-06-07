@@ -2,7 +2,7 @@
 import { reactive, ref } from "vue";
 import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
-import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, AssetHunter } from "../../../wailsjs/go/main/App";
+import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, AssetHunter, Callgologger } from "../../../wailsjs/go/main/App";
 import global from "../../global"
 import { ExportAssetToXlsx } from '../../export'
 import { onMounted } from 'vue';
@@ -79,10 +79,9 @@ function Collect() {
     Init()
     if (from.subcompany) {
         const promises = from.companys.map(async companyName => {
-            from.log += `[INF] 正在收集${companyName}的子公司信息\n`
+            Callgologger("info", `正在收集${companyName}的子公司信息`)
             if (typeof companyName === 'string') {
                 const result = await SubsidiariesAndDomains(companyName, from.defaultHold);
-                console.log(result)
                 if (Array.isArray(result.Asset) && result.Asset.length > 0) {
                     for (const item of result.Asset) {
                         su.value.push({
@@ -94,17 +93,17 @@ function Collect() {
                     }
                 }
                 if (result.Prompt.length > 0) { // 处理字符串
-                    from.log += `[INF] ${result.Prompt}\n`;
+                    Callgologger("info", `${result.Prompt}`)
                 }
             }
         });
         Promise.all(promises).then(() => {
-            from.log += `[SUCCESS] 已完成子公司查询任务\n`;
+            Callgologger("info", "已完成子公司查询任务")
         });
     }
     if (from.wechat) {
         const promises = from.companys.map(async companyName => {
-            from.log += `[INF] 正在收集${companyName}的微信公众号资产\n`
+            Callgologger("info", `正在收集${companyName}的微信公众号资产`)
             if (typeof companyName === 'string') {
                 const result = await WechatOfficial(companyName);
                 if (result.Asset.length > 0) {
@@ -121,12 +120,12 @@ function Collect() {
                     we.value.push(...mappedResult);
                 }
                 if (result.Prompt.length > 0) { // 处理字符串
-                    from.log += `[INF] ${result.Prompt}\n`;
+                    Callgologger("info", `${result.Prompt}`)
                 }
             }
         });
         Promise.all(promises).then(() => {
-            from.log += `[SUCCESS] 已完成微信公众查询任务\n`;
+            Callgologger("info", "已完成微信公众查询任务")
         });
     }
 }
@@ -174,7 +173,7 @@ async function huntersearch() {
                         hunums: result.Total,
                     }
                 )
-                from.log += `[INF] ${result.Info}\n`
+                Callgologger("info", result.info)
             }
         )
     }
@@ -189,7 +188,7 @@ async function huntersearch() {
                         hunums: result.Total,
                     }
                 )
-                from.log += `[INF] ${result.Info}\n`
+                Callgologger("info", result.Info)
             }
         )
     }
@@ -248,6 +247,9 @@ async function huntersearch() {
                             </div>
                         </template>
                     </el-table-column>
+                    <template #empty>
+                        <el-empty />
+                    </template>
                 </el-table>
             </el-tab-pane>
 
@@ -282,6 +284,9 @@ async function huntersearch() {
                         </template>
                     </el-table-column>
                     <el-table-column prop="introduction" label="简介" :show-overflow-tooltip="true" />
+                    <template #empty>
+                        <el-empty />
+                    </template>
                 </el-table>
             </el-tab-pane>
 
@@ -291,10 +296,10 @@ async function huntersearch() {
                     <el-table-column prop="name" label="公司域名或ICP名称" :show-overflow-tooltip="true" />
                     <el-table-column prop="hunums" label="资产数量"
                         :sort-method="(a: any, b: any) => { return a.hunums - b.hunums }" sortable />
+                    <template #empty>
+                        <el-empty />
+                    </template>
                 </el-table>
-            </el-tab-pane>
-            <el-tab-pane label="运行日志">
-                <el-input class="log-textarea" v-model="from.log" type="textarea" rows="20" readonly></el-input>
             </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar">
@@ -317,8 +322,8 @@ async function huntersearch() {
                 </el-button>
                 <el-button @click="ExportAssetToXlsx(su, we, hu)">
                     <template #icon>
-                        <img src="/excle.svg" width="16">
-                    </template>导出Excle</el-button>
+                        <img src="/excel.svg" width="16">
+                    </template>导出Excel</el-button>
             </el-button-group>
         </div>
     </div>

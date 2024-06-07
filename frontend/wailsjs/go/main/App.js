@@ -10,8 +10,12 @@ export function AssetHunter(arg1, arg2, arg3) {
   return window['go']['main']['App']['AssetHunter'](arg1, arg2, arg3);
 }
 
-export function CheckCdn(arg1, arg2, arg3) {
-  return window['go']['main']['App']['CheckCdn'](arg1, arg2, arg3);
+export function Callgologger(arg1, arg2) {
+  return window['go']['main']['App']['Callgologger'](arg1, arg2);
+}
+
+export function CheckCdn(arg1) {
+  return window['go']['main']['App']['CheckCdn'](arg1);
 }
 
 export function CheckTarget(arg1, arg2) {
@@ -78,6 +82,10 @@ export function IconHash(arg1) {
   return window['go']['main']['App']['IconHash'](arg1);
 }
 
+export function InitBurteDict() {
+  return window['go']['main']['App']['InitBurteDict']();
+}
+
 export function InitIPResolved() {
   return window['go']['main']['App']['InitIPResolved']();
 }
@@ -110,12 +118,24 @@ export function LoadSubDict(arg1) {
   return window['go']['main']['App']['LoadSubDict'](arg1);
 }
 
+export function NewCorrespondsScan(arg1, arg2) {
+  return window['go']['main']['App']['NewCorrespondsScan'](arg1, arg2);
+}
+
+export function NewSynScanner(arg1, arg2) {
+  return window['go']['main']['App']['NewSynScanner'](arg1, arg2);
+}
+
+export function NewTcpScanner(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['NewTcpScanner'](arg1, arg2, arg3, arg4);
+}
+
 export function NucleiEnabled(arg1) {
   return window['go']['main']['App']['NucleiEnabled'](arg1);
 }
 
-export function NucleiScanner(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-  return window['go']['main']['App']['NucleiScanner'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+export function NucleiScanner(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+  return window['go']['main']['App']['NucleiScanner'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 
 export function PathRequest(arg1, arg2, arg3, arg4, arg5, arg6) {
@@ -126,44 +146,32 @@ export function PortBrute(arg1, arg2, arg3) {
   return window['go']['main']['App']['PortBrute'](arg1, arg2, arg3);
 }
 
-export function PortCheck(arg1, arg2, arg3) {
-  return window['go']['main']['App']['PortCheck'](arg1, arg2, arg3);
-}
-
 export function PortParse(arg1) {
   return window['go']['main']['App']['PortParse'](arg1);
-}
-
-export function SaveFile(arg1) {
-  return window['go']['main']['App']['SaveFile'](arg1);
-}
-
-export function SelectFile() {
-  return window['go']['main']['App']['SelectFile']();
 }
 
 export function Sock5Connect(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['Sock5Connect'](arg1, arg2, arg3, arg4, arg5);
 }
 
-export function Subdomain(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['Subdomain'](arg1, arg2, arg3, arg4);
+export function StopPortScan() {
+  return window['go']['main']['App']['StopPortScan']();
+}
+
+export function Subdomain(arg1, arg2) {
+  return window['go']['main']['App']['Subdomain'](arg1, arg2);
 }
 
 export function SubsidiariesAndDomains(arg1, arg2) {
   return window['go']['main']['App']['SubsidiariesAndDomains'](arg1, arg2);
 }
 
-export function SynPortCheck(arg1, arg2, arg3) {
-  return window['go']['main']['App']['SynPortCheck'](arg1, arg2, arg3);
-}
-
 export function System(arg1, arg2) {
   return window['go']['main']['App']['System'](arg1, arg2);
 }
 
-export function ThinkDict(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['main']['App']['ThinkDict'](arg1, arg2, arg3, arg4, arg5);
+export function ThinkDict(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+  return window['go']['main']['App']['ThinkDict'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
 export function UseDruid(arg1, arg2, arg3) {

@@ -2,25 +2,62 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
+	rt "runtime"
 	"slack-wails/lib/update"
 	"slack-wails/lib/util"
 	"strings"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+var configPath = util.HomeDir() + "/slack/config"
 
 // File struct 文件操作
 type File struct {
-	configPath string
+	ctx context.Context
+}
+
+func (f *File) startup(ctx context.Context) {
+	f.ctx = ctx
 }
 
 func NewFile() *File {
-	return &File{
-		configPath: util.HomeDir() + "/slack/config/",
+	return &File{}
+}
+
+// 只能用在App上
+func (f *File) FileDialog() string {
+	selection, err := runtime.OpenFileDialog(f.ctx, runtime.OpenDialogOptions{
+		Title: "选择文件",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "文本数据",
+				Pattern:     "*.txt",
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Sprintf("err %s!", err)
 	}
+	return selection
+}
+
+// selection会返回保存的文件路径+文件名 例如/Users/xxx/Downloads/test.xlsx
+func (f *File) SaveFile(filename string) string {
+	selection, err := runtime.SaveFileDialog(f.ctx, runtime.SaveDialogOptions{
+		Title:           "保存文件",
+		DefaultFilename: filename,
+	})
+	if err != nil {
+		return ""
+	}
+	return selection
 }
 
 // 开始就要检测
@@ -34,7 +71,7 @@ func (f *File) PathBase(p string) string {
 
 func (f *File) OpenFolder(path string) string {
 	var cmd *exec.Cmd
-	switch runtime.GOOS {
+	switch rt.GOOS {
 	case "windows":
 		cmd = exec.Command("cmd", "/c", "start", path)
 	case "darwin":
@@ -62,20 +99,20 @@ func (f *File) CheckFileStat(path string) bool {
 func (f *File) GetFileContent(filename string) string {
 	b, err := os.ReadFile(filename)
 	if err != nil {
-		return "文件不存在"
+		return ""
 	}
 	return string(b)
 }
 
 func (f *File) UpdatePocFile() string {
-	if err := update.UpdatePoc(f.configPath); err != nil {
+	if err := update.UpdatePoc(configPath); err != nil {
 		return err.Error()
 	}
 	return ""
 }
 
 func (f *File) InitConfig() bool {
-	return update.InitConfig(f.configPath)
+	return update.InitConfig(configPath)
 }
 
 func (*File) InitMemo(filepath, content string) bool {
@@ -135,6 +172,21 @@ func (*File) WriteFile(filetype, path, content string) bool {
 	}
 	err := os.WriteFile(path, buf, 0644)
 	return err == nil
+}
+
+func (a *App) DownloadCyberChef(url string) error {
+	cyber := "/slack/CyberChef.zip"
+	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath)
+	if err != nil {
+		return err
+	}
+	runtime.EventsEmit(a.ctx, "downloadComplete", fileName)
+	uz := util.NewUnzip()
+	if _, err := uz.Extract(util.HomeDir()+cyber, a.defaultPath); err != nil {
+		return err
+	}
+	os.Remove(util.HomeDir() + cyber)
+	return nil
 }
 
 // type Records struct {

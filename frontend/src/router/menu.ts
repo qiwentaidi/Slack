@@ -18,6 +18,10 @@ const MenuList = [
           path: "/Permeation/Portscan",
         },
         {
+          name: "aside.crack",
+          path: "/Permeation/Crack",
+        },
+        {
           name: "aside.dirscan",
           path: "/Permeation/Dirsearch",
         },
@@ -91,12 +95,27 @@ const MenuList = [
           path: "/Tools/Memo",
         },
         {
+          name: "aside.reverse",
+          path: "/Tools/Reverse",
+        },
+        {
           name: "aside.associate_dictionary_generator",
           path: "/Tools/Thinkdict",
         },
         {
           name: "aside.aksk",
           path: "/Tools/AKSK",
+        },
+      ]
+    },
+    {
+      name: "aside.guard",
+      path: "/Guard",
+      icon: "Flag",
+      children: [
+        {
+          name: "aside.guarantee",
+          path: "/Guard/Guarantee",
         },
       ]
     },

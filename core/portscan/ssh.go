@@ -1,35 +1,34 @@
 package portscan
 
 import (
+	"context"
+	"fmt"
 	"net"
+	"slack-wails/lib/gologger"
 	"strings"
 	"time"
 
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"golang.org/x/crypto/ssh"
 )
 
-func SshScan(host string, usernames, passwords []string) *Burte {
+func SshScan(ctx context.Context, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := SshConn(host, user, pass)
 			if flag && err == nil {
-				return &Burte{
+				runtime.EventsEmit(ctx, "bruteResult", Burte{
 					Status:   true,
 					Host:     host,
 					Protocol: "ssh",
 					Username: user,
 					Password: pass,
-				}
+				})
+			} else {
+				gologger.Info(ctx, fmt.Sprintf("ssh://%s %s:%s is login failed", host, user, pass))
 			}
 		}
-	}
-	return &Burte{
-		Status:   false,
-		Host:     host,
-		Protocol: "ssh",
-		Username: "",
-		Password: "",
 	}
 }
 

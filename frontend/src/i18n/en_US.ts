@@ -38,6 +38,11 @@ export default {
         'navigation': 'Online Navigation',
         'app_navigation': 'Application Navigation',
         'exp': 'Vulnerability Exploitation',
+        'reverse': 'Reverse Shell Generation',
+        'crack': 'Crack',
+        'guard': 'Guard',
+        'guarantee': 'Important Period Guarantee',
+        'dict': 'Dictionary Management',
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

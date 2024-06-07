@@ -6,7 +6,6 @@ import {
     CheckCdn,
 } from '../../../wailsjs/go/main/App'
 import async from 'async';
-import global from "../../global"
 import { SplitTextArea } from '../../util';
 const info = `配域名进行IP解析以及CDN判断(可批量)
 ===如果域名解析的非常慢，请考虑是否是本机网络不佳===
@@ -34,7 +33,7 @@ function cdncheck() {
     }
     from.result += "---域名解析(CDN查询)---:\n"
     async.eachLimit(domains, 100, async (domain: string) => {
-        let result = await CheckCdn(from.input, global.scan.dns1, global.scan.dns2)
+        let result = await CheckCdn(domain)
         from.result += result + "\n"
     })
 }

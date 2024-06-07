@@ -1,32 +1,32 @@
 package portscan
 
 import (
+	"context"
+	"fmt"
+	"slack-wails/lib/gologger"
 	"strings"
 	"time"
 
 	"github.com/mitchellh/go-vnc"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func VncScan(host string, passwords []string) *Burte {
+func VncScan(ctx context.Context, host string, passwords []string) {
 	for _, pass := range passwords {
 		pass = strings.Replace(pass, "{user}", "vnc", -1)
 		flag, err := VncConn(host, pass)
 		if flag && err == nil {
-			return &Burte{
+			runtime.EventsEmit(ctx, "bruteResult", Burte{
 				Status:   true,
 				Host:     host,
 				Protocol: "vnc",
 				Username: "",
 				Password: pass,
-			}
+			})
+			return
+		} else {
+			gologger.Info(ctx, fmt.Sprintf("vnc://%s %s is login failed", host, pass))
 		}
-	}
-	return &Burte{
-		Status:   false,
-		Host:     host,
-		Protocol: "vnc",
-		Username: "",
-		Password: "",
 	}
 }
 

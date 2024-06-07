@@ -16,16 +16,14 @@ import (
 	"slack-wails/core/jsfind"
 	"slack-wails/core/portscan"
 	"slack-wails/core/space"
-	"slack-wails/core/waf"
 	"slack-wails/core/webscan"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/update"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -37,6 +35,7 @@ type App struct {
 	cdnFile          string
 	qqwryFile        string
 	avFile           string
+	bruteFile        string
 	defaultPath      string
 }
 
@@ -50,7 +49,8 @@ func NewApp() *App {
 		cdnFile:          home + "/slack/config/cdn.yaml",
 		qqwryFile:        home + "/slack/config/qqwry.dat",
 		avFile:           home + "/slack/config/antivirues.yaml",
-		defaultPath:      home + "/slack",
+		bruteFile:        home + "/slack/portburte",
+		defaultPath:      home + "/slack/",
 	}
 }
 
@@ -60,33 +60,17 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// 只能用在App上
-func (a *App) SelectFile() string {
-	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "选择文件",
-		Filters: []runtime.FileFilter{
-			{
-				DisplayName: "文本数据",
-				Pattern:     "*.txt",
-			},
-		},
-	})
-	if err != nil {
-		return fmt.Sprintf("err %s!", err)
+func (a *App) Callgologger(level, msg string) {
+	switch level {
+	case "info":
+		gologger.Info(a.ctx, msg)
+	case "warning":
+		gologger.Warning(a.ctx, msg)
+	case "error":
+		gologger.Error(a.ctx, msg)
+	default:
+		gologger.Debug(a.ctx, msg)
 	}
-	return selection
-}
-
-// selection会返回保存的文件路径+文件名 例如/Users/xxx/Downloads/test.xlsx
-func (a *App) SaveFile(filename string) string {
-	selection, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
-		Title:           "保存文件",
-		DefaultFilename: filename,
-	})
-	if err != nil {
-		return ""
-	}
-	return selection
 }
 
 func (a *App) IsRoot() bool {
@@ -158,8 +142,8 @@ func (a *App) Fscan2Txt(content string) string {
 }
 
 // thinkdict
-func (a *App) ThinkDict(p_name, c_name, c_domain, p_birthday, p_worknum string) []string {
-	return core.GenerateDict(p_name, c_name, c_domain, p_birthday, p_worknum)
+func (a *App) ThinkDict(userNameCN, userNameEN, companyName, companyDomain, birthday, jobNumber, connectWord string, weakList []string) []string {
+	return core.GenerateDict(userNameCN, userNameEN, companyName, companyDomain, birthday, jobNumber, connectWord, weakList)
 }
 
 func (a *App) System(content string, mode int) [][]string {
@@ -171,25 +155,25 @@ func (a *App) System(content string, mode int) [][]string {
 	}
 }
 
-func (a *App) CyberChefLocalServer() {
-	go func() {
-		// 定义要服务的目录
-		dir := util.HomeDir() + "/slack/CyberChef/"
-		// 创建文件服务器
-		fs := http.FileServer(http.Dir(dir))
+var onec sync.Once
 
-		// 设置路由，将所有请求重定向到文件服务器
-		http.Handle("/", fs)
-		// port, err := freeport.GetFreePort()
-		// if err != nil {
-		// 	return
-		// }
-		// 指定一个随机端口, 启动HTTP服务器
-		err := http.ListenAndServe(fmt.Sprintf(":%d", 8731), nil)
-		if err != nil {
-			return
-		}
-	}()
+func (a *App) CyberChefLocalServer() {
+	onec.Do(func() {
+		go func() {
+			// 定义要服务的目录
+			dir := util.HomeDir() + "/slack/CyberChef/"
+			// 创建文件服务器
+			fs := http.FileServer(http.Dir(dir))
+
+			// 设置路由，将所有请求重定向到文件服务器
+			http.Handle("/", fs)
+			// 指定一个随机端口, 启动HTTP服务器
+			err := http.ListenAndServe(fmt.Sprintf(":%d", 8731), nil)
+			if err != nil {
+				return
+			}
+		}()
+	})
 }
 
 func (a *App) ExtractIP(text string) string {
@@ -220,9 +204,9 @@ DNS: %v
 状态: %v`, s, s2, s3, s4, s5, s6, s7, s8, s9)
 }
 
-func (a *App) CheckCdn(domain, dns1, dns2 string) string {
+func (a *App) CheckCdn(domain string) string {
 	var result string
-	ips, cnames, err := core.Resolution(domain, []string{dns1 + ":53", dns2 + ":53"}, 10)
+	ips, cnames, err := core.Resolution(domain, 10)
 	if err == nil {
 		if len(cnames) != 0 {
 			for name, cdns := range core.ReadCDNFile(a.cdnFile) {
@@ -254,8 +238,8 @@ func (a *App) LoadSubDict(configPath string) []string {
 	return util.LoadSubdomainDict(util.HomeDir()+configPath, "/dicc.txt")
 }
 
-func (a *App) Subdomain(subdomain, dns1, dns2 string, timeout int) []string {
-	sr := core.BurstSubdomain(subdomain, []string{dns1 + ":53", dns2 + "53"}, timeout, a.qqwryFile, a.cdnFile)
+func (a *App) Subdomain(subdomain string, timeout int) []string {
+	sr := core.BurstSubdomain(subdomain, timeout, a.qqwryFile, a.cdnFile)
 	return []string{sr.Subdomain, strings.Join(sr.Cname, " | "), strings.Join(sr.Ips, " | "), sr.Notes}
 }
 
@@ -387,53 +371,43 @@ func (a *App) PortParse(text string) []int {
 }
 
 func (a *App) HostAlive(targets []string, Ping bool) []string {
-	return portscan.CheckLive(targets, Ping)
+	return portscan.CheckLive(a.ctx, targets, Ping)
 }
 
-func (a *App) PortCheck(ip string, port, timeout int) portscan.PortResult {
-	return portscan.Connect(ip, port, timeout)
+func (a *App) NewTcpScanner(ips []string, ports []int, thread, timeout int) {
+	portscan.ExitFunc = false
+	portscan.TcpScan(a.ctx, ips, ports, thread, timeout)
 }
 
-func (a *App) SynPortCheck(ips []string, ports []int, timeout int) {
-	portscan.SynScan(a.ctx, ips, util.IntArrayToUint16Array(ports), timeout)
-	runtime.EventsEmit(a.ctx, "synScanComplete", "done")
+func (a *App) NewCorrespondsScan(specialTargets []string, timeout int) {
+	var addrs []portscan.Address
+	for _, target := range specialTargets {
+		temp := strings.Split(target, ":")
+		port, err := strconv.Atoi(temp[1]) // 如果后缀端口有误则继续
+		if err != nil {
+			continue
+		}
+		addrs = append(addrs, portscan.Address{
+			IP:   temp[0],
+			Port: port,
+		})
+	}
+	portscan.ExitFunc = false
+	portscan.CorrespondsScan(a.ctx, addrs, timeout)
+}
+
+func (a *App) NewSynScanner(ips []string, ports []int) {
+	portscan.ExitFunc = false
+	portscan.SynScan(a.ctx, ips, util.IntArrayToUint16Array(ports))
+}
+
+func (a *App) StopPortScan() {
+	portscan.ExitFunc = true
 }
 
 // 端口暴破
-func (a *App) PortBrute(host string, usernames, passwords []string) *portscan.Burte {
-	u, err := url.Parse(host)
-	if err != nil {
-		return nil
-	}
-	switch u.Scheme {
-	case "ftp":
-		return portscan.FtpScan(u.Host, usernames, passwords)
-	case "ssh":
-		return portscan.SshScan(u.Host, usernames, passwords)
-	case "telnet":
-		return portscan.TelenetScan(u.Host, usernames, passwords)
-	case "smb":
-		return portscan.SmbScan(u.Host, usernames, passwords)
-	case "oracle":
-		return portscan.OracleScan(u.Host, usernames, passwords)
-	case "mssql":
-		return portscan.MssqlScan(u.Host, usernames, passwords)
-	case "mysql":
-		return portscan.MysqlScan(u.Host, usernames, passwords)
-	case "rdp":
-		return portscan.RdpScan(u.Host, usernames, passwords)
-	case "postgresql":
-		return portscan.PostgresScan(u.Host, usernames, passwords)
-	case "vnc":
-		return portscan.VncScan(u.Host, passwords)
-	case "redis":
-		return portscan.RedisScan(u.Host, passwords)
-	case "memcached":
-		return portscan.MemcachedScan(u.Host)
-	case "mongodb":
-		return portscan.MongodbScan(u.Host)
-	}
-	return nil
+func (a *App) PortBrute(host string, usernames, passwords []string) {
+	portscan.PortBrute(a.ctx, host, usernames, passwords)
 }
 
 // fofa
@@ -509,6 +483,15 @@ type InfoResult struct {
 	WAF          string
 }
 
+func (a *App) InitBurteDict() bool {
+	if _, err := os.Stat(a.bruteFile); err != nil {
+		os.MkdirAll(a.bruteFile+"/username", 0777)
+		os.Mkdir(a.bruteFile+"/password", 0777)
+		return true
+	}
+	return false
+}
+
 // 仅在执行时调用一次
 func (a *App) InitRule() bool {
 	return webscan.InitAll(a.webfingerFile, a.activefingerFile, a.workflowFile)
@@ -520,96 +503,12 @@ func (a *App) FingerLength() int {
 	return len(webscan.FingerprintDB)
 }
 
-func (a *App) FingerScan(target string, proxy clients.Proxy) *InfoResult {
-	client := clients.JudgeClient(proxy)
-	if !strings.HasPrefix(target, "http") {
-		if fulltarget, err := clients.IsWeb(target, client); err != nil {
-			return &InfoResult{
-				URL:        target,
-				StatusCode: 0,
-			}
-		} else {
-			target = fulltarget
-		}
-	}
-	u := webscan.HostPort(target)
-	banner := webscan.GetBanner(&u)
-	resp, body, _ := clients.NewSimpleGetRequest(target, client)
-	if resp == nil {
-		return &InfoResult{
-			URL:        target,
-			StatusCode: 0,
-		}
-	}
-	title, server, content_type := webscan.GetHeaderInfo(body, resp)
-	headers, _, _ := webscan.DumpResponseHeadersAndRaw(resp)
-	ti := &webscan.TargetINFO{
-		HeadeString:   string(headers),
-		ContentType:   content_type,
-		Cert:          webscan.GetTLSString(u.Scheme, fmt.Sprintf("%s:%d", u.Host, u.Port)),
-		BodyString:    string(body),
-		Path:          u.Path,
-		Title:         title,
-		Server:        server,
-		ContentLength: len(body),
-		Port:          u.Port,
-		IconHash:      webscan.FaviconHash(u.Scheme, target, clients.DefaultClient()),
-		StatusCode:    resp.StatusCode,
-		Banner:        banner,
-		Waf:           *waf.IsWAF(u.Host),
-	}
-	return &InfoResult{
-		URL:          target,
-		StatusCode:   ti.StatusCode,
-		Length:       ti.ContentLength,
-		Title:        ti.Title,
-		Fingerprints: webscan.FingerScan(ti, webscan.FingerprintDB),
-		IsWAF:        ti.Waf.Exsits,
-		WAF:          ti.Waf.Name,
-	}
+func (a *App) FingerScan(target []string, proxy clients.Proxy) {
+	webscan.NewFingerScan(a.ctx, target, proxy)
 }
 
-func (a *App) ActiveFingerScan(target string, proxy clients.Proxy) []InfoResult {
-	var irs []InfoResult
-	client := clients.JudgeClient(proxy)
-	u := webscan.HostPort(target)
-	for fingername, paths := range webscan.Sensitive {
-		for _, path := range paths {
-			resp, body, _ := clients.NewSimpleGetRequest(target+path, client)
-			if resp == nil {
-				return nil
-			}
-			title, server, content_type := webscan.GetHeaderInfo(body, resp)
-			headers, _, _ := webscan.DumpResponseHeadersAndRaw(resp)
-			ti := &webscan.TargetINFO{
-				HeadeString:   string(headers),
-				ContentType:   content_type,
-				Cert:          "",
-				BodyString:    string(body),
-				Path:          u.Path,
-				Title:         title,
-				Server:        server,
-				ContentLength: len(body),
-				Port:          u.Port,
-				IconHash:      "",
-				StatusCode:    resp.StatusCode,
-				Banner:        "",
-			}
-			result := webscan.FingerScan(ti, webscan.ActiveFingerprintDB)
-			// 多路径匹配时如果某一路径匹配到就立刻停止
-			if len(result) > 0 && fingername == result[0] {
-				irs = append(irs, InfoResult{
-					URL:          target + path,
-					StatusCode:   ti.StatusCode,
-					Length:       ti.ContentLength,
-					Title:        ti.Title,
-					Fingerprints: []string{fingername},
-				})
-				break
-			}
-		}
-	}
-	return irs
+func (a *App) ActiveFingerScan(target []string, proxy clients.Proxy) {
+	webscan.NewActiveFingerScan(a.ctx, target, proxy)
 }
 
 func (a *App) IsHighRisk(fingerprint string) bool {
@@ -623,25 +522,23 @@ func (a *App) IsHighRisk(fingerprint string) bool {
 
 // 在漏扫开始时，需要轮询结果
 // mode = 0  表示扫指纹漏洞， mode = 1 表示扫全漏洞
-func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucleiPath, reportName string, interactsh bool, keywords, severity string) []webscan.VulnerabilityInfo {
-	nc := webscan.NewNucleiCaller(nucleiPath, reportName, interactsh, severity)
-	if err := nc.ReportDirStat(); err != nil {
-		return []webscan.VulnerabilityInfo{}
-	}
+func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucleiPath string, interactsh bool, keywords, severity string) {
+	nc := webscan.NewNucleiCaller(nucleiPath, interactsh, severity)
+	nc.ReportDirStat()
 	if mode == 0 {
 		pe := nc.TargetBindFingerPocs(target, fingerprints)
-		return nc.CallerFP(pe)
+		nc.CallerFP(a.ctx, pe)
 	} else {
 		keys := []string{}
 		if keywords != "" {
 			keys = strings.Split(keywords, ",")
 		}
-		return nc.CallerAP(target, keys)
+		nc.CallerAP(a.ctx, target, keys)
 	}
 }
 
 func (a *App) NucleiEnabled(nucleiPath string) bool {
-	return webscan.NewNucleiCaller(nucleiPath, "", false, "").Enabled()
+	return webscan.NewNucleiCaller(nucleiPath, false, "").Enabled()
 }
 
 func (a *App) WebPocLength() int {
@@ -722,19 +619,4 @@ func (a *App) UseDruid(target string, attackType int, proxy clients.Proxy) (resu
 		result, _ = druid.GetSession(target, clients.JudgeClient(proxy))
 	}
 	return
-}
-
-func (a *App) DownloadCyberChef(url string) error {
-	cyber := "/slack/CyberChef.zip"
-	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath)
-	if err != nil {
-		return err
-	}
-	runtime.EventsEmit(a.ctx, "downloadComplete", fileName)
-	uz := util.NewUnzip()
-	if _, err := uz.Extract(util.HomeDir()+cyber, a.defaultPath); err != nil {
-		return err
-	}
-	os.Remove(util.HomeDir() + cyber)
-	return nil
 }

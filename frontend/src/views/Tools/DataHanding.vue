@@ -1,22 +1,13 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
-import { ExtractIP, Fscan2Txt, SelectFile } from '../../../wailsjs/go/main/App'
-import { GetFileContent } from '../../../wailsjs/go/main/File'
+import { ExtractIP, Fscan2Txt } from '../../../wailsjs/go/main/App'
+import { GetFileContent, FileDialog } from '../../../wailsjs/go/main/File'
 import { Delete, Files } from '@element-plus/icons-vue';
 import { ElNotification } from 'element-plus';
 
 const form = reactive({
     result: '',
     input: '',
-    options: [{
-        value: 0,
-        label: "192.168.0.0/255.255.255.0 => 192.168.0.0/24",
-    },
-    {
-        value: 1,
-        label: "192.168.0.0/24 => 192.168.0.0-192.168.0.255"
-    }],
-    current: 0,
     dedupOptions: [
         {
             value: '\n',
@@ -41,7 +32,7 @@ function FscanExtract() {
 }
 
 async function ReadFile() {
-    let filepath = await SelectFile()
+    let filepath = await FileDialog()
     if (filepath != "") {
         form.input = await GetFileContent(filepath)
     }
@@ -78,7 +69,7 @@ function Deduplication() {
 }
 
 // async function HunterCSVremoveDuplicates() {
-//     let filepath = await SelectFile()
+//     let filepath = await FileDialog()
 //     let result = await HunterRemoveDuplicates(filepath)
 //     if (result) {
 //         ElNotification({

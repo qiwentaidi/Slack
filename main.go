@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 
 	"github.com/wailsapp/wails/v2"
@@ -19,16 +20,19 @@ func main() {
 	db := NewDatabase()
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "slack-wails",
-		Width:  1024,
+		Title:  "Slack",
+		Width:  1280,
 		Height: 768,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
 		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 255},
-		OnStartup:        app.startup,
-		MinWidth:         1280,
-		MinHeight:        768,
+		OnStartup: func(ctx context.Context) {
+			app.startup(ctx)
+			file.startup(ctx)
+		},
+		MinWidth:  1280,
+		MinHeight: 768,
 		// Frameless:        true,
 		Bind: []interface{}{
 			app,

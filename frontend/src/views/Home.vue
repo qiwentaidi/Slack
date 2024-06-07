@@ -5,11 +5,14 @@ import { onMounted, ref, computed } from 'vue';
 import Navigation from './Navigation.vue'
 import { Search } from "@element-plus/icons-vue";
 import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
+import Crack from "./Permeation/Crack.vue";
+import Webscan from "./Permeation/Webscan.vue";
 // 初始化时调用
 onMounted(async () => {
   await InitConfigFile()
 });
 
+const shouldHideComponents = false; // 控制组件显示与隐藏
 const searchFilter = ref('')
 const activeCard = ref('local')
 
@@ -31,7 +34,6 @@ const filteredOptions = computed(() => {
       <el-tab-pane :label="$t('aside.app_navigation')" name="local">
         <Navigation />
       </el-tab-pane>
-      <!-- 在线导航 -->
       <el-tab-pane :label="$t('aside.navigation')" name="online">
         <el-scrollbar height="85vh">
           <div v-for="groups in filteredOptions" style="margin-top: 10px; width: 99%;">
@@ -59,7 +61,6 @@ const filteredOptions = computed(() => {
         placeholder="Filter search"></el-input>
     </div>
   </div>
-
 </template>
 
 <style>

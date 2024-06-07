@@ -1,36 +1,35 @@
 package portscan
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"slack-wails/lib/gologger"
 	"strings"
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func PostgresScan(host string, usernames, passwords []string) *Burte {
+func PostgresScan(ctx context.Context, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
 			pass = strings.Replace(pass, "{user}", string(user), -1)
 			flag, err := PostgresConn(host, user, pass)
 			if flag && err == nil {
-				return &Burte{
+				runtime.EventsEmit(ctx, "bruteResult", Burte{
 					Status:   true,
 					Host:     host,
 					Protocol: "postgres",
 					Username: user,
 					Password: pass,
-				}
+				})
+				return
+			} else {
+				gologger.Info(ctx, fmt.Sprintf("postgres://%s %s:%s is login failed", host, user, pass))
 			}
 		}
-	}
-	return &Burte{
-		Status:   false,
-		Host:     host,
-		Protocol: "postgres",
-		Username: "",
-		Password: "",
 	}
 }
 

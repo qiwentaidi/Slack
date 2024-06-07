@@ -15,6 +15,7 @@ const form = reactive({
     query: '',
     fraud: false,
     cert: false,
+    deduplication: false,
     tips: '',
     fofaImg: [
         '/fofa_syntax/fofa1.png',
@@ -28,13 +29,8 @@ const form = reactive({
     syntaxdialog: false,
     icondialog: false,
     batchdialog: false,
-    socksdialog: false,
     hashURL: '',
     batchURL: '',
-    socksLogger: '',
-    socksMax: 1,
-    socksNum: 1,
-    percentage: 0,
 })
 const loading = ref(false)
 
@@ -242,14 +238,40 @@ async function CopyURL() {
         temp = []
     }
 }
+
+async function CopyDeduplicationURL() {
+    await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+        if (result.Status == false) {
+            ElMessage("查询失败")
+            return
+        }
+        var temp = [];
+        let content = result.Results
+        let seen = new Set(); // 用于存储已处理过的 IP:Port 组合
+        if (Array.isArray(content)) {
+            for (const line of content) {
+                let ip = (line as any)["IP"];
+                let port = (line as any)["Port"];
+                let ipPort = `${ip}:${port}`;
+                if (!seen.has(ipPort)) {
+                    seen.add(ipPort); // 将新的 IP:Port 组合加入到 set 中
+                    temp.push(line["URL"]); // 添加 URL 到 temp 数组中
+                }
+            }
+        }
+        Copy(temp.join("\n"))
+        temp = []
+    })
+}
 </script>
 
 <template>
     <el-form :model="form" @submit.native.prevent="table.addTab(form.query)">
         <el-form-item label="查询条件">
             <div class="head">
-                <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                    @select="entry.handleSelect" :trigger-on-focus="false" :debounce="1000" style="width: 100%;">
+                <el-autocomplete v-model="form.query" placeholder="Search..."
+                    :fetch-suggestions="entry.querySearchAsync" @select="entry.handleSelect" :trigger-on-focus="false"
+                    :debounce="1000" style="width: 100%;">
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />
@@ -282,7 +304,10 @@ async function CopyURL() {
                         <el-dropdown-menu>
                             <el-dropdown-item :icon="Share" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
                             <el-dropdown-item :icon="Share" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+
                             <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
+                            <el-dropdown-item :icon="CopyDocument"
+                                @click="CopyDeduplicationURL">复制所有URL(根据IP+PORT去重)</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -333,7 +358,8 @@ async function CopyURL() {
                     :filter-method="filterHandlerTitle" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" label="IP" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Port" label="端口" width="100"
-                    :sort-method="(a: any, b: any) => { return a.Port - b.Port }" sortable :show-overflow-tooltip="true" />
+                    :sort-method="(a: any, b: any) => { return a.Port - b.Port }" sortable
+                    :show-overflow-tooltip="true" />
                 <el-table-column prop="Domain" label="域名" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Protocol" label="协议" :filters='getColumnData("Protocol")'
                     :filter-method="filterHandlerProtocol" width="100" :show-overflow-tooltip="true" />
@@ -345,7 +371,8 @@ async function CopyURL() {
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
                 <el-pagination :page-size="100" :page-sizes="[100, 500, 1000]" layout="sizes, prev, pager, next"
-                    @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange" :total="item.total" />
+                    @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange"
+                    :total="item.total" />
             </div>
         </el-tab-pane>
         <el-image class="center" src="/loading.gif" alt="loading" v-else></el-image>

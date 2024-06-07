@@ -10,7 +10,7 @@ const issueAddress = "https://github.com/qiwentaidi/Slack/issues/new"
     <div style="text-align: center;">
         <el-space direction="vertical" :size="8">
             <img src="/slack.svg" style="height: 8em; margin-bottom: 5px;">
-            <span class="bold">slack-wails <el-tag round type="info" size="small" style="margin-bottom: 2px;">{{ "v" +
+            <span class="bold">Slack <el-tag round type="info" size="small" style="margin-bottom: 2px;">{{ "v" +
             global.LOCAL_VERSION }}</el-tag></span>
             <span class="slogan">{{ $t('aside.slogan') }}</span>
 

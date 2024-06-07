@@ -1,6 +1,7 @@
 package webscan
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -8,6 +9,8 @@ import (
 	"slack-wails/lib/util"
 	"strings"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type NucleiResult []struct {
@@ -58,14 +61,17 @@ type VulnerabilityInfo struct {
 type NucleiCaller struct {
 	CommandLine []string
 	NucleiPath  string
-	ReportName  string
 	Interactsh  string
 	Severity    string
 }
 
-const reportTemp = "/slack/web_report/"
+var (
+	pocFile    = util.HomeDir() + "/slack/config/pocs"
+	reportTemp = util.HomeDir() + "/slack/web_report/"
+	result     = reportTemp + "temp.json"
+)
 
-func NewNucleiCaller(path, reportName string, interactsh bool, severity string) *NucleiCaller {
+func NewNucleiCaller(path string, interactsh bool, severity string) *NucleiCaller {
 	var nucleiPath, ni string
 	// 存在环境变量
 	if path == "" {
@@ -79,7 +85,6 @@ func NewNucleiCaller(path, reportName string, interactsh bool, severity string) 
 	}
 	return &NucleiCaller{
 		NucleiPath: nucleiPath,
-		ReportName: reportName,
 		Interactsh: ni,
 		Severity:   severity,
 	}
@@ -87,9 +92,8 @@ func NewNucleiCaller(path, reportName string, interactsh bool, severity string) 
 
 // 检查存储报告的文件夹是否存在
 func (nc *NucleiCaller) ReportDirStat() error {
-	path := util.HomeDir() + reportTemp
-	if _, err := os.Stat(path); err != nil {
-		return os.MkdirAll(path, 0755)
+	if _, err := os.Stat(reportTemp); err != nil {
+		return os.MkdirAll(reportTemp, 0755)
 	}
 	return nil
 }
@@ -116,16 +120,17 @@ func (nc *NucleiCaller) TargetBindFingerPocs(target string, fingerprints []strin
 	return fp
 }
 
-func (nc *NucleiCaller) ReadNucleiJson(reportName string) []VulnerabilityInfo {
-	var vis []VulnerabilityInfo
-	b, err := os.ReadFile(util.HomeDir() + reportTemp + "temp.json")
+func (nc *NucleiCaller) ReadNucleiJson(ctx context.Context) error {
+	b, err := os.ReadFile(result)
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
+		return err
 	}
 	var nr NucleiResult
-	json.Unmarshal(b, &nr)
+	if err = json.Unmarshal(b, &nr); err != nil {
+		return err
+	}
 	for _, result := range nr {
-		vis = append(vis, VulnerabilityInfo{
+		runtime.EventsEmit(ctx, "nucleiResult", VulnerabilityInfo{
 			ID:          result.TemplateID,
 			Name:        result.Info.Name,
 			Description: result.Info.Description,
@@ -138,28 +143,21 @@ func (nc *NucleiCaller) ReadNucleiJson(reportName string) []VulnerabilityInfo {
 			Risk:        result.Info.Severity,
 		})
 	}
-	return vis
+	return nil
 }
 
 // Finger POC
-func (nc *NucleiCaller) CallerFP(pe FingerPoc) []VulnerabilityInfo {
-	result := util.HomeDir() + reportTemp + "temp.json"
+func (nc *NucleiCaller) CallerFP(ctx context.Context, pe FingerPoc) error {
 	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", strings.Join(pe.PocFiles, ","), "-je", result, nc.Interactsh}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("err: %v\n", err)
-		return []VulnerabilityInfo{}
+		return err
 	}
-	return nc.ReadNucleiJson(nc.ReportName)
+	return nc.ReadNucleiJson(ctx)
 }
 
-var (
-	pocFile = util.HomeDir() + "/slack/config/pocs"
-	result  = util.HomeDir() + reportTemp + "temp.json"
-)
-
 // ALL POC
-func (nc *NucleiCaller) CallerAP(target string, keywords []string) []VulnerabilityInfo {
+func (nc *NucleiCaller) CallerAP(ctx context.Context, target string, keywords []string) error {
 	var pocs []string
 	nc.CommandLine = []string{"-duc", "-u", target, "-je", result, nc.Interactsh}
 	// 风险等级、关键词筛选
@@ -176,10 +174,9 @@ func (nc *NucleiCaller) CallerAP(target string, keywords []string) []Vulnerabili
 	}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("callerap err: %v\n", err)
-		return []VulnerabilityInfo{}
+		return fmt.Errorf("callerap err: %v", err)
 	}
-	return nc.ReadNucleiJson(nc.ReportName)
+	return nc.ReadNucleiJson(ctx)
 }
 
 func (nc *NucleiCaller) FilterPoc(pocs, keywords []string) []string {

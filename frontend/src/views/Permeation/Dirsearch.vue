@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { GoFetch, LoadDirsearchDict, PathRequest, SelectFile } from "../../../wailsjs/go/main/App";
+import { GoFetch, LoadDirsearchDict, PathRequest } from "../../../wailsjs/go/main/App";
 import { ReadLine, SplitTextArea, Copy, sleep } from '../../util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
@@ -8,6 +8,7 @@ import async from 'async';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '../../global';
+import { FileDialog } from '../../../wailsjs/go/main/File';
 // 初始化时调用
 onMounted(() => {
     dir.value = []
@@ -31,7 +32,7 @@ const from = reactive({
 const dir = ref([{}])
 
 async function handleFileChange() {
-    let path = await SelectFile()
+    let path = await FileDialog()
     let result = (await ReadLine(path))!
     const extensions = from.exts.split(',');
     for (const line of result) {
@@ -97,6 +98,7 @@ class Dirsearch {
         let startTime = Date.now();
         let statusCounts: Record<number, number> = {};
         let statuscodeFilter = control.psc()
+        console.log(statuscodeFilter)
         let redirect = false
         if (from.redirectClient) {
             redirect = true
@@ -122,7 +124,8 @@ class Dirsearch {
                         statusCounts[result.Length] = (statusCounts[result.Length] || 0) + 1;
                         if (statusCounts[result.Length] <= config.times) {
                             if (statuscodeFilter.length > 0) {
-                                if (statuscodeFilter.find(number => number != result.Status) != undefined) {
+                                // 在状态码过滤列表中，如果匹配不到响应的状态码，则添加结果
+                                if (statuscodeFilter.includes(result.Status)) {
                                     dir.value.push({
                                         status: result.Status,
                                         length: result.Length,
@@ -171,7 +174,7 @@ const control = reactive({
             control.runningStatus = false
         }
     },
-    format: function (percentage: any) {
+    format: function () {
         return `${from.id}/${from.paths.length} (${from.currentRate}/s)`
     },
     // Processing status codes
@@ -377,7 +380,7 @@ const config = reactive({
             </template>
         </el-table-column>
         <template #empty>
-            <el-empty description="点击开始扫描获取数据"></el-empty>
+            <el-empty />
         </template>
     </el-table>
     <el-dialog v-model="from.respDialog" title="Response" width="800">

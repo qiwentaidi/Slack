@@ -38,6 +38,11 @@ export default {
         'navigation': '在线导航',
         'app_navigation': '应用导航',
         'exp': '漏洞利用',
+        'reverse': '反弹Shell生成',
+        'crack': '暴破与未授权检测',
+        'guard': '重保值守',
+        'guarantee': '重保专区',
+        'dict': '字典管理',
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

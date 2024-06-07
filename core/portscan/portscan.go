@@ -1,36 +1,20 @@
 package portscan
 
 import (
+	"context"
 	"fmt"
-	"net"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/util"
+	"sync"
+	"sync/atomic"
 	"time"
+
+	"github.com/panjf2000/ants/v2"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-type Burte struct {
-	Status   bool
-	Protocol string
-	Host     string
-	Username string
-	Password string
-}
-
-func WrapperTcpWithTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
-	d := &net.Dialer{Timeout: timeout}
-	return WrapperTCP(network, address, d)
-}
-
-func WrapperTCP(network, address string, forward *net.Dialer) (net.Conn, error) {
-	//get conn
-	conn, err := forward.Dial(network, address)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-
-}
+var ExitFunc = false
 
 type PortResult struct {
 	Status    bool
@@ -39,6 +23,99 @@ type PortResult struct {
 	Server    string
 	Link      string
 	HttpTitle string
+}
+
+func TcpScan(ctx context.Context, ips []string, ports []int, workers, timeout int) {
+	var id int32
+	single := make(chan struct{})
+	retChan := make(chan PortResult, len(ips)*len(ports))
+	var wg sync.WaitGroup
+	go func() {
+		for pr := range retChan {
+			runtime.EventsEmit(ctx, "tcpPortScanLoading", pr)
+		}
+		close(single)
+		runtime.EventsEmit(ctx, "tcpScanComplete", "done")
+	}()
+	// port scan func
+	portScan := func(port int) {
+		for _, ip := range ips {
+			if ExitFunc {
+				return
+			}
+			pr := Connect(ip, port, timeout)
+			runtime.EventsEmit(ctx, "tcpProgressID", id)
+			atomic.AddInt32(&id, 1)
+			if pr.Status {
+				pr.IP = ip
+				pr.Port = port
+				retChan <- pr
+			}
+			// gologger.Info(ctx, pr)
+		}
+	}
+	threadPool, _ := ants.NewPoolWithFunc(workers, func(ports interface{}) {
+		port := ports.(int)
+		portScan(port)
+		wg.Done()
+	})
+	defer threadPool.Release()
+	for _, port := range ports {
+		if ExitFunc {
+			return
+		}
+		wg.Add(1)
+		threadPool.Invoke(port)
+	}
+	wg.Wait()
+	close(retChan)
+	<-single
+}
+
+type Address struct {
+	IP   string
+	Port int
+}
+
+// 处理 192.168.1.1:6379 这种单独IP端口组模式
+func CorrespondsScan(ctx context.Context, address []Address, timeout int) {
+	var id int32
+	single := make(chan struct{})
+	retChan := make(chan PortResult, len(address))
+	go func() {
+		for pr := range retChan {
+			runtime.EventsEmit(ctx, "csPortScanLoading", pr)
+		}
+		close(single)
+	}()
+	// port scan func
+	portScan := func(addr Address) {
+		pr := Connect(addr.IP, addr.Port, timeout)
+		atomic.AddInt32(&id, 1)
+		runtime.EventsEmit(ctx, "csProgressID", id)
+		if pr.Status {
+			pr.IP = addr.IP
+			pr.Port = addr.Port
+			retChan <- pr
+		}
+	}
+	var wg sync.WaitGroup
+	threadPool, _ := ants.NewPoolWithFunc(20, func(task interface{}) {
+		addr := task.(Address)
+		portScan(addr)
+		wg.Done()
+	})
+	defer threadPool.Release()
+	for _, addr := range address {
+		if ExitFunc {
+			return
+		}
+		wg.Add(1)
+		threadPool.Invoke(addr)
+	}
+	wg.Wait()
+	close(retChan)
+	<-single
 }
 
 func Connect(ip string, port, timeout int) PortResult {

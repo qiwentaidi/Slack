@@ -1,36 +1,35 @@
 package portscan
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"slack-wails/lib/gologger"
 	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MysqlScan(host string, usernames, passwords []string) *Burte {
+func MysqlScan(ctx context.Context, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := MysqlConn(host, user, pass)
 			if flag && err == nil {
-				return &Burte{
+				runtime.EventsEmit(ctx, "bruteResult", Burte{
 					Status:   true,
 					Host:     host,
 					Protocol: "mysql",
 					Username: user,
 					Password: pass,
-				}
+				})
+				return
+			} else {
+				gologger.Info(ctx, fmt.Sprintf("mysql://%s %s:%s is login failed", host, user, pass))
 			}
 		}
-	}
-	return &Burte{
-		Status:   false,
-		Host:     host,
-		Protocol: "mysql",
-		Username: "",
-		Password: "",
 	}
 }
 

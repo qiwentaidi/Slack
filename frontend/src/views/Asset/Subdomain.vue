@@ -4,7 +4,8 @@ import async from 'async';
 import { ReadLine } from '../../util'
 import { ExportToXlsx } from '../../export'
 import { reactive, ref } from "vue";
-import { Subdomain, InitIPResolved, LoadSubDict, SelectFile } from "../../../wailsjs/go/main/App";
+import { Subdomain, InitIPResolved, LoadSubDict } from "../../../wailsjs/go/main/App";
+import { FileDialog } from "../../../wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import { onMounted } from 'vue';
 import { Loading } from '@element-plus/icons-vue';
@@ -39,7 +40,7 @@ async function BurstSubdomain() {
         if (!from.runningStatus) {
             return
         }
-        Subdomain(sub + "." + from.domain, global.scan.dns1, global.scan.dns2, from.timeout).then((result) => {
+        Subdomain(sub + "." + from.domain, from.timeout).then((result) => {
             if (result[2].length > 0) {
                 sbr.value.push({
                     subdomains: result[0],
@@ -75,7 +76,7 @@ function stop() {
 }
 
 async function handleFileChange() {
-    let path = await SelectFile()
+    let path = await FileDialog()
     from.subs = (await ReadLine(path))!
     from.tips = `loaded ${from.subs.length} dicts`;
 }
@@ -108,9 +109,9 @@ async function handleFileChange() {
             <el-button style="margin-left: auto;"
                 @click="ExportToXlsx(['子域名', 'CNAME', 'IPS', '备注'], '子域名暴破', 'subdomain', sbr)">
                 <template #icon>
-                    <img src="/excle.svg" width="16">
+                    <img src="/excel.svg" width="16">
                 </template>
-                导出Excle</el-button>
+                导出Excel</el-button>
         </el-form-item>
     </el-form>
     <el-table :data="sbr" border style="height: 75vh; margin-bottom: 10px;">

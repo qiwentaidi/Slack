@@ -1,12 +1,17 @@
 package portscan
 
 import (
+	"context"
+	"fmt"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/gotelnet"
 	"strconv"
 	"strings"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func TelenetScan(host string, usernames, passwords []string) *Burte {
+func TelenetScan(ctx context.Context, host string, usernames, passwords []string) {
 	h := strings.Split(host, ":")[0]
 	p, _ := strconv.Atoi(strings.Split(host, ":")[1])
 	serverType := getTelnetServerType(h, p)
@@ -15,22 +20,18 @@ func TelenetScan(host string, usernames, passwords []string) *Burte {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := TelnetConn(h, user, pass, p, serverType)
 			if flag && err == nil {
-				return &Burte{
+				runtime.EventsEmit(ctx, "bruteResult", Burte{
 					Status:   true,
 					Host:     host,
 					Protocol: "telnet",
 					Username: user,
 					Password: pass,
-				}
+				})
+				return
+			} else {
+				gologger.Info(ctx, fmt.Sprintf("telnet://%s %s:%s is login failed", host, user, pass))
 			}
 		}
-	}
-	return &Burte{
-		Status:   false,
-		Host:     host,
-		Protocol: "telnet",
-		Username: "",
-		Password: "",
 	}
 }
 

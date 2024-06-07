@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, Link, Operation, RefreshRight } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, Link, Grid, RefreshRight, Menu } from '@element-plus/icons-vue';
 import {
     InitRule,
     FofaSearch,
@@ -11,15 +11,16 @@ import {
     IsHighRisk,
     NucleiScanner,
     NucleiEnabled,
-    WebPocLength
+    WebPocLength,
+    Callgologger
 } from '../../../wailsjs/go/main/App'
-import { ElMessage, ElNotification } from 'element-plus';
-import { formatURL, ApiSyntaxCheck, TestProxy, currentTime, Copy, CopyALL, currentTimestamp } from '../../util'
-import { ExportWebScanToXlsx } from '../../export'
 import async from 'async';
+import { ElMessage, ElNotification } from 'element-plus';
+import { formatURL, ApiSyntaxCheck, TestProxy, Copy, CopyALL } from '../../util'
+import { ExportWebScanToXlsx } from '../../export'
 import global from "../../global"
 import { onMounted } from 'vue';
-import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
+import { BrowserOpenURL, EventsOn } from '../../../wailsjs/runtime/runtime';
 // 初始化时调用
 onMounted(() => {
     InitRule().then(err => {
@@ -44,6 +45,47 @@ onMounted(() => {
     })
 });
 
+onMounted(() => {
+    EventsOn("nucleiResult", (result: any) => {
+        const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
+        dashboard.riskLevel[riskLevelKey]++;
+        form.vulResult.push({
+            vulID: result.ID,
+            vulName: result.Name,
+            protocoltype: result.Type.toLocaleUpperCase(),
+            severity: result.Risk.toLocaleUpperCase(),
+            vulURL: result.URL,
+            request: result.Request,
+            response: result.Response,
+            extInfo: result.Extract,
+            description: result.Description,
+            reference: result.Reference,
+        })
+    });
+    global.webscan.urlFingerMap = []
+    EventsOn("webFingerScan", async (result: any) => {
+        if (result.StatusCode == 0) {
+            dashboard.reqErrorURLs.push(result.URL)
+        } else {
+            global.webscan.urlFingerMap.push({
+                url: result.URL,
+                finger: result.Fingerprints
+            })
+            let temp = await sortFinger(result.Fingerprints)
+            form.fingerResult.push({
+                url: result.URL,
+                status: result.StatusCode,
+                length: result.Length,
+                title: result.Title,
+                detect: "Default",
+                existsWaf: result.IsWAF,
+                waf: "WAF: " + result.WAF,
+                fingerprint: temp,
+            })
+        }
+    });
+})
+
 interface Vulnerability {
     vulID: string
     vulName: string
@@ -66,6 +108,11 @@ interface FingerprintTable {
     existsWaf: boolean
     waf: string
     fingerprint: FingerLevel[]
+}
+
+interface uf {
+    url: string,
+    finger: string[]
 }
 
 interface FingerLevel {
@@ -101,7 +148,6 @@ const form = reactive({
     thread: 50,
     vulResult: [] as Vulnerability[],
     fingerResult: [] as FingerprintTable[],
-    urlFingerMap: [] as uf[],
     currentLoadPath: [] as string[],
     fofaDialog: false,
     fofaNum: 1000,
@@ -113,10 +159,7 @@ const form = reactive({
     noInteractsh: false,
 })
 
-interface uf {
-    url: string,
-    finger: string[]
-}
+
 
 const dashboard = reactive({
     reqErrorURLs: [] as string[],
@@ -134,6 +177,7 @@ const dashboard = reactive({
     nucleiEnabled: false
 })
 
+// 导出文件
 function convertFT(ft: FingerprintTable[]) {
     return ft.map(item => ({
         url: item.url,
@@ -152,6 +196,24 @@ function convertVUL(vul: Vulnerability[]) {
         severity: item.severity,
         vulURL: item.vulURL
     }))
+}
+
+async function sortFinger(Fingerprints: any) {
+    const temp = [] as FingerLevel[]
+    for (const finger of Fingerprints) {
+        if (await IsHighRisk(finger)) {
+            temp.push({
+                name: finger,
+                level: 1
+            })
+        } else {
+            temp.push({
+                name: finger,
+                level: 0
+            })
+        }
+    }
+    return temp
 }
 
 async function startScan() {
@@ -174,7 +236,7 @@ function stopScan() {
 class Scanner {
     urls = [] as string[]
     public init() {
-        form.urlFingerMap = [] as uf[]
+        global.webscan.urlFingerMap = []
         form.fingerResult = []
         form.vulResult = []
         dashboard.riskLevel.critical = 0
@@ -186,25 +248,6 @@ class Scanner {
         dashboard.currentModule = ""
         form.runnningStatus = true
     }
-
-    public async sortFinger(Fingerprints: any) {
-        const temp = [] as FingerLevel[]
-        for (const finger of Fingerprints) {
-            if (await IsHighRisk(finger)) {
-                temp.push({
-                    name: finger,
-                    level: 1
-                })
-            } else {
-                temp.push({
-                    name: finger,
-                    level: 0
-                })
-            }
-        }
-        return temp
-    }
-
     public async infoScanner() {
         // 检查先行条件
         if (!await TestProxy(1)) {
@@ -221,129 +264,48 @@ class Scanner {
             });
             return
         }
+        dashboard.currentModule = form.module[form.currentModule].label
         // 指纹扫描      
-        global.Logger.value += `${currentTime()} 网站扫描任务已加载，目标数量: ${this.urls.length}，当前扫描模式: ${dashboard.currentModule} \n`
-        global.Logger.value += '正在进行指纹扫描 ...\n'
+        Callgologger("info", `Webscan task loaded, current: ${this.urls.length}，当前扫描模式: ${dashboard.currentModule}`)
+        Callgologger("info", '正在进行指纹扫描 ...')
+        await FingerScan(this.urls, global.proxy)
+        if (dashboard.currentModule == "指纹+敏感目录扫描" || dashboard.currentModule == "指纹漏洞扫描") {
+            const urlArray: string[] = global.webscan.urlFingerMap.map(item => item.url);
+            Callgologger("info", '正在进行主动指纹探测 ...')
+            await ActiveFingerScan(urlArray, global.proxy)
+        }
         let count = 0
-        dashboard.currentModule = form.module.find(module => module.value === form.currentModule)!.label;
-        async.eachLimit(this.urls, form.thread, async (target: string, callback: () => void) => {
-            if (!form.runnningStatus) {
-                return
+        let mode = 0
+        if (dashboard.currentModule == "指纹漏洞扫描" || dashboard.currentModule == "全部漏洞扫描") {
+            if (dashboard.currentModule == "全部漏洞扫描") {
+                mode = 1
             }
-            let result = await FingerScan(target, global.proxy)
-            if (result.StatusCode == 0) {
-                dashboard.reqErrorURLs.push(target)
-            } else {
-                form.urlFingerMap.push({
-                    url: result.URL,
-                    finger: result.Fingerprints
-                })
-                let temp = await this.sortFinger(result.Fingerprints)
-                form.fingerResult.push({
-                    url: result.URL,
-                    status: result.StatusCode,
-                    length: result.Length,
-                    title: result.Title,
-                    detect: "Default",
-                    existsWaf: result.IsWAF,
-                    waf: result.WAF,
-                    fingerprint: temp,
-                })
-            }
-            count++
-            if (count == this.urls.length) { // 等任务全部执行完毕调用主动指纹探测
-                global.Logger.value += `${currentTime()} 指纹扫描已完成\n`
-                count = 0
-                callback();
-            }
-        }, async () => {
-            // 在不等于指纹扫描的其他模式下，需要进行主动目录探测
-            if (form.currentModule != 0) {
-                async.eachLimit(form.urlFingerMap, 20, async (ufm: uf, callback2: () => void) => {
-                    if (!form.runnningStatus) {
-                        return
-                    }
-                    let activeResult = await ActiveFingerScan(ufm.url, global.proxy)
-                    if (Array.isArray(activeResult) && activeResult.length > 0) {
-                        activeResult.forEach(async item => {
-                            let temp = await this.sortFinger(item.Fingerprints)
-                            form.fingerResult.push({
-                                url: item.URL,
-                                status: item.StatusCode,
-                                length: item.Length,
-                                title: item.Title,
-                                detect: "Active",
-                                existsWaf: item.IsWAF,
-                                waf: item.WAF,
-                                fingerprint: temp,
-                            })
-                            for (const fm of form.urlFingerMap) {
-                                if (fm.url == item.URL) {
-                                    fm.finger = Array.from(new Set(item.Fingerprints.push(fm.finger)))
-                                }
-                            }
-                        })
-                    }
-                    count++
-                    if (count == form.urlFingerMap.length) {
-                        global.Logger.value += `${currentTime()} 敏感目录已扫描结束\n`
-                        count = 0
-                        if (form.currentModule == 1) {
-                            form.runnningStatus = false
-                            return
-                        }
-                        callback2();
-                    }
-                }, async () => {
-                    let mode = 0
-                    if (form.currentModule == 3) {
-                        mode = 1
-                    }
-                    this.webScanner(mode)
-                })
-            } else {
+            Callgologger("info", `正在进行${dashboard.currentModule} ...`)
+            async.eachLimit(global.webscan.urlFingerMap, 10, async (ufm: uf, callback: () => void) => {
+                if (!form.runnningStatus) {
+                    return
+                }
+                await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, form.noInteractsh, form.keyword, form.risk.join(","))
+                count++
+                if (count == global.webscan.urlFingerMap.length) {
+                    callback()
+                }
+            }, () => {
+                Callgologger("info", "漏洞扫描已扫描结束")
+                this.done()
                 form.runnningStatus = false
-            }
-        })
+            })
+        } else {
+            Callgologger("info", "漏洞扫描已扫描结束")
+            this.done()
+            form.runnningStatus = false
+        }
 
     }
-
-    public webScanner(mode: number) {
-        let count = 0
-        async.eachLimit(form.urlFingerMap, 1, async (ufm: uf, callback: () => void) => {
-            if (!form.runnningStatus) {
-                return
-            }
-
-            let nucleiResult = await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, currentTimestamp(), form.noInteractsh, form.keyword, form.risk.join(","))
-            for (const result of nucleiResult) {
-                const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
-                dashboard.riskLevel[riskLevelKey]++;
-                form.vulResult.push({
-                    vulID: result.ID,
-                    vulName: result.Name,
-                    protocoltype: result.Type.toLocaleUpperCase(),
-                    severity: result.Risk.toLocaleUpperCase(),
-                    vulURL: result.URL,
-                    request: result.Request,
-                    response: result.Response,
-                    extInfo: result.Extract,
-                    description: result.Description,
-                    reference: result.Reference,
-                })
-            }
-            count++
-            if (count == form.urlFingerMap.length) {
-                callback()
-            }
-        }, () => {
-            global.Logger.value += `${currentTime()} 漏洞扫描已扫描结束\n`
-            ElNotification({
-                message: "Scanner Finished",
-                type: "success",
-                position: "bottom-right",
-            })
-            form.runnningStatus = false
+    public async done() {
+        ElNotification({
+            message: "Scanner Finished",
+            position: "bottom-right",
         })
     }
 }
@@ -355,6 +317,8 @@ const uncover = {
         if (ApiSyntaxCheck(0, global.space.fofaemail, global.space.fofakey, form.query) === false) {
             return
         }
+        form.fofaDialog = false
+        ElMessage("正在导入FOFA数据，请稍后...")
         FofaSearch(form.query, form.fofaNum.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true).then(result => {
             if (result.Status == false) {
                 return
@@ -363,14 +327,14 @@ const uncover = {
             for (const item of result.Results) {
                 form.url += item.URL + "\n"
             }
-            form.fofaDialog = false
         })
     },
     hunter: function () {
         if (ApiSyntaxCheck(1, "", global.space.hunterkey, form.query) === false) {
             return
         }
-        form.url = ""
+        form.hunterDialog = false
+        ElMessage("正在导入鹰图数据，请稍后...")
         HunterSearch(global.space.hunterkey, form.query, form.defaultNum, "1", "0", "3", false).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
@@ -383,11 +347,11 @@ const uncover = {
                     return
                 }
             }
+            form.url = ""
             result.data.arr.forEach((item: any) => {
                 form.url += item.url + "\n"
             });
         })
-        form.hunterDialog = false
     }
 }
 
@@ -422,7 +386,7 @@ function getClassBySeverity(severity: string) {
 </script>
 
 <template>
-    <el-card style="margin-bottom: 10px;">
+    <el-card>
         <template #header>
             <div class="card-header">
                 <span>Dashboard</span>
@@ -473,7 +437,7 @@ function getClassBySeverity(severity: string) {
             </el-col>
         </el-row>
     </el-card>
-    <div style="position: relative;">
+    <div style="position: relative; margin-top: 10px;">
         <el-tabs type="card">
             <el-tab-pane label="指纹">
                 <el-table :data="form.fingerResult" border height="63vh" :cell-style="{ textAlign: 'center' }"
@@ -523,7 +487,6 @@ function getClassBySeverity(severity: string) {
                                 <template #content>
                                     · 普通指纹会呈现浅蓝色，workflow中存在漏洞的指纹会呈现浅红色<br />
                                     · 若指纹标签会呈现填充红色，表示该指纹为敏感目录扫描得到<br />
-                                    · 盾牌图标显示存在WAF，鼠标移入会显示WAF信息<br />
                                 </template>
                                 <el-icon>
                                     <QuestionFilled size="24" />
@@ -537,12 +500,13 @@ function getClassBySeverity(severity: string) {
                                     :type="finger.level === 1 ? 'danger' : 'primary'"
                                     :effect="scope.row.detect === 'Default' ? 'light' : 'dark'">{{ finger.name
                                     }}</el-tag>
-                                <a :title="scope.row.waf" v-if="scope.row.existsWaf">
-                                    <el-image src="/shield.png" style="width: 24px;"></el-image>
-                                </a>
+                                <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
                             </div>
                         </template>
                     </el-table-column>
+                    <template #empty>
+                        <el-empty />
+                    </template>
                 </el-table>
             </el-tab-pane>
             <el-tab-pane label="漏洞">
@@ -582,31 +546,30 @@ function getClassBySeverity(severity: string) {
                         </template>
                     </el-table-column>
                     <el-table-column prop="vulURL" label="URL" :show-overflow-tooltip="true" />
+                    <template #empty>
+                        <el-empty />
+                    </template>
                 </el-table>
             </el-tab-pane>
         </el-tabs>
         <el-space class="custom_eltabs_titlebar" :size="5">
+
             <el-button :icon="RefreshRight" text bg type="danger" @click="NucleiEnabled(global.webscan.nucleiEngine)"
                 v-show="!dashboard.nucleiEnabled">Reload
                 Engine</el-button>
-            <el-popover placement="bottom" :width="200" trigger="click">
-                <template #reference>
-                    <el-button text bg :icon="Operation"></el-button>
-                </template>
-                <template #default>
-                    <div class="context-menu">
-                        <div class="click-div" @click="CopyALL(dashboard.reqErrorURLs)">
-                            复制全部失败目标
-                        </div>
-                    </div>
-                </template>
-            </el-popover>
 
-            <el-button @click="ExportWebScanToXlsx(convertFT(form.fingerResult), convertVUL(form.vulResult))">
-                <template #icon>
-                    <img src="/excle.svg" width="16">
+            <el-dropdown>
+                <el-button :icon="Menu" color="#D2DEE3" />
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
+                            :icon="CopyDocument">复制全部失败目标</el-dropdown-item>
+                        <el-dropdown-item :icon="Grid"
+                            @click="ExportWebScanToXlsx(convertFT(form.fingerResult), convertVUL(form.vulResult))">
+                            导出Excel</el-dropdown-item>
+                    </el-dropdown-menu>
                 </template>
-                导出Excle</el-button>
+            </el-dropdown>
         </el-space>
     </div>
 
@@ -661,7 +624,7 @@ function getClassBySeverity(severity: string) {
                 </template>
                 <el-segmented v-model="form.currentModule" :options="form.module" style="width: 100%;" />
             </el-form-item>
-            <div v-if="form.currentModule == 3">
+            <div v-if="dashboard.currentModule == '全部漏洞扫描'">
                 <el-form-item label="关键字:" class="bottom">
                     <el-input v-model="form.keyword" placeholder="根据id判断','分割关键字" clearable></el-input>
                 </el-form-item>

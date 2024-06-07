@@ -4,6 +4,7 @@ import { reactive, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import about from "./About.vue";
 import updateUI from "./Update.vue";
+import dict from "./Dict.vue";
 import global from "../global";
 import menus from "../router/menu";
 import { check } from "../util";
@@ -20,8 +21,9 @@ const changeLanguage = (area: string) => {
 };
 
 const dg = reactive({
-  helpDialogVisible: false,
-  updateDialogVisible: false,
+  helpDialog: false,
+  updateDialog: false,
+  dictDialog: false,
 });
 </script>
 
@@ -38,7 +40,7 @@ const dg = reactive({
         </el-menu-item>
         <el-sub-menu :index="menu.path" v-else>
           <template #title>
-            <el-icon>
+            <el-icon class="aside">
               <component :is="menu.icon" />
             </el-icon>
             <span>{{ $t(menu.name) }}</span>
@@ -52,18 +54,18 @@ const dg = reactive({
     <div class="copy-menu"></div>
 
     <el-menu :collapse="true" active-text-color="#fff" background-color="#F2F3F5" text-color="#000">
-      <el-menu-item class="custom-menu-item" index="/update" @click="dg.updateDialogVisible = true">
-        <el-icon>
+      <el-menu-item class="custom-menu-item" index="/update" @click="dg.updateDialog = true">
+        <el-icon class="aside">
           <Refresh />
         </el-icon>
         <template #title><span>{{ $t("aside.update") }}</span></template>
-        <el-badge is-dot v-if="global.UPDATE.ClientStatus == true ||
-      global.UPDATE.PocStatus == true
+        <el-badge is-dot v-if="global.UPDATE.ClientStatus ||
+      global.UPDATE.PocStatus
       " />
       </el-menu-item>
 
       <el-menu-item class="custom-menu-item" @click="$router.push('/settings')">
-        <el-icon>
+        <el-icon class="aside">
           <setting />
         </el-icon>
         <template #title><span>{{ $t("aside.setting") }}</span></template>
@@ -75,6 +77,9 @@ const dg = reactive({
           </el-icon>
           <span>{{ $t("aside.more") }}</span>
         </template>
+        <el-menu-item index="dict" @click="dg.dictDialog = true">{{
+      $t("aside.dict")
+    }}</el-menu-item>
         <el-sub-menu index="language">
           <template #title><span>{{ $t("aside.language") }}</span></template>
           <el-menu-item index="cn" @click="changeLanguage('zh')">{{
@@ -84,7 +89,7 @@ const dg = reactive({
       $t("aside.en")
     }}</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="about" @click="dg.helpDialogVisible = true">{{
+        <el-menu-item index="about" @click="dg.helpDialog = true">{{
       $t("aside.about")
     }}</el-menu-item>
       </el-sub-menu>
@@ -92,13 +97,17 @@ const dg = reactive({
   </div>
 
   <!-- update -->
-  <el-dialog v-model="dg.updateDialogVisible" title="更新通知" width="40%">
+  <el-dialog v-model="dg.updateDialog" title="更新通知" width="40%">
     <updateUI></updateUI>
   </el-dialog>
 
   <!-- about -->
-  <el-dialog v-model="dg.helpDialogVisible" width="36%" center>
+  <el-dialog v-model="dg.helpDialog" width="36%" center>
     <about></about>
+  </el-dialog>
+  <!-- dict -->
+  <el-dialog v-model="dg.dictDialog" width="36%" center>
+      <dict></dict>
   </el-dialog>
 </template>
 
@@ -156,7 +165,7 @@ const dg = reactive({
   margin-bottom: 0px;
 }
 
-.el-icon svg {
+.aside svg {
   height: 1.5em;
   width: 1.5em;
 }

@@ -38,29 +38,22 @@ html {
   width: 100%;
 }
 
-.log-textarea .el-textarea__inner {
+.log-textarea {
   background-color: black;
-  /* color: rgb(52, 228, 52); */
-  color: rgb(211, 209, 217);
+  color: rgb(255, 255, 255);
   height: 100%; /* 设置 textarea 高度为父元素高度 */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+  overflow-x: auto;
+  padding: 2px;
 }
 
-.log-textarea .el-textarea__inner::-webkit-scrollbar{
-  width: 6px ;
-  height: 6px ;
-}
-/* 设置滚动条样式 */
-.log-textarea .el-textarea__inner::-webkit-scrollbar-thumb {
-   border-radius: 3px ;
-   -moz-border-radius: 3px ;
-   -webkit-border-radius: 3px ;
-   background-color: #797777 ;
-}
-.log-textarea .el-textarea__inner::-webkit-scrollbar-track {
- background-color: transparent ;
-
-}
-
+.log-info { color: lightblue; }
+.log-warning { color: #D2BB85; }
+.log-error { color: #E58C77; }
+.log-debug { color: rgb(13, 85, 13); }
+.log-success { color: rgb(98, 203, 98);}
 .my-header {
   display: flex;
   flex-direction: row;
@@ -120,4 +113,9 @@ html {
 .dropdown_icon {
   width: 16px;
   height: 16px;
+}
+
+.iframe {
+  width:100%; 
+  height:100%; border:none;
 }

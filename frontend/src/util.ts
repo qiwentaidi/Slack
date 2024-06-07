@@ -5,27 +5,6 @@ import { CheckTarget, GoFetch, NucleiEnabled, Sock5Connect } from "../wailsjs/go
 import { CheckFileStat, GetFileContent, UserHomeDir } from "../wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
 
-
-// 复制端口扫描中的所有HTTP链接
-export function CopyURLs(result: {}[]) {
-  // 避免控制台报错
-  if (result.length <= 1) {
-    ElNotification({
-      message: "复制内容条数需大于1",
-      type: "warning",
-      position: 'bottom-right',
-    });
-    return;
-  }
-  const temp = [];
-  for (const line of result) {
-    if ((line as any)["link"].includes("http")) {
-      temp.push((line as any)["link"]);
-    }
-  }
-  Copy(temp.join("\n"))
-}
-
 export function Copy(content: string) {
   if (content == "") {
     ElNotification({
@@ -189,7 +168,7 @@ export async function ReadLine(filepath: string) {
     });
     return;
   }
-  if (res !== "文件不存在") {
+  if (res !== "") {
     const result = res.replace(/\r\n/g, "\n"); // 避免windows unix系统差异
     return Array.from(result.split("\n"));
   }
@@ -197,8 +176,8 @@ export async function ReadLine(filepath: string) {
 
 // mode 0 is button click
 export async function TestProxy(mode: number) {
-  const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port
   if (global.proxy.enabled) {
+    const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port
     if (global.proxy.mode == "HTTP") {
       let resp = await GoFetch("GET", proxyURL, "", [{}], 10, null)
       if (resp.Error == true) {
@@ -256,11 +235,6 @@ export async function TestNuclei() {
       });
     }
   })
-}
-
-export function currentTime() {
-  var date = new Date();
-  return date.toLocaleString()
 }
 
 export function currentTimestamp() {

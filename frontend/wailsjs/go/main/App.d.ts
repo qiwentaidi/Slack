@@ -4,14 +4,14 @@ import {clients} from '../models';
 import {main} from '../models';
 import {space} from '../models';
 import {jsfind} from '../models';
-import {webscan} from '../models';
-import {portscan} from '../models';
 
-export function ActiveFingerScan(arg1:string,arg2:clients.Proxy):Promise<Array<main.InfoResult>>;
+export function ActiveFingerScan(arg1:Array<string>,arg2:clients.Proxy):Promise<void>;
 
 export function AssetHunter(arg1:number,arg2:string,arg3:string):Promise<main.HunterSearch>;
 
-export function CheckCdn(arg1:string,arg2:string,arg3:string):Promise<string>;
+export function Callgologger(arg1:string,arg2:string):Promise<void>;
+
+export function CheckCdn(arg1:string):Promise<string>;
 
 export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
 
@@ -25,7 +25,7 @@ export function ExtractIP(arg1:string):Promise<string>;
 
 export function FingerLength():Promise<number>;
 
-export function FingerScan(arg1:string,arg2:clients.Proxy):Promise<main.InfoResult>;
+export function FingerScan(arg1:Array<string>,arg2:clients.Proxy):Promise<void>;
 
 export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean):Promise<space.FofaSearchResult>;
 
@@ -45,6 +45,8 @@ export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 
 export function IconHash(arg1:string):Promise<string>;
 
+export function InitBurteDict():Promise<boolean>;
+
 export function InitIPResolved():Promise<void>;
 
 export function InitRule():Promise<boolean>;
@@ -61,33 +63,33 @@ export function LoadDirsearchDict(arg1:string,arg2:Array<string>):Promise<Array<
 
 export function LoadSubDict(arg1:string):Promise<Array<string>>;
 
+export function NewCorrespondsScan(arg1:Array<string>,arg2:number):Promise<void>;
+
+export function NewSynScanner(arg1:Array<string>,arg2:Array<number>):Promise<void>;
+
+export function NewTcpScanner(arg1:Array<string>,arg2:Array<number>,arg3:number,arg4:number):Promise<void>;
+
 export function NucleiEnabled(arg1:string):Promise<boolean>;
 
-export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:string,arg6:boolean,arg7:string,arg8:string):Promise<Array<webscan.VulnerabilityInfo>>;
+export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:boolean,arg6:string,arg7:string):Promise<void>;
 
 export function PathRequest(arg1:string,arg2:string,arg3:number,arg4:string,arg5:boolean,arg6:string):Promise<main.PathData>;
 
-export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Promise<portscan.Burte>;
-
-export function PortCheck(arg1:string,arg2:number,arg3:number):Promise<portscan.PortResult>;
+export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Promise<void>;
 
 export function PortParse(arg1:string):Promise<Array<number>>;
 
-export function SaveFile(arg1:string):Promise<string>;
-
-export function SelectFile():Promise<string>;
-
 export function Sock5Connect(arg1:string,arg2:number,arg3:number,arg4:string,arg5:string):Promise<boolean>;
 
-export function Subdomain(arg1:string,arg2:string,arg3:string,arg4:number):Promise<Array<string>>;
+export function StopPortScan():Promise<void>;
+
+export function Subdomain(arg1:string,arg2:number):Promise<Array<string>>;
 
 export function SubsidiariesAndDomains(arg1:string,arg2:number):Promise<main.TycAssetResult>;
 
-export function SynPortCheck(arg1:Array<string>,arg2:Array<number>,arg3:number):Promise<void>;
-
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
 
-export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<Array<string>>;
+export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string,arg8:Array<string>):Promise<Array<string>>;
 
 export function UseDruid(arg1:string,arg2:number,arg3:clients.Proxy):Promise<Array<string>>;
 

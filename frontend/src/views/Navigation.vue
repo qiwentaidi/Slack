@@ -14,6 +14,11 @@ var options = [
                 icon: "/portscan.png"
             },
             {
+                name: "aside.crack",
+                route: "/Permeation/Crack",
+                icon: "/target.png"
+            },
+            {
                 name: "aside.dirscan",
                 route: "/Permeation/Dirsearch",
                 icon: "/dirscan.png"
@@ -87,6 +92,11 @@ var options = [
                 name:"aside.data_handing",
                 route: "/Tools/DataHanding",
                 icon: "/data.png"
+            },
+            {
+                name: "aside.reverse",
+                route: "/Tools/Reverse",
+                icon: "/skull.png"
             },
             {
                 name: "aside.memorandum",

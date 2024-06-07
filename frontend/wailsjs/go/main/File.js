@@ -6,6 +6,10 @@ export function CheckFileStat(arg1) {
   return window['go']['main']['File']['CheckFileStat'](arg1);
 }
 
+export function FileDialog() {
+  return window['go']['main']['File']['FileDialog']();
+}
+
 export function GetFileContent(arg1) {
   return window['go']['main']['File']['GetFileContent'](arg1);
 }
@@ -32,6 +36,10 @@ export function PathBase(arg1) {
 
 export function ReadMemo(arg1) {
   return window['go']['main']['File']['ReadMemo'](arg1);
+}
+
+export function SaveFile(arg1) {
+  return window['go']['main']['File']['SaveFile'](arg1);
 }
 
 export function UpdatePocFile() {

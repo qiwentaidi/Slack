@@ -197,8 +197,7 @@ async function Delelte(host: string) {
                     </el-popover>
                     代理池爬取
                 </template>
-                <el-input v-model="form.socksLogger" type="textarea" rows="20" resize="none" readonly
-                    class="log-textarea"></el-input>
+                <div class="pretty-response">{{ form.socksLogger }}</div>
                 <el-progress :percentage="form.percentage" :text-inside="true" :stroke-width="20"
                     style="margin-top: 5px" color="#5DC4F7" />
             </el-tab-pane>

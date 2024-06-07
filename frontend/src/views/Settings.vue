@@ -1,23 +1,7 @@
 <template>
     <el-scrollbar max-height="85vh" style="height: 85vh;">
-        <el-collapse model-value="2">
+        <el-collapse model-value="1">
           <el-collapse-item name="1"><template #title>
-              <h2>DNS Server</h2>
-            </template>
-            <el-form :model="global.scan" label-width="110px" label-position="top">
-              <el-form-item>
-                <el-row :gutter="20">
-                  <el-col :span="12">
-                    <el-input v-model="global.scan.dns1" placeholder="DNS1"><template #append>:53</template></el-input>
-                  </el-col>
-                  <el-col :span="12">
-                    <el-input v-model="global.scan.dns2" placeholder="DNS2"><template #append>:53</template></el-input>
-                  </el-col>
-                </el-row>
-              </el-form-item>
-            </el-form>
-          </el-collapse-item>
-          <el-collapse-item name="2"><template #title>
               <h2>{{ $t('aside.webscan') }}</h2>
             </template>
             <el-form :inline="true" :model="global.proxy" label-width="auto" class="demo-form-inline">
@@ -62,7 +46,7 @@
               </div>
             </el-form>
           </el-collapse-item>
-          <el-collapse-item name="3"><template #title>
+          <el-collapse-item name="2"><template #title>
               <h2>{{ $t('aside.space_engine') }}</h2>
             </template>
             <el-form :model="global.space" label-width="auto">
@@ -94,7 +78,6 @@ function saveConfig() {
   global.space.fofakey = global.space.fofakey.replace(/[\r\n\s]/g, '');
   global.space.hunterkey = global.space.hunterkey.replace(/[\r\n\s]/g, '');
   global.space.quakekey = global.space.quakekey.replace(/[\r\n\s]/g, '');
-  localStorage.setItem('scan', JSON.stringify(global.scan));
   localStorage.setItem('proxy', JSON.stringify(global.proxy));
   localStorage.setItem('space', JSON.stringify(global.space));
   localStorage.setItem('webscan', JSON.stringify(global.webscan));

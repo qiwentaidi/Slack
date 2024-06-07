@@ -3,6 +3,8 @@
 
 export function CheckFileStat(arg1:string):Promise<boolean>;
 
+export function FileDialog():Promise<string>;
+
 export function GetFileContent(arg1:string):Promise<string>;
 
 export function InitConfig():Promise<boolean>;
@@ -16,6 +18,8 @@ export function OpenFolder(arg1:string):Promise<string>;
 export function PathBase(arg1:string):Promise<string>;
 
 export function ReadMemo(arg1:string):Promise<{[key: string]: string}>;
+
+export function SaveFile(arg1:string):Promise<string>;
 
 export function UpdatePocFile():Promise<string>;
 

@@ -42,7 +42,7 @@ func GetTLSString(protocol, host string) string {
 
 func getCertResponse(protocol, host string) *CertResponse {
 	if protocol == "https" || protocol == "tls" {
-		conn, err := tls.DialWithDialer(&net.Dialer{Timeout: time.Duration(5) * time.Second}, "tcp", host, &tls.Config{InsecureSkipVerify: true})
+		conn, err := tls.DialWithDialer(&net.Dialer{Timeout: time.Duration(3) * time.Second}, "tcp", host, &tls.Config{InsecureSkipVerify: true})
 		if err != nil {
 			return nil
 		}

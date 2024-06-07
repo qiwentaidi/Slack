@@ -1,10 +1,12 @@
 package portscan
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"os"
+	"slack-wails/lib/gologger"
 	"strings"
 	"sync"
 	"time"
@@ -17,11 +19,11 @@ import (
 	"github.com/tomatome/grdp/protocol/t125"
 	"github.com/tomatome/grdp/protocol/tpkt"
 	"github.com/tomatome/grdp/protocol/x224"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func RdpScan(host string, usernames, passwords []string) *Burte {
+func RdpScan(ctx context.Context, host string, usernames, passwords []string) {
 	var wg sync.WaitGroup
-	var result *Burte
 	var mutex sync.Mutex
 	limiter := make(chan bool, 10) // 限制协程数量
 	for _, user := range usernames {
@@ -32,32 +34,25 @@ func RdpScan(host string, usernames, passwords []string) *Burte {
 			go func(user, pass string) {
 				wg.Done()
 				flag, err := RdpConn(host, "", user, pass, 10)
+				mutex.Lock()
 				if flag && err == nil {
-					mutex.Lock()
-					result = &Burte{
+					runtime.EventsEmit(ctx, "bruteResult", Burte{
 						Status:   true,
 						Host:     host,
 						Protocol: "rdp",
 						Username: user,
 						Password: pass,
-					}
-					mutex.Unlock()
+					})
+					return
+				} else {
+					gologger.Info(ctx, fmt.Sprintf("rdp://%s %s:%s is login failed", host, user, pass))
 				}
+				mutex.Unlock()
 				<-limiter
 			}(user, pass)
 		}
 	}
 	wg.Wait()
-	if result == nil {
-		return &Burte{
-			Status:   false,
-			Host:     host,
-			Protocol: "rdp",
-			Username: "",
-			Password: "",
-		}
-	}
-	return result
 }
 
 func RdpConn(host, domain, user, password string, timeout int) (bool, error) {

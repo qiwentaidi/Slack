@@ -2,14 +2,16 @@ package webscan
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"runtime"
+	rt "runtime"
 	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/util"
 	"strconv"
@@ -18,9 +20,14 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/panjf2000/ants/v2"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var iconRels = []string{"icon", "shortcut icon", "apple-touch-icon", "mask-icon"}
+var (
+	iconRels = []string{"icon", "shortcut icon", "apple-touch-icon", "mask-icon"}
+	ExitFunc = false
+)
 
 type TargetINFO struct {
 	Protocol      string
@@ -37,6 +44,182 @@ type TargetINFO struct {
 	Banner        string // tcp指纹
 	Cert          string // TLS证书
 	Waf           waf.WAF
+}
+
+type InfoResult struct {
+	URL          string
+	StatusCode   int
+	Length       int
+	Title        string
+	Fingerprints []string
+	IsWAF        bool
+	WAF          string
+}
+
+func NewFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
+	var wg sync.WaitGroup
+	client := clients.JudgeClient(proxy)
+	single := make(chan struct{})
+	retChan := make(chan InfoResult, len(targets))
+	go func() {
+		for pr := range retChan {
+			runtime.EventsEmit(ctx, "webFingerScan", pr)
+		}
+		close(single)
+	}()
+	// 指纹扫描
+	fscan := func(target string) {
+		if ExitFunc {
+			return
+		}
+		if !strings.HasPrefix(target, "http") {
+			if fulltarget, err := clients.IsWeb(target, client); err != nil {
+				retChan <- InfoResult{
+					URL:        target,
+					StatusCode: 0,
+				}
+				return
+			} else {
+				target = fulltarget
+			}
+		}
+		u := HostPort(target)
+		banner := GetBanner(&u)
+		resp, body, _ := clients.NewSimpleGetRequest(target, client)
+		if resp == nil {
+			retChan <- InfoResult{
+				URL:        target,
+				StatusCode: 0,
+			}
+			return
+		}
+		title, server, content_type := GetHeaderInfo(body, resp)
+		headers, _, _ := DumpResponseHeadersAndRaw(resp)
+		ti := &TargetINFO{
+			HeadeString:   string(headers),
+			ContentType:   content_type,
+			Cert:          GetTLSString(u.Scheme, fmt.Sprintf("%s:%d", u.Host, u.Port)),
+			BodyString:    string(body),
+			Path:          u.Path,
+			Title:         title,
+			Server:        server,
+			ContentLength: len(body),
+			Port:          u.Port,
+			IconHash:      FaviconHash(u.Scheme, target, clients.DefaultClient()),
+			StatusCode:    resp.StatusCode,
+			Banner:        banner,
+			Waf:           *waf.IsWAF(u.Host),
+		}
+		retChan <- InfoResult{
+			URL:          target,
+			StatusCode:   ti.StatusCode,
+			Length:       ti.ContentLength,
+			Title:        ti.Title,
+			Fingerprints: FingerScan(ti, FingerprintDB),
+			IsWAF:        ti.Waf.Exsits,
+			WAF:          ti.Waf.Name,
+		}
+	}
+	threadPool, _ := ants.NewPoolWithFunc(50, func(target interface{}) {
+		t := target.(string)
+		fscan(t)
+		wg.Done()
+	})
+	defer threadPool.Release()
+	for _, target := range targets {
+		if ExitFunc {
+			return
+		}
+		wg.Add(1)
+		threadPool.Invoke(target)
+	}
+	wg.Wait()
+	close(retChan)
+	gologger.Info(ctx, "FingerScan Finished")
+	<-single
+}
+
+type TFP struct {
+	Target      string
+	Fingerprint string
+	Path        string
+}
+
+func NewActiveFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
+	var wg sync.WaitGroup
+	var matched bool
+	client := clients.JudgeClient(proxy)
+	single := make(chan struct{})
+	retChan := make(chan InfoResult, len(targets))
+	go func() {
+		for pr := range retChan {
+			runtime.EventsEmit(ctx, "webFingerScan", pr)
+		}
+		close(single)
+		// runtime.EventsEmit(ctx, "webFingerScanComplete", "done")
+	}()
+	// 主动指纹扫描
+	threadPool, _ := ants.NewPoolWithFunc(10, func(tfp interface{}) {
+		defer wg.Done()
+		fp := tfp.(TFP)
+		u := HostPort(fp.Target)
+		resp, body, _ := clients.NewSimpleGetRequest(fp.Target+fp.Path, client)
+		if resp == nil {
+			return
+		}
+		title, server, content_type := GetHeaderInfo(body, resp)
+		headers, _, _ := DumpResponseHeadersAndRaw(resp)
+		ti := &TargetINFO{
+			HeadeString:   string(headers),
+			ContentType:   content_type,
+			Cert:          "",
+			BodyString:    string(body),
+			Path:          u.Path,
+			Title:         title,
+			Server:        server,
+			ContentLength: len(body),
+			Port:          u.Port,
+			IconHash:      "",
+			StatusCode:    resp.StatusCode,
+			Banner:        "",
+		}
+		result := FingerScan(ti, ActiveFingerprintDB)
+		// 多路径匹配时如果某一路径匹配到就立刻停止
+		if len(result) > 0 && fp.Fingerprint == result[0] {
+			retChan <- InfoResult{
+				URL:          fp.Target + fp.Path,
+				StatusCode:   ti.StatusCode,
+				Length:       ti.ContentLength,
+				Title:        ti.Title,
+				Fingerprints: []string{fp.Fingerprint},
+			}
+			matched = true
+		}
+	})
+	defer threadPool.Release()
+	for _, target := range targets {
+		for fingername, paths := range Sensitive {
+			matched = false
+			for _, path := range paths {
+				if ExitFunc { // 控制程序退出
+					return
+				}
+				if matched { // 如果已经有匹配成功的指纹需要跳出当层目录循环
+					break
+				}
+				wg.Add(1)
+				threadPool.Invoke(TFP{
+					Target:      target,
+					Fingerprint: fingername,
+					Path:        path,
+				})
+			}
+		}
+	}
+	wg.Wait()
+	close(retChan)
+	gologger.Info(ctx, "ActiveFingerScan Finished")
+	<-single
 }
 
 // DumpResponseHeadersAndRaw returns http headers and response as strings
@@ -80,7 +263,7 @@ func FingerScan(ti *TargetINFO, targetDB []FingerPEntity) []string {
 	var fingerPrintResults []string
 
 	isWeb := ti.Path != "no#web"
-	workers := runtime.NumCPU() * 2
+	workers := rt.NumCPU() * 2
 	inputChan := make(chan FingerPEntity, len(targetDB))
 	defer close(inputChan)
 	results := make(chan string, len(targetDB))
@@ -98,7 +281,7 @@ func FingerScan(ti *TargetINFO, targetDB []FingerPEntity) []string {
 		}
 	}()
 
-	//多线程扫描
+	//多指纹同时扫描
 	for i := 0; i < workers; i++ {
 		go func() {
 			for finger := range inputChan {

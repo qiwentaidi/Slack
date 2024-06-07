@@ -7,10 +7,7 @@ var space = reactive({
     hunterkey: '',
     quakekey: ''
 })
-var scan = reactive({
-    dns1: "114.114.114.114",
-    dns2: "223.5.5.5",
-})
+
 var proxy = reactive({
     enabled: false,
     mode: 'HTTP',
@@ -20,13 +17,19 @@ var proxy = reactive({
     password: '',
 })
 
+interface uf {
+    url: string,
+    finger: string[]
+}
+
 var webscan = reactive({
-    nucleiEngine: ""
+    nucleiEngine: "",
+    urlFingerMap: [] as uf[],
 })
 
 const Logger = ref("")
 
-const LOCAL_VERSION = "1.5.2"
+const LOCAL_VERSION = "1.5.3"
 
 
 var PATH = {
@@ -336,7 +339,6 @@ var onlineOptions = [
 
 export default {
     space,
-    scan,
     proxy,
     dict,
     Logger,
