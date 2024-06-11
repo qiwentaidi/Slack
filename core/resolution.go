@@ -4,11 +4,11 @@ import (
 	"context"
 	"net"
 	"os"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
 	"time"
 
 	"github.com/miekg/dns"
-	"github.com/wailsapp/wails/v2/pkg/logger"
 	"gopkg.in/yaml.v2"
 )
 
@@ -78,15 +78,15 @@ func LookupCNAMEWithServer(domain, domainServer string, timeout int) ([]string, 
 	return CNAMES, nil
 }
 
-func ReadCDNFile(cdnFile string) map[string][]string {
+func ReadCDNFile(ctx context.Context, cdnFile string) map[string][]string {
 	yamlData, err := os.ReadFile(cdnFile)
 	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Error(ctx, err)
 	}
 	data := make(map[string][]string)
 	err = yaml.Unmarshal(yamlData, &data)
 	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Error(ctx, err)
 	}
 	return data
 }

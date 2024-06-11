@@ -96,13 +96,6 @@ onMounted(() => {
 
 onMounted(async () => {
     form.isRoot = await IsRoot()
-    if (!form.isRoot) {
-        ElNotification({
-            title: "提示",
-            message: "当前应用非ROOT模式启动，无法调用SYN扫描模式",
-            type: "warning",
-        });
-    }
     table.result = []
     table.pageContent = []
     table.burteResult = []
@@ -367,9 +360,16 @@ function linkage(mode: string) {
     <el-card style="width: 100%;">
         <el-row :gutter="8">
             <el-col :span="6" style="display: flex; align-items: center;">
-                <el-checkbox v-model="form.isSYN" label="SYN" :disabled="!form.isRoot"></el-checkbox>
-                <el-checkbox v-model="config.crack">口令猜测</el-checkbox>
-                <el-checkbox v-model="config.webscan">网站扫描</el-checkbox>
+                <el-checkbox v-model="form.isSYN" :disabled="!form.isRoot">
+                    <el-tooltip placement="right" v-if="!form.isRoot">
+                        <template #content>
+                            非ROOT模式启动时，无法调用SYN扫描模式
+                        </template>
+                        SYN
+                    </el-tooltip>
+                </el-checkbox>
+                <el-checkbox v-model="config.crack" label="口令猜测"></el-checkbox>
+                <el-checkbox v-model="config.webscan" label="网站扫描"></el-checkbox>
             </el-col>
             <el-divider direction="vertical" style="height: 4vh;" />
             <el-col :span="7" style="display: flex; align-items: center;">

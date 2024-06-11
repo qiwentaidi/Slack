@@ -128,17 +128,7 @@ func (a *App) GoFetch(method, target, body string, headers []map[string]string, 
 
 // fscan
 func (a *App) Fscan2Txt(content string) string {
-	var result string
-	result += "[NetInfo]\n"
-	for _, netinfo := range core.NetInfoReg.FindAllString(content, -1) {
-		result += netinfo + "\n"
-	}
-	result += "\n"
-	lines := strings.Split(content, "\n")
-	for name, reg := range core.FscanRegs {
-		result += core.MatchLine(name, reg, lines)
-	}
-	return result
+	return core.ExtractFscanResult(content)
 }
 
 // thinkdict
@@ -181,27 +171,13 @@ func (a *App) ExtractIP(text string) string {
 }
 
 func (a *App) DomainInfo(text string) string {
-	s, s2, s3 := core.SeoChinaz(text)
-	s4, s5, s6, s7, s8, s9 := core.WhoisChinaz(text)
+	name, icp, ip := core.SeoChinaz(a.ctx, text)
 	return fmt.Sprintf(`---备案查询---
 公司名称: %v
 	
 备案号: %v
 	
-IP: %v
-	
----whois查询---
-更新时间: %v
-
-创建时间: %v
-
-过期时间: %v
-
-注册商服务器: %v
-
-DNS: %v
-
-状态: %v`, s, s2, s3, s4, s5, s6, s7, s8, s9)
+IP: %v`, name, icp, ip)
 }
 
 func (a *App) CheckCdn(domain string) string {
@@ -209,7 +185,7 @@ func (a *App) CheckCdn(domain string) string {
 	ips, cnames, err := core.Resolution(domain, 10)
 	if err == nil {
 		if len(cnames) != 0 {
-			for name, cdns := range core.ReadCDNFile(a.cdnFile) {
+			for name, cdns := range core.ReadCDNFile(a.ctx, a.cdnFile) {
 				for _, cdn := range cdns {
 					for _, cname := range cnames {
 						if strings.Contains(cname, cdn) { // 识别到cdn
@@ -239,7 +215,7 @@ func (a *App) LoadSubDict(configPath string) []string {
 }
 
 func (a *App) Subdomain(subdomain string, timeout int) []string {
-	sr := core.BurstSubdomain(subdomain, timeout, a.qqwryFile, a.cdnFile)
+	sr := core.BurstSubdomain(a.ctx, subdomain, timeout, a.qqwryFile, a.cdnFile)
 	return []string{sr.Subdomain, strings.Join(sr.Cname, " | "), strings.Join(sr.Ips, " | "), sr.Notes}
 }
 
@@ -253,13 +229,13 @@ type TycAssetResult struct {
 }
 
 // mode 0 = 查询子公司 . mode 1 = 查询公众号
-func (*App) SubsidiariesAndDomains(companyName string, ratio int) TycAssetResult {
+func (a *App) SubsidiariesAndDomains(companyName string, ratio int) TycAssetResult {
 	var isFuzz string
-	companyId, fuzzName := info.GetCompanyID(companyName) // 获得到一个模糊匹配后，关联度最高的名称
-	if companyName != fuzzName {                          // 如果传进来的名称与模糊匹配的不相同
+	companyId, fuzzName := info.GetCompanyID(a.ctx, companyName) // 获得到一个模糊匹配后，关联度最高的名称
+	if companyName != fuzzName {                                 // 如果传进来的名称与模糊匹配的不相同
 		isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
 	}
-	asset, logs := info.SearchSubsidiary(fuzzName, companyId, ratio)
+	asset, logs := info.SearchSubsidiary(a.ctx, fuzzName, companyId, ratio)
 	if isFuzz == "" {
 		logs = isFuzz + logs
 	}
@@ -277,8 +253,8 @@ type WechatAssetResult struct {
 
 func (a *App) WechatOfficial(companyName string) WechatAssetResult {
 	var isFuzz string
-	companyId, fuzzName := info.GetCompanyID(companyName) // 获得到一个模糊匹配后，关联度最高的名称
-	if companyName != fuzzName {                          // 如果传进来的名称与模糊匹配的不相同
+	companyId, fuzzName := info.GetCompanyID(a.ctx, companyName) // 获得到一个模糊匹配后，关联度最高的名称
+	if companyName != fuzzName {                                 // 如果传进来的名称与模糊匹配的不相同
 		isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
 	}
 	asset, logs := info.WeChatOfficialAccounts(fuzzName, companyId)
@@ -426,7 +402,7 @@ func (a *App) FofaTips(query string) *space.TipsResult {
 }
 
 func (a *App) FofaSearch(query, pageSzie, pageNum, address, email, key string, fraud, cert bool) *space.FofaSearchResult {
-	return space.FofaApiSearch(query, pageSzie, pageNum, address, email, key, fraud, cert)
+	return space.FofaApiSearch(a.ctx, query, pageSzie, pageNum, address, email, key, fraud, cert)
 }
 
 func (a *App) Sock5Connect(ip string, port, timeout int, username, password string) bool {
@@ -558,13 +534,13 @@ func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, d
 }
 
 func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
-	jsLinks := jsfind.ExtractJS(target)
+	jsLinks := jsfind.ExtractJS(a.ctx, target)
 	var wg sync.WaitGroup
 	limiter := make(chan bool, 100)
 	wg.Add(1)
 	limiter <- true
 	go func() {
-		fs = jsfind.FindInfo(target, limiter, &wg)
+		fs = jsfind.FindInfo(a.ctx, target, limiter, &wg)
 	}()
 	wg.Wait()
 	u, _ := url.Parse(target)
@@ -580,7 +556,7 @@ func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
 		limiter <- true
 		go func(js string) {
 			newURL := host + "/" + js
-			fs2 := jsfind.FindInfo(newURL, limiter, &wg)
+			fs2 := jsfind.FindInfo(a.ctx, newURL, limiter, &wg)
 			fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
 			fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
 			fs.ChinesePhone = append(fs.ChinesePhone, fs2.ChinesePhone...)

@@ -2,13 +2,14 @@ package webscan
 
 import (
 	"container/list"
+	"context"
 	"fmt"
 	"os"
 	"regexp"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
 	"strings"
 
-	"github.com/wailsapp/wails/v2/pkg/logger"
 	"gopkg.in/yaml.v2"
 )
 
@@ -180,10 +181,10 @@ func getRuleData(rule string) RuleData {
 }
 
 // 计算纯bool表达式，支持 ! && & || | ( )
-func boolEval(expression string) bool {
+func boolEval(ctx context.Context, expression string) bool {
 	// 左右括号相等
 	if strings.Count(expression, "(") != strings.Count(expression, ")") {
-		logger.NewDefaultLogger().Warning(fmt.Sprintf("[-] 纯布尔表达式 [%s] 左右括号不匹配", expression))
+		gologger.Warning(ctx, fmt.Sprintf("纯布尔表达式 [%s] 左右括号不匹配", expression))
 	}
 	// 去除空格
 	for strings.Contains(expression, " ") {

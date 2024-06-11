@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"slack-wails/lib/qqwry"
@@ -42,9 +43,9 @@ func InitQqwry(qqwryFile string) {
 }
 
 // 采用递归判断暴破层级
-func BurstSubdomain(subdomains string, timeout int, qqwryFile, cdnFile string) *SubdomainResult {
+func BurstSubdomain(ctx context.Context, subdomains string, timeout int, qqwryFile, cdnFile string) *SubdomainResult {
 	onec.Do(func() {
-		cdndata = ReadCDNFile(cdnFile)
+		cdndata = ReadCDNFile(ctx, cdnFile)
 		InitQqwry(qqwryFile)
 	})
 	var sr SubdomainResult

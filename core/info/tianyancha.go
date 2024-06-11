@@ -2,12 +2,14 @@ package info
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
 	"time"
 
@@ -113,18 +115,18 @@ func InitHEAD(token string) {
 }
 
 // 要根据ID值查子公司
-func GetCompanyID(company string) (string, string) {
+func GetCompanyID(ctx context.Context, company string) (string, string) {
 	var max, id int
 	data := make(map[string]interface{})
 	data["keyword"] = company
 	bytesData, _ := json.Marshal(data)
 	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-tempest/search/suggest/v3", posthead, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Error(ctx, err)
 	}
 	var qs TycSearchID
 	if err = json.Unmarshal(b, &qs); err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Error(ctx, err)
 	}
 	time.Sleep(time.Second * 2)
 	if len(qs.Data) > 0 { // 先走接口不会进行模糊匹配,如果匹配不到值那就走模糊查询
@@ -164,7 +166,7 @@ type CompanyInfo struct {
 }
 
 // 返回查询公司的名称和子公司的名称
-func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset []CompanyInfo, logs string) {
+func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int) (holdasset []CompanyInfo, logs string) {
 	data := make(map[string]interface{})
 	data["gid"] = companyId
 	data["pageSize"] = 100
@@ -175,7 +177,7 @@ func SearchSubsidiary(companyName, companyId string, ratio int) (holdasset []Com
 	bytesData, _ := json.Marshal(data)
 	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-company-background/company/investListV2", posthead, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Error(ctx, err)
 	}
 	var qr TycResult
 	json.Unmarshal(b, &qr)

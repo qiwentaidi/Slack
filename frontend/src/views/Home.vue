@@ -5,14 +5,11 @@ import { onMounted, ref, computed } from 'vue';
 import Navigation from './Navigation.vue'
 import { Search } from "@element-plus/icons-vue";
 import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
-import Crack from "./Permeation/Crack.vue";
-import Webscan from "./Permeation/Webscan.vue";
 // 初始化时调用
 onMounted(async () => {
   await InitConfigFile()
 });
 
-const shouldHideComponents = false; // 控制组件显示与隐藏
 const searchFilter = ref('')
 const activeCard = ref('local')
 

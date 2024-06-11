@@ -1,6 +1,7 @@
 package space
 
 import (
+	"context"
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
@@ -13,11 +14,10 @@ import (
 	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
 const TipApi = "https://api.fofa.info/v1/search/tip?"
@@ -108,7 +108,7 @@ type FofaSearchResult struct {
 	}
 }
 
-func FofaApiSearch(search, pageSize, pageNum, addr, email, key string, fraud, cert bool) *FofaSearchResult {
+func FofaApiSearch(ctx context.Context, search, pageSize, pageNum, addr, email, key string, fraud, cert bool) *FofaSearchResult {
 	var fs FofaSearchResult
 	address := addr + "api/v1/search/all?email=" + email + "&key=" + key + "&qbase64=" +
 		FOFABaseEncode(search) + "&cert.is_valid" + fmt.Sprint(cert) + fmt.Sprintf("&is_fraud=%v&is_honeypot=%v", fmt.Sprint(fraud), fmt.Sprint(fraud)) +
@@ -120,7 +120,7 @@ func FofaApiSearch(search, pageSize, pageNum, addr, email, key string, fraud, ce
 	}
 	var fr FofaResult
 	if err = json.Unmarshal(b, &fr); err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Error(ctx, err)
 	}
 	fs.Total = fr.Size
 	if fr.Error {

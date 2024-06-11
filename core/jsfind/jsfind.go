@@ -1,13 +1,13 @@
 package jsfind
 
 import (
+	"context"
 	"regexp"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
 	"strings"
 	"sync"
-
-	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
 var (
@@ -59,10 +59,10 @@ func init() {
 	}
 }
 
-func ExtractJS(url string) (allJS []string) {
+func ExtractJS(ctx context.Context, url string) (allJS []string) {
 	_, body, err := clients.NewSimpleGetRequest(url, clients.DefaultClient())
 	if err != nil || body == nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Debug(ctx, err)
 		return
 	}
 	content := string(body)
@@ -80,12 +80,12 @@ func ExtractJS(url string) (allJS []string) {
 }
 
 // setp 0 first need deep js
-func FindInfo(url string, limiter chan bool, wg *sync.WaitGroup) *FindSomething {
+func FindInfo(ctx context.Context, url string, limiter chan bool, wg *sync.WaitGroup) *FindSomething {
 	defer wg.Done()
 	var fs FindSomething
 	_, body, err := clients.NewSimpleGetRequest(url, clients.DefaultClient())
 	if err != nil || body == nil {
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Debug(ctx, err)
 		return &fs
 	} else {
 		content := string(body)

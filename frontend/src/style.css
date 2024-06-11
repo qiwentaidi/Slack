@@ -53,7 +53,8 @@ html {
 .log-warning { color: #D2BB85; }
 .log-error { color: #E58C77; }
 .log-debug { color: rgb(13, 85, 13); }
-.log-success { color: rgb(98, 203, 98);}
+.log-success { color: #6FC3AE; }
+
 .my-header {
   display: flex;
   flex-direction: row;

@@ -115,7 +115,7 @@ func NewFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
 			StatusCode:   ti.StatusCode,
 			Length:       ti.ContentLength,
 			Title:        ti.Title,
-			Fingerprints: FingerScan(ti, FingerprintDB),
+			Fingerprints: FingerScan(ctx, ti, FingerprintDB),
 			IsWAF:        ti.Waf.Exsits,
 			WAF:          ti.Waf.Name,
 		}
@@ -183,7 +183,7 @@ func NewActiveFingerScan(ctx context.Context, targets []string, proxy clients.Pr
 			StatusCode:    resp.StatusCode,
 			Banner:        "",
 		}
-		result := FingerScan(ti, ActiveFingerprintDB)
+		result := FingerScan(ctx, ti, ActiveFingerprintDB)
 		// 多路径匹配时如果某一路径匹配到就立刻停止
 		if len(result) > 0 && fp.Fingerprint == result[0] {
 			retChan <- InfoResult{
@@ -259,7 +259,7 @@ func DumpResponseHeadersAndRaw(resp *http.Response) (headers, fullresp []byte, e
 	return
 }
 
-func FingerScan(ti *TargetINFO, targetDB []FingerPEntity) []string {
+func FingerScan(ctx context.Context, ti *TargetINFO, targetDB []FingerPEntity) []string {
 	var fingerPrintResults []string
 
 	isWeb := ti.Path != "no#web"
@@ -356,7 +356,7 @@ func FingerScan(ti *TargetINFO, targetDB []FingerPEntity) []string {
 					}
 				}
 
-				r := boolEval(expr)
+				r := boolEval(ctx, expr)
 				if r {
 					results <- product
 				} else {

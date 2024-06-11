@@ -133,11 +133,11 @@ wails dev || wails build
 > Executing: go mod tidy
 > • Generating bindings: 
 > ERROR  
->  package slack-wails
->        imports slack-wails/core/portscan
->        imports github.com/tomatome/grdp/protocol/pdu
->        imports github.com/tomatome/grdp/protocol/t125/gcc
->        imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
+> package slack-wails
+>     imports slack-wails/core/portscan
+>     imports github.com/tomatome/grdp/protocol/pdu
+>     imports github.com/tomatome/grdp/protocol/t125/gcc
+>     imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
 > ```
 >
 > A：
@@ -151,28 +151,32 @@ wails dev || wails build
 > ``````
 > # Building target: linux/amd64
 > 
->   • Generating bindings:   ERROR   
->           # github.com/google/gopacket/pcap
->           /root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
->              34 | #include <pcap.h>
->                 |          ^~~~~~~~
->           compilation terminated.
->           
->           exit status 1
+> • Generating bindings:   ERROR   
+>        # github.com/google/gopacket/pcap
+>        /root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
+>           34 | #include <pcap.h>
+>              |          ^~~~~~~~
+>        compilation terminated.
 > 
->   ERROR   
->           # github.com/google/gopacket/pcap
->           /root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
->              34 | #include <pcap.h>
->                 |          ^~~~~~~~
->           compilation terminated.
->           
->           exit status 1
->  ♥   If Wails is useful to you or your company, please consider sponsoring the project:                                                                   
+>        exit status 1
+> 
+> ERROR   
+>        # github.com/google/gopacket/pcap
+>        /root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
+>           34 | #include <pcap.h>
+>              |          ^~~~~~~~
+>        compilation terminated.
+> 
+>        exit status 1
+> ♥   If Wails is useful to you or your company, please consider sponsoring the project:                                                                   
 > https://github.com/sponsors/leaanthony
 > ``````
 >
 > A：
+>
+> ``````shell
+> sudo apt install libpcap-dev 
+> ``````
 >
 > Q: Mac 启动出现安装包损坏
 >
@@ -180,7 +184,7 @@ wails dev || wails build
 >
 > ``````
 > 1、在隐私和安全性处运行安装应用为任意来源
-> 2、执行 xattr -c slack-wails_darwin.app
+> 2、执行 xattr -c slack-macos.app
 > ``````
 
 # 联系方式

@@ -2,23 +2,42 @@
 import { ref, onMounted } from "vue";
 import global from "./global";
 import Sidebar from "./components/Sidebar.vue";
-import { ArrowRight } from '@element-plus/icons-vue';
 import { useRoute } from "vue-router";
 import { EventsOn } from "../wailsjs/runtime/runtime";
 import { InitBurteDict } from "../wailsjs/go/main/App";
 import { WriteFile, UserHomeDir } from "../wailsjs/go/main/File";
+import router from "./router";
+import { ElLoading } from "element-plus";
 
 const route = useRoute();
 const showLogger = ref(false);
 
-function breadcrumbItems(label: string) {
+// 自动加载联动路由，避免内容丢失
+async function autoLoadRoutes(timeout: number) {
+  const loading = ElLoading.service({
+    lock: true,
+    text: '正在初始化联动模块中...',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
+  await new Promise(resolve => setTimeout(resolve, timeout));
+  router.push("/Permeation/Crack");
+
+  await new Promise(resolve => setTimeout(resolve, timeout));
+  router.push("/Permeation/Webscan");
+
+  await new Promise(resolve => setTimeout(resolve, timeout));
+  router.push("/");
+  loading.close();
+}
+
+function breadcrumbItems(label: string, separator: string) {
   switch (label) {
     case "/":
-      return ["Home"];
+      return "Home";
     case "/settings":
-      return ["Settings"];
+      return "Settings";
     default:
-      return label.slice(1).split('/');
+      return label.slice(1).split('/').join(separator);
   }
 }
 
@@ -27,10 +46,10 @@ interface MsgInfo {
   Msg: string
 }
 
-const len = 100 // 日志显示条数
 const logArray = [] as string[]
 
 onMounted(() => {
+  autoLoadRoutes(1000)
   InitDict()
   const levelClassMap: { [key: string]: string } = {
     "[INF]": "log-info",
@@ -44,7 +63,7 @@ onMounted(() => {
     const logEntry = `<span class="${logClass}">${mi.Level}</span> ${mi.Msg}`;
     logArray.push(logEntry);
 
-    if (logArray.length > len) {
+    if (logArray.length > global.Logger.length) {
       logArray.shift(); // 移除数组开头的元素
     }
     // 将数组内容拼接成字符串
@@ -56,12 +75,12 @@ onMounted(() => {
 // 初始化字典
 async function InitDict() {
   global.PATH.PortBurstPath = await UserHomeDir() + global.PATH.PortBurstPath
-    if (await InitBurteDict()) {
-        for (const item of global.dict.usernames) {
-            WriteFile("txt", `${global.PATH.PortBurstPath}/username/${item.name}.txt`, item.dic.join("\n"))
-        }
-        WriteFile("txt", `${global.PATH.PortBurstPath}/password/password.txt`, global.dict.passwords.join("\n"))
+  if (await InitBurteDict()) {
+    for (const item of global.dict.usernames) {
+      WriteFile("txt", `${global.PATH.PortBurstPath}/username/${item.name}.txt`, item.dic.join("\n"))
     }
+    WriteFile("txt", `${global.PATH.PortBurstPath}/password/password.txt`, global.dict.passwords.join("\n"))
+  }
 }
 </script>
 
@@ -81,12 +100,10 @@ async function InitDict() {
       </el-main>
       <div class="console-log">
         <div>
-          <el-breadcrumb :separator-icon="ArrowRight" style="margin-left: 2.5vh;">
-            <el-breadcrumb-item v-for="label in breadcrumbItems(route.path)">
-              {{ label }}
-            </el-breadcrumb-item>
-          </el-breadcrumb>
-          <div style="margin-right: 2.5vh">
+          <span class="margin-25">
+            {{ breadcrumbItems(route.path, ' > ') }}
+          </span>
+          <div class="margin-25">
             <el-button link @click="showLogger = true">
               <template #icon>
                 <img src="/console.svg">
@@ -94,7 +111,6 @@ async function InitDict() {
               Console
             </el-button>
           </div>
-
         </div>
       </div>
     </el-container>
@@ -111,5 +127,11 @@ async function InitDict() {
 <style>
 .el-aside {
   width: 64px;
+}
+
+.margin-25 {
+  margin: 2.5vh;
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>
