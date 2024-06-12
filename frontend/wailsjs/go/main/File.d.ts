@@ -19,6 +19,8 @@ export function PathBase(arg1:string):Promise<string>;
 
 export function ReadMemo(arg1:string):Promise<{[key: string]: string}>;
 
+export function RemoveOldConfig():Promise<void>;
+
 export function SaveFile(arg1:string):Promise<string>;
 
 export function UpdatePocFile():Promise<string>;

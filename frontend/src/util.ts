@@ -2,7 +2,7 @@
 import { ElMessage, ElNotification } from "element-plus";
 import global from "./global";
 import { CheckTarget, GoFetch, NucleiEnabled, Sock5Connect } from "../wailsjs/go/main/App";
-import { CheckFileStat, GetFileContent, UserHomeDir } from "../wailsjs/go/main/File";
+import { CheckFileStat, GetFileContent, RemoveOldConfig, UserHomeDir } from "../wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
 
 export function Copy(content: string) {
@@ -95,6 +95,7 @@ function AddRightSubString(str: string, sub: string) {
   return str + sub
 }
 
+// version1 > version2 return 1
 export function compareVersion(version1: string, version2: string) {
   const v1 = version1.split(".").map(Number);
   const v2 = version2.split(".").map(Number);
@@ -261,6 +262,10 @@ export const check = ({
       return
     } else {
       global.UPDATE.LocalPocVersion = await GetFileContent(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+      // 如果本地系统版本小于1.5.1需要移除旧版本配置文件
+      if (compareVersion(global.UPDATE.LocalPocVersion, "0.0.4") != 1) {
+        RemoveOldConfig()
+      }
     }
     let resp = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
     if (resp.Error == true) {

@@ -45,8 +45,6 @@ export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 
 export function IconHash(arg1:string):Promise<string>;
 
-export function InitBurteDict():Promise<boolean>;
-
 export function InitIPResolved():Promise<void>;
 
 export function InitRule():Promise<boolean>;

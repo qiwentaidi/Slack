@@ -292,10 +292,13 @@ async function EzWebscan(ips: string[]) {
     await FingerScan(ips, global.proxy)
     await ActiveFingerScan(ips, global.proxy)
     if (await NucleiEnabled(global.webscan.nucleiEngine)) {
-        async.eachLimit(global.webscan.urlFingerMap, 10, async (ufm: uf, callback: () => void) => {
+        const filteredUrlFingerprints = global.webscan.urlFingerMap
+            .filter(item => item.finger.length > 0 && item.url)
+            .map(item => ({ url: item.url, finger: item.finger }));
+        async.eachLimit(filteredUrlFingerprints, 10, async (ufm: uf, callback: () => void) => {
             await NucleiScanner(0, ufm.url, ufm.finger, global.webscan.nucleiEngine, false, "", "")
             id++
-            if (id == global.webscan.urlFingerMap.length) {
+            if (id == filteredUrlFingerprints.length) {
                 callback()
             }
         }, (err: any) => {
@@ -311,12 +314,16 @@ async function EzWebscan(ips: string[]) {
     }
 }
 
+const needBrute = ["ftp","ssh","telnet","smb","oracle","mssql","mysql","rdp","postgresql","vnc","redis","memcached","mongodb"]
+
 function EzCrack(ips: string[]) {
     let id = 0
     async.eachLimit(ips, 20, async (target: string, callback: () => void) => {
         let protocol = target.split("://")[0]
         let userDict = global.dict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
-        Callgologger("info", target + " is start brute")
+        if (needBrute.includes(protocol)) {
+            Callgologger("info", target + " is start brute")
+        }
         await PortBrute(target, userDict, global.dict.passwords)
         id++
         if (id == ips.length) {
@@ -335,7 +342,7 @@ function EzCrack(ips: string[]) {
 function linkage(mode: string) {
     // 处理对象，不然map拿不到值
     const selectRows = JSON.parse(JSON.stringify(table.selectRows));
-    let targets = selectRows.map((item:any) => item.link)
+    let targets = selectRows.map((item: any) => item.link)
     if (targets.length == 0) {
         ElMessage("至少选择1个联动目标")
         return
@@ -367,6 +374,7 @@ function linkage(mode: string) {
                         </template>
                         SYN
                     </el-tooltip>
+                    <span v-else>SYN</span>
                 </el-checkbox>
                 <el-checkbox v-model="config.crack" label="口令猜测"></el-checkbox>
                 <el-checkbox v-model="config.webscan" label="网站扫描"></el-checkbox>
@@ -462,7 +470,7 @@ function linkage(mode: string) {
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
                     <el-progress :text-inside="true" :stroke-width="20" :percentage="form.percentage" color="#5DC4F7"
-                        style="width: 50%;" />
+                        style="width: 40%;" />
                     <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange"
                         :current-page="table.currentPage" :page-sizes="[10, 20, 50]" :page-size="table.pageSize"
                         layout="total, sizes, prev, pager, next" :total="table.result.length">

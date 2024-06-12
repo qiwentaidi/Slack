@@ -116,6 +116,9 @@ class Dirsearch {
                 callback(new Error(`失败次数超过${config.failedCounts}次，扫描任务已停止`));
                 return;
             }
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+            }
             PathRequest(from.defaultOption, from.url + path, config.timeout, config.exclude, redirect, config.headers).then(result => {
                 if (result.Status == 0) {
                     from.errorCounts++

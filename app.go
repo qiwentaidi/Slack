@@ -35,8 +35,8 @@ type App struct {
 	cdnFile          string
 	qqwryFile        string
 	avFile           string
-	bruteFile        string
-	defaultPath      string
+	// bruteFile        string
+	defaultPath string
 }
 
 // NewApp creates a new App application struct
@@ -49,8 +49,8 @@ func NewApp() *App {
 		cdnFile:          home + "/slack/config/cdn.yaml",
 		qqwryFile:        home + "/slack/config/qqwry.dat",
 		avFile:           home + "/slack/config/antivirues.yaml",
-		bruteFile:        home + "/slack/portburte",
-		defaultPath:      home + "/slack/",
+		// bruteFile:        home + "/slack/portburte",
+		defaultPath: home + "/slack/",
 	}
 }
 
@@ -459,14 +459,14 @@ type InfoResult struct {
 	WAF          string
 }
 
-func (a *App) InitBurteDict() bool {
-	if _, err := os.Stat(a.bruteFile); err != nil {
-		os.MkdirAll(a.bruteFile+"/username", 0777)
-		os.Mkdir(a.bruteFile+"/password", 0777)
-		return true
-	}
-	return false
-}
+// func (a *App) InitBurteDict() bool {
+// 	if _, err := os.Stat(a.bruteFile); err != nil {
+// 		os.MkdirAll(a.bruteFile+"/username", 0777)
+// 		os.Mkdir(a.bruteFile+"/password", 0777)
+// 		return true
+// 	}
+// 	return false
+// }
 
 // 仅在执行时调用一次
 func (a *App) InitRule() bool {

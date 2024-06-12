@@ -189,6 +189,10 @@ func (a *App) DownloadCyberChef(url string) error {
 	return nil
 }
 
+func (*File) RemoveOldConfig() error {
+	return os.RemoveAll(util.HomeDir() + "/slack")
+}
+
 // type Records struct {
 // 	Fields []string
 // }

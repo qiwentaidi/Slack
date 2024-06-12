@@ -82,10 +82,6 @@ export function IconHash(arg1) {
   return window['go']['main']['App']['IconHash'](arg1);
 }
 
-export function InitBurteDict() {
-  return window['go']['main']['App']['InitBurteDict']();
-}
-
 export function InitIPResolved() {
   return window['go']['main']['App']['InitIPResolved']();
 }

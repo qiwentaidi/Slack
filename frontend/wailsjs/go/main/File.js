@@ -38,6 +38,10 @@ export function ReadMemo(arg1) {
   return window['go']['main']['File']['ReadMemo'](arg1);
 }
 
+export function RemoveOldConfig() {
+  return window['go']['main']['File']['RemoveOldConfig']();
+}
+
 export function SaveFile(arg1) {
   return window['go']['main']['File']['SaveFile'](arg1);
 }

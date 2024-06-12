@@ -150,7 +150,7 @@ func (nc *NucleiCaller) ReadNucleiJson(ctx context.Context) error {
 func (nc *NucleiCaller) CallerFP(ctx context.Context, pe FingerPoc) error {
 	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", strings.Join(pe.PocFiles, ","), "-je", result, nc.Interactsh}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
-	if err := cmd.Run(); err != nil {
+	if _, err := cmd.CombinedOutput(); err != nil {
 		return err
 	}
 	return nc.ReadNucleiJson(ctx)
@@ -173,7 +173,7 @@ func (nc *NucleiCaller) CallerAP(ctx context.Context, target string, keywords []
 		}
 	}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
-	if err := cmd.Run(); err != nil {
+	if _, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("callerap err: %v", err)
 	}
 	return nc.ReadNucleiJson(ctx)
