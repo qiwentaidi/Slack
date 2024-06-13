@@ -29,10 +29,7 @@ const update = ({
     <el-card class="box-card">
         <template #header>
             <div class="card-header">
-                <el-text>
-                    <span style="font-weight: bold;">POC&指纹{{ global.UPDATE.RemotePocVersion }}</span>
-                    <br />当前{{ "v" + global.UPDATE.LocalPocVersion }}
-                </el-text>
+                <span style="font-weight: bold;">POC&指纹: 最新{{ global.UPDATE.RemotePocVersion }}/当前{{ global.UPDATE.LocalPocVersion }}</span>
                 <el-button class="button" :icon="Download" text @click="update.poc"
                     v-if="global.UPDATE.PocStatus">立即下载</el-button>
                 <span v-else>{{ global.UPDATE.PocContent }}</span>
@@ -46,10 +43,7 @@ const update = ({
     <el-card class="box-card" style="margin-top: 10px;">
         <template #header>
             <div class="card-header">
-                <el-text>
-                    <span style="font-weight: bold;">客户端{{ global.UPDATE.RemoteClientVersion }}</span>
-                    <br />当前{{ "v" + global.LOCAL_VERSION }}
-                </el-text>
+                <span style="font-weight: bold;">客户端: 最新{{ global.UPDATE.RemoteClientVersion }}/当前{{ global.LOCAL_VERSION }}</span>
                 <el-button class="button" :icon="Download" text
                     @click="BrowserOpenURL('https://github.com/qiwentaidi/Slack/releases')"
                     v-if="global.UPDATE.ClientStatus">立即下载</el-button>

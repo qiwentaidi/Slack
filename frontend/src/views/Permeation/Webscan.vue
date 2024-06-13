@@ -269,15 +269,15 @@ class Scanner {
         Callgologger("info", `Webscan task loaded, current: ${this.urls.length}，当前扫描模式: ${dashboard.currentModule}`)
         Callgologger("info", '正在进行指纹扫描 ...')
         await FingerScan(this.urls, global.proxy)
-        if (dashboard.currentModule == "指纹+敏感目录扫描" || dashboard.currentModule == "指纹漏洞扫描") {
+        if (form.currentModule == 1 || form.currentModule == 2) {
             const urlArray: string[] = global.webscan.urlFingerMap.map(item => item.url);
             Callgologger("info", '正在进行主动指纹探测 ...')
             await ActiveFingerScan(urlArray, global.proxy)
         }
         let count = 0
         let mode = 0
-        if (dashboard.currentModule == "指纹漏洞扫描" || dashboard.currentModule == "全部漏洞扫描") {
-            if (dashboard.currentModule == "全部漏洞扫描") {
+        if (form.currentModule == 2 || form.currentModule == 3) {
+            if (form.currentModule == 3) {
                 mode = 1
             }
             Callgologger("info", `正在进行${dashboard.currentModule} ...`)
@@ -624,7 +624,7 @@ function getClassBySeverity(severity: string) {
                 </template>
                 <el-segmented v-model="form.currentModule" :options="form.module" style="width: 100%;" />
             </el-form-item>
-            <div v-if="dashboard.currentModule == '全部漏洞扫描'">
+            <div v-if="form.currentModule == 3">
                 <el-form-item label="关键字:" class="bottom">
                     <el-input v-model="form.keyword" placeholder="根据id判断','分割关键字" clearable></el-input>
                 </el-form-item>
