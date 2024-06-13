@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slack-wails/lib/bridge"
 	"slack-wails/lib/util"
 	"strings"
 	"time"
@@ -100,6 +101,7 @@ func (nc *NucleiCaller) ReportDirStat() error {
 
 func (nc *NucleiCaller) Enabled() bool {
 	cmd := exec.Command(nc.NucleiPath, "--version")
+	bridge.HideExecWindow(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return false
@@ -150,6 +152,7 @@ func (nc *NucleiCaller) ReadNucleiJson(ctx context.Context) error {
 func (nc *NucleiCaller) CallerFP(ctx context.Context, pe FingerPoc) error {
 	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", strings.Join(pe.PocFiles, ","), "-je", result, nc.Interactsh}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
+	bridge.HideExecWindow(cmd)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		return err
 	}
@@ -173,6 +176,7 @@ func (nc *NucleiCaller) CallerAP(ctx context.Context, target string, keywords []
 		}
 	}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
+	bridge.HideExecWindow(cmd) // 让windows执行cmd时无窗口
 	if _, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("callerap err: %v", err)
 	}
