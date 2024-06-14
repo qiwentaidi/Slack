@@ -2,7 +2,7 @@
 import { InitConfigFile } from "../config";
 import global from "../global";
 import { onMounted, ref, computed } from 'vue';
-import Navigation from './Navigation.vue'
+import Navigation from '../components/Navigation.vue'
 import { Search } from "@element-plus/icons-vue";
 import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
 // 初始化时调用

@@ -7,7 +7,7 @@ import router from "./router";
 function catchError(result: boolean, loading: any) {
   if (result) {
     loading.setText("配置文件初始化成功!");
-  }else {
+  } else {
     ElNotification({
       message: "无法下载配置文件,请自行到https://gitee.com/the-temperature-is-too-low/slack-poc/releases/下载config.zip并解压到用户根目录下的/slack/文件夹下!",
       position: "bottom-right"

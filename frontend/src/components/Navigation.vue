@@ -89,7 +89,7 @@ var options = [
                 icon: "/virus.png"
             },
             {
-                name:"aside.data_handing",
+                name: "aside.data_handing",
                 route: "/Tools/DataHanding",
                 icon: "/data.png"
             },

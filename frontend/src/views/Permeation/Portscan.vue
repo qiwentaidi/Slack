@@ -314,7 +314,7 @@ async function EzWebscan(ips: string[]) {
     }
 }
 
-const needBrute = ["ftp","ssh","telnet","smb","oracle","mssql","mysql","rdp","postgresql","vnc","redis","memcached","mongodb"]
+const needBrute = ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "rdp", "postgresql", "vnc", "redis", "memcached", "mongodb"]
 
 function EzCrack(ips: string[]) {
     let id = 0
@@ -420,12 +420,12 @@ function linkage(mode: string) {
                             排除IP可以在可支持输入的IP格式前加!:<br />
                             !192.168.1.6/28<br />
                         </template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
+                        <el-icon style="width: 13px;">
+                            <QuestionFilled />
                         </el-icon>
                     </el-tooltip>
                 </span>
-                <el-button size="small" style="margin-bottom: 2px;" @click="uploadFile">IP导入</el-button>
+                <el-button size="small" @click="uploadFile">IP导入</el-button>
             </div>
             <el-input class="input" type="textarea" rows="3" v-model="form.target" resize="none" />
         </el-col>
@@ -479,21 +479,24 @@ function linkage(mode: string) {
             </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar">
-            <el-dropdown>
-                <el-button :icon="Menu" color="#D2DEE3" />
-                <template #dropdown>
-                    <el-dropdown-menu>
-                        <el-dropdown-item @click="CopyURLs(table.result)"
-                            :icon="CopyDocument">复制全部URL</el-dropdown-item>
-                        <el-dropdown-item :icon="Grid"
-                            @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">
-                            导出Excel</el-dropdown-item>
-                        <el-dropdown-item @click="linkage('webscan')" :icon="Promotion"
-                            divided>发送至网站扫描</el-dropdown-item>
-                        <el-dropdown-item @click="linkage('crack')" :icon="Promotion">发送至暴破与未授权检测</el-dropdown-item>
-                    </el-dropdown-menu>
-                </template>
-            </el-dropdown>
+            <el-space>
+                <el-input></el-input>
+                <el-dropdown>
+                    <el-button :icon="Menu" color="#D2DEE3" />
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item @click="CopyURLs(table.result)"
+                                :icon="CopyDocument">复制全部URL</el-dropdown-item>
+                            <el-dropdown-item :icon="Grid"
+                                @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">
+                                导出Excel</el-dropdown-item>
+                            <el-dropdown-item @click="linkage('webscan')" :icon="Promotion"
+                                divided>发送至网站扫描</el-dropdown-item>
+                            <el-dropdown-item @click="linkage('crack')" :icon="Promotion">发送至暴破与未授权检测</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
+            </el-space>
         </div>
     </div>
 </template>

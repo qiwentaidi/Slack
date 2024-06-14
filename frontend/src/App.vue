@@ -9,9 +9,6 @@ import { CheckFileStat, UserHomeDir, Mkdir, WriteFile } from "../wailsjs/go/main
 const route = useRoute();
 const showLogger = ref(false);
 
-// 自动加载联动路由，避免内容丢失
-
-
 function breadcrumbItems(label: string, separator: string) {
   switch (label) {
     case "/":
