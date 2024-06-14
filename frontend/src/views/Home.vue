@@ -7,7 +7,7 @@ import { Search } from "@element-plus/icons-vue";
 import { BrowserOpenURL } from '../../wailsjs/runtime/runtime';
 // 初始化时调用
 onMounted(async () => {
-  await InitConfigFile()
+  await InitConfigFile(1000)
 });
 
 const searchFilter = ref('')

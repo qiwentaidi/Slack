@@ -50,19 +50,20 @@ func download(target, dest string) (string, error) {
 }
 
 func InitConfig(configPath string) bool {
-	os.MkdirAll(util.HomeDir()+"/slack/config", 0777)
+	var defaultFile = util.HomeDir() + "/slack/"
+	os.MkdirAll(configPath, 0777)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
 	_, b, err := clients.NewSimpleGetRequest(latestConfigVersion, http.DefaultClient)
 	if err != nil {
 		return false
 	}
 	configFileZip := lastestPocUrl + "v" + string(b) + "/config.zip"
-	fileName, err := download(configFileZip, configPath)
+	fileName, err := download(configFileZip, defaultFile)
 	if err != nil {
 		return false
 	}
 	uz := util.NewUnzip()
-	if _, err := uz.Extract(configPath+fileName, configPath); err != nil {
+	if _, err := uz.Extract(defaultFile+fileName, configPath); err != nil {
 		return false
 	}
 	os.Remove(util.HomeDir() + "/slack/config.zip")
