@@ -6,32 +6,38 @@ const MenuList = [
     },
     {
       name: "aside.penetration",
-      path: "/Penetration", // 什么路径都行，但是别重复
+      path: "/Penetration", // 父级路径怎么写都行，但是别重复
       icon: "Smoking",
       children: [
         {
           name: "aside.webscan",
           path: "/Permeation/Webscan",
+          icon: "/webscan.png"
         },
         {
           name: "aside.portscan",
           path: "/Permeation/Portscan",
+          icon: "/portscan.png"
         },
         {
           name: "aside.crack",
           path: "/Permeation/Crack",
+          icon: "/target.png"
         },
         {
           name: "aside.dirscan",
           path: "/Permeation/Dirsearch",
+          icon: "/dirscan.png"
         },
         {
           name: "aside.jsfinder",
           path: "/Permeation/JSFinder",
+          icon: "/extract.png"
         },
         {
           name: "aside.exp",
           path: "/Permeation/Exploitation",
+          icon: "/attack.png"
         },
       ]
     },
@@ -43,14 +49,17 @@ const MenuList = [
         {
           name: "aside.asset_from_company",
           path: "/Asset/Company",
+          icon: "/company.png",
         },
         {
           name: "aside.subdomain_brute_force",
           path: "/Asset/Subdomain",
+          icon: "/bomb.png"
         },
         {
           name: "aside.search_domain_info",
           path: "/Asset/Ipdomain",
+          icon: "/domain.png"
         },
       ]
     },
@@ -62,14 +71,17 @@ const MenuList = [
         {
           name: "aside.fofa",
           path: "/SpaceEngine/FOFA",
+          icon: "/fofa.ico"
         },
         {
           name: "aside.hunter",
           path: "/SpaceEngine/Hunter",
+          icon: "/hunter.ico"
         },
         {
           name: "aside.agent_pool",
           path: "/SpaceEngine/AgentPool",
+          icon: "/vpn.png"
         },
       ]
     },
@@ -81,30 +93,37 @@ const MenuList = [
         {
           name: "aside.en_and_de",
           path: "/Tools/Codec",
+          icon: "/encrypt.png"
         },
         {
           name: "aside.systeminfo",
           path: "/Tools/System",
+          icon: "/virus.png"
         },
         {
           name: "aside.data_handing",
           path: "/Tools/DataHanding",
+          icon: "/data.png"
         },
         {
           name: "aside.memorandum",
           path: "/Tools/Memo",
+          icon: "/memo.png"
         },
         {
           name: "aside.reverse",
           path: "/Tools/Reverse",
+          icon: "/skull.png"
         },
         {
           name: "aside.associate_dictionary_generator",
           path: "/Tools/Thinkdict",
+          icon: "/dict.png"
         },
         {
           name: "aside.aksk",
           path: "/Tools/AKSK",
+          icon: "/wechat.png"
         },
       ]
     },
@@ -116,6 +135,7 @@ const MenuList = [
         {
           name: "aside.guarantee",
           path: "/Guard/Guarantee",
+          icon: "/navigation/ahapt.png"
         },
       ]
     },
