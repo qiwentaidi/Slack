@@ -190,7 +190,11 @@ func (a *App) DownloadCyberChef(url string) error {
 }
 
 func (*File) RemoveOldConfig() error {
-	return os.RemoveAll(util.HomeDir() + "/slack")
+	err := os.RemoveAll(util.HomeDir() + "/slack")
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+	}
+	return err
 }
 
 // type Records struct {

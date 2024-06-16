@@ -79,6 +79,11 @@ const MenuList = [
           icon: "/hunter.ico"
         },
         {
+          name: "aside.360quake",
+          path: "/SpaceEngine/Quake",
+          icon: "/navigation/360.ico"
+        },
+        {
           name: "aside.agent_pool",
           path: "/SpaceEngine/AgentPool",
           icon: "/vpn.png"

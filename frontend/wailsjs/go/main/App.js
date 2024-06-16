@@ -26,6 +26,10 @@ export function CyberChefLocalServer() {
   return window['go']['main']['App']['CyberChefLocalServer']();
 }
 
+export function DirScan(arg1) {
+  return window['go']['main']['App']['DirScan'](arg1);
+}
+
 export function DomainInfo(arg1) {
   return window['go']['main']['App']['DomainInfo'](arg1);
 }
@@ -134,10 +138,6 @@ export function NucleiScanner(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
   return window['go']['main']['App']['NucleiScanner'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 
-export function PathRequest(arg1, arg2, arg3, arg4, arg5, arg6) {
-  return window['go']['main']['App']['PathRequest'](arg1, arg2, arg3, arg4, arg5, arg6);
-}
-
 export function PortBrute(arg1, arg2, arg3) {
   return window['go']['main']['App']['PortBrute'](arg1, arg2, arg3);
 }
@@ -148,6 +148,10 @@ export function PortParse(arg1) {
 
 export function Sock5Connect(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['Sock5Connect'](arg1, arg2, arg3, arg4, arg5);
+}
+
+export function StopDirScan() {
+  return window['go']['main']['App']['StopDirScan']();
 }
 
 export function StopPortScan() {

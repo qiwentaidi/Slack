@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { URLFingerMap } from '../interface'
 
 var space = reactive({
     fofaapi: 'https://fofa.info/',
@@ -17,14 +18,15 @@ var proxy = reactive({
     password: '',
 })
 
-interface uf {
-    url: string,
-    finger: string[]
-}
-
 var webscan = reactive({
     nucleiEngine: "",
-    urlFingerMap: [] as uf[],
+})
+
+// 临时全局变量但是不进行保存
+var temp = reactive({
+    urlFingerMap: [] as URLFingerMap[],
+    dirsearchPathConut: 0,
+    dirsearchStartTime: 0, 
 })
 
 const Logger = reactive({
@@ -32,8 +34,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "1.5.3"
-
+const LOCAL_VERSION = "1.5.4"
 
 var PATH = {
     ConfigPath: "/slack/config",
@@ -311,17 +312,17 @@ var onlineOptions = [
         label: 'navigator.dnslog',
         value: [
             {
-                name: "dnslog",
+                name: "Dnslog",
                 url: "https://dnslog.cn/",
                 icon: "/navigation/dnslog.ico"
             },
             {
-                name: "dig.pm",
+                name: "Dig",
                 url: "https://dig.pm/",
                 icon: "/navigation/dig.png"
             },
             {
-                name: "eyes",
+                name: "Eyes",
                 url: "http://eyes.sh/",
                 icon: "/navigation/eyes.png"
             },
@@ -355,5 +356,6 @@ export default {
     jsfind,
     webscan,
     onlineOptions,
-    portGroup
+    portGroup,
+    temp
 };

@@ -1,35 +1,90 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
-import { GoFetch, LoadDirsearchDict, PathRequest } from "../../../wailsjs/go/main/App";
-import { ReadLine, SplitTextArea, Copy, sleep } from '../../util'
+import { reactive } from 'vue';
+import { GoFetch, LoadDirsearchDict, DirScan, StopDirScan } from "../../../wailsjs/go/main/App";
+import { ReadLine, SplitTextArea, Copy } from '../../util'
 import { ElMessage, ElNotification } from 'element-plus'
-import { BrowserOpenURL } from '../../../wailsjs/runtime'
-import async from 'async';
+import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '../../global';
 import { FileDialog } from '../../../wailsjs/go/main/File';
-// 初始化时调用
+import { Dir, DirScanOptions } from '../../interface';
+
 onMounted(() => {
-    dir.value = []
+    EventsOn("dirsearchLoading", (result: any) => {
+        switch (result.Status) {
+            case 0:
+                from.errorCounts++
+                break
+            case 1:
+                break
+            case 999:
+                ElNotification({
+                    message: result.Message,
+                    type: 'error',
+                    position: 'bottom-right',
+                });
+                break
+            default:
+                table.result.push({
+                    Status: result.Status,
+                    Length: result.Length,
+                    URL: result.URL,
+                    Location: result.Location,
+                })
+                table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+                break
+        }
+    });
+    EventsOn("dirsearchProgressID", (id: number) => {
+        from.id = id
+        from.currentRate = Math.round(from.id / ((Date.now() - global.temp.dirsearchStartTime) / 1000));
+        from.percentage = Number(((from.id / global.temp.dirsearchPathConut) * 100).toFixed(2));
+    });
+    EventsOn("dirsearchComplete ", () => {
+        config.runningStatus = false
+        from.percentage = 100
+    });
+    return () => {
+        EventsOff("dirsearchLoading");
+        EventsOff("dirsearchProgressID");
+        EventsOff("dirsearchComplete");
+    };
 });
+
 const from = reactive({
     url: '',
     options: ['GET', 'POST', 'HEAD', 'OPTIONS'],
     defaultOption: 'GET',
     exts: 'php,aspx,asp,jsp,html,js',
-    statusFilter: '',
+    statusFilter: '404',
     paths: [] as string[],
     percentage: 0,
     id: 0,
     currentRate: 0,
     errorCounts: 0,
-    redirectClient: false,
     alive: false,
     respDialog: false,
-    content: ""
+    content: "",
 })
-const dir = ref([{}])
+
+const table = reactive({
+    currentPage: 1,
+    pageSize: 50,
+    result: [] as Dir[],
+    pageContent: [] as Dir[],
+})
+
+function handleSizeChange(val: any) {
+    table.pageSize = val;
+    table.currentPage = 1;
+    table.pageContent = table.result.slice(0, val)
+}
+
+function handleCurrentChange(val: any) {
+    table.currentPage = val;
+    table.pageContent = table.result.slice((val - 1) * table.pageSize, (val - 1) * table.pageSize + table.pageSize)
+}
 
 async function handleFileChange() {
     let path = await FileDialog()
@@ -49,7 +104,7 @@ async function handleFileChange() {
 
 async function dirscan() {
     // true is in running 
-    if (!control.runningStatus) {
+    if (!config.runningStatus) {
         let ds = new Dirsearch()
         if (await ds.checkURL()) {
             ds.scanner()
@@ -81,7 +136,8 @@ class Dirsearch {
         }
         return true
     }
-    public async scanner() {
+    public async init() {
+        config.runningStatus = true
         if (from.url[from.url.length - 1] !== "/") {
             from.url += "/"
         }
@@ -92,93 +148,47 @@ class Dirsearch {
                 from.paths = result;
             });
         }
-        dir.value = []
+        global.temp.dirsearchPathConut = from.paths.length
         from.id = 0
         from.errorCounts = 0
-        let startTime = Date.now();
-        let statusCounts: Record<number, number> = {};
+        global.temp.dirsearchStartTime = Date.now();
+    }
+
+    public async scanner() {
+        await this.init()
         let statuscodeFilter = control.psc()
-        console.log(statuscodeFilter)
-        let redirect = false
-        if (from.redirectClient) {
-            redirect = true
+        let option: DirScanOptions = {
+            Method: from.defaultOption,
+            URL: from.url,
+            Paths: from.paths,
+            Workers: config.thread,
+            Timeout: config.timeout,
+            BodyExclude: config.exclude,
+            BodyLengthExcludeTimes: config.times,
+            StatusCodeExclude: statuscodeFilter,
+            FailedCounts: config.failedCounts,
+            Redirect: config.redirectClient,
+            Interval: config.interval,
+            CustomHeader: config.headers,
         }
-        control.runningStatus = true
-        async.eachLimit(from.paths, config.thread, (path: string, callback: (err?: Error) => void) => {
-            from.id++;
-            from.currentRate = Math.round(from.id / ((Date.now() - startTime) / 1000));
-            from.percentage = Number(((from.id / from.paths.length) * 100).toFixed(2));
-            if (control.runningStatus == false) {
-                callback(new Error('用户已终止扫描任务'));
-                return;
-            }
-            if (config.failedCounts != 0 && config.failedCounts <= from.errorCounts) {
-                callback(new Error(`失败次数超过${config.failedCounts}次，扫描任务已停止`));
-                return;
-            }
-            if (path.startsWith("/")) {
-                path = path.substring(1);
-            }
-            PathRequest(from.defaultOption, from.url + path, config.timeout, config.exclude, redirect, config.headers).then(result => {
-                if (result.Status == 0) {
-                    from.errorCounts++
-                } else if (result.Status !== 1) {
-                    if (config.timeout != 0) {
-                        statusCounts[result.Length] = (statusCounts[result.Length] || 0) + 1;
-                        if (statusCounts[result.Length] <= config.times) {
-                            if (statuscodeFilter.length > 0) {
-                                // 在状态码过滤列表中，如果匹配不到响应的状态码，则添加结果
-                                if (statuscodeFilter.includes(result.Status)) {
-                                    dir.value.push({
-                                        status: result.Status,
-                                        length: result.Length,
-                                        path: from.url + path,
-                                        location: result.Location,
-                                    });
-                                }
-                            } else {
-                                dir.value.push({
-                                    status: result.Status,
-                                    length: result.Length,
-                                    path: from.url + path,
-                                    location: result.Location,
-                                });
-                            }
-                        }
-                    }
-                }
-                callback()
-                sleep(config.interval * 1000)
-            })
-        }, (err: any) => {
-            if (err) {
-                ElNotification({
-                    message: err,
-                    type: 'error',
-                    position: 'bottom-right',
-                });
-                control.runningStatus = false
-            } else {
-                ElNotification({
-                    message: `目录扫描任务已结束`,
-                    type: 'success',
-                    position: 'bottom-right',
-                });
-                control.runningStatus = false
-            }
-        });
+        await DirScan(option)
     }
 }
 
-const control = reactive({
-    runningStatus: false,
-    stop: function () {
-        if (control.runningStatus == true) {
-            control.runningStatus = false
+const control = ({
+    stop: async function () {
+        if (config.runningStatus) {
+            await StopDirScan()
+            config.runningStatus = false
+            ElNotification({
+                message: "用户已终止扫描任务",
+                type: 'error',
+                position: 'bottom-right',
+            });
         }
     },
     format: function () {
-        return `${from.id}/${from.paths.length} (${from.currentRate}/s)`
+        return `${from.id}/${global.temp.dirsearchPathConut} (${from.currentRate}/s)`
     },
     // Processing status codes
     psc: function (): number[] {
@@ -203,16 +213,10 @@ async function GetResponse(url: string) {
     from.respDialog = true
     let result = await GoFetch("GET", url, "", [{}], 10, null);
     if (result.Error) {
-        ElMessage({
-            showClose: true,
-            message: '目的地址响应超时',
-            type: 'warning',
-        })
-        return
+        from.content = '目的地址响应超时'
     }
     try {
-        const jsonResult = JSON.parse(result.Body);
-        from.content = jsonResult;
+        from.content = JSON.parse(result.Body);
     } catch (error) {
         from.content = result.Body
     }
@@ -220,15 +224,18 @@ async function GetResponse(url: string) {
 
 const config = reactive({
     drawer: false,
-    thread: 50,
+    thread: 25,
     timeout: 8,
-    interval: 0,
     times: 5,
+    interval: 0,
     failedCounts: 0,
     exclude: "",
     headers: "",
     customDict: "",
+    redirectClient: false,
+    runningStatus: false,
 })
+
 </script>
 
 <template>
@@ -238,23 +245,25 @@ const config = reactive({
                 <el-select v-model=from.defaultOption value=options style="width: 20vh;">
                     <el-option v-for="item in from.options" :value="item" :label="item" />
                 </el-select>
-                <el-input v-model="from.url" placeholder="请输入URL地址" style="margin-right: 5px;" />
-                <el-button type="primary" @click="dirscan" v-if="!control.runningStatus">开始扫描</el-button>
-                <el-button type="danger" @click="control.stop" v-else>停止扫描</el-button>
-                <el-button color="rgb(194, 194, 196)" @click="config.drawer = true" style="margin-left: 5px;">参数设置</el-button>
+                <el-input v-model="from.url" placeholder="请输入URL地址" />
+                <div class="two-end-space5">
+                    <el-button type="primary" @click="dirscan" v-if="!config.runningStatus">开始扫描</el-button>
+                    <el-button type="danger" @click="control.stop" v-else>停止扫描</el-button>
+                </div>
+                <el-button color="rgb(194, 194, 196)" @click="config.drawer = true">参数设置</el-button>
             </div>
         </el-form-item>
         <el-form-item>
             <el-space>
                 <div>
                     <span>重定向跟随：</span>
-                    <el-switch v-model="from.redirectClient" inline-prompt active-text="关闭" inactive-text="开启" />
+                    <el-switch v-model="config.redirectClient" inline-prompt active-text="关闭" inactive-text="开启" />
                 </div>
                 <div>
                     <span>初始不判断存活：</span>
                     <el-switch v-model="from.alive" inline-prompt active-text="关闭" inactive-text="开启" />
                 </div>
-                <el-tag>字典大小:{{ from.paths.length }}</el-tag>
+                <el-tag>字典大小:{{ global.temp.dirsearchPathConut }}</el-tag>
                 <el-tag>线程:{{ config.thread }}</el-tag>
                 <el-tooltip placement="bottom" content="请求失败数量">
                     <el-tag type="danger">ERROR:{{ from.errorCounts }}</el-tag>
@@ -324,7 +333,7 @@ const config = reactive({
                 </template>
                 <el-input v-model="config.exclude"></el-input>
             </el-form-item>
-            <el-form-item label="状态码过滤:">
+            <el-form-item label="排除状态码:">
                 <el-input v-model="from.statusFilter" placeholder="支持200,300 | 200-300,400-500"></el-input>
             </el-form-item>
             <el-form-item label="自定义请求头:">
@@ -341,56 +350,61 @@ const config = reactive({
                     </el-tooltip>
                 </template>
                 <el-input v-model="config.customDict" type="textarea" rows="5"></el-input>
-                <el-button link @click="handleFileChange()"
-                    style="margin-top: 10px;">选择字典(不选择加载默认字典)</el-button>
+                <el-button link @click="handleFileChange()" style="margin-top: 10px;">选择字典(不选择加载默认字典)</el-button>
             </el-form-item>
         </el-form>
     </el-drawer>
-    <el-table :data="dir" border style="height: 74vh;">
+    <el-table :data="table.pageContent" border style="height: 74vh;">
         <el-table-column type="index" label="#" width="60px" />
-        <el-table-column prop="status" width="100px" label="状态码"
-            :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable />
-        <el-table-column prop="length" width="100px" label="长度"
-            :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable />
-        <el-table-column prop="path" label="目录路径" :show-overflow-tooltip="true">
+        <el-table-column prop="Status" width="100px" label="状态码"
+            :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
+        <el-table-column prop="Length" width="100px" label="长度"
+            :sort-method="(a: any, b: any) => { return a.Length - b.Length }" sortable />
+        <el-table-column prop="URL" label="目录路径" :show-overflow-tooltip="true">
             <template #default="scope">
                 <el-tooltip placement="top">
-                    <template #content>Redirect to {{ scope.row.location }}</template>
-                    <el-button link @click.prevent="BrowserOpenURL(scope.row.location)" v-show="scope.row.location != ''">
-                    <template #icon>
-                        <svg class="bi bi-shuffle" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M12.646 1.146a.5.5 0 0 1 .708 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708-.708L14.793 4l-2.147-2.146a.5.5 0 0 1 0-.708zm0 8a.5.5 0 0 1 .708 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708-.708L14.793 12l-2.147-2.146a.5.5 0 0 1 0-.708z" />
-                            <path fill-rule="evenodd"
-                                d="M0 4a.5.5 0 0 1 .5-.5h2c3.053 0 4.564 2.258 5.856 4.226l.08.123c.636.97 1.224 1.865 1.932 2.539.718.682 1.538 1.112 2.632 1.112h2a.5.5 0 0 1 0 1h-2c-1.406 0-2.461-.57-3.321-1.388-.795-.755-1.441-1.742-2.055-2.679l-.105-.159C6.186 6.242 4.947 4.5 2.5 4.5h-2A.5.5 0 0 1 0 4z" />
-                            <path fill-rule="evenodd"
-                                d="M0 12a.5.5 0 0 0 .5.5h2c3.053 0 4.564-2.258 5.856-4.226l.08-.123c.636-.97 1.224-1.865 1.932-2.539C11.086 4.93 11.906 4.5 13 4.5h2a.5.5 0 0 0 0-1h-2c-1.406 0-2.461.57-3.321 1.388-.795.755-1.441 1.742-2.055 2.679l-.105.159C6.186 9.758 4.947 11.5 2.5 11.5h-2a.5.5 0 0 0-.5.5z" />
-                        </svg>
-                    </template>
-                </el-button>
+                    <template #content>Redirect to {{ scope.row.Location }}</template>
+                    <el-button link @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.Location != ''">
+                        <template #icon>
+                            <svg class="bi bi-shuffle" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M12.646 1.146a.5.5 0 0 1 .708 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708-.708L14.793 4l-2.147-2.146a.5.5 0 0 1 0-.708zm0 8a.5.5 0 0 1 .708 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708-.708L14.793 12l-2.147-2.146a.5.5 0 0 1 0-.708z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 4a.5.5 0 0 1 .5-.5h2c3.053 0 4.564 2.258 5.856 4.226l.08.123c.636.97 1.224 1.865 1.932 2.539.718.682 1.538 1.112 2.632 1.112h2a.5.5 0 0 1 0 1h-2c-1.406 0-2.461-.57-3.321-1.388-.795-.755-1.441-1.742-2.055-2.679l-.105-.159C6.186 6.242 4.947 4.5 2.5 4.5h-2A.5.5 0 0 1 0 4z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 12a.5.5 0 0 0 .5.5h2c3.053 0 4.564-2.258 5.856-4.226l.08-.123c.636-.97 1.224-1.865 1.932-2.539C11.086 4.93 11.906 4.5 13 4.5h2a.5.5 0 0 0 0-1h-2c-1.406 0-2.461.57-3.321 1.388-.795.755-1.441 1.742-2.055 2.679l-.105.159C6.186 9.758 4.947 11.5 2.5 11.5h-2a.5.5 0 0 0-.5.5z" />
+                            </svg>
+                        </template>
+                    </el-button>
                 </el-tooltip>
-                {{ scope.row.path }}
+                {{ scope.row.URL }}
             </template>
         </el-table-column>
         <el-table-column fixed="right" label="操作" width="180px" align="center">
             <template #default="scope">
-                <el-button type="primary" link @click.prevent="Copy(scope.row.path)">复制</el-button>
+                <el-button type="primary" link @click.prevent="Copy(scope.row.URL)">复制</el-button>
                 <el-divider direction="vertical" />
-                <el-button type="primary" link @click.prevent="BrowserOpenURL(scope.row.path)">打开</el-button>
+                <el-button type="primary" link @click.prevent="BrowserOpenURL(scope.row.URL)">打开</el-button>
                 <el-divider direction="vertical" />
-                <el-button type="primary" link @click.prevent="GetResponse(scope.row.path)">查看</el-button>
+                <el-button type="primary" link @click.prevent="GetResponse(scope.row.URL)">查看</el-button>
             </template>
         </el-table-column>
         <template #empty>
             <el-empty />
         </template>
     </el-table>
+    <div class="my-header" style="margin-top: 10px;">
+        <el-progress :text-inside="true" :stroke-width="20" :percentage="from.percentage" :format="control.format"
+        color="#5DC4F7" style="width: 40%;" />
+        <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange"
+            :pager-count="5" :current-page="table.currentPage" :page-sizes="[50, 100, 200, 500]" :page-size="table.pageSize"
+            layout="total, sizes, prev, pager, next" :total="table.result.length">
+        </el-pagination>
+    </div>
     <el-dialog v-model="from.respDialog" title="Response" width="800">
         <pre class="pretty-response"><code>{{ from.content }}</code></pre>
     </el-dialog>
-    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
-        color="#5DC4F7" style="margin-top: 10px;" />
 </template>
 
 <style>

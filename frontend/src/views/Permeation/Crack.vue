@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue';
-import { QuestionFilled, Search, Document } from '@element-plus/icons-vue';
+import { InfoFilled, Search, Document } from '@element-plus/icons-vue';
 import { FileDialog, CheckFileStat } from '../../../wailsjs/go/main/File';
 import { ElMessage } from 'element-plus';
 import async from 'async';
@@ -27,9 +27,6 @@ onMounted(() => {
             Username: result.Username,
             Password: result.Password,
         })
-        // Vue.set(config.content, config.content.length, newItem);
-        // config.renderKey++
-        console.log(config.content)
     });
     return () => {
         EventsOff("bruteResult");
@@ -90,15 +87,15 @@ async function NewScanner() {
             let result = await CheckFileStat(config.username) // 文件不存在则为单用户名
             if (!result) {
                 userDict.push(config.username)
-            }else {
+            } else {
                 userDict = (await ReadLine(config.username))!
             }
         }
         if (config.password != "") {
             let result = await CheckFileStat(config.password)
             if (!result) {
-                 passDict.push(config.password)
-            }else {
+                passDict.push(config.password)
+            } else {
                 passDict = (await ReadLine(config.password))!
             }
         }
@@ -109,7 +106,7 @@ async function NewScanner() {
         item.dic = (await ReadLine(global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
     }
     var id = 0
-    
+
     async.eachLimit(url, 20, async (target: string, callback: () => void) => {
         let protocol = target.split("://")[0]
         // 如果当个字典不为空
@@ -129,7 +126,7 @@ async function NewScanner() {
         Callgologger("info", "PortBrute Finished")
         // ctrl.runningStatus = false
     });
-}``
+} ``
 
 </script>
 
@@ -137,33 +134,33 @@ async function NewScanner() {
     <div class="my-header">
         <div style="display: flex;">
             <el-checkbox v-model="config.builtIn" label="内置字典" />
-            <!-- <el-checkbox v-model="config.association" label="联想模式" /> -->
-            <el-tooltip :content="placeholder" placement="right-end">
-                <template #content>
-                    1、使用内置字典时，账号密码输入框无效，要使用自己的字典请取消勾选使用内置字典<br />
-                    2、账号密码框处支持单字段比如admin和txt字典路径，可以拖拽读取文件路径<br />
-                    3、联想模式意为根据关键字段如出生年月或公司名等固定规律组成字典<br />
-                    4、支持协议名: ftp、ssh、telnet、smb、oracle、mssql、mysql、rdp、vnc、redis<br />
-                    postgresql、memcached、mongodb<br />
-                </template>
-                <el-button :icon="QuestionFilled" link style="margin-bottom: 4px; margin-left: 5px;"></el-button>
-            </el-tooltip>
-
+            <el-checkbox v-model="config.association" label="联想模式" />
         </div>
+        <el-tooltip :content="placeholder" placement="bottom">
+            <template #content>
+                1、使用内置字典时，账号密码输入框无效，要使用自己的字典请取消勾选使用内置字典<br />
+                2、账号密码框处支持单字段比如admin和txt字典路径，可以拖拽读取文件路径<br />
+                3、联想模式意为根据关键字段如出生年月或公司名等固定规律组成字典<br />
+                4、支持协议名: ftp、ssh、telnet、smb、oracle、mssql、mysql、rdp、vnc、redis<br />
+                postgresql、memcached、mongodb<br />
+            </template>
+            <el-button :icon="InfoFilled" link>使用须知</el-button>
+        </el-tooltip>
         <el-button type="primary" :icon="Search" @click="NewScanner">开始暴破</el-button>
     </div>
     <el-form style="margin-top: 10px;">
         <el-form-item label="账号">
             <el-input v-model="config.username" :disabled="config.builtIn">
                 <template #suffix>
-                    <el-button link :icon="Document" @click="selectDict('username')"></el-button>
+                    <el-button link :icon="Document" @click="selectDict('username')"
+                        :disabled="config.builtIn"></el-button>
                 </template>
             </el-input>
         </el-form-item>
         <el-form-item label="密码">
             <el-input v-model="config.password" :disabled="config.builtIn">
                 <template #suffix>
-                    <el-button link :icon="Document" @click="selectDict"></el-button>
+                    <el-button link :icon="Document" @click="selectDict" :disabled="config.builtIn"></el-button>
                 </template>
             </el-input>
         </el-form-item>
@@ -175,7 +172,7 @@ async function NewScanner() {
         </pane>
         <pane size="70">
             <el-table border :data="config.content" :cell-style="{ textAlign: 'center' }"
-                    :header-cell-style="{ 'text-align': 'center' }" style="width: 100%; height: 100% ;">
+                :header-cell-style="{ 'text-align': 'center' }" style="width: 100%; height: 100% ;">
                 <el-table-column prop="Host" label="Host" />
                 <el-table-column prop="Port" label="Port" />
                 <el-table-column prop="Protocol" label="Protocol" />

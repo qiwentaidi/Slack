@@ -29,6 +29,7 @@ const filteredOptions = computed(() => {
 <template>
   <div style="position: relative">
     <el-tabs v-model="activeCard">
+      <!-- 应用导航 -->
       <el-tab-pane :label="$t('aside.app_navigation')" name="local">
         <el-scrollbar height="85vh">
           <template v-for="groups in MenuList">
@@ -54,6 +55,7 @@ const filteredOptions = computed(() => {
           </template>
         </el-scrollbar>
       </el-tab-pane>
+      <!-- 在线导航 -->
       <el-tab-pane :label="$t('aside.navigation')" name="online">
         <el-scrollbar height="85vh">
           <div
@@ -81,6 +83,9 @@ const filteredOptions = computed(() => {
             </el-card>
           </div>
         </el-scrollbar>
+      </el-tab-pane>
+      <el-tab-pane label="本地导航">
+
       </el-tab-pane>
     </el-tabs>
     <div class="custom_eltabs_titlebar" v-if="activeCard == 'online'">

@@ -84,7 +84,6 @@ func NewFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
 			}
 		}
 		u := HostPort(target)
-		banner := GetBanner(&u)
 		resp, body, _ := clients.NewSimpleGetRequest(target, client)
 		if resp == nil {
 			retChan <- InfoResult{
@@ -107,7 +106,7 @@ func NewFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
 			Port:          u.Port,
 			IconHash:      FaviconHash(u.Scheme, target, clients.DefaultClient()),
 			StatusCode:    resp.StatusCode,
-			Banner:        banner,
+			Banner:        GetBanner(&u),
 			Waf:           *waf.IsWAF(u.Host),
 		}
 		retChan <- InfoResult{

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ExportToXlsx } from '../../export'
-import { reactive, ref } from 'vue';
-import { ElNotification, ElMessage } from "element-plus";
-import { Menu, Search, ChatLineRound, ChromeFilled, CopyDocument, Share } from '@element-plus/icons-vue';
-import { TableTabs, ApiSyntaxCheck, splitInt, SplitTextArea, validateIP, validateDomain, Copy } from '../../util'
+import { reactive } from 'vue';
+import { ElNotification, ElMessage, ElMessageBox } from "element-plus";
+import { Menu, Search, ChatLineRound, ChromeFilled, CopyDocument, Grid, Document, Aim, Operation } from '@element-plus/icons-vue';
+import { ApiSyntaxCheck, splitInt, SplitTextArea, validateIP, validateDomain, Copy } from '../../util'
+import { TableTabs } from "../../interface"
 import global from "../../global"
 import {
     WebIconMd5,
@@ -48,8 +49,6 @@ const form = reactive({
     deduplication: false,
     tips: '',
     loadAll: [] as EntryTips[],
-    icondialog: false,
-    hashURL: '',
     batchdialog: false,
     batchURL: '',
 })
@@ -63,14 +62,13 @@ interface EntryTips {
 
 let timeout: ReturnType<typeof setTimeout>
 const entry = reactive({
-    querySearchAsync: (queryString: string, cb: (arg: any) => void) => {
-        if (!queryString.includes("=")) {
-            entry.getTips(queryString)
-            clearTimeout(timeout)
-            timeout = setTimeout(() => {
-                cb(form.loadAll)
-            }, 2000 * Math.random())
+    querySearchAsync: (queryString: string, cb: any) => {
+        if (queryString.includes("=") || queryString == "" || form.loadAll.length === 0) {
+            cb(form.loadAll);
+            return
         }
+        entry.getTips(queryString)
+        cb(form.loadAll);
     },
     getTips: function (queryString: string) {
         HunterTips(queryString).then(result => {
@@ -95,8 +93,12 @@ const table = reactive({
     acvtiveNames: "1",
     tabIndex: 1,
     editableTabs: [] as TableTabs[],
+    loading: false,
+})
+
+const tableCtrl = ({
     addTab: (query: string) => {
-        if (ApiSyntaxCheck(1, "", global.space.hunterkey, query) === false) {
+        if (!ApiSyntaxCheck(global.space.hunterkey)) {
             return
         }
         const newTabName = `${++table.tabIndex}`
@@ -108,7 +110,7 @@ const table = reactive({
             pageSize: 10,
             currentPage: 1,
         });
-        loading.value = true
+        table.loading = true
         HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 switch (result.code) {
@@ -117,7 +119,7 @@ const table = reactive({
                             message: '请求超时',
                             type: "error",
                         });
-                        loading.value = false
+                        table.loading = false
                         return
                     case 40205:
                         ElNotification({
@@ -129,7 +131,7 @@ const table = reactive({
                             message: result.message,
                             type: "error",
                         });
-                        loading.value = false
+                        table.loading = false
                         return
                 }
             }
@@ -141,7 +143,7 @@ const table = reactive({
                     message: "暂未查询到相关数据",
                     type: "warning",
                 });
-                loading.value = false
+                table.loading = false
                 return
             }
             result.data.arr.forEach((item: any) => {
@@ -162,7 +164,7 @@ const table = reactive({
             });
             tab.total = result.data.total
             table.acvtiveNames = newTabName
-            loading.value = false
+            table.loading = false
         })
     },
     removeTab: (targetName: string) => {
@@ -184,7 +186,7 @@ const table = reactive({
     },
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        loading.value = true
+        table.loading = true
         HunterSearch(global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
@@ -199,7 +201,7 @@ const table = reactive({
                         message: result.message,
                         type: "error",
                     });
-                    loading.value = false
+                    table.loading = false
                     return
                 }
             }
@@ -223,13 +225,13 @@ const table = reactive({
                 })
             });
             tab.total = result.data.total
-            loading.value = false
+            table.loading = false
         })
     },
     handleCurrentChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
-        loading.value = true
+        table.loading = true
         HunterSearch(global.space.hunterkey, tab.title, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
@@ -244,7 +246,7 @@ const table = reactive({
                         message: result.message,
                         type: "error",
                     });
-                    loading.value = false
+                    table.loading = false
                     return
                 }
             }
@@ -268,43 +270,60 @@ const table = reactive({
                 })
             });
             tab.total = result.data.total
-            loading.value = false
+            table.loading = false
         })
-    },
+    }
 })
-const loading = ref(false)
 
 async function IconHashSearch() {
-    let hash = await WebIconMd5(form.hashURL.trim())
-    if (hash == "") {
-        ElNotification({
-            message: "目标不可达或者URL格式错误",
-            type: "warning",
-        });
-        return
-    }
-    form.icondialog = false
-    table.addTab(`web.icon=="${hash}"`)
+    ElMessageBox.prompt('输入目标Favicon地址会自动计算并搜索相关资产', 'ICON搜索', {
+        confirmButtonText: 'Search',
+        inputPattern: /^(https?:\/\/)?((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|localhost|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/[^\s]*)?$/,
+        inputErrorMessage: 'Invalid URL',
+        showCancelButton: false,
+    })
+        .then(async ({ value }) => {
+            let hash = await WebIconMd5(value.trim())
+            if (hash == "") {
+                ElNotification({
+                    message: "目标不可达或者URL格式错误",
+                    type: "warning",
+                });
+                return
+            }
+            tableCtrl.addTab(`web.icon=="${hash}"`)
+        })
 }
 
 function BatchSearch() {
-    const lines = SplitTextArea(form.batchURL)
-    var temp = ''
-    for (const line of lines) {
-        if (validateIP(line)) {
-            temp += `ip="${line}"||`
-        } else if (validateDomain(line)) {
-            temp += `domain.suffix="${line}"||`
-        }
-    }
-    if (temp == '') {
-        ElNotification({
-            message: "目标为空",
-            type: "warning",
-        });
-        return
-    }
-    table.addTab(temp.slice(0, -2))
+    ElMessageBox.prompt('请输入IP/网段/域名(MAX 5)', '批量查询', {
+        confirmButtonText: 'Search',
+        inputType: 'textarea',
+        showCancelButton: false,
+    })
+        .then(async ({ value }) => {
+            const lines = SplitTextArea(value);
+            const temp = [];
+
+            for (const line of lines) {
+                if (validateIP(line)) {
+                    temp.push(`ip="${line}"`);
+                } else if (validateDomain(line)) {
+                    temp.push(`domain.suffix="${line}"`);
+                }
+            }
+
+            if (temp.length === 0) {
+                ElMessage({
+                    showClose: true,
+                    message: "目标为空",
+                    type: "warning",
+                });
+                return;
+            }
+
+            tableCtrl.addTab(temp.join('||'));
+        })
 }
 
 
@@ -373,19 +392,22 @@ async function CopyURL(mode: number) {
 </script>
 
 <template>
-    <el-form v-model="form" @submit.native.prevent="table.addTab(form.query)">
-        <el-form-item label="查询条件">
+    <el-form v-model="form" @submit.native.prevent="tableCtrl.addTab(form.query)">
+        <el-form-item>
             <div class="head">
                 <el-autocomplete v-model="form.query" placeholder="Search..."
                     :fetch-suggestions="entry.querySearchAsync" @select="entry.handleSelect" :trigger-on-focus="false"
                     :debounce="1000" style="width: 100%;">
+                    <template #prepend>
+                        查询条件
+                    </template>
                     <template #append>
                         <el-dropdown>
                             <el-button :icon="Menu" />
                             <template #dropdown>
                                 <el-dropdown-menu :hide-on-click="true">
-                                    <el-dropdown-item @click="form.icondialog = true">icon搜索</el-dropdown-item>
-                                    <el-dropdown-item @click="form.batchdialog = true">批量查询</el-dropdown-item>
+                                    <el-dropdown-item :icon="Aim" @click="IconHashSearch()">icon搜索</el-dropdown-item>
+                                    <el-dropdown-item :icon="Document" @click="BatchSearch()">批量查询</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
@@ -398,40 +420,16 @@ async function CopyURL(mode: number) {
                         </el-space>
                     </template>
                 </el-autocomplete>
-                <el-dialog v-model="form.icondialog" title="输入目标favicon地址会自动计算并搜索相关资产" width="50%" center>
-                    <el-input v-model="form.hashURL"></el-input>
-                    <template #footer>
-                        <span>
-                            <el-button type="primary" @click="IconHashSearch">
-                                搜索
-                            </el-button>
-                        </span>
-                    </template>
-                </el-dialog>
-                <el-dialog v-model="form.batchdialog" title="批量查询: 请输入IP/网段/域名(MAX 5)" width="40%" center>
-                    <el-input v-model="form.batchURL" type="textarea" rows="10"></el-input>
-                    <template #footer>
-                        <span>
-                            <el-button type="primary" @click="BatchSearch">
-                                搜索
-                            </el-button>
-                        </span>
-                    </template>
-                </el-dialog>
-                <el-button type="primary" :icon="Search" @click="table.addTab(form.query)"
-                    style="margin-left: 10px; margin-right: 10px;">查询</el-button>
+                <el-button type="primary" :icon="Search" @click="tableCtrl.addTab(form.query)"
+                    class="two-end-space5">查询</el-button>
                 <el-dropdown>
-                    <el-button>
-                        <template #icon>
-                            <el-icon>
-                                <img src="/more.svg" class="dropdown_icon">
-                            </el-icon>
-                        </template>
+                    <el-button :icon="Operation" color="#D2DEE3">
+
                     </el-button>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item :icon="Share" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                            <el-dropdown-item :icon="Share" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                            <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                            <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
                             <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)"
                                 divided>复制当前页URL</el-dropdown-item>
                             <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
@@ -462,15 +460,16 @@ async function CopyURL(mode: number) {
             </el-scrollbar>
         </el-dialog>
     </div>
-    <el-tabs v-model="table.acvtiveNames" v-loading="loading" type="card" style="margin-top: 10px;" closable
-        @tab-remove="table.removeTab">
+    <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" style="margin-top: 10px;" closable
+        @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" width="200" :show-overflow-tooltip="true">
                     <template #default="scope">
-                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.URL != ''" />
+                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)"
+                            v-show="scope.row.URL != ''" />
                         {{ scope.row.URL }}
                     </template>
 
@@ -513,12 +512,12 @@ async function CopyURL(mode: number) {
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
-                <el-pagination background :page-size="10" :page-sizes="[10, 50, 100]" layout="sizes, prev, pager, next"
-                    @size-change="table.handleSizeChange" @current-change="table.handleCurrentChange"
-                    :total="item.total" />
+                <el-pagination background v-model:page-size="item.pageSize" :page-sizes="[10, 50, 100]"
+                    layout="sizes, prev, pager, next" @size-change="tableCtrl.handleSizeChange"
+                    @current-change="tableCtrl.handleCurrentChange" :total="item.total" />
             </div>
         </el-tab-pane>
-        <el-image class="center" src="/loading.gif" alt="loading" v-else></el-image>
+        <el-empty v-else></el-empty>
     </el-tabs>
 </template>
 
@@ -534,10 +533,10 @@ async function CopyURL(mode: number) {
 }
 
 .el-tabs__item .el-icon {
-        position: absolute !important;
-        top: 13px !important;
-        right: 3px !important;
-    }
+    position: absolute !important;
+    top: 13px !important;
+    right: 3px !important;
+}
 
 .el-tabs__nav {
     line-height: 255%;

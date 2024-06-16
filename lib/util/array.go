@@ -39,10 +39,9 @@ func ReplaceElement(slice []string, old, new string) []string {
 }
 
 // 泛型判断数组中是否存在某个元素类似python in
-// 如果数组长度为0那么也返回成功 -> dirsearch排除状态码
 func ArrayContains[T comparable](t T, array []T) bool {
 	if len(array) == 0 {
-		return true
+		return false
 	}
 	for _, ele := range array {
 		if t == ele {

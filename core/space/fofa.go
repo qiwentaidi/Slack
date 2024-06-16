@@ -10,11 +10,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/gologger"
 	"strconv"
 	"strings"
 	"time"
@@ -47,13 +45,11 @@ func (f *FofaConfig) GetTips(key string) ([]byte, error) {
 	params.Set("ts", ts)
 	params.Set("sign", f.GetInputSign(signParam))
 	params.Set("app_id", f.AppId)
-	resp, err := http.Get(TipApi + params.Encode())
+	_, body, err := clients.NewSimpleGetRequest(TipApi+params.Encode(), clients.DefaultClient())
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	b, _ := io.ReadAll(resp.Body)
-	return b, nil
+	return body, nil
 }
 
 func (f *FofaConfig) GetInputSign(inputString string) string {
@@ -80,6 +76,7 @@ func FOFABaseEncode(str string) string {
 	return base64.StdEncoding.EncodeToString([]byte(str))
 }
 
+// fofa
 type FofaResult struct {
 	Error   bool       `json:"error"`
 	Errmsg  string     `json:"errmsg"`
@@ -91,74 +88,67 @@ type FofaResult struct {
 }
 
 type FofaSearchResult struct {
-	Status  bool
+	Error   bool
 	Message string
-	Total   int64
-	Results []struct {
-		URL      string
-		Title    string
-		IP       string
-		Port     string
-		Domain   string
-		Protocol string
-		Country  string
-		Region   string
-		City     string
-		ICP      string
-	}
+	Size    int64
+	Results []Results
+}
+
+type Results struct {
+	URL      string
+	Host     string
+	Title    string
+	IP       string
+	Port     string
+	Domain   string
+	Protocol string
+	Region   string
+	ICP      string
 }
 
 func FofaApiSearch(ctx context.Context, search, pageSize, pageNum, addr, email, key string, fraud, cert bool) *FofaSearchResult {
-	var fs FofaSearchResult
+	var fs FofaSearchResult // 期望返回结构体
+	var fr FofaResult       // 原始数据
 	address := addr + "api/v1/search/all?email=" + email + "&key=" + key + "&qbase64=" +
 		FOFABaseEncode(search) + "&cert.is_valid" + fmt.Sprint(cert) + fmt.Sprintf("&is_fraud=%v&is_honeypot=%v", fmt.Sprint(fraud), fmt.Sprint(fraud)) +
 		"&page=" + pageNum + "&size=" + pageSize + "&fields=host,title,ip,domain,port,protocol,country_name,region,city,icp"
 	_, b, err := clients.NewSimpleGetRequest(address, http.DefaultClient)
 	if err != nil {
-		fs.Status = false
+		fs.Error = true
 		fs.Message = "请求失败"
+		return &fs
 	}
-	var fr FofaResult
-	if err = json.Unmarshal(b, &fr); err != nil {
-		gologger.Error(ctx, err)
-	}
-	fs.Total = fr.Size
-	if fr.Error {
-		fs.Status = false
-		fs.Message = fr.Errmsg
-	} else {
-		if fr.Size == 0 {
+	json.Unmarshal(b, &fr)
+	fs.Size = fr.Size
+	fs.Error = fr.Error
+	fs.Message = fr.Errmsg
+	if !fs.Error {
+		if fs.Size == 0 {
 			fs.Message = "未查询到数据"
 		} else {
-			fs.Status = true
 			for i := 0; i < len(fr.Results); i++ {
 				var temp string
-				if !strings.Contains(fr.Results[i][0], "://") && (fr.Results[i][5] == "http" || fr.Results[i][5] == "https") {
+				if !strings.HasPrefix(fr.Results[i][0], "http") && (fr.Results[i][5] == "http" || fr.Results[i][5] == "https") {
 					temp = fr.Results[i][5] + "://" + fr.Results[i][0]
 				} else {
 					temp = fr.Results[i][0]
 				}
-				fs.Results = append(fs.Results, struct {
-					URL      string
-					Title    string
-					IP       string
-					Port     string
-					Domain   string
-					Protocol string
-					Country  string
-					Region   string
-					City     string
-					ICP      string
-				}{
+				var region string
+				// 排除直辖市重复显示
+				if fr.Results[i][7] == fr.Results[i][8] {
+					region = strings.Join([]string{fr.Results[i][6], fr.Results[i][7]}, "/")
+				} else {
+					region = strings.Join([]string{fr.Results[i][6], fr.Results[i][7], fr.Results[i][8]}, "/")
+				}
+				fs.Results = append(fs.Results, Results{
 					URL:      temp,
+					Host:     fr.Results[i][0],
 					Title:    fr.Results[i][1],
 					IP:       fr.Results[i][2],
 					Port:     fr.Results[i][4],
 					Domain:   fr.Results[i][3],
 					Protocol: fr.Results[i][5],
-					Country:  fr.Results[i][6],
-					Region:   fr.Results[i][7],
-					City:     fr.Results[i][8],
+					Region:   region,
 					ICP:      fr.Results[i][9],
 				})
 			}

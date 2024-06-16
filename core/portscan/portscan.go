@@ -44,8 +44,8 @@ func TcpScan(ctx context.Context, ips []string, ports []int, workers, timeout in
 				return
 			}
 			pr := Connect(ip, port, timeout)
-			runtime.EventsEmit(ctx, "tcpProgressID", id)
 			atomic.AddInt32(&id, 1)
+			runtime.EventsEmit(ctx, "tcpProgressID", id)
 			if pr.Status {
 				pr.IP = ip
 				pr.Port = port

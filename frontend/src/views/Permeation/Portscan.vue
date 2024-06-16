@@ -1,32 +1,26 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
-import { Copy, SplitTextArea } from '../../util'
+import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '../../util'
 import { ExportToXlsx } from '../../export'
-import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Grid } from '@element-plus/icons-vue';
+import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Grid, Search } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, NewCorrespondsScan, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from '../../../wailsjs/go/main/App'
 import { GetFileContent, FileDialog } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import global from '../../global'
 import async from 'async';
-interface PortScanData {
-    IP: string
-    Port: number
-    Server: string
-    Link: string
-    HttpTitle: string
-}
+import { URLFingerMap, PortScanData } from '../../interface';
 
 // syn 扫描模式
 onMounted(async () => {
     // 扫描状态，把结果从后端传输到前端
     EventsOn("synPortScanLoading", (p: PortScanData) => {
         table.result.push({
-            host: p.IP,
-            port: p.Port,
-            fingerprint: p.Server,
-            link: p.Link,
-            title: p.HttpTitle,
+            IP: p.IP,
+            Port: p.Port,
+            Server: p.Server,
+            Link: p.Link,
+            HttpTitle: p.HttpTitle,
         })
         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
     });
@@ -50,11 +44,11 @@ onMounted(async () => {
 onMounted(() => {
     EventsOn("tcpPortScanLoading", (p: PortScanData) => {
         table.result.push({
-            host: p.IP,
-            port: p.Port,
-            fingerprint: p.Server,
-            link: p.Link,
-            title: p.HttpTitle,
+            IP: p.IP,
+            Port: p.Port,
+            Server: p.Server,
+            Link: p.Link,
+            HttpTitle: p.HttpTitle,
         })
         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
     });
@@ -76,11 +70,11 @@ onMounted(() => {
 onMounted(() => {
     EventsOn("csPortScanLoading", (p: PortScanData) => {
         table.result.push({
-            host: p.IP,
-            port: p.Port,
-            fingerprint: p.Server,
-            link: p.Link,
-            title: p.HttpTitle,
+            IP: p.IP,
+            Port: p.Port,
+            Server: p.Server,
+            Link: p.Link,
+            HttpTitle: p.HttpTitle,
         })
         table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
     });
@@ -96,9 +90,6 @@ onMounted(() => {
 
 onMounted(async () => {
     form.isRoot = await IsRoot()
-    table.result = []
-    table.pageContent = []
-    table.burteResult = []
     selectItem(1); // 更新初始化显示
 });
 
@@ -115,12 +106,9 @@ const form = reactive({
     currentAliveMoudle: "None",
     isSYN: false,
     isRoot: false,
+    hostFilter: '',
 })
 
-interface uf {
-    url: string,
-    finger: string[]
-}
 
 async function uploadFile() {
     let path = await FileDialog()
@@ -136,7 +124,7 @@ const config = reactive({
 })
 
 async function NewScanner() {
-    let mode = form.isSYN ? "syn扫描" : "全连接扫描"
+    let mode = form.isSYN ? "syn" : "fully connected"
     Callgologger("info", "Port scan task loaded, current mode: " + mode)
     const ps = new Scanner()
     await ps.PortScanner()
@@ -223,10 +211,10 @@ const ctrl = reactive({
 const table = reactive({
     currentPage: 1,
     pageSize: 10,
-    result: [{}],
-    pageContent: [{}],
-    burteResult: [{}],
+    result: [] as PortScanData[],
+    pageContent: [] as PortScanData[],
     selectRows: [] as PortScanData[],
+    filteredResult: [] as PortScanData[], // 添加用于存储过滤后的结果
 })
 
 const selectedIndex = ref<number | null>(null);
@@ -251,6 +239,17 @@ function handleSizeChange(val: any) {
 function handleCurrentChange(val: any) {
     table.currentPage = val;
     table.pageContent = table.result.slice((val - 1) * table.pageSize, (val - 1) * table.pageSize + table.pageSize)
+}
+
+function filterByIP() {
+    const ipFilter = form.hostFilter.trim();
+    if (ipFilter) {
+        table.filteredResult = table.result.filter((p: PortScanData) => p.IP.includes(ipFilter));
+    } else {
+        table.filteredResult = table.result;
+    }
+    table.currentPage = 1; // 重置分页
+    table.pageContent = table.filteredResult.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
 }
 
 function getColumnData(prop: string): any[] {
@@ -287,15 +286,15 @@ function handleChange(rows: PortScanData[]) {
 
 async function EzWebscan(ips: string[]) {
     let id = 0
-    global.webscan.urlFingerMap = []
+    global.temp.urlFingerMap = []
     Callgologger("info", `正在将WEB目标联动网站扫描，共计加载目标: ${ips.length}`)
     await FingerScan(ips, global.proxy)
     await ActiveFingerScan(ips, global.proxy)
     if (await NucleiEnabled(global.webscan.nucleiEngine)) {
-        const filteredUrlFingerprints = global.webscan.urlFingerMap
+        const filteredUrlFingerprints = global.temp.urlFingerMap
             .filter(item => item.finger.length > 0 && item.url)
             .map(item => ({ url: item.url, finger: item.finger }));
-        async.eachLimit(filteredUrlFingerprints, 10, async (ufm: uf, callback: () => void) => {
+        async.eachLimit(deduplicateUrlFingerMap(filteredUrlFingerprints), 10, async (ufm: URLFingerMap, callback: () => void) => {
             await NucleiScanner(0, ufm.url, ufm.finger, global.webscan.nucleiEngine, false, "", "")
             id++
             if (id == filteredUrlFingerprints.length) {
@@ -339,6 +338,7 @@ function EzCrack(ips: string[]) {
     });
 }
 
+// 联动
 function linkage(mode: string) {
     // 处理对象，不然map拿不到值
     const selectRows = JSON.parse(JSON.stringify(table.selectRows));
@@ -381,19 +381,25 @@ function linkage(mode: string) {
             </el-col>
             <el-divider direction="vertical" style="height: 4vh;" />
             <el-col :span="7" style="display: flex; align-items: center;">
-                <span style="width: 80px;">存活探测:</span>
-                <el-radio-group v-model="form.currentAliveMoudle">
+                存活探测
+                <el-radio-group v-model="form.currentAliveMoudle" style="margin-left: 10px;">
                     <el-radio v-for="item in form.aliveOptions" :value="item">{{ item }}</el-radio>
                 </el-radio-group>
             </el-col>
             <el-divider direction="vertical" style="height: 4vh;" />
-            <el-col :span="4" style="display: flex; align-items: center;">
-                <span style="width: 120px;">指纹超时:</span>
-                <el-input v-model="config.timeout" />
+            <el-col :span="4">
+                <el-input v-model="config.timeout">
+                    <template #prepend>
+                        指纹超时
+                    </template>
+                </el-input>
             </el-col>
-            <el-col :span="4" style="display: flex; align-items: center;">
-                <span style="width: 120px;">线程数量:</span>
-                <el-input v-model="config.thread" />
+            <el-col :span="4">
+                <el-input v-model="config.thread">
+                    <template #prepend>
+                        线程数量
+                    </template>
+                </el-input>
             </el-col>
             <el-col :span="2">
                 <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
@@ -447,23 +453,23 @@ function linkage(mode: string) {
             <el-input class="input" type="textarea" rows="3" v-model="form.portlist" resize="none" />
         </el-col>
     </el-row>
-    <div style="position: relative;">
+    <div style="position: relative; margin-top: 5px;">
         <el-tabs v-model="activeName">
             <el-tab-pane label="结果输出" name="1">
-                <el-table :data="table.pageContent" border style="height: 51vh;" @selection-change="handleChange">
-                    <el-table-column type="selection" width="55px" />
-                    <el-table-column prop="host" label="Host" />
-                    <el-table-column prop="port" label="Port" width="100px" />
-                    <el-table-column prop="fingerprint" label="Fingerprint" />
-                    <el-table-column prop="link" label="Link">
+                <el-table :data="table.pageContent" border style="height: 50vh;" @selection-change="handleChange">
+                    <el-table-column type="selection" width="42px" />
+                    <el-table-column prop="IP" label="Host" />
+                    <el-table-column prop="Port" label="Port" width="100px" />
+                    <el-table-column prop="Server" label="Fingerprint" />
+                    <el-table-column prop="Link" label="Link">
                         <template #default="scope">
                             <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)"
                                 v-show="scope.row.link != ''">
                             </el-button>
-                            {{ scope.row.link }}
+                            {{ scope.row.Link }}
                         </template>
                     </el-table-column>
-                    <el-table-column prop="title" label="WebTitle" />
+                    <el-table-column prop="HttpTitle" label="WebTitle" />
                     <template #empty>
                         <el-empty />
                     </template>
@@ -472,15 +478,20 @@ function linkage(mode: string) {
                     <el-progress :text-inside="true" :stroke-width="20" :percentage="form.percentage" color="#5DC4F7"
                         style="width: 40%;" />
                     <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                        :current-page="table.currentPage" :page-sizes="[10, 20, 50]" :page-size="table.pageSize"
-                        layout="total, sizes, prev, pager, next" :total="table.result.length">
+                        :pager-count="5" :current-page="table.currentPage" :page-sizes="[10, 20, 50]"
+                        :page-size="table.pageSize" layout="total, sizes, prev, pager, next"
+                        :total="table.result.length">
                     </el-pagination>
                 </div>
             </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar">
             <el-space>
-                <el-input></el-input>
+                <el-input v-model="form.hostFilter" placeholder="Filter host">
+                    <template #append>
+                        <el-button :icon="Search" @click="filterByIP"></el-button>
+                    </template>
+                </el-input>
                 <el-dropdown>
                     <el-button :icon="Menu" color="#D2DEE3" />
                     <template #dropdown>

@@ -4,6 +4,7 @@ import global from "./global";
 import { CheckTarget, GoFetch, NucleiEnabled, Sock5Connect } from "../wailsjs/go/main/App";
 import { CheckFileStat, GetFileContent, UserHomeDir } from "../wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
+import { URLFingerMap } from "./interface";
 
 export function Copy(content: string) {
   if (content == "") {
@@ -115,44 +116,13 @@ export function compareVersion(version1: string, version2: string) {
   return 0;
 }
 
-export interface TableTabs {
-  title: string;
-  name: string;
-  content: null | [{}];
-  total: number;
-  pageSize: number;
-  currentPage: number;
-}
-
-let RegCompliance = new RegExp('(\\w+)[!,=]{1,3}"([^"]+)"');
-
-// mode 0 fofa , mode 1 hunter
+// hunter
 export function ApiSyntaxCheck(
-  mode: number,
-  email: string,
   key: string,
-  query: string
 ) {
-  if (mode == 0) {
-    if (email == "" || key == "") {
-      ElNotification({
-        message: "请在设置处填写FOFA Email和Key",
-        type: "warning",
-      });
-      return false;
-    }
-  } else {
-    if (key == "") {
-      ElNotification({
-        message: "请在设置处填写Hunter Key",
-        type: "warning",
-      });
-      return false;
-    }
-  }
-  if (RegCompliance.test(query) === false) {
+  if (key == "") {
     ElNotification({
-      message: "Syntax error",
+      message: "请在设置处填写Hunter Key",
       type: "warning",
     });
     return false;
@@ -299,4 +269,17 @@ export const check = ({
 
 export async function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+
+export function deduplicateUrlFingerMap(urlFingerMap: URLFingerMap[]): URLFingerMap[] {
+  const seenUrls = new Set<string>();
+  return urlFingerMap.filter(item => {
+      if (seenUrls.has(item.url)) {
+          return false;
+      } else {
+          seenUrls.add(item.url);
+          return true;
+      }
+  });
 }

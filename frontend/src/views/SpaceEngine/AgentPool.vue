@@ -131,7 +131,7 @@ class Socks5Crawling {
         for (const num of splitInt(form.socksNum, 10000)) {
             index += 1
             let result = await FofaSearch(query, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, false)
-            if (result.Status == false) {
+            if (result.Error) {
                 form.socksLogger += "查询异常，已退出存活测试" + result.Message + "\n"
                 return
             }

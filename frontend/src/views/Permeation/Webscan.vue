@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { reactive } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, Link, Grid, RefreshRight, Menu } from '@element-plus/icons-vue';
+import { reactive, onMounted } from 'vue'
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Grid, RefreshRight, Menu, Promotion } from '@element-plus/icons-vue';
 import {
     InitRule,
     FofaSearch,
@@ -12,15 +12,17 @@ import {
     NucleiScanner,
     NucleiEnabled,
     WebPocLength,
-    Callgologger
+    Callgologger,
+    LoadDirsearchDict,
+    DirScan
 } from '../../../wailsjs/go/main/App'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
-import { formatURL, ApiSyntaxCheck, TestProxy, Copy, CopyALL } from '../../util'
+import { formatURL, ApiSyntaxCheck, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap } from '../../util'
 import { ExportWebScanToXlsx } from '../../export'
 import global from "../../global"
-import { onMounted } from 'vue';
-import { BrowserOpenURL, EventsOn } from '../../../wailsjs/runtime/runtime';
+import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
+import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions } from '../../interface';
 // 初始化时调用
 onMounted(() => {
     InitRule().then(err => {
@@ -62,12 +64,11 @@ onMounted(() => {
             reference: result.Reference,
         })
     });
-    global.webscan.urlFingerMap = []
     EventsOn("webFingerScan", async (result: any) => {
         if (result.StatusCode == 0) {
             dashboard.reqErrorURLs.push(result.URL)
         } else {
-            global.webscan.urlFingerMap.push({
+            global.temp.urlFingerMap.push({
                 url: result.URL,
                 finger: result.Fingerprints
             })
@@ -84,41 +85,13 @@ onMounted(() => {
             })
         }
     });
+    return () => {
+        EventsOff("nucleiResult");
+        EventsOff("webFingerScan");
+    };
 })
 
-interface Vulnerability {
-    vulID: string
-    vulName: string
-    protocoltype: string
-    severity: string
-    vulURL: string
-    request: string
-    response: string
-    extInfo: string
-    reference: string
-    description: string
-}
 
-interface FingerprintTable {
-    url: string
-    status: string
-    length: string
-    title: string
-    detect: string
-    existsWaf: boolean
-    waf: string
-    fingerprint: FingerLevel[]
-}
-
-interface uf {
-    url: string,
-    finger: string[]
-}
-
-interface FingerLevel {
-    name: string
-    level: number // level 0 is default , level 1 is high risk
-}
 
 const form = reactive({
     url: '',
@@ -216,6 +189,7 @@ async function sortFinger(Fingerprints: any) {
     return temp
 }
 
+
 async function startScan() {
     let ws = new Scanner
     form.newscanner = false // 隐藏界面
@@ -236,7 +210,7 @@ function stopScan() {
 class Scanner {
     urls = [] as string[]
     public init() {
-        global.webscan.urlFingerMap = []
+        global.temp.urlFingerMap = []
         form.fingerResult = []
         form.vulResult = []
         dashboard.riskLevel.critical = 0
@@ -253,8 +227,7 @@ class Scanner {
         if (!await TestProxy(1)) {
             return
         }
-        this.urls = await formatURL(form.url)
-        this.urls = Array.from(new Set(this.urls))
+        this.urls = Array.from(new Set(await formatURL(form.url))) // 处理目标
         dashboard.count = this.urls.length
         if (this.urls.length == 0) {
             ElMessage({
@@ -268,26 +241,26 @@ class Scanner {
         // 指纹扫描      
         Callgologger("info", `Webscan task loaded, current: ${this.urls.length}，当前扫描模式: ${dashboard.currentModule}`)
         Callgologger("info", '正在进行指纹扫描 ...')
+        let count = 0
+        let mode = 0
         await FingerScan(this.urls, global.proxy)
         if (form.currentModule == 1 || form.currentModule == 2) {
-            const urlArray: string[] = global.webscan.urlFingerMap.map(item => item.url);
+            const urlArray: string[] = global.temp.urlFingerMap.map(item => item.url);
             Callgologger("info", '正在进行主动指纹探测 ...')
             await ActiveFingerScan(urlArray, global.proxy)
         }
-        let count = 0
-        let mode = 0
         if (form.currentModule == 2 || form.currentModule == 3) {
             if (form.currentModule == 3) {
                 mode = 1
             }
             Callgologger("info", `正在进行${dashboard.currentModule} ...`)
-            async.eachLimit(global.webscan.urlFingerMap, 10, async (ufm: uf, callback: () => void) => {
+            async.eachLimit(deduplicateUrlFingerMap(global.temp.urlFingerMap), 10, async (ufm: URLFingerMap, callback: () => void) => {
                 if (!form.runnningStatus) {
                     return
                 }
                 await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, form.noInteractsh, form.keyword, form.risk.join(","))
                 count++
-                if (count == global.webscan.urlFingerMap.length) {
+                if (count == global.temp.urlFingerMap.length) {
                     callback()
                 }
             }, () => {
@@ -314,9 +287,6 @@ class Scanner {
 
 const uncover = {
     fofa: function () {
-        if (ApiSyntaxCheck(0, global.space.fofaemail, global.space.fofakey, form.query) === false) {
-            return
-        }
         form.fofaDialog = false
         ElMessage("正在导入FOFA数据，请稍后...")
         FofaSearch(form.query, form.fofaNum.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true).then(result => {
@@ -330,7 +300,7 @@ const uncover = {
         })
     },
     hunter: function () {
-        if (ApiSyntaxCheck(1, "", global.space.hunterkey, form.query) === false) {
+        if (!ApiSyntaxCheck(global.space.hunterkey)) {
             return
         }
         form.hunterDialog = false
@@ -352,21 +322,42 @@ const uncover = {
                 form.url += item.url + "\n"
             });
         })
+    },
+    dirsearch: async function (url: string) {
+        ElNotification({
+            message: "已将目标联动至目录扫描",
+            position: "bottom-right"
+        })
+        let paths = await LoadDirsearchDict(global.PATH.ConfigPath + "/dirsearch", "php,aspx,asp,jsp,html,js".split(','))
+        global.temp.dirsearchPathConut = paths.length
+        global.temp.dirsearchStartTime = Date.now()
+        let option: DirScanOptions = {
+            Method: "GET",
+            URL: url,
+            Paths: paths,
+            Workers: 25,
+            Timeout: 8,
+            BodyExclude: "",
+            BodyLengthExcludeTimes: 5,
+            StatusCodeExclude: [404],
+            FailedCounts: 0,
+            Redirect: false,
+            Interval: 0,
+            CustomHeader: "",
+        }
+        await DirScan(option)
     }
 }
 
-// 排序
-const levelMap: Record<string, number> = {
-    'critical': 1,
-    'high': 2,
-    'medium': 3,
-    'low': 4,
-    'info': 5
-};
+function filterHandlerSeverity(value: string, row: any): boolean {
+    return row.severity === value;
+}
 
-const sortMethod = (a: any, b: any) => {
-    return levelMap[a.level as keyof typeof levelMap] - levelMap[b.level as keyof typeof levelMap];
-};
+function getColumnData(prop: string): any[] {
+    let protocols = new Set(form.vulResult.map((item: any) => item[prop]));
+    let newArray = Array.from(protocols).map(protocol => ({ text: protocol, value: protocol }))
+    return newArray
+}
 
 // 设置css样式
 function getClassBySeverity(severity: string) {
@@ -445,32 +436,24 @@ function getClassBySeverity(severity: string) {
                     <el-table-column fixed type="index" label="#" width="60px" />
                     <el-table-column fixed prop="url" label="URL" width="300px" :show-overflow-tooltip="true">
                         <template #default="scope">
-                            <el-popover placement="bottom" trigger="click">
-                                <template #reference>
+                            <!-- 设置el-dropdown后会导致元素偏移，需要div重新定位 -->
+                            <div class="cell-content">
+                                <el-dropdown :hide-on-click="false" trigger="click">
                                     <el-link :underline="false">{{ scope.row.url }}</el-link>
-                                </template>
-                                <template #default>
-                                    <div class="context-menu">
-                                        <div class="click-div" @click="Copy(scope.row.url)">
-                                            <el-text class="align">
-                                                <el-icon>
-                                                    <CopyDocument />
-                                                </el-icon>
-                                                复制
-                                            </el-text>
-                                        </div>
-                                        <div class="click-div" @click="BrowserOpenURL(scope.row.url)"
-                                            style="width: 100%">
-                                            <el-text class="align">
-                                                <el-icon>
-                                                    <Link />
-                                                </el-icon>
-                                                打开链接
-                                            </el-text>
-                                        </div>
-                                    </div>
-                                </template>
-                            </el-popover>
+                                    <template #dropdown>
+                                        <el-dropdown-menu>
+                                            <el-dropdown-item :icon="CopyDocument"
+                                                @click="Copy(scope.row.url)">复制</el-dropdown-item>
+                                            <el-dropdown-item :icon="ChromeFilled"
+                                                @click="BrowserOpenURL(scope.row.url)">打开链接</el-dropdown-item>
+                                            <el-dropdown-item :icon="Promotion"
+                                                @click="uncover.dirsearch(scope.row.url)"
+                                                divided>联动目录扫描</el-dropdown-item>
+                                            <!-- <el-dropdown-item :icon="Promotion" @click="">联动JSFinder</el-dropdown-item> -->
+                                        </el-dropdown-menu>
+                                    </template>
+                                </el-dropdown>
+                            </div>
                         </template>
                     </el-table-column>
                     <el-table-column prop="status" width="100px" label="Code"
@@ -480,7 +463,6 @@ function getClassBySeverity(severity: string) {
                         :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
                         :show-overflow-tooltip="true" />
                     <el-table-column prop="title" label="Title" />
-                    <!-- <el-table-column prop="waf" label="WAF" width="120px" /> -->
                     <el-table-column fixed="right" prop="fingerprint" width="350px">
                         <template #header>
                             <el-tooltip placement="left">
@@ -527,20 +509,23 @@ function getClassBySeverity(severity: string) {
                                         </div>
                                     </el-descriptions-item>
                                 </el-descriptions>
-
-                                <el-space>
-                                    <div class="pretty-response" style="width: 80vh; height: 50vh;">{{
+                                <splitpanes class="default-theme">
+                                    <pane size="50">
+                                        <div class="pretty-response">{{
                         props.row.request }}</div>
-                                    <div class="pretty-response" style="width: fit-content; height: 50vh;">{{
+                                    </pane>
+                                    <pane size="50">
+                                        <div class="pretty-response">{{
                         props.row.response }}</div>
-                                </el-space>
+                                    </pane>
+                                </splitpanes>
                             </div>
-
                         </template>
                     </el-table-column>
                     <el-table-column prop="vulID" label="ID" width="250px" :show-overflow-tooltip="true" />
-                    <el-table-column prop="protocoltype" label="Type" width="150px" />
-                    <el-table-column prop="severity" width="150px" label="Risk" :sort-method="sortMethod" sortable>
+                    <!-- <el-table-column prop="protocoltype" label="Type" width="150px" /> -->
+                    <el-table-column prop="severity" width="150px" label="Severity"
+                        :filter-method="filterHandlerSeverity" :filters='getColumnData("severity")'>
                         <template #default="scope">
                             <span :class="getClassBySeverity(scope.row.severity)">{{ scope.row.severity }}</span>
                         </template>
@@ -741,5 +726,10 @@ function getClassBySeverity(severity: string) {
     display: flex;
     align-items: center;
     text-align: center
+}
+
+.cell-content {
+    display: flex;
+    justify-content: center;
 }
 </style>

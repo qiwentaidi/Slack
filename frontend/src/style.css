@@ -111,12 +111,13 @@ html {
   gap: 10px;
 }
 
-.dropdown_icon {
-  width: 16px;
-  height: 16px;
+.two-end-space5 {
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 .iframe {
   width:100%; 
   height:100%; border:none;
 }
+

@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"slack-wails/core"
+	"slack-wails/core/dirsearch"
 	alibaba "slack-wails/core/druid"
 	"slack-wails/core/info"
 	"slack-wails/core/jsfind"
@@ -303,37 +304,13 @@ func (a *App) LoadDirsearchDict(configPath string, newExts []string) []string {
 	return util.LoadDirsearchDict(util.HomeDir()+configPath, "/dicc.txt", "%EXT%", newExts)
 }
 
-type PathData struct {
-	Status   int    // 状态码
-	Location string // server信息
-	Length   int    // 主体内容
+func (a *App) DirScan(options dirsearch.Options) {
+	dirsearch.ExitFunc = false
+	dirsearch.NewScanner(a.ctx, options)
 }
 
-func (a *App) PathRequest(method, url string, timeout int, bodyExclude string, redirect bool, customHeader string) PathData {
-	var pd PathData // 将响应头和响应头的数据存储到结构体中
-	client := clients.NotFollowClient()
-	if redirect {
-		client = clients.DefaultClient()
-	}
-	var header = http.Header{}
-	if customHeader != "" {
-		for _, single := range strings.Split(customHeader, "\n") {
-			temp := strings.Split(single, ":")
-			header.Set(temp[0], temp[1])
-		}
-	}
-	resp, body, err := clients.NewRequest(method, url, header, nil, timeout, true, client)
-	if err != nil {
-		return pd
-	}
-	if bodyExclude != "" && bytes.Contains(body, []byte(bodyExclude)) {
-		pd.Status = 1 // status 1 表示被body排除在外，不计入ERROR请求中
-	} else {
-		pd.Status = resp.StatusCode
-	}
-	pd.Length = len(body)
-	pd.Location = resp.Header.Get("Location")
-	return pd
+func (a *App) StopDirScan() {
+	dirsearch.ExitFunc = true
 }
 
 // portscan
