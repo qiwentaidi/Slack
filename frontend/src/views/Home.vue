@@ -110,7 +110,9 @@ function save() {
               1、添加组后会出现卡片组，名称不支持重复<br />
               2、卡片新增后可以从桌面或者文件夹拖入元素或者右上角添加元素<br />
               3、右键元素可以编辑已有信息、打开文件夹、删除<br />
-              4、Java Verison 代表运行jar包的java环境变量
+              4、Java Verison 代表运行jar包的java环境变量<br />
+              5、对于CMD应用，Windows会进入当前应用路径的CMD窗口<br />
+              Mac会调用iTerm2，并添加到已有的窗口中
             </template>
               <el-icon>
                 <InfoFilled />
