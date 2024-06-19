@@ -105,7 +105,7 @@ const tableCtrl = ({
         table.editableTabs.push({
             title: query,
             name: newTabName,
-            content: [{}],
+            content: [],
             total: 0,
             pageSize: 10,
             currentPage: 1,
@@ -173,7 +173,7 @@ const tableCtrl = ({
         if (activeName === targetName) {
             tabs.forEach((tab, index) => {
                 if (tab.name === targetName) {
-                    tab.content = null // 清理内存
+                    tab.content = [] // 清理内存
                     const nextTab = tabs[index + 1] || tabs[index - 1]
                     if (nextTab) {
                         activeName = nextTab.name

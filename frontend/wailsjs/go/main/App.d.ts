@@ -14,7 +14,7 @@ export function Callgologger(arg1:string,arg2:string):Promise<void>;
 
 export function CheckCdn(arg1:string):Promise<string>;
 
-export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.AliveTarget>;
+export function CheckTarget(arg1:string,arg2:clients.Proxy):Promise<main.FormatTarget>;
 
 export function CyberChefLocalServer():Promise<void>;
 

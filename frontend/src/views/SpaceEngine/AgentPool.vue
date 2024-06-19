@@ -8,6 +8,7 @@ import { Sock5Connect, FofaSearch } from '../../../wailsjs/go/main/App'
 import global from "../../global"
 import { Check, CreateTable, InsertAgentPool, SearchAgentPool, DeleteAgentPoolField, DeleteAllField } from '../../../wailsjs/go/main/Database';
 import { ElMessage } from 'element-plus';
+import { FofaResult } from '../../interface';
 
 onMounted(async () => {
     let stat = await Check()
@@ -120,9 +121,9 @@ interface Hosts {
 
 class Socks5Crawling {
     public async SearchTotal(query: string) {
-        let result = await FofaSearch(query, "1", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, false)
-        form.socksLogger += "共查询到数据:" + result.Total + "条" + result.Message + "\n"
-        return Number(result.Total)
+        let result: FofaResult = await FofaSearch(query, "1", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, false)
+        form.socksLogger += "共查询到数据:" + result.Size! + "条" + result.Message! + "\n"
+        return Number(result.Size!)
     }
 
     public async TargetExtraction(query: string) {
@@ -130,12 +131,12 @@ class Socks5Crawling {
         let temps = [] as Hosts[]
         for (const num of splitInt(form.socksNum, 10000)) {
             index += 1
-            let result = await FofaSearch(query, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, false)
+            let result: FofaResult = await FofaSearch(query, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, false)
             if (result.Error) {
                 form.socksLogger += "查询异常，已退出存活测试" + result.Message + "\n"
                 return
             }
-            for (const temp of result.Results) {
+            for (const temp of result.Results!) {
                 temps.push({
                     IP: temp.IP,
                     Port: temp.Port

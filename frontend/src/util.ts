@@ -2,9 +2,11 @@
 import { ElMessage, ElNotification } from "element-plus";
 import global from "./global";
 import { CheckTarget, GoFetch, NucleiEnabled, Sock5Connect } from "../wailsjs/go/main/App";
-import { CheckFileStat, GetFileContent, UserHomeDir } from "../wailsjs/go/main/File";
+import { CheckFileStat, ReadFile, UserHomeDir } from "../wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
-import { URLFingerMap } from "./interface";
+import { URLFingerMap, ProxyOptions, File } from "./interface";
+
+export var proxys: ProxyOptions // wails2.9之后替换原来的null
 
 export function Copy(content: string) {
   if (content == "") {
@@ -79,9 +81,9 @@ export async function formatURL(host: string): Promise<string[]> {
   let urls: Array<string> = [];
   for (var target of SplitTextArea(host)) {
     if (!target.startsWith("http")) {
-      const result = await CheckTarget(host, global.proxy);
-      if (result.Status === true) {
-        target = result.ProtocolURL;
+      const result: any = await CheckTarget(host, global.proxy)
+      if (!result.Error) {
+        target = result.CompleteTarget!;
       }
     }
     urls.push(AddRightSubString(target, "/"))
@@ -131,18 +133,16 @@ export function ApiSyntaxCheck(
 }
 
 export async function ReadLine(filepath: string) {
-  let res = await GetFileContent(filepath);
-  if (res.length == 0) {
+  let file: File = await ReadFile(filepath);
+  if (file.Error) {
     ElNotification({
-      message: "Reading file cannot be empty",
+      message: file.Message,
       type: "warning",
     });
     return;
   }
-  if (res !== "") {
-    const result = res.replace(/\r\n/g, "\n"); // 避免windows unix系统差异
-    return Array.from(result.split("\n"));
-  }
+  const result = file.Content!.replace(/\r\n/g, "\n"); // 避免windows unix系统差异
+  return Array.from(result.split("\n"));
 }
 
 // mode 0 is button click
@@ -150,8 +150,8 @@ export async function TestProxy(mode: number) {
   if (global.proxy.enabled) {
     const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port
     if (global.proxy.mode == "HTTP") {
-      let resp = await GoFetch("GET", proxyURL, "", [{}], 10, null)
-      if (resp.Error == true) {
+      let resp: any = await GoFetch("GET", proxyURL, "", [{}], 10, proxys)
+      if (resp.Error) {
         ElNotification({
           message: "The proxy is unreachable",
           type: "warning",
@@ -231,17 +231,19 @@ export const check = ({
       global.UPDATE.PocStatus = false
       return
     } else {
-      global.UPDATE.LocalPocVersion = await GetFileContent(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+       let file:File = await ReadFile(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+       global.UPDATE.LocalPocVersion = file.Content!
     }
-    let resp = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, null)
+    let resp: any = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, proxys)
     if (resp.Error == true) {
       global.UPDATE.PocContent = "检测更新失败"
       global.UPDATE.PocStatus = false
     } else {
-      global.UPDATE.RemotePocVersion = resp.Body
+      global.UPDATE.RemotePocVersion = resp.Body!
       if (compareVersion(global.UPDATE.LocalPocVersion, global.UPDATE.RemotePocVersion) == -1) {
-        global.UPDATE.PocContent = (await GoFetch("GET", download.PocUpdateCentent, "", [{}], 10, null)).Body
-        global.UPDATE.PocStatus = true
+        let result: any = GoFetch("GET", download.PocUpdateCentent, "", [{}], 10, proxys)
+          global.UPDATE.PocContent = result.Body
+          global.UPDATE.PocStatus = true
       } else {
         global.UPDATE.PocContent = "已是最新版本"
         global.UPDATE.PocStatus = false
@@ -250,15 +252,16 @@ export const check = ({
   },
   // client
   client: async function () {
-    let resp = await GoFetch("GET", download.RemoteClientVersion, "", [{}], 10, null)
+    let resp: any = await GoFetch("GET", download.RemoteClientVersion, "", [{}], 10, proxys)
     if (resp.Error) {
       global.UPDATE.RemoteClientVersion = "检测更新失败"
       global.UPDATE.ClientStatus = false
     } else {
-      global.UPDATE.RemoteClientVersion = resp.Body
+      global.UPDATE.RemoteClientVersion = resp.Body!
       if (compareVersion(global.LOCAL_VERSION, global.UPDATE.RemoteClientVersion) == -1) {
-        global.UPDATE.ClientContent = (await GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, null)).Body
-        global.UPDATE.ClientStatus = true
+        let result:any =  GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, proxys)
+          global.UPDATE.ClientContent = result.Body!
+          global.UPDATE.ClientStatus = true
       } else {
         global.UPDATE.ClientContent = "已是最新版本"
         global.UPDATE.ClientStatus = false

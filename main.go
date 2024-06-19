@@ -8,6 +8,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 //go:embed all:frontend/dist
@@ -30,6 +31,14 @@ func main() {
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
 			file.startup(ctx)
+		},
+		DragAndDrop: &options.DragAndDrop{
+			EnableFileDrop: true,
+		},
+		OnDomReady: func(ctx context.Context) {
+			runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
+				runtime.EventsEmit(ctx, "wails-drop", paths)
+			})
 		},
 		MinWidth:  1280,
 		MinHeight: 768,

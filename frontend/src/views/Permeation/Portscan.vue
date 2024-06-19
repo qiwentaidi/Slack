@@ -5,11 +5,11 @@ import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '../../util'
 import { ExportToXlsx } from '../../export'
 import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Grid, Search } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, NewCorrespondsScan, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from '../../../wailsjs/go/main/App'
-import { GetFileContent, FileDialog } from '../../../wailsjs/go/main/File'
+import { ReadFile, FileDialog } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import global from '../../global'
 import async from 'async';
-import { URLFingerMap, PortScanData } from '../../interface';
+import { URLFingerMap, PortScanData, File } from '../../interface';
 
 // syn 扫描模式
 onMounted(async () => {
@@ -112,7 +112,18 @@ const form = reactive({
 
 async function uploadFile() {
     let path = await FileDialog()
-    form.target = await GetFileContent(path)
+    if (path == ""){
+        return
+    }
+    let file:File = await ReadFile(path)
+    if (file.Error) {
+        ElMessage({
+            type: "warning",
+            message: file.Message
+        })
+        return
+    }
+    form.target = file.Content!
 }
 
 const config = reactive({
@@ -364,7 +375,7 @@ function linkage(mode: string) {
 </script>
 
 <template>
-    <el-card style="width: 100%;">
+    <el-card shadow="never">
         <el-row :gutter="8">
             <el-col :span="6" style="display: flex; align-items: center;">
                 <el-checkbox v-model="form.isSYN" :disabled="!form.isRoot">

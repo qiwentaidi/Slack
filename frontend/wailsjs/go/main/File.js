@@ -10,8 +10,8 @@ export function FileDialog() {
   return window['go']['main']['File']['FileDialog']();
 }
 
-export function GetFileContent(arg1) {
-  return window['go']['main']['File']['GetFileContent'](arg1);
+export function GetLocalNaConfig() {
+  return window['go']['main']['File']['GetLocalNaConfig']();
 }
 
 export function InitConfig() {
@@ -22,6 +22,14 @@ export function InitMemo(arg1, arg2) {
   return window['go']['main']['File']['InitMemo'](arg1, arg2);
 }
 
+export function InsetGroupNavigation(arg1) {
+  return window['go']['main']['File']['InsetGroupNavigation'](arg1);
+}
+
+export function InsetItemNavigation(arg1, arg2) {
+  return window['go']['main']['File']['InsetItemNavigation'](arg1, arg2);
+}
+
 export function Mkdir(arg1) {
   return window['go']['main']['File']['Mkdir'](arg1);
 }
@@ -30,8 +38,12 @@ export function OpenFolder(arg1) {
   return window['go']['main']['File']['OpenFolder'](arg1);
 }
 
-export function PathBase(arg1) {
-  return window['go']['main']['File']['PathBase'](arg1);
+export function Path(arg1) {
+  return window['go']['main']['File']['Path'](arg1);
+}
+
+export function ReadFile(arg1) {
+  return window['go']['main']['File']['ReadFile'](arg1);
 }
 
 export function ReadMemo(arg1) {
@@ -42,8 +54,20 @@ export function RemoveOldConfig() {
   return window['go']['main']['File']['RemoveOldConfig']();
 }
 
+export function RunApp(arg1, arg2, arg3) {
+  return window['go']['main']['File']['RunApp'](arg1, arg2, arg3);
+}
+
 export function SaveFile(arg1) {
   return window['go']['main']['File']['SaveFile'](arg1);
+}
+
+export function SaveJsonFile(arg1) {
+  return window['go']['main']['File']['SaveJsonFile'](arg1);
+}
+
+export function SaveNavigation(arg1) {
+  return window['go']['main']['File']['SaveNavigation'](arg1);
 }
 
 export function UpdatePocFile() {

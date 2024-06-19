@@ -19,7 +19,7 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stacktitan/smb v0.0.0-20190531122847-da9a425dceb8
 	github.com/tomatome/grdp v0.1.0
-	github.com/wailsapp/wails/v2 v2.8.2
+	github.com/wailsapp/wails/v2 v2.9.1
 	github.com/zmap/zcrypto v0.0.0-20231219022726-a1f61fb1661c
 	golang.org/x/crypto v0.23.0
 	golang.org/x/net v0.25.0

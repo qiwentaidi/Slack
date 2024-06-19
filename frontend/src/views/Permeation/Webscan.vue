@@ -22,7 +22,7 @@ import { formatURL, ApiSyntaxCheck, TestProxy, Copy, CopyALL, deduplicateUrlFing
 import { ExportWebScanToXlsx } from '../../export'
 import global from "../../global"
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
-import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions } from '../../interface';
+import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions, FofaResult } from '../../interface';
 // 初始化时调用
 onMounted(() => {
     InitRule().then(err => {
@@ -289,12 +289,12 @@ const uncover = {
     fofa: function () {
         form.fofaDialog = false
         ElMessage("正在导入FOFA数据，请稍后...")
-        FofaSearch(form.query, form.fofaNum.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true).then(result => {
-            if (result.Status == false) {
+        FofaSearch(form.query, form.fofaNum.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true).then((result: FofaResult) => {
+            if (result.Error) {
                 return
             }
             form.url = ""
-            for (const item of result.Results) {
+            for (const item of result.Results!) {
                 form.url += item.URL + "\n"
             }
         })

@@ -1,8 +1,9 @@
-import { CheckFileStat, InitConfig, UserHomeDir, GetFileContent, RemoveOldConfig } from '../wailsjs/go/main/File';
+import { CheckFileStat, InitConfig, UserHomeDir, ReadFile, RemoveOldConfig } from '../wailsjs/go/main/File';
 import { ElLoading, ElNotification } from 'element-plus';
 import global from "./global";
 import { compareVersion, sleep } from './util';
 import router from "./router";
+import { File } from "./interface";
 
 function catchError(result: boolean, loading: any) {
   if (result) {
@@ -28,7 +29,8 @@ export async function InitConfigFile(timeout: number) {
     let result = await InitConfig();
     catchError(result, loading)
   } else {
-    global.UPDATE.LocalPocVersion = await GetFileContent(await UserHomeDir() + global.PATH.LocalPocVersionFile);
+      let result:File = await ReadFile(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+      global.UPDATE.LocalPocVersion = result.Content!
     if (global.UPDATE.LocalPocVersion == "" || compareVersion(global.UPDATE.LocalPocVersion, "0.0.4") != 1) {
       loading.setText("检测到旧版本配置文件，正在移除...");
       await RemoveOldConfig();

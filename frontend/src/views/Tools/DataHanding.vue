@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
 import { ExtractIP, Fscan2Txt } from '../../../wailsjs/go/main/App'
-import { GetFileContent, FileDialog } from '../../../wailsjs/go/main/File'
+import { ReadFile, FileDialog } from '../../../wailsjs/go/main/File'
 import { Delete, Files } from '@element-plus/icons-vue';
-import { ElNotification } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
+import { File } from '../../interface';
 
 const form = reactive({
     result: '',
@@ -31,11 +32,20 @@ function FscanExtract() {
     }
 }
 
-async function ReadFile() {
+async function uploadFile() {
     let filepath = await FileDialog()
-    if (filepath != "") {
-        form.input = await GetFileContent(filepath)
+    if (filepath == "") {
+        return
     }
+    let file:File = await ReadFile(filepath)
+    if (file.Error) {
+        ElMessage({
+            type: "warning",
+            message: file.Message
+        })
+        return
+    }
+    form.input = file.Content!
 }
 
 function extract() {
@@ -145,7 +155,7 @@ function Deduplication() {
 
             <el-space>
                 <el-tooltip content="Load File" placement="left">
-                    <el-button type="primary" :icon="Files" circle size="large" @click="ReadFile"></el-button>
+                    <el-button type="primary" :icon="Files" circle size="large" @click="uploadFile"></el-button>
                 </el-tooltip>
                 <el-tooltip content="Clear input" placement="left">
                     <el-button type="primary" :icon="Delete" circle size="large" @click=""></el-button>

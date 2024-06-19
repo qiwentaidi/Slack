@@ -20,13 +20,16 @@ var proxy = reactive({
 
 var webscan = reactive({
     nucleiEngine: "",
+    java: "java",
 })
 
 // 临时全局变量但是不进行保存
 var temp = reactive({
     urlFingerMap: [] as URLFingerMap[],
     dirsearchPathConut: 0,
-    dirsearchStartTime: 0, 
+    dirsearchStartTime: 0,
+    thinkdict: [] as string[],
+    localAddItem: false, 
 })
 
 const Logger = reactive({

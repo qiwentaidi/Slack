@@ -1,7 +1,7 @@
 export interface TableTabs {
     title: string;
     name: string;
-    content: null | [{}];
+    content: any[];
     total: number;
     pageSize: number;
     currentPage: number;
@@ -70,4 +70,49 @@ export interface DirScanOptions {
     Redirect: boolean
     Interval: number
     CustomHeader: string
+}
+
+export interface ProxyOptions {
+    Enabled: boolean
+	Mode:     string
+	Address:  string
+	Port:     number
+	Username: string
+	Password: string
+}
+
+export interface FofaResult {
+    Error?: boolean
+	Message?: string
+	Size?:    number
+	Results?: Results[]
+}
+
+export interface Results {
+    URL:      string
+	Host:     string
+	Title:    string
+	IP:       string
+	Port:     string
+	Domain:   string
+	Protocol: string
+	Region:   string
+	ICP:      string
+}
+
+export interface LocalOpitons {
+    Name: string
+    Children: Child[] | null
+}
+
+export interface Child {
+    Name: string
+    Type: string
+    Path: string
+}
+
+export interface File {
+    Error?: boolean
+    Message?: string
+    Content?: string
 }

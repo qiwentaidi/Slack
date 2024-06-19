@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { GoFetch, LoadDirsearchDict, DirScan, StopDirScan } from "../../../wailsjs/go/main/App";
-import { ReadLine, SplitTextArea, Copy } from '../../util'
+import { ReadLine, SplitTextArea, Copy, proxys } from '../../util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import { QuestionFilled } from '@element-plus/icons-vue';
@@ -124,7 +124,7 @@ class Dirsearch {
             return false
         }
         if (!from.alive) {
-            let result = await GoFetch("GET", from.url, "", [{}], 10, null);
+            let result: any = await GoFetch("GET", from.url, "", [{}], 10, proxys);
             if (result.Error) {
                 ElMessage({
                     showClose: true,
@@ -151,6 +151,8 @@ class Dirsearch {
         global.temp.dirsearchPathConut = from.paths.length
         from.id = 0
         from.errorCounts = 0
+        table.result = []
+        table.pageContent = []
         global.temp.dirsearchStartTime = Date.now();
     }
 
@@ -172,6 +174,7 @@ class Dirsearch {
             CustomHeader: config.headers,
         }
         await DirScan(option)
+        config.runningStatus = false
     }
 }
 
@@ -211,7 +214,7 @@ const control = ({
 
 async function GetResponse(url: string) {
     from.respDialog = true
-    let result = await GoFetch("GET", url, "", [{}], 10, null);
+    let result: any = await GoFetch("GET", url, "", [{}], 10, proxys);
     if (result.Error) {
         from.content = '目的地址响应超时'
     }
@@ -396,9 +399,9 @@ const config = reactive({
     </el-table>
     <div class="my-header" style="margin-top: 10px;">
         <el-progress :text-inside="true" :stroke-width="20" :percentage="from.percentage" :format="control.format"
-        color="#5DC4F7" style="width: 40%;" />
-        <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange"
-            :pager-count="5" :current-page="table.currentPage" :page-sizes="[50, 100, 200, 500]" :page-size="table.pageSize"
+            color="#5DC4F7" style="width: 40%;" />
+        <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange" :pager-count="5"
+            :current-page="table.currentPage" :page-sizes="[50, 100, 200, 500]" :page-size="table.pageSize"
             layout="total, sizes, prev, pager, next" :total="table.result.length">
         </el-pagination>
     </div>

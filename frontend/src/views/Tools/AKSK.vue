@@ -3,6 +3,7 @@ import { reactive, ref } from "vue";
 import { GoFetch } from "../../../wailsjs/go/main/App";
 import { Delete, QuestionFilled } from "@element-plus/icons-vue";
 import { ElNotification } from "element-plus";
+import { proxys } from "../../util";
 const wechat = reactive({
   appid: "",
   secert: "",
@@ -103,7 +104,14 @@ async function checksecert() {
     wechat.appid +
     "&secret=" +
     wechat.secert;
-  let response = await GoFetch("GET", url, "", [{}], 10, null);
+  let response: any = await GoFetch(
+    "GET",
+    url,
+    "",
+    [{}],
+    10,
+    proxys
+  );
   if (response.Error) {
     result.value += "请求失败\n";
     return;
@@ -127,25 +135,25 @@ async function doRequest(method: string, url: string, parameter: string) {
     });
     return;
   }
-  if (parameter != null) {
-    let response = await GoFetch(
+  if (!parameter) {
+    let response: any = await GoFetch(
       method,
       url + wechat.accessToken + "&" + parameter,
       "",
       [{}],
       10,
-      null
+      proxys
     );
     result.value = JSON.parse(response.Body);
     return;
   }
-  let response = await GoFetch(
+  let response: any = await GoFetch(
     method,
     url + wechat.accessToken,
     "",
     [{}],
     10,
-    null
+    proxys
   );
   result.value = JSON.parse(response.Body);
 }
@@ -159,22 +167,12 @@ async function doRequest(method: string, url: string, parameter: string) {
           <el-input v-model="wechat.appid" style="width: 40%" />
           <span style="margin-left: 10px; margin-right: 10px">Secert</span>
           <el-input v-model="wechat.secert" style="width: 40%" />
-          <el-button
-            type="primary"
-            @click="checksecert"
-            style="width: 13%; margin-left: 10px"
-            >Check Token</el-button
-          >
+          <el-button type="primary" @click="checksecert" style="width: 13%; margin-left: 10px">Check Token</el-button>
         </el-form-item>
         <el-form-item>
           <template #label>
             AccessToken
-            <el-popover
-              placement="right"
-              :width="630"
-              :height="300"
-              trigger="hover"
-            >
+            <el-popover placement="right" :width="630" :height="300" trigger="hover">
               <template #reference>
                 <el-icon>
                   <QuestionFilled size="24" />
@@ -182,42 +180,27 @@ async function doRequest(method: string, url: string, parameter: string) {
               </template>
               <el-table :data="wechatErrorDesc" style="height: 50vh">
                 <el-table-column width="100" property="code" label="错误码" />
-                <el-table-column
-                  width="200"
-                  property="describe"
-                  label="错误描述"
-                />
-                <el-table-column
-                  width="300"
-                  property="solution"
-                  label="解决方案"
-                />
+                <el-table-column width="200" property="describe" label="错误描述" />
+                <el-table-column width="300" property="solution" label="解决方案" />
               </el-table>
             </el-popover>
           </template>
           <el-input v-model="wechat.accessToken" style="width: 100%" />
         </el-form-item>
         <el-form-item label="Operation">
-          <el-button
-            v-for="yw in wechatAPI.ywzx"
-            @click="doRequest(yw.method, yw.url, '')"
-            >{{ yw.name }}</el-button
-          >
+          <el-button v-for="yw in wechatAPI.ywzx" @click="doRequest(yw.method, yw.url, '')">{{ yw.name }}</el-button>
         </el-form-item>
       </el-form>
     </el-tab-pane>
     <el-tab-pane label="DingDing"> </el-tab-pane>
   </el-tabs>
-  <div style="position: relative; margin-top: 5px;">
+  <div style="position: relative; margin-top: 5px">
     <el-tabs>
       <el-tab-pane label="Console">
-        <pre
-          class="pretty-response"
-          style="height: 40vh"
-        ><code>{{ result }}</code></pre>
+        <pre class="pretty-response" style="height: 40vh"><code>{{ result }}</code></pre>
       </el-tab-pane>
     </el-tabs>
-      <el-button class="custom_eltabs_titlebar" :icon="Delete" @click="result = ''" />
+    <el-button class="custom_eltabs_titlebar" :icon="Delete" @click="result = ''" />
   </div>
 </template>
 

@@ -407,22 +407,22 @@ func (a *App) IconHash(target string) string {
 }
 
 // infoscan
-type AliveTarget struct {
-	Status      bool
-	ProtocolURL string
+type FormatTarget struct {
+	Error          bool
+	CompleteTarget string
 }
 
-func (a *App) CheckTarget(host string, proxy clients.Proxy) *AliveTarget {
+func (a *App) CheckTarget(host string, proxy clients.Proxy) *FormatTarget {
 	protocolURL, err := clients.IsWeb(host, clients.JudgeClient(proxy))
 	if err != nil {
-		return &AliveTarget{
-			Status:      false,
-			ProtocolURL: host,
+		return &FormatTarget{
+			Error:          true,
+			CompleteTarget: host,
 		}
 	}
-	return &AliveTarget{
-		Status:      true,
-		ProtocolURL: protocolURL,
+	return &FormatTarget{
+		Error:          false,
+		CompleteTarget: protocolURL,
 	}
 }
 

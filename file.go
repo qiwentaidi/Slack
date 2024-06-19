@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	rt "runtime"
+	"slack-wails/lib/bridge"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/update"
 	"slack-wails/lib/util"
 	"strings"
@@ -31,7 +34,6 @@ func NewFile() *File {
 	return &File{}
 }
 
-// 只能用在App上
 func (f *File) FileDialog() string {
 	selection, err := runtime.OpenFileDialog(f.ctx, runtime.OpenDialogOptions{
 		Title: "选择文件",
@@ -65,28 +67,24 @@ func (f *File) UserHomeDir() string {
 	return util.HomeDir()
 }
 
-func (f *File) PathBase(p string) string {
-	return filepath.Base(p)
+// 传入路径获取到的信息
+type PathInfo struct {
+	Name string
+	Ext  string
 }
 
-func (f *File) OpenFolder(path string) string {
-	var cmd *exec.Cmd
-	switch rt.GOOS {
-	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", path)
-	case "darwin":
-		cmd = exec.Command("open", path)
-	default:
-		cmd = exec.Command("xdg-open", path)
+func (f *File) Path(p string) PathInfo {
+	// 获取路径中的最后一个元素
+	base := filepath.Base(p)
+	// 如果有文件扩展名，则去除扩展名（例如 ".exe"）
+	ext := filepath.Ext(base)
+	if ext != "" {
+		base = base[:len(base)-len(ext)]
 	}
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return err.Error()
+	return PathInfo{
+		Name: base,
+		Ext:  strings.ToUpper(strings.TrimLeft(ext, ".")),
 	}
-	return ""
 }
 
 func (f *File) CheckFileStat(path string) bool {
@@ -96,12 +94,33 @@ func (f *File) CheckFileStat(path string) bool {
 	return true
 }
 
-func (f *File) GetFileContent(filename string) string {
+type FileInfo struct {
+	Error   bool
+	Message string
+	Content string
+}
+
+func (f *File) ReadFile(filename string) *FileInfo {
 	b, err := os.ReadFile(filename)
 	if err != nil {
-		return ""
+		return &FileInfo{
+			Error:   true,
+			Message: err.Error(),
+			Content: "",
+		}
 	}
-	return string(b)
+	if len(b) == 0 {
+		return &FileInfo{
+			Error:   true,
+			Message: "Read file can't be empty",
+			Content: "",
+		}
+	}
+	return &FileInfo{
+		Error:   false,
+		Message: "",
+		Content: string(b),
+	}
 }
 
 func (f *File) UpdatePocFile() string {
@@ -195,6 +214,149 @@ func (*File) RemoveOldConfig() error {
 		fmt.Printf("err: %v\n", err)
 	}
 	return err
+}
+
+type Navigation struct {
+	Name     string
+	Children []Children
+}
+
+type Children struct {
+	Name string
+	Type string
+	Path string
+}
+
+var (
+	na         = util.HomeDir() + "/slack/navogation.json"
+	navigation []Navigation
+)
+
+func (f *File) GetLocalNaConfig() *[]Navigation {
+	if !f.CheckFileStat(na) {
+		os.Create(na)
+		gologger.Error(f.ctx, "Can't create navogation.json")
+	}
+	b, err := os.ReadFile(na)
+	if err != nil {
+		gologger.Error(f.ctx, err)
+	}
+	if err := json.Unmarshal(b, &navigation); err != nil {
+		gologger.Error(f.ctx, err)
+	}
+	return &navigation
+}
+
+func (f *File) InsetGroupNavigation(n Navigation) bool {
+	navigation = append(navigation, n)
+	return f.SaveJsonFile(navigation)
+}
+
+func (f *File) InsetItemNavigation(groupName string, child Children) bool {
+	for i, n := range navigation {
+		if n.Name == groupName {
+			navigation[i].Children = append(n.Children, child)
+		}
+	}
+	return f.SaveJsonFile(navigation)
+}
+
+func (f *File) SaveNavigation(n []Navigation) bool {
+	navigation = n
+	return f.SaveJsonFile(navigation)
+}
+
+func (f *File) SaveJsonFile(content interface{}) bool {
+	b, err := json.MarshalIndent(content, "", "  ")
+	if err != nil {
+		gologger.Error(f.ctx, err)
+		return false
+	}
+	if err := os.WriteFile(na, b, 0777); err != nil {
+		gologger.Error(f.ctx, err)
+		return false
+	}
+	return true
+}
+
+func (f *File) OpenFolder(filepath string) string {
+	filepath, err := getDirectoryPath(filepath)
+	if err != nil {
+		return err.Error()
+	}
+	var cmd *exec.Cmd
+	bridge.HideExecWindow(cmd)
+	switch rt.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", filepath)
+	case "darwin":
+		cmd = exec.Command("open", filepath)
+	default:
+		cmd = exec.Command("xdg-open", filepath)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err = cmd.Run(); err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+// JAR | EXE | LNK | Other
+func (f *File) RunApp(jdk, types, path string) bool {
+	var cmd *exec.Cmd
+	bridge.HideExecWindow(cmd)
+	switch types {
+	case "JAR":
+		cmd = exec.Command(jdk, "-jar", path)
+	case "EXE":
+		if rt.GOOS == "windows" {
+			cmd = exec.Command(path)
+		}
+
+	case "LNK":
+		if rt.GOOS == "windows" {
+			cmd = exec.Command(path)
+		}
+	default:
+		path, _ = getDirectoryPath(path)
+		if rt.GOOS == "windows" {
+			cmd = exec.Command("cmd.exe", "/C", "start", "cmd.exe", "/K", "cd /d", path)
+		} else if rt.GOOS == "darwin" {
+			// Construct the osascript command to open a new iTerm2 window
+			script := `tell application "iTerm"
+                        activate
+                        tell application "System Events"
+                            keystroke "t" using {command down}
+                        end tell
+                        delay 0.2
+                        tell current session of current window
+                            write text "cd ` + path + `"
+                        end tell
+                    end tell`
+			cmd = exec.Command("osascript", "-e", script)
+		}
+	}
+	go func() {
+		if err := cmd.Run(); err != nil {
+			return
+		}
+	}()
+	return true
+}
+
+func getDirectoryPath(path string) (string, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+	if fileInfo.IsDir() {
+		// 如果是目录，直接返回路径
+		return path, nil
+	} else {
+		// 如果是文件，返回其所在的目录
+		return filepath.Dir(path), nil
+	}
 }
 
 // type Records struct {

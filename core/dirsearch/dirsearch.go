@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
 	"strings"
 	"sync"
@@ -81,7 +82,7 @@ func NewScanner(ctx context.Context, o Options) {
 		if strings.HasPrefix(path, "/") {
 			path = strings.TrimLeft(path, "/")
 		}
-		r := Scan(o.URL+path, header, o, client)
+		r := Scan(ctx, o.URL+path, header, o, client)
 		atomic.AddInt32(&id, 1)
 		runtime.EventsEmit(ctx, "dirsearchProgressID", id)
 		retChan <- r
@@ -108,10 +109,11 @@ func NewScanner(ctx context.Context, o Options) {
 }
 
 // status 1 表示被排除显示在外，不计入前端ERROR请求中
-func Scan(url string, header http.Header, o Options, client *http.Client) Result {
+func Scan(ctx context.Context, url string, header http.Header, o Options, client *http.Client) Result {
 	var result Result
 	resp, body, err := clients.NewRequest(o.Method, url, header, nil, o.Timeout, true, client)
 	if err != nil {
+		gologger.IntervalError(ctx, err)
 		atomic.AddInt32(&errorCount, 1)
 		if o.FailedCounts != 0 && errorCount >= o.FailedCounts {
 			result.Status = 999

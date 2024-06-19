@@ -81,7 +81,7 @@ function Collect() {
         const promises = from.companys.map(async companyName => {
             Callgologger("info", `正在收集${companyName}的子公司信息`)
             if (typeof companyName === 'string') {
-                const result = await SubsidiariesAndDomains(companyName, from.defaultHold);
+                const result:any = await SubsidiariesAndDomains(companyName, from.defaultHold);
                 if (Array.isArray(result.Asset) && result.Asset.length > 0) {
                     for (const item of result.Asset) {
                         su.value.push({
@@ -105,7 +105,7 @@ function Collect() {
         const promises = from.companys.map(async companyName => {
             Callgologger("info", `正在收集${companyName}的微信公众号资产`)
             if (typeof companyName === 'string') {
-                const result = await WechatOfficial(companyName);
+                const result: any = await WechatOfficial(companyName);
                 if (result.Asset.length > 0) {
                     const mappedResult = result.Asset.map((item: any) => {
                         return {
@@ -166,7 +166,7 @@ async function huntersearch() {
     for (let target of from.correctName) {
         await sleep(2500);
         AssetHunter(0, target as string, global.space.hunterkey).then(
-            result => {
+            (result:any) => {
                 hu.value.push(
                     {
                         name: target,
@@ -181,7 +181,7 @@ async function huntersearch() {
     for (let target of from.domains) {
         await sleep(2500);
         AssetHunter(1, target as string, global.space.hunterkey).then(
-            result => {
+            (result:any) => {
                 hu.value.push(
                     {
                         name: target,

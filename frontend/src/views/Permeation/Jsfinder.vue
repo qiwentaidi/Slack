@@ -90,7 +90,7 @@ async function JSFinder() {
   }
   config.loading = true
   async.eachLimit(urls, 10, (url: string) => {
-    JSFind(url, config.perfixURL).then(result => {
+    JSFind(url, config.perfixURL).then((result: any) => {
       dashboardItems[0].data.value = result.JS
       dashboardItems[2].data.value = result.APIRoute
       dashboardItems[1].data.value = result.SensitiveField
@@ -120,7 +120,8 @@ async function JSFinder() {
       });
       config.loading = false
     });
-  })
+  }
+  )
 }
 
 const saveConfig = () => {
@@ -173,8 +174,7 @@ function changeType(item: dashboardItem) {
       </template>
       <div class="head">
         <el-input v-model="config.urls" style="margin-right: 5px;"></el-input>
-        <el-button type="primary" :icon="Search" @click="JSFinder"
-          v-if="!config.loading">开始检测</el-button>
+        <el-button type="primary" :icon="Search" @click="JSFinder" v-if="!config.loading">开始检测</el-button>
         <el-button type="primary" loading v-else>正在检测</el-button>
         <el-button color="rgb(194, 194, 196)" style="margin-left: 5px" @click="config.drawer = true">参数设置</el-button>
       </div>

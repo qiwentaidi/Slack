@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue';
-import { InfoFilled, Search, Document } from '@element-plus/icons-vue';
+import { InfoFilled, Search, Document, Link } from '@element-plus/icons-vue';
 import { FileDialog, CheckFileStat } from '../../../wailsjs/go/main/File';
 import { ElMessage } from 'element-plus';
 import async from 'async';
@@ -48,7 +48,8 @@ const placeholder = `
 
 2、账号密码框处支持单字段比如admin和txt字典路径，可以拖拽读取文件路径
 
-3、联想模式意为根据关键字段如出生年月或公司名等固定规律组成字典
+3、联想模式意为根据关键字段如出生年月或公司名等固定规律组成字典，需要在联想
+生成器模块生成结果才可以使用
 
 4、支持协议名: ftp、ssh、telnet、smb、oracle、mssql、mysql、rdp、
 postgresql、vnc、redis、memcached、mongodb
@@ -78,10 +79,13 @@ async function NewScanner() {
         }
     }
     if (url.length == 0) {
-        ElMessage("可用目标为空")
+        ElMessage({
+            message: "可用目标为空",
+            type: "warning"
+        })
         return
     }
-    // 内置模式处理字典
+    // 非内置模式处理字典
     if (!config.builtIn) {
         if (config.username != "") {
             let result = await CheckFileStat(config.username) // 文件不存在则为单用户名
@@ -100,6 +104,17 @@ async function NewScanner() {
             }
         }
     }
+    // 仅勾选联想模式
+    if (config.association) {
+        if (global.temp.thinkdict.length == 0) {
+            ElMessage({
+                message: "未生成联想字典",
+                type: "warning"
+            })
+        }else {
+            passDict.push(...global.temp.thinkdict)
+        }
+    }
     config.content = []
     global.dict.passwords = (await ReadLine(global.PATH.PortBurstPath + "/password/password.txt"))!
     for (var item of global.dict.usernames) {
@@ -109,7 +124,7 @@ async function NewScanner() {
 
     async.eachLimit(url, 20, async (target: string, callback: () => void) => {
         let protocol = target.split("://")[0]
-        // 如果当个字典不为空
+        // 如果原字典不为空则采用内置字典
         if (userDict.length == 0) {
             userDict = global.dict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
         }
@@ -135,6 +150,10 @@ async function NewScanner() {
         <div style="display: flex;">
             <el-checkbox v-model="config.builtIn" label="内置字典" />
             <el-checkbox v-model="config.association" label="联想模式" />
+            <el-button type="primary" link :icon="Link" 
+            style="margin-left: 10px;"
+            v-if="config.association"
+            @click="$router.push('/Tools/Thinkdict')">跳转到联想字典生成器</el-button>
         </div>
         <el-tooltip :content="placeholder" placement="bottom">
             <template #content>

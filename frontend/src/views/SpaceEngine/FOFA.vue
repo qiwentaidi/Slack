@@ -2,7 +2,7 @@
 import { reactive } from 'vue';
 import { Menu, Search, ChatLineRound, ChromeFilled, CopyDocument, Grid, Operation, Document, Aim } from '@element-plus/icons-vue';
 import { SplitTextArea, validateIP, validateDomain, splitInt, Copy } from '../../util'
-import { TableTabs } from "../../interface"
+import { FofaResult, TableTabs } from "../../interface"
 import { ExportToXlsx } from '../../export'
 import { FofaTips, FofaSearch, IconHash } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
@@ -71,7 +71,7 @@ const tableCtrl = ({
     addTab: async (query: string) => {
         const newTabName = `${++table.tabIndex}`
         table.loading = true
-        let result = await FofaSearch(query, "100", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result: FofaResult = await FofaSearch(query, "100", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
         if (result.Error) {
             ElMessage({
                 showClose: true,
@@ -84,15 +84,15 @@ const tableCtrl = ({
         table.editableTabs.push({
             title: query,
             name: newTabName,
-            content: [{}],
+            content: [],
             total: 0,
             pageSize: 100,
             currentPage: 1,
         });
         form.tips = result.Message + " 共查询到数据:" + result.Size + "条"
         const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
-        tab.content = result.Results;
-        tab.total = result.Size
+        tab.content = result.Results!;
+        tab.total = result.Size!
         table.acvtiveNames = newTabName
         table.loading = false
     },
@@ -102,7 +102,7 @@ const tableCtrl = ({
         if (activeName === targetName) {
             tabs.forEach((tab, index) => {
                 if (tab.name === targetName) {
-                    tab.content = null // 清理内存
+                    tab.content = [] // 清理内存
                     const nextTab = tabs[index + 1] || tabs[index - 1]
                     if (nextTab) {
                         activeName = nextTab.name
@@ -116,14 +116,14 @@ const tableCtrl = ({
     handleSizeChange: (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
-        FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
-            form.tips = result.Message + " 共查询到数据:" + result.Size + "条"
+        FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult) => {
+            form.tips = result.Message! + " 共查询到数据:" + result.Size! + "条"
             if (result.Error) {
                 table.loading = false
                 return
             }
-            tab.content = result.Results;
-            tab.total = result.Size
+            tab.content = result.Results!;
+            tab.total = result.Size!
         })
         table.loading = false
     },
@@ -131,14 +131,14 @@ const tableCtrl = ({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+        FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult) => {
             form.tips = result.Message + " 共查询到数据:" + result.Size + "条"
             if (result.Error) {
                 table.loading = false
                 return
             }
-            tab.content = result.Results;
-            tab.total = result.Size
+            tab.content = result.Results!;
+            tab.total = result.Size!
         })
         table.loading = false
     }
@@ -211,11 +211,11 @@ async function SaveData(mode: number) {
             for (const num of splitInt(tab.total, 10000)) {
                 index += 1
                 ElMessage("正在导出第" + index.toString() + "页");
-                await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+                await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult) => {
                     if (result.Error) {
                         return
                     }
-                    temp.push(...result.Results)
+                    temp.push(...result.Results!)
                 })
             }
             ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", temp)
@@ -252,7 +252,7 @@ async function CopyURL() {
 }
 
 async function CopyDeduplicationURL() {
-    await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then(result => {
+    await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult)=> {
         if (result.Error) {
             ElMessage("查询失败")
             return

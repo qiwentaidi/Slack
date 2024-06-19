@@ -18,7 +18,7 @@ var (
 		"chinacache":     {".chinacache.net", ".ccgslb.net", ".chinacache.com"},
 		"nscloudwaf":     {".nscloudwaf.com"},
 		"wangsu":         {".wsssec.com", ".lxdns.com", ".wscdns.com", ".cdn20.com", ".cdn30.com", ".ourplat.net", ".wsdvs.com", ".wsglb0.com", ".wswebcdn.com", ".wswebpic.com", ".wsssec.com", ".wscloudcdn.com", ".mwcloudcdn.com", ".chinanetcenter.com"},
-		"qianxin":        {".360safedns.com", ".360cloudwaf.com", ".360wzb.com"},
+		"qianxin":        {".360safedns.com", ".360cloudwaf.com", ".360wzb.com", ".qaxcloudwaf.com"},
 		"baiduyunjiasu":  {".yunjiasu-cdn.net"},
 		"anquanbao":      {".anquanbao.net", ".anquanbao.com"},
 		"aliyun":         {"kunlun", "aliyunddos", "aliyunwaf", "aligaofang", "aliyundunwaf"},

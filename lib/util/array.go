@@ -3,7 +3,7 @@ package util
 import "sort"
 
 // 去除某个元素
-func RemoveElement(arr []string, ele string) (newArr []string) {
+func RemoveElement[T comparable](arr []T, ele T) (newArr []T) {
 	for _, v := range arr {
 		if v != ele {
 			newArr = append(newArr, v)

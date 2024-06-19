@@ -46,6 +46,7 @@ import { reactive } from 'vue'
 import { ThinkDict } from '../../../wailsjs/go/main/App'
 import { onMounted } from 'vue';
 import { Copy } from '../../util';
+import global from '../../global';
 
 onMounted(() => {
     dict.easyContent = dict.easyList.join("\n")
@@ -72,6 +73,7 @@ function generate() {
     dict.easyList = dict.easyContent.split("\n")
     ThinkDict(dict.p_cnName, dict.p_enName, dict.c_name, dict.c_domain, dict.p_birthday, dict.p_worknum, dict.connect, dict.easyList).then(
         result => {
+            global.temp.thinkdict = result
             r.result = result.join("\n")
             r.count = result.length
         }

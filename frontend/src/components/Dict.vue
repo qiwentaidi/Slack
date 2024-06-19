@@ -24,8 +24,9 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import global from '../global';
-import { GetFileContent, WriteFile } from '../../wailsjs/go/main/File';
+import { ReadFile, WriteFile } from '../../wailsjs/go/main/File';
 import { ElMessage } from 'element-plus';
+import { File } from '../interface';
 
 const ctrl = reactive({
     drawer: false,
@@ -35,7 +36,8 @@ const ctrl = reactive({
 })
 
 async function ReadDict(path: string) {
-    ctrl.currentDic = await GetFileContent(global.PATH.PortBurstPath + path)
+    let file:File = await ReadFile(global.PATH.PortBurstPath + path)
+    ctrl.currentDic = file.Content!
 }
 
 async function SaveFile(path: string) {
