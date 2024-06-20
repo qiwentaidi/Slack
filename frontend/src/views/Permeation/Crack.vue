@@ -130,6 +130,8 @@ async function NewScanner() {
         }
         if (passDict.length == 0) {
             passDict = global.dict.passwords
+        }else {
+            passDict.push("") // 增加空密码
         }
         Callgologger("info", target + " is start brute")
         await PortBrute(target, userDict, passDict)

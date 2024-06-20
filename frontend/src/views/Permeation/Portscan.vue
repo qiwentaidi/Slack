@@ -198,7 +198,7 @@ class Scanner {
             EzWebscan(ips)
         }
         if (config.crack) {
-            ips = getColumnData("link")
+            ips = getColumnData("Link")
             EzCrack(ips)
         }
     }
@@ -284,8 +284,8 @@ function CopyURLs(result: {}[]) {
 function getHTTPLinks(result: {}[]) {
     const temp = [];
     for (const line of result) {
-        if ((line as any)["link"].includes("http")) {
-            temp.push((line as any)["link"]);
+        if ((line as any)["Link"].includes("http")) {
+            temp.push((line as any)["Link"]);
         }
     }
     return temp
@@ -353,7 +353,7 @@ function EzCrack(ips: string[]) {
 function linkage(mode: string) {
     // 处理对象，不然map拿不到值
     const selectRows = JSON.parse(JSON.stringify(table.selectRows));
-    let targets = selectRows.map((item: any) => item.link)
+    let targets = selectRows.map((item: any) => item.Link)
     if (targets.length == 0) {
         ElMessage("至少选择1个联动目标")
         return
@@ -474,7 +474,7 @@ function linkage(mode: string) {
                     <el-table-column prop="Server" label="Fingerprint" />
                     <el-table-column prop="Link" label="Link">
                         <template #default="scope">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.link)"
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.Link)"
                                 v-show="scope.row.link != ''">
                             </el-button>
                             {{ scope.row.Link }}
