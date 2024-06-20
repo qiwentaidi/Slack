@@ -121,3 +121,8 @@ html {
   height:100%; border:none;
 }
 
+/* 设置align-right的元素内容右对齐 */
+.align-right .el-form-item__content{
+  display: flex;
+  justify-content: flex-end;
+}

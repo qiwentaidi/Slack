@@ -6,6 +6,10 @@ export function Check() {
   return window['go']['main']['Database']['Check']();
 }
 
+export function CreateHunterSyntaxTable() {
+  return window['go']['main']['Database']['CreateHunterSyntaxTable']();
+}
+
 export function CreateTable() {
   return window['go']['main']['Database']['CreateTable']();
 }
@@ -18,10 +22,22 @@ export function DeleteAllField(arg1) {
   return window['go']['main']['Database']['DeleteAllField'](arg1);
 }
 
+export function DeleteHunterSyntax(arg1, arg2) {
+  return window['go']['main']['Database']['DeleteHunterSyntax'](arg1, arg2);
+}
+
 export function InsertAgentPool(arg1) {
   return window['go']['main']['Database']['InsertAgentPool'](arg1);
 }
 
+export function InsertHunterSyntax(arg1, arg2) {
+  return window['go']['main']['Database']['InsertHunterSyntax'](arg1, arg2);
+}
+
 export function SearchAgentPool() {
   return window['go']['main']['Database']['SearchAgentPool']();
+}
+
+export function SelectAllHunterSyntax() {
+  return window['go']['main']['Database']['SelectAllHunterSyntax']();
 }

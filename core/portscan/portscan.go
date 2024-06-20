@@ -25,10 +25,22 @@ type PortResult struct {
 	HttpTitle string
 }
 
-func TcpScan(ctx context.Context, ips []string, ports []int, workers, timeout int) {
+func ParseTarget(ips []string, ports []int) (addrs []Address) {
+	for _, ip := range ips {
+		for _, port := range ports {
+			addrs = append(addrs, Address{
+				IP:   ip,
+				Port: port,
+			})
+		}
+	}
+	return
+}
+
+func TcpScan(ctx context.Context, address []Address, workers, timeout int) {
 	var id int32
 	single := make(chan struct{})
-	retChan := make(chan PortResult, len(ips)*len(ports))
+	retChan := make(chan PortResult, len(address))
 	var wg sync.WaitGroup
 	go func() {
 		for pr := range retChan {
@@ -38,34 +50,32 @@ func TcpScan(ctx context.Context, ips []string, ports []int, workers, timeout in
 		runtime.EventsEmit(ctx, "tcpScanComplete", "done")
 	}()
 	// port scan func
-	portScan := func(port int) {
-		for _, ip := range ips {
-			if ExitFunc {
-				return
-			}
-			pr := Connect(ip, port, timeout)
-			atomic.AddInt32(&id, 1)
-			runtime.EventsEmit(ctx, "tcpProgressID", id)
-			if pr.Status {
-				pr.IP = ip
-				pr.Port = port
-				retChan <- pr
-			}
-			// gologger.Info(ctx, pr)
+	portScan := func(add Address) {
+		if ExitFunc {
+			return
 		}
+		pr := Connect(add.IP, add.Port, timeout)
+		atomic.AddInt32(&id, 1)
+		runtime.EventsEmit(ctx, "tcpProgressID", id)
+		if pr.Status {
+			pr.IP = add.IP
+			pr.Port = add.Port
+			retChan <- pr
+		}
+		// gologger.Info(ctx, pr)
 	}
-	threadPool, _ := ants.NewPoolWithFunc(workers, func(ports interface{}) {
-		port := ports.(int)
-		portScan(port)
+	threadPool, _ := ants.NewPoolWithFunc(workers, func(ipaddr interface{}) {
+		ipa := ipaddr.(Address)
+		portScan(ipa)
 		wg.Done()
 	})
 	defer threadPool.Release()
-	for _, port := range ports {
+	for _, add := range address {
 		if ExitFunc {
 			return
 		}
 		wg.Add(1)
-		threadPool.Invoke(port)
+		threadPool.Invoke(add)
 	}
 	wg.Wait()
 	close(retChan)
@@ -75,47 +85,6 @@ func TcpScan(ctx context.Context, ips []string, ports []int, workers, timeout in
 type Address struct {
 	IP   string
 	Port int
-}
-
-// 处理 192.168.1.1:6379 这种单独IP端口组模式
-func CorrespondsScan(ctx context.Context, address []Address, timeout int) {
-	var id int32
-	single := make(chan struct{})
-	retChan := make(chan PortResult, len(address))
-	go func() {
-		for pr := range retChan {
-			runtime.EventsEmit(ctx, "csPortScanLoading", pr)
-		}
-		close(single)
-	}()
-	// port scan func
-	portScan := func(addr Address) {
-		pr := Connect(addr.IP, addr.Port, timeout)
-		atomic.AddInt32(&id, 1)
-		runtime.EventsEmit(ctx, "csProgressID", id)
-		if pr.Status {
-			pr.IP = addr.IP
-			pr.Port = addr.Port
-			retChan <- pr
-		}
-	}
-	var wg sync.WaitGroup
-	threadPool, _ := ants.NewPoolWithFunc(20, func(task interface{}) {
-		addr := task.(Address)
-		portScan(addr)
-		wg.Done()
-	})
-	defer threadPool.Release()
-	for _, addr := range address {
-		if ExitFunc {
-			return
-		}
-		wg.Add(1)
-		threadPool.Invoke(addr)
-	}
-	wg.Wait()
-	close(retChan)
-	<-single
 }
 
 func Connect(ip string, port, timeout int) PortResult {

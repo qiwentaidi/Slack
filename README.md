@@ -103,9 +103,7 @@ wails dev || wails build
 
 ## 鹰图
 
-![image-20231229143634981](assets/image-20231229143634981.png)
-
-![image-20231229143654453](assets/image-20231229143654453.png)
+![image-20240620234045723](assets/image-20240620234045723.png)
 
 # 小工具
 

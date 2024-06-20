@@ -64,11 +64,9 @@ export function LoadDirsearchDict(arg1:string,arg2:Array<string>):Promise<Array<
 
 export function LoadSubDict(arg1:string):Promise<Array<string>>;
 
-export function NewCorrespondsScan(arg1:Array<string>,arg2:number):Promise<void>;
+export function NewSynScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>):Promise<void>;
 
-export function NewSynScanner(arg1:Array<string>,arg2:Array<number>):Promise<void>;
-
-export function NewTcpScanner(arg1:Array<string>,arg2:Array<number>,arg3:number,arg4:number):Promise<void>;
+export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>,arg4:number,arg5:number):Promise<void>;
 
 export function NucleiEnabled(arg1:string):Promise<boolean>;
 

@@ -4,7 +4,7 @@ import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '../../util'
 import { ExportToXlsx } from '../../export'
 import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Grid, Search } from '@element-plus/icons-vue';
-import { PortParse, IPParse, NewTcpScanner, NewCorrespondsScan, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from '../../../wailsjs/go/main/App'
+import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from '../../../wailsjs/go/main/App'
 import { ReadFile, FileDialog } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import global from '../../global'
@@ -66,28 +66,6 @@ onMounted(() => {
     };
 })
 
-// 特殊目标扫描
-onMounted(() => {
-    EventsOn("csPortScanLoading", (p: PortScanData) => {
-        table.result.push({
-            IP: p.IP,
-            Port: p.Port,
-            Server: p.Server,
-            Link: p.Link,
-            HttpTitle: p.HttpTitle,
-        })
-        table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
-    });
-    EventsOn("csProgressID", (id: number) => {
-        form.percentage = Number(((id / form.count) * 100).toFixed(2));
-    });
-    return () => {
-        EventsOff("csPortScanLoading");
-        EventsOff("csProgressID");
-    };
-})
-
-
 onMounted(async () => {
     form.isRoot = await IsRoot()
     selectItem(1); // 更新初始化显示
@@ -102,20 +80,20 @@ const form = reactive({
     id: 0,
     count: 0,
     radio: "2",
-    aliveOptions: ["None", "ICMP", "Ping"],
     currentAliveMoudle: "None",
     isSYN: false,
     isRoot: false,
-    hostFilter: '',
+    filter: '',
+    defaultFilterGroup: "Host"
 })
 
 
 async function uploadFile() {
     let path = await FileDialog()
-    if (path == ""){
+    if (path == "") {
         return
     }
-    let file:File = await ReadFile(path)
+    let file: File = await ReadFile(path)
     if (file.Error) {
         ElMessage({
             type: "warning",
@@ -126,6 +104,36 @@ async function uploadFile() {
     form.target = file.Content!
 }
 
+const options = ({
+    filterGroup: ["Host", "Port", "Fingerprint", "Link", "WebTitle"],
+    aliveGroup: ["None", "ICMP", "Ping"],
+    filterField: function () {
+        const filter = form.filter.trim();
+        if (filter) {
+            switch (form.defaultFilterGroup) {
+                case "Host":
+                    table.filteredResult = table.result.filter((p: PortScanData) => p.IP.includes(filter));
+                    break
+                case "Port":
+                    table.filteredResult = table.result.filter((p: PortScanData) => p.Port.toString().includes(filter));
+                    break
+                case "Fingerprint":
+                    table.filteredResult = table.result.filter((p: PortScanData) => p.Server.includes(filter));
+                    break
+                case "Link":
+                    table.filteredResult = table.result.filter((p: PortScanData) => p.Link.includes(filter));
+                    break
+                case "WebTitle":
+                    table.filteredResult = table.result.filter((p: PortScanData) => p.HttpTitle.includes(filter));
+            }
+        } else {
+            table.filteredResult = table.result;
+        }
+        table.currentPage = 1; // 重置分页
+        table.pageContent = table.filteredResult.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+    }
+})
+
 const config = reactive({
     thread: 1000,
     timeout: 7,
@@ -133,6 +141,20 @@ const config = reactive({
     webscan: false,
     crack: false,
 })
+
+function validateInput() {
+    const ipPatterns = [
+        /^(\d{1,3}\.){3}\d{1,3}$/, // 192.168.1.1
+        /^(\d{1,3}\.){3}\d{1,3}\/(\d{1,2})$/, // 192.168.1.1/8, 192.168.1.1/16, 192.168.1.1/24
+        /^(\d{1,3}\.){3}\d{1,3}-((\d{1,3}\.){2}\d{1,3}|\d{1,3})$/, // 192.168.1.1-192.168.255.255, 192.168.1.1-255
+        /^(\d{1,3}\.){3}\d{1,3}:\d{1,5}$/, // 192.168.0.1:6379
+        /^!((\d{1,3}\.){3}\d{1,3}(\/\d+)?|(\d{1,3}\.){2}\d{1,3}|\d{1,3})$/, // !192.168.1.6/28
+    ];
+    const lines = form.target.split('\n');
+    return lines.every(line =>
+        ipPatterns.some(pattern => pattern.test(line.trim()))
+    );
+}
 
 async function NewScanner() {
     let mode = form.isSYN ? "syn" : "fully connected"
@@ -150,6 +172,13 @@ class Scanner {
         form.count = 0
         var ips = [] as string[]
         var portsList = [] as number[]
+        if (!validateInput()) {
+            ElMessage({
+                type: "warning",
+                message: "输入目标格式不正确",
+            })
+            return
+        }
         const lines = SplitTextArea(form.target)
         let specialTarget = [] as string[]
         let conventionTarget = [] as string[]
@@ -166,6 +195,7 @@ class Scanner {
         ips = await IPParse(conventionTarget)
         // 判断扫描总数
         ips == null ? form.count = specialTarget.length : form.count = ips.length * portsList.length + specialTarget.length
+        Callgologger("info", "targets cout: " + ips.length)
         if (form.count == 0) {
             ElMessage({
                 showClose: true,
@@ -180,14 +210,11 @@ class Scanner {
             form.currentAliveMoudle === 'ICMP' ? config.ping = false : config.ping = true
             ips = await HostAlive((ips as any), config.ping)
         }
-        if (specialTarget.length != 0) {
-            await NewCorrespondsScan(specialTarget, config.timeout)
-        }
         if (form.isSYN) {
-            await NewSynScanner(ips, portsList)
+            await NewSynScanner(specialTarget, ips, portsList)
             return
         }
-        await NewTcpScanner(ips, portsList, config.thread, config.timeout)
+        await NewTcpScanner(specialTarget, ips, portsList, config.thread, config.timeout)
         // 恢复配置
         ctrl.runningStatus = false
         ips = []
@@ -250,17 +277,6 @@ function handleSizeChange(val: any) {
 function handleCurrentChange(val: any) {
     table.currentPage = val;
     table.pageContent = table.result.slice((val - 1) * table.pageSize, (val - 1) * table.pageSize + table.pageSize)
-}
-
-function filterByIP() {
-    const ipFilter = form.hostFilter.trim();
-    if (ipFilter) {
-        table.filteredResult = table.result.filter((p: PortScanData) => p.IP.includes(ipFilter));
-    } else {
-        table.filteredResult = table.result;
-    }
-    table.currentPage = 1; // 重置分页
-    table.pageContent = table.filteredResult.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
 }
 
 function getColumnData(prop: string): any[] {
@@ -394,7 +410,7 @@ function linkage(mode: string) {
             <el-col :span="7" style="display: flex; align-items: center;">
                 存活探测
                 <el-radio-group v-model="form.currentAliveMoudle" style="margin-left: 10px;">
-                    <el-radio v-for="item in form.aliveOptions" :value="item">{{ item }}</el-radio>
+                    <el-radio v-for="item in options.aliveGroup" :value="item">{{ item }}</el-radio>
                 </el-radio-group>
             </el-col>
             <el-divider direction="vertical" style="height: 4vh;" />
@@ -444,7 +460,7 @@ function linkage(mode: string) {
                 </span>
                 <el-button size="small" @click="uploadFile">IP导入</el-button>
             </div>
-            <el-input class="input" type="textarea" rows="3" v-model="form.target" resize="none" />
+            <el-input class="input" type="textarea" rows="3" v-model="form.target" resize="none" @blur="" />
         </el-col>
         <el-col :span="4">
             <span class="my-header" style="background-color: #eee;">
@@ -475,7 +491,7 @@ function linkage(mode: string) {
                     <el-table-column prop="Link" label="Link">
                         <template #default="scope">
                             <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.Link)"
-                                v-show="scope.row.link != ''">
+                                v-show="scope.row.Link != ''">
                             </el-button>
                             {{ scope.row.Link }}
                         </template>
@@ -498,9 +514,14 @@ function linkage(mode: string) {
         </el-tabs>
         <div class="custom_eltabs_titlebar">
             <el-space>
-                <el-input v-model="form.hostFilter" placeholder="Filter host">
-                    <template #append>
-                        <el-button :icon="Search" @click="filterByIP"></el-button>
+                <el-input v-model="form.filter" placeholder="Filter">
+                    <template #prepend>
+                        <el-select v-model="form.defaultFilterGroup" style="width: 120px;">
+                            <el-option v-for="name in options.filterGroup" :value="name">{{ name }}</el-option>
+                        </el-select>
+                    </template>
+                    <template #suffix>
+                        <el-button :icon="Search" @click="options.filterField" link></el-button>
                     </template>
                 </el-input>
                 <el-dropdown>

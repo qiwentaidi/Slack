@@ -2,20 +2,17 @@ package util
 
 import (
 	"net"
-	"regexp"
 
 	"strconv"
 	"strings"
 )
 
-var ipv4Regex = `^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
-
 func ParseIPs(ipList []string) (ips []string) {
-	var excludeip, temp []string
-	r, _ := regexp.Compile(ipv4Regex)
+	var excludeip []string
 	for _, line := range ipList {
-		if strings.Contains(line, "!") {
-			excludeip = append(excludeip, line)
+		if strings.HasPrefix(line, "!") {
+			line = strings.TrimLeft(line, "!")
+			excludeip = append(excludeip, ParseIP(line)...)
 		} else {
 			ips = append(ips, ParseIP(line)...)
 		}
@@ -23,23 +20,7 @@ func ParseIPs(ipList []string) (ips []string) {
 	for _, ep := range excludeip {
 		ips = RemoveElement(ips, ep)
 	}
-	for _, ip := range ips {
-		if r.MatchString(ip) {
-			temp = append(temp, ip)
-		}
-	}
-	return temp
-}
-
-func ParseTarget(text string) []string {
-	var temp, targets []string
-	temp = strings.Split(text, "\n") // 通过查找换行去分割每个目标
-	for _, t := range temp {
-		if t != "" {
-			targets = append(targets, t)
-		}
-	}
-	return targets
+	return ips
 }
 
 func ParseIP(ipString string) []string {

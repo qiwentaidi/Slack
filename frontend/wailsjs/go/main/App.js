@@ -118,16 +118,12 @@ export function LoadSubDict(arg1) {
   return window['go']['main']['App']['LoadSubDict'](arg1);
 }
 
-export function NewCorrespondsScan(arg1, arg2) {
-  return window['go']['main']['App']['NewCorrespondsScan'](arg1, arg2);
+export function NewSynScanner(arg1, arg2, arg3) {
+  return window['go']['main']['App']['NewSynScanner'](arg1, arg2, arg3);
 }
 
-export function NewSynScanner(arg1, arg2) {
-  return window['go']['main']['App']['NewSynScanner'](arg1, arg2);
-}
-
-export function NewTcpScanner(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['NewTcpScanner'](arg1, arg2, arg3, arg4);
+export function NewTcpScanner(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['NewTcpScanner'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function NucleiEnabled(arg1) {

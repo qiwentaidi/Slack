@@ -1,7 +1,7 @@
 package portscan
 
 import (
-	"context"
+	"fmt"
 	"testing"
 )
 
@@ -26,6 +26,7 @@ func TestWrapperTcpWithTimeout(t *testing.T) {
 
 	// // Close the connection
 	// conn.Close()
-	// TcpScan([]string{"118.31.42.197"}, []int{21, 22}, 10)
-	PortBrute(context.TODO(), "167.172.69.161", []string{"root"}, []string{"123456"})
+	flag, err := OracleConn("172.16.29.102:1521", "sys", "password")
+	fmt.Printf("flag: %v\n", flag)
+	fmt.Printf("err: %v\n", err)
 }

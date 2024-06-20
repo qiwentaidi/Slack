@@ -116,3 +116,14 @@ export interface File {
     Message?: string
     Content?: string
 }
+
+export interface HunterEntryTips {
+    value: string
+    assetNum: number
+    tags: string[]
+}
+
+export interface RuleForm {
+    name?: string
+    desc?: string
+}

@@ -1,37 +1,21 @@
 <script setup lang="ts">
 import { ExportToXlsx } from '../../export'
-import { reactive } from 'vue';
-import { ElNotification, ElMessage, ElMessageBox } from "element-plus";
-import { Menu, Search, ChatLineRound, ChromeFilled, CopyDocument, Grid, Document, Aim, Operation } from '@element-plus/icons-vue';
-import { ApiSyntaxCheck, splitInt, SplitTextArea, validateIP, validateDomain, Copy } from '../../util'
-import { TableTabs } from "../../interface"
+import { reactive, ref } from 'vue';
+import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
+import { Search, ChatLineRound, ChromeFilled, CopyDocument, Grid, PictureRounded, Operation, Delete, Star, Present, CollectionTag } from '@element-plus/icons-vue';
+import { ApiSyntaxCheck, splitInt, Copy } from '../../util'
+import { TableTabs, HunterEntryTips, RuleForm } from "../../interface"
 import global from "../../global"
 import {
     WebIconMd5,
     HunterSearch,
     HunterTips,
 } from '../../../wailsjs/go/main/App'
+import { InsertHunterSyntax, SelectAllHunterSyntax, DeleteHunterSyntax } from '../../../wailsjs/go/main/Database'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
-const form = reactive({
-    query: '',
-    syntaxDialog: false,
-    hunterImg: 'hunter_syntax.png',
-    optionsTime: [
-        {
-            value: '0',
-            label: '最近一个月',
-        },
-        {
-            value: '1',
-            label: '最近半年',
-        },
-        {
-            value: '2',
-            label: '最近一年',
-        },
-    ],
-    defaultTime: '0',
-    optionsServer: [
+
+const options = ({
+    Server: [
         {
             value: '3',
             label: '全部资产',
@@ -45,23 +29,120 @@ const form = reactive({
             label: '非WEB服务资产',
         },
     ],
+    Time: [
+        {
+            value: '0',
+            label: '最近一个月',
+        },
+        {
+            value: '1',
+            label: '最近半年',
+        },
+        {
+            value: '2',
+            label: '最近一年',
+        },
+    ],
+    Data: [
+        {
+            "syntax": 'app.name="小米 Router"',
+            "description": '搜索标记为”小米 Router“的资产'
+        },
+        {
+            "syntax": 'protocol="http"',
+            "description": '搜索协议为”http“的资产'
+        },
+        {
+            "syntax": 'icp.name="奇安信"',
+            "description": '搜索ICP备案单位名中含有“奇安信”的资产'
+        },
+        {
+            "syntax": 'icp.number="京ICP备16020626号-8"',
+            "description": '搜索通过域名关联的ICP备案号为”京ICP备16020626号-8”的网站资产'
+        },
+        {
+            "syntax": 'web.title="北京"',
+            "description": '从网站标题中搜索“北京”'
+        },
+        {
+            "syntax": 'web.body="网络空间测绘"',
+            "description": '搜索网站正文包含”网络空间测绘“的资产'
+        },
+        {
+            "syntax": 'header="elastic"',
+            "description": '搜索HTTP请求头中含有”elastic“的资产'
+        },
+    ]
+})
+
+// ref得单独校验
+const ruleFormRef = ref<FormInstance>()
+
+const syntax = ({
+    searchDialog: ref(false),
+    starDialog: ref(false),
+    rules: reactive<FormRules<RuleForm>>({
+        name: [
+            { required: true, message: '请输入语法名称', trigger: 'blur' },
+        ],
+        desc: [
+            {
+                required: true,
+                message: '请输入语法内容',
+                trigger: 'blur',
+            },
+        ],
+    }),
+    ruleForm: reactive<RuleForm>({
+        name: '',
+        desc: '',
+    }),
+    createStarDialog: () => {
+        syntax.starDialog.value = true
+        syntax.ruleForm.name = ""
+        syntax.ruleForm.desc = form.query
+    },
+    submitStar: async (formEl: FormInstance | undefined) => {
+        if (!formEl) return
+        let result = await formEl.validate()
+        if (!result) return
+        InsertHunterSyntax(syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
+            if (r) {
+                ElMessage.success('添加语法成功')
+            } else {
+                ElMessage.error('添加语法失败')
+            }
+            syntax.starDialog.value = false
+        })
+    },
+    deleteStar: (name: string, content: string) => {
+        DeleteHunterSyntax(name, content).then((r: Boolean) => {
+            if (r) {
+                ElMessage.success('删除语法成功,重新打开刷新')
+            } else {
+                ElMessage.error('删除语法失败')
+            }
+        })
+    },
+    searchStarSyntax: async () => {
+        form.syntaxData = await SelectAllHunterSyntax()
+    },
+})
+
+const form = reactive({
+    query: '',
+    hunterImg: 'hunter_syntax.png',
+    defaultTime: '0',
     defaultSever: '3',
     deduplication: false,
     tips: '',
-    loadAll: [] as EntryTips[],
+    loadAll: [] as HunterEntryTips[],
     batchdialog: false,
     batchURL: '',
+    syntaxData: [] as RuleForm[],
 })
 
-interface EntryTips {
-    value: string
-    assetNum: number
-    tags: string[]
-}
-
-
-let timeout: ReturnType<typeof setTimeout>
-const entry = reactive({
+const entry = ({
     querySearchAsync: (queryString: string, cb: any) => {
         if (queryString.includes("=") || queryString == "" || form.loadAll.length === 0) {
             cb(form.loadAll);
@@ -86,7 +167,14 @@ const entry = reactive({
     },
     handleSelect: (item: Record<string, any>) => {
         form.query = `app.name="${item.value}"`
-    }
+    },
+    addSyntax: function (content: string) {
+        if (form.query == "") {
+            form.query = content
+        } else {
+            form.query += " && " + content
+        }
+    },
 })
 
 const table = reactive({
@@ -98,9 +186,7 @@ const table = reactive({
 
 const tableCtrl = ({
     addTab: (query: string) => {
-        if (!ApiSyntaxCheck(global.space.hunterkey)) {
-            return
-        }
+        if (!ApiSyntaxCheck(global.space.hunterkey)) return
         const newTabName = `${++table.tabIndex}`
         table.editableTabs.push({
             title: query,
@@ -126,6 +212,7 @@ const tableCtrl = ({
                             message: result.message,
                             type: "info",
                         });
+                        break
                     default:
                         ElNotification({
                             message: result.message,
@@ -272,60 +359,28 @@ const tableCtrl = ({
             tab.total = result.data.total
             table.loading = false
         })
+    },
+    IconSearch: async function () {
+        ElMessageBox.prompt('输入目标Favicon地址会自动计算并搜索相关资产', '图标搜索', {
+            confirmButtonText: '查询',
+            inputPattern: /^(https?:\/\/)?((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|localhost|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/[^\s]*)?$/,
+            inputErrorMessage: 'Invalid URL',
+            showCancelButton: false,
+        })
+            .then(async ({ value }) => {
+                let hash = await WebIconMd5(value.trim())
+                if (hash == "") {
+                    ElNotification({
+                        message: "目标不可达或者URL格式错误",
+                        type: "warning",
+                    });
+                    return
+                }
+                tableCtrl.addTab(`web.icon=="${hash}"`)
+            }).catch(() => {
+            })
     }
 })
-
-async function IconHashSearch() {
-    ElMessageBox.prompt('输入目标Favicon地址会自动计算并搜索相关资产', 'ICON搜索', {
-        confirmButtonText: 'Search',
-        inputPattern: /^(https?:\/\/)?((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|localhost|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/[^\s]*)?$/,
-        inputErrorMessage: 'Invalid URL',
-        showCancelButton: false,
-    })
-        .then(async ({ value }) => {
-            let hash = await WebIconMd5(value.trim())
-            if (hash == "") {
-                ElNotification({
-                    message: "目标不可达或者URL格式错误",
-                    type: "warning",
-                });
-                return
-            }
-            tableCtrl.addTab(`web.icon=="${hash}"`)
-        })
-}
-
-function BatchSearch() {
-    ElMessageBox.prompt('请输入IP/网段/域名(MAX 5)', '批量查询', {
-        confirmButtonText: 'Search',
-        inputType: 'textarea',
-        showCancelButton: false,
-    })
-        .then(async ({ value }) => {
-            const lines = SplitTextArea(value);
-            const temp = [];
-
-            for (const line of lines) {
-                if (validateIP(line)) {
-                    temp.push(`ip="${line}"`);
-                } else if (validateDomain(line)) {
-                    temp.push(`domain.suffix="${line}"`);
-                }
-            }
-
-            if (temp.length === 0) {
-                ElMessage({
-                    showClose: true,
-                    message: "目标为空",
-                    type: "warning",
-                });
-                return;
-            }
-
-            tableCtrl.addTab(temp.join('||'));
-        })
-}
-
 
 async function SaveData(mode: number) {
     if (table.editableTabs.length != 0) {
@@ -401,16 +456,78 @@ async function CopyURL(mode: number) {
                     <template #prepend>
                         查询条件
                     </template>
+                    <template #suffix>
+                        <el-space :size="2">
+                            <el-popover placement="bottom-end" :width="550" trigger="click">
+                                <template #reference>
+                                    <div>
+                                        <el-tooltip content="常用关键词搜索" placement="bottom">
+                                            <el-button :icon="CollectionTag" link />
+                                        </el-tooltip>
+                                    </div>
+                                </template>
+                                <el-table :data="options.Data">
+                                    <el-table-column width="300" property="syntax">
+                                        <template #default="scope">
+                                            <el-link @click="entry.addSyntax(scope.row.syntax)">{{ scope.row.syntax
+                                                }}</el-link>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column property="description" />
+                                </el-table>
+                            </el-popover>
+                            <el-tooltip content="使用网页图标搜索" placement="bottom">
+                                <el-button :icon="PictureRounded" link @click="tableCtrl.IconSearch" />
+                            </el-tooltip>
+                        </el-space>
+                        <el-divider direction="vertical" />
+                        <el-space :size="2">
+                            <el-tooltip content="清空语法" placement="bottom">
+                                <el-button :icon="Delete" link @click="form.query = ''" />
+                            </el-tooltip>
+                            <el-tooltip content="收藏语法" placement="bottom">
+                                <el-button :icon="Star" link @click="syntax.createStarDialog" />
+                            </el-tooltip>
+                            <el-tooltip content="复制语法" placement="bottom">
+                                <el-button :icon="CopyDocument" link @click="Copy(form.query)" />
+                            </el-tooltip>
+                            <el-divider direction="vertical" />
+                        </el-space>
+                        <el-button link :icon="Search" @click="tableCtrl.addTab(form.query)"
+                            style="height: 40px;">查询</el-button>
+                    </template>
                     <template #append>
-                        <el-dropdown>
-                            <el-button :icon="Menu" />
-                            <template #dropdown>
-                                <el-dropdown-menu :hide-on-click="true">
-                                    <el-dropdown-item :icon="Aim" @click="IconHashSearch()">icon搜索</el-dropdown-item>
-                                    <el-dropdown-item :icon="Document" @click="BatchSearch()">批量查询</el-dropdown-item>
-                                </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
+                        <el-space :size="25">
+                            <el-popover placement="bottom-end" :width="550" trigger="click">
+                                <template #reference>
+                                    <div>
+                                        <el-tooltip content="我收藏的语法" placement="left">
+                                            <el-button :icon="Present" @click="syntax.searchStarSyntax" />
+                                        </el-tooltip>
+                                    </div>
+                                </template>
+                                <el-table :data="form.syntaxData">
+                                    <el-table-column width="150" prop="Name" label="语法名称" />
+                                    <el-table-column prop="Content" label="语法内容">
+                                        <template #default="scope">
+                                            <el-link @click="entry.addSyntax(scope.row.Content)">{{ scope.row.Content
+                                                }}</el-link>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="操作" width="100">
+                                        <template #default="scope">
+                                            <el-button type="text"
+                                                @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
+                                            </el-button>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </el-popover>
+
+                            <el-tooltip content="查询语法" placement="left">
+                                <el-button :icon="ChatLineRound" @click="syntax.searchDialog.value = true" />
+                            </el-tooltip>
+                        </el-space>
                     </template>
                     <template #default="{ item }">
                         <el-space>
@@ -420,45 +537,32 @@ async function CopyURL(mode: number) {
                         </el-space>
                     </template>
                 </el-autocomplete>
-                <el-button type="primary" :icon="Search" @click="tableCtrl.addTab(form.query)"
-                    class="two-end-space5">查询</el-button>
-                <el-dropdown>
-                    <el-button :icon="Operation" color="#D2DEE3">
-
-                    </el-button>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                            <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
-                            <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)"
-                                divided>复制当前页URL</el-dropdown-item>
-                            <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
             </div>
         </el-form-item>
     </el-form>
     <div class="my-header">
         <el-space>
             <el-select v-model="form.defaultTime" style="width: 120px;">
-                <el-option v-for="item in form.optionsTime" :key="item.value" :label="item.label" :value="item.value"
+                <el-option v-for="item in options.Time" :key="item.value" :label="item.label" :value="item.value"
                     style="text-align: center;" />
             </el-select>
             <el-select v-model="form.defaultSever" style="width: 160px;">
-                <el-option v-for="item in form.optionsServer" :key="item.value" :label="item.label" :value="item.value"
+                <el-option v-for="item in options.Server" :key="item.value" :label="item.label" :value="item.value"
                     style="text-align: center;" />
             </el-select>
             <el-checkbox v-model="form.deduplication" size="large">数据去重(需权益积分)</el-checkbox>
         </el-space>
-        <el-link @click="form.syntaxDialog = true"><el-icon>
-                <ChatLineRound />
-            </el-icon>查询语法</el-link>
-        <el-dialog v-model="form.syntaxDialog" title="查询语法参考" width="80%" center>
-            <el-scrollbar height="400px">
-                <el-image :src="form.hunterImg"></el-image>
-            </el-scrollbar>
-        </el-dialog>
+        <el-dropdown>
+            <el-button :icon="Operation" color="#D2DEE3" />
+            <template #dropdown>
+                <el-dropdown-menu>
+                    <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                    <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                    <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
+                    <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
+                </el-dropdown-menu>
+            </template>
+        </el-dropdown>
     </div>
     <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" style="margin-top: 10px;" closable
         @tab-remove="tableCtrl.removeTab">
@@ -519,6 +623,29 @@ async function CopyURL(mode: number) {
         </el-tab-pane>
         <el-empty v-else></el-empty>
     </el-tabs>
+    <el-dialog v-model="syntax.searchDialog.value" title="查询语法" width="80%" center>
+        <el-scrollbar height="400px">
+            <el-image :src="form.hunterImg"></el-image>
+        </el-scrollbar>
+    </el-dialog>
+    <el-dialog v-model="syntax.starDialog.value" title="收藏语法" width="40%" center>
+        <!-- 一定要用:model v-model校验会失效 -->
+        <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="syntax.rules" status-icon>
+            <el-form-item label="语法名称" prop="name">
+                <el-input v-model="syntax.ruleForm.name" maxlength="30" show-word-limit></el-input>
+            </el-form-item>
+            <el-form-item label="语法内容" prop="desc">
+                <el-input v-model="syntax.ruleForm.desc" type="textarea" rows="10" maxlength="1024"
+                    show-word-limit></el-input>
+            </el-form-item>
+            <el-form-item class="align-right">
+                <el-button type="primary" @click="syntax.submitStar(ruleFormRef)">
+                    确定
+                </el-button>
+                <el-button @click="syntax.starDialog.value = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
 </template>
 
 <style>
@@ -535,7 +662,7 @@ async function CopyURL(mode: number) {
 .el-tabs__item .el-icon {
     position: absolute !important;
     top: 13px !important;
-    right: 3px !important;
+    right: 7px !important;
 }
 
 .el-tabs__nav {

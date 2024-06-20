@@ -40,7 +40,6 @@ const config = reactive({
     password: '',
     target: '',
     content: [] as BruteResult[],
-    renderKey: 0
 })
 
 const placeholder = `

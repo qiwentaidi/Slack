@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -327,13 +328,9 @@ func (a *App) HostAlive(targets []string, Ping bool) []string {
 	return portscan.CheckLive(a.ctx, targets, Ping)
 }
 
-func (a *App) NewTcpScanner(ips []string, ports []int, thread, timeout int) {
+func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, thread, timeout int) {
 	portscan.ExitFunc = false
-	portscan.TcpScan(a.ctx, ips, ports, thread, timeout)
-}
-
-func (a *App) NewCorrespondsScan(specialTargets []string, timeout int) {
-	var addrs []portscan.Address
+	addrs := portscan.ParseTarget(ips, ports)
 	for _, target := range specialTargets {
 		temp := strings.Split(target, ":")
 		port, err := strconv.Atoi(temp[1]) // 如果后缀端口有误则继续
@@ -345,13 +342,24 @@ func (a *App) NewCorrespondsScan(specialTargets []string, timeout int) {
 			Port: port,
 		})
 	}
-	portscan.ExitFunc = false
-	portscan.CorrespondsScan(a.ctx, addrs, timeout)
+	portscan.TcpScan(a.ctx, addrs, thread, timeout)
 }
 
-func (a *App) NewSynScanner(ips []string, ports []int) {
+func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []int) {
 	portscan.ExitFunc = false
-	portscan.SynScan(a.ctx, ips, util.IntArrayToUint16Array(ports))
+	addrs := portscan.ParseTarget2(ips, util.IntArrayToUint16Array(ports))
+	for _, target := range specialTargets {
+		temp := strings.Split(target, ":")
+		port, err := strconv.ParseUint(temp[1], 10, 16) // 如果后缀端口有误则继续
+		if err != nil {
+			continue
+		}
+		addrs = append(addrs, portscan.Address2{
+			IP:   net.IP(temp[0]),
+			Port: uint16(port),
+		})
+	}
+	portscan.SynScan(a.ctx, addrs)
 }
 
 func (a *App) StopPortScan() {
