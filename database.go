@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"slack-wails/lib/util"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -14,17 +15,16 @@ type Database struct {
 }
 
 func NewDatabase() *Database {
+	os.Mkdir(util.HomeDir()+"/slack", 0777)
 	dp := util.HomeDir() + "/slack/config.db"
 	db, err := sql.Open("sqlite3", dp)
 	if err != nil {
-		logger.NewDefaultLogger().Error("Failed to open database:" + err.Error())
 		return &Database{
 			DB: nil,
 		}
 	}
 	err = db.Ping()
 	if err != nil {
-		logger.NewDefaultLogger().Error("Failed to ping database:" + err.Error())
 		return &Database{
 			DB: nil,
 		}
