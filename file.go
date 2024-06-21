@@ -208,8 +208,8 @@ func (a *App) DownloadCyberChef(url string) error {
 	return nil
 }
 
-func (*File) RemoveOldConfig() error {
-	err := os.RemoveAll(util.HomeDir() + "/slack")
+func (f *File) RemoveOldConfig() error {
+	err := os.RemoveAll(configPath)
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 	}
