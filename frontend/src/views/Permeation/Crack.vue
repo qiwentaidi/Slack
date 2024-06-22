@@ -60,7 +60,7 @@ mysql://10.0.0.1:3306
 `
 
 async function selectDict(input: string) {
-    let filepath = await FileDialog()
+    let filepath = await FileDialog("*.txt")
     if (input == "username") {
         config.username = filepath
         return

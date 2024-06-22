@@ -5,19 +5,43 @@ import { LocalOpitons, Child } from "../interface";
 import global from "../global";
 import { DeleteFilled, Edit, FolderOpened } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
-import { EventsOn } from "../../wailsjs/runtime/runtime";
-import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation } from "../../wailsjs/go/main/File";
-import { OpenFolder, SaveNavigation, RunApp } from "../../wailsjs/go/main/File";
+import { OnFileDrop, EventsOn } from "../../wailsjs/runtime/runtime";
+import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp } from "../../wailsjs/go/main/File";
+import { GOOS } from "../../wailsjs/go/main/App";
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
-onMounted(() => {
+onMounted(async () => {
+    let os = await GOOS()
+    // windows
+    OnFileDrop((x, y, paths) => {
+        if (os == "windows") {
+            let card = localGroup.options.value.find(item => item.Name === config.mouseOnGroupName)
+            paths.forEach(p => {
+                Path(p).then((pathinfo: any) => {
+                    if (card) {
+                        let c = {
+                            Name: pathinfo.Name,
+                            Type: localGroup.getExtType(pathinfo.Ext),
+                            Path: p
+                        }
+                        if (!card.Children) {
+                            card.Children = [c];
+                        } else {
+                            card.Children.push(c)
+                        }
+                        InsetItemNavigation(config.mouseOnGroupName, c)
+                    }
+                })
+            })
+        }
+    }, true)
     GetLocalNaConfig().then((result: LocalOpitons[]) => {
         if (result) {
             localGroup.options.value.push(...result)
         }
     })
-    // 监听拖拽事件，获取拖拽文件的路径
+    // macos
     EventsOn("wails-drop", (paths: string[]) => {
         let card = localGroup.options.value.find(item => item.Name === config.mouseOnGroupName)
         paths.forEach(p => {
@@ -64,17 +88,17 @@ const localGroup = ({
         switch (type) {
             case "JAR":
                 return "/navigation/java.svg"
-            case "EXE":
-                return "/navigation/app.svg"
-            case "LNK":
+            case "APP":
                 return "/navigation/app.svg"
             default:
                 return "/navigation/iterm.svg"
         }
     },
     getExtType: function (type: string) {
-        if (type == "JAR" || type == "EXE" || type == "LNK") {
+        if (type == "JAR") {
             return type
+        } else if (type == "LNK" || type == "EXE") {
+            return "APP"
         }
         return "CMD"
     },
@@ -165,9 +189,6 @@ const localGroup = ({
         event.preventDefault();
         config.mouseOnGroupName = groupName
     },
-    handleDragOver: function (event: DragEvent) {
-        event.preventDefault();
-    },
     handleOpenFolder: async function (filepath: string) {
         let result = await OpenFolder(filepath)
         if (result != "") {
@@ -189,8 +210,7 @@ defineExpose({
 <template>
     <el-scrollbar height="85vh">
         <div v-for="groups in localGroup.options.value" class="card-group">
-            <el-card @dragenter="localGroup.handleDragOver" @dragover="localGroup.handleDragOver"
-                @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable">
+            <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable">
                 <div class="my-header" style="margin-bottom: 10px">
                     <span style="font-weight: bold">{{ groups.Name }}</span>
                     <el-popconfirm title="Are you sure to delete this?" @confirm="localGroup.deleteGroup(groups.Name)">
@@ -209,26 +229,26 @@ defineExpose({
                                     </el-icon>
                                     {{ $t("navigator.open_folder") }}</el-menu-item>
                                 <el-menu-item index="edit" @click="localGroup.editItem(groups.Name, {
-            Name: item.Name,
-            Type: item.Type,
-            Path: item.Path,
-        })">
+                                    Name: item.Name,
+                                    Type: item.Type,
+                                    Path: item.Path,
+                                })">
                                     <el-icon>
                                         <Edit />
                                     </el-icon>
                                     {{ $t("navigator.edit") }}</el-menu-item>
                                 <el-menu-item index="delete" @click="localGroup.deleteItem(groups.Name, {
-            Name: item.Name,
-            Type: item.Type,
-            Path: item.Path,
-        })">
+                                    Name: item.Name,
+                                    Type: item.Type,
+                                    Path: item.Path,
+                                })">
                                     <el-icon>
                                         <DeleteFilled />
                                     </el-icon>
                                     {{ $t("navigator.delete") }}</el-menu-item>
                             </el-menu>
                             <template #reference>
-                                <el-button bg text @click="RunApp(global.webscan.java,item.Type, item.Path)">
+                                <el-button bg text @click="RunApp(global.webscan.java, item.Type, item.Path)">
                                     <template #icon>
                                         <img :src="localGroup.getSvgPath(item.Type)" style="width: 16px;">
                                     </template>
@@ -313,21 +333,21 @@ defineExpose({
 }
 
 .el-menu-item.is-active::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 5px;
-  /*  色块的宽度 */
-  height: 100%;
-  background-color: #fff;
-  /*  色块的颜色 */
-  border-radius: 0 3px 3px 0;
-  /* 轨道的形状 */
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    /*  色块的宽度 */
+    height: 100%;
+    background-color: #fff;
+    /*  色块的颜色 */
+    border-radius: 0 3px 3px 0;
+    /* 轨道的形状 */
 }
 
 .drop-enable {
-    --wails-drop-target: "drop";
+    --wails-drop-target: drop;
     width: 100%;
 }
 

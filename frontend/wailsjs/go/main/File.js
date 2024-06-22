@@ -6,8 +6,8 @@ export function CheckFileStat(arg1) {
   return window['go']['main']['File']['CheckFileStat'](arg1);
 }
 
-export function FileDialog() {
-  return window['go']['main']['File']['FileDialog']();
+export function FileDialog(arg1) {
+  return window['go']['main']['File']['FileDialog'](arg1);
 }
 
 export function GetLocalNaConfig() {

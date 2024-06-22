@@ -87,7 +87,7 @@ function handleCurrentChange(val: any) {
 }
 
 async function handleFileChange() {
-    let path = await FileDialog()
+    let path = await FileDialog("*.txt")
     let result = (await ReadLine(path))!
     const extensions = from.exts.split(',');
     for (const line of result) {

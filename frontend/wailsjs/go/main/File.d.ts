@@ -4,7 +4,7 @@ import {main} from '../models';
 
 export function CheckFileStat(arg1:string):Promise<boolean>;
 
-export function FileDialog():Promise<string>;
+export function FileDialog(arg1:string):Promise<string>;
 
 export function GetLocalNaConfig():Promise<any>;
 

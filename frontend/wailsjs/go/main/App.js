@@ -62,6 +62,10 @@ export function Fscan2Txt(arg1) {
   return window['go']['main']['App']['Fscan2Txt'](arg1);
 }
 
+export function GOOS() {
+  return window['go']['main']['App']['GOOS']();
+}
+
 export function GoFetch(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['GoFetch'](arg1, arg2, arg3, arg4, arg5, arg6);
 }

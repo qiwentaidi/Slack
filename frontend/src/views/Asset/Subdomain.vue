@@ -76,7 +76,7 @@ function stop() {
 }
 
 async function handleFileChange() {
-    let path = await FileDialog()
+    let path = await FileDialog("*.txt")
     from.subs = (await ReadLine(path))!
     from.tips = `loaded ${from.subs.length} dicts`;
 }

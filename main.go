@@ -4,6 +4,8 @@ import (
 	"context"
 	"embed"
 
+	rt "runtime"
+
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -20,6 +22,13 @@ func main() {
 	file := NewFile()
 	db := NewDatabase()
 	// Create application with options
+	winDropOptions := &options.DragAndDrop{
+		EnableFileDrop:     true,
+		DisableWebViewDrop: true,
+	}
+	macDropOptions := &options.DragAndDrop{
+		EnableFileDrop: true,
+	}
 	err := wails.Run(&options.App{
 		Title:  "Slack",
 		Width:  1280,
@@ -32,17 +41,22 @@ func main() {
 			app.startup(ctx)
 			file.startup(ctx)
 		},
-		DragAndDrop: &options.DragAndDrop{
-			EnableFileDrop: true,
-		},
+		DragAndDrop: func() *options.DragAndDrop {
+			if rt.GOOS == "windows" {
+				return winDropOptions
+			} else {
+				return macDropOptions
+			}
+		}(),
 		OnDomReady: func(ctx context.Context) {
-			runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
-				runtime.EventsEmit(ctx, "wails-drop", paths)
-			})
+			if rt.GOOS == "darwin" {
+				runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
+					runtime.EventsEmit(ctx, "wails-drop", paths)
+				})
+			}
 		},
 		MinWidth:  1280,
 		MinHeight: 768,
-		// Frameless:        true,
 		Bind: []interface{}{
 			app,
 			file,

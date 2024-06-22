@@ -33,7 +33,7 @@ function FscanExtract() {
 }
 
 async function uploadFile() {
-    let filepath = await FileDialog()
+    let filepath = await FileDialog("*.txt")
     if (filepath == "") {
         return
     }
@@ -79,7 +79,7 @@ function Deduplication() {
 }
 
 // async function HunterCSVremoveDuplicates() {
-//     let filepath = await FileDialog()
+//     let filepath = await FileDialog("*.txt")
 //     let result = await HunterRemoveDuplicates(filepath)
 //     if (result) {
 //         ElNotification({

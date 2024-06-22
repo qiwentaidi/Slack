@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	rt "runtime"
-	"slack-wails/lib/bridge"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/update"
 	"slack-wails/lib/util"
@@ -34,13 +33,13 @@ func NewFile() *File {
 	return &File{}
 }
 
-func (f *File) FileDialog() string {
+func (f *File) FileDialog(ext string) string {
 	selection, err := runtime.OpenFileDialog(f.ctx, runtime.OpenDialogOptions{
 		Title: "选择文件",
 		Filters: []runtime.FileFilter{
 			{
 				DisplayName: "文本数据",
-				Pattern:     "*.txt",
+				Pattern:     ext,
 			},
 		},
 	})
@@ -285,7 +284,7 @@ func (f *File) OpenFolder(filepath string) string {
 		return err.Error()
 	}
 	var cmd *exec.Cmd
-	bridge.HideExecWindow(cmd)
+	// bridge.HideExecWindow(cmd)
 	switch rt.GOOS {
 	case "windows":
 		cmd = exec.Command("cmd", "/c", "start", filepath)
@@ -305,16 +304,11 @@ func (f *File) OpenFolder(filepath string) string {
 // JAR | EXE | LNK | Other
 func (f *File) RunApp(jdk, types, path string) bool {
 	var cmd *exec.Cmd
-	bridge.HideExecWindow(cmd)
+	// bridge.HideExecWindow(cmd)
 	switch types {
 	case "JAR":
 		cmd = exec.Command(jdk, "-jar", path)
-	case "EXE":
-		if rt.GOOS == "windows" {
-			cmd = exec.Command(path)
-		}
-
-	case "LNK":
+	case "APP":
 		if rt.GOOS == "windows" {
 			cmd = exec.Command(path)
 		}

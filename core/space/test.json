@@ -27,16 +27,7 @@
                 "tls-jarm": {
                     "jarm_hash": "21d19d00021d21d21c21d19d21d21dddc75ea8bb053134e7478e004d03ff65",
                     "jarm_ans": [
-                        "c013|0303|http/1.1|ff01-0000-0001-000b-0023-0010-0017",
-                        "00c0|0303|http/1.1|ff01-0000-0001-0023-0010-0017",
-                        "|||",
-                        "c013|0303|http/1.0|ff01-0000-0001-000b-0023-0010-0017",
-                        "c013|0303|http/1.0|ff01-0000-0001-000b-0023-0010-0017",
-                        "c013|0302|http/1.1|ff01-0000-0001-000b-0023-0010-0017",
-                        "c013|0303|http/1.1|ff01-0000-0001-000b-0023-0010-0017",
-                        "00c0|0303|http/1.1|ff01-0000-0001-0023-0010-0017",
-                        "c013|0303|http/1.1|ff01-0000-0001-000b-0023-0010-0017",
-                        "c013|0303|http/1.1|ff01-0000-0001-000b-0023-0010-0017"
+                       
                     ]
                 },
                 "response_hash": "e975d9f63923b4d6790b340501f47031",
@@ -126,190 +117,14 @@
                             "session_id": "r9Zlzm1tsPSnPfTjRulDLUNvDF8uPJ3rPrVE6x/6nfc=",
                             "extended_master_secret": false,
                             "signature_and_hashes": [
-                                {
-                                    "hash_algorithm": "sha256",
-                                    "signature_algorithm": "rsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha256",
-                                    "signature_algorithm": "ecdsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha256",
-                                    "signature_algorithm": "unknown.230"
-                                },
-                                {
-                                    "hash_algorithm": "sha384",
-                                    "signature_algorithm": "rsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha512",
-                                    "signature_algorithm": "rsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha256",
-                                    "signature_algorithm": "rsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha384",
-                                    "signature_algorithm": "rsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha512",
-                                    "signature_algorithm": "rsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha384",
-                                    "signature_algorithm": "ecdsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha512",
-                                    "signature_algorithm": "ecdsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha1",
-                                    "signature_algorithm": "rsa"
-                                },
-                                {
-                                    "hash_algorithm": "sha1",
-                                    "signature_algorithm": "ecdsa"
-                                }
+                                
                             ],
                             "version": {
                                 "name": "TLSv1.2",
                                 "value": 771
                             },
                             "cipher_suites": [
-                                {
-                                    "name": "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
-                                    "hex": "0xCCA8",
-                                    "value": 52392
-                                },
-                                {
-                                    "name": "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
-                                    "hex": "0xCCA9",
-                                    "value": 52393
-                                },
-                                {
-                                    "name": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-                                    "hex": "0xC02F",
-                                    "value": 49199
-                                },
-                                {
-                                    "name": "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-                                    "hex": "0xC030",
-                                    "value": 49200
-                                },
-                                {
-                                    "name": "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-                                    "hex": "0xC02B",
-                                    "value": 49195
-                                },
-                                {
-                                    "name": "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
-                                    "hex": "0xC02C",
-                                    "value": 49196
-                                },
-                                {
-                                    "name": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
-                                    "hex": "0xC009",
-                                    "value": 49161
-                                },
-                                {
-                                    "name": "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256",
-                                    "hex": "0x009E",
-                                    "value": 158
-                                },
-                                {
-                                    "name": "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
-                                    "hex": "0xCCA8",
-                                    "value": 52392
-                                },
-                                {
-                                    "name": "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
-                                    "hex": "0xCCAA",
-                                    "value": 52394
-                                },
-                                {
-                                    "name": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
-                                    "hex": "0x0033",
-                                    "value": 51
-                                },
-                                {
-                                    "name": "TLS_RSA_WITH_AES_256_CBC_SHA256",
-                                    "hex": "0x003D",
-                                    "value": 61
-                                },
-                                {
-                                    "name": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
-                                    "hex": "0x0016",
-                                    "value": 22
-                                },
-                                {
-                                    "name": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
-                                    "hex": "0xC00A",
-                                    "value": 49162
-                                },
-                                {
-                                    "name": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
-                                    "hex": "0x0039",
-                                    "value": 57
-                                },
-                                {
-                                    "name": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
-                                    "hex": "0xC013",
-                                    "value": 49171
-                                },
-                                {
-                                    "name": "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
-                                    "hex": "0x000A",
-                                    "value": 10
-                                },
-                                {
-                                    "name": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
-                                    "hex": "0xC014",
-                                    "value": 49172
-                                },
-                                {
-                                    "name": "TLS_RSA_WITH_AES_128_GCM_SHA256",
-                                    "hex": "0x009C",
-                                    "value": 156
-                                },
-                                {
-                                    "name": "TLS_RSA_WITH_AES_256_GCM_SHA384",
-                                    "hex": "0x009D",
-                                    "value": 157
-                                },
-                                {
-                                    "name": "TLS_RSA_WITH_AES_128_CBC_SHA",
-                                    "hex": "0x002F",
-                                    "value": 47
-                                },
-                                {
-                                    "name": "TLS_RSA_WITH_AES_256_CBC_SHA",
-                                    "hex": "0x0035",
-                                    "value": 53
-                                },
-                                {
-                                    "name": "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
-                                    "hex": "0xC012",
-                                    "value": 49170
-                                },
-                                {
-                                    "name": "TLS_CHACHA20_POLY1305_SHA256",
-                                    "hex": "0x1303",
-                                    "value": 4867
-                                },
-                                {
-                                    "name": "TLS_AES_128_GCM_SHA256",
-                                    "hex": "0x1301",
-                                    "value": 4865
-                                },
-                                {
-                                    "name": "TLS_AES_256_GCM_SHA384",
-                                    "hex": "0x1302",
-                                    "value": 4866
-                                }
+                               
                             ],
                             "alpn_protocols": [
                                 "h2",

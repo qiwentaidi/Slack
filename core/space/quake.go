@@ -7,7 +7,7 @@ import (
 	"slack-wails/lib/clients"
 )
 
-type QuakeResult struct {
+type QuakeRawResult struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Data    []struct {
@@ -23,16 +23,24 @@ type QuakeResult struct {
 				Host   string `json:"host"`
 				Title  string `json:"title"`
 			} `json:"http"`
-		} `json:"service"`
-		IP  string `json:"ip"`
-		TLS struct {
-			Certificate struct {
-				Subject struct {
-					Organization []string `json:"organization"`
-					CommonName   []string `json:"common_name"`
-				} `json:"subject"`
+			TLS struct {
+				Handshake_log struct {
+					Server_certificates struct {
+						Certificate struct {
+							Parsed struct {
+								Subject struct {
+									Country      []string `json:"country"`
+									Province     []string `json:"province"`
+									Organization []string `json:"organization"`
+									Common_name  []string `json:"common_name"`
+								} `json:"subject"`
+							} `json:"parsed"`
+						} `json:"certificate"`
+					} `json:"server_certificates"`
+				} `json:"handshake_log"`
 			} `json:"tls"`
-		} `json:"data"`
+		} `json:"service"`
+		IP       string `json:"ip"`
 		Location struct {
 			Isp        string `json:"isp"`
 			ProvinceCn string `json:"province_cn"`
@@ -88,7 +96,7 @@ type QuakeUserInfo struct {
 	} `json:"meta"`
 }
 
-func QuakeApiSearch(query string, startIndex, pageSize int, token string, latest bool) (*QuakeResult, int) {
+func QuakeApiSearch(query string, startIndex, pageSize int, token string, latest bool) (*QuakeRawResult, int) {
 	data := make(map[string]interface{})
 	data["query"] = query
 	data["start"] = startIndex
@@ -102,9 +110,9 @@ func QuakeApiSearch(query string, startIndex, pageSize int, token string, latest
 	header.Set("X-QuakeToken", token)
 	_, body, err := clients.NewRequest("POST", "https://quake.360.net/api/v3/search/quake_service", header, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
-		return &QuakeResult{}, 0
+		return &QuakeRawResult{}, 0
 	}
-	var qk QuakeResult
+	var qk QuakeRawResult
 	json.Unmarshal(body, &qk)
 	return &qk, QuakeUserSearch(token)
 }

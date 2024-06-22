@@ -89,7 +89,7 @@ const form = reactive({
 
 
 async function uploadFile() {
-    let path = await FileDialog()
+    let path = await FileDialog("*.txt")
     if (path == "") {
         return
     }

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"slack-wails/core"
 	"slack-wails/core/dirsearch"
 	alibaba "slack-wails/core/druid"
@@ -77,6 +78,10 @@ func (a *App) Callgologger(level, msg string) {
 
 func (a *App) IsRoot() bool {
 	return os.Getuid() == 0
+}
+
+func (a *App) GOOS() string {
+	return runtime.GOOS
 }
 
 type Response struct {

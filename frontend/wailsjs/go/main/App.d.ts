@@ -36,6 +36,8 @@ export function FofaTips(arg1:string):Promise<space.TipsResult>;
 
 export function Fscan2Txt(arg1:string):Promise<string>;
 
+export function GOOS():Promise<string>;
+
 export function GoFetch(arg1:string,arg2:string,arg3:string,arg4:Array<{[key: string]: string}>,arg5:number,arg6:clients.Proxy):Promise<main.Response>;
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
