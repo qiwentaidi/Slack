@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	rt "runtime"
 	"slack-wails/lib/gologger"
@@ -302,20 +303,24 @@ func (f *File) OpenFolder(filepath string) string {
 }
 
 // JAR | EXE | LNK | Other
-func (f *File) RunApp(jdk, types, path string) bool {
+func (f *File) RunApp(jdk, types, filepath string) bool {
 	var cmd *exec.Cmd
 	// bridge.HideExecWindow(cmd)
 	switch types {
 	case "JAR":
-		cmd = exec.Command(jdk, "-jar", path)
+		cmd = exec.Command(jdk, "-jar", filepath)
 	case "APP":
 		if rt.GOOS == "windows" {
-			cmd = exec.Command(path)
+			if path.Ext(filepath) == ".lnk" {
+				cmd = exec.Command("cmd", "/c", "start", filepath)
+			} else {
+				cmd = exec.Command(filepath)
+			}
 		}
 	default:
-		path, _ = getDirectoryPath(path)
+		filepath, _ = getDirectoryPath(filepath)
 		if rt.GOOS == "windows" {
-			cmd = exec.Command("cmd.exe", "/C", "start", "cmd.exe", "/K", "cd /d", path)
+			cmd = exec.Command("cmd", "/C", "start", "cmd", "/K", "cd /d", filepath)
 		} else if rt.GOOS == "darwin" {
 			// Construct the osascript command to open a new iTerm2 window
 			script := `tell application "iTerm"
@@ -325,7 +330,7 @@ func (f *File) RunApp(jdk, types, path string) bool {
                         end tell
                         delay 0.2
                         tell current session of current window
-                            write text "cd ` + path + `"
+                            write text "cd ` + filepath + `"
                         end tell
                     end tell`
 			cmd = exec.Command("osascript", "-e", script)
