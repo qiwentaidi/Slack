@@ -332,31 +332,8 @@ defineExpose({
     /* 按钮根据内容自动调整宽度 */
 }
 
-.el-menu-item.is-active::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 5px;
-    /*  色块的宽度 */
-    height: 100%;
-    background-color: #fff;
-    /*  色块的颜色 */
-    border-radius: 0 3px 3px 0;
-    /* 轨道的形状 */
-}
-
 .drop-enable {
     --wails-drop-target: drop;
     width: 100%;
-}
-
-.right-click {
-    border: 0cap;
-
-    .el-menu-item {
-        font-size: 13px;
-        height: 30px;
-    }
 }
 </style>

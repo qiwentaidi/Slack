@@ -19,22 +19,18 @@ export async function ExportToXlsx(
 }
 
 // 资产导出
-export async function ExportAssetToXlsx(r1: {}[], r2: {}[], r3: {}[]) {
+export async function ExportAssetToXlsx(r1: {}[], r2: {}[]) {
   // 创建一个新的工作簿
   let wb = XLSX.utils.book_new();
   // 自定义表头
   let suheaders = ["公司名称", "股权比例", "投资数额", "域名"];
   let weheaders = ["公司名称", "公众号名称", "微信号", "Logo", "二维码", "简介"];
-  let huheaders = ["公司域名或ICP名称", "资产数量"];
   let ws1 = XLSX.utils.json_to_sheet(r1);
   let ws2 = XLSX.utils.json_to_sheet(r2);
-  let ws3 = XLSX.utils.json_to_sheet(r3);
   XLSX.utils.sheet_add_aoa(ws1, [suheaders], { origin: "A1" });
   XLSX.utils.sheet_add_aoa(ws2, [weheaders], { origin: "A1" });
-  XLSX.utils.sheet_add_aoa(ws3, [huheaders], { origin: "A1" });
   XLSX.utils.book_append_sheet(wb, ws1, "子公司");
   XLSX.utils.book_append_sheet(wb, ws2, "公众号");
-  XLSX.utils.book_append_sheet(wb, ws3, "鹰图资产数量");
   const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
   await ExportFile("base64", "asset.xlsx", b64);
 }

@@ -6,7 +6,7 @@ var space = reactive({
     fofaemail: '',
     fofakey: '',
     hunterkey: '',
-    quakekey: ''
+    quakekey: '',
 })
 
 var proxy = reactive({

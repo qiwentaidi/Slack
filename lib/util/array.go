@@ -1,6 +1,9 @@
 package util
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // 去除某个元素
 func RemoveElement[T comparable](arr []T, ele T) (newArr []T) {
@@ -99,4 +102,15 @@ func Combination(s1, s2 []string, split string) []string {
 		}
 	}
 	return temp
+}
+
+// 拼接非空值项数组
+func MergeNonEmpty(arrayList []string, connector string) string {
+	var newArr []string
+	for _, v := range arrayList {
+		if v != "" {
+			newArr = append(newArr, v)
+		}
+	}
+	return strings.Join(newArr, connector)
 }

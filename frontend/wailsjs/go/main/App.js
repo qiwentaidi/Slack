@@ -6,10 +6,6 @@ export function ActiveFingerScan(arg1, arg2) {
   return window['go']['main']['App']['ActiveFingerScan'](arg1, arg2);
 }
 
-export function AssetHunter(arg1, arg2, arg3) {
-  return window['go']['main']['App']['AssetHunter'](arg1, arg2, arg3);
-}
-
 export function Callgologger(arg1, arg2) {
   return window['go']['main']['App']['Callgologger'](arg1, arg2);
 }
@@ -40,6 +36,10 @@ export function DownloadCyberChef(arg1) {
 
 export function ExtractIP(arg1) {
   return window['go']['main']['App']['ExtractIP'](arg1);
+}
+
+export function FaviconMd5(arg1) {
+  return window['go']['main']['App']['FaviconMd5'](arg1);
 }
 
 export function FingerLength() {
@@ -146,6 +146,14 @@ export function PortParse(arg1) {
   return window['go']['main']['App']['PortParse'](arg1);
 }
 
+export function QuakeSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+  return window['go']['main']['App']['QuakeSearch'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+}
+
+export function QuakeTips(arg1) {
+  return window['go']['main']['App']['QuakeTips'](arg1);
+}
+
 export function Sock5Connect(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['Sock5Connect'](arg1, arg2, arg3, arg4, arg5);
 }
@@ -176,10 +184,6 @@ export function ThinkDict(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
 
 export function UseDruid(arg1, arg2, arg3) {
   return window['go']['main']['App']['UseDruid'](arg1, arg2, arg3);
-}
-
-export function WebIconMd5(arg1) {
-  return window['go']['main']['App']['WebIconMd5'](arg1);
 }
 
 export function WebPocLength() {

@@ -2,11 +2,10 @@
 import { reactive, ref } from "vue";
 import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
-import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, AssetHunter, Callgologger } from "../../../wailsjs/go/main/App";
-import global from "../../global"
+import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger } from "../../../wailsjs/go/main/App";
 import { ExportAssetToXlsx } from '../../export'
 import { onMounted } from 'vue';
-import { sleep } from "../../util";
+import { CompanyInfo } from "../../interface";
 // 初始化时调用
 onMounted(() => {
     Init()
@@ -20,30 +19,18 @@ const from = reactive({
     token: '',
     activeName: 'subcompany',
 
-    companys: [{}],
-    log: '',
+    companys: [] as string[],
     runningStatus: false,
-    domains: [{}],
-    correctName: [{}],
-    getColumnData(prop: string): any[] {
-        return su.value.map((item: any) => item[prop]);
-    }
+    domains: [] as string[],
 })
 
-interface CompanyInfo {
-    CompanyName: string
-    Holding: string
-    Investment: string
-    Domains: string[]
-}
-
-var su = ref([] as CompanyInfo[])
-const hu = ref([{}])
 const we = ref([{}])
 
+const table = reactive({
+    company: [] as CompanyInfo[]
+})
+
 function Init() {
-    su.value = [];
-    hu.value = [];
     we.value = [];
 }
 
@@ -81,10 +68,10 @@ function Collect() {
         const promises = from.companys.map(async companyName => {
             Callgologger("info", `正在收集${companyName}的子公司信息`)
             if (typeof companyName === 'string') {
-                const result:any = await SubsidiariesAndDomains(companyName, from.defaultHold);
+                const result: any = await SubsidiariesAndDomains(companyName, from.defaultHold);
                 if (Array.isArray(result.Asset) && result.Asset.length > 0) {
                     for (const item of result.Asset) {
-                        su.value.push({
+                        table.company.push({
                             CompanyName: item.CompanyName,
                             Holding: item.Holding,
                             Investment: item.Investment,
@@ -129,70 +116,17 @@ function Collect() {
         });
     }
 }
-async function huntersearch() {
-    if (global.space.hunterkey.length <= 1) {
-        ElMessage({
-            showClose: true,
-            message: '请先在设置中配置鹰图key再使用该功能',
-            type: 'warning',
-        })
-        return
+
+const dataHandle = ({
+    companyInfo: function (ci: CompanyInfo[]) {
+        return ci.map(item => ({
+            CompanyName: item.CompanyName,
+            Holding: item.Holding,
+            Investment: item.Investment,
+            Domains: item.Domains.map(it => JSON.stringify(it)).join('|')
+        }))
     }
-    if (su.value.length <= 1) {
-        ElMessage({
-            showClose: true,
-            message: '请先查询控股企业信息再继续资产数量查询',
-            type: 'warning',
-        })
-        return
-    }
-    // 初始化要查询的目标
-    from.correctName = from.getColumnData("company")
-    from.domains = []
-    from.getColumnData("domains").forEach(dms => {
-        if (dms != "") {
-            if (dms.includes("|")) {
-                let elements = dms.split(" | "); // 如果字符串包含 "|" 符号，则根据 "|" 符号进行分割
-                // 将分割后的元素追加到 from.waitsearch 中
-                elements.forEach((element: any) => {
-                    from.domains.push(element);
-                });
-            } else {
-                from.domains.push(dms); // 如果字符串不包含 "|" 符号，则直接追加到 from.waitsearch 中
-            }
-        }
-    });
-    // 查询icp
-    for (let target of from.correctName) {
-        await sleep(2500);
-        AssetHunter(0, target as string, global.space.hunterkey).then(
-            (result:any) => {
-                hu.value.push(
-                    {
-                        name: target,
-                        hunums: result.Total,
-                    }
-                )
-                Callgologger("info", result.info)
-            }
-        )
-    }
-    // 查询domain
-    for (let target of from.domains) {
-        await sleep(2500);
-        AssetHunter(1, target as string, global.space.hunterkey).then(
-            (result:any) => {
-                hu.value.push(
-                    {
-                        name: target,
-                        hunums: result.Total,
-                    }
-                )
-                Callgologger("info", result.Info)
-            }
-        )
-    }
-}
+})
 </script>
 
 <template>
@@ -205,23 +139,17 @@ async function huntersearch() {
         </el-form-item>
         <el-form-item label="查询条件:">
             <div class="flex-box">
-                <el-checkbox v-model="from.subcompany" label="查询子公司并反查域名" />
-                <el-tooltip placement="left">
-                    <template #content>控股率>=(%)</template>
-                    <el-icon>
-                        <QuestionFilled />
-                    </el-icon>
-                </el-tooltip>
+                <el-checkbox v-model="from.subcompany" label="子公司(控股率>=)并反查域名" />
                 <el-input-number v-model="from.defaultHold" size="small" :min="1" :max="100" style="margin-left: 10px;"
                     v-if="from.subcompany"></el-input-number>
             </div>
-            <el-checkbox v-model="from.wechat" label="查询公众号" style="margin-right: 20px; margin-left: 20px;" />
+            <el-checkbox v-model="from.wechat" label="公众号" style="margin-right: 20px; margin-left: 20px;" />
         </el-form-item>
         <el-form-item>
             <template #label>
                 Token:
                 <el-tooltip placement="right">
-                    <template #content>由于天眼查登录校验机制，为了确保公众号爬取数据准确<br />
+                    <template #content>由于天眼查登录校验机制，为了确保爬取数据准确<br />
                         需要在此处填入网页登录后Cookie头中auth_token字段</template>
                     <el-icon>
                         <QuestionFilled size="24" />
@@ -234,7 +162,7 @@ async function huntersearch() {
     <div style="position: relative;">
         <el-tabs v-model="from.activeName" type="card">
             <el-tab-pane label="控股企业" name="subcompany">
-                <el-table :data="su" height="60vh" border>
+                <el-table :data="table.company" height="60vh" border>
                     <el-table-column type="index" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" :show-overflow-tooltip="true" />
                     <el-table-column prop="Holding" label="股权比例" :show-overflow-tooltip="true" />
@@ -289,43 +217,21 @@ async function huntersearch() {
                     </template>
                 </el-table>
             </el-tab-pane>
-
-            <el-tab-pane label="鹰图资产数量" name="hunter">
-                <el-table :data="hu" height="60vh" border>
-                    <el-table-column type="index" width="60px" />
-                    <el-table-column prop="name" label="公司域名或ICP名称" :show-overflow-tooltip="true" />
-                    <el-table-column prop="hunums" label="资产数量"
-                        :sort-method="(a: any, b: any) => { return a.hunums - b.hunums }" sortable />
-                    <template #empty>
-                        <el-empty />
-                    </template>
-                </el-table>
-            </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar">
-            <el-button-group>
-                <el-button @click="huntersearch">
-                    <template #icon>
-                        <img src="/hunter.ico" width="16">
-                    </template>
-                    测绘资产数量
-                    <el-popover placement="left-start" :width="350" trigger="hover">
-                        ①需要控股企业查询的<b>资产数量>=1</b><br /><br />
-                        ②查询公司名或者域名在鹰图中的资产数量<br /><br />
-                        ③一次查询消耗1积分对应的鹰图查询语句为<b>icp.name=""</b>和<b>domain.suffix=""</b>
-                        <template #reference>
-                            <el-icon>
-                                <QuestionFilled size="24" />
-                            </el-icon>
-                        </template>
-                    </el-popover>
-                </el-button>
-                <el-button @click="ExportAssetToXlsx(su, we, hu)">
-                    <template #icon>
-                        <img src="/excel.svg" width="16">
-                    </template>导出Excel</el-button>
-            </el-button-group>
+            <el-button @click="ExportAssetToXlsx(dataHandle.companyInfo(table.company), we)">
+                <template #icon>
+                    <img src="/excel.svg" width="16">
+                </template>导出Excel</el-button>
         </div>
     </div>
 
 </template>
+
+<style scoped>
+.finger-container {
+    flex-wrap: wrap;
+    display: flex;
+    gap: 7px;
+}
+</style>

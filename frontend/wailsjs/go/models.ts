@@ -87,18 +87,6 @@ export namespace main {
 	
 	    }
 	}
-	export class HunterSearch {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new HunterSearch(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
 	export class HunterSyntax {
 	
 	
@@ -254,6 +242,70 @@ export namespace space {
 	        this.code = source["code"];
 	        this.data = this.convertValues(source["data"], Object);
 	        this.message = source["message"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class QuakeResult {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new QuakeResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+	export class QuakeTipsData {
+	    product_name: string;
+	    vul_count: number;
+	    vendor_name: string;
+	    ip_count: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new QuakeTipsData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.product_name = source["product_name"];
+	        this.vul_count = source["vul_count"];
+	        this.vendor_name = source["vendor_name"];
+	        this.ip_count = source["ip_count"];
+	    }
+	}
+	export class QuakeTipsResult {
+	    code: number;
+	    message: string;
+	    data: QuakeTipsData[];
+	
+	    static createFrom(source: any = {}) {
+	        return new QuakeTipsResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.code = source["code"];
+	        this.message = source["message"];
+	        this.data = this.convertValues(source["data"], QuakeTipsData);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

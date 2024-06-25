@@ -60,6 +60,9 @@
               <el-form-item :label="$t('aside.hunter')">
                 <el-input v-model="global.space.hunterkey" placeholder="key" clearable></el-input>
               </el-form-item>
+              <el-form-item :label="$t('aside.360quake')">
+                <el-input v-model="global.space.quakekey" placeholder="token" clearable></el-input>
+              </el-form-item>
             </el-form>
           </el-collapse-item>
         </el-collapse>

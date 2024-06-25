@@ -21,11 +21,6 @@ html {
   height: 100%;
   overflow: hidden;
 }
-/* img */
-.center {
-  margin-left: 30%;
-  width: 40%;
-}
 
 .card-header {
   display: flex;
@@ -41,7 +36,8 @@ html {
 .log-textarea {
   background-color: black;
   color: rgb(255, 255, 255);
-  height: 100%; /* 设置 textarea 高度为父元素高度 */
+  height: 100%;
+  /* 设置 textarea 高度为父元素高度 */
   white-space: pre-wrap;
   word-wrap: break-word;
   word-break: break-all;
@@ -49,11 +45,25 @@ html {
   padding: 2px;
 }
 
-.log-info { color: lightblue; }
-.log-warning { color: #D2BB85; }
-.log-error { color: #E58C77; }
-.log-debug { color: rgb(13, 85, 13); }
-.log-success { color: #6FC3AE; }
+.log-info {
+  color: lightblue;
+}
+
+.log-warning {
+  color: #D2BB85;
+}
+
+.log-error {
+  color: #E58C77;
+}
+
+.log-debug {
+  color: rgb(13, 85, 13);
+}
+
+.log-success {
+  color: #6FC3AE;
+}
 
 .my-header {
   display: flex;
@@ -80,7 +90,7 @@ html {
 }
 
 .console-log {
-  height: 25px; 
+  height: 25px;
   background-color: #F2F3F5;
   position: absolute;
   width: calc(100% - 64px);
@@ -88,8 +98,8 @@ html {
 }
 
 .console-log div {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   height: 100%;
   flex-direction: row;
   justify-content: space-between;
@@ -117,12 +127,36 @@ html {
 }
 
 .iframe {
-  width:100%; 
-  height:100%; border:none;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 /* 设置align-right的元素内容右对齐 */
-.align-right .el-form-item__content{
+.align-right .el-form-item__content {
   display: flex;
   justify-content: flex-end;
+}
+
+.right-click {
+  border: 0cap;
+
+  .el-menu-item {
+    font-size: 13px;
+    height: 30px;
+  }
+
+  .el-menu-item.is-active::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    /*  色块的宽度 */
+    height: 100%;
+    background-color: #fff;
+    /*  色块的颜色 */
+    border-radius: 0 3px 3px 0;
+    /* 轨道的形状 */
+  }
 }

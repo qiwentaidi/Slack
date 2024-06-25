@@ -8,122 +8,163 @@ export interface TableTabs {
 }
 
 export interface URLFingerMap {
-    url: string,
-    finger: string[]
+    url: string;
+    finger: string[];
 }
 
 export interface PortScanData {
-    IP: string
-    Port: number
-    Server: string
-    Link: string
-    HttpTitle: string
+    IP: string;
+    Port: number;
+    Server: string;
+    Link: string;
+    HttpTitle: string;
 }
 
 export interface Vulnerability {
-    vulID: string
-    vulName: string
-    protocoltype: string
-    severity: string
-    vulURL: string
-    request: string
-    response: string
-    extInfo: string
-    reference: string
-    description: string
+    vulID: string;
+    vulName: string;
+    protocoltype: string;
+    severity: string;
+    vulURL: string;
+    request: string;
+    response: string;
+    extInfo: string;
+    reference: string;
+    description: string;
 }
 
 export interface FingerprintTable {
-    url: string
-    status: string
-    length: string
-    title: string
-    detect: string
-    existsWaf: boolean
-    waf: string
-    fingerprint: FingerLevel[]
+    url: string;
+    status: string;
+    length: string;
+    title: string;
+    detect: string;
+    existsWaf: boolean;
+    waf: string;
+    fingerprint: FingerLevel[];
 }
 
-
 export interface FingerLevel {
-    name: string
-    level: number // level 0 is default , level 1 is high risk
+    name: string;
+    level: number; // level 0 is default , level 1 is high risk
 }
 
 export interface Dir {
-    Status: number
-    URL: string
-    Location: string
-    Length: number
+    Status: number;
+    URL: string;
+    Location: string;
+    Length: number;
 }
 
 export interface DirScanOptions {
-    Method: string
-    URL: string
-    Paths: string[]
-    Workers: number
-    Timeout: number
-    BodyExclude: string
-    BodyLengthExcludeTimes: number
-    StatusCodeExclude: number[]
-    FailedCounts: number
-    Redirect: boolean
-    Interval: number
-    CustomHeader: string
+    Method: string;
+    URL: string;
+    Paths: string[];
+    Workers: number;
+    Timeout: number;
+    BodyExclude: string;
+    BodyLengthExcludeTimes: number;
+    StatusCodeExclude: number[];
+    FailedCounts: number;
+    Redirect: boolean;
+    Interval: number;
+    CustomHeader: string;
 }
 
 export interface ProxyOptions {
-    Enabled: boolean
-	Mode:     string
-	Address:  string
-	Port:     number
-	Username: string
-	Password: string
+    Enabled: boolean;
+    Mode: string;
+    Address: string;
+    Port: number;
+    Username: string;
+    Password: string;
 }
 
 export interface FofaResult {
-    Error?: boolean
-	Message?: string
-	Size?:    number
-	Results?: Results[]
+    Error?: boolean;
+    Message?: string;
+    Size?: number;
+    Results?: Results[];
 }
 
 export interface Results {
-    URL:      string
-	Host:     string
-	Title:    string
-	IP:       string
-	Port:     string
-	Domain:   string
-	Protocol: string
-	Region:   string
-	ICP:      string
+    URL: string;
+    Host: string;
+    Title: string;
+    IP: string;
+    Port: string;
+    Domain: string;
+    Protocol: string;
+    Region: string;
+    ICP: string;
 }
 
 export interface LocalOpitons {
-    Name: string
-    Children: Child[] | null
+    Name: string;
+    Children: Child[] | null;
 }
 
 export interface Child {
-    Name: string
-    Type: string
-    Path: string
+    Name: string;
+    Type: string;
+    Path: string;
 }
 
 export interface File {
-    Error?: boolean
-    Message?: string
-    Content?: string
+    Error?: boolean;
+    Message?: string;
+    Content?: string;
 }
 
 export interface HunterEntryTips {
-    value: string
-    assetNum: number
-    tags: string[]
+    value: string;
+    assetNum: number;
+    tags: string[];
 }
 
 export interface RuleForm {
-    name?: string
-    desc?: string
+    name?: string;
+    desc?: string;
+}
+
+export interface CompanyInfo {
+    CompanyName: string;
+    Holding: string;
+    Investment: string;
+    Domains: string[];
+}
+
+export interface QuakeResult {
+    Code?: number; // 响应状态信息，正常是0
+    Message?: string; // 提示信息
+    Data?: QuakeData[];
+    Total?: number;
+    Credit?: number; // 剩余积分
+}
+
+export interface QuakeData {
+    Components: string[];
+    Port: number;
+    Protocol: string; // 协议类型
+    Host: string;
+    Title: string;
+    CertCompany: string; // 证书申请单位
+    CertDomain: string; // 证书域名
+    IP: string;
+    Isp: string;
+    Position: string;
+}
+
+export interface QuakeEntryTips {
+    Code?: number;
+    Message?: string;
+    Data?: QuakeTipsData[];
+    Meta?: null;
+}
+
+export interface QuakeTipsData {
+    Product_name: string;
+    Vul_count: number;
+    Vendor_name: string;
+    Ip_count: number;
 }

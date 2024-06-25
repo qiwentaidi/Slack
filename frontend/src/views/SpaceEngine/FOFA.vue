@@ -326,8 +326,8 @@ async function CopyDeduplicationURL() {
     </el-form>
     <div class="my-header" style="margin-bottom: 10px;">
         <div>
-            <el-checkbox size="large" v-model="form.fraud">排除干扰(专业版)</el-checkbox>
-            <el-checkbox size="large" v-model="form.cert">证书(个人版)</el-checkbox>
+            <el-checkbox v-model="form.fraud">排除干扰(专业版)</el-checkbox>
+            <el-checkbox v-model="form.cert">证书(个人版)</el-checkbox>
         </div>
         <el-link @click="form.syntaxdialog = true"><el-icon>
                 <ChatLineRound />

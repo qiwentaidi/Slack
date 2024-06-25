@@ -280,29 +280,29 @@ type HunterSearch struct {
 }
 
 // mode = 0 campanyName, mode = 1 domain or ip
-func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
-	if mode == 0 {
-		str := fmt.Sprintf("icp.name=\"%v\"", target)
-		t, i := space.SearchTotal(api, str)
-		return HunterSearch{
-			Total: fmt.Sprint(t),
-			Info:  i,
-		}
-	} else {
-		var str string
-		// 处理网站域名是IP的情况
-		if util.RegIP.MatchString(target) {
-			str = fmt.Sprintf("ip=\"%v\"", target)
-		} else {
-			str = fmt.Sprintf("domain.suffix=\"%v\"", target)
-		}
-		t, i := space.SearchTotal(api, str)
-		return HunterSearch{
-			Total: fmt.Sprint(t),
-			Info:  i,
-		}
-	}
-}
+// func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
+// 	if mode == 0 {
+// 		str := fmt.Sprintf("icp.name=\"%v\"", target)
+// 		t, i := space.SearchTotal(api, str)
+// 		return HunterSearch{
+// 			Total: fmt.Sprint(t),
+// 			Info:  i,
+// 		}
+// 	} else {
+// 		var str string
+// 		// 处理网站域名是IP的情况
+// 		if util.RegIP.MatchString(target) {
+// 			str = fmt.Sprintf("ip=\"%v\"", target)
+// 		} else {
+// 			str = fmt.Sprintf("domain.suffix=\"%v\"", target)
+// 		}
+// 		t, i := space.SearchTotal(api, str)
+// 		return HunterSearch{
+// 			Total: fmt.Sprint(t),
+// 			Info:  i,
+// 		}
+// 	}
+// }
 
 // dirsearch
 
@@ -523,6 +523,27 @@ func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, d
 	return hr
 }
 
+// quake
+
+func (a *App) QuakeTips(query string) *space.QuakeTipsResult {
+	return space.SearchQuakeTips(query)
+}
+
+func (a *App) QuakeSearch(query string, pageNum, pageSize int, latest, invalid, honeypot, cdn bool, token string) *space.QuakeResult {
+	qk := space.QuakeApiSearch(&space.QuakeRequestOptions{
+		Query:    query,
+		PageNum:  pageNum,
+		PageSize: pageSize,
+		Latest:   latest,
+		Invalid:  invalid,
+		Honeypot: honeypot,
+		CDN:      cdn,
+		Token:    token,
+	})
+	time.Sleep(time.Second * 1)
+	return qk
+}
+
 func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
 	jsLinks := jsfind.ExtractJS(a.ctx, target)
 	var wg sync.WaitGroup
@@ -563,16 +584,25 @@ func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
 	return fs
 }
 
-func (a *App) WebIconMd5(target string) string {
-	if _, err := url.Parse(target); err != nil {
-		return ""
-	}
-	_, body, err := clients.NewSimpleGetRequest(target, clients.DefaultClient())
-	if err != nil {
-		return ""
-	}
+// 允许目标传入文件或者目标favicon地址
+func (a *App) FaviconMd5(target string) string {
 	hasher := md5.New()
-	hasher.Write(body)
+	if _, err := os.Stat(target); err != nil {
+		if _, err := url.Parse(target); err != nil {
+			return ""
+		}
+		_, body, err := clients.NewSimpleGetRequest(target, clients.DefaultClient())
+		if err != nil {
+			return ""
+		}
+		hasher.Write(body)
+	} else {
+		content, err := os.ReadFile(target)
+		if err != nil {
+			return ""
+		}
+		hasher.Write(content)
+	}
 	sum := hasher.Sum(nil)
 	return hex.EncodeToString(sum)
 }

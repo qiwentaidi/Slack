@@ -8,8 +8,6 @@ import {jsfind} from '../models';
 
 export function ActiveFingerScan(arg1:Array<string>,arg2:clients.Proxy):Promise<void>;
 
-export function AssetHunter(arg1:number,arg2:string,arg3:string):Promise<main.HunterSearch>;
-
 export function Callgologger(arg1:string,arg2:string):Promise<void>;
 
 export function CheckCdn(arg1:string):Promise<string>;
@@ -25,6 +23,8 @@ export function DomainInfo(arg1:string):Promise<string>;
 export function DownloadCyberChef(arg1:string):Promise<void>;
 
 export function ExtractIP(arg1:string):Promise<string>;
+
+export function FaviconMd5(arg1:string):Promise<string>;
 
 export function FingerLength():Promise<number>;
 
@@ -78,6 +78,10 @@ export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Pro
 
 export function PortParse(arg1:string):Promise<Array<number>>;
 
+export function QuakeSearch(arg1:string,arg2:number,arg3:number,arg4:boolean,arg5:boolean,arg6:boolean,arg7:boolean,arg8:string):Promise<space.QuakeResult>;
+
+export function QuakeTips(arg1:string):Promise<space.QuakeTipsResult>;
+
 export function Sock5Connect(arg1:string,arg2:number,arg3:number,arg4:string,arg5:string):Promise<boolean>;
 
 export function StopDirScan():Promise<void>;
@@ -93,8 +97,6 @@ export function System(arg1:string,arg2:number):Promise<Array<any>>;
 export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string,arg8:Array<string>):Promise<Array<string>>;
 
 export function UseDruid(arg1:string,arg2:number,arg3:clients.Proxy):Promise<Array<string>>;
-
-export function WebIconMd5(arg1:string):Promise<string>;
 
 export function WebPocLength():Promise<number>;
 

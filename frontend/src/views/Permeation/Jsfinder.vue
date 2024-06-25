@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { CopyALL, formatURL } from '../../util';
+import { Copy, CopyALL, formatURL } from '../../util';
 import { JSFind } from '../../../wailsjs/go/main/App';
-import { QuestionFilled, Search } from '@element-plus/icons-vue';
+import { QuestionFilled, Search, CopyDocument } from '@element-plus/icons-vue';
 import async from 'async';
 import global from "../../global";
 import { ElNotification, ElMessage } from 'element-plus';
-import ContextMenu from '../../components/ContextMenu.vue';
 const config = reactive({
   urls: "",
   loading: false,
@@ -35,25 +34,23 @@ var dashboardItems = [
     icon: 'WarningFilled',
     tagType: ref(global.jsfind.defaultType[3]),
     data: ref([] as LinkSource[]),
-    children: [
-      {
-        title: '手机号',
-        icon: 'WarningFilled',
-        tagType: ref(global.jsfind.defaultType[1]),
-        data: ref([] as LinkSource[]),
-      },
-      {
-        title: '身份证',
-        icon: 'WarningFilled',
-        tagType: ref(global.jsfind.defaultType[2]),
-        data: ref([] as LinkSource[]),
-      },
-    ]
   },
   {
     title: 'API接口',
     icon: 'SuccessFilled',
     tagType: ref(global.jsfind.defaultType[4]),
+    data: ref([] as LinkSource[]),
+  },
+  {
+    title: '手机号',
+    icon: 'WarningFilled',
+    tagType: ref(global.jsfind.defaultType[1]),
+    data: ref([] as LinkSource[]),
+  },
+  {
+    title: '身份证',
+    icon: 'WarningFilled',
+    tagType: ref(global.jsfind.defaultType[2]),
     data: ref([] as LinkSource[]),
   },
   {
@@ -94,9 +91,9 @@ async function JSFinder() {
       dashboardItems[0].data.value = result.JS
       dashboardItems[2].data.value = result.APIRoute
       dashboardItems[1].data.value = result.SensitiveField
-      dashboardItems[1].children![0].data.value = result.ChinesePhone
-      dashboardItems[1].children![1].data.value = result.ChineseIDCard
-      dashboardItems[3].data.value = result.IP_URL
+      dashboardItems[3].data.value = result.ChinesePhone
+      dashboardItems[4].data.value = result.ChineseIDCard
+      dashboardItems[5].data.value = result.IP_URL
       if (config.otherURL) {
         async.eachLimit(result.IP_URL, 10, (url2: string) => {
           for (const whitedomain of global.jsfind.whiteList.split("\n")) {
@@ -105,9 +102,9 @@ async function JSFinder() {
                 dashboardItems[0].data.value.push(result.JS)
                 dashboardItems[2].data.value.push(result.APIRoute)
                 dashboardItems[1].data.value.push(result.SensitiveField)
-                dashboardItems[1].children![0].data.value.push(result.ChinesePhone)
-                dashboardItems[1].children![1].data.value.push(result.ChineseIDCard)
-                dashboardItems[3].data.value.push(result.IP_URL)
+                dashboardItems[3].data.value.push(result.ChinesePhone)
+                dashboardItems[4].data.value.push(result.ChineseIDCard)
+                dashboardItems[5].data.value.push(result.IP_URL)
               })
             }
           }
@@ -158,22 +155,24 @@ function changeType(item: dashboardItem) {
 <template>
   <el-form label-width="auto">
     <el-form-item>
-      <template #label>URL地址:
-        <el-tooltip placement="right-end">
-          <template #content>
-            爬取流程:<br />
-            1、对目标进行JS提取<br />
-            2、再将JS路径进行拼接访问<br />
-            3、提取JS中的敏感数据<br />
-            4、若开启URL爬取则会对获取到的URL进行1、2、3步重复
-          </template>
-          <el-icon>
-            <QuestionFilled size="24" />
-          </el-icon>
-        </el-tooltip>
-      </template>
       <div class="head">
-        <el-input v-model="config.urls" style="margin-right: 5px;"></el-input>
+        <el-input v-model="config.urls" style="margin-right: 5px;">
+          <template #prepend>
+            URL地址:
+            <el-tooltip placement="right-end">
+              <template #content>
+                爬取流程:<br />
+                1、对目标进行JS提取<br />
+                2、再将JS路径进行拼接访问<br />
+                3、提取JS中的敏感数据<br />
+                4、若开启URL爬取则会对获取到的URL进行1、2、3步重复
+              </template>
+              <el-icon>
+                <QuestionFilled size="24" />
+              </el-icon>
+            </el-tooltip>
+          </template>
+        </el-input>
         <el-button type="primary" :icon="Search" @click="JSFinder" v-if="!config.loading">开始检测</el-button>
         <el-button type="primary" loading v-else>正在检测</el-button>
         <el-button color="rgb(194, 194, 196)" style="margin-left: 5px" @click="config.drawer = true">参数设置</el-button>
@@ -201,27 +200,25 @@ function changeType(item: dashboardItem) {
             <template #reference>
               <el-tag :type="item.tagType.value">{{ ls.Filed }}</el-tag>
             </template>
-            <template #default>
-              <ContextMenu :data="ls" />
-            </template>
+            <el-menu class="right-click">
+              <el-menu-item index="copy" @click="Copy(ls.Filed)">
+                <el-icon>
+                  <CopyDocument />
+                </el-icon>
+                复制</el-menu-item>
+              <el-menu-item index="copy-source" @click="Copy(ls.Source)">
+                <el-icon>
+                  <CopyDocument />
+                </el-icon>
+                复制来源</el-menu-item>
+            </el-menu>
           </el-popover>
-          <div class="tag-container" style="margin-top: 0;" v-if="item.children && item.children.length > 0"
-            v-for="(child, index) in item.children" :key="index">
-            <el-popover placement="right-end" trigger="contextmenu" v-for="ls in child.data.value">
-              <template #reference>
-                <el-tag :type="child.tagType.value">{{ ls.Filed }}</el-tag>
-              </template>
-              <template #default>
-                <ContextMenu :data="ls" />
-              </template>
-            </el-popover>
-          </div>
         </div>
       </div>
     </el-scrollbar>
   </el-card>
   <!-- adv -->
-  <el-drawer v-model="config.drawer" size="56%">
+  <el-drawer v-model="config.drawer" size="53%">
     <template #header>
       <h3>设置高级参数</h3>
     </template>
@@ -245,26 +242,17 @@ function changeType(item: dashboardItem) {
         <el-input v-model="global.jsfind.whiteList" type="textarea" rows="5"></el-input>
       </el-form-item>
       <el-form-item label="标记颜色:">
-        <div>
-          <el-descriptions :column="1" border>
-            <div v-for="(item, index) in dashboardItems" :key="index">
-              <el-descriptions-item :label="item.title">
-                <div class="flex-box" style="gap: 8px">
-                  <el-segmented v-model="item.tagType.value" :options="typeOptions" @click="changeType(item)" />
-                  <el-tag :type="item.tagType.value" size="large">example</el-tag>
-                </div>
-              </el-descriptions-item>
-              <el-descriptions-item v-if="item.children && item.children.length > 0" v-for="item2 in item.children"
-                :label="item2.title" @click="changeType(item2)">
-                <div class="flex-box" style="gap: 8px">
-                  <el-segmented v-model="item2.tagType.value" :options="typeOptions" />
-                  <el-tag :type="item2.tagType.value" size="large">example</el-tag>
-                </div>
-              </el-descriptions-item>
+        <el-descriptions :column="1" border style="width: 100%;">
+          <el-descriptions-item v-for="(item, index) in dashboardItems" :key="index" :label="item.title">
+            <div class="flex-box" style="gap: 8px;">
+              <el-segmented v-model="item.tagType.value" :options="typeOptions" @click="changeType(item)" />
+              <el-tag :type="item.tagType.value" size="large">example</el-tag>
             </div>
-          </el-descriptions>
-          <el-button type="primary" @click="saveConfig" style="float: right; margin-top: 10px;">保存</el-button>
-        </div>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-form-item>
+      <el-form-item class="align-right">
+        <el-button type="primary" @click="saveConfig">保存</el-button>
       </el-form-item>
     </el-form>
   </el-drawer>
@@ -283,9 +271,5 @@ function changeType(item: dashboardItem) {
   /* This allows the tags to wrap to a new line */
   gap: 8px;
   /* Adjust the gap between tags as needed */
-}
-
-.el-popper.is-light.el-popover {
-  padding: 8px;
 }
 </style>

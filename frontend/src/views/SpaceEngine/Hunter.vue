@@ -7,7 +7,7 @@ import { ApiSyntaxCheck, splitInt, Copy } from '../../util'
 import { TableTabs, HunterEntryTips, RuleForm } from "../../interface"
 import global from "../../global"
 import {
-    WebIconMd5,
+    FaviconMd5,
     HunterSearch,
     HunterTips,
 } from '../../../wailsjs/go/main/App'
@@ -168,12 +168,12 @@ const entry = ({
     handleSelect: (item: Record<string, any>) => {
         form.query = `app.name="${item.value}"`
     },
-    addSyntax: function (content: string) {
+    rowClick: function (row: any, column: any, event: Event) {
         if (form.query == "") {
-            form.query = content
-        } else {
-            form.query += " && " + content
+            form.query = row.syntax
+            return
         }
+        form.query += " && " + row.syntax
     },
 })
 
@@ -368,7 +368,7 @@ const tableCtrl = ({
             showCancelButton: false,
         })
             .then(async ({ value }) => {
-                let hash = await WebIconMd5(value.trim())
+                let hash = await FaviconMd5(value.trim())
                 if (hash == "") {
                     ElNotification({
                         message: "目标不可达或者URL格式错误",
@@ -449,95 +449,82 @@ async function CopyURL(mode: number) {
 <template>
     <el-form v-model="form" @submit.native.prevent="tableCtrl.addTab(form.query)">
         <el-form-item>
-            <div class="head">
-                <el-autocomplete v-model="form.query" placeholder="Search..."
-                    :fetch-suggestions="entry.querySearchAsync" @select="entry.handleSelect" :trigger-on-focus="false"
-                    :debounce="1000" style="width: 100%;">
-                    <template #prepend>
-                        查询条件
-                    </template>
-                    <template #suffix>
-                        <el-space :size="2">
-                            <el-popover placement="bottom-end" :width="550" trigger="click">
-                                <template #reference>
-                                    <div>
-                                        <el-tooltip content="常用关键词搜索" placement="bottom">
-                                            <el-button :icon="CollectionTag" link />
-                                        </el-tooltip>
-                                    </div>
-                                </template>
-                                <el-table :data="options.Data">
-                                    <el-table-column width="300" property="syntax">
-                                        <template #default="scope">
-                                            <el-link @click="entry.addSyntax(scope.row.syntax)">{{ scope.row.syntax
-                                                }}</el-link>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column property="description" />
-                                </el-table>
-                            </el-popover>
-                            <el-tooltip content="使用网页图标搜索" placement="bottom">
-                                <el-button :icon="PictureRounded" link @click="tableCtrl.IconSearch" />
-                            </el-tooltip>
-                        </el-space>
+            <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
+                @select="entry.handleSelect" :trigger-on-focus="false" :debounce="1000" style="width: 100%;">
+                <template #prepend>
+                    查询条件
+                </template>
+                <template #suffix>
+                    <el-space :size="2">
+                        <el-popover placement="bottom-end" :width="550" trigger="click">
+                            <template #reference>
+                                <div>
+                                    <el-tooltip content="常用关键词搜索" placement="bottom">
+                                        <el-button :icon="CollectionTag" link />
+                                    </el-tooltip>
+                                </div>
+                            </template>
+                            <el-table :data="options.Data" @row-click="entry.rowClick" class="hunter-keyword-search">
+                                <el-table-column width="300" property="syntax" />
+                                <el-table-column property="description" />
+                            </el-table>
+                        </el-popover>
+                        <el-tooltip content="使用网页图标搜索" placement="bottom">
+                            <el-button :icon="PictureRounded" link @click="tableCtrl.IconSearch" />
+                        </el-tooltip>
+                    </el-space>
+                    <el-divider direction="vertical" />
+                    <el-space :size="2">
+                        <el-tooltip content="清空语法" placement="bottom">
+                            <el-button :icon="Delete" link @click="form.query = ''" />
+                        </el-tooltip>
+                        <el-tooltip content="收藏语法" placement="bottom">
+                            <el-button :icon="Star" link @click="syntax.createStarDialog" />
+                        </el-tooltip>
+                        <el-tooltip content="复制语法" placement="bottom">
+                            <el-button :icon="CopyDocument" link @click="Copy(form.query)" />
+                        </el-tooltip>
                         <el-divider direction="vertical" />
-                        <el-space :size="2">
-                            <el-tooltip content="清空语法" placement="bottom">
-                                <el-button :icon="Delete" link @click="form.query = ''" />
-                            </el-tooltip>
-                            <el-tooltip content="收藏语法" placement="bottom">
-                                <el-button :icon="Star" link @click="syntax.createStarDialog" />
-                            </el-tooltip>
-                            <el-tooltip content="复制语法" placement="bottom">
-                                <el-button :icon="CopyDocument" link @click="Copy(form.query)" />
-                            </el-tooltip>
-                            <el-divider direction="vertical" />
-                        </el-space>
-                        <el-button link :icon="Search" @click="tableCtrl.addTab(form.query)"
-                            style="height: 40px;">查询</el-button>
-                    </template>
-                    <template #append>
-                        <el-space :size="25">
-                            <el-popover placement="bottom-end" :width="550" trigger="click">
-                                <template #reference>
-                                    <div>
-                                        <el-tooltip content="我收藏的语法" placement="left">
-                                            <el-button :icon="Present" @click="syntax.searchStarSyntax" />
-                                        </el-tooltip>
-                                    </div>
-                                </template>
-                                <el-table :data="form.syntaxData">
-                                    <el-table-column width="150" prop="Name" label="语法名称" />
-                                    <el-table-column prop="Content" label="语法内容">
-                                        <template #default="scope">
-                                            <el-link @click="entry.addSyntax(scope.row.Content)">{{ scope.row.Content
-                                                }}</el-link>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="操作" width="100">
-                                        <template #default="scope">
-                                            <el-button type="text"
-                                                @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
-                                            </el-button>
-                                        </template>
-                                    </el-table-column>
-                                </el-table>
-                            </el-popover>
+                    </el-space>
+                    <el-button link :icon="Search" @click="tableCtrl.addTab(form.query)"
+                        style="height: 40px;">查询</el-button>
+                </template>
+                <template #append>
+                    <el-space :size="25">
+                        <el-popover placement="bottom-end" :width="550" trigger="click">
+                            <template #reference>
+                                <div>
+                                    <el-tooltip content="我收藏的语法" placement="left">
+                                        <el-button :icon="Present" @click="syntax.searchStarSyntax" />
+                                    </el-tooltip>
+                                </div>
+                            </template>
+                            <el-table :data="form.syntaxData" @row-click="entry.rowClick" class="hunter-keyword-search">
+                                <el-table-column width="150" prop="Name" label="语法名称" />
+                                <el-table-column prop="Content" label="语法内容" />
+                                <el-table-column label="操作" width="100">
+                                    <template #default="scope">
+                                        <el-button type="text"
+                                            @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-popover>
 
-                            <el-tooltip content="查询语法" placement="left">
-                                <el-button :icon="ChatLineRound" @click="syntax.searchDialog.value = true" />
-                            </el-tooltip>
-                        </el-space>
-                    </template>
-                    <template #default="{ item }">
-                        <el-space>
-                            <span>{{ item.value }}</span>
-                            <span>({{ item.assetNum }} 条数据)</span>
-                            <el-tag v-for="label in item.tags">{{ label }}</el-tag>
-                        </el-space>
-                    </template>
-                </el-autocomplete>
-            </div>
+                        <el-tooltip content="查询语法" placement="left">
+                            <el-button :icon="ChatLineRound" @click="syntax.searchDialog.value = true" />
+                        </el-tooltip>
+                    </el-space>
+                </template>
+                <template #default="{ item }">
+                    <el-space>
+                        <span>{{ item.value }}</span>
+                        <span>({{ item.assetNum }} 条数据)</span>
+                        <el-tag v-for="label in item.tags">{{ label }}</el-tag>
+                    </el-space>
+                </template>
+            </el-autocomplete>
         </el-form-item>
     </el-form>
     <div class="my-header">
@@ -590,17 +577,17 @@ async function CopyURL(mode: number) {
                     <template #default="scope">
                         <el-space>
                             <el-tag v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">{{
-        scope.row.Component[0].name + scope.row.Component[0].version }}</el-tag>
+                                scope.row.Component[0].name + scope.row.Component[0].version }}</el-tag>
                             <el-popover placement="bottom" :width="350" trigger="hover">
                                 <template #reference>
                                     <el-button round size="small"
                                         v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">共{{
-        scope.row.Component.length }}条</el-button>
+                                        scope.row.Component.length }}条</el-button>
                                 </template>
                                 <template #default>
                                     <div style="display: flex; flex-direction: column;">
                                         <el-tag v-for="component in scope.row.Component">{{ component.name +
-        component.version }}</el-tag>
+                                            component.version }}</el-tag>
                                     </div>
                                 </template>
                             </el-popover>
@@ -667,5 +654,17 @@ async function CopyURL(mode: number) {
 
 .el-tabs__nav {
     line-height: 255%;
+}
+
+.hunter-keyword-search {
+    .el-table__header-wrapper {
+        height: 0;
+    }
+
+    .el-table__row:hover {
+        background-color: #f5f5f5 !important;
+        color: #4874ED;
+        cursor: pointer;
+    }
 }
 </style>
