@@ -4,7 +4,7 @@ import global from "./global";
 import { compareVersion, sleep } from './util';
 import router from "./router";
 import { File } from "./interface";
-import { CreateHunterSyntaxTable } from '../wailsjs/go/main/Database';
+import { CreateHunterSyntaxTable, CreateQuakeSyntaxTable } from '../wailsjs/go/main/Database';
 
 function catchError(result: boolean, loading: any) {
   if (result) {
@@ -53,8 +53,13 @@ export async function InitConfigFile(timeout: number) {
 
 async function checkDatabase() {
   let result = await CreateHunterSyntaxTable()
+
   if (!result) {
     console.log("create hunter_syntax table error")
+  }
+  result = await CreateQuakeSyntaxTable()
+  if (!result) {
+    console.log("create quake_syntax table error")
   }
 }
 

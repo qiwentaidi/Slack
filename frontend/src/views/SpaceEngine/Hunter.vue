@@ -131,7 +131,6 @@ const syntax = ({
 
 const form = reactive({
     query: '',
-    hunterImg: 'hunter_syntax.png',
     defaultTime: '0',
     defaultSever: '3',
     deduplication: false,
@@ -143,27 +142,26 @@ const form = reactive({
 })
 
 const entry = ({
-    querySearchAsync: (queryString: string, cb: any) => {
-        if (queryString.includes("=") || queryString == "" || form.loadAll.length === 0) {
+    querySearchAsync: (queryString: string, cb: Function) => {
+        if (queryString.includes("=") || queryString == "") {
             cb(form.loadAll);
             return
         }
         entry.getTips(queryString)
         cb(form.loadAll);
     },
-    getTips: function (queryString: string) {
-        HunterTips(queryString).then(result => {
-            form.loadAll = []
-            if (result.code == 200) {
-                for (const item of result.data.app) {
-                    form.loadAll.push({
-                        value: item.name,
-                        assetNum: item.asset_num,
-                        tags: item.tags
-                    })
-                }
+    getTips: async function (queryString: string) {
+        let result = await HunterTips(queryString)
+        form.loadAll = []
+        if (result.code == 200) {
+            for (const item of result.data.app) {
+                form.loadAll.push({
+                    value: item.name,
+                    assetNum: item.asset_num,
+                    tags: item.tags
+                })
             }
-        })
+        }
     },
     handleSelect: (item: Record<string, any>) => {
         form.query = `app.name="${item.value}"`
@@ -450,7 +448,7 @@ async function CopyURL(mode: number) {
     <el-form v-model="form" @submit.native.prevent="tableCtrl.addTab(form.query)">
         <el-form-item>
             <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                @select="entry.handleSelect" :trigger-on-focus="false" :debounce="1000" style="width: 100%;">
+                @select="entry.handleSelect" :debounce="1000" style="width: 100%;">
                 <template #prepend>
                     查询条件
                 </template>
@@ -582,7 +580,7 @@ async function CopyURL(mode: number) {
                                 <template #reference>
                                     <el-button round size="small"
                                         v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">共{{
-                                        scope.row.Component.length }}条</el-button>
+                                            scope.row.Component.length }}条</el-button>
                                 </template>
                                 <template #default>
                                     <div style="display: flex; flex-direction: column;">
@@ -612,7 +610,7 @@ async function CopyURL(mode: number) {
     </el-tabs>
     <el-dialog v-model="syntax.searchDialog.value" title="查询语法" width="80%" center>
         <el-scrollbar height="400px">
-            <el-image :src="form.hunterImg"></el-image>
+            <el-image src="/hunter_syntax.png"></el-image>
         </el-scrollbar>
     </el-dialog>
     <el-dialog v-model="syntax.starDialog.value" title="收藏语法" width="40%" center>

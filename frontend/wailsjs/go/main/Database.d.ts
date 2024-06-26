@@ -6,6 +6,8 @@ export function Check():Promise<boolean>;
 
 export function CreateHunterSyntaxTable():Promise<boolean>;
 
+export function CreateQuakeSyntaxTable():Promise<boolean>;
+
 export function CreateTable():Promise<boolean>;
 
 export function DeleteAgentPoolField(arg1:string):Promise<boolean>;
@@ -14,10 +16,16 @@ export function DeleteAllField(arg1:string):Promise<boolean>;
 
 export function DeleteHunterSyntax(arg1:string,arg2:string):Promise<boolean>;
 
+export function DeleteQuakeSyntax(arg1:string,arg2:string):Promise<boolean>;
+
 export function InsertAgentPool(arg1:string):Promise<boolean>;
 
 export function InsertHunterSyntax(arg1:string,arg2:string):Promise<boolean>;
 
+export function InsertQuakeSyntax(arg1:string,arg2:string):Promise<boolean>;
+
 export function SearchAgentPool():Promise<Array<string>>;
 
-export function SelectAllHunterSyntax():Promise<Array<main.HunterSyntax>>;
+export function SelectAllHunterSyntax():Promise<Array<main.Syntax>>;
+
+export function SelectAllQuakeSyntax():Promise<Array<main.Syntax>>;

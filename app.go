@@ -529,8 +529,9 @@ func (a *App) QuakeTips(query string) *space.QuakeTipsResult {
 	return space.SearchQuakeTips(query)
 }
 
-func (a *App) QuakeSearch(query string, pageNum, pageSize int, latest, invalid, honeypot, cdn bool, token string) *space.QuakeResult {
+func (a *App) QuakeSearch(ipList []string, query string, pageNum, pageSize int, latest, invalid, honeypot, cdn bool, token string) *space.QuakeResult {
 	qk := space.QuakeApiSearch(&space.QuakeRequestOptions{
+		IpList:   ipList,
 		Query:    query,
 		PageNum:  pageNum,
 		PageSize: pageSize,

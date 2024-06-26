@@ -7,6 +7,17 @@ export interface TableTabs {
     currentPage: number;
 }
 
+export interface QuakeTableTabs {
+    title: string;
+    name: string;
+    content: any[];
+    total: number;
+    pageSize: number;
+    currentPage: number;
+    isBatch: boolean;
+    ipList: string[];
+}
+
 export interface URLFingerMap {
     url: string;
     finger: string[];
@@ -155,11 +166,10 @@ export interface QuakeData {
     Position: string;
 }
 
-export interface QuakeEntryTips {
+export interface QuakeTipsResult {
     Code?: number;
     Message?: string;
     Data?: QuakeTipsData[];
-    Meta?: null;
 }
 
 export interface QuakeTipsData {

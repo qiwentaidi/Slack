@@ -1,8 +1,8 @@
 <template>
-    <el-form v-model="quake" @submit.native.prevent="tableCtrl.addTab(quake.query)">
+    <el-form v-model="quake" @submit.native.prevent="tableCtrl.addTab(quake.query, false)">
         <el-form-item>
             <el-autocomplete v-model="quake.query" placeholder="Search..." :fetch-suggestions="syntax.querySearchAsync"
-                @select="syntax.handleSelect" :trigger-on-focus="false" :debounce="2000" style="width: 100%;">
+                @select="syntax.handleSelect" :trigger-on-focus="false" :debounce="1000" style="width: 100%;">
                 <template #prepend>
                     查询条件
                 </template>
@@ -31,9 +31,25 @@
                                 </el-tab-pane>
                             </el-tabs>
                         </el-popover>
-                        <el-tooltip content="使用网页图标搜索" placement="bottom">
-                            <el-button :icon="PictureRounded" link @click="" />
-                        </el-tooltip>
+                        <el-popover placement="bottom-end" :width="400" trigger="click">
+                            <template #reference>
+                                <div>
+                                    <el-tooltip content="使用网页图标搜索" placement="bottom">
+                                        <el-button :icon="PictureRounded" link />
+                                    </el-tooltip>
+                                </div>
+                            </template>
+                            <div class="batch-search">
+                                <el-alert type="info" :closable="false" title="如果上传文件与URL均不为空时优先检测文件" show-icon />
+                                <el-input v-model="quake.iconURL" placeholder="Favicon URL地址"></el-input>
+                                <el-button class="upload" :icon="UploadFilled">上传图片文件</el-button>
+                                <div class="my-header">
+                                    <div></div>
+                                    <el-button color="#4CA87D" :dark="true" class="search"
+                                        @click="tableCtrl.searchFavicon">检索</el-button>
+                                </div>
+                            </div>
+                        </el-popover>
                         <el-popover placement="bottom-end" :width="400" title="IP/域名批量搜索" trigger="click">
                             <template #reference>
                                 <div>
@@ -43,13 +59,14 @@
                                 </div>
                             </template>
                             <div class="batch-search">
-                                <el-alert type="success" :closable="false" title="上传包含IP/域名的.txt文件，数量不超过1000个"
-                                    show-icon />
+                                <el-alert type="info" :closable="false" title="上传包含IP/域名的.txt文件，数量不超过1000个" show-icon />
                                 <el-button class="upload" :icon="UploadFilled">上传文件</el-button>
-                                <el-input type="textarea" rows="5" placeholder="请输入IP/域名，每行一个，多个请换行输入"></el-input>
+                                <el-input v-model="quake.batchIps" type="textarea" rows="5"
+                                    placeholder="请输入IP/域名，每行一个，多个请换行输入"></el-input>
                                 <div class="my-header">
                                     <div></div>
-                                    <el-button color="#4CA87D" :dark="true" class="search">检索</el-button>
+                                    <el-button color="#4CA87D" :dark="true" class="search"
+                                        @click="tableCtrl.addTab(generateRandomString(12), true)">检索</el-button>
                                 </div>
                             </div>
                         </el-popover>
@@ -60,14 +77,14 @@
                             <el-button :icon="Delete" link @click="quake.query = ''" />
                         </el-tooltip>
                         <el-tooltip content="收藏语法" placement="bottom">
-                            <el-button :icon="Star" link @click="" />
+                            <el-button :icon="Star" link @click="syntax.starDialog.value = true" />
                         </el-tooltip>
                         <el-tooltip content="复制语法" placement="bottom">
                             <el-button :icon="CopyDocument" link @click="Copy(quake.query)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                     </el-space>
-                    <el-button link :icon="Search" @click="tableCtrl.addTab(quake.query)"
+                    <el-button link :icon="Search" @click="tableCtrl.addTab(quake.query, false)"
                         style="height: 40px;">查询</el-button>
                 </template>
                 <template #append>
@@ -76,60 +93,64 @@
                             <template #reference>
                                 <div>
                                     <el-tooltip content="我收藏的语法" placement="left">
-                                        <el-button :icon="Present" @click="" />
+                                        <el-button :icon="Present" @click="syntax.searchStarSyntax" />
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <!-- <el-table :data="form.syntaxData">
-                                    <el-table-column width="150" prop="Name" label="语法名称" />
-                                    <el-table-column prop="Content" label="语法内容">
-                                        <template #default="scope">
-                                            <el-link @click="entry.addSyntax(scope.row.Content)">{{ scope.row.Content
-                                                }}</el-link>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="操作" width="100">
-                                        <template #default="scope">
-                                            <el-button type="text"
-                                                @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
-                                            </el-button>
-                                        </template>
-                                    </el-table-column>
-                                </el-table> -->
+                            <el-table :data="quake.syntaxData" @row-click="syntax.rowClick">
+                                <el-table-column width="150" prop="Name" label="语法名称" />
+                                <el-table-column prop="Content" label="语法内容" />
+                                <el-table-column label="操作" width="100">
+                                    <template #default="scope">
+                                        <el-button link style="color: #4CA87D"
+                                            @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
                         </el-popover>
                     </el-space>
                 </template>
                 <template #default="{ item }">
-                    <el-space>
-                        <span>{{ item.product_name }}</span>
-                        <span>{{ item.vendor_name }}</span>
-                        <el-tag type="success">测绘资产数量:{{ item.ip_count }}条</el-tag>
-                        <el-tag type="success">关联漏洞:{{ item.vul_count }}条</el-tag>
-                    </el-space>
+                    <div>
+                        <span>{{ item.Product_name }}</span>
+                        <el-divider direction="vertical" />
+                        <span v-if="item.Vendor_name != ''">{{ item.Vendor_name }}</span>
+                        <span v-else>-</span>
+                        <el-divider direction="vertical" />
+                        <el-button link style="color: #4CA87D;">
+                            测绘资产数量: {{ item.Ip_count }}
+                        </el-button>
+                        <el-divider direction="vertical" />
+                        <el-button link style="color: #F56C6C;">
+                            关联漏洞: {{ item.Vul_count }}
+                        </el-button>
+                    </div>
                 </template>
             </el-autocomplete>
         </el-form-item>
         <el-form-item style="display: flex; align-items: center; width: 100%;">
             <div>
                 <span class="mr">最新数据</span><el-switch v-model="options.switch.latest"
-                    style="--el-switch-on-color: #4CA87D;" />
+                    @change="tableCtrl.handleSizeChange" style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
             <div>
                 <el-tooltip content="开启后，将过滤掉400、401、502等状态码和无法解析的协议/端口数据" placement="bottom">
                     <span class="mr">过滤无效请求</span>
                 </el-tooltip>
-                <el-switch v-model="options.switch.invalid" style="--el-switch-on-color: #4CA87D;" />
+                <el-switch v-model="options.switch.invalid" @change="tableCtrl.handleSizeChange"
+                    style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
             <div>
                 <span class="mr">排除蜜罐</span><el-switch v-model="options.switch.honeypot"
-                    style="--el-switch-on-color: #4CA87D;" />
+                    @change="tableCtrl.handleSizeChange" style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
             <div>
                 <span class="mr">排除CDN</span><el-switch v-model="options.switch.cdn"
-                    style="--el-switch-on-color: #4CA87D;" />
+                    @change="tableCtrl.handleSizeChange" style="--el-switch-on-color: #4CA87D;" />
             </div>
             <div style="flex-grow: 1;"></div>
             <el-dropdown>
@@ -140,14 +161,15 @@
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item>导出Excel</el-dropdown-item>
+                        <el-dropdown-item :icon="Grid" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Grid" @click="exportData(1)">导出全部数据</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
         </el-form-item>
     </el-form>
     <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" closable
-        @tab-remove="tableCtrl.removeTab">
+        @tab-remove="tableCtrl.removeTab" class="quake-tabs">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
@@ -214,23 +236,46 @@
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: #4CA87D;">{{ quake.message }}</span>
-                <el-pagination class="quake-pagin" background v-model:page-size="item.pageSize" :page-sizes="[10, 20, 50, 100]"
-                    layout="total, sizes, prev, pager, next" @size-change="tableCtrl.handleSizeChange"
-                    @current-change="tableCtrl.handleCurrentChange" :total="item.total" />
+                <el-pagination class="quake-pagin" background v-model:page-size="item.pageSize"
+                    :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next"
+                    @size-change="tableCtrl.handleSizeChange" @current-change="tableCtrl.handleCurrentChange"
+                    :total="item.total" />
             </div>
         </el-tab-pane>
         <el-empty v-else></el-empty>
     </el-tabs>
+    <el-dialog v-model="syntax.starDialog.value" title="收藏语法" width="40%" center>
+        <!-- 一定要用:model v-model校验会失效 -->
+        <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="syntax.rules" status-icon>
+            <el-form-item label="语法名称" prop="name">
+                <el-input v-model="syntax.ruleForm.name" maxlength="30" show-word-limit></el-input>
+            </el-form-item>
+            <el-form-item label="语法内容" prop="desc">
+                <el-input v-model="syntax.ruleForm.desc" type="textarea" rows="10" maxlength="1024"
+                    show-word-limit></el-input>
+            </el-form-item>
+            <el-form-item class="align-right">
+                <el-button color="#4CA87D" :dark="true" style="color: #fff;" @click="syntax.submitStar(ruleFormRef)">
+                    确定
+                </el-button>
+                <el-button @click="syntax.starDialog.value = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowDown, CopyDocument, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Present, CollectionTag, ChromeFilled } from '@element-plus/icons-vue';
-import { reactive } from 'vue';
-import { Copy } from '../../util';
-import { QuakeData, QuakeEntryTips, QuakeResult, QuakeTipsData, TableTabs } from '../../interface';
+import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Present, CollectionTag, ChromeFilled } from '@element-plus/icons-vue';
+import { reactive, ref } from 'vue';
+import { Copy, ReadLine, generateRandomString } from '../../util';
+import { ExportToXlsx } from '../../export';
+import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData, RuleForm } from '../../interface';
 import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
-import { QuakeSearch, QuakeTips } from '../../../wailsjs/go/main/App';
+import { FaviconMd5, QuakeSearch, QuakeTips } from '../../../wailsjs/go/main/App';
 import global from '../../global';
+import { ElMessage, FormInstance, FormRules } from 'element-plus';
+import { FileDialog } from '../../../wailsjs/go/main/File';
+import { InsertQuakeSyntax, DeleteQuakeSyntax, SelectAllQuakeSyntax } from '../../../wailsjs/go/main/Database';
 
 const options = ({
     keywordActive: "基本信息",
@@ -316,8 +361,10 @@ const options = ({
     }
 })
 
+const ruleFormRef = ref<FormInstance>()
+
 const syntax = ({
-    querySearchAsync: (queryString: string, cb: any) => {
+    querySearchAsync: (queryString: string, cb: Function) => {
         if (queryString.includes(":") || queryString == "") {
             cb(quake.tips)
             return
@@ -325,18 +372,23 @@ const syntax = ({
         syntax.getTips(queryString)
         cb(quake.tips);
     },
-    getTips: function (queryString: string) {
-        QuakeTips(queryString).then(
-            (result: any) => {
-                if (result.Code != 0) {
-                    return
-                }
-                quake.tips = result.Data
-            }
-        )
+    getTips: async function (queryString: string) {
+        quake.tips = []
+        let result = await QuakeTips(queryString)
+        if (result.code != 0) {
+            return
+        }
+        for (const item of result.data!) {
+            quake.tips.push({
+                Product_name: item.product_name,
+                Vul_count: item.vul_count,
+                Vendor_name: item.vendor_name,
+                Ip_count: item.ip_count,
+            })
+        }
     },
     handleSelect: (item: Record<string, any>) => {
-        quake.query = `app:"${item.value}"`
+        quake.query = `app:"${item.Product_name}"`
     },
     rowClick: function (row: any, column: any, event: Event) {
         if (quake.query == "") {
@@ -344,25 +396,81 @@ const syntax = ({
             return
         }
         quake.query += " AND " + row.key
-    }
+    },
+    starDialog: ref(false),
+    rules: reactive<FormRules<RuleForm>>({
+        name: [
+            { required: true, message: '请输入语法名称', trigger: 'blur' },
+        ],
+        desc: [
+            {
+                required: true,
+                message: '请输入语法内容',
+                trigger: 'blur',
+            },
+        ],
+    }),
+    ruleForm: reactive<RuleForm>({
+        name: '',
+        desc: '',
+    }),
+    createStarDialog: () => {
+        syntax.starDialog.value = true
+        syntax.ruleForm.name = ""
+        syntax.ruleForm.desc = quake.query
+    },
+    submitStar: async (formEl: FormInstance | undefined) => {
+        if (!formEl) return
+        let result = await formEl.validate()
+        if (!result) return
+        InsertQuakeSyntax(syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
+            if (r) {
+                ElMessage.success('添加语法成功')
+            } else {
+                ElMessage.error('添加语法失败')
+            }
+            syntax.starDialog.value = false
+        })
+    },
+    deleteStar: (name: string, content: string) => {
+        DeleteQuakeSyntax(name, content).then((r: Boolean) => {
+            if (r) {
+                ElMessage.success('删除语法成功,重新打开刷新')
+            } else {
+                ElMessage.error('删除语法失败')
+            }
+        })
+    },
+    searchStarSyntax: async () => {
+        quake.syntaxData = await SelectAllQuakeSyntax()
+    },
 })
 
 const quake = reactive({
     query: '',
     message: "",
     tips: [] as QuakeTipsData[],
+    iconURL: "",
+    iconFile: "",
+    batchIps: "",
+    batchFile: "",
+    syntaxData: [] as RuleForm[],
 })
 
 const table = reactive({
     acvtiveNames: "1",
     tabIndex: 1,
-    editableTabs: [] as TableTabs[],
+    editableTabs: [] as QuakeTableTabs[],
     loading: false,
 })
 
 const tableCtrl = ({
-    addTab: async (query: string) => {
+    addTab: async (query: string, isBatch: boolean) => {
         const newTabName = `${++table.tabIndex}`
+        let ipList = [] as string[]
+        if (isBatch) {
+            ipList = await tableCtrl.getIpList()
+        }
         table.editableTabs.push({
             title: query,
             name: newTabName,
@@ -370,9 +478,11 @@ const tableCtrl = ({
             total: 0,
             pageSize: 10,
             currentPage: 1,
+            isBatch: isBatch,
+            ipList: ipList,
         });
         table.loading = true
-        QuakeSearch(query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+        QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
             (result: QuakeResult) => {
                 if (result.Code != 0) {
                     quake.message = result.Message!
@@ -423,7 +533,7 @@ const tableCtrl = ({
         tab.pageSize = val
         tab.currentPage = 1
         table.loading = true
-        QuakeSearch(tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+        QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
             (result: QuakeResult) => {
                 if (result.Code != 0) {
                     quake.message = result.Message!
@@ -451,11 +561,11 @@ const tableCtrl = ({
             }
         )
     },
-    handleCurrentChange: (val: any) => {
+    handleCurrentChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        QuakeSearch(tab.title, tab.currentPage, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+        QuakeSearch(tab.ipList, tab.title, tab.currentPage, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
             (result: QuakeResult) => {
                 if (result.Code != 0) {
                     quake.message = result.Message!
@@ -482,8 +592,79 @@ const tableCtrl = ({
                 table.loading = false
             }
         )
+    },
+    searchFavicon: function () {
+        let t = ""
+        if (quake.iconFile != "" && quake.iconURL != "") {
+            t = quake.batchFile
+        } else if (quake.iconFile != "") {
+            t = quake.batchFile
+        } else if (quake.iconURL != "") {
+            t = quake.iconURL
+        } else {
+            ElMessage.warning("请输入URL或者上传图标")
+            return
+        }
+        FaviconMd5(t).then((result: string) => {
+            tableCtrl.addTab(`favicon:` + result, false)
+        })
+    },
+    // type 0 choose txt , type 1 choose img
+    handleFileupload: async function (type: number) {
+        if (type == 0) {
+            quake.iconFile = await FileDialog("")
+        } else {
+            quake.batchFile = await FileDialog("*.txt")
+            quake.batchIps = (await ReadLine(quake.batchFile))!.join("\n")
+        }
+    },
+    getIpList: async function () {
+        let ips = quake.batchIps.split("\n")
+        if (ips.length > 1000) {
+            ElMessage.warning("最多支持1000个IP")
+            return []
+        }
+        return ips
     }
 })
+
+async function exportData(mode: number) {
+    if (table.editableTabs.length != 0) {
+        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        if (mode == 0) {
+            ExportToXlsx(["IP", "域名", "标题", "端口", "协议", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", tab.content)
+        } else {
+            let temp = [{}]
+            let ipList = await tableCtrl.getIpList()
+            QuakeSearch(ipList, tab.title, 1, tab.total, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+                (result: QuakeResult) => {
+                    if (result.Code != 0) {
+                        quake.message = result.Message!
+                        table.loading = false
+                        return
+                    }
+                    temp.pop()
+                    result.Data?.forEach((item: QuakeData) => {
+                        temp.push({
+                            Host: item.Host,
+                            IP: item.IP,
+                            Port: item.Port,
+                            Protocol: item.Protocol,
+                            CertDomain: item.CertDomain,
+                            Component: item.Components,
+                            Title: item.Title,
+                            CertCompany: item.CertCompany,
+                            ISP: item.Isp,
+                            Position: item.Position,
+                        })
+                    });
+                    ExportToXlsx(["IP", "域名", "标题", "端口", "协议", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", temp)
+                    temp = []
+                }
+            )
+        }
+    }
+}
 </script>
 
 <style scoped>
@@ -501,7 +682,7 @@ const tableCtrl = ({
     display: flex;
     justify-content: center;
     align-items: center;
-}   
+}
 
 .quake :deep(.el-tabs__item:hover) {
     color: #4CA87D;
@@ -570,11 +751,11 @@ const tableCtrl = ({
     line-height: 255%;
 }
 
-.quake :deep(.el-tabs__item.is-activ) {
+.quake-tabs :deep(.el-tabs__item.is-active) {
     color: #4CA87D;
 }
 
-.quake-pagin :deep(.el-pagination.is-background .btn-next.is-active, .el-pagination.is-background .btn-prev.is-active, .el-pagination.is-background .el-pager li.is-active) {
+.quake-pagin :deep(.el-pager li.is-active) {
     background-color: #4CA87D;
 }
 

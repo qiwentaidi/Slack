@@ -231,8 +231,8 @@ export const check = ({
       global.UPDATE.PocStatus = false
       return
     } else {
-       let file:File = await ReadFile(await UserHomeDir() + global.PATH.LocalPocVersionFile)
-       global.UPDATE.LocalPocVersion = file.Content!
+      let file: File = await ReadFile(await UserHomeDir() + global.PATH.LocalPocVersionFile)
+      global.UPDATE.LocalPocVersion = file.Content!
     }
     let resp: any = await GoFetch("GET", download.RemotePocVersion, "", [{}], 10, proxys)
     if (resp.Error == true) {
@@ -242,8 +242,8 @@ export const check = ({
       global.UPDATE.RemotePocVersion = resp.Body!
       if (compareVersion(global.UPDATE.LocalPocVersion, global.UPDATE.RemotePocVersion) == -1) {
         let result: any = GoFetch("GET", download.PocUpdateCentent, "", [{}], 10, proxys)
-          global.UPDATE.PocContent = result.Body
-          global.UPDATE.PocStatus = true
+        global.UPDATE.PocContent = result.Body
+        global.UPDATE.PocStatus = true
       } else {
         global.UPDATE.PocContent = "已是最新版本"
         global.UPDATE.PocStatus = false
@@ -259,9 +259,9 @@ export const check = ({
     } else {
       global.UPDATE.RemoteClientVersion = resp.Body!
       if (compareVersion(global.LOCAL_VERSION, global.UPDATE.RemoteClientVersion) == -1) {
-        let result:any =  GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, proxys)
-          global.UPDATE.ClientContent = result.Body!
-          global.UPDATE.ClientStatus = true
+        let result: any = GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, proxys)
+        global.UPDATE.ClientContent = result.Body!
+        global.UPDATE.ClientStatus = true
       } else {
         global.UPDATE.ClientContent = "已是最新版本"
         global.UPDATE.ClientStatus = false
@@ -278,11 +278,21 @@ export async function sleep(time: number) {
 export function deduplicateUrlFingerMap(urlFingerMap: URLFingerMap[]): URLFingerMap[] {
   const seenUrls = new Set<string>();
   return urlFingerMap.filter(item => {
-      if (seenUrls.has(item.url)) {
-          return false;
-      } else {
-          seenUrls.add(item.url);
-          return true;
-      }
+    if (seenUrls.has(item.url)) {
+      return false;
+    } else {
+      seenUrls.add(item.url);
+      return true;
+    }
   });
+}
+
+export function generateRandomString(length: number) :string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 }

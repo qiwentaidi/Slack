@@ -32,9 +32,9 @@ interface LinkItem {
     value: string
     link: string
 }
-const entry = reactive({
+const entry = ({
     querySearchAsync: (queryString: string, cb: any) => {
-        if (queryString.includes("=") || queryString == "" || form.loadAll.length === 0) {
+        if (queryString.includes("=") || queryString == "") {
             cb(form.loadAll);
             return
         }
@@ -282,8 +282,8 @@ async function CopyDeduplicationURL() {
         <el-form-item>
             <div class="head">
                 <el-autocomplete v-model="form.query" placeholder="Search..."
-                    :fetch-suggestions="entry.querySearchAsync" @select="entry.handleSelect" :trigger-on-focus="false"
-                    :debounce="2000" style="width: 100%;">
+                    :fetch-suggestions="entry.querySearchAsync" @select="entry.handleSelect"
+                    :debounce="1000" style="width: 100%;">
                     <template #prepend>
                         查询条件
                     </template>

@@ -10,8 +10,15 @@ import (
 	"strings"
 )
 
+const (
+	quakeTipsApi   = "https://quake.360.net/api/visitor/search/app"
+	quakeServerApi = "https://quake.360.net/api/v3/search/quake_service"
+	quakeUserApi   = "https://quake.360.net/api/v3/user/info"
+)
+
 type QuakeRequestOptions struct {
 	Query    string
+	IpList   []string // 判断 IpList 是否为空决定是否为批量查询
 	PageNum  int
 	PageSize int
 	Latest   bool
@@ -132,37 +139,28 @@ type QuakeUserInfo struct {
 	} `json:"meta"`
 }
 
-// cdn -> 635fcbaacc57190bd8826d0b
-// honeypot -> 635fcb52cc57190bd8826d09
-// invalid -> 63734bfa9c27d4249ca7261c
 func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 	var startIndex int
-	var shortcuts []string
 	if o.PageNum == 1 {
 		startIndex = 0
 	} else {
 		startIndex = (o.PageNum - 1) * o.PageSize
 	}
-	if o.CDN {
-		shortcuts = append(shortcuts, "635fcbaacc57190bd8826d0b")
-	}
-	if o.Honeypot {
-		shortcuts = append(shortcuts, "635fcb52cc57190bd8826d09")
-	}
-	if o.Invalid {
-		shortcuts = append(shortcuts, "635fcb0acc57190bd8826d0c")
-	}
 	data := make(map[string]interface{})
-	data["query"] = o.Query
+	if len(o.IpList) > 0 {
+		data["ip_list"] = o.IpList
+	} else {
+		data["query"] = o.Query
+	}
 	data["start"] = startIndex
 	data["size"] = o.PageSize
 	data["latest"] = o.Latest
-	data["shortcuts"] = shortcuts
+	data["shortcuts"] = getShortcuts(o)
 	bytesData, _ := json.Marshal(data)
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
 	header.Set("X-QuakeToken", o.Token)
-	_, body, err := clients.NewRequest("POST", "https://quake.360.net/api/v3/search/quake_service", header, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
+	_, body, err := clients.NewRequest("POST", quakeServerApi, header, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
 		return &QuakeResult{}
 	}
@@ -212,7 +210,7 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 func QuakeUserSearch(token string) int {
 	header := http.Header{}
 	header.Set("X-QuakeToken", token)
-	_, body, err := clients.NewRequest("GET", "https://quake.360.net/api/v3/user/info", header, nil, 10, true, clients.DefaultClient())
+	_, body, err := clients.NewRequest("GET", quakeUserApi, header, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		return 0
 	}
@@ -242,10 +240,27 @@ func SearchQuakeTips(query string) *QuakeTipsResult {
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
 	header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.112 Safari/537.36")
-	_, b, err := clients.NewRequest("POST", "https://quake.360.net/api/visitor/search/app", header, strings.NewReader(jsonData), 10, true, clients.DefaultClient())
+	_, b, err := clients.NewRequest("POST", quakeTipsApi, header, strings.NewReader(jsonData), 10, true, clients.DefaultClient())
 	if err != nil {
 		return &qs
 	}
 	json.Unmarshal(b, &qs)
 	return &qs
+}
+
+// cdn -> 635fcbaacc57190bd8826d0b
+// honeypot -> 635fcb52cc57190bd8826d09
+// invalid -> 63734bfa9c27d4249ca7261c
+func getShortcuts(o *QuakeRequestOptions) []string {
+	var shortcuts []string
+	if o.CDN {
+		shortcuts = append(shortcuts, "635fcbaacc57190bd8826d0b")
+	}
+	if o.Honeypot {
+		shortcuts = append(shortcuts, "635fcb52cc57190bd8826d09")
+	}
+	if o.Invalid {
+		shortcuts = append(shortcuts, "635fcb0acc57190bd8826d0c")
+	}
+	return shortcuts
 }

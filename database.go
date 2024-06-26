@@ -103,12 +103,12 @@ func (d *Database) CreateHunterSyntaxTable() bool {
 	return err == nil
 }
 
-type HunterSyntax struct {
+type Syntax struct {
 	Name    string
 	Content string
 }
 
-func (d *Database) SelectAllHunterSyntax() (data []HunterSyntax) {
+func (d *Database) SelectAllHunterSyntax() (data []Syntax) {
 	rows, err := d.DB.Query(`SELECT name, content FROM hunter_syntax;`)
 	if err != nil {
 		return
@@ -120,7 +120,7 @@ func (d *Database) SelectAllHunterSyntax() (data []HunterSyntax) {
 		if err != nil {
 			return
 		}
-		data = append(data, HunterSyntax{
+		data = append(data, Syntax{
 			Name:    name,
 			Content: content,
 		})
@@ -149,6 +149,69 @@ func (d *Database) InsertHunterSyntax(name, content string) bool {
 
 func (d *Database) DeleteHunterSyntax(name, content string) bool {
 	stmt, err := d.DB.Prepare("DELETE FROM hunter_syntax WHERE name = ? AND content = ?")
+	if err != nil {
+		return false
+	}
+	defer stmt.Close()
+	tx, err := d.DB.Begin()
+	if err != nil {
+		return false
+	}
+	_, err = stmt.Exec(name, content)
+	if err != nil {
+		tx.Rollback()
+		logger.NewDefaultLogger().Debug(err.Error())
+	}
+	err = tx.Commit()
+	return err == nil
+}
+
+func (d *Database) CreateQuakeSyntaxTable() bool {
+	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );`)
+	return err == nil
+}
+
+func (d *Database) SelectAllQuakeSyntax() (data []Syntax) {
+	rows, err := d.DB.Query(`SELECT name, content FROM quake_syntax;`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var name, content string
+		err = rows.Scan(&name, &content)
+		if err != nil {
+			return
+		}
+		data = append(data, Syntax{
+			Name:    name,
+			Content: content,
+		})
+	}
+	return
+}
+
+func (d *Database) InsertQuakeSyntax(name, content string) bool {
+	stmt, err := d.DB.Prepare("INSERT INTO quake_syntax(name, content) VALUES(?,?)")
+	if err != nil {
+		return false
+	}
+	defer stmt.Close()
+	tx, err := d.DB.Begin()
+	if err != nil {
+		return false
+	}
+	_, err = stmt.Exec(name, content)
+	if err != nil {
+		tx.Rollback()
+		logger.NewDefaultLogger().Debug(err.Error())
+	}
+	err = tx.Commit()
+	return err == nil
+}
+
+func (d *Database) DeleteQuakeSyntax(name, content string) bool {
+	stmt, err := d.DB.Prepare("DELETE FROM quake_syntax WHERE name = ? AND content = ?")
 	if err != nil {
 		return false
 	}

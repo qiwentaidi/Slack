@@ -87,18 +87,6 @@ export namespace main {
 	
 	    }
 	}
-	export class HunterSyntax {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new HunterSyntax(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
 	export class Navigation {
 	
 	
@@ -128,6 +116,18 @@ export namespace main {
 	
 	    static createFrom(source: any = {}) {
 	        return new Response(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+	export class Syntax {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Syntax(source);
 	    }
 	
 	    constructor(source: any = {}) {
