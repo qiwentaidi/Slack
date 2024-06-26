@@ -29,11 +29,14 @@ var (
 
 func ExtractFscanResult(content string) string {
 	var result string
-	result += "[NetInfo]\n"
-	for _, netinfo := range NetInfoReg.FindAllString(content, -1) {
-		result += netinfo + "\n"
+	nets := NetInfoReg.FindAllString(content, -1)
+	if len(nets) > 0 {
+		result += "[NetInfo]\n"
+		for _, netinfo := range nets {
+			result += netinfo + "\n"
+		}
+		result += "\n"
 	}
-	result += "\n"
 	lines := strings.Split(content, "\n")
 	for name, reg := range FscanRegs {
 		result += MatchLine(name, reg, lines)

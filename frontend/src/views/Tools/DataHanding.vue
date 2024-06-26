@@ -2,24 +2,14 @@
 import { reactive } from 'vue'
 import { ExtractIP, Fscan2Txt } from '../../../wailsjs/go/main/App'
 import { ReadFile, FileDialog } from '../../../wailsjs/go/main/File'
-import { Delete, Files } from '@element-plus/icons-vue';
+import { UploadFilled, Search } from '@element-plus/icons-vue';
 import { ElMessage, ElNotification } from 'element-plus';
 import { File } from '../../interface';
 
 const form = reactive({
     result: '',
     input: '',
-    dedupOptions: [
-        {
-            value: '\n',
-            label: '按换行'
-        },
-        {
-            value: ',',
-            label: '按逗号'
-        }
-    ],
-    dedupCurrent: '\n',
+    dedupSplit: '',
 })
 
 function FscanExtract() {
@@ -37,7 +27,7 @@ async function uploadFile() {
     if (filepath == "") {
         return
     }
-    let file:File = await ReadFile(filepath)
+    let file: File = await ReadFile(filepath)
     if (file.Error) {
         ElMessage({
             type: "warning",
@@ -60,10 +50,10 @@ function extract() {
 
 function Deduplication() {
     let lines = [] as string[]
-    if (form.dedupCurrent == "\n") {
+    if (form.dedupSplit == "\\n") {
         lines = form.input.split(/[(\r\n)\r\n]+/) // 根据换行或者回车进行识别
     } else {
-        lines = form.input.split(',')
+        lines = form.input.split(form.dedupSplit)
     }
     lines = lines.filter(item => item.trim() !== '') // 删除空项并去除左右空格
     let uniqueArray = Array.from(new Set(lines))
@@ -76,6 +66,30 @@ function Deduplication() {
         type: 'success'
     })
     form.result = uniqueArray.join('\n')
+}
+
+function extractUrls() {
+    form.result = Array.from(new Set(getURLs())).join('\n')
+}
+
+function extractDomains() {
+    const urls = getURLs();
+    const domains = urls.map(url => {
+        try {
+            const parsedUrl = new URL(url);
+            return parsedUrl.hostname;
+        } catch (e) {
+            console.error(`Invalid URL: ${url}`);
+            return '';
+        }
+    }).filter(domain => domain); // 过滤掉空字符串
+    form.result = Array.from(new Set(domains)).join('\n')
+}
+
+function getURLs() : string[]{
+    const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/g;
+    const urls = form.input.match(urlPattern);
+    return urls ? urls : [];
 }
 
 // async function HunterCSVremoveDuplicates() {
@@ -95,10 +109,15 @@ function Deduplication() {
 
 <template>
     <div class="head">
-        <el-input v-model="form.input" :rows="7" resize='none' type="textarea"
-            placeholder='Please input the content or load the file' />
+        <el-popover :width="200" trigger="contextmenu">
+            <template #reference>
+                <el-input v-model="form.input" resize='none' type="textarea" placeholder='粘贴文件内容或者右键上传' />
+            </template>
+            <el-button :icon="UploadFilled" text bg style="width: 100%;" @click="uploadFile">上传文件</el-button>
+        </el-popover>
+
         <el-space direction="vertical" style="margin-left: 5px; width: 25%; align-items:start;">
-            <el-button @click="FscanExtract" style="width: 250px;">
+            <el-button @click="FscanExtract" style="width: 250px;" type="primary">
                 <template #icon>
                     <el-tooltip placement="left">
                         <template #content>可提取内容如下:<br />
@@ -115,55 +134,32 @@ function Deduplication() {
                 </template>
                 Fscan结果提取
             </el-button>
-
-            <el-button @click="extract" style="width: 250px">
-                <template #icon>
-                    <el-tooltip placement="right">
-                        <template #content>IP提取:
-                            <br />输入任意内容会自动匹配IPV4地址会进行提取并统计C段数量</template>
-                        <QuestionFilled />
-                    </el-tooltip>
-                </template>
+            <el-button @click="extract" style="width: 250px" type="success">
                 IP提取
             </el-button>
-            <!-- <el-button @click="HunterCSVremoveDuplicates" style="width: 250px">
-                <template #icon>
-                    <el-tooltip placement="right">
-                        <template #content>去重Hunter从WEB端导出的CSV数据
-                            <br />通过IP+端口+网站标题确定唯一性</template>
-                        <QuestionFilled />
+            <el-button @click="extractDomains" style="width: 250px" type="warning">
+                URL域名提取
+            </el-button>
+            <el-button @click="extractUrls" style="width: 250px" type="info">
+                URL提取
+            </el-button>
+            <el-input v-model="form.dedupSplit">
+                <template #prepend>
+                    数据去重
+                    <el-tooltip placement="left">
+                        <template #content>输入分隔字符后转换成数组，然后去重，换行输入\n</template>
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
                     </el-tooltip>
                 </template>
-                Hunter资产去重
-            </el-button> -->
-            <div style="display: flex;">
-                <el-button @click="Deduplication" style="width: 125px;">
-                    <template #icon>
-                        <svg class="bi bi-exclude" width="14px" height="14px" viewBox="0 0 16 16" fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M1.5 0A1.5 1.5 0 0 0 0 1.5v9A1.5 1.5 0 0 0 1.5 12H4v2.5A1.5 1.5 0 0 0 5.5 16h9a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 4H12V1.5A1.5 1.5 0 0 0 10.5 0h-9zM12 4H5.5A1.5 1.5 0 0 0 4 5.5V12h6.5a1.5 1.5 0 0 0 1.5-1.5V4z" />
-                        </svg>
-                    </template>
-                    数据去重
-                </el-button>
-                <el-select v-model="form.dedupCurrent" placeholder="选择分隔字符" style="width: 125px;">
-                    <el-option v-for="item in form.dedupOptions" :key="item.value" :label="item.label"
-                        :value="item.value" />
-                </el-select>
-            </div>
-
-            <el-space>
-                <el-tooltip content="Load File" placement="left">
-                    <el-button type="primary" :icon="Files" circle size="large" @click="uploadFile"></el-button>
-                </el-tooltip>
-                <el-tooltip content="Clear input" placement="left">
-                    <el-button type="primary" :icon="Delete" circle size="large" @click=""></el-button>
-                </el-tooltip>
-            </el-space>
+                <template #suffix>
+                    <el-button :icon="Search" link @click="Deduplication"></el-button>
+                </template>
+            </el-input>
         </el-space>
     </div>
-    <el-input v-model="form.result" :rows="5" type="textarea" resize="none" style="height: 70%; margin-top: 10px;" />
+    <el-input v-model="form.result" type="textarea" resize="none" style="height: 70%; margin-top: 10px;" />
 </template>
 <style>
 .el-textarea__inner {
