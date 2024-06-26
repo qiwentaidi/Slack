@@ -530,7 +530,7 @@ func (a *App) QuakeTips(query string) *space.QuakeTipsResult {
 }
 
 func (a *App) QuakeSearch(ipList []string, query string, pageNum, pageSize int, latest, invalid, honeypot, cdn bool, token string) *space.QuakeResult {
-	qk := space.QuakeApiSearch(&space.QuakeRequestOptions{
+	option := &space.QuakeRequestOptions{
 		IpList:   ipList,
 		Query:    query,
 		PageNum:  pageNum,
@@ -540,7 +540,8 @@ func (a *App) QuakeSearch(ipList []string, query string, pageNum, pageSize int, 
 		Honeypot: honeypot,
 		CDN:      cdn,
 		Token:    token,
-	})
+	}
+	qk := space.QuakeApiSearch(option)
 	time.Sleep(time.Second * 1)
 	return qk
 }

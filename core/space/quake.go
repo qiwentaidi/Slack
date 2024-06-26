@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/util"
+	"strconv"
 	"strings"
 )
 
@@ -30,8 +31,8 @@ type QuakeRequestOptions struct {
 
 // 原始数据中有用的字段
 type QuakeRawResult struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    interface{} `json:"code"`
+	Message string      `json:"message"`
 	Data    []struct {
 		Components []struct {
 			ProductNameEn string `json:"product_name_en"`
@@ -44,6 +45,18 @@ type QuakeRawResult struct {
 				Server string `json:"server"` // 中间件
 				Host   string `json:"host"`
 				Title  string `json:"title"`
+				Icp    struct {
+					Leader_name  string `json:"leader_name"`
+					Domain       string `json:"domain"`
+					Main_licence struct {
+						Unit    string `json:"unit"`
+						Nature  string `json:"nature"`
+						Licence string `json:"licence"`
+					} `json:"main_licence"`
+					Content_type_name string `json:"content_type_name"`
+					Limit_access      bool   `json:"limit_access"`
+					Licence           string `json:"licence"`
+				} `json:"icp"`
 			} `json:"http"`
 			TLS struct {
 				Handshake_log struct {
@@ -89,21 +102,21 @@ type QuakeResult struct {
 }
 
 type QuakeData struct {
-	Components  []string
-	Port        int
-	Protocol    string // 协议类型
-	Host        string
-	Title       string
-	CertCompany string // 证书申请单位
-	CertDomain  string // 证书域名
-	IP          string
-	Isp         string
-	Position    string
+	Components []string
+	Port       int
+	Protocol   string // 协议类型
+	Host       string
+	Title      string
+	IcpName    string // 证书申请单位
+	IcpNumber  string // 证书域名
+	IP         string
+	Isp        string
+	Position   string
 }
 
 type QuakeUserInfo struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    interface{} `json:"code"`
+	Message string      `json:"message"`
 	Data    struct {
 		ID   string `json:"id"`
 		User struct {
@@ -173,16 +186,20 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 	if string(body) == "暂不支持搜索该内容" {
 		return &QuakeResult{
 			Code:    302,
-			Message: "Token is error",
+			Message: "暂不支持搜索该内容",
 		}
 	}
 	var qrk QuakeRawResult
 	json.Unmarshal(body, &qrk)
 	qk := &QuakeResult{
-		Code:    qrk.Code,
 		Message: qrk.Message,
 		Total:   qrk.Meta.Pagination.Total,
 		Credit:  QuakeUserSearch(o.Token),
+	}
+	if code, err := strconv.Atoi(fmt.Sprintf("%v", qrk.Code)); err == nil {
+		qk.Code = code
+	} else {
+		qk.Code = 500
 	}
 	for _, item := range qrk.Data {
 		var components []string
@@ -190,16 +207,16 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 			components = append(components, util.MergeNonEmpty([]string{v.ProductNameEn, v.Version}, "/"))
 		}
 		qk.Data = append(qk.Data, QuakeData{
-			Components:  components,
-			Port:        item.Port,
-			Protocol:    item.Service.Name,
-			Host:        item.Service.HTTP.Host,
-			Title:       item.Service.HTTP.Title,
-			CertCompany: strings.Join(item.Service.TLS.Handshake_log.Server_certificates.Certificate.Parsed.Subject.Organization, ","),
-			CertDomain:  strings.Join(item.Service.TLS.Handshake_log.Server_certificates.Certificate.Parsed.Subject.Common_name, ","),
-			IP:          item.IP,
-			Isp:         item.Location.Isp,
-			Position:    util.MergeNonEmpty([]string{item.Location.ProvinceCn, item.Location.CityCn, item.Location.DistrictCn}, "/"),
+			Components: components,
+			Port:       item.Port,
+			Protocol:   item.Service.Name,
+			Host:       item.Service.HTTP.Host,
+			Title:      item.Service.HTTP.Title,
+			IcpName:    item.Service.HTTP.Icp.Main_licence.Unit,
+			IcpNumber:  item.Service.HTTP.Icp.Main_licence.Licence,
+			IP:         item.IP,
+			Isp:        item.Location.Isp,
+			Position:   util.MergeNonEmpty([]string{item.Location.ProvinceCn, item.Location.CityCn, item.Location.DistrictCn}, "/"),
 		})
 	}
 	qrk = QuakeRawResult{} // 清空内存

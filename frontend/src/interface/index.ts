@@ -159,8 +159,8 @@ export interface QuakeData {
     Protocol: string; // 协议类型
     Host: string;
     Title: string;
-    CertCompany: string; // 证书申请单位
-    CertDomain: string; // 证书域名
+    IcpName: string;
+    IcpNumber: string;
     IP: string;
     Isp: string;
     Position: string;

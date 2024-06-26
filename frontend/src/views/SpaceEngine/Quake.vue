@@ -132,25 +132,25 @@
         <el-form-item style="display: flex; align-items: center; width: 100%;">
             <div>
                 <span class="mr">最新数据</span><el-switch v-model="options.switch.latest"
-                    @change="tableCtrl.handleSizeChange" style="--el-switch-on-color: #4CA87D;" />
+                    @change="tableCtrl.handleOptionChange" style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
             <div>
                 <el-tooltip content="开启后，将过滤掉400、401、502等状态码和无法解析的协议/端口数据" placement="bottom">
                     <span class="mr">过滤无效请求</span>
                 </el-tooltip>
-                <el-switch v-model="options.switch.invalid" @change="tableCtrl.handleSizeChange"
+                <el-switch v-model="options.switch.invalid" @change="tableCtrl.handleOptionChange"
                     style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
             <div>
                 <span class="mr">排除蜜罐</span><el-switch v-model="options.switch.honeypot"
-                    @change="tableCtrl.handleSizeChange" style="--el-switch-on-color: #4CA87D;" />
+                    @change="tableCtrl.handleOptionChange" style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
             <div>
                 <span class="mr">排除CDN</span><el-switch v-model="options.switch.cdn"
-                    @change="tableCtrl.handleSizeChange" style="--el-switch-on-color: #4CA87D;" />
+                    @change="tableCtrl.handleOptionChange" style="--el-switch-on-color: #4CA87D;" />
             </div>
             <div style="flex-grow: 1;"></div>
             <el-dropdown>
@@ -181,7 +181,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="Title" label="标题" width="200" :show-overflow-tooltip="true" />
-                <el-table-column prop="Port" label="端口|协议" width="170" :show-overflow-tooltip="true">
+                <el-table-column prop="Port" label="端口 | 协议" width="170" :show-overflow-tooltip="true">
                     <template #default="scope">
                         {{ scope.row.Port }}
                         <el-divider direction="vertical" />
@@ -209,8 +209,8 @@
                         </el-button>
                     </template>
                 </el-table-column>
-                <el-table-column prop="CertCompany" label="证书申请单位" width="160" :show-overflow-tooltip="true" />
-                <el-table-column prop="CertDomain" label="证书域名" width="150" :show-overflow-tooltip="true" />
+                <el-table-column prop="IcpName" label="ICP名称" width="160" :show-overflow-tooltip="true" />
+                <el-table-column prop="IcpNumber" label="ICP编号" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="ISP" label="运营商" width="100" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="200" :show-overflow-tooltip="true" />
                 <el-table-column fixed="right" label="操作" width="100">
@@ -484,6 +484,7 @@ const tableCtrl = ({
         table.loading = true
         QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
             (result: QuakeResult) => {
+                console.log(result.Code)
                 if (result.Code != 0) {
                     quake.message = result.Message!
                     table.loading = false
@@ -497,10 +498,10 @@ const tableCtrl = ({
                         IP: item.IP,
                         Port: item.Port,
                         Protocol: item.Protocol,
-                        CertDomain: item.CertDomain,
+                        IcpName: item.IcpName,
                         Component: item.Components,
                         Title: item.Title,
-                        CertCompany: item.CertCompany,
+                        IcpNumber: item.IcpNumber,
                         ISP: item.Isp,
                         Position: item.Position,
                     })
@@ -548,10 +549,10 @@ const tableCtrl = ({
                         IP: item.IP,
                         Port: item.Port,
                         Protocol: item.Protocol,
-                        CertDomain: item.CertDomain,
+                        IcpName: item.IcpName,
                         Component: item.Components,
                         Title: item.Title,
-                        CertCompany: item.CertCompany,
+                        IcpNumber: item.IcpNumber,
                         ISP: item.Isp,
                         Position: item.Position,
                     })
@@ -580,10 +581,43 @@ const tableCtrl = ({
                         IP: item.IP,
                         Port: item.Port,
                         Protocol: item.Protocol,
-                        CertDomain: item.CertDomain,
+                        IcpName: item.IcpName,
                         Component: item.Components,
                         Title: item.Title,
-                        CertCompany: item.CertCompany,
+                        IcpNumber: item.IcpNumber,
+                        ISP: item.Isp,
+                        Position: item.Position,
+                    })
+                });
+                tab.total = result.Total!
+                table.loading = false
+            }
+        )
+    },
+    handleOptionChange: function() {
+        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        tab.pageSize = 10
+        tab.currentPage = 1
+        table.loading = true
+        QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+            (result: QuakeResult) => {
+                if (result.Code != 0) {
+                    quake.message = result.Message!
+                    table.loading = false
+                    return
+                }
+                quake.message = "查询成功,目前剩余积分:" + result.Credit
+                tab.content = []
+                result.Data?.forEach((item: QuakeData) => {
+                    tab.content.push({
+                        Host: item.Host,
+                        IP: item.IP,
+                        Port: item.Port,
+                        Protocol: item.Protocol,
+                        IcpName: item.IcpName,
+                        Component: item.Components,
+                        Title: item.Title,
+                        IcpNumber: item.IcpNumber,
                         ISP: item.Isp,
                         Position: item.Position,
                     })
@@ -650,10 +684,10 @@ async function exportData(mode: number) {
                             IP: item.IP,
                             Port: item.Port,
                             Protocol: item.Protocol,
-                            CertDomain: item.CertDomain,
+                            IcpName: item.IcpName,
                             Component: item.Components,
                             Title: item.Title,
-                            CertCompany: item.CertCompany,
+                            IcpNumber: item.IcpNumber,
                             ISP: item.Isp,
                             Position: item.Position,
                         })
@@ -731,7 +765,7 @@ async function exportData(mode: number) {
     margin-right: 10px;
 }
 
-.el-tabs__item {
+.quake-tabs :deep(.el-tabs__item) {
     position: relative;
     display: inline-block;
     max-width: 300px;
@@ -741,13 +775,13 @@ async function exportData(mode: number) {
     text-overflow: ellipsis;
 }
 
-.el-tabs__item .el-icon {
+.quake-tabs :deep(.el-tabs__item .el-icon) {
     position: absolute !important;
     top: 13px !important;
     right: 7px !important;
 }
 
-.el-tabs__nav {
+.quake-tabs :deep(.el-tabs__nav) {
     line-height: 255%;
 }
 
