@@ -6,19 +6,17 @@ import { ExportTXT } from '../../export'
 import { reactive, onMounted } from 'vue';
 import { Sock5Connect, FofaSearch } from '../../../wailsjs/go/main/App'
 import global from "../../global"
-import { Check, CreateTable, InsertAgentPool, SearchAgentPool, DeleteAgentPoolField, DeleteAllField } from '../../../wailsjs/go/main/Database';
+import { Check, InsertAgentPool, SearchAgentPool, DeleteAgentPoolField, DeleteAllField } from '../../../wailsjs/go/main/Database';
 import { ElMessage } from 'element-plus';
 import { FofaResult } from '../../interface';
 
 onMounted(async () => {
     let stat = await Check()
     if (stat) {
-        if (await CreateTable()) {
-            let hosts = await SearchAgentPool()
-            if (Array.isArray(hosts)) {
-                for (const host of hosts) {
-                    form.pool.push({ Host: host })
-                }
+        let hosts = await SearchAgentPool()
+        if (Array.isArray(hosts)) {
+            for (const host of hosts) {
+                form.pool.push({ Host: host })
             }
         }
     }
@@ -217,7 +215,7 @@ async function Delelte(host: string) {
                 </el-table>
             </el-tab-pane>
         </el-tabs>
-        <el-space class="custom_eltabs_titlebar" v-if="form.currentTableName == '0'" >
+        <el-space class="custom_eltabs_titlebar" v-if="form.currentTableName == '0'">
             <span>检测数量:</span><el-input-number v-model="form.socksNum" :min="1" :max="form.socksMax"
                 controls-position="right" style="width: 100px;"></el-input-number>
             <span>存储阈值:</span><el-input-number v-model="form.socksThreshold" :min="1" controls-position="right"

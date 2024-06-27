@@ -263,11 +263,11 @@ const config = reactive({
             <el-space>
                 <div>
                     <span>重定向跟随：</span>
-                    <el-switch v-model="config.redirectClient" inline-prompt active-text="关闭" inactive-text="开启" />
+                    <el-switch v-model="config.redirectClient" />
                 </div>
                 <div>
                     <span>初始不判断存活：</span>
-                    <el-switch v-model="from.alive" inline-prompt active-text="关闭" inactive-text="开启" />
+                    <el-switch v-model="from.alive" />
                 </div>
                 <el-tag>字典大小:{{ global.temp.dirsearchPathConut }}</el-tag>
                 <el-tag>线程:{{ config.thread }}</el-tag>

@@ -13,7 +13,7 @@
     "@types/node": "^20.9.1",
     "async": "^3.2.5",
     "crypto-js": "^4.2.0",
-    "element-plus": "^2.7.1",
+    "element-plus": "^2.7.6",
     "jsencrypt": "^3.3.2",
     "sm-crypto": "^0.3.13",
     "splitpanes": "^3.1.5",

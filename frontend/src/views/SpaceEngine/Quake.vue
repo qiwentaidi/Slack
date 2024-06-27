@@ -275,7 +275,7 @@ import { FaviconMd5, QuakeSearch, QuakeTips } from '../../../wailsjs/go/main/App
 import global from '../../global';
 import { ElMessage, FormInstance, FormRules } from 'element-plus';
 import { FileDialog } from '../../../wailsjs/go/main/File';
-import { InsertQuakeSyntax, DeleteQuakeSyntax, SelectAllQuakeSyntax } from '../../../wailsjs/go/main/Database';
+import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from '../../../wailsjs/go/main/Database';
 
 const options = ({
     keywordActive: "基本信息",
@@ -423,7 +423,7 @@ const syntax = ({
         if (!formEl) return
         let result = await formEl.validate()
         if (!result) return
-        InsertQuakeSyntax(syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
+        InsertFavGrammarFiled("quake", syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
             if (r) {
                 ElMessage.success('添加语法成功')
             } else {
@@ -433,7 +433,7 @@ const syntax = ({
         })
     },
     deleteStar: (name: string, content: string) => {
-        DeleteQuakeSyntax(name, content).then((r: Boolean) => {
+        RemoveFavGrammarFiled("quake", name, content).then((r: Boolean) => {
             if (r) {
                 ElMessage.success('删除语法成功,重新打开刷新')
             } else {
@@ -442,7 +442,7 @@ const syntax = ({
         })
     },
     searchStarSyntax: async () => {
-        quake.syntaxData = await SelectAllQuakeSyntax()
+        quake.syntaxData = await SelectAllSyntax("quake")
     },
 })
 

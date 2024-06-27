@@ -174,7 +174,7 @@ export async function TestProxy(mode: number) {
       if (!resp) {
         ElNotification.closeAll()
         ElNotification({
-          message: "Connect to http://www.baidu.com is timeout",
+          message: "The sock5 proxy is unreachable",
           type: "error",
         });
         return false

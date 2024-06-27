@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
@@ -106,7 +105,7 @@ func (a *App) GoFetch(method, target, body string, headers []map[string]string, 
 			hhhhheaders.Set(k, v)
 		}
 	}
-	resp, b, err := clients.NewRequest(method, target, hhhhheaders, bytes.NewReader([]byte(body)), 10, true, clients.JudgeClient(proxy))
+	resp, b, err := clients.NewRequest(method, target, hhhhheaders, strings.NewReader(body), 10, true, clients.JudgeClient(proxy))
 	if err != nil {
 		return &Response{
 			Error:  true,
@@ -448,15 +447,6 @@ type InfoResult struct {
 	IsWAF        bool
 	WAF          string
 }
-
-// func (a *App) InitBurteDict() bool {
-// 	if _, err := os.Stat(a.bruteFile); err != nil {
-// 		os.MkdirAll(a.bruteFile+"/username", 0777)
-// 		os.Mkdir(a.bruteFile+"/password", 0777)
-// 		return true
-// 	}
-// 	return false
-// }
 
 // 仅在执行时调用一次
 func (a *App) InitRule() bool {

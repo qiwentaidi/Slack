@@ -110,7 +110,7 @@ async function NewScanner() {
                 message: "未生成联想字典",
                 type: "warning"
             })
-        }else {
+        } else {
             passDict.push(...global.temp.thinkdict)
         }
     }
@@ -129,7 +129,7 @@ async function NewScanner() {
         }
         if (passDict.length == 0) {
             passDict = global.dict.passwords
-        }else {
+        } else {
             passDict.push("") // 增加空密码
         }
         Callgologger("info", target + " is start brute")
@@ -151,10 +151,8 @@ async function NewScanner() {
         <div style="display: flex;">
             <el-checkbox v-model="config.builtIn" label="内置字典" />
             <el-checkbox v-model="config.association" label="联想模式" />
-            <el-button type="primary" link :icon="Link" 
-            style="margin-left: 10px;"
-            v-if="config.association"
-            @click="$router.push('/Tools/Thinkdict')">跳转到联想字典生成器</el-button>
+            <el-button type="primary" link :icon="Link" style="margin-left: 10px;" v-if="config.association"
+                @click="$router.push('/Tools/Thinkdict')">跳转到联想字典生成器</el-button>
         </div>
         <el-tooltip :content="placeholder" placement="bottom">
             <template #content>
@@ -168,23 +166,24 @@ async function NewScanner() {
         </el-tooltip>
         <el-button type="primary" :icon="Search" @click="NewScanner">开始暴破</el-button>
     </div>
-    <el-form style="margin-top: 10px;">
-        <el-form-item label="账号">
-            <el-input v-model="config.username" :disabled="config.builtIn">
-                <template #suffix>
-                    <el-button link :icon="Document" @click="selectDict('username')"
-                        :disabled="config.builtIn"></el-button>
-                </template>
-            </el-input>
-        </el-form-item>
-        <el-form-item label="密码">
-            <el-input v-model="config.password" :disabled="config.builtIn">
-                <template #suffix>
-                    <el-button link :icon="Document" @click="selectDict" :disabled="config.builtIn"></el-button>
-                </template>
-            </el-input>
-        </el-form-item>
-    </el-form>
+    <div style="margin-top: 10px; margin-bottom: 10px;">
+        <el-input v-model="config.username" :disabled="config.builtIn" style="margin-bottom: 10px;">
+            <template #prepend>
+                账号
+            </template>
+            <template #suffix>
+                <el-button link :icon="Document" @click="selectDict('username')" :disabled="config.builtIn"></el-button>
+            </template>
+        </el-input>
+        <el-input v-model="config.password" :disabled="config.builtIn">
+            <template #prepend>
+                密码
+            </template>
+            <template #suffix>
+                <el-button link :icon="Document" @click="selectDict" :disabled="config.builtIn"></el-button>
+            </template>
+        </el-input>
+    </div>
     <splitpanes class="default-theme" style="height: 73vh;">
         <pane size="30">
             <el-input v-model="config.target" :placeholder="placeholder2" type="textarea" resize="none"

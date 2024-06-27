@@ -15,9 +15,9 @@ type Database struct {
 }
 
 func NewDatabase() *Database {
-	os.Mkdir(util.HomeDir()+"/slack", 0777)
+	os.Mkdir(util.HomeDir()+"/slack", 0777) // 创建配置文件夹
 	dp := util.HomeDir() + "/slack/config.db"
-	db, err := sql.Open("sqlite3", dp)
+	db, err := sql.Open("sqlite3", dp) // 创建数据库文件
 	if err != nil {
 		return &Database{
 			DB: nil,
@@ -36,11 +36,6 @@ func NewDatabase() *Database {
 
 func (d *Database) Check() bool {
 	return d.DB == nil
-}
-
-func (d *Database) CreateTable() bool {
-	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );`)
-	return err == nil
 }
 
 func (d *Database) InsertAgentPool(host string) bool {
@@ -98,8 +93,10 @@ func (d *Database) DeleteAllField(tableName string) bool {
 	return err == nil
 }
 
-func (d *Database) CreateHunterSyntaxTable() bool {
-	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS hunter_syntax ( name TEXT, content TEXT );`)
+func (d *Database) CreateTable() bool {
+	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS hunter_syntax ( name TEXT, content TEXT );
+	CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );
+	CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );`)
 	return err == nil
 }
 
@@ -108,8 +105,8 @@ type Syntax struct {
 	Content string
 }
 
-func (d *Database) SelectAllHunterSyntax() (data []Syntax) {
-	rows, err := d.DB.Query(`SELECT name, content FROM hunter_syntax;`)
+func (d *Database) SelectAllSyntax(module string) (data []Syntax) {
+	rows, err := d.DB.Query(fmt.Sprintf(`SELECT name, content FROM %v;`, chooseSyntaxDbName(module)))
 	if err != nil {
 		return
 	}
@@ -128,8 +125,8 @@ func (d *Database) SelectAllHunterSyntax() (data []Syntax) {
 	return
 }
 
-func (d *Database) InsertHunterSyntax(name, content string) bool {
-	stmt, err := d.DB.Prepare("INSERT INTO hunter_syntax(name, content) VALUES(?,?)")
+func (d *Database) InsertFavGrammarFiled(module, name, content string) bool {
+	stmt, err := d.DB.Prepare(fmt.Sprintf("INSERT INTO %v(name, content) VALUES(?,?)", chooseSyntaxDbName(module)))
 	if err != nil {
 		return false
 	}
@@ -147,71 +144,19 @@ func (d *Database) InsertHunterSyntax(name, content string) bool {
 	return err == nil
 }
 
-func (d *Database) DeleteHunterSyntax(name, content string) bool {
-	stmt, err := d.DB.Prepare("DELETE FROM hunter_syntax WHERE name = ? AND content = ?")
-	if err != nil {
-		return false
+func chooseSyntaxDbName(name string) string {
+	switch name {
+	case "quake":
+		return "quake_syntax"
+	case "hunter":
+		return "hunter_syntax"
+	default:
+		return "fofa_syntax"
 	}
-	defer stmt.Close()
-	tx, err := d.DB.Begin()
-	if err != nil {
-		return false
-	}
-	_, err = stmt.Exec(name, content)
-	if err != nil {
-		tx.Rollback()
-		logger.NewDefaultLogger().Debug(err.Error())
-	}
-	err = tx.Commit()
-	return err == nil
 }
 
-func (d *Database) CreateQuakeSyntaxTable() bool {
-	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );`)
-	return err == nil
-}
-
-func (d *Database) SelectAllQuakeSyntax() (data []Syntax) {
-	rows, err := d.DB.Query(`SELECT name, content FROM quake_syntax;`)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var name, content string
-		err = rows.Scan(&name, &content)
-		if err != nil {
-			return
-		}
-		data = append(data, Syntax{
-			Name:    name,
-			Content: content,
-		})
-	}
-	return
-}
-
-func (d *Database) InsertQuakeSyntax(name, content string) bool {
-	stmt, err := d.DB.Prepare("INSERT INTO quake_syntax(name, content) VALUES(?,?)")
-	if err != nil {
-		return false
-	}
-	defer stmt.Close()
-	tx, err := d.DB.Begin()
-	if err != nil {
-		return false
-	}
-	_, err = stmt.Exec(name, content)
-	if err != nil {
-		tx.Rollback()
-		logger.NewDefaultLogger().Debug(err.Error())
-	}
-	err = tx.Commit()
-	return err == nil
-}
-
-func (d *Database) DeleteQuakeSyntax(name, content string) bool {
-	stmt, err := d.DB.Prepare("DELETE FROM quake_syntax WHERE name = ? AND content = ?")
+func (d *Database) RemoveFavGrammarFiled(module, name, content string) bool {
+	stmt, err := d.DB.Prepare(fmt.Sprintf("DELETE FROM %v WHERE name = ? AND content = ?", chooseSyntaxDbName(module)))
 	if err != nil {
 		return false
 	}

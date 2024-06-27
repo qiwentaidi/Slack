@@ -11,7 +11,7 @@ import {
     HunterSearch,
     HunterTips,
 } from '../../../wailsjs/go/main/App'
-import { InsertHunterSyntax, SelectAllHunterSyntax, DeleteHunterSyntax } from '../../../wailsjs/go/main/Database'
+import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from '../../../wailsjs/go/main/Database'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
 
 const options = ({
@@ -106,7 +106,7 @@ const syntax = ({
         if (!formEl) return
         let result = await formEl.validate()
         if (!result) return
-        InsertHunterSyntax(syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
+        InsertFavGrammarFiled("hunter", syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
             if (r) {
                 ElMessage.success('添加语法成功')
             } else {
@@ -116,7 +116,7 @@ const syntax = ({
         })
     },
     deleteStar: (name: string, content: string) => {
-        DeleteHunterSyntax(name, content).then((r: Boolean) => {
+        RemoveFavGrammarFiled("hunter", name, content).then((r: Boolean) => {
             if (r) {
                 ElMessage.success('删除语法成功,重新打开刷新')
             } else {
@@ -125,7 +125,7 @@ const syntax = ({
         })
     },
     searchStarSyntax: async () => {
-        form.syntaxData = await SelectAllHunterSyntax()
+        form.syntaxData = await SelectAllSyntax("hunter")
     },
 })
 

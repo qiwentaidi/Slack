@@ -6,14 +6,6 @@ export function Check() {
   return window['go']['main']['Database']['Check']();
 }
 
-export function CreateHunterSyntaxTable() {
-  return window['go']['main']['Database']['CreateHunterSyntaxTable']();
-}
-
-export function CreateQuakeSyntaxTable() {
-  return window['go']['main']['Database']['CreateQuakeSyntaxTable']();
-}
-
 export function CreateTable() {
   return window['go']['main']['Database']['CreateTable']();
 }
@@ -26,34 +18,22 @@ export function DeleteAllField(arg1) {
   return window['go']['main']['Database']['DeleteAllField'](arg1);
 }
 
-export function DeleteHunterSyntax(arg1, arg2) {
-  return window['go']['main']['Database']['DeleteHunterSyntax'](arg1, arg2);
-}
-
-export function DeleteQuakeSyntax(arg1, arg2) {
-  return window['go']['main']['Database']['DeleteQuakeSyntax'](arg1, arg2);
-}
-
 export function InsertAgentPool(arg1) {
   return window['go']['main']['Database']['InsertAgentPool'](arg1);
 }
 
-export function InsertHunterSyntax(arg1, arg2) {
-  return window['go']['main']['Database']['InsertHunterSyntax'](arg1, arg2);
+export function InsertFavGrammarFiled(arg1, arg2, arg3) {
+  return window['go']['main']['Database']['InsertFavGrammarFiled'](arg1, arg2, arg3);
 }
 
-export function InsertQuakeSyntax(arg1, arg2) {
-  return window['go']['main']['Database']['InsertQuakeSyntax'](arg1, arg2);
+export function RemoveFavGrammarFiled(arg1, arg2, arg3) {
+  return window['go']['main']['Database']['RemoveFavGrammarFiled'](arg1, arg2, arg3);
 }
 
 export function SearchAgentPool() {
   return window['go']['main']['Database']['SearchAgentPool']();
 }
 
-export function SelectAllHunterSyntax() {
-  return window['go']['main']['Database']['SelectAllHunterSyntax']();
-}
-
-export function SelectAllQuakeSyntax() {
-  return window['go']['main']['Database']['SelectAllQuakeSyntax']();
+export function SelectAllSyntax(arg1) {
+  return window['go']['main']['Database']['SelectAllSyntax'](arg1);
 }

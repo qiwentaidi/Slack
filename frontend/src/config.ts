@@ -4,7 +4,7 @@ import global from "./global";
 import { compareVersion, sleep } from './util';
 import router from "./router";
 import { File } from "./interface";
-import { CreateHunterSyntaxTable, CreateQuakeSyntaxTable } from '../wailsjs/go/main/Database';
+import { CreateTable } from '../wailsjs/go/main/Database';
 
 function catchError(result: boolean, loading: any) {
   if (result) {
@@ -19,7 +19,7 @@ function catchError(result: boolean, loading: any) {
 
 export async function InitConfigFile(timeout: number) {
   LoadConfig();
-  checkDatabase()
+  CreateTable()
   const loading = ElLoading.service({
     lock: true,
     background: "rgba(255, 255, 255)",
@@ -49,18 +49,6 @@ export async function InitConfigFile(timeout: number) {
     router.push(route);
   }
   loading.close();
-}
-
-async function checkDatabase() {
-  let result = await CreateHunterSyntaxTable()
-
-  if (!result) {
-    console.log("create hunter_syntax table error")
-  }
-  result = await CreateQuakeSyntaxTable()
-  if (!result) {
-    console.log("create quake_syntax table error")
-  }
 }
 
 // 加载本地配置信息
