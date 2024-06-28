@@ -18,13 +18,8 @@ var (
 		"[\"'‘“`]\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 		"=\\s{0,6}[\",',’,”]{0,1}\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 	}
-	// UrlFind = []string{
-	// 	"[\"'‘“`]\\s{0,6}(https{0,1}:[-a-zA-Z0-9()@:%_\\+.~#?&//={}]{2,250}?)\\s{0,6}[\"'‘“`]",
-	// 	"=\\s{0,6}(https{0,1}:[-a-zA-Z0-9()@:%_\\+.~#?&//={}]{2,250})",
-	// 	"[\"'‘“`]\\s{0,6}([#,.]{0,2}/[-a-zA-Z0-9()@:%_\\+.~#?&//={}]{2,250}?)\\s{0,6}[\"'‘“`]",
-	// 	"\"([-a-zA-Z0-9()@:%_\\+.~#?&//={}]+?[/]{1}[-a-zA-Z0-9()@:%_\\+.~#?&//={}]+?)\"",
-	// 	"href\\s{0,6}=\\s{0,6}[\"'‘“`]{0,1}\\s{0,6}([-a-zA-Z0-9()@:%_\\+.~#?&//={}]{2,250})|action\\s{0,6}=\\s{0,6}[\"'‘“`]{0,1}\\s{0,6}([-a-zA-Z0-9()@:%_\\+.~#?&//={}]{2,250})",
-	// }
+	Phone          = regexp.MustCompile(`[^\w]((?:(?:\+|00)86)?1(?:(?:3[\d])|(?:4[5-79])|(?:5[0-35-9])|(?:6[5-7])|(?:7[0-8])|(?:8[\d])|(?:9[189]))\d{8})[^\w]`)
+	IDCard         = regexp.MustCompile(`[^0-9]((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))[^0-9]`)
 	SensitiveField = []string{
 		// sensitive-filed
 		`((\[)?('|")?([\w]{0,10})((key)|(secret)|(token)|(config)|(auth)|(access)|(admin))([\w]{0,10})('|")?(\])?( |)(:|=)( |)('|")(.*?)('|")(|,))`,
@@ -94,8 +89,8 @@ func FindInfo(ctx context.Context, url string, limiter chan bool, wg *sync.WaitG
 		fs.JS = *AppendSource(url, js)
 		fs.APIRoute = *AppendSource(url, apis)
 		fs.IP_URL = *AppendSource(url, append(util.RegIP_PORT.FindAllString(content, -1), urls...))
-		fs.ChineseIDCard = *AppendSource(url, util.RegIDCard.FindAllString(content, -1))
-		fs.ChinesePhone = *AppendSource(url, util.RegPhone.FindAllString(content, -1))
+		fs.ChineseIDCard = *AppendSource(url, IDCard.FindAllString(content, -1))
+		fs.ChinesePhone = *AppendSource(url, cleanPhoneNumber(Phone.FindAllString(content, -1)))
 		for _, reg := range SensitiveField {
 			regSen := regexp.MustCompile(reg)
 			for _, item := range regSen.FindAllString(content, -1) {
@@ -105,6 +100,16 @@ func FindInfo(ctx context.Context, url string, limiter chan bool, wg *sync.WaitG
 	}
 	<-limiter
 	return &fs
+}
+
+// 去除手机号中的其他字符
+func cleanPhoneNumber(phone []string) (news []string) {
+	// 定义只保留数字和+的正则表达式
+	cleanRegex := regexp.MustCompile(`[^\d+]`)
+	for _, p := range phone {
+		news = append(news, cleanRegex.ReplaceAllString(p, ""))
+	}
+	return
 }
 
 func AppendSource(source string, filed []string) *[]InfoSource {

@@ -18,8 +18,6 @@ export function CyberChefLocalServer():Promise<void>;
 
 export function DirScan(arg1:dirsearch.Options):Promise<void>;
 
-export function DomainInfo(arg1:string):Promise<string>;
-
 export function DownloadCyberChef(arg1:string):Promise<void>;
 
 export function ExtractIP(arg1:string):Promise<string>;
@@ -38,13 +36,15 @@ export function Fscan2Txt(arg1:string):Promise<string>;
 
 export function GOOS():Promise<string>;
 
-export function GoFetch(arg1:string,arg2:string,arg3:string,arg4:Array<{[key: string]: string}>,arg5:number,arg6:clients.Proxy):Promise<main.Response>;
+export function GoFetch(arg1:string,arg2:string,arg3:any,arg4:Array<{[key: string]: string}>,arg5:number,arg6:clients.Proxy):Promise<main.Response>;
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
 
 export function HunterSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean):Promise<space.HunterResult>;
 
 export function HunterTips(arg1:string):Promise<space.HunterTipsResult>;
+
+export function ICPInfo(arg1:string):Promise<string>;
 
 export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 
@@ -55,6 +55,10 @@ export function InitIPResolved():Promise<void>;
 export function InitRule():Promise<boolean>;
 
 export function InitTycHeader(arg1:string):Promise<void>;
+
+export function Ip138IpHistory(arg1:string):Promise<string>;
+
+export function Ip138Subdomain(arg1:string):Promise<string>;
 
 export function IsHighRisk(arg1:string):Promise<boolean>;
 

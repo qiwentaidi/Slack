@@ -10,25 +10,22 @@ export var proxys: ProxyOptions // wails2.9之后替换原来的null
 
 export function Copy(content: string) {
   if (content == "") {
-    ElNotification({
+    ElNotification.warning({
       message: "Copy data can't be empty",
-      type: "warning",
       position: 'bottom-right',
     });
     return;
   }
   navigator.clipboard.writeText(content).then(
     function () {
-      ElNotification({
+      ElNotification.success({
         message: "Copy Finished",
-        type: "success",
         position: 'bottom-right',
       });
     },
     function (err) {
-      ElNotification({
+      ElNotification.error({
         message: "Copy Failed: " + err,
-        type: "error",
         position: 'bottom-right',
       });
     }
@@ -62,7 +59,7 @@ export function validateURL(url: string): boolean {
     new URL(url)
     return true
   } catch (e) {
-    ElMessage("请输入正确的URL")
+    ElMessage.warning("请输入正确的URL")
     return false
   }
 }
@@ -123,10 +120,7 @@ export function ApiSyntaxCheck(
   key: string,
 ) {
   if (key == "") {
-    ElNotification({
-      message: "请在设置处填写Hunter Key",
-      type: "warning",
-    });
+    ElNotification.warning("请在设置处填写Hunter Key");
     return false;
   }
   return true;
@@ -135,10 +129,7 @@ export function ApiSyntaxCheck(
 export async function ReadLine(filepath: string) {
   let file: File = await ReadFile(filepath);
   if (file.Error) {
-    ElNotification({
-      message: file.Message,
-      type: "warning",
-    });
+    ElNotification.warning(file.Message);
     return;
   }
   const result = file.Content!.replace(/\r\n/g, "\n"); // 避免windows unix系统差异
@@ -152,17 +143,11 @@ export async function TestProxy(mode: number) {
     if (global.proxy.mode == "HTTP") {
       let resp: any = await GoFetch("GET", proxyURL, "", [{}], 10, proxys)
       if (resp.Error) {
-        ElNotification({
-          message: "The proxy is unreachable",
-          type: "warning",
-        });
+        ElNotification.warning("The proxy is unreachable");
         return false
       }
       if (mode == 0) {
-        ElNotification({
-          message: "The proxy is enabled",
-          type: "success",
-        });
+        ElNotification.success("The proxy is enabled");
       }
     } else {
       ElNotification({
@@ -173,18 +158,11 @@ export async function TestProxy(mode: number) {
       let resp = await Sock5Connect(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password)
       if (!resp) {
         ElNotification.closeAll()
-        ElNotification({
-          message: "The sock5 proxy is unreachable",
-          type: "error",
-        });
+        ElNotification.error("The sock5 proxy is unreachable");
         return false
       }
       ElNotification.closeAll()
-      ElNotification({
-        title: 'Success',
-        message: "Connect to http://www.baidu.com is success",
-        type: "success",
-      });
+      ElNotification.success("Connect to http://www.baidu.com is success");
     }
   }
   return true
@@ -193,17 +171,9 @@ export async function TestProxy(mode: number) {
 export async function TestNuclei() {
   NucleiEnabled(global.webscan.nucleiEngine).then(result => {
     if (result) {
-      ElNotification({
-        message: "Nuclei engine is enabled",
-        type: "success",
-        duration: 2000,
-      });
+      ElNotification.success("Nuclei engine is enabled");
     } else {
-      ElNotification({
-        type: 'error',
-        message: "Nuclei engine is disable",
-        duration: 2000,
-      });
+      ElNotification.error("Nuclei engine is disable");
     }
   })
 }

@@ -10,15 +10,9 @@ const update = ({
     poc: async function () {
         let err = await UpdatePocFile()
         if (err == "") {
-            ElNotification({
-                message: "POC update success!",
-                type: "success",
-            });
+            ElNotification.success("POC update success!");
         } else {
-            ElNotification({
-                message: "POC update failed! " + err,
-                type: "error",
-            });
+            ElNotification.error("POC update failed! " + err);
         }
     }
 })

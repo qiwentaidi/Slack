@@ -93,7 +93,7 @@ const wechatOption = ({
       url: "https://api.weixin.qq.com/wxaapi/feedback/list?access_token=",
     },
   ],
-  checksecert: async function () {
+  checksecret: async function () {
     let url =
       "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" +
       wechat.appid +
@@ -114,41 +114,16 @@ const wechatOption = ({
     const jsonResult = JSON.parse(response.Body);
     if (response.Body.includes("access_token")) {
       wechat.accessToken = jsonResult.access_token;
-      ElNotification({
-        type: "success",
-        message: "AccessToken set successfully",
-      });
+      ElNotification.success("AccessToken set successfully");
     }
     result.value = jsonResult;
   },
-  doRequest: async function (method: string, url: string, parameter: string) {
+  doRequest: async function (method: string, url: string) {
     if (wechat.accessToken == "") {
-      ElNotification({
-        message: "AccessToken is null",
-        type: "warning",
-      });
+      ElNotification.warning("AccessToken is null");
       return;
     }
-    if (!parameter) {
-      let response: any = await GoFetch(
-        method,
-        url + wechat.accessToken + "&" + parameter,
-        "",
-        [{}],
-        10,
-        proxys
-      );
-      result.value = JSON.parse(response.Body);
-      return;
-    }
-    let response: any = await GoFetch(
-      method,
-      url + wechat.accessToken,
-      "",
-      [{}],
-      10,
-      proxys
-    );
+    let response: any = await GoFetch(method, url + wechat.accessToken, "", [{}], 10, proxys);
     result.value = JSON.parse(response.Body);
   }
 })
@@ -160,11 +135,49 @@ const dingding = reactive({
 })
 
 const dingdingOption = ({
-  checksecret: function() {
-      let url = "https://api.dingtalk.com/v1.0/oauth2/accessToken"
-      GoFetch("POST", url, "", [{
-        "Content-Type": "application/json"
-      }], 10, proxys)
+  api: [
+    {
+      name: "获取员工人数(包括未激活用户)",
+      method: "POST",
+      url: "https://oapi.dingtalk.com/topapi/user/count?access_token=",
+      body: `{
+ "only_active":"false"
+}`
+    },
+    {
+      name: "获取管理员列表",
+      method: "POST",
+      url: "https://oapi.dingtalk.com/topapi/user/listadmin?access_token=",
+      body: ``
+    }
+  ],
+  checksecret: async function () {
+    const jsonData = `{
+  "appKey" : "${dingding.appid}",
+  "appSecret" : "${dingding.secert}"
+}`
+    let response: any = await GoFetch("POST", "https://api.dingtalk.com/v1.0/oauth2/accessToken", JSON.parse(jsonData), [{
+      "Content-Type": "application/json"
+    }], 10, proxys)
+    try {
+      const jsonResult = JSON.parse(response.Body);
+      result.value = jsonResult;
+      if (response.Body.includes("7200")) {
+        wechat.accessToken = jsonResult.accessToken;
+        ElNotification.success("AccessToken set successfully");
+      }
+    } catch (error) {
+
+    }
+  },
+  doRequest: async function (method: string, url: string, parameter: string) {
+    if (dingding.accessToken == "") {
+      ElNotification.warning("AccessToken is null");
+      return;
+    }
+    let body = JSON.parse(parameter);
+    let response: any = await GoFetch(method, url + dingding.accessToken, body, [{}], 10, proxys);
+    result.value = JSON.parse(response.Body);
   }
 })
 const result = ref("");
@@ -198,12 +211,12 @@ const result = ref("");
           </template>
           <el-input v-model="wechat.accessToken" style="width: 100%">
             <template #suffix>
-              <el-button type="primary" link @click="wechatOption.checksecert">获取Token</el-button>
+              <el-button type="primary" link @click="wechatOption.checksecret">获取Token</el-button>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item label="Operation">
-          <el-button v-for="yw in wechatOption.api" @click="wechatOption.doRequest(yw.method, yw.url, '')">{{ yw.name
+          <el-button v-for="yw in wechatOption.api" @click="wechatOption.doRequest(yw.method, yw.url)">{{ yw.name
             }}</el-button>
         </el-form-item>
       </el-form>
@@ -219,13 +232,14 @@ const result = ref("");
         <el-form-item label="AccessToken">
           <el-input v-model="dingding.accessToken">
             <template #suffix>
-              <el-button type="primary" link @click="wechatOption.checksecert">获取Token</el-button>
+              <el-button type="primary" link @click="dingdingOption.checksecret">获取Token</el-button>
             </template>
           </el-input>
         </el-form-item>
-        <!-- <el-form-item label="Operation">
-          
-        </el-form-item> -->
+        <el-form-item label="Operation">
+          <el-button v-for="yw in dingdingOption.api" @click="dingdingOption.doRequest(yw.method, yw.url, yw.body)">{{ yw.name
+            }}</el-button>
+        </el-form-item>
       </el-form>
     </el-tab-pane>
   </el-tabs>

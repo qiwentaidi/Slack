@@ -1,65 +1,98 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
-import { MapLocation } from '@element-plus/icons-vue';
-import {
-    DomainInfo,
-    CheckCdn,
-} from '../../../wailsjs/go/main/App'
-import async from 'async';
-import { SplitTextArea } from '../../util';
-const info = `配域名进行IP解析以及CDN判断(可批量)
-===如果域名解析的非常慢，请考虑是否是本机网络不佳===
-`;
-const from = reactive({
+import { ICPInfo, CheckCdn, Ip138IpHistory, Ip138Subdomain } from '../../../wailsjs/go/main/App'
+import { ElMessage } from 'element-plus';
+
+const domain = reactive({
     input: '',
-    result: '',
+    icp: '',
+    cdn: '',
+    history: '',
+    subdomain: '',
 });
 
 const domainRegex = /^(?=.{1,253}$)([a-z0-9]([-a-z0-9]*[a-z0-9])?\.)+[a-z]{2,}$/i;
-
-function searchdomain() {
-    DomainInfo(from.input).then(
+function startSearch() {
+    if (!domainRegex.test(domain.input)) {
+        ElMessage.warning("请输入正确域名")
+        return
+    }
+    CheckCdn(domain.input).then(result => {
+        domain.cdn = result
+    })
+    ICPInfo(domain.input).then(
         result => {
-            from.result = result
+            domain.icp = result
+        }
+    )
+    Ip138IpHistory(domain.input).then(
+        result => {
+            domain.history = result
+        }
+    )
+    Ip138Subdomain(domain.input).then(
+        result => {
+            domain.subdomain = result
         }
     )
 }
-
-function cdncheck() {
-    let lines = SplitTextArea(from.input)
-    let domains = [] as string[]
-    for (const domain of lines) {
-        domainRegex.test(domain) ? domains.push(domain) : console.log(domain + ' is not a domain')
-    }
-    from.result += "---域名解析(CDN查询)---:\n"
-    async.eachLimit(domains, 100, async (domain: string) => {
-        let result = await CheckCdn(domain)
-        from.result += result + "\n"
-    })
-}
-
 </script>
 
 <template>
-    <div class="head" style="margin-top: 10px; margin-bottom: 10px;">
-        <el-input type="textarea" v-model="from.input" rows="10" resize="none" :placeholder="info"
-            style="height: 40vh; margin-right: 5px;"></el-input>
-        <el-space direction="vertical">
-            <el-button :icon="MapLocation" @click="cdncheck" size="large">域名CDN查询</el-button>
-            <el-button @click="searchdomain" size="large">
-                <template #icon>
-                    <img src="/chinaz.ico">
-                </template>
-                域名信息查询
-            </el-button>
-        </el-space>
-
+    <div style="margin-bottom: 10px; display: flex; justify-content: center;">
+        <el-input v-model="domain.input" style="width: 60%; height: 40px;">
+            <template #prepend>
+                域名
+            </template>
+            <template #suffix>
+                <el-button type="primary" link @click="startSearch()">开始查询</el-button>
+            </template>
+        </el-input>
     </div>
-    <el-input type="textarea" v-model="from.result" rows="10" readonly resize="none" style="height: 50vh;"></el-input>
+    <div class="grid-container">
+        <el-card shadow="never" class="grid-item">
+            <el-text><el-icon><img src="/chinaz.ico"></el-icon><span class="title">备案信息:</span></el-text>
+            <el-input v-model="domain.icp" type="textarea" rows="12" resize="none" style="margin-top: 10px;"></el-input>
+        </el-card>
+        <el-card shadow="never" class="grid-item">
+            <span class="title">CDN信息:</span>
+            <el-input v-model="domain.cdn" type="textarea" rows="12" resize="none" style="margin-top: 10px;"></el-input>
+        </el-card>
+        <el-card shadow="never" class="grid-item">
+            <el-text><el-icon><img src="/ip138.ico"></el-icon><span class="title">子域名:</span></el-text>
+            <el-input v-model="domain.subdomain" type="textarea" rows="12" resize="none"
+                style="margin-top: 10px;"></el-input>
+        </el-card>
+        <el-card shadow="never" class="grid-item">
+            <el-text><el-icon><img src="/ip138.ico"></el-icon><span class="title">历史解析:</span></el-text>
+            <el-input v-model="domain.history" type="textarea" rows="12" resize="none"
+                style="margin-top: 10px;"></el-input>
+        </el-card>
+    </div>
 </template>
 
-<style>
-.el-textarea__inner {
-    height: 100%;
+<style scoped>
+.title {
+    margin-left: 5px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+    /* 宽度可以根据需要调整 */
+    height: 98%;
+    /* 高度可以根据需要调整 */
+}
+
+.grid-item {
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    background-color: #f5f5f5;
 }
 </style>

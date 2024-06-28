@@ -287,9 +287,8 @@ function getColumnData(prop: string): any[] {
 function CopyURLs(result: {}[]) {
     // 避免控制台报错
     if (result.length <= 1) {
-        ElNotification({
+        ElNotification.warning({
             message: "复制内容条数需大于1",
-            type: "warning",
             position: 'bottom-right',
         });
         return;
@@ -329,8 +328,7 @@ async function EzWebscan(ips: string[]) {
             }
         }, (err: any) => {
             Callgologger("info", "Webscan Finished")
-            ElNotification({
-                type: "success",
+            ElNotification.success({
                 message: "Webscan Finished",
                 position: "bottom-right"
             })
@@ -357,8 +355,7 @@ function EzCrack(ips: string[]) {
         }
     }, (err: any) => {
         Callgologger("info", "PortBrute Finished")
-        ElNotification({
-            type: "success",
+        ElNotification.success({
             message: "Crack Finished",
             position: "bottom-right"
         })
@@ -375,16 +372,10 @@ function linkage(mode: string) {
         return
     }
     if (mode == "webscan") {
-        ElNotification({
-            type: "success",
-            message: `已发送${targets.length}个目标到网站扫描`,
-        })
+        ElNotification.success(`已发送${targets.length}个目标到网站扫描`)
         EzWebscan(targets)
     } else {
-        ElNotification({
-            type: "success",
-            message: `已发送${targets.length}个目标到暴破与未授权检测`,
-        })
+        ElNotification.success(`已发送${targets.length}个目标到暴破与未授权检测`)
         EzCrack(targets)
     }
 }

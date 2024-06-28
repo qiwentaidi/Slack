@@ -5,9 +5,8 @@
                 <el-button type="primary" style="width: 50%;" @click="dialog = true">添加</el-button>
                 <el-button type="primary" style="width: 50%;" @click="
                     save()
-                ElNotification({
+                ElNotification.success({
                     message: 'Save successfully',
-                    type: 'success',
                     position: 'bottom-right',
                 });
                 ">保存</el-button>

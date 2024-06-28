@@ -396,7 +396,7 @@ func parseIcons(doc *goquery.Document) []string {
 
 // 获取favicon hash值
 func FaviconHash(scheme, url string, client *http.Client) string {
-	_, body, err := clients.NewRequest("GET", url, nil, nil, 10, false, client)
+	_, body, err := clients.NewSimpleGetRequest(url, client)
 	if err != nil {
 		return ""
 	}

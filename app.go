@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"runtime"
 	"slack-wails/core"
 	"slack-wails/core/dirsearch"
@@ -90,7 +92,7 @@ type Response struct {
 	Body   string
 }
 
-func (a *App) GoFetch(method, target, body string, headers []map[string]string, timeout int, proxy clients.Proxy) *Response {
+func (a *App) GoFetch(method, target string, body interface{}, headers []map[string]string, timeout int, proxy clients.Proxy) *Response {
 	if _, err := url.Parse(target); err != nil {
 		return &Response{
 			Error:  true,
@@ -105,7 +107,14 @@ func (a *App) GoFetch(method, target, body string, headers []map[string]string, 
 			hhhhheaders.Set(k, v)
 		}
 	}
-	resp, b, err := clients.NewRequest(method, target, hhhhheaders, strings.NewReader(body), 10, true, clients.JudgeClient(proxy))
+	var content []byte
+	// 判断body的类型
+	if data, ok := body.(map[string]interface{}); ok {
+		content, _ = json.Marshal(data)
+	} else {
+		content = []byte(body.(string))
+	}
+	resp, b, err := clients.NewRequest(method, target, hhhhheaders, bytes.NewReader(content), 10, true, clients.JudgeClient(proxy))
 	if err != nil {
 		return &Response{
 			Error:  true,
@@ -173,41 +182,56 @@ func (a *App) CyberChefLocalServer() {
 }
 
 func (a *App) ExtractIP(text string) string {
-	return core.Analysis(text)
-}
-
-func (a *App) DomainInfo(text string) string {
-	name, icp, ip := core.SeoChinaz(a.ctx, text)
-	return fmt.Sprintf(`---备案查询---
-公司名称: %v
-	
-备案号: %v
-	
-IP: %v`, name, icp, ip)
-}
-
-func (a *App) CheckCdn(domain string) string {
 	var result string
+	var IP_analysis = make(map[string]int)
+	result += "---提取IP资产---\n"
+	for _, ip := range util.RemoveDuplicates(util.RegIP.FindAllString(text, -1)) {
+		result += ip + "\n"
+		ip = ip[:len(ip)-len(path.Ext(ip))]
+		IP_analysis[ip+".0"]++
+	}
+	result += "\n\n\n---提取C段资产---\n"
+	for _, p := range util.SortMap(IP_analysis) {
+		result += fmt.Sprintf("%v/24(%v)\n", p.Key, p.Value)
+	}
+	return result
+}
+
+func (a *App) ICPInfo(domain string) string {
+	name, icp, ip := info.SeoChinaz(a.ctx, domain)
+	return fmt.Sprintf("公司名称: %v\n备案号: %v\nIP: %v", name, icp, ip)
+}
+
+func (App) Ip138IpHistory(domain string) string {
+	return info.Ip138IpHistory(domain)
+}
+
+func (App) Ip138Subdomain(domain string) string {
+	return info.Ip138Subdomain(domain)
+}
+func (a *App) CheckCdn(domain string) string {
 	ips, cnames, err := core.Resolution(domain, 10)
-	if err == nil {
-		if len(cnames) != 0 {
-			for name, cdns := range core.ReadCDNFile(a.ctx, a.cdnFile) {
-				for _, cdn := range cdns {
-					for _, cname := range cnames {
-						if strings.Contains(cname, cdn) { // 识别到cdn
-							return fmt.Sprintf("域名: %v 识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v\n", domain, cname, name, strings.Join(ips, " | "))
-						} else if strings.Contains(cname, "cdn") {
-							return fmt.Sprintf("域名: %v CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v \n", domain, cname, strings.Join(ips, " | "))
-						}
-					}
+	if err != nil {
+		return fmt.Sprintf("域名: %v 解析失败,%v", domain, err)
+	}
+	if len(cnames) == 0 {
+		return fmt.Sprintf("域名: %v 未解析到CNAME信息", domain)
+	}
+	cdnData := core.ReadCDNFile(a.ctx, a.cdnFile)
+	ipList := strings.Join(ips, " | ")
+	for _, cname := range cnames {
+		for name, cdns := range cdnData {
+			for _, cdn := range cdns {
+				if strings.Contains(cname, cdn) {
+					return fmt.Sprintf("识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v", cname, name, ipList)
 				}
 			}
 		}
-		result = fmt.Sprintf("域名: %v 解析到IP为: %v CNAME: %v\n", domain, strings.Join(ips, ","), strings.Join(cnames, ","))
-	} else {
-		result = fmt.Sprintf("域名: %v 解析失败,%v\n", domain, err)
+		if strings.Contains(cname, "cdn") {
+			return fmt.Sprintf("CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v", cname, ipList)
+		}
 	}
-	return result
+	return fmt.Sprintf("未识别到CDN信息，解析到IP为: %v CNAME: %v", ipList, strings.Join(cnames, ","))
 }
 
 // 初始化IP记录器

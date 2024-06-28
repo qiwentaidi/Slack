@@ -12,7 +12,9 @@
 
 
 
-## 运行
+# 运行代码
+
+## 安装环境
 
 Linux/Debian
 
@@ -30,99 +32,125 @@ sudo apt install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev libpcap-dev
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
 git clone https://github.com/qiwentaidi/Slack.git
-cd Slack
-
-# choose one, successfully packaged on build/bin
-wails dev || wails build
 ```
 
 Windows
 
 ```sh
 # need install Go 1.20+ && nodejs 15+
-# download gcc(https://sourceforge.net/projects/mingw-w64/) and configure environment variables
+# download gcc(https://github.com/niXman/mingw-builds-binaries/releases) and configure environment variables
 
 # install wails to run app
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
 git clone https://github.com/qiwentaidi/Slack.git
-cd Slack
-
-# choose one, successfully packaged on build/bin
-wails dev || wails build
 ```
 
-# 首页
+## 编译/调试
+
+``````sh
+cd Slack
+# used for debugging while writing code
+wails dev 
+
+# build executable file on /build/bin
+wails build
+
+# open web console in executable file
+wails build -debug -devtools
+``````
+
+# 模块介绍
+
+## 首页
 
 ![image-20240510214011206](assets/image-20240530185056848.png)
 
 ![image-20240510214011206](assets/image-20240530185121324.png)
 
-# 渗透测试
+## 渗透测试
 
-## 网站扫描
+### 网站扫描
 
 ![image-20240510214011206](assets/image-20240510214011206.png)
 
 ![image-20240510214144484](assets/image-20240510214144484.png)
 
-## 主机扫描
+### 主机扫描
 
-![image-20240410135219996](assets/image-20240410135219996.png)
+![image-20240628171638340](assets/image-20240628171638340.png)
 
-## 目录扫描
+### 暴破与未授权检测
+
+![image-20240628173000629](assets/image-20240628173000629.png)
+
+### 目录扫描
 
 ![image-20240410135353422](assets/image-20240410135353422.png)
 
-## JSFinder
+### JSFinder
 
 ![image-20240425150345629](assets/image-20240425150345629.png)
 
-![image-20240425150407430](assets/image-20240425150407430.png)
+## 资产收集
 
-# 资产收集
-
-## 公司名称查资产
+### 公司名称查资产
 
 ![image-20231124155235223](assets/image-20231124155235223.png)
 
 ![image-20240412150938371](assets/image-20240412150938371.png)
 
-## 子域名暴破
+### 子域名暴破
 
 ![image-20240222154726647](assets/image-20240222154726647.png)
 
-## 域名信息查询
+### 域名信息查询
 
-![image-20240410134646623](assets/image-20240410134646623.png)
+![image-20240629003953025](assets/image-20240629003953025.png)
 
-# 空间引擎
+## 空间引擎
 
-## FOFA
+### FOFA
 
 ![image-20231204000209352](assets/image-20231204000209352.png)
 
-## 鹰图
+### 鹰图
 
 ![image-20240620234045723](assets/image-20240620234045723.png)
 
-# 小工具
+### Quake
 
-## 编码转换
+![image-20240628172913333](assets/image-20240628172913333.png)
 
+## 小工具
 
+### 加解密模块
 
-## 数据处理
+![image-20240628172153383](assets/image-20240628172153383.png)
 
-![image-20240512003549512](assets/image-20240512003549512.png)
+### 数据处理
 
-## WeChat
+![image-20240628172250510](assets/image-20240628172250510.png)
+
+### 杀软/补丁识别
+
+![image-20240628172737827](assets/image-20240628172737827.png)
+
+### 反弹Shell生成
+
+![image-20240628172826365](assets/image-20240628172826365.png)
+
+### 备忘录
+
+![image-20240628172702349](assets/image-20240628172702349.png)
+
+### WeChat/DingDing
 
 ![image-20240512003433659](assets/image-20240512003433659.png)
 
 
 
-## 常见问题
+# 常见问题
 
 > Q：Windows grdp库无法打包，出现如下报错
 >

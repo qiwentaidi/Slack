@@ -276,7 +276,7 @@ class Scanner {
 
     }
     public async done() {
-        ElNotification({
+        ElNotification.success({
             message: "Scanner Finished",
             position: "bottom-right",
         })
@@ -324,7 +324,7 @@ const uncover = {
         })
     },
     dirsearch: async function (url: string) {
-        ElNotification({
+        ElNotification.success({
             message: "已将目标联动至目录扫描",
             position: "bottom-right"
         })

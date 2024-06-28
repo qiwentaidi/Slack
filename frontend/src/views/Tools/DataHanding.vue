@@ -61,10 +61,7 @@ function Deduplication() {
         ElNotification('不存在重复数据')
         return
     }
-    ElNotification({
-        message: `已去重数据${lines.length - uniqueArray.length}条`,
-        type: 'success'
-    })
+    ElNotification.success(`已去重数据${lines.length - uniqueArray.length}条`)
     form.result = uniqueArray.join('\n')
 }
 
@@ -138,7 +135,7 @@ function getURLs() : string[]{
                 IP提取
             </el-button>
             <el-button @click="extractDomains" style="width: 250px" type="warning">
-                URL域名提取
+                提取URL中的域名
             </el-button>
             <el-button @click="extractUrls" style="width: 250px" type="info">
                 URL提取

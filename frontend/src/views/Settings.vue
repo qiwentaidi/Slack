@@ -84,9 +84,8 @@ function saveConfig() {
   localStorage.setItem('proxy', JSON.stringify(global.proxy));
   localStorage.setItem('space', JSON.stringify(global.space));
   localStorage.setItem('webscan', JSON.stringify(global.webscan));
-  ElNotification({
+  ElNotification.success({
     message: 'Save successful',
-    type: 'success',
     position: 'bottom-right'
   })
 };

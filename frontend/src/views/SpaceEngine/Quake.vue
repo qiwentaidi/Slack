@@ -220,7 +220,7 @@
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">
-                            <el-button link @click.prevent="">
+                            <el-button link @click.prevent="tableCtrl.searchCsegment(scope.row.IP)">
                                 <template #icon>
                                     <svg t="1719219479838" class="icon" viewBox="0 0 1450 1024" version="1.1"
                                         xmlns="http://www.w3.org/2000/svg" p-id="5099" width="200" height="200">
@@ -659,6 +659,10 @@ const tableCtrl = ({
             return []
         }
         return ips
+    },
+    searchCsegment: function(ip: string) {
+        let cSegment = ip.split('.').slice(0, 3).join('.') + ".0/24";
+        tableCtrl.addTab("ip: " + cSegment, false)
     }
 })
 
@@ -775,6 +779,11 @@ async function exportData(mode: number) {
     text-overflow: ellipsis;
 }
 
+.quake-tabs :deep(.el-tabs__item:hover) {
+    color: #4CA87D;
+    cursor: pointer;
+}
+
 .quake-tabs :deep(.el-tabs__item .el-icon) {
     position: absolute !important;
     top: 13px !important;
@@ -791,6 +800,10 @@ async function exportData(mode: number) {
 
 .quake-pagin :deep(.el-pager li.is-active) {
     background-color: #4CA87D;
+}
+
+.quake-pagin :deep(.el-pager li.is-active:hover) {
+    color: #fff;
 }
 
 .quake-pagin :deep(.el-pager li:hover) {

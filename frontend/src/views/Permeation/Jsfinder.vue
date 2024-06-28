@@ -2,10 +2,11 @@
 import { reactive, ref } from 'vue';
 import { Copy, CopyALL, formatURL } from '../../util';
 import { JSFind } from '../../../wailsjs/go/main/App';
-import { QuestionFilled, Search, CopyDocument } from '@element-plus/icons-vue';
+import { QuestionFilled, Search, CopyDocument, Link } from '@element-plus/icons-vue';
 import async from 'async';
 import global from "../../global";
 import { ElNotification, ElMessage } from 'element-plus';
+import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
 const config = reactive({
   urls: "",
   loading: false,
@@ -110,8 +111,7 @@ async function JSFinder() {
           }
         })
       }
-      ElNotification({
-        type: "success",
+      ElNotification.success({
         message: 'JSFind Finished!',
         position: "bottom-right"
       });
@@ -123,9 +123,8 @@ async function JSFinder() {
 
 const saveConfig = () => {
   localStorage.setItem('jsfind', JSON.stringify(global.jsfind));
-  ElNotification({
+  ElNotification.success({
     message: 'Save successful',
-    type: 'success',
     position: 'bottom-right'
   })
 }
@@ -149,6 +148,14 @@ function changeType(item: dashboardItem) {
       break
     default:
       global.jsfind.defaultType[2] = item.tagType.value
+  }
+}
+
+function getLength(arr: any) {
+  if (Array.isArray(arr)) {
+    return arr.length
+  } else {
+    return 0
   }
 }
 </script>
@@ -189,7 +196,8 @@ function changeType(item: dashboardItem) {
             <el-icon>
               <component :is="item.icon" />
             </el-icon>
-            <span style="font-weight: bold; margin-right: 5px;">{{ item.title }}: {{ item.data.value.length }}</span>
+            <span style="font-weight: bold; margin-right: 5px;">{{ item.title }}: {{ getLength(item.data.value)
+              }}</span>
           </div>
           <el-button round type="primary" size="small" @click="CopyALL(item.data.value.map(item => item.Filed))">Copy
             ALL</el-button>
@@ -211,6 +219,11 @@ function changeType(item: dashboardItem) {
                   <CopyDocument />
                 </el-icon>
                 复制来源</el-menu-item>
+              <el-menu-item index="open-source" @click="BrowserOpenURL(ls.Source)">
+                <el-icon>
+                  <Link />
+                </el-icon>
+                打开来源链接</el-menu-item>
             </el-menu>
           </el-popover>
         </div>

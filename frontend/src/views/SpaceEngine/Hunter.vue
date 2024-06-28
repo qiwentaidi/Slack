@@ -199,23 +199,14 @@ const tableCtrl = ({
             if (result.code !== 200) {
                 switch (result.code) {
                     case 0:
-                        ElNotification({
-                            message: '请求超时',
-                            type: "error",
-                        });
+                        ElNotification.error('请求超时');
                         table.loading = false
                         return
                     case 40205:
-                        ElNotification({
-                            message: result.message,
-                            type: "info",
-                        });
+                        ElNotification.info(result.message);
                         break
                     default:
-                        ElNotification({
-                            message: result.message,
-                            type: "error",
-                        });
+                        ElNotification.error(result.message);
                         table.loading = false
                         return
                 }
@@ -224,10 +215,7 @@ const tableCtrl = ({
             const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
             tab.content!.pop()
             if (result.data.arr == null) {
-                ElNotification({
-                    message: "暂未查询到相关数据",
-                    type: "warning",
-                });
+                ElNotification.warning("暂未查询到相关数据");
                 table.loading = false
                 return
             }
@@ -275,16 +263,14 @@ const tableCtrl = ({
         HunterSearch(global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
-                    ElNotification({
+                    ElNotification.info({
                         title: "提示",
                         message: result.message,
-                        type: "info",
                     });
                 } else {
-                    ElNotification({
+                    ElNotification.error({
                         title: "提示",
                         message: result.message,
-                        type: "error",
                     });
                     table.loading = false
                     return
@@ -320,16 +306,14 @@ const tableCtrl = ({
         HunterSearch(global.space.hunterkey, tab.title, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 if (result.code == 40205) {
-                    ElNotification({
+                    ElNotification.info({
                         title: "提示",
                         message: result.message,
-                        type: "info",
                     });
                 } else {
-                    ElNotification({
+                    ElNotification.error({
                         title: "提示",
                         message: result.message,
-                        type: "error",
                     });
                     table.loading = false
                     return
@@ -368,10 +352,7 @@ const tableCtrl = ({
             .then(async ({ value }) => {
                 let hash = await FaviconMd5(value.trim())
                 if (hash == "") {
-                    ElNotification({
-                        message: "目标不可达或者URL格式错误",
-                        type: "warning",
-                    });
+                    ElNotification.warning("目标不可达或者URL格式错误");
                     return
                 }
                 tableCtrl.addTab(`web.icon=="${hash}"`)
@@ -386,10 +367,9 @@ async function SaveData(mode: number) {
         if (mode == 0) {
             ExportToXlsx(["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"], "asset", "hunter_asset", tab.content!)
         } else {
-            ElNotification({
+            ElNotification.info({
                 title: "提示",
                 message: "正在进行全数据导出，API每页最大查询限度100，请稍后。",
-                type: "info",
             });
             let temp = [{}]
             temp.pop()

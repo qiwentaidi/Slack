@@ -35,9 +35,8 @@ onMounted(() => {
 onMounted(async () => {
     if (await CheckFileStat(await UserHomeDir() + "/slack/CyberChef")) {
         config.LocalENV = true
-        ElNotification({
+        ElNotification.success({
             message: '检测到本地环境存在，优先使用本地环境',
-            type: 'success',
             duration: 2000,
         })
         loadLocal()

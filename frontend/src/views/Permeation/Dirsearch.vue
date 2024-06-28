@@ -19,9 +19,8 @@ onMounted(() => {
             case 1:
                 break
             case 999:
-                ElNotification({
+                ElNotification.error({
                     message: result.Message,
-                    type: 'error',
                     position: 'bottom-right',
                 });
                 break
@@ -183,9 +182,8 @@ const control = ({
         if (config.runningStatus) {
             await StopDirScan()
             config.runningStatus = false
-            ElNotification({
+            ElNotification.error({
                 message: "用户已终止扫描任务",
-                type: 'error',
                 position: 'bottom-right',
             });
         }
@@ -214,7 +212,7 @@ const control = ({
 
 async function GetResponse(url: string) {
     from.respDialog = true
-    let result: any = await GoFetch("GET", url, "", [{}], 10, proxys);
+    let result: any = await GoFetch(from.defaultOption, url, "", [{}], 10, proxys);
     if (result.Error) {
         from.content = '目的地址响应超时'
     }

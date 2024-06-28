@@ -72,14 +72,8 @@ export async function ExportFile(
   }
   const result = await WriteFile(filetype, path, content);
   if (result) {
-    ElNotification({
-      message: "数据保存成功，路径为:" + path,
-      type: "success",
-    });
+    ElNotification.success("数据保存成功，路径为:" + path);
   } else {
-    ElNotification({
-      message: "数据导出失败!",
-      type: "warning",
-    });
+    ElNotification.warning("数据导出失败!");
   }
 }

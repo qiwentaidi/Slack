@@ -20,7 +20,7 @@ import (
 var (
 	ExitFunc      = false
 	errorCount    int32
-	bodyLengthMap = make(map[string]int)
+	bodyLengthMap map[string]int
 	mutex         = sync.Mutex{}
 )
 
@@ -49,6 +49,7 @@ type Options struct {
 
 // method 请求类型
 func NewScanner(ctx context.Context, o Options) {
+	bodyLengthMap = make(map[string]int)
 	// 初始化请求信息
 	if o.Timeout == 0 {
 		o.Timeout = 8

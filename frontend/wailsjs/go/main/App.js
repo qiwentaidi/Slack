@@ -26,10 +26,6 @@ export function DirScan(arg1) {
   return window['go']['main']['App']['DirScan'](arg1);
 }
 
-export function DomainInfo(arg1) {
-  return window['go']['main']['App']['DomainInfo'](arg1);
-}
-
 export function DownloadCyberChef(arg1) {
   return window['go']['main']['App']['DownloadCyberChef'](arg1);
 }
@@ -82,6 +78,10 @@ export function HunterTips(arg1) {
   return window['go']['main']['App']['HunterTips'](arg1);
 }
 
+export function ICPInfo(arg1) {
+  return window['go']['main']['App']['ICPInfo'](arg1);
+}
+
 export function IPParse(arg1) {
   return window['go']['main']['App']['IPParse'](arg1);
 }
@@ -100,6 +100,14 @@ export function InitRule() {
 
 export function InitTycHeader(arg1) {
   return window['go']['main']['App']['InitTycHeader'](arg1);
+}
+
+export function Ip138IpHistory(arg1) {
+  return window['go']['main']['App']['Ip138IpHistory'](arg1);
+}
+
+export function Ip138Subdomain(arg1) {
+  return window['go']['main']['App']['Ip138Subdomain'](arg1);
 }
 
 export function IsHighRisk(arg1) {
