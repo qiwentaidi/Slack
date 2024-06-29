@@ -1,15 +1,12 @@
 <script lang="ts" setup>
-import { reactive, ref } from "vue";
+import { reactive } from "vue";
 import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger } from "../../../wailsjs/go/main/App";
 import { ExportAssetToXlsx } from '../../export'
 import { onMounted } from 'vue';
-import { CompanyInfo } from "../../interface";
-// 初始化时调用
-onMounted(() => {
-    Init()
-});
+import { CompanyInfo, WechatInfo } from "../../interface";
+
 const from = reactive({
     subcompany: false,
     wechat: false,
@@ -24,15 +21,10 @@ const from = reactive({
     domains: [] as string[],
 })
 
-const we = ref([{}])
-
 const table = reactive({
-    company: [] as CompanyInfo[]
+    company: [] as CompanyInfo[],
+    wehcat: [] as WechatInfo[]
 })
-
-function Init() {
-    we.value = [];
-}
 
 function Collect() {
     if (from.company === "") {
@@ -63,14 +55,15 @@ function Collect() {
         })
         return
     }
-    Init()
+    table.company = []
+    table.wehcat = []
     if (from.subcompany) {
         const promises = from.companys.map(async companyName => {
             Callgologger("info", `正在收集${companyName}的子公司信息`)
             if (typeof companyName === 'string') {
-                const result: any = await SubsidiariesAndDomains(companyName, from.defaultHold);
-                if (Array.isArray(result.Asset) && result.Asset.length > 0) {
-                    for (const item of result.Asset) {
+                const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.defaultHold);
+                if (result.length > 0) {
+                    for (const item of result) {
                         table.company.push({
                             CompanyName: item.CompanyName,
                             Holding: item.Holding,
@@ -78,9 +71,6 @@ function Collect() {
                             Domains: item.Domains,
                         })
                     }
-                }
-                if (result.Prompt.length > 0) { // 处理字符串
-                    Callgologger("info", `${result.Prompt}`)
                 }
             }
         });
@@ -92,22 +82,18 @@ function Collect() {
         const promises = from.companys.map(async companyName => {
             Callgologger("info", `正在收集${companyName}的微信公众号资产`)
             if (typeof companyName === 'string') {
-                const result: any = await WechatOfficial(companyName);
-                if (result.Asset.length > 0) {
-                    const mappedResult = result.Asset.map((item: any) => {
-                        return {
-                            companyName: companyName,
-                            weName: item[0],
-                            weNums: item[1],
-                            logo: item[2],
-                            qrcode: item[3],
-                            introduction: item[4],
-                        };
-                    });
-                    we.value.push(...mappedResult);
-                }
-                if (result.Prompt.length > 0) { // 处理字符串
-                    Callgologger("info", `${result.Prompt}`)
+                const result: WechatInfo[] = await WechatOfficial(companyName);
+                if (result.length > 0) {
+                    for (const item of result) {
+                        table.wehcat.push({
+                            CompanyName: item.CompanyName,
+                            WechatName: item.WechatName,
+                            WechatNums: item.WechatNums,
+                            Qrcode: item.Qrcode,
+                            Logo: item.Logo,
+                            Introduction: item.Introduction,
+                        });
+                    }
                 }
             }
         });
@@ -123,7 +109,7 @@ const dataHandle = ({
             CompanyName: item.CompanyName,
             Holding: item.Holding,
             Investment: item.Investment,
-            Domains: item.Domains.map(it => JSON.stringify(it)).join('|')
+            Domains: item.Domains?.map(it => JSON.stringify(it)).join('|')
         }))
     }
 })
@@ -163,10 +149,10 @@ const dataHandle = ({
         <el-tabs v-model="from.activeName" type="card">
             <el-tab-pane label="控股企业" name="subcompany">
                 <el-table :data="table.company" height="60vh" border>
-                    <el-table-column type="index" width="60px" />
+                    <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" :show-overflow-tooltip="true" />
-                    <el-table-column prop="Holding" label="股权比例" :show-overflow-tooltip="true" />
-                    <el-table-column prop="Investment" label="投资数额" :show-overflow-tooltip="true" />
+                    <el-table-column prop="Holding" width="100px" label="股权比例" />
+                    <el-table-column prop="Investment" width="160px" label="投资数额" />
                     <el-table-column prop="Domains" label="域名">
                         <template #default="scope">
                             <div class="finger-container" v-if="scope.row.Domains.length > 0">
@@ -182,19 +168,19 @@ const dataHandle = ({
             </el-tab-pane>
 
             <el-tab-pane label="公众号" name="wechat">
-                <el-table :data="we" height="60vh" border :cell-style="{ height: '23px' }">
-                    <el-table-column type="index" width="60px" />
-                    <el-table-column prop="companyName" label="公司名称" width="180px" />
-                    <el-table-column prop="weName" label="公众号名称">
+                <el-table :data="table.wehcat" height="65vh" border :cell-style="{ height: '23px' }">
+                    <el-table-column type="index" label="#" width="60px" />
+                    <el-table-column prop="CompanyName" label="公司名称" width="180px" />
+                    <el-table-column prop="WechatName" label="公众号名称">
                         <template #default="scope">
                             <div class="flex-box">
-                                <img :src="scope.row.logo" style="width: 25px; height: 25px; margin-right: 10px;">
-                                <span>{{ scope.row.weName }}</span>
+                                <img :src="scope.row.Logo" style="width: 25px; height: 25px; margin-right: 10px;">
+                                <span>{{ scope.row.WechatName }}</span>
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="weNums" label="微信号" :show-overflow-tooltip="true" />
-                    <el-table-column prop="qrcode" width="80px" label="二维码" align="center">
+                    <el-table-column prop="WechatNums" label="微信号" :show-overflow-tooltip="true" />
+                    <el-table-column prop="Qrcode" width="80px" label="二维码" align="center">
                         <template #default="scope">
                             <el-popover :width="180" placement="left">
                                 <template #reference>
@@ -206,12 +192,12 @@ const dataHandle = ({
                                     </svg>
                                 </template>
                                 <template #default>
-                                    <img :src="scope.row.qrcode" style="width: 150px; height: 150px">
+                                    <img :src="scope.row.Qrcode" style="width: 150px; height: 150px">
                                 </template>
                             </el-popover>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="introduction" label="简介" :show-overflow-tooltip="true" />
+                    <el-table-column prop="Introduction" label="简介" :show-overflow-tooltip="true" />
                     <template #empty>
                         <el-empty />
                     </template>
@@ -219,7 +205,7 @@ const dataHandle = ({
             </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar">
-            <el-button @click="ExportAssetToXlsx(dataHandle.companyInfo(table.company), we)">
+            <el-button @click="ExportAssetToXlsx(dataHandle.companyInfo(table.company), table.wehcat)">
                 <template #icon>
                     <img src="/excel.svg" width="16">
                 </template>导出Excel</el-button>

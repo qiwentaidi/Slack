@@ -5,6 +5,7 @@ import {main} from '../models';
 import {dirsearch} from '../models';
 import {space} from '../models';
 import {jsfind} from '../models';
+import {info} from '../models';
 
 export function ActiveFingerScan(arg1:Array<string>,arg2:clients.Proxy):Promise<void>;
 
@@ -94,7 +95,7 @@ export function StopPortScan():Promise<void>;
 
 export function Subdomain(arg1:string,arg2:number):Promise<Array<string>>;
 
-export function SubsidiariesAndDomains(arg1:string,arg2:number):Promise<main.TycAssetResult>;
+export function SubsidiariesAndDomains(arg1:string,arg2:number):Promise<Array<info.CompanyInfo>>;
 
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
 
@@ -104,4 +105,4 @@ export function UseDruid(arg1:string,arg2:number,arg3:clients.Proxy):Promise<Arr
 
 export function WebPocLength():Promise<number>;
 
-export function WechatOfficial(arg1:string):Promise<main.WechatAssetResult>;
+export function WechatOfficial(arg1:string):Promise<Array<info.WechatReulst>>;

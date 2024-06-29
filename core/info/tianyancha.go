@@ -92,26 +92,19 @@ type TycResult struct {
 var (
 	company_name string
 	company_id   string
-	// tycTotal     = regexp.MustCompile(`beian-name">(\d+)`)
-	// reg          = regexp.MustCompile(`(?s)ranking-keys">.*?<span class="ranking-ym" rel="nofollow">.*?</span>`) // 包含公司名称以及域名
-	// regCompany   = regexp.MustCompile(`keys">(.*?)</a>`)                                                         // 公司名
-	// regDomain    = regexp.MustCompile(`nofollow">(.*?)</span>`)                                                  // 域名
-)
-
-var (
-	gethead  = http.Header{}
-	posthead = http.Header{}
+	gethead      = http.Header{}
+	posthead     = http.Header{}
 )
 
 func InitHEAD(token string) {
 	gethead.Set("Version", "TYC-Web")
 	gethead.Set("X-Auth-Token", token)
-	gethead.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+	gethead.Set("User-Agent", util.RandomUA())
 
 	posthead.Set("Version", "TYC-Web")
 	posthead.Set("X-Auth-Token", token)
 	posthead.Set("Content-Type", "application/json")
-	posthead.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+	posthead.Set("User-Agent", util.RandomUA())
 }
 
 // 要根据ID值查子公司
@@ -166,7 +159,7 @@ type CompanyInfo struct {
 }
 
 // 返回查询公司的名称和子公司的名称
-func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int) (holdasset []CompanyInfo, logs string) {
+func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int) (Asset []CompanyInfo) {
 	data := make(map[string]interface{})
 	data["gid"] = companyId
 	data["pageSize"] = 100
@@ -178,80 +171,22 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-company-background/company/investListV2", posthead, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
 		gologger.Error(ctx, err)
+		return
 	}
 	var qr TycResult
 	json.Unmarshal(b, &qr)
 	// 获取到本公司对应的域名
-	domains := Beianx(companyName)
-	holdasset = append(holdasset, CompanyInfo{companyName, "本公司", "", util.RemoveDuplicates(domains)})
+	domains, _ := Beianx(companyName)
+	Asset = append(Asset, CompanyInfo{companyName, "本公司", "", util.RemoveDuplicates(domains)})
 	for _, result := range qr.Data.Result {
 		gq, _ := strconv.Atoi(strings.TrimSuffix(result.Percent, "%"))
 		if gq <= 100 && gq >= ratio { // 提取在控股范围内的子公司
-			subsidiaryDomains := Beianx(result.Name)
-			if len(subsidiaryDomains) > 0 {
-				holdasset = append(holdasset, CompanyInfo{result.Name, result.Percent, result.Amount, util.RemoveDuplicates(subsidiaryDomains)})
-			} else { // 没查到域名的子公司也要显示
-				holdasset = append(holdasset, CompanyInfo{result.Name, result.Percent, result.Amount, []string{}})
-			}
+			subsidiaryDomains, _ := Beianx(result.Name)
+			Asset = append(Asset, CompanyInfo{result.Name, result.Percent, result.Amount, util.RemoveDuplicates(subsidiaryDomains)})
 		}
 	}
-	fmt.Printf("holdasset: %v\n", holdasset)
-	return holdasset, logs
+	return
 }
-
-// 返回对应域名组
-// func ICP2Domain(company string) (domains []string) {
-// 	var pages int
-// 	_, b, err := clients.NewRequest("GET", "https://beian.tianyancha.com/search/"+url.QueryEscape(company), gethead, nil, 10, clients.DefaultClient())
-// 	if err != nil {
-// 		logger.NewDefaultLogger().Debug(err.Error())
-// 	}
-// 	fmt.Printf("string(b): %v\n", string(b))
-// 	t := tycTotal.FindStringSubmatch(string(b))
-// 	if len(t) > 0 {
-// 		if total, _ := strconv.Atoi(t[1]); total <= 20 {
-// 			pages = 1
-// 		} else {
-// 			pages = total/20 + 1
-// 		}
-// 	} else {
-// 		pages = 1
-// 	}
-// 	for _, v := range reg.FindAllString(string(b), -1) {
-// 		companyName := regCompany.FindStringSubmatch(v)
-// 		domain := regDomain.FindStringSubmatch(v)
-// 		companyNames := strings.ReplaceAll(strings.ReplaceAll(companyName[1], "<em>", ""), "</em>", "")
-// 		if companyNames == company {
-// 			domains = append(domains, domain[1])
-// 			d := Beianx(company)
-// 			if len(d) > 0 {
-// 				domains = append(domains, d...)
-// 			}
-// 		}
-// 	}
-// 	// 查询页码大于1时需要对其他页码也进行筛选
-// 	if pages > 1 {
-// 		for i := 2; i <= pages; i++ {
-// 			_, b, err := clients.NewRequest("GET", fmt.Sprintf(`https://beian.tianyancha.com/search/%v/p%d`, url.QueryEscape(company), i), gethead, nil, 10, clients.DefaultClient())
-// 			if err != nil {
-// 				logger.NewDefaultLogger().Debug(err.Error())
-// 			}
-// 			for _, v := range reg.FindAllString(string(b), -1) {
-// 				companyName := regCompany.FindStringSubmatch(v)
-// 				domain := regDomain.FindStringSubmatch(v)
-// 				companyNames := strings.ReplaceAll(strings.ReplaceAll(companyName[1], "<em>", ""), "</em>", "")
-// 				if companyNames == company {
-// 					domains = append(domains, domain[1])
-// 					d := Beianx(company)
-// 					if len(d) > 0 {
-// 						domains = append(domains, d...)
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return domains
-// }
 
 type OfficialAccounts struct {
 	State      string `json:"state"`
@@ -272,28 +207,43 @@ type OfficialAccounts struct {
 	} `json:"data"`
 }
 
+type WechatReulst struct {
+	CompanyName  string
+	WechatName   string
+	WechatNums   string
+	Logo         string
+	Qrcode       string
+	Introduction string
+}
+
 // 获取微信公众号信息
-func WeChatOfficialAccounts(companyName, companyId string) (asset [][]string, logs string) {
+func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) (wr []WechatReulst) {
 	_, b, err := clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize=1&pageNum=1", gethead, nil, 10, true, clients.DefaultClient())
 	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
-		return nil, logs
+		gologger.Error(ctx, err)
+		return
 	}
 	var oa OfficialAccounts
 	json.Unmarshal(b, &oa)
 	if oa.ErrorCode != 0 || oa.Data.Count == 0 {
-		logs = "公众号查询出现错误或不存在公众号资产,公司名称: " + companyName
-		return nil, logs
+		gologger.Info(ctx, "公众号查询出现错误或不存在公众号资产,公司名称: "+companyName)
+		return
 	}
-
 	_, b, err = clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize="+fmt.Sprint(oa.Data.Count)+"&pageNum=1", gethead, nil, 10, true, clients.DefaultClient())
 	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
-		return nil, logs
+		gologger.Error(ctx, err)
+		return
 	}
 	json.Unmarshal(b, &oa)
 	for _, result := range oa.Data.ResultList {
-		asset = append(asset, []string{result.Title, result.PublicNum, result.TitleImgURL, result.CodeImg, result.Recommend})
+		wr = append(wr, WechatReulst{
+			CompanyName:  companyName,
+			WechatNums:   result.PublicNum,
+			WechatName:   result.Title,
+			Qrcode:       result.CodeImg,
+			Introduction: result.Recommend,
+			Logo:         result.TitleImgURL,
+		})
 	}
-	return asset, logs
+	return
 }

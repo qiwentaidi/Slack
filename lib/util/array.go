@@ -19,6 +19,9 @@ func RemoveElement[T comparable](arr []T, ele T) (newArr []T) {
 func RemoveDuplicates[T comparable](arr []T) []T {
 	encountered := map[T]bool{}
 	result := []T{}
+	if len(arr) == 0 {
+		return result
+	}
 	for _, v := range arr {
 		if !encountered[v] {
 			encountered[v] = true

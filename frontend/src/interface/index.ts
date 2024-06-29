@@ -139,10 +139,19 @@ export interface RuleForm {
 }
 
 export interface CompanyInfo {
-    CompanyName: string;
-    Holding: string;
-    Investment: string;
-    Domains: string[];
+    CompanyName?: string;
+    Holding?: string;
+    Investment?: string;
+    Domains?: string[];
+}
+
+export interface WechatInfo {
+    CompanyName?: string;
+    WechatName?: string;
+    WechatNums?: string;
+    Logo?: string;
+    Qrcode?: string;
+    Introduction?: string;
 }
 
 export interface QuakeResult {

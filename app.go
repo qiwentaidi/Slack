@@ -253,54 +253,29 @@ func (a *App) InitTycHeader(token string) {
 	info.InitHEAD(token)
 }
 
-type TycAssetResult struct {
-	Asset  []info.CompanyInfo
-	Prompt string
-}
-
 // mode 0 = 查询子公司 . mode 1 = 查询公众号
-func (a *App) SubsidiariesAndDomains(companyName string, ratio int) TycAssetResult {
-	var isFuzz string
+func (a *App) SubsidiariesAndDomains(companyName string, ratio int) []info.CompanyInfo {
 	companyId, fuzzName := info.GetCompanyID(a.ctx, companyName) // 获得到一个模糊匹配后，关联度最高的名称
 	if companyName != fuzzName {                                 // 如果传进来的名称与模糊匹配的不相同
-		isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
+		var isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
+		gologger.Info(a.ctx, isFuzz)
 	}
-	asset, logs := info.SearchSubsidiary(a.ctx, fuzzName, companyId, ratio)
-	if isFuzz == "" {
-		logs = isFuzz + logs
-	}
-	return TycAssetResult{
-		Asset:  asset,
-		Prompt: logs,
-	}
-
+	return info.SearchSubsidiary(a.ctx, fuzzName, companyId, ratio)
 }
 
-type WechatAssetResult struct {
-	Asset  [][]string
-	Prompt string
-}
-
-func (a *App) WechatOfficial(companyName string) WechatAssetResult {
-	var isFuzz string
+func (a *App) WechatOfficial(companyName string) []info.WechatReulst {
 	companyId, fuzzName := info.GetCompanyID(a.ctx, companyName) // 获得到一个模糊匹配后，关联度最高的名称
-	if companyName != fuzzName {                                 // 如果传进来的名称与模糊匹配的不相同
-		isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
+	if companyName != fuzzName {
+		var isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
+		gologger.Info(a.ctx, isFuzz)
 	}
-	asset, logs := info.WeChatOfficialAccounts(fuzzName, companyId)
-	if isFuzz == "" {
-		logs = isFuzz + logs
-	}
-	return WechatAssetResult{
-		Asset:  asset,
-		Prompt: logs,
-	}
+	return info.WeChatOfficialAccounts(a.ctx, fuzzName, companyId)
 }
 
-type HunterSearch struct {
-	Total string
-	Info  string
-}
+// type HunterSearch struct {
+// 	Total string
+// 	Info  string
+// }
 
 // mode = 0 campanyName, mode = 1 domain or ip
 // func (a *App) AssetHunter(mode int, target, api string) HunterSearch {

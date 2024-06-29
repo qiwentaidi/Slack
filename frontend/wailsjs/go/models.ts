@@ -32,6 +32,35 @@ export namespace dirsearch {
 
 }
 
+export namespace info {
+	
+	export class CompanyInfo {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new CompanyInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+	export class WechatReulst {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new WechatReulst(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+
+}
+
 export namespace jsfind {
 	
 	export class FindSomething {
@@ -128,30 +157,6 @@ export namespace main {
 	
 	    static createFrom(source: any = {}) {
 	        return new Syntax(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
-	export class TycAssetResult {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new TycAssetResult(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
-	export class WechatAssetResult {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new WechatAssetResult(source);
 	    }
 	
 	    constructor(source: any = {}) {

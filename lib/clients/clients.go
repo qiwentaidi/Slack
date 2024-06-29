@@ -81,6 +81,9 @@ func NewRequest(method, url string, headers http.Header, body io.Reader, timeout
 	if b, err := io.ReadAll(resp.Body); err == nil {
 		return resp, b, nil
 	} else {
+		if err.Error() == "unexpected EOF" {
+			return nil, b, err
+		}
 		return nil, nil, err
 	}
 }

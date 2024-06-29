@@ -26,8 +26,7 @@ type Proxy struct {
 // 选择代理模式，返回http.client
 func SelectProxy(pr *Proxy, client *http.Client) (*http.Client, error) {
 	if pr.Mode == "HTTP" {
-		urli := url.URL{}
-		urlproxy, _ := urli.Parse(fmt.Sprintf("%v://%v:%v", pr.Mode, pr.Address, pr.Port)) //"https://127.0.0.1:9743"
+		urlproxy, _ := url.Parse(fmt.Sprintf("%v://%v:%v", pr.Mode, pr.Address, pr.Port)) //"https://127.0.0.1:9743"
 		client.Transport = &http.Transport{
 			Proxy:               http.ProxyURL(urlproxy),
 			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true}, // 防止HTTPS报错
