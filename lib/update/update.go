@@ -13,6 +13,7 @@ import (
 	"slack-wails/lib/util"
 	"time"
 
+	"github.com/minio/selfupdate"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -49,29 +50,16 @@ func download(target, dest string) (string, error) {
 	return fileName, nil
 }
 
-func InitConfig(configPath string) bool {
-	var defaultFile = util.HomeDir() + "/slack/"
-	os.MkdirAll(configPath, 0777)
-	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
-	_, b, err := clients.NewSimpleGetRequest(latestConfigVersion, http.DefaultClient)
+func UpdateClientWithoutProgress(url string) error {
+	resp, err := http.Get(url)
 	if err != nil {
-		return false
+		return err
 	}
-	configFileZip := lastestPocUrl + "v" + string(b) + "/config.zip"
-	fileName, err := download(configFileZip, defaultFile)
-	if err != nil {
-		return false
-	}
-	uz := util.NewUnzip()
-	if _, err := uz.Extract(defaultFile+fileName, configPath); err != nil {
-		return false
-	}
-	os.Remove(util.HomeDir() + "/slack/config.zip")
-	return true
+	defer resp.Body.Close()
+	return selfupdate.Apply(resp.Body, selfupdate.Options{})
 }
 
-// 带前端下载动画
-func NewDownload(ctx context.Context, target, dest string) (string, error) {
+func NewDownload(ctx context.Context, target, dest, events string) (string, error) {
 	fileName := path.Base(target)
 	res, err := http.Get(target)
 	if err != nil {
@@ -98,7 +86,7 @@ func NewDownload(ctx context.Context, target, dest string) (string, error) {
 			downloadedSize += int64(n)
 			progress := float64(downloadedSize) / float64(totalSize) * 100
 			roundedProgress := roundToTwoDecimals(progress)
-			runtime.EventsEmit(ctx, "downloadProgress", roundedProgress)
+			runtime.EventsEmit(ctx, events, roundedProgress)
 		}
 		if err != nil {
 			if err == io.EOF {
@@ -113,4 +101,25 @@ func NewDownload(ctx context.Context, target, dest string) (string, error) {
 
 func roundToTwoDecimals(value float64) float64 {
 	return math.Round(value*100) / 100
+}
+
+func InitConfig(configPath string) bool {
+	var defaultFile = util.HomeDir() + "/slack/"
+	os.MkdirAll(configPath, 0777)
+	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
+	_, b, err := clients.NewSimpleGetRequest(latestConfigVersion, http.DefaultClient)
+	if err != nil {
+		return false
+	}
+	configFileZip := lastestPocUrl + "v" + string(b) + "/config.zip"
+	fileName, err := download(configFileZip, defaultFile)
+	if err != nil {
+		return false
+	}
+	uz := util.NewUnzip()
+	if _, err := uz.Extract(defaultFile+fileName, configPath); err != nil {
+		return false
+	}
+	os.Remove(util.HomeDir() + "/slack/config.zip")
+	return true
 }

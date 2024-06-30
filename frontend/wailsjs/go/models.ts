@@ -80,18 +80,6 @@ export namespace jsfind {
 
 export namespace main {
 	
-	export class Children {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new Children(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
 	export class FileInfo {
 	
 	
@@ -104,47 +92,11 @@ export namespace main {
 	
 	    }
 	}
-	export class FormatTarget {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new FormatTarget(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
-	export class Navigation {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new Navigation(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
 	export class PathInfo {
 	
 	
 	    static createFrom(source: any = {}) {
 	        return new PathInfo(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
-	export class Response {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new Response(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -364,6 +316,59 @@ export namespace space {
 		    }
 		    return a;
 		}
+	}
+
+}
+
+export namespace structs {
+	
+	export class Children {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Children(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+	export class Navigation {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Navigation(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+	export class Response {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Response(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+	export class Status {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Status(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
 	}
 
 }

@@ -28,6 +28,7 @@ require (
 )
 
 require (
+	aead.dev/minisign v0.2.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -36,6 +37,7 @@ require (
 	github.com/jackpal/gateway v1.0.15 // indirect
 	github.com/libp2p/go-netroute v0.2.1 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.23 // indirect
+	github.com/minio/selfupdate v0.6.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/projectdiscovery/stringsutil v0.0.2 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect

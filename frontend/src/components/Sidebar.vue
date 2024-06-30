@@ -59,7 +59,7 @@ const dg = reactive({
           <Refresh />
         </el-icon>
         <template #title><span>{{ $t("aside.update") }}</span></template>
-        <el-badge is-dot v-if="global.UPDATE.ClientStatus ||
+        <el-badge value="new" v-if="global.UPDATE.ClientStatus ||
       global.UPDATE.PocStatus
       " />
       </el-menu-item>
@@ -113,7 +113,9 @@ const dg = reactive({
 
 <style>
 .el-badge {
-  margin-bottom: 70px;
+  margin-bottom: 80px;
+  left: 15px;
+  position: absolute;
 }
 
 .el-sub-menu.is-active .el-sub-menu__title i {

@@ -60,6 +60,16 @@ wails build
 wails build -debug -devtools
 ``````
 
+`Mac build dmg`
+
+``````sh
+# need build Slack.app first
+
+brew install create-dmg
+
+create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-size 100  --icon "Slack.app" 200 190 --app-drop-link 600 185 --hide-extension "Slack.app" --volicon build/bin/Slack.app/Contents/Resources/iconfile.icns  "Slack.dmg" build/bin/Slack.app
+``````
+
 # 模块介绍
 
 ## 首页

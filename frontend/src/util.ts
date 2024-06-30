@@ -80,7 +80,7 @@ export async function formatURL(host: string): Promise<string[]> {
     if (!target.startsWith("http")) {
       const result: any = await CheckTarget(host, global.proxy)
       if (!result.Error) {
-        target = result.CompleteTarget!;
+        target = result.Msg;
       }
     }
     urls.push(AddRightSubString(target, "/"))
@@ -229,7 +229,8 @@ export const check = ({
     } else {
       global.UPDATE.RemoteClientVersion = resp.Body!
       if (compareVersion(global.LOCAL_VERSION, global.UPDATE.RemoteClientVersion) == -1) {
-        let result: any = GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, proxys)
+        let result: any = await GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, proxys)
+        console.log(result)
         global.UPDATE.ClientContent = result.Body!
         global.UPDATE.ClientStatus = true
       } else {

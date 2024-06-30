@@ -9,6 +9,7 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -61,6 +62,11 @@ func main() {
 			app,
 			file,
 			db,
+		},
+		Mac: &mac.Options{
+			TitleBar: &mac.TitleBar{
+				FullSizeContent: false,
+			},
 		},
 		Windows: &windows.Options{
 			WebviewBrowserPath: "", // 可以让windows使用默认浏览器打开链接

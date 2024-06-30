@@ -6,6 +6,10 @@ export function CheckFileStat(arg1) {
   return window['go']['main']['File']['CheckFileStat'](arg1);
 }
 
+export function DownloadLastestClient() {
+  return window['go']['main']['File']['DownloadLastestClient']();
+}
+
 export function FileDialog(arg1) {
   return window['go']['main']['File']['FileDialog'](arg1);
 }
@@ -54,6 +58,10 @@ export function RemoveOldConfig() {
   return window['go']['main']['File']['RemoveOldConfig']();
 }
 
+export function Restart() {
+  return window['go']['main']['File']['Restart']();
+}
+
 export function RunApp(arg1, arg2, arg3) {
   return window['go']['main']['File']['RunApp'](arg1, arg2, arg3);
 }
@@ -68,6 +76,10 @@ export function SaveJsonFile(arg1) {
 
 export function SaveNavigation(arg1) {
   return window['go']['main']['File']['SaveNavigation'](arg1);
+}
+
+export function UpdateClinetFile(arg1) {
+  return window['go']['main']['File']['UpdateClinetFile'](arg1);
 }
 
 export function UpdatePocFile() {

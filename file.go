@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	rt "runtime"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"slack-wails/lib/update"
 	"slack-wails/lib/util"
 	"strings"
@@ -19,11 +20,11 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var configPath = util.HomeDir() + "/slack/config"
-
 // File struct 文件操作
 type File struct {
-	ctx context.Context
+	ctx          context.Context
+	configPath   string
+	downloadPath string
 }
 
 func (f *File) startup(ctx context.Context) {
@@ -31,7 +32,11 @@ func (f *File) startup(ctx context.Context) {
 }
 
 func NewFile() *File {
-	return &File{}
+	home := util.HomeDir()
+	return &File{
+		configPath:   home + "/slack/config",
+		downloadPath: home + "/Downloads/",
+	}
 }
 
 func (f *File) FileDialog(ext string) string {
@@ -124,14 +129,14 @@ func (f *File) ReadFile(filename string) *FileInfo {
 }
 
 func (f *File) UpdatePocFile() string {
-	if err := update.UpdatePoc(configPath); err != nil {
+	if err := update.UpdatePoc(f.configPath); err != nil {
 		return err.Error()
 	}
 	return ""
 }
 
 func (f *File) InitConfig() bool {
-	return update.InitConfig(configPath)
+	return update.InitConfig(f.configPath)
 }
 
 func (*File) InitMemo(filepath, content string) bool {
@@ -195,7 +200,7 @@ func (*File) WriteFile(filetype, path, content string) bool {
 
 func (a *App) DownloadCyberChef(url string) error {
 	cyber := "/slack/CyberChef.zip"
-	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath)
+	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath, "downloadProgress")
 	if err != nil {
 		return err
 	}
@@ -204,35 +209,72 @@ func (a *App) DownloadCyberChef(url string) error {
 	if _, err := uz.Extract(util.HomeDir()+cyber, a.defaultPath); err != nil {
 		return err
 	}
-	os.Remove(util.HomeDir() + cyber)
-	return nil
+	return os.Remove(util.HomeDir() + cyber)
+}
+
+func (f *File) Restart() {
+	cmd := exec.Command(os.Args[0])
+	err := cmd.Start()
+	if err != nil {
+		return
+	}
+	os.Exit(0)
+}
+
+func (f *File) DownloadLastestClient() structs.Status {
+	const (
+		url           = "https://gitee.com/the-temperature-is-too-low/Slack/releases/download/v1/"
+		darwin_amd64  = "Slack_darwin_amd64.dmg"
+		darwin_arm64  = "Slack_darwin_arm64.dmg"
+		windows_amd64 = "Slack.exe"
+	)
+	var filename string
+	if rt.GOOS == "darwin" {
+		if rt.GOARCH == "amd64" {
+			filename = darwin_amd64
+		} else {
+			filename = darwin_arm64
+		}
+		_, err := update.NewDownload(f.ctx, url+filename, f.downloadPath, "clientDownloadProgress")
+		if err != nil {
+			return structs.Status{
+				Error: true,
+				Msg:   err.Error(),
+			}
+		}
+		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "mac-success")
+		f.OpenFolder(f.downloadPath)
+	}
+	if rt.GOOS == "windows" && rt.GOARCH == "amd64" {
+		filename = windows_amd64
+		if err := update.UpdateClientWithoutProgress(url + filename); err != nil {
+			return structs.Status{
+				Error: true,
+				Msg:   err.Error(),
+			}
+		}
+		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "win-success")
+	}
+	return structs.Status{
+		Error: false,
+		Msg:   "Unsupported platform",
+	}
 }
 
 func (f *File) RemoveOldConfig() error {
-	err := os.RemoveAll(configPath)
+	err := os.RemoveAll(f.configPath)
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 	}
 	return err
 }
 
-type Navigation struct {
-	Name     string
-	Children []Children
-}
-
-type Children struct {
-	Name string
-	Type string
-	Path string
-}
-
 var (
 	na         = util.HomeDir() + "/slack/navogation.json"
-	navigation []Navigation
+	navigation []structs.Navigation
 )
 
-func (f *File) GetLocalNaConfig() *[]Navigation {
+func (f *File) GetLocalNaConfig() *[]structs.Navigation {
 	if !f.CheckFileStat(na) {
 		os.Create(na)
 		gologger.Error(f.ctx, "Can't create navogation.json")
@@ -247,12 +289,12 @@ func (f *File) GetLocalNaConfig() *[]Navigation {
 	return &navigation
 }
 
-func (f *File) InsetGroupNavigation(n Navigation) bool {
+func (f *File) InsetGroupNavigation(n structs.Navigation) bool {
 	navigation = append(navigation, n)
 	return f.SaveJsonFile(navigation)
 }
 
-func (f *File) InsetItemNavigation(groupName string, child Children) bool {
+func (f *File) InsetItemNavigation(groupName string, child structs.Children) bool {
 	for i, n := range navigation {
 		if n.Name == groupName {
 			navigation[i].Children = append(n.Children, child)
@@ -261,7 +303,7 @@ func (f *File) InsetItemNavigation(groupName string, child Children) bool {
 	return f.SaveJsonFile(navigation)
 }
 
-func (f *File) SaveNavigation(n []Navigation) bool {
+func (f *File) SaveNavigation(n []structs.Navigation) bool {
 	navigation = n
 	return f.SaveJsonFile(navigation)
 }
@@ -285,7 +327,6 @@ func (f *File) OpenFolder(filepath string) string {
 		return err.Error()
 	}
 	var cmd *exec.Cmd
-	// bridge.HideExecWindow(cmd)
 	switch rt.GOOS {
 	case "windows":
 		cmd = exec.Command("cmd", "/c", "start", filepath)

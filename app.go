@@ -23,6 +23,7 @@ import (
 	"slack-wails/core/webscan"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"strconv"
 	"strings"
@@ -85,16 +86,9 @@ func (a *App) GOOS() string {
 	return runtime.GOOS
 }
 
-type Response struct {
-	Error  bool
-	Proto  string
-	Header []map[string]string
-	Body   string
-}
-
-func (a *App) GoFetch(method, target string, body interface{}, headers []map[string]string, timeout int, proxy clients.Proxy) *Response {
+func (a *App) GoFetch(method, target string, body interface{}, headers []map[string]string, timeout int, proxy clients.Proxy) *structs.Response {
 	if _, err := url.Parse(target); err != nil {
-		return &Response{
+		return &structs.Response{
 			Error:  true,
 			Proto:  "",
 			Header: nil,
@@ -116,7 +110,7 @@ func (a *App) GoFetch(method, target string, body interface{}, headers []map[str
 	}
 	resp, b, err := clients.NewRequest(method, target, hhhhheaders, bytes.NewReader(content), 10, true, clients.JudgeClient(proxy))
 	if err != nil {
-		return &Response{
+		return &structs.Response{
 			Error:  true,
 			Proto:  "",
 			Header: nil,
@@ -133,7 +127,7 @@ func (a *App) GoFetch(method, target string, body interface{}, headers []map[str
 		// 将 map 添加到切片中
 		headerArray = append(headerArray, headerMap)
 	}
-	return &Response{
+	return &structs.Response{
 		Error:  false,
 		Proto:  resp.Proto,
 		Header: headerArray,
@@ -418,33 +412,19 @@ func (a *App) IconHash(target string) string {
 }
 
 // infoscan
-type FormatTarget struct {
-	Error          bool
-	CompleteTarget string
-}
 
-func (a *App) CheckTarget(host string, proxy clients.Proxy) *FormatTarget {
+func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
 	protocolURL, err := clients.IsWeb(host, clients.JudgeClient(proxy))
 	if err != nil {
-		return &FormatTarget{
-			Error:          true,
-			CompleteTarget: host,
+		return &structs.Status{
+			Error: true,
+			Msg:   host,
 		}
 	}
-	return &FormatTarget{
-		Error:          false,
-		CompleteTarget: protocolURL,
+	return &structs.Status{
+		Error: false,
+		Msg:   protocolURL,
 	}
-}
-
-type InfoResult struct {
-	URL          string
-	StatusCode   int
-	Length       int
-	Title        string
-	Fingerprints []string
-	IsWAF        bool
-	WAF          string
 }
 
 // 仅在执行时调用一次
