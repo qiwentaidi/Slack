@@ -54,6 +54,10 @@ export function ReadMemo(arg1) {
   return window['go']['main']['File']['ReadMemo'](arg1);
 }
 
+export function RemoveOldClient() {
+  return window['go']['main']['File']['RemoveOldClient']();
+}
+
 export function RemoveOldConfig() {
   return window['go']['main']['File']['RemoveOldConfig']();
 }
@@ -76,10 +80,6 @@ export function SaveJsonFile(arg1) {
 
 export function SaveNavigation(arg1) {
   return window['go']['main']['File']['SaveNavigation'](arg1);
-}
-
-export function UpdateClinetFile(arg1) {
-  return window['go']['main']['File']['UpdateClinetFile'](arg1);
 }
 
 export function UpdatePocFile() {

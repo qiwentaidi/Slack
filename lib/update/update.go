@@ -2,6 +2,7 @@ package update
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -50,13 +51,38 @@ func download(target, dest string) (string, error) {
 	return fileName, nil
 }
 
-func UpdateClientWithoutProgress(url string) error {
+func UpdateClientWithoutProgress(ctx context.Context, url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	return selfupdate.Apply(resp.Body, selfupdate.Options{})
+	var buffer bytes.Buffer
+	totalSize := resp.ContentLength
+	downloadedSize := int64(0)
+	reader := bufio.NewReaderSize(resp.Body, 32*1024)
+	// 创建一个缓冲区来模拟文件写入
+	buf := make([]byte, 32*1024)
+	for {
+		n, err := reader.Read(buf)
+		if n > 0 {
+			downloadedSize += int64(n)
+			progress := float64(downloadedSize) / float64(totalSize) * 100
+			roundedProgress := roundToTwoDecimals(progress)
+			runtime.EventsEmit(ctx, "clientDownloadProgress", roundedProgress)
+			// 将数据写入缓冲区，不然由于进度条消耗，resp.Body的数据会为空
+			if _, err := buffer.Write(buf[:n]); err != nil {
+				return err
+			}
+		}
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+	}
+	return selfupdate.Apply(&buffer, selfupdate.Options{})
 }
 
 func NewDownload(ctx context.Context, target, dest, events string) (string, error) {

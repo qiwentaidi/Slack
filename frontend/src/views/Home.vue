@@ -36,7 +36,6 @@ function addGroup() {
 }
 
 function save() {
-  console.log(global.webscan)
   localStorage.setItem('webscan', JSON.stringify(global.webscan))
   ElMessage({
     type: 'success',

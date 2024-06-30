@@ -484,7 +484,6 @@ const tableCtrl = ({
         table.loading = true
         QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
             (result: QuakeResult) => {
-                console.log(result.Code)
                 if (result.Code != 0) {
                     quake.message = result.Message!
                     table.loading = false

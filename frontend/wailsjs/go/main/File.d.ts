@@ -29,6 +29,8 @@ export function ReadFile(arg1:string):Promise<main.FileInfo>;
 
 export function ReadMemo(arg1:string):Promise<{[key: string]: string}>;
 
+export function RemoveOldClient():Promise<void>;
+
 export function RemoveOldConfig():Promise<void>;
 
 export function Restart():Promise<void>;
@@ -40,8 +42,6 @@ export function SaveFile(arg1:string):Promise<string>;
 export function SaveJsonFile(arg1:any):Promise<boolean>;
 
 export function SaveNavigation(arg1:Array<structs.Navigation>):Promise<boolean>;
-
-export function UpdateClinetFile(arg1:string):Promise<string>;
 
 export function UpdatePocFile():Promise<string>;
 

@@ -107,7 +107,7 @@ const customColorMethod = (percentage: number) => {
             {{ global.UPDATE.ClientContent }}
         </el-scrollbar>
     </el-card>
-    <div style="margin-top: 5px;" v-if="update.downloadRunningStatus.value">正在下载中，请等待下载完成(windows下载进度只在后台显示)...
+    <div style="margin-top: 5px;" v-if="update.downloadRunningStatus.value">正在下载中，请等待下载完成...
         <el-progress :percentage="update.progress.value" :color="customColorMethod"></el-progress>
     </div>
 </template>

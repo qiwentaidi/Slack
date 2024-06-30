@@ -247,7 +247,7 @@ func (f *File) DownloadLastestClient() structs.Status {
 	}
 	if rt.GOOS == "windows" && rt.GOARCH == "amd64" {
 		filename = windows_amd64
-		if err := update.UpdateClientWithoutProgress(url + filename); err != nil {
+		if err := update.UpdateClientWithoutProgress(f.ctx, url+filename); err != nil {
 			return structs.Status{
 				Error: true,
 				Msg:   err.Error(),
@@ -267,6 +267,16 @@ func (f *File) RemoveOldConfig() error {
 		fmt.Printf("err: %v\n", err)
 	}
 	return err
+}
+
+func (f *File) RemoveOldClient() {
+	// 不确定名称，暂时先这样
+	oldFileList := []string{".Slack.exe.old", ".slack.exe.old"}
+	for _, old := range oldFileList {
+		if _, err := os.Stat(old); err == nil {
+			os.Remove(old)
+		}
+	}
 }
 
 var (

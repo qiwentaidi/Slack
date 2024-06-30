@@ -2,7 +2,7 @@
 import { ElMessage, ElNotification } from "element-plus";
 import global from "./global";
 import { CheckTarget, GoFetch, NucleiEnabled, Sock5Connect } from "../wailsjs/go/main/App";
-import { CheckFileStat, ReadFile, UserHomeDir } from "../wailsjs/go/main/File";
+import { CheckFileStat, ReadFile, RemoveOldClient, UserHomeDir } from "../wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
 import { URLFingerMap, ProxyOptions, File } from "./interface";
 
@@ -230,11 +230,11 @@ export const check = ({
       global.UPDATE.RemoteClientVersion = resp.Body!
       if (compareVersion(global.LOCAL_VERSION, global.UPDATE.RemoteClientVersion) == -1) {
         let result: any = await GoFetch("GET", download.ClientUpdateCentent, "", [{}], 10, proxys)
-        console.log(result)
         global.UPDATE.ClientContent = result.Body!
         global.UPDATE.ClientStatus = true
       } else {
         global.UPDATE.ClientContent = "已是最新版本"
+        RemoveOldClient()
         global.UPDATE.ClientStatus = false
       }
     }
