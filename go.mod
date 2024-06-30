@@ -12,6 +12,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/miekg/dns v1.1.57
+	github.com/minio/selfupdate v0.6.0
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/mozillazg/go-pinyin v0.20.0
 	github.com/panjf2000/ants/v2 v2.9.1
@@ -37,7 +38,6 @@ require (
 	github.com/jackpal/gateway v1.0.15 // indirect
 	github.com/libp2p/go-netroute v0.2.1 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.23 // indirect
-	github.com/minio/selfupdate v0.6.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/projectdiscovery/stringsutil v0.0.2 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
