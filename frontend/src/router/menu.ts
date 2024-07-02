@@ -86,14 +86,14 @@ const MenuList = [
         {
           name: "aside.agent_pool",
           path: "/SpaceEngine/AgentPool",
-          icon: "/vpn.png"
+          icon: "/navigation/pool.png"
         },
       ]
     },
     {
       name: "aside.tools",
       path: "/Tools",
-      icon: "Tools",
+      icon: "/tools.svg",
       children: [
         {
           name: "aside.en_and_de",

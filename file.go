@@ -93,10 +93,8 @@ func (f *File) Path(p string) PathInfo {
 }
 
 func (f *File) CheckFileStat(path string) bool {
-	if _, err := os.Stat(path); err != nil {
-		return false
-	}
-	return true
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 type FileInfo struct {

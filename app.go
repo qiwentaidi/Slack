@@ -473,7 +473,8 @@ func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucl
 }
 
 func (a *App) NucleiEnabled(nucleiPath string) bool {
-	return webscan.NewNucleiCaller(nucleiPath, false, "").Enabled()
+	nc := webscan.NewNucleiCaller(nucleiPath, false, "")
+	return nc.Enabled(a.ctx)
 }
 
 func (a *App) WebPocLength() int {

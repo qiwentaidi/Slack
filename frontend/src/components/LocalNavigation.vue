@@ -3,10 +3,10 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, ref } from "vue";
 import { LocalOpitons, Child } from "../interface";
 import global from "../global";
-import { DeleteFilled, Edit, FolderOpened } from "@element-plus/icons-vue";
+import { DeleteFilled, Edit, FolderOpened, Document } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop, EventsOn } from "../../wailsjs/runtime/runtime";
-import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp } from "../../wailsjs/go/main/File";
+import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog } from "../../wailsjs/go/main/File";
 import { GOOS } from "../../wailsjs/go/main/App";
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
@@ -197,20 +197,35 @@ const localGroup = ({
                 message: result
             })
         }
-    }
+    },
+    selectFile: async function () {
+        let result = await FileDialog("")
+        config.path = result
+    },
 })
 
 // 暴露addGroup方法供其他地方调用
 defineExpose({
     addGroup: localGroup.addGroup
 })
+
+const showCardPopover = ref(false)
+const xRef = ref(0)
+const yRef = ref(0)
+function handleCardContextMenu(event: MouseEvent) {
+    event.preventDefault()
+    showCardPopover.value = true
+    xRef.value = event.clientX
+    yRef.value = event.clientY
+}
 </script>
 
 
 <template>
     <el-scrollbar height="85vh">
         <div v-for="groups in localGroup.options.value" class="card-group">
-            <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable">
+            <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
+                @contextmenu.prevent="handleCardContextMenu">
                 <div class="my-header" style="margin-bottom: 10px">
                     <span style="font-weight: bold">{{ groups.Name }}</span>
                     <el-popconfirm title="Are you sure to delete this?" @confirm="localGroup.deleteGroup(groups.Name)">
@@ -278,7 +293,15 @@ defineExpose({
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="Path">
-                <el-input v-model="config.path"></el-input>
+                <el-input v-model="config.path">
+                    <template #suffix>
+                        <el-button link @click="localGroup.selectFile()">
+                            <template #icon>
+                                <Document />
+                            </template>
+                        </el-button>
+                    </template>
+                </el-input>
             </el-form-item>
         </el-form>
         <template #footer>

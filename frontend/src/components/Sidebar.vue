@@ -41,7 +41,8 @@ const dg = reactive({
         <el-sub-menu :index="menu.path" v-else>
           <template #title>
             <el-icon class="aside">
-              <component :is="menu.icon" />
+              <img :src="menu.icon" class="custom-svg" v-if="menu.icon.endsWith('svg')">
+              <component :is="menu.icon" v-else />
             </el-icon>
             <span>{{ $t(menu.name) }}</span>
           </template>

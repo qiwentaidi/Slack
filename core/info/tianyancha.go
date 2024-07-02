@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
-	"regexp"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
@@ -15,8 +13,6 @@ import (
 
 	"strconv"
 	"strings"
-
-	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
 type TycSearchID struct {
@@ -30,7 +26,7 @@ type TycSearchID struct {
 		ID         int         `json:"id"`
 		GraphID    string      `json:"graphId"`
 		Type       int         `json:"type"`
-		MatchType  string      `json:"matchType"`
+		MatchType  string      `json:"matchType"` // 商标信息匹配 > 股票简称匹配 > 公司名称匹配 > 公司品牌匹配 > 公司信息匹配
 		ComName    string      `json:"comName"`
 		Name       string      `json:"name"`
 		Alias      string      `json:"alias"`
@@ -90,10 +86,8 @@ type TycResult struct {
 }
 
 var (
-	company_name string
-	company_id   string
-	gethead      = http.Header{}
-	posthead     = http.Header{}
+	gethead  = http.Header{}
+	posthead = http.Header{}
 )
 
 func InitHEAD(token string) {
@@ -109,7 +103,7 @@ func InitHEAD(token string) {
 
 // 要根据ID值查子公司
 func GetCompanyID(ctx context.Context, company string) (string, string) {
-	var max, id int
+	var company_id, company_name string
 	data := make(map[string]interface{})
 	data["keyword"] = company
 	bytesData, _ := json.Marshal(data)
@@ -121,34 +115,12 @@ func GetCompanyID(ctx context.Context, company string) (string, string) {
 	if err = json.Unmarshal(b, &qs); err != nil {
 		gologger.Error(ctx, err)
 	}
-	time.Sleep(time.Second * 2)
-	if len(qs.Data) > 0 { // 先走接口不会进行模糊匹配,如果匹配不到值那就走模糊查询
-		return qs.Data[0].GraphID, qs.Data[0].ComName
-	} else {
-		_, b, err := clients.NewRequest("GET", "https://www.tianyancha.com/search?key="+url.QueryEscape(company), gethead, nil, 10, true, clients.DefaultClient())
-		if err != nil {
-			logger.NewDefaultLogger().Debug(err.Error())
-		}
-		fuzzy := regexp.MustCompile(`\d{10}" target="_blank">(.*?)</span></a>`)
-		all := fuzzy.FindAllString(string(b), -1)
-		for _, v := range all {
-			s := strings.Split(v, `" target="_blank"><span>`)
-			f := s[1][:len(s[1])-11] // 模糊匹配到的词绍兴市<em>公安</em>局<em>越城</em>区<em>分局</em>
-			var temp string
-			for _, keyword := range strings.Split(strings.ReplaceAll(f, "/", ""), "<em>") {
-				if strings.Contains(company, keyword) {
-					id++
-				}
-				temp += keyword
-			}
-			if max < id {
-				max = id
-				company_id = s[0]
-				company_name = temp
-			}
-		}
-		return company_id, company_name
+	if len(qs.Data) > 0 { // 接口会自动进行 商标信息匹配 > 股票简称匹配 > 公司名称匹配 > 公司品牌匹配 > 公司信息匹配 五种规则的匹配
+		company_id = qs.Data[0].GraphID
+		company_name = qs.Data[0].ComName
 	}
+	time.Sleep(time.Second * 2)
+	return company_id, company_name
 }
 
 type CompanyInfo struct {
