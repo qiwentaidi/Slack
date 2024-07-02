@@ -198,7 +198,7 @@ func (*File) WriteFile(filetype, path, content string) bool {
 
 func (a *App) DownloadCyberChef(url string) error {
 	cyber := "/slack/CyberChef.zip"
-	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath, "downloadProgress")
+	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath, "downloadProgress", "")
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func (f *File) DownloadLastestClient() structs.Status {
 		} else {
 			filename = darwin_arm64
 		}
-		_, err := update.NewDownload(f.ctx, url+filename, f.downloadPath, "clientDownloadProgress")
+		_, err := update.NewDownload(f.ctx, url+filename, f.downloadPath, "clientDownloadProgress", "")
 		if err != nil {
 			return structs.Status{
 				Error: true,
@@ -275,7 +275,7 @@ func (f *File) DownloadLastestClient() structs.Status {
 			filename = linux_arm64
 		}
 		dir, _ := os.Getwd()
-		_, err := update.NewDownload(f.ctx, url+filename, dir, "clientDownloadProgress")
+		_, err := update.NewDownload(f.ctx, url+filename, dir, "clientDownloadProgress", getExecName())
 		if err != nil {
 			return structs.Status{
 				Error: true,
@@ -304,7 +304,7 @@ func (f *File) RemoveOldConfig() error {
 
 func (f *File) RemoveOldClient() {
 	// 不确定名称，暂时先这样
-	oldFileList := []string{".Slack.exe.old", ".slack.exe.old"}
+	oldFileList := []string{".Slack-windows-amd64.exe.old", ".Slack-windows-ard64.old"}
 	for _, old := range oldFileList {
 		if _, err := os.Stat(old); err == nil {
 			os.Remove(old)
@@ -440,6 +440,16 @@ func getDirectoryPath(path string) (string, error) {
 		// 如果是文件，返回其所在的目录
 		return filepath.Dir(path), nil
 	}
+}
+
+func getExecName() string {
+	execPath, err := os.Executable()
+	if err != nil {
+		fmt.Println("获取可执行文件路径失败:", err)
+		return ""
+	}
+
+	return filepath.Base(execPath)
 }
 
 // type Records struct {

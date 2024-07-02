@@ -158,11 +158,11 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240512003433659](assets/image-20240512003433659.png)
 
-
-
 # 常见问题
 
-> Q：Windows grdp库无法打包，出现如下报错
+## Windows
+
+> Q：grdp库无法打包，出现如下报错
 >
 > ```
 > Wails CLI v2.7.1
@@ -171,57 +171,105 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 > • Generating bindings: 
 > ERROR  
 > package slack-wails
->     imports slack-wails/core/portscan
->     imports github.com/tomatome/grdp/protocol/pdu
->     imports github.com/tomatome/grdp/protocol/t125/gcc
->     imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
+>  imports slack-wails/core/portscan
+>  imports github.com/tomatome/grdp/protocol/pdu
+>  imports github.com/tomatome/grdp/protocol/t125/gcc
+>  imports github.com/tomatome/grdp/plugin: build constraints exclude all Go files in C:\xx\go\pkg\mod\github.com\tomatome\grdp@v0.1.0\plugin
 > ```
 >
-> A：
+> A：检查GCC环境环境是否安装，可以通过命令行输入gcc查看命令提示
 >
 > ```
-> 1、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
-> 2、需要安装GCC环境
+> 1、查看文档上方安装教程
+> 2、go env查看CGO_ENABLED是否为1，若不是则go env -w CGO_ENABLED=1 
 > ```
-> Q: Linux gopacket打包失败
+## Linux
 >
-> ``````
-> # Building target: linux/amd64
-> 
-> • Generating bindings:   ERROR   
->        # github.com/google/gopacket/pcap
->        /root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
->           34 | #include <pcap.h>
->              |          ^~~~~~~~
->        compilation terminated.
-> 
->        exit status 1
-> 
-> ERROR   
->        # github.com/google/gopacket/pcap
->        /root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
->           34 | #include <pcap.h>
->              |          ^~~~~~~~
->        compilation terminated.
-> 
->        exit status 1
-> ♥   If Wails is useful to you or your company, please consider sponsoring the project:                                                                   
-> https://github.com/sponsors/leaanthony
-> ``````
+>Q1: gopacket打包失败
 >
-> A：
+>``````sh
+># Building target: linux/amd64
 >
-> ``````shell
-> sudo apt install libpcap-dev 
-> ``````
+>• Generating bindings:   ERROR   
+># github.com/google/gopacket/pcap
+>/root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
+>   34 | #include <pcap.h>
+>      |          ^~~~~~~~
+>compilation terminated.
+>
+>exit status 1
+>
+>ERROR   
+># github.com/google/gopacket/pcap
+>/root/go/pkg/mod/github.com/google/gopacket@v1.1.19/pcap/pcap_unix.go:34:10: fatal error: pcap.h: No such file or directory                     
+>   34 | #include <pcap.h>
+>      |          ^~~~~~~~
+>compilation terminated.
+>
+>exit status 1
+>♥   If Wails is useful to you or your company, please consider sponsoring the project:                                                                   
+>https://github.com/sponsors/leaanthony
+>``````
+>
+>A: 安装libpcap-dev包
+>
+>``````sh
+>sudo apt install libpcap-dev 
+>``````
+>
+>
+>
+>Q2: nodejs编译内存溢出
+>
+>``````sh
+><--- Last few GCs --->
+>    
+>    [7287:0x55767da1ede0]     9749 ms: Mark-sweep (reduce) 979.8 (1002.0) -> 979.4 (999.5) MB, 256.4 / 0.0 ms  (+ 11.1 ms in 5 steps since start of marking, biggest step 5.5 ms, walltime since start of marking 272 ms) (average mu = 0.190, current mu = 0.155) 
+>    
+>    <--- JS stacktrace --->
+>    
+>    FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+>     1: 0x7ff1401fbdd8 node::Abort() [/lib/x86_64-linux-gnu/libnode.so.109]
+>     2: 0x7ff1400fe362  [/lib/x86_64-linux-gnu/libnode.so.109]
+>     3: 0x7ff1405d9f80 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, bool) [/lib/x86_64-linux-gnu/libnode.so.109]
+>     4: 0x7ff1405da33c v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, bool) [/lib/x86_64-linux-gnu/libnode.so.109]
+>     5: 0x7ff1407adbb5  [/lib/x86_64-linux-gnu/libnode.so.109]
+>     6: 0x7ff1407adc8b  [/lib/x86_64-linux-gnu/libnode.so.109]
+>     7: 0x7ff1407c1a5a v8::internal::Heap::PerformGarbageCollection(v8::internal::GarbageCollector, v8::internal::GarbageCollectionReason, char const*, v8::GCCallbackFlags) [/lib/x86_64-linux-gnu/libnode.so.109]
+>     8: 0x7ff1407c25c9 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [/lib/x86_64-linux-gnu/libnode.so.109]
+>     9: 0x7ff14079ee4a v8::internal::HeapAllocator::AllocateRawWithLightRetrySlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [/lib/x86_64-linux-gnu/libnode.so.109]
+>    10: 0x7ff14079ff55 v8::internal::HeapAllocator::AllocateRawWithRetryOrFailSlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [/lib/x86_64-linux-gnu/libnode.so.109]
+>    11: 0x7ff1407810ce v8::internal::Factory::NewFillerObject(int, v8::internal::AllocationAlignment, v8::internal::AllocationType, v8::internal::AllocationOrigin) [/lib/x86_64-linux-gnu/libnode.so.109]
+>    12: 0x7ff140b5ad2c v8::internal::Runtime_AllocateInYoungGeneration(int, unsigned long*, v8::internal::Isolate*) [/lib/x86_64-linux-gnu/libnode.so.109]
+>    13: 0x7ff1404e37b9  [/lib/x86_64-linux-gnu/libnode.so.109]
+>    Aborted
+>``````
+>
+>A: 设置nodejs最大内存
+>
+>``````sh
+>export NODE_OPTIONS="--max_old_space_size=4096"
+>``````
+>
+>
+>
+>Q3: 新版Linux没有安装未找到 libwebkit2gtk-4.0-dev
+>
+>A: 安装libwebkit2gtk-4.1.0 并安装Wails CLI 2.9.0+ ，通过设置编译tags支持
+>
+>``````sh
+>apt install libwebkit2gtk-4.1.0
+>wails build -tags webkit2_41
+>``````
+## MacOS
+
 >
 > Q: Mac 启动出现安装包损坏
 >
-> A: 
+> A: 在隐私和安全性处运行安装应用为任意来源
 >
-> ``````
-> 1、在隐私和安全性处运行安装应用为任意来源
-> 2、执行 xattr -c slack-macos.app
+> ``````sh
+> xattr -c slack-macos.app
 > ``````
 
 # 联系方式

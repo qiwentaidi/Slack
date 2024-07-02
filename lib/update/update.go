@@ -85,8 +85,12 @@ func UpdateClientWindows(ctx context.Context, url string) error {
 	return selfupdate.Apply(&buffer, selfupdate.Options{})
 }
 
-func NewDownload(ctx context.Context, target, dest, events string) (string, error) {
+// 通过execName执行文件名称是否为空判断，是否需要将远程下载的文件重命名为本地文件名称 -- 主要是支持Linux覆盖文件以及重新启动
+func NewDownload(ctx context.Context, target, dest, events, execName string) (string, error) {
 	fileName := path.Base(target)
+	if execName != "" {
+		fileName = execName
+	}
 	res, err := http.Get(target)
 	if err != nil {
 		return "", err
