@@ -2,11 +2,11 @@
 import { reactive } from 'vue';
 import { ElMessage } from 'element-plus';
 const oa = reactive({
-        encrypt: '',
-        decrypt: '',
-        mode: 'FanruanOA',
-        options: ['FanruanOA', "SeeyonOA"],
-    })
+    encrypt: '',
+    decrypt: '',
+    mode: 'FanruanOA',
+    options: ['FanruanOA', "SeeyonOA"],
+})
 const PASSWORD_MASK_ARRAY: number[] = [19, 78, 10, 15, 100, 213, 43, 23]; // 掩码
 function OACrypt(input: string, mode: string) {
     oa.decrypt = ''
@@ -48,16 +48,14 @@ function OACrypt(input: string, mode: string) {
             <el-option v-for="item in oa.options" :value="item" :label="item" />
         </el-select>
     </div>
-    <div style="margin-bottom: 10px;">
-        <span>帆软数据报表 privilege.xml 密码解密，示例：___0072002a00670066000a</span>
-    </div>
-    <div style="margin-bottom: 10px;">
-        <span>致远OA datasourceCtp.properties 密码解密，示例：/1.0/UWJ0dHgxc2U=</span>
-    </div>
+    <el-descriptions title="示例" :column="1" border style="margin-bottom: 10px;">
+        <el-descriptions-item label="帆软数据报表 privilege.xml">___0072002a00670066000a</el-descriptions-item>
+        <el-descriptions-item label="致远OA datasourceCtp.properties">/1.0/UWJ0dHgxc2U=</el-descriptions-item>
+    </el-descriptions>
     <div class="flex-box">
         <el-input v-model="oa.encrypt" resize='none' placeholder="请输入需要解密的密码"></el-input>
         <el-col :span="2" style="text-align: center;">
-            <span class="text-gray-500">=></span>
+            <span>=></span>
         </el-col>
         <el-input v-model="oa.decrypt" resize='none'></el-input>
         <el-button class="button" type="warning" plain @click="OACrypt(oa.encrypt, oa.mode)"

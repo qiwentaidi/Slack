@@ -65,11 +65,14 @@ func ExtractJS(ctx context.Context, url string) (allJS []string) {
 		for _, item := range reg.FindAllString(content, -1) {
 			item = strings.TrimLeft(item, "=")
 			item = strings.Trim(item, "\"")
+			item = strings.Trim(item, "'")
 			item = strings.TrimLeft(item, ".")
-			if item[0:4] != "http" {
-				allJS = append(allJS, item)
-			}
+			allJS = append(allJS, item)
 		}
+	}
+	regJSSecond := regexp.MustCompile(`(?i)<script[^>]+src=["']([^"']+\.js)["']?`)
+	for _, item := range regJSSecond.FindAllStringSubmatch(content, -1) {
+		allJS = append(allJS, item[1])
 	}
 	return util.RemoveDuplicates(allJS)
 }

@@ -4,14 +4,16 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"testing"
 )
 
 func TestFindInfo(t *testing.T) {
 	var fs *FindSomething
-	target := "http://www.baidu.com"
+	target := "https://www.baidu.com/"
 	jsLinks := ExtractJS(context.TODO(), target)
+	fmt.Printf("jsLinks: %v\n", jsLinks)
 	var wg sync.WaitGroup
 	limiter := make(chan bool, 100)
 	wg.Add(1)
@@ -22,14 +24,17 @@ func TestFindInfo(t *testing.T) {
 	wg.Wait()
 	u, _ := url.Parse(target)
 	fs.JS = *AppendSource(target, jsLinks)
-	host := ""
-
-	host = u.Scheme + "://" + u.Host
+	host := u.Scheme + "://" + u.Host
 	for _, jslink := range jsLinks {
 		wg.Add(1)
 		limiter <- true
 		go func(js string) {
-			newURL := host + "/" + js
+			var newURL string
+			if strings.HasPrefix(js, "http") {
+				newURL = js
+			} else {
+				newURL = host + "/" + js
+			}
 			fs2 := FindInfo(context.TODO(), newURL, limiter, &wg)
 			fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
 			fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
@@ -44,7 +49,4 @@ func TestFindInfo(t *testing.T) {
 	fs.ChinesePhone = RemoveDuplicatesInfoSource(fs.ChinesePhone)
 	fs.SensitiveField = RemoveDuplicatesInfoSource(fs.SensitiveField)
 	fs.IP_URL = RemoveDuplicatesInfoSource(fs.IP_URL)
-	for _, v := range fs.APIRoute {
-		fmt.Printf("v.Filed: %v\n", v.Filed)
-	}
 }

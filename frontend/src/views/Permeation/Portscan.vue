@@ -558,8 +558,4 @@ function linkage(mode: string) {
 .input {
     height: 120px;
 }
-
-.el-textarea__inner {
-    height: 100%;
-}
 </style>

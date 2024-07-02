@@ -2,7 +2,7 @@
 import { ExportToXlsx } from '../../export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Search, ChatLineRound, ChromeFilled, CopyDocument, Grid, PictureRounded, Operation, Delete, Star, Present, CollectionTag } from '@element-plus/icons-vue';
+import { Search, ChatLineRound, ChromeFilled, CopyDocument, Grid, PictureRounded, Operation, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { ApiSyntaxCheck, splitInt, Copy } from '../../util'
 import { TableTabs, HunterEntryTips, RuleForm } from "../../interface"
 import global from "../../global"
@@ -473,7 +473,7 @@ async function CopyURL(mode: number) {
                             <template #reference>
                                 <div>
                                     <el-tooltip content="我收藏的语法" placement="left">
-                                        <el-button :icon="Present" @click="syntax.searchStarSyntax" />
+                                        <el-button :icon="Collection" @click="syntax.searchStarSyntax" />
                                     </el-tooltip>
                                 </div>
                             </template>

@@ -26,7 +26,7 @@
         <div style="width: 70%; margin-left: 10px;">
             <pre class="pretty-response" style="margin: 0; height: auto;"><code>{{ reverse.show }}</code></pre>
             <el-button type="primary" style="float: right; margin-top: 10px;"
-                @click="ClipboardSetText(reverse.show)">复制</el-button>
+                @click="Copy(reverse.show)">复制</el-button>
         </div>
     </div>
     <el-dialog title="添加" v-model="dialog" width="500">
@@ -53,8 +53,8 @@
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { CheckFileStat, InitMemo, ReadMemo } from '../../../wailsjs/go/main/File';
-import { ClipboardSetText } from '../../../wailsjs/runtime';
 import { UserHomeDir } from '../../../wailsjs/go/main/File';
+import { Copy } from '../../util';
 onMounted(async () => {
     handleChange(data.memo[0])
     let fp = await UserHomeDir() + "/slack/memo.txt"

@@ -93,7 +93,7 @@
                             <template #reference>
                                 <div>
                                     <el-tooltip content="我收藏的语法" placement="left">
-                                        <el-button :icon="Present" @click="syntax.searchStarSyntax" />
+                                        <el-button :icon="Collection" @click="syntax.searchStarSyntax" />
                                     </el-tooltip>
                                 </div>
                             </template>
@@ -265,7 +265,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Present, CollectionTag, ChromeFilled } from '@element-plus/icons-vue';
+import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString } from '../../util';
 import { ExportToXlsx } from '../../export';

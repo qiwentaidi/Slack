@@ -93,7 +93,7 @@ const MenuList = [
     {
       name: "aside.tools",
       path: "/Tools",
-      icon: "/tools.svg",
+      icon: "DataAnalysis",
       children: [
         {
           name: "aside.en_and_de",

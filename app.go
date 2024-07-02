@@ -538,7 +538,12 @@ func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
 		wg.Add(1)
 		limiter <- true
 		go func(js string) {
-			newURL := host + "/" + js
+			var newURL string
+			if strings.HasPrefix(js, "http") {
+				newURL = js
+			} else {
+				newURL = host + "/" + js
+			}
 			fs2 := jsfind.FindInfo(a.ctx, newURL, limiter, &wg)
 			fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
 			fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)

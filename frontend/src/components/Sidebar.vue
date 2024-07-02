@@ -29,7 +29,7 @@ const dg = reactive({
 
 <template>
   <div class="flex-box-v">
-    <el-menu :collapse="true" :router="true" :default-active="$route.path" active-text-color="#fff"
+    <el-menu :collapse="true" :router="true" :default-active="$route.path" active-text-color="#3875f6"
       background-color="#F2F3F5" text-color="#000">
       <template v-for="menu in menus">
         <el-menu-item v-if="!menu.children" :index="menu.path">
@@ -78,9 +78,6 @@ const dg = reactive({
           </el-icon>
           <span>{{ $t("aside.more") }}</span>
         </template>
-        <el-menu-item index="dict" @click="dg.dictDialog = true">{{
-      $t("aside.dict")
-    }}</el-menu-item>
         <el-sub-menu index="language">
           <template #title><span>{{ $t("aside.language") }}</span></template>
           <el-menu-item index="cn" @click="changeLanguage('zh')">{{
@@ -119,10 +116,6 @@ const dg = reactive({
   position: absolute;
 }
 
-.el-sub-menu.is-active .el-sub-menu__title i {
-  color: #3875f6;
-}
-
 .el-menu-item.is-active {
   color: #000;
 }
@@ -144,7 +137,6 @@ const dg = reactive({
 .el-menu-item {
   font-size: 16px;
 }
-
 .el-sub-menu__title {
   font-size: 16px;
 }
