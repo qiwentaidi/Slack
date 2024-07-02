@@ -148,7 +148,7 @@ const dataHandle = ({
     <div style="position: relative;">
         <el-tabs v-model="from.activeName" type="card">
             <el-tab-pane label="控股企业" name="subcompany">
-                <el-table :data="table.company" height="60vh" border>
+                <el-table :data="table.company" height="65vh" border>
                     <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" :show-overflow-tooltip="true" />
                     <el-table-column prop="Holding" width="100px" label="股权比例" />

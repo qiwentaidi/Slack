@@ -4,7 +4,6 @@ import { reactive, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import about from "./About.vue";
 import updateUI from "./Update.vue";
-import dict from "./Dict.vue";
 import global from "../global";
 import menus from "../router/menu";
 import { check } from "../util";
@@ -104,9 +103,6 @@ const dg = reactive({
     <about></about>
   </el-dialog>
   <!-- dict -->
-  <el-dialog v-model="dg.dictDialog" width="36%" center>
-      <dict></dict>
-  </el-dialog>
 </template>
 
 <style>

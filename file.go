@@ -222,9 +222,12 @@ func (f *File) Restart() {
 func (f *File) DownloadLastestClient() structs.Status {
 	const (
 		url           = "https://gitee.com/the-temperature-is-too-low/Slack/releases/download/v1/"
-		darwin_amd64  = "Slack_darwin_amd64.dmg"
-		darwin_arm64  = "Slack_darwin_arm64.dmg"
-		windows_amd64 = "Slack.exe"
+		darwin_amd64  = "Slack-macos-amd64.dmg"
+		darwin_arm64  = "Slack-macos-arm64.dmg"
+		windows_amd64 = "Slack-windows-amd64.exe"
+		windows_arm64 = "Slack-windows-arm64.exe"
+		linux_amd64   = "Slack-linux-arm64"
+		linux_arm64   = "Slack-linux-arm64"
 	)
 	var filename string
 	if rt.GOOS == "darwin" {
@@ -242,19 +245,51 @@ func (f *File) DownloadLastestClient() structs.Status {
 		}
 		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "mac-success")
 		f.OpenFolder(f.downloadPath)
+		return structs.Status{
+			Error: false,
+			Msg:   "Update success!",
+		}
 	}
-	if rt.GOOS == "windows" && rt.GOARCH == "amd64" {
-		filename = windows_amd64
-		if err := update.UpdateClientWithoutProgress(f.ctx, url+filename); err != nil {
+	if rt.GOOS == "windows" {
+		if rt.GOARCH == "amd64" {
+			filename = windows_amd64
+		} else {
+			filename = windows_arm64
+		}
+		if err := update.UpdateClientWindows(f.ctx, url+filename); err != nil {
 			return structs.Status{
 				Error: true,
 				Msg:   err.Error(),
 			}
 		}
 		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "win-success")
+		return structs.Status{
+			Error: false,
+			Msg:   "Update success!",
+		}
+	}
+	if rt.GOOS == "linux" {
+		if rt.GOARCH == "amd64" {
+			filename = linux_amd64
+		} else {
+			filename = linux_arm64
+		}
+		dir, _ := os.Getwd()
+		_, err := update.NewDownload(f.ctx, url+filename, dir, "clientDownloadProgress")
+		if err != nil {
+			return structs.Status{
+				Error: true,
+				Msg:   err.Error(),
+			}
+		}
+		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "linux-success")
+		return structs.Status{
+			Error: false,
+			Msg:   "Update success!",
+		}
 	}
 	return structs.Status{
-		Error: false,
+		Error: true,
 		Msg:   "Unsupported platform",
 	}
 }

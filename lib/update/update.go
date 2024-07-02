@@ -51,7 +51,7 @@ func download(target, dest string) (string, error) {
 	return fileName, nil
 }
 
-func UpdateClientWithoutProgress(ctx context.Context, url string) error {
+func UpdateClientWindows(ctx context.Context, url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err

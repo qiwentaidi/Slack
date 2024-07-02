@@ -119,7 +119,6 @@ function saveConfig() {
 };
 
 const ctrl = reactive({
-  drawer: false,
   innerDrawer: false,
   currentDic: '',
   currentPath: '',
