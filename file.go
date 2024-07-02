@@ -226,7 +226,7 @@ func (f *File) DownloadLastestClient() structs.Status {
 		darwin_arm64  = "Slack-macos-arm64.dmg"
 		windows_amd64 = "Slack-windows-amd64.exe"
 		windows_arm64 = "Slack-windows-arm64.exe"
-		linux_amd64   = "Slack-linux-arm64"
+		linux_amd64   = "Slack-linux-amd64"
 		linux_arm64   = "Slack-linux-arm64"
 	)
 	var filename string
@@ -275,13 +275,15 @@ func (f *File) DownloadLastestClient() structs.Status {
 			filename = linux_arm64
 		}
 		dir, _ := os.Getwd()
-		_, err := update.NewDownload(f.ctx, url+filename, dir, "clientDownloadProgress", getExecName())
+		_, err := update.NewDownload(f.ctx, url+filename, dir+"/", "clientDownloadProgress", getExecName()+".new")
 		if err != nil {
 			return structs.Status{
 				Error: true,
 				Msg:   err.Error(),
 			}
 		}
+		os.Rename(dir+"/"+getExecName()+".new", dir+"/"+getExecName()) // 下载完成就覆盖旧的文件
+		os.Chmod(dir+"/"+getExecName(), 0755)                          // 赋予文件执行权限
 		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "linux-success")
 		return structs.Status{
 			Error: false,
