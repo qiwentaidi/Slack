@@ -44,6 +44,7 @@ export default {
         'guard': 'Guard',
         'guarantee': 'Important Period Guarantee',
         'dict': 'Dictionary Management',
+        'polymerization': 'Polymerization',
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

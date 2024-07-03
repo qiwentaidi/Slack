@@ -96,6 +96,7 @@ func (d *Database) DeleteAllField(tableName string) bool {
 func (d *Database) CreateTable() bool {
 	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS hunter_syntax ( name TEXT, content TEXT );
 	CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );
+	CREATE TABLE IF NOT EXISTS fofa_syntax ( name TEXT, content TEXT );
 	CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );`)
 	return err == nil
 }

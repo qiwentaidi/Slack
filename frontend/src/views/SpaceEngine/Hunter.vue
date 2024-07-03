@@ -2,7 +2,7 @@
 import { ExportToXlsx } from '../../export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Search, ChatLineRound, ChromeFilled, CopyDocument, Grid, PictureRounded, Operation, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
+import { Search, ChatLineSquare, ChromeFilled, CopyDocument, Grid, PictureRounded, Operation, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { ApiSyntaxCheck, splitInt, Copy } from '../../util'
 import { TableTabs, HunterEntryTips, RuleForm } from "../../interface"
 import global from "../../global"
@@ -491,7 +491,7 @@ async function CopyURL(mode: number) {
                         </el-popover>
 
                         <el-tooltip content="查询语法" placement="left">
-                            <el-button :icon="ChatLineRound" @click="syntax.searchDialog.value = true" />
+                            <el-button :icon="ChatLineSquare" @click="syntax.searchDialog.value = true" />
                         </el-tooltip>
                     </el-space>
                 </template>

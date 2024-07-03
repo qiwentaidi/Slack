@@ -1,37 +1,87 @@
 <script lang="ts" setup>
-import { reactive } from 'vue';
-import { Menu, Search, ChatLineRound, ChromeFilled, CopyDocument, Grid, Operation, Document, Aim } from '@element-plus/icons-vue';
+import { reactive, ref } from 'vue';
+import { Search, ChromeFilled, CopyDocument, Grid, Operation, ChatLineSquare, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
 import { SplitTextArea, validateIP, validateDomain, splitInt, Copy } from '../../util'
-import { FofaResult, TableTabs } from "../../interface"
+import { FofaResult, LinkItem, RuleForm, TableTabs } from "../../interface"
 import { ExportToXlsx } from '../../export'
 import { FofaTips, FofaSearch, IconHash } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus';
 import global from "../../global"
+import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from '../../../wailsjs/go/main/Database';
 const form = reactive({
     query: '',
     fraud: false,
     cert: false,
     tips: '',
     loadAll: [] as LinkItem[],
-    syntaxdialog: false,
+    syntaxData: [] as RuleForm[],
 })
 
-const fofaImg = [
-    '/fofa_syntax/fofa1.png',
-    '/fofa_syntax/fofa2.png',
-    '/fofa_syntax/fofa3.png',
-    '/fofa_syntax/fofa4.png',
-    '/fofa_syntax/fofa5.png',
-    '/fofa_syntax/fofa6.png',
-]
+// ref得单独校验
+const ruleFormRef = ref<FormInstance>()
+
+const syntax = ({
+    fofaImg: [
+        '/fofa_syntax/fofa1.png',
+        '/fofa_syntax/fofa2.png',
+        '/fofa_syntax/fofa3.png',
+        '/fofa_syntax/fofa4.png',
+        '/fofa_syntax/fofa5.png',
+        '/fofa_syntax/fofa6.png',
+    ],
+    searchDialog: ref(false),
+    starDialog: ref(false),
+    rules: reactive<FormRules<RuleForm>>({
+        name: [
+            { required: true, message: '请输入语法名称', trigger: 'blur' },
+        ],
+        desc: [
+            {
+                required: true,
+                message: '请输入语法内容',
+                trigger: 'blur',
+            },
+        ],
+    }),
+    ruleForm: reactive<RuleForm>({
+        name: '',
+        desc: '',
+    }),
+    createStarDialog: () => {
+        syntax.starDialog.value = true
+        syntax.ruleForm.name = ""
+        syntax.ruleForm.desc = form.query
+    },
+    submitStar: async (formEl: FormInstance | undefined) => {
+        if (!formEl) return
+        let result = await formEl.validate()
+        if (!result) return
+        InsertFavGrammarFiled("fofa", syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
+            if (r) {
+                ElMessage.success('添加语法成功')
+            } else {
+                ElMessage.error('添加语法失败')
+            }
+            syntax.starDialog.value = false
+        })
+    },
+    deleteStar: (name: string, content: string) => {
+        RemoveFavGrammarFiled("fofa", name, content).then((r: Boolean) => {
+            if (r) {
+                ElMessage.success('删除语法成功,重新打开刷新')
+            } else {
+                ElMessage.error('删除语法失败')
+            }
+        })
+    },
+    searchStarSyntax: async () => {
+        form.syntaxData = await SelectAllSyntax("fofa")
+    },
+})
 
 // 输入框Tips提示
 
-interface LinkItem {
-    value: string
-    link: string
-}
 const entry = ({
     querySearchAsync: (queryString: string, cb: any) => {
         if (queryString.includes("=") || queryString == "") {
@@ -56,7 +106,14 @@ const entry = ({
     },
     handleSelect: (item: Record<string, any>) => {
         form.query = `app="${item.value}"`
-    }
+    },
+    rowClick: function (row: any, column: any, event: Event) {
+        if (form.query == "") {
+            form.query = row.syntax
+            return
+        }
+        form.query += " && " + row.syntax
+    },
 })
 
 
@@ -147,7 +204,7 @@ const tableCtrl = ({
 
 function IconHashSearch() {
     ElMessageBox.prompt('输入目标Favicon地址会自动计算并搜索相关资产', 'ICON搜索', {
-        confirmButtonText: 'Search',
+        confirmButtonText: '检索',
         inputPattern: /^(https?:\/\/)?((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|localhost|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/[^\s]*)?$/,
         inputErrorMessage: 'Invalid URL',
         showCancelButton: false,
@@ -168,7 +225,7 @@ function IconHashSearch() {
 
 function BatchSearch() {
     ElMessageBox.prompt('请输入IP/网段/域名(MAX 100)', '批量查询', {
-        confirmButtonText: 'Search',
+        confirmButtonText: '检索',
         inputType: 'textarea',
         showCancelButton: false,
     })
@@ -252,7 +309,7 @@ async function CopyURL() {
 }
 
 async function CopyDeduplicationURL() {
-    await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult)=> {
+    await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult) => {
         if (result.Error) {
             ElMessage("查询失败")
             return
@@ -280,48 +337,70 @@ async function CopyDeduplicationURL() {
 <template>
     <el-form :model="form" @submit.native.prevent="tableCtrl.addTab(form.query)">
         <el-form-item>
-            <div class="head">
-                <el-autocomplete v-model="form.query" placeholder="Search..."
-                    :fetch-suggestions="entry.querySearchAsync" @select="entry.handleSelect"
-                    :debounce="1000" style="width: 100%;">
-                    <template #prepend>
-                        查询条件
-                    </template>
-                    <template #append>
-                        <el-dropdown>
-                            <el-button :icon="Menu" />
-                            <template #dropdown>
-                                <el-dropdown-menu :hide-on-click="true">
-                                    <el-dropdown-item :icon="Aim" @click="IconHashSearch()">icon搜索</el-dropdown-item>
-                                    <el-dropdown-item :icon="Document" @click="BatchSearch()">批量查询</el-dropdown-item>
-                                </el-dropdown-menu>
+            <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
+                @select="entry.handleSelect" :debounce="1000" style="width: 100%;">
+                <template #prepend>
+                    查询条件
+                </template>
+                <template #suffix>
+                    <el-space :size="2">
+                        <el-tooltip content="使用网页图标搜索" placement="bottom">
+                            <el-button :icon="PictureRounded" link @click="IconHashSearch()" />
+                        </el-tooltip>
+                        <el-tooltip content="IP/域名批量搜索" placement="bottom">
+                            <el-button :icon="Document" link @click="BatchSearch()" />
+                        </el-tooltip>
+                    </el-space>
+                    <el-divider direction="vertical" />
+                    <el-space :size="2">
+                        <el-tooltip content="清空语法" placement="bottom">
+                            <el-button :icon="Delete" link @click="form.query = ''" />
+                        </el-tooltip>
+                        <el-tooltip content="收藏语法" placement="bottom">
+                            <el-button :icon="Star" link @click="syntax.createStarDialog" />
+                        </el-tooltip>
+                        <el-tooltip content="复制语法" placement="bottom">
+                            <el-button :icon="CopyDocument" link @click="Copy(form.query)" />
+                        </el-tooltip>
+                        <el-divider direction="vertical" />
+                    </el-space>
+                    <el-button link :icon="Search" @click="tableCtrl.addTab(form.query)"
+                        style="height: 40px;">查询</el-button>
+                </template>
+                <template #append>
+                    <el-space :size="25">
+                        <el-popover placement="bottom-end" :width="550" trigger="click">
+                            <template #reference>
+                                <div>
+                                    <el-tooltip content="我收藏的语法" placement="left">
+                                        <el-button :icon="Collection" @click="syntax.searchStarSyntax" />
+                                    </el-tooltip>
+                                </div>
                             </template>
-                        </el-dropdown>
-                    </template>
-                    <template #default="{ item }">
-                        <el-space>
-                            <span>{{ item.value }}</span>
-                            <el-tag>{{ item.link }}</el-tag>
-                        </el-space>
-                    </template>
-                </el-autocomplete>
-                <el-button type="primary" :icon="Search" @click="tableCtrl.addTab(form.query)"
-                    class="two-end-space5">查询</el-button>
-                <el-dropdown>
-                    <el-button :icon="Operation" color="#D2DEE3">
-
-                    </el-button>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                            <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
-                            <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
-                            <el-dropdown-item :icon="CopyDocument"
-                                @click="CopyDeduplicationURL">去重复制前1w条URL</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-            </div>
+                            <el-table :data="form.syntaxData" @row-click="entry.rowClick" class="hunter-keyword-search">
+                                <el-table-column width="150" prop="Name" label="语法名称" />
+                                <el-table-column prop="Content" label="语法内容" />
+                                <el-table-column label="操作" width="100">
+                                    <template #default="scope">
+                                        <el-button type="text"
+                                            @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-popover>
+                        <el-tooltip content="查询语法" placement="left">
+                            <el-button :icon="ChatLineSquare" @click="syntax.searchDialog.value = true" />
+                        </el-tooltip>
+                    </el-space>
+                </template>
+                <template #default="{ item }">
+                    <el-space>
+                        <span>{{ item.value }}</span>
+                        <el-tag>{{ item.link }}</el-tag>
+                    </el-space>
+                </template>
+            </el-autocomplete>
         </el-form-item>
     </el-form>
     <div class="my-header" style="margin-bottom: 10px;">
@@ -329,16 +408,20 @@ async function CopyDeduplicationURL() {
             <el-checkbox v-model="form.fraud">排除干扰(专业版)</el-checkbox>
             <el-checkbox v-model="form.cert">证书(个人版)</el-checkbox>
         </div>
-        <el-link @click="form.syntaxdialog = true"><el-icon>
-                <ChatLineRound />
-            </el-icon>查询语法</el-link>
-        <el-dialog v-model="form.syntaxdialog" title="查询语法参考" width="80%" center>
-            <div class="demo-image__lazy">
-                <el-image v-for="url in fofaImg" :key="url" :src="url" lazy></el-image>
-            </div>
-        </el-dialog>
+        <el-dropdown>
+            <el-button :icon="Operation" color="#D2DEE3" />
+            <template #dropdown>
+                <el-dropdown-menu>
+                    <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                    <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                    <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
+                    <el-dropdown-item :icon="CopyDocument" @click="CopyDeduplicationURL">去重复制前1w条URL</el-dropdown-item>
+                </el-dropdown-menu>
+            </template>
+        </el-dropdown>
     </div>
-    <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" closable @tab-remove="tableCtrl.removeTab">
+    <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" closable
+        @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 65vh;">
@@ -364,15 +447,36 @@ async function CopyDeduplicationURL() {
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
-                <el-pagination background 
-                v-model:page-size="item.pageSize" 
-                :page-sizes="[100, 500, 1000]" layout="sizes, prev, pager, next" 
-                @size-change="tableCtrl.handleSizeChange"
+                <el-pagination background v-model:page-size="item.pageSize" :page-sizes="[100, 500, 1000]"
+                    layout="sizes, prev, pager, next" @size-change="tableCtrl.handleSizeChange"
                     @current-change="tableCtrl.handleCurrentChange" :total="item.total" />
             </div>
         </el-tab-pane>
         <el-empty v-else></el-empty>
     </el-tabs>
+    <el-dialog v-model="syntax.searchDialog.value" title="查询语法参考" width="80%" center>
+        <div class="demo-image__lazy">
+            <el-image v-for="url in syntax.fofaImg" :key="url" :src="url" lazy></el-image>
+        </div>
+    </el-dialog>
+    <el-dialog v-model="syntax.starDialog.value" title="收藏语法" width="40%" center>
+        <!-- 一定要用:model v-model校验会失效 -->
+        <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="syntax.rules" status-icon>
+            <el-form-item label="语法名称" prop="name">
+                <el-input v-model="syntax.ruleForm.name" maxlength="30" show-word-limit></el-input>
+            </el-form-item>
+            <el-form-item label="语法内容" prop="desc">
+                <el-input v-model="syntax.ruleForm.desc" type="textarea" rows="10" maxlength="1024"
+                    show-word-limit></el-input>
+            </el-form-item>
+            <el-form-item class="align-right">
+                <el-button type="primary" @click="syntax.submitStar(ruleFormRef)">
+                    确定
+                </el-button>
+                <el-button @click="syntax.starDialog.value = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
 </template>
 
 <style scoped>

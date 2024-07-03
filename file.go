@@ -211,12 +211,27 @@ func (a *App) DownloadCyberChef(url string) error {
 }
 
 func (f *File) Restart() {
-	cmd := exec.Command(os.Args[0])
-	err := cmd.Start()
-	if err != nil {
-		return
+	if rt.GOOS == "darwin" {
+		var filename string
+		if rt.GOARCH == "arm64" {
+			filename = "Slack-macos-arm64.dmg"
+		} else {
+			filename = "Slack-macos-amd64.dmg"
+		}
+		cmd := exec.Command("hdiutil", "attach", f.downloadPath+filename)
+		if err := cmd.Run(); err == nil {
+			cmd = exec.Command("Open", "/Volumes/Slack")
+			cmd.Run()
+		} else {
+			gologger.Debug(f.ctx, err)
+		}
+	} else {
+		cmd := exec.Command(os.Args[0])
+		if err := cmd.Start(); err != nil {
+			return
+		}
+		os.Exit(0)
 	}
-	os.Exit(0)
 }
 
 func (f *File) DownloadLastestClient() structs.Status {
@@ -244,7 +259,6 @@ func (f *File) DownloadLastestClient() structs.Status {
 			}
 		}
 		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "mac-success")
-		f.OpenFolder(f.downloadPath)
 		return structs.Status{
 			Error: false,
 			Msg:   "Update success!",
@@ -304,12 +318,18 @@ func (f *File) RemoveOldConfig() error {
 	return err
 }
 
+// windows要移除.xxx.old文件
+// mac需要推出挂载
 func (f *File) RemoveOldClient() {
-	// 不确定名称，暂时先这样
-	oldFileList := []string{".Slack-windows-amd64.exe.old", ".Slack-windows-ard64.old"}
-	for _, old := range oldFileList {
-		if _, err := os.Stat(old); err == nil {
-			os.Remove(old)
+	if rt.GOOS == "windows" {
+		filename := getExecName()
+		if _, err := os.Stat(fmt.Sprintf(".%s.old", filename)); err == nil {
+			os.Remove(fmt.Sprintf(".%s.old", filename))
+		}
+	} else if rt.GOOS == "darwin" {
+		cmd := exec.Command("hdiutil", "detach", "/Volumes/Slack")
+		if err := cmd.Run(); err != nil {
+			gologger.Debug(f.ctx, err)
 		}
 	}
 }

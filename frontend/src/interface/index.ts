@@ -187,3 +187,9 @@ export interface QuakeTipsData {
     Vendor_name: string;
     Ip_count: number;
 }
+
+
+export interface LinkItem {
+    value: string
+    link: string
+}

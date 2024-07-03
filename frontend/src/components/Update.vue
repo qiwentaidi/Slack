@@ -15,11 +15,16 @@ onMounted(() => {
 
     // 监听下载完成事件
     EventsOn("clientDownloadComplete", (msg: string) => {
+        let message = ""
+        if (msg == "mac-success") {
+            message = "更新成功，是否立即安装?"
+        } else {
+            message = "更新成功，是否重新启动?"
+        }
         update.downloadRunningStatus.value = false
         update.progress.value = 100;
-        if (msg === "win-success") {
             ElMessageBox.confirm(
-                '更新成功，是否重新启动?',
+                message,
                 {
                     confirmButtonText: '确认',
                     cancelButtonText: '取消',
@@ -33,10 +38,6 @@ onMounted(() => {
                 .catch(() => {
                     console.log('User cancelled or chose another option.')
                 })
-        } else if (msg === "mac-success") {
-            ElNotification.success("Download success， please reinstall!");
-        }
-
     });
 
     // 清除事件监听器
@@ -83,7 +84,7 @@ const customColorMethod = (percentage: number) => {
             <div class="card-header">
                 <span style="font-weight: bold;">POC&指纹: 最新{{ global.UPDATE.RemotePocVersion }}/当前{{
                     global.UPDATE.LocalPocVersion }}</span>
-                <el-button class="button" :icon="Download" text @click="update.poc"
+                <el-button type="primary" :icon="Download" text @click="update.poc"
                     v-if="global.UPDATE.PocStatus">立即下载</el-button>
                 <span v-else>{{ global.UPDATE.PocContent }}</span>
             </div>
@@ -98,7 +99,7 @@ const customColorMethod = (percentage: number) => {
             <div class="card-header">
                 <span style="font-weight: bold;">客户端: 最新{{ global.UPDATE.RemoteClientVersion }}/当前{{
                     global.LOCAL_VERSION }}</span>
-                <el-button class="button" :icon="Download" text @click="update.client"
+                <el-button type="primary" :icon="Download" text @click="update.client"
                     v-if="global.UPDATE.ClientStatus">立即下载</el-button>
                 <span v-else>{{ global.UPDATE.ClientContent }}</span>
             </div>

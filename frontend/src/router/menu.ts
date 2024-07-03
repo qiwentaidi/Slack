@@ -84,6 +84,11 @@ const MenuList = [
           icon: "/navigation/360.ico"
         },
         {
+          name: "aside.polymerization",
+          path: "/SpaceEngine/Polymerization",
+          icon: "/navigation/polymerization.png"
+        },
+        {
           name: "aside.agent_pool",
           path: "/SpaceEngine/AgentPool",
           icon: "/navigation/pool.png"
@@ -93,7 +98,7 @@ const MenuList = [
     {
       name: "aside.tools",
       path: "/Tools",
-      icon: "DataAnalysis",
+      icon: "Tools",
       children: [
         {
           name: "aside.en_and_de",
