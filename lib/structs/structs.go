@@ -25,3 +25,8 @@ type Children struct {
 	Type string
 	Path string
 }
+
+type TycCompanyInfo struct {
+	CompanyID   string
+	CompanyName string
+}

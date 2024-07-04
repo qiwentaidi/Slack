@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import { InfoFilled, Search, Document, Link } from '@element-plus/icons-vue';
 import { FileDialog, CheckFileStat } from '../../../wailsjs/go/main/File';
 import { ElMessage } from 'element-plus';
@@ -33,6 +33,8 @@ onMounted(() => {
     };
 });
 
+const options = ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "rdp", "postgresql", "vnc", "redis", "memcached", "mongodb"]
+
 const config = reactive({
     builtIn: true,
     association: false,
@@ -40,7 +42,17 @@ const config = reactive({
     password: '',
     target: '',
     content: [] as BruteResult[],
+    defaultOption: "ftp",
+    input: '',
 })
+
+const addTarget = () => {
+    if (config.input == "") {
+        ElMessage.warning("请输入目标")
+        return
+    }
+    config.target += config.defaultOption + "://" + config.input
+}
 
 const placeholder = `
 1、使用内置字典时，账号密码输入框无效，要使用自己的字典请取消勾选使用内置字典
@@ -184,10 +196,20 @@ async function NewScanner() {
             </template>
         </el-input>
     </div>
-    <splitpanes class="default-theme" style="height: 73vh;">
+    <splitpanes class="default-theme" style="height: 75vh;">
         <pane size="30">
+            <el-input v-model="config.input" placeholder="主机地址">
+                <template #prepend>
+                    <el-select v-model="config.defaultOption" style="width: 15vh;">
+                        <el-option v-for="value in options" :label="value" :value="value" />
+                    </el-select>
+                </template>
+                <template #append>
+                    <el-button @click="addTarget">添加</el-button>
+                </template>
+            </el-input>
             <el-input v-model="config.target" :placeholder="placeholder2" type="textarea" resize="none"
-                style="height: 100%;"></el-input>
+                style="height: 94.5%;"></el-input>
         </pane>
         <pane size="70">
             <el-table border :data="config.content" :cell-style="{ textAlign: 'center' }"

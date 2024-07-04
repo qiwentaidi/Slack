@@ -4,13 +4,17 @@ import { GoFetch, LoadDirsearchDict, DirScan, StopDirScan } from "../../../wails
 import { ReadLine, SplitTextArea, Copy, proxys } from '../../util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
-import { QuestionFilled } from '@element-plus/icons-vue';
+import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '../../global';
-import { FileDialog } from '../../../wailsjs/go/main/File';
+import { FileDialog, List, OpenFolder, UserHomeDir } from '../../../wailsjs/go/main/File';
 import { Dir, DirScanOptions } from '../../interface';
+import usePagination from '../../usePagination';
+
 
 onMounted(() => {
+    // 获取当前全部字典
+    getDictList()
     EventsOn("dirsearchLoading", (result: any) => {
         switch (result.Status) {
             case 0:
@@ -25,13 +29,13 @@ onMounted(() => {
                 });
                 break
             default:
-                table.result.push({
+                pagination.table.result.push({
                     Status: result.Status,
                     Length: result.Length,
                     URL: result.URL,
                     Location: result.Location,
                 })
-                table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+                pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
                 break
         }
     });
@@ -52,6 +56,7 @@ onMounted(() => {
 });
 
 const from = reactive({
+    configPath: '',
     url: '',
     options: ['GET', 'POST', 'HEAD', 'OPTIONS'],
     defaultOption: 'GET',
@@ -65,28 +70,28 @@ const from = reactive({
     alive: false,
     respDialog: false,
     content: "",
-})
-
-const table = reactive({
-    currentPage: 1,
-    pageSize: 50,
+    dictList: [] as string[],
+    selectDict: [] as string[],
+    checkAll: false,
+    indeterminate: false,
     result: [] as Dir[],
-    pageContent: [] as Dir[],
 })
 
-function handleSizeChange(val: any) {
-    table.pageSize = val;
-    table.currentPage = 1;
-    table.pageContent = table.result.slice(0, val)
-}
+let pagination = usePagination(from.result, 50)
 
-function handleCurrentChange(val: any) {
-    table.currentPage = val;
-    table.pageContent = table.result.slice((val - 1) * table.pageSize, (val - 1) * table.pageSize + table.pageSize)
+function getDictList() {
+    from.selectDict = []
+    UserHomeDir().then(async (home: any) => {
+        from.configPath = home + "/slack/config/dirsearch"
+        from.dictList = await List(from.configPath)
+    })
 }
 
 async function handleFileChange() {
     let path = await FileDialog("*.txt")
+    if (path == "") {
+        return
+    }
     let result = (await ReadLine(path))!
     const extensions = from.exts.split(',');
     for (const line of result) {
@@ -143,15 +148,17 @@ class Dirsearch {
         if (config.customDict != "") {
             from.paths = SplitTextArea(config.customDict)
         } else {
-            await LoadDirsearchDict(global.PATH.ConfigPath + "/dirsearch", from.exts.split(',')).then(result => {
+            if (from.selectDict.length == 0) {
+                from.selectDict = [from.configPath + "/dicc.txt"]
+            }
+            await LoadDirsearchDict(from.selectDict, from.exts.split(',')).then(result => {
                 from.paths = result;
             });
         }
         global.temp.dirsearchPathConut = from.paths.length
         from.id = 0
         from.errorCounts = 0
-        table.result = []
-        table.pageContent = []
+        pagination.ctrl.initTable()
         global.temp.dirsearchStartTime = Date.now();
     }
 
@@ -275,7 +282,7 @@ const config = reactive({
             </el-space>
         </el-form-item>
     </el-form>
-    <el-drawer v-model="config.drawer" size="50%">
+    <el-drawer v-model="config.drawer" size="60%">
         <template #header>
             <h3>设置高级参数</h3>
         </template>
@@ -291,9 +298,9 @@ const config = reactive({
             </el-form-item>
             <el-form-item>
                 <template #label>
-                    <span>过滤长度重复数据:</span>
+                    <span>过滤长度次数:</span>
                     <el-tooltip placement="left">
-                        <template #content>值为0时不过滤数据</template>
+                        <template #content>响应长度显示超过n次时不再显示<br />值为0时不过滤数据</template>
                         <el-icon>
                             <QuestionFilled size="24" />
                         </el-icon>
@@ -345,7 +352,7 @@ const config = reactive({
             </el-form-item>
             <el-form-item>
                 <template #label>
-                    <span>自定义字典:</span>
+                    <span>字典列表:</span>
                     <el-tooltip placement="left">
                         <template #content>若文本框中存在内容，则加载其内容目录为字典，不使用内置字典</template>
                         <el-icon>
@@ -353,12 +360,29 @@ const config = reactive({
                         </el-icon>
                     </el-tooltip>
                 </template>
+                <div class="head">
+                    <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip
+                        placeholder="不选择默认加载dicc字典" :max-collapse-tags="1">
+                        <el-option v-for="item in from.dictList" :label="item"
+                            :value="item" />
+                    </el-select>
+                    <el-button-group style="width: 165px;">
+                        <el-tooltip content="加载自定义字典">
+                            <el-button text bg :icon="Document" @click="handleFileChange()" />
+                        </el-tooltip>
+                        <el-tooltip content="打开文件夹">
+                            <el-button text bg :icon="FolderOpened" @click="OpenFolder(from.configPath)" />
+                        </el-tooltip>
+                        <el-tooltip content="刷新字典列表">
+                            <el-button text bg :icon="RefreshRight" @click="getDictList()" />
+                        </el-tooltip>
+                    </el-button-group>
+                </div>
                 <el-input v-model="config.customDict" type="textarea" rows="5"></el-input>
-                <el-button link @click="handleFileChange()" style="margin-top: 10px;">选择字典(不选择加载默认字典)</el-button>
             </el-form-item>
         </el-form>
     </el-drawer>
-    <el-table :data="table.pageContent" border style="height: 74vh;">
+    <el-table :data="pagination.table.pageContent" border style="height: 74vh;">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="Status" width="100px" label="状态码"
             :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
@@ -401,9 +425,11 @@ const config = reactive({
     <div class="my-header" style="margin-top: 10px;">
         <el-progress :text-inside="true" :stroke-width="20" :percentage="from.percentage" :format="control.format"
             color="#5DC4F7" style="width: 40%;" />
-        <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange" :pager-count="5"
-            :current-page="table.currentPage" :page-sizes="[50, 100, 200, 500]" :page-size="table.pageSize"
-            layout="total, sizes, prev, pager, next" :total="table.result.length">
+        <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
+            @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+            :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
+            :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+            :total="pagination.table.result.length">
         </el-pagination>
     </div>
     <el-dialog v-model="from.respDialog" title="Response" width="800">

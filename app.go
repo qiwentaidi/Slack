@@ -217,15 +217,15 @@ func (a *App) CheckCdn(domain string) string {
 		for name, cdns := range cdnData {
 			for _, cdn := range cdns {
 				if strings.Contains(cname, cdn) {
-					return fmt.Sprintf("识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v", cname, name, ipList)
+					return fmt.Sprintf("域名: %v，识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v", domain, cname, name, ipList)
 				}
 			}
 		}
 		if strings.Contains(cname, "cdn") {
-			return fmt.Sprintf("CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v", cname, ipList)
+			return fmt.Sprintf("域名: %v，CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v", domain, cname, ipList)
 		}
 	}
-	return fmt.Sprintf("未识别到CDN信息，解析到IP为: %v CNAME: %v", ipList, strings.Join(cnames, ","))
+	return fmt.Sprintf("域名: %v，未识别到CDN信息，解析到IP为: %v CNAME: %v", domain, ipList, strings.Join(cnames, ","))
 }
 
 // 初始化IP记录器
@@ -248,22 +248,14 @@ func (a *App) InitTycHeader(token string) {
 }
 
 // mode 0 = 查询子公司 . mode 1 = 查询公众号
-func (a *App) SubsidiariesAndDomains(companyName string, ratio int) []info.CompanyInfo {
-	companyId, fuzzName := info.GetCompanyID(a.ctx, companyName) // 获得到一个模糊匹配后，关联度最高的名称
-	if companyName != fuzzName {                                 // 如果传进来的名称与模糊匹配的不相同
-		var isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
-		gologger.Info(a.ctx, isFuzz)
-	}
-	return info.SearchSubsidiary(a.ctx, fuzzName, companyId, ratio)
+func (a *App) SubsidiariesAndDomains(query string, ratio int) []info.CompanyInfo {
+	tkm := info.CheckKeyMap(a.ctx, query)
+	return info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyID, ratio)
 }
 
-func (a *App) WechatOfficial(companyName string) []info.WechatReulst {
-	companyId, fuzzName := info.GetCompanyID(a.ctx, companyName) // 获得到一个模糊匹配后，关联度最高的名称
-	if companyName != fuzzName {
-		var isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", companyName, fuzzName)
-		gologger.Info(a.ctx, isFuzz)
-	}
-	return info.WeChatOfficialAccounts(a.ctx, fuzzName, companyId)
+func (a *App) WechatOfficial(query string) []info.WechatReulst {
+	tkm := info.CheckKeyMap(a.ctx, query)
+	return info.WeChatOfficialAccounts(a.ctx, tkm.CompanyName, tkm.CompanyID)
 }
 
 // type HunterSearch struct {
@@ -298,8 +290,12 @@ func (a *App) WechatOfficial(companyName string) []info.WechatReulst {
 
 // dirsearch
 
-func (a *App) LoadDirsearchDict(configPath string, newExts []string) []string {
-	return util.LoadDirsearchDict(util.HomeDir()+configPath, "/dicc.txt", "%EXT%", newExts)
+func (a *App) LoadDirsearchDict(dictPath, newExts []string) []string {
+	var dicts []string
+	for _, dict := range dictPath {
+		dicts = append(dicts, util.LoadDirsearchDict(a.ctx, dict, "%EXT%", newExts)...)
+	}
+	return util.RemoveDuplicates(dicts)
 }
 
 func (a *App) DirScan(options dirsearch.Options) {

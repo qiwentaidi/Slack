@@ -355,3 +355,23 @@ export function generateRandomString(length: number): string {
   }
   return result;
 }
+
+
+type AnyObject = { [key: string]: any };
+
+// 将对象中的数组字段转换为自定义拼接符的字符串
+export function transformArrayFields<T extends AnyObject>(data: T[], delimiter: string = '|'): T[] {
+    return data.map(item => {
+        const transformedItem: AnyObject = {};
+        for (const key in item) {
+            if (item.hasOwnProperty(key)) {
+                if (Array.isArray(item[key])) {
+                    transformedItem[key] = item[key].map((subItem: any) => JSON.stringify(subItem)).join(delimiter);
+                } else {
+                    transformedItem[key] = item[key];
+                }
+            }
+        }
+        return transformedItem as T;
+    });
+}

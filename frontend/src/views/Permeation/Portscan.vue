@@ -10,19 +10,20 @@ import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import global from '../../global'
 import async from 'async';
 import { URLFingerMap, PortScanData, File } from '../../interface';
+import usePagination from '../../usePagination';
 
 // syn 扫描模式
 onMounted(async () => {
     // 扫描状态，把结果从后端传输到前端
     EventsOn("synPortScanLoading", (p: PortScanData) => {
-        table.result.push({
+        pagination.table.result.push({
             IP: p.IP,
             Port: p.Port,
             Server: p.Server,
             Link: p.Link,
             HttpTitle: p.HttpTitle,
         })
-        table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize) 
     });
     // 进度条
     EventsOn("synProgressID", (id: number) => {
@@ -43,14 +44,14 @@ onMounted(async () => {
 // 全连接 扫描模式
 onMounted(() => {
     EventsOn("tcpPortScanLoading", (p: PortScanData) => {
-        table.result.push({
+        pagination.table.result.push({
             IP: p.IP,
             Port: p.Port,
             Server: p.Server,
             Link: p.Link,
             HttpTitle: p.HttpTitle,
         })
-        table.pageContent = table.result.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize) 
     });
     EventsOn("tcpProgressID", (id: number) => {
         form.percentage = Number(((id / form.count) * 100).toFixed(2));
@@ -71,9 +72,9 @@ onMounted(async () => {
     selectItem(1); // 更新初始化显示
 });
 
-const activeName = '1'
 
 const form = reactive({
+    activeName: '1',
     target: '',
     portlist: '',
     percentage: 0,
@@ -84,9 +85,15 @@ const form = reactive({
     isSYN: false,
     isRoot: false,
     filter: '',
-    defaultFilterGroup: "Host"
+    defaultFilterGroup: "Host",
 })
 
+const table = reactive({
+    result: [] as PortScanData[],
+    filteredResult: [] as PortScanData[], // 添加用于存储过滤后的结果
+})
+
+let pagination = usePagination(table.result, 10)
 
 async function uploadFile() {
     let path = await FileDialog("*.txt")
@@ -112,25 +119,25 @@ const options = ({
         if (filter) {
             switch (form.defaultFilterGroup) {
                 case "Host":
-                    table.filteredResult = table.result.filter((p: PortScanData) => p.IP.includes(filter));
+                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.IP.includes(filter));
                     break
                 case "Port":
-                    table.filteredResult = table.result.filter((p: PortScanData) => p.Port.toString().includes(filter));
+                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.Port.toString().includes(filter));
                     break
                 case "Fingerprint":
-                    table.filteredResult = table.result.filter((p: PortScanData) => p.Server.includes(filter));
+                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.Server.includes(filter));
                     break
                 case "Link":
-                    table.filteredResult = table.result.filter((p: PortScanData) => p.Link.includes(filter));
+                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.Link.includes(filter));
                     break
                 case "WebTitle":
-                    table.filteredResult = table.result.filter((p: PortScanData) => p.HttpTitle.includes(filter));
+                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.HttpTitle.includes(filter));
             }
         } else {
-            table.filteredResult = table.result;
+            table.filteredResult = pagination.table.result;
         }
-        table.currentPage = 1; // 重置分页
-        table.pageContent = table.filteredResult.slice((table.currentPage - 1) * table.pageSize, (table.currentPage - 1) * table.pageSize + table.pageSize)
+        pagination.table.currentPage = 1; // 重置分页
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(table.filteredResult, pagination.table.currentPage, pagination.table.pageSize) 
     }
 })
 
@@ -166,8 +173,7 @@ async function NewScanner() {
 class Scanner {
     public async PortScanner() {
         // 初始化
-        table.result = []
-        table.pageContent = []
+        pagination.ctrl.initTable()
         form.id = 0
         form.count = 0
         var ips = [] as string[]
@@ -221,11 +227,11 @@ class Scanner {
         portsList = []
         Callgologger("info", "Portscan task is ending")
         if (config.webscan) {
-            ips = getHTTPLinks(table.result)
+            ips = getHTTPLinks(pagination.table.result)
             EzWebscan(ips)
         }
         if (config.crack) {
-            ips = getColumnData("Link")
+            ips = pagination.ctrl.getColumnData("Link")
             EzCrack(ips)
         }
     }
@@ -246,14 +252,6 @@ const ctrl = reactive({
     },
 })
 
-const table = reactive({
-    currentPage: 1,
-    pageSize: 10,
-    result: [] as PortScanData[],
-    pageContent: [] as PortScanData[],
-    selectRows: [] as PortScanData[],
-    filteredResult: [] as PortScanData[], // 添加用于存储过滤后的结果
-})
 
 const selectedIndex = ref<number | null>(null);
 const selectItem = (index: number): void => {
@@ -266,21 +264,6 @@ function updatePorts(radio: number) {
     if (index >= 0 && index < global.portGroup.length) {
         form.portlist = global.portGroup[index].value;
     }
-}
-
-function handleSizeChange(val: any) {
-    table.pageSize = val;
-    table.currentPage = 1;
-    table.pageContent = table.result.slice(0, val)
-}
-
-function handleCurrentChange(val: any) {
-    table.currentPage = val;
-    table.pageContent = table.result.slice((val - 1) * table.pageSize, (val - 1) * table.pageSize + table.pageSize)
-}
-
-function getColumnData(prop: string): any[] {
-    return table.result.map((item: any) => item[prop]);
 }
 
 // 复制端口扫描中的所有HTTP链接
@@ -304,10 +287,6 @@ function getHTTPLinks(result: {}[]) {
         }
     }
     return temp
-}
-
-function handleChange(rows: PortScanData[]) {
-    table.selectRows = rows
 }
 
 async function EzWebscan(ips: string[]) {
@@ -365,7 +344,7 @@ function EzCrack(ips: string[]) {
 // 联动
 function linkage(mode: string) {
     // 处理对象，不然map拿不到值
-    const selectRows = JSON.parse(JSON.stringify(table.selectRows));
+    const selectRows = JSON.parse(JSON.stringify(pagination.table.selectRows));
     let targets = selectRows.map((item: any) => item.Link)
     if (targets.length == 0) {
         ElMessage("至少选择1个联动目标")
@@ -472,9 +451,9 @@ function linkage(mode: string) {
         </el-col>
     </el-row>
     <div style="position: relative; margin-top: 5px;">
-        <el-tabs v-model="activeName">
+        <el-tabs v-model="form.activeName">
             <el-tab-pane label="结果输出" name="1">
-                <el-table :data="table.pageContent" border style="height: 50vh;" @selection-change="handleChange">
+                <el-table :data="pagination.table.pageContent" border style="height: 50vh;" @selection-change="pagination.ctrl.handleSelectChange">
                     <el-table-column type="selection" width="42px" />
                     <el-table-column prop="IP" label="Host" />
                     <el-table-column prop="Port" label="Port" width="100px" />
@@ -495,10 +474,10 @@ function linkage(mode: string) {
                 <div class="my-header" style="margin-top: 5px;">
                     <el-progress :text-inside="true" :stroke-width="20" :percentage="form.percentage" color="#5DC4F7"
                         style="width: 40%;" />
-                    <el-pagination background @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                        :pager-count="5" :current-page="table.currentPage" :page-sizes="[10, 20, 50]"
-                        :page-size="table.pageSize" layout="total, sizes, prev, pager, next"
-                        :total="table.result.length">
+                    <el-pagination background @size-change="pagination.ctrl.handleSizeChange" @current-change="pagination.ctrl.handleCurrentChange"
+                        :pager-count="5" :current-page="pagination.table.currentPage" :page-sizes="[10, 20, 50]"
+                        :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+                        :total="pagination.table.result.length">
                     </el-pagination>
                 </div>
             </el-tab-pane>
@@ -519,10 +498,10 @@ function linkage(mode: string) {
                     <el-button :icon="Menu" color="#D2DEE3" />
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item @click="CopyURLs(table.result)"
+                            <el-dropdown-item @click="CopyURLs(pagination.table.result)"
                                 :icon="CopyDocument">复制全部URL</el-dropdown-item>
                             <el-dropdown-item :icon="Grid"
-                                @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', table.result)">
+                                @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)">
                                 导出Excel</el-dropdown-item>
                             <el-dropdown-item @click="linkage('webscan')" :icon="Promotion"
                                 divided>发送至网站扫描</el-dropdown-item>
@@ -537,6 +516,10 @@ function linkage(mode: string) {
 
 
 <style>
+.el-textarea__inner {
+    height: 100%;
+}
+
 .list-container {
     width: 20vh;
     background-color: #ffffff;

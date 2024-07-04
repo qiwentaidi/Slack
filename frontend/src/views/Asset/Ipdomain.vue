@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { ICPInfo, CheckCdn, Ip138IpHistory, Ip138Subdomain } from '../../../wailsjs/go/main/App'
+import { Document, UploadFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import { SplitTextArea } from '../../util';
+import async from 'async'
 
 const domain = reactive({
     input: '',
@@ -9,6 +12,7 @@ const domain = reactive({
     cdn: '',
     history: '',
     subdomain: '',
+    batch: '',
 });
 
 const domainRegex = /^(?=.{1,253}$)([a-z0-9]([-a-z0-9]*[a-z0-9])?\.)+[a-z]{2,}$/i;
@@ -36,6 +40,23 @@ function startSearch() {
         }
     )
 }
+
+function batchQuery() {
+    let id = 0
+    const lines = SplitTextArea(domain.batch)
+    ElMessage.info("正在执行CDN批量检测，目标数: " + lines.length)
+    async.eachLimit(lines, 20, (target: string, callback: () => void) => {
+        CheckCdn(target).then(result => {
+            domain.cdn += result + "\n\n"
+            id++
+        })
+        if (id == lines.length) {
+            callback()
+        }
+    }, (err: any) => {
+        ElMessage.success("CheckCdn Finished")
+    });
+}
 </script>
 
 <template>
@@ -55,8 +76,26 @@ function startSearch() {
             <el-input v-model="domain.icp" type="textarea" rows="12" resize="none" style="margin-top: 10px;"></el-input>
         </el-card>
         <el-card shadow="never" class="grid-item">
-            <span class="title">CDN信息:</span>
+            <div class="my-header">
+                <span class="title">CDN信息:</span>
+                <el-popover placement="left" :width="350" trigger="click">
+                    <template #reference>
+                        <div>
+                            <el-tooltip content="批量查询">
+                                <el-button :icon="Document"></el-button>
+                            </el-tooltip>
+                        </div>
+                    </template>
+                    <el-button text bg :icon="UploadFilled" style="width: 100%; margin-bottom: 5px;">选择域名文件</el-button>
+                    <el-input v-model="domain.batch" type="textarea" rows="5" placeholder="请输入域名，按换行分割"></el-input>
+                    <div class="my-header" style="margin-top: 5px;">
+                        <div></div>
+                        <el-button type="primary" @click="batchQuery">开始批量查询</el-button>
+                    </div>
+                </el-popover>
+            </div>
             <el-input v-model="domain.cdn" type="textarea" rows="12" resize="none" style="margin-top: 10px;"></el-input>
+
         </el-card>
         <el-card shadow="never" class="grid-item">
             <el-text><el-icon><img src="/ip138.ico"></el-icon><span class="title">子域名:</span></el-text>

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"time"
 
@@ -86,8 +87,9 @@ type TycResult struct {
 }
 
 var (
-	gethead  = http.Header{}
-	posthead = http.Header{}
+	gethead   = http.Header{}
+	posthead  = http.Header{}
+	TycKeyMap = make(map[string]structs.TycCompanyInfo)
 )
 
 func InitHEAD(token string) {
@@ -127,6 +129,7 @@ type CompanyInfo struct {
 	CompanyName string
 	Holding     string
 	Investment  string
+	RegStatus   string
 	Domains     []string
 }
 
@@ -148,13 +151,18 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 	var qr TycResult
 	json.Unmarshal(b, &qr)
 	// 获取到本公司对应的域名
-	domains, _ := Beianx(companyName)
-	Asset = append(Asset, CompanyInfo{companyName, "本公司", "", util.RemoveDuplicates(domains)})
+	var domains []string
+	domains, _ = Beianx(companyName)
+	Asset = append(Asset, CompanyInfo{companyName, "本公司", "", qr.State, util.RemoveDuplicates(domains)})
 	for _, result := range qr.Data.Result {
 		gq, _ := strconv.Atoi(strings.TrimSuffix(result.Percent, "%"))
 		if gq <= 100 && gq >= ratio { // 提取在控股范围内的子公司
-			subsidiaryDomains, _ := Beianx(result.Name)
-			Asset = append(Asset, CompanyInfo{result.Name, result.Percent, result.Amount, util.RemoveDuplicates(subsidiaryDomains)})
+			gologger.Info(ctx, fmt.Sprintf("%v", result.Name))
+			var subsidiaryDomains []string
+			if result.RegStatus == "存续" { // 注销的公司不用查备案
+				subsidiaryDomains, _ = Beianx(result.Name)
+			}
+			Asset = append(Asset, CompanyInfo{result.Name, result.Percent, result.Amount, result.RegStatus, util.RemoveDuplicates(subsidiaryDomains)})
 		}
 	}
 	return
@@ -218,4 +226,19 @@ func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) 
 		})
 	}
 	return
+}
+
+func CheckKeyMap(ctx context.Context, query string) structs.TycCompanyInfo {
+	if _, ok := TycKeyMap[query]; !ok {
+		companyId, fuzzName := GetCompanyID(ctx, query) // 获得到一个模糊匹配后，关联度最高的名称
+		if query != fuzzName {                          // 如果传进来的名称与模糊匹配的不相同
+			var isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", query, fuzzName)
+			gologger.Info(ctx, isFuzz)
+		}
+		TycKeyMap[query] = structs.TycCompanyInfo{
+			CompanyName: fuzzName,
+			CompanyID:   companyId,
+		}
+	}
+	return TycKeyMap[query]
 }

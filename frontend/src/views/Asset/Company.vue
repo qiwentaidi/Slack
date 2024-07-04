@@ -1,32 +1,32 @@
 <script lang="ts" setup>
 import { reactive } from "vue";
-import { QuestionFilled, Search } from '@element-plus/icons-vue';
+import { QuestionFilled, Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger } from "../../../wailsjs/go/main/App";
 import { ExportAssetToXlsx } from '../../export'
-import { onMounted } from 'vue';
 import { CompanyInfo, WechatInfo } from "../../interface";
+import usePagination from "../../usePagination";
+import { sleep, transformArrayFields } from "../../util";
 
 const from = reactive({
-    subcompany: false,
-    wechat: false,
-
+    newTask: false,
+    domain: true,
+    wechat: true,
     company: '',
     defaultHold: 100,
     token: '',
     activeName: 'subcompany',
-
-    companys: [] as string[],
     runningStatus: false,
-    domains: [] as string[],
+    companyData: [] as CompanyInfo[],
+    wehcatData: [] as WechatInfo[]
 })
 
-const table = reactive({
-    company: [] as CompanyInfo[],
-    wehcat: [] as WechatInfo[]
-})
+let pc = usePagination(from.companyData, 20) // paginationCompany
+let pw = usePagination(from.wehcatData, 20) // paginationWehcat
 
 function Collect() {
+    from.newTask = false
+    from.runningStatus = true
     if (from.company === "") {
         ElMessage({
             showClose: true,
@@ -35,19 +35,7 @@ function Collect() {
         })
         return
     }
-    if (from.subcompany === false && from.wechat === false) {
-        ElMessage({
-            showClose: true,
-            message: '请选择你需要查询的条件',
-            type: 'warning',
-        })
-        return
-    }
-    const lines = from.company.split(/[(\r\n)\r\n]+/);
-    from.companys = lines.map(line => line.trim().replace(/\s+/g, ''));
-    if (from.token !== "") {
-        InitTycHeader(from.token)
-    } else {
+    if (from.token == "") {
         ElMessage({
             showClose: true,
             message: '天眼查Token为空，大概率会影响爬取结果，请先填写Token信息',
@@ -55,37 +43,19 @@ function Collect() {
         })
         return
     }
-    table.company = []
-    table.wehcat = []
-    if (from.subcompany) {
-        const promises = from.companys.map(async companyName => {
-            Callgologger("info", `正在收集${companyName}的子公司信息`)
-            if (typeof companyName === 'string') {
-                const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.defaultHold);
-                if (result.length > 0) {
-                    for (const item of result) {
-                        table.company.push({
-                            CompanyName: item.CompanyName,
-                            Holding: item.Holding,
-                            Investment: item.Investment,
-                            Domains: item.Domains,
-                        })
-                    }
-                }
-            }
-        });
-        Promise.all(promises).then(() => {
-            Callgologger("info", "已完成子公司查询任务")
-        });
-    }
+    const lines = from.company.split(/[(\r\n)\r\n]+/);
+    let companys = lines.map(line => line.trim().replace(/\s+/g, ''));
+    InitTycHeader(from.token)
+    pc.ctrl.initTable()
+    pw.ctrl.initTable()
     if (from.wechat) {
-        const promises = from.companys.map(async companyName => {
+        const promises = companys.map(async companyName => {
             Callgologger("info", `正在收集${companyName}的微信公众号资产`)
             if (typeof companyName === 'string') {
                 const result: WechatInfo[] = await WechatOfficial(companyName);
                 if (result.length > 0) {
                     for (const item of result) {
-                        table.wehcat.push({
+                        pw.table.result.push({
                             CompanyName: item.CompanyName,
                             WechatName: item.WechatName,
                             WechatNums: item.WechatNums,
@@ -93,66 +63,100 @@ function Collect() {
                             Logo: item.Logo,
                             Introduction: item.Introduction,
                         });
+                        pw.table.pageContent = pw.ctrl.watchResultChange(pw.table.result, pw.table.currentPage, pw.table.pageSize)
                     }
                 }
             }
         });
         Promise.all(promises).then(() => {
             Callgologger("info", "已完成微信公众查询任务")
+            from.runningStatus = false
         });
     }
+    sleep(2000) // vx查的比较快，子公司查询延时2s执行，可以减少一次模糊查询的时间
+    const promises = companys.map(async companyName => {
+        Callgologger("info", `正在收集${companyName}的子公司信息`)
+        if (typeof companyName === 'string') {
+            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.defaultHold);
+            if (result.length > 0) {
+                for (const item of result) {
+                    pc.table.result.push({
+                        CompanyName: item.CompanyName,
+                        Holding: item.Holding,
+                        Investment: item.Investment,
+                        RegStatus: item.RegStatus,
+                        Domains: item.Domains,
+                    })
+                    pc.table.pageContent = pc.ctrl.watchResultChange(pc.table.result, pc.table.currentPage, pc.table.pageSize)
+                }
+            }
+        }
+    });
+    Promise.all(promises).then(() => {
+        Callgologger("info", "已完成子公司查询任务")
+        if (!from.wechat) from.runningStatus = false
+    });
+    
 }
 
-const dataHandle = ({
-    companyInfo: function (ci: CompanyInfo[]) {
-        return ci.map(item => ({
-            CompanyName: item.CompanyName,
-            Holding: item.Holding,
-            Investment: item.Investment,
-            Domains: item.Domains?.map(it => JSON.stringify(it)).join('|')
-        }))
-    }
-})
 </script>
 
+
 <template>
-    <el-form :model="from" label-width="30%">
-        <el-form-item label="公司名称:">
-            <el-input v-model="from.company" type="textarea" :rows="1" style="width: 50%;"></el-input>
-            <el-button type="primary" :icon="Search" @click="Collect" style="margin-left: 10px;"
-                v-if="!from.runningStatus">开始查询</el-button>
-            <el-button type="danger" loading style="margin-left: 10px;" v-else>正在查询</el-button>
-        </el-form-item>
-        <el-form-item label="查询条件:">
-            <div class="flex-box">
-                <el-checkbox v-model="from.subcompany" label="子公司(控股率>=)并反查域名" />
-                <el-input-number v-model="from.defaultHold" size="small" :min="1" :max="100" style="margin-left: 10px;"
-                    v-if="from.subcompany"></el-input-number>
-            </div>
-            <el-checkbox v-model="from.wechat" label="公众号" style="margin-right: 20px; margin-left: 20px;" />
-        </el-form-item>
-        <el-form-item>
-            <template #label>
-                Token:
-                <el-tooltip placement="right">
-                    <template #content>由于天眼查登录校验机制，为了确保爬取数据准确<br />
-                        需要在此处填入网页登录后Cookie头中auth_token字段</template>
-                    <el-icon>
-                        <QuestionFilled size="24" />
-                    </el-icon>
-                </el-tooltip>
-            </template>
-            <el-input v-model="from.token" style="width: 50%;"></el-input>
-        </el-form-item>
-    </el-form>
+    <el-drawer v-model="from.newTask" direction="rtl" size="40%">
+        <template #header>
+            <h4>新建任务</h4>
+        </template>
+        <el-form :model="from" label-width="auto">
+            <el-form-item label="公司名称:">
+                <el-input v-model="from.company" type="textarea" :rows="5"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <template #label>
+                    股权比例:
+                    <el-tooltip placement="right" content="会自动反查域名">
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-input-number v-model="from.defaultHold" :min="1" :max="100"></el-input-number>
+            </el-form-item>
+            <el-form-item label="其他查询内容:">
+                <el-checkbox v-model="from.wechat" label="公众号" />
+            </el-form-item>
+            <el-form-item>
+                <template #label>
+                    Token:
+                    <el-tooltip placement="right">
+                        <template #content>由于天眼查登录校验机制，为了确保爬取数据准确<br />
+                            需要在此处填入网页登录后Cookie头中auth_token字段</template>
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-input v-model="from.token" type="textarea" rows="4"></el-input>
+            </el-form-item>
+            <el-form-item class="align-right">
+                <el-button type="primary" @click="Collect">开始查询</el-button>
+            </el-form-item>
+        </el-form>
+    </el-drawer>
     <div style="position: relative;">
-        <el-tabs v-model="from.activeName" type="card">
+        <el-tabs v-model="from.activeName">
             <el-tab-pane label="控股企业" name="subcompany">
-                <el-table :data="table.company" height="65vh" border>
+                <el-table :data="pc.table.pageContent" height="80vh" border>
                     <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" :show-overflow-tooltip="true" />
                     <el-table-column prop="Holding" width="100px" label="股权比例" />
                     <el-table-column prop="Investment" width="160px" label="投资数额" />
+                    <el-table-column prop="RegStatus" width="100px" label="企业状态" align="center">
+                        <template #default="scope">
+                            <el-tag v-if="scope.row.RegStatus === '存续'" type="success">{{ scope.row.RegStatus }}</el-tag>
+                            <el-tag v-else-if="scope.row.RegStatus === '注销'" type="danger">{{ scope.row.RegStatus }}</el-tag>
+                        </template>
+                    </el-table-column>
                     <el-table-column prop="Domains" label="域名">
                         <template #default="scope">
                             <div class="finger-container" v-if="scope.row.Domains.length > 0">
@@ -165,10 +169,18 @@ const dataHandle = ({
                         <el-empty />
                     </template>
                 </el-table>
+                <div class="my-header" style="margin-top: 5px;">
+                    <div></div>
+                    <el-pagination background @size-change="pc.ctrl.handleSizeChange" @current-change="pc.ctrl.handleCurrentChange"
+                        :pager-count="5" :current-page="pc.table.currentPage" :page-sizes="[20, 50, 100]"
+                        :page-size="pc.table.pageSize" layout="total, sizes, prev, pager, next"
+                        :total="pc.table.result.length">
+                    </el-pagination>
+                </div>
+                
             </el-tab-pane>
-
             <el-tab-pane label="公众号" name="wechat">
-                <el-table :data="table.wehcat" height="65vh" border :cell-style="{ height: '23px' }">
+                <el-table :data="pw.table.pageContent" height="80vh" border :cell-style="{ height: '23px' }">
                     <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" width="180px" />
                     <el-table-column prop="WechatName" label="公众号名称">
@@ -202,13 +214,22 @@ const dataHandle = ({
                         <el-empty />
                     </template>
                 </el-table>
+                <div class="my-header" style="margin-top: 5px;">
+                    <div></div>
+                    <el-pagination background @size-change="pw.ctrl.handleSizeChange" @current-change="pw.ctrl.handleCurrentChange"
+                        :pager-count="5" :current-page="pw.table.currentPage" :page-sizes="[20, 50, 100]"
+                        :page-size="pw.table.pageSize" layout="total, sizes, prev, pager, next"
+                        :total="pw.table.result.length">
+                    </el-pagination>
+                </div>
+                
             </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar">
-            <el-button @click="ExportAssetToXlsx(dataHandle.companyInfo(table.company), table.wehcat)">
-                <template #icon>
-                    <img src="/excel.svg" width="16">
-                </template>导出Excel</el-button>
+            <el-button type="primary" :icon="Plus" @click="from.newTask = true" v-if="!from.runningStatus">新建任务</el-button>
+            <el-button type="primary" loading v-else>正在查询</el-button>
+            <el-button style="margin-left: 5px;" color="#626aef"
+            @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">导出</el-button>
         </div>
     </div>
 

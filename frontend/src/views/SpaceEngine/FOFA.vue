@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, CopyDocument, Grid, Operation, ChatLineSquare, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
 import { SplitTextArea, validateIP, validateDomain, splitInt, Copy } from '../../util'
-import { FofaResult, LinkItem, RuleForm, TableTabs } from "../../interface"
+import { FofaResult, DefaultKeyValue, RuleForm, TableTabs } from "../../interface"
 import { ExportToXlsx } from '../../export'
 import { FofaTips, FofaSearch, IconHash } from '../../../wailsjs/go/main/App'
 import { BrowserOpenURL } from '../../../wailsjs/runtime'
@@ -14,7 +14,7 @@ const form = reactive({
     fraud: false,
     cert: false,
     tips: '',
-    loadAll: [] as LinkItem[],
+    loadAll: [] as DefaultKeyValue[],
     syntaxData: [] as RuleForm[],
 })
 
@@ -98,7 +98,7 @@ const entry = ({
                 for (const item of result.data) {
                     form.loadAll.push({
                         value: item.name,
-                        link: item.company
+                        label: item.company
                     })
                 }
             }

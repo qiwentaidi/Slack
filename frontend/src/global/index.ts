@@ -37,7 +37,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "1.5.4"
+const LOCAL_VERSION = "1.5.5"
 
 var PATH = {
     ConfigPath: "/slack/config",

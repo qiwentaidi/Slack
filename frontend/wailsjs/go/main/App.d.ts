@@ -67,7 +67,7 @@ export function IsRoot():Promise<boolean>;
 
 export function JSFind(arg1:string,arg2:string):Promise<jsfind.FindSomething>;
 
-export function LoadDirsearchDict(arg1:string,arg2:Array<string>):Promise<Array<string>>;
+export function LoadDirsearchDict(arg1:Array<string>,arg2:Array<string>):Promise<Array<string>>;
 
 export function LoadSubDict(arg1:string):Promise<Array<string>>;
 

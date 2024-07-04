@@ -34,6 +34,10 @@ export function InsetItemNavigation(arg1, arg2) {
   return window['go']['main']['File']['InsetItemNavigation'](arg1, arg2);
 }
 
+export function List(arg1) {
+  return window['go']['main']['File']['List'](arg1);
+}
+
 export function Mkdir(arg1) {
   return window['go']['main']['File']['Mkdir'](arg1);
 }

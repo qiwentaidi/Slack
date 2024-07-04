@@ -19,6 +19,8 @@ export function InsetGroupNavigation(arg1:structs.Navigation):Promise<boolean>;
 
 export function InsetItemNavigation(arg1:string,arg2:structs.Children):Promise<boolean>;
 
+export function List(arg1:string):Promise<Array<string>>;
+
 export function Mkdir(arg1:string):Promise<boolean>;
 
 export function OpenFolder(arg1:string):Promise<string>;

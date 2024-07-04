@@ -76,6 +76,7 @@ func (f *File) UserHomeDir() string {
 type PathInfo struct {
 	Name string
 	Ext  string
+	Dir  string
 }
 
 func (f *File) Path(p string) PathInfo {
@@ -89,7 +90,22 @@ func (f *File) Path(p string) PathInfo {
 	return PathInfo{
 		Name: base,
 		Ext:  strings.ToUpper(strings.TrimLeft(ext, ".")),
+		Dir:  filepath.Dir(p),
 	}
+}
+
+func (f *File) List(path string) []string {
+	var files []string
+	filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			files = append(files, p)
+		}
+		return nil
+	})
+	return files
 }
 
 func (f *File) CheckFileStat(path string) bool {

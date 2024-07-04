@@ -2,16 +2,18 @@ package util
 
 import (
 	"bufio"
+	"context"
 	"os"
+	"slack-wails/lib/gologger"
 	"strings"
 
 	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
-func LoadDirsearchDict(defaultDict, filename, old string, new []string) (dict []string) {
-	file, err := os.Open(defaultDict + filename)
+func LoadDirsearchDict(ctx context.Context, filepath, old string, new []string) (dict []string) {
+	file, err := os.Open(filepath)
 	if err != nil {
-		logger.NewFileLogger(filename).Debug(err.Error())
+		gologger.Error(ctx, err)
 	}
 	defer file.Close()
 	s := bufio.NewScanner(file)

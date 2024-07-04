@@ -142,6 +142,7 @@ export interface CompanyInfo {
     CompanyName?: string;
     Holding?: string;
     Investment?: string;
+    RegStatus?: string;
     Domains?: string[];
 }
 
@@ -189,7 +190,7 @@ export interface QuakeTipsData {
 }
 
 
-export interface LinkItem {
+export interface DefaultKeyValue {
     value: string
-    link: string
+    label: string
 }
