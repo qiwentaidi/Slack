@@ -354,7 +354,7 @@ const config = reactive({
                 <template #label>
                     <span>字典列表:</span>
                     <el-tooltip placement="left">
-                        <template #content>若文本框中存在内容，则加载其内容目录为字典，不使用内置字典</template>
+                        <template #content>若文本框中存在内容，则加载其内容目录为字典，不使用选中字典</template>
                         <el-icon>
                             <QuestionFilled size="24" />
                         </el-icon>

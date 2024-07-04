@@ -18,7 +18,7 @@ import {
 } from '../../../wailsjs/go/main/App'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
-import { formatURL, ApiSyntaxCheck, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap } from '../../util'
+import { formatURL, ApiSyntaxCheck, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transformArrayFields } from '../../util'
 import { ExportWebScanToXlsx } from '../../export'
 import global from "../../global"
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
@@ -150,27 +150,6 @@ const dashboard = reactive({
     yamlPocsLength: 0,
     nucleiEnabled: false
 })
-
-// 导出文件
-function convertFT(ft: FingerprintTable[]) {
-    return ft.map(item => ({
-        url: item.url,
-        status: item.status,
-        length: item.length,
-        title: item.title,
-        detect: item.detect,
-        fingerprint: item.fingerprint.map(fingerprintItem => JSON.stringify(fingerprintItem)).join('|')
-    }))
-}
-
-function convertVUL(vul: Vulnerability[]) {
-    return vul.map(item => ({
-        vulName: item.vulName,
-        protocoltype: item.protocoltype,
-        severity: item.severity,
-        vulURL: item.vulURL
-    }))
-}
 
 async function sortFinger(Fingerprints: any) {
     const temp = [] as FingerLevel[]
@@ -552,7 +531,7 @@ function getClassBySeverity(severity: string) {
                         <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
                             :icon="CopyDocument">复制全部失败目标</el-dropdown-item>
                         <el-dropdown-item :icon="Grid"
-                            @click="ExportWebScanToXlsx(convertFT(form.fingerResult), convertVUL(form.vulResult))">
+                            @click="ExportWebScanToXlsx(transformArrayFields(form.fingerResult), transformArrayFields(form.vulResult))">
                             导出Excel</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
