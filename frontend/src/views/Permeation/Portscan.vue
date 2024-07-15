@@ -3,7 +3,7 @@ import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '../../util'
 import { ExportToXlsx } from '../../export'
-import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Grid, Search } from '@element-plus/icons-vue';
+import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Grid, Search, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from '../../../wailsjs/go/main/App'
 import { ReadFile, FileDialog } from '../../../wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
@@ -13,9 +13,9 @@ import { URLFingerMap, PortScanData, File } from '../../interface';
 import usePagination from '../../usePagination';
 
 // syn 扫描模式
-onMounted(async () => {
+onMounted(() => {
     // 扫描状态，把结果从后端传输到前端
-    EventsOn("synPortScanLoading", (p: PortScanData) => {
+    EventsOn("portScanLoading", (p: PortScanData) => {
         pagination.table.result.push({
             IP: p.IP,
             Port: p.Port,
@@ -23,49 +23,23 @@ onMounted(async () => {
             Link: p.Link,
             HttpTitle: p.HttpTitle,
         })
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize) 
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
     });
     // 进度条
-    EventsOn("synProgressID", (id: number) => {
+    EventsOn("progressID", (id: number) => {
         form.percentage = Number(((id / form.count) * 100).toFixed(2));
     });
     // 扫描结束时让进度条为100
-    EventsOn("synScanComplete", () => {
+    EventsOn("scanComplete", () => {
         form.percentage = 100
         ctrl.runningStatus = false
     });
     return () => {
-        EventsOff("synPortScanLoading");
-        EventsOff("synScanComplete");
-        EventsOff("synProgressID");
+        EventsOff("portScanLoading");
+        EventsOff("scanComplete");
+        EventsOff("progressID");
     };
 });
-
-// 全连接 扫描模式
-onMounted(() => {
-    EventsOn("tcpPortScanLoading", (p: PortScanData) => {
-        pagination.table.result.push({
-            IP: p.IP,
-            Port: p.Port,
-            Server: p.Server,
-            Link: p.Link,
-            HttpTitle: p.HttpTitle,
-        })
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize) 
-    });
-    EventsOn("tcpProgressID", (id: number) => {
-        form.percentage = Number(((id / form.count) * 100).toFixed(2));
-    });
-    EventsOn("tcpScanComplete", () => {
-        form.percentage = 100
-        ctrl.runningStatus = false
-    });
-    return () => {
-        EventsOff("tcpPortScanLoading");
-        EventsOff("tcpScanComplete");
-        EventsOff("tcpProgressID");
-    };
-})
 
 onMounted(async () => {
     form.isRoot = await IsRoot()
@@ -85,15 +59,17 @@ const form = reactive({
     isSYN: false,
     isRoot: false,
     filter: '',
-    defaultFilterGroup: "Host",
+    defaultFilterGroup: "Fingerprint",
+    hideDashboard: false,
 })
 
 const table = reactive({
     result: [] as PortScanData[],
-    filteredResult: [] as PortScanData[], // 添加用于存储过滤后的结果
+    temp: [] as PortScanData[], // 用于存储过滤之前的数据，后续需要还原给result
+    filterId: 0
 })
 
-let pagination = usePagination(table.result, 10)
+let pagination = usePagination(table.result, 20)
 
 async function uploadFile() {
     let path = await FileDialog("*.txt")
@@ -116,28 +92,33 @@ const options = ({
     aliveGroup: ["None", "ICMP", "Ping"],
     filterField: function () {
         const filter = form.filter.trim();
+        if (table.filterId == 0) {
+            console.log("filter id" + table.filterId)
+            table.temp = pagination.table.result
+            table.filterId++
+        }
         if (filter) {
             switch (form.defaultFilterGroup) {
                 case "Host":
-                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.IP.includes(filter));
+                    pagination.table.result = table.temp.filter((p: PortScanData) => p.IP.includes(filter));
                     break
                 case "Port":
-                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.Port.toString().includes(filter));
+                    pagination.table.result = table.temp.filter((p: PortScanData) => p.Port.toString().includes(filter));
                     break
                 case "Fingerprint":
-                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.Server.includes(filter));
+                    pagination.table.result = table.temp.filter((p: PortScanData) => p.Server.includes(filter));
                     break
                 case "Link":
-                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.Link.includes(filter));
+                    pagination.table.result = table.temp.filter((p: PortScanData) => p.Link.includes(filter));
                     break
                 case "WebTitle":
-                    table.filteredResult = pagination.table.result.filter((p: PortScanData) => p.HttpTitle.includes(filter));
+                    pagination.table.result = table.temp.filter((p: PortScanData) => p.HttpTitle.includes(filter));
             }
         } else {
-            table.filteredResult = pagination.table.result;
+            pagination.table.result = table.temp;
         }
         pagination.table.currentPage = 1; // 重置分页
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(table.filteredResult, pagination.table.currentPage, pagination.table.pageSize) 
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
     }
 })
 
@@ -156,6 +137,7 @@ function validateInput() {
         /^(\d{1,3}\.){3}\d{1,3}-((\d{1,3}\.){2}\d{1,3}|\d{1,3})$/, // 192.168.1.1-192.168.255.255, 192.168.1.1-255
         /^(\d{1,3}\.){3}\d{1,3}:\d{1,5}$/, // 192.168.0.1:6379
         /^!((\d{1,3}\.){3}\d{1,3}(\/\d+)?|(\d{1,3}\.){2}\d{1,3}|\d{1,3})$/, // !192.168.1.6/28
+        /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/, // domain
     ];
     const lines = form.target.split('\n');
     return lines.every(line =>
@@ -176,6 +158,8 @@ class Scanner {
         pagination.ctrl.initTable()
         form.id = 0
         form.count = 0
+        form.percentage = 0
+        table.temp = []
         var ips = [] as string[]
         var portsList = [] as number[]
         if (!validateInput()) {
@@ -201,7 +185,7 @@ class Scanner {
         ips = await IPParse(conventionTarget)
         // 判断扫描总数
         ips == null ? form.count = specialTarget.length : form.count = ips.length * portsList.length + specialTarget.length
-        Callgologger("info", "targets cout: " + ips.length)
+        // Callgologger("info", "targets cout: " + ips.length)
         if (form.count == 0) {
             ElMessage({
                 showClose: true,
@@ -227,7 +211,7 @@ class Scanner {
         portsList = []
         Callgologger("info", "Portscan task is ending")
         if (config.webscan) {
-            ips = getHTTPLinks(pagination.table.result)
+            ips = moreOperate.getHTTPLinks(pagination.table.result)
             EzWebscan(ips)
         }
         if (config.crack) {
@@ -264,29 +248,6 @@ function updatePorts(radio: number) {
     if (index >= 0 && index < global.portGroup.length) {
         form.portlist = global.portGroup[index].value;
     }
-}
-
-// 复制端口扫描中的所有HTTP链接
-function CopyURLs(result: {}[]) {
-    // 避免控制台报错
-    if (result.length <= 1) {
-        ElNotification.warning({
-            message: "复制内容条数需大于1",
-            position: 'bottom-right',
-        });
-        return;
-    }
-    Copy(getHTTPLinks(result).join("\n"))
-}
-
-function getHTTPLinks(result: {}[]) {
-    const temp = [];
-    for (const line of result) {
-        if ((line as any)["Link"].includes("http")) {
-            temp.push((line as any)["Link"]);
-        }
-    }
-    return temp
 }
 
 async function EzWebscan(ips: string[]) {
@@ -341,119 +302,168 @@ function EzCrack(ips: string[]) {
     });
 }
 
-// 联动
-function linkage(mode: string) {
-    // 处理对象，不然map拿不到值
-    const selectRows = JSON.parse(JSON.stringify(pagination.table.selectRows));
-    let targets = selectRows.map((item: any) => item.Link)
-    if (targets.length == 0) {
-        ElMessage("至少选择1个联动目标")
-        return
-    }
-    if (mode == "webscan") {
-        ElNotification.success(`已发送${targets.length}个目标到网站扫描`)
-        EzWebscan(targets)
+const moreOperate = ({
+    getHTTPLinks: function (result: PortScanData[]): string[] {
+        return result
+            .filter(line => line.Link.startsWith("http"))
+            .map(line => line.Link);
+    },
+
+    getBruteLinks: function (result: PortScanData[]): string[] {
+        return result
+            .filter(line => needBrute.some(brute => line.Link.startsWith(brute)))
+            .map(line => line.Link);
+    },
+    // 复制端口扫描中的所有HTTP链接
+    CopyURLs: function (type: string, result: PortScanData[]) {
+        if (result.length <= 1) {
+            ElNotification.warning({
+                message: "复制内容条数需大于1",
+                position: 'bottom-right',
+            });
+            return;
+        }
+        if (type == "url") {
+            Copy(this.getHTTPLinks(result).join("\n"))
+        } else {
+            Copy(this.getBruteLinks(result).join("\n"))
+        }
+    },
+    CopySelectLinks: function () {
+        const selectRows = JSON.parse(JSON.stringify(pagination.table.selectRows));
+        let targets: string[] = selectRows.map((item: any) => item.Link)
+        Copy(targets.join("\n"))
+    },
+    // 联动
+    Linkage: function (mode: string) {
+        // 处理对象，不然map拿不到值
+        const selectRows = JSON.parse(JSON.stringify(pagination.table.selectRows));
+        let targets = selectRows.map((item: any) => item.Link)
+        if (targets.length == 0) {
+            ElMessage("至少选择1个联动目标")
+            return
+        }
+        if (mode == "webscan") {
+            ElNotification.success(`已发送${targets.length}个目标到网站扫描`)
+            EzWebscan(targets)
+        } else {
+            ElNotification.success(`已发送${targets.length}个目标到暴破与未授权检测`)
+            EzCrack(targets)
+        }
+    },
+})
+
+function changeTableHeigth() {
+    form.hideDashboard = !form.hideDashboard
+    var portscanTable = document.getElementById('portscan-table')!
+    if (!form.hideDashboard) {
+        portscanTable.style.height = '50vh'
     } else {
-        ElNotification.success(`已发送${targets.length}个目标到暴破与未授权检测`)
-        EzCrack(targets)
+        portscanTable.style.height = '80.5vh'
     }
 }
+
+
 </script>
 
 <template>
-    <el-card shadow="never">
-        <el-row :gutter="8">
-            <el-col :span="6" style="display: flex; align-items: center;">
-                <el-checkbox v-model="form.isSYN" :disabled="!form.isRoot">
-                    <el-tooltip placement="right" v-if="!form.isRoot">
-                        <template #content>
-                            非ROOT模式启动时，无法调用SYN扫描模式
+    <div v-show="!form.hideDashboard" style="margin-bottom: 5px;">
+        <el-card shadow="never">
+            <el-row :gutter="8">
+                <el-col :span="6" style="display: flex; align-items: center;">
+                    <el-checkbox v-model="form.isSYN" :disabled="!form.isRoot">
+                        <el-tooltip placement="right">
+                            <template #content>
+                                需要ROOT权限
+                            </template>
+                            SYN
+                        </el-tooltip>
+                    </el-checkbox>
+                    <el-checkbox v-model="config.crack" label="口令猜测"></el-checkbox>
+                    <el-checkbox v-model="config.webscan" label="网站扫描"></el-checkbox>
+                </el-col>
+                <el-divider direction="vertical" style="height: 4vh;" />
+                <el-col :span="7" style="display: flex; align-items: center;">
+                    <el-button link>存活探测</el-button>
+                    <el-radio-group v-model="form.currentAliveMoudle" style="margin-left: 10px;">
+                        <el-radio v-for="item in options.aliveGroup" :value="item">{{ item }}</el-radio>
+                    </el-radio-group>
+                </el-col>
+                <el-divider direction="vertical" style="height: 4vh;" />
+                <el-col :span="4">
+                    <el-input v-model="config.timeout">
+                        <template #prepend>
+                            指纹超时
                         </template>
-                        SYN
-                    </el-tooltip>
-                    <span v-else>SYN</span>
-                </el-checkbox>
-                <el-checkbox v-model="config.crack" label="口令猜测"></el-checkbox>
-                <el-checkbox v-model="config.webscan" label="网站扫描"></el-checkbox>
+                    </el-input>
+                </el-col>
+                <el-col :span="4">
+                    <el-input v-model="config.thread">
+                        <template #prepend>
+                            线程数量
+                        </template>
+                    </el-input>
+                </el-col>
+                <el-col :span="2">
+                    <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
+                    <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
+                </el-col>
+            </el-row>
+        </el-card>
+        <el-row :gutter="8" style="margin-top: 10px;">
+            <el-col :span="10">
+                <div class="my-header" style="background-color: #eee;">
+                    <span>IP:
+                        <el-tooltip placement="right-end">
+                            <template #content>
+                                目标支持换行分割,IP支持如下格式:<br />
+                                192.168.1.1<br />
+                                192.168.1.1/8<br />
+                                192.168.1.1/16<br />
+                                192.168.1.1/24<br />
+                                192.168.1.1,192.168.1.2<br />
+                                192.168.1.1-192.168.255.255<br />
+                                192.168.1.1-255<br /><br />
+                                如果IP输入模式为192.168.0.1:6379此类形式，则只扫描该端口<br />
+                                <br />
+                                排除IP可以在可支持输入的IP格式前加!:<br />
+                                !192.168.1.6/28<br />
+                                <br />
+                                域名格式: www.expamle.com
+                            </template>
+                            <el-icon style="width: 13px;">
+                                <QuestionFilled />
+                            </el-icon>
+                        </el-tooltip>
+                    </span>
+                    <el-button size="small" @click="uploadFile">IP导入</el-button>
+                </div>
+                <el-input class="input" type="textarea" rows="3" v-model="form.target" resize="none" />
             </el-col>
-            <el-divider direction="vertical" style="height: 4vh;" />
-            <el-col :span="7" style="display: flex; align-items: center;">
-                存活探测
-                <el-radio-group v-model="form.currentAliveMoudle" style="margin-left: 10px;">
-                    <el-radio v-for="item in options.aliveGroup" :value="item">{{ item }}</el-radio>
-                </el-radio-group>
-            </el-col>
-            <el-divider direction="vertical" style="height: 4vh;" />
             <el-col :span="4">
-                <el-input v-model="config.timeout">
-                    <template #prepend>
-                        指纹超时
-                    </template>
-                </el-input>
+                <span class="my-header" style="background-color: #eee;">
+                    预设端口:
+                </span>
+                <el-scrollbar class="list-container" max-height="130px" style="width: 100%">
+                    <div class="list-item" v-for="(item, index) in global.portGroup"
+                        :class="{ 'selected': selectedIndex === index }" @click="selectItem(index)">{{ item.text }}
+                    </div>
+                </el-scrollbar>
             </el-col>
-            <el-col :span="4">
-                <el-input v-model="config.thread">
-                    <template #prepend>
-                        线程数量
-                    </template>
-                </el-input>
-            </el-col>
-            <el-col :span="2">
-                <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
-                <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
+            <el-col :span="10">
+                <div class="my-header" style="background-color: #eee;">
+                    端口列表:
+                    <el-button size="small" @click="form.portlist = ''">清空</el-button>
+                </div>
+                <el-input class="input" type="textarea" rows="3" v-model="form.portlist" resize="none" />
             </el-col>
         </el-row>
-    </el-card>
-    <el-row :gutter="8" style="margin-top: 10px;">
-        <el-col :span="10">
-            <div class="my-header" style="background-color: #eee;">
-                <span>IP:
-                    <el-tooltip placement="right-end">
-                        <template #content>
-                            目标支持换行分割,IP支持如下格式:<br />
-                            192.168.1.1<br />
-                            192.168.1.1/8<br />
-                            192.168.1.1/16<br />
-                            192.168.1.1/24<br />
-                            192.168.1.1,192.168.1.2<br />
-                            192.168.1.1-192.168.255.255<br />
-                            192.168.1.1-255<br /><br />
-                            如果IP输入模式为192.168.0.1:6379此类形式，则只扫描该端口<br />
-                            <br />
-                            排除IP可以在可支持输入的IP格式前加!:<br />
-                            !192.168.1.6/28<br />
-                        </template>
-                        <el-icon style="width: 13px;">
-                            <QuestionFilled />
-                        </el-icon>
-                    </el-tooltip>
-                </span>
-                <el-button size="small" @click="uploadFile">IP导入</el-button>
-            </div>
-            <el-input class="input" type="textarea" rows="3" v-model="form.target" resize="none" @blur="" />
-        </el-col>
-        <el-col :span="4">
-            <span class="my-header" style="background-color: #eee;">
-                预设端口:
-            </span>
-            <el-scrollbar class="list-container" max-height="130px" style="width: 100%">
-                <div class="list-item" v-for="(item, index) in global.portGroup"
-                    :class="{ 'selected': selectedIndex === index }" @click="selectItem(index)">{{ item.text }}
-                </div>
-            </el-scrollbar>
-        </el-col>
-        <el-col :span="10">
-            <div class="my-header" style="background-color: #eee;">
-                端口列表:
-                <el-button size="small" @click="form.portlist = ''">清空</el-button>
-            </div>
-            <el-input class="input" type="textarea" rows="3" v-model="form.portlist" resize="none" />
-        </el-col>
-    </el-row>
-    <div style="position: relative; margin-top: 5px;">
+    </div>
+    <div style="position: relative;">
         <el-tabs v-model="form.activeName">
             <el-tab-pane label="结果输出" name="1">
-                <el-table :data="pagination.table.pageContent" border style="height: 50vh;" @selection-change="pagination.ctrl.handleSelectChange">
+                <el-table :data="pagination.table.pageContent" border id="portscan-table"
+                    @selection-change="pagination.ctrl.handleSelectChange" style="height: 50vh;">
                     <el-table-column type="selection" width="42px" />
                     <el-table-column prop="IP" label="Host" />
                     <el-table-column prop="Port" label="Port" width="100px" />
@@ -474,8 +484,9 @@ function linkage(mode: string) {
                 <div class="my-header" style="margin-top: 5px;">
                     <el-progress :text-inside="true" :stroke-width="20" :percentage="form.percentage" color="#5DC4F7"
                         style="width: 40%;" />
-                    <el-pagination background @size-change="pagination.ctrl.handleSizeChange" @current-change="pagination.ctrl.handleCurrentChange"
-                        :pager-count="5" :current-page="pagination.table.currentPage" :page-sizes="[10, 20, 50]"
+                    <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
+                        @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+                        :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100, 200, 500]"
                         :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
                         :total="pagination.table.result.length">
                     </el-pagination>
@@ -484,6 +495,12 @@ function linkage(mode: string) {
         </el-tabs>
         <div class="custom_eltabs_titlebar">
             <el-space>
+                <el-button link @click="changeTableHeigth">
+                    <template #icon>
+                        <ArrowUpBold v-if="!form.hideDashboard" />
+                        <ArrowDownBold v-else />
+                    </template>
+                </el-button>
                 <el-input v-model="form.filter" placeholder="Filter">
                     <template #prepend>
                         <el-select v-model="form.defaultFilterGroup" style="width: 120px;">
@@ -498,14 +515,19 @@ function linkage(mode: string) {
                     <el-button :icon="Menu" color="#D2DEE3" />
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item @click="CopyURLs(pagination.table.result)"
+                            <el-dropdown-item @click="moreOperate.CopyURLs('url', pagination.table.result)"
                                 :icon="CopyDocument">复制全部URL</el-dropdown-item>
+                            <el-dropdown-item @click="moreOperate.CopyURLs('brute', pagination.table.result)"
+                                :icon="CopyDocument">复制全部可爆破协议</el-dropdown-item>
+                            <el-dropdown-item @click="moreOperate.CopySelectLinks()"
+                                :icon="CopyDocument">复制选中目标</el-dropdown-item>
                             <el-dropdown-item :icon="Grid"
-                                @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)">
+                                @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)" divided>
                                 导出Excel</el-dropdown-item>
-                            <el-dropdown-item @click="linkage('webscan')" :icon="Promotion"
+                            <el-dropdown-item @click="moreOperate.Linkage('webscan')" :icon="Promotion"
                                 divided>发送至网站扫描</el-dropdown-item>
-                            <el-dropdown-item @click="linkage('crack')" :icon="Promotion">发送至暴破与未授权检测</el-dropdown-item>
+                            <el-dropdown-item @click="moreOperate.Linkage('crack')"
+                                :icon="Promotion">发送至暴破与未授权检测</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>

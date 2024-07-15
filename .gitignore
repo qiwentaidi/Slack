@@ -3,3 +3,4 @@ node_modules
 frontend/dist
 release
 .vscode
+assets/Thumbs.db

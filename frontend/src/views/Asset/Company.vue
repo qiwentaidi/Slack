@@ -6,7 +6,7 @@ import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger } f
 import { ExportAssetToXlsx } from '../../export'
 import { CompanyInfo, WechatInfo } from "../../interface";
 import usePagination from "../../usePagination";
-import { sleep, transformArrayFields } from "../../util";
+import { transformArrayFields } from "../../util";
 
 const from = reactive({
     newTask: false,
@@ -42,38 +42,15 @@ function Collect() {
             type: 'error',
         })
         return
+    } else {
+        from.token = from.token.replace(/[\r\n\s]/g, '')
     }
     const lines = from.company.split(/[(\r\n)\r\n]+/);
     let companys = lines.map(line => line.trim().replace(/\s+/g, ''));
     InitTycHeader(from.token)
     pc.ctrl.initTable()
     pw.ctrl.initTable()
-    if (from.wechat) {
-        const promises = companys.map(async companyName => {
-            Callgologger("info", `正在收集${companyName}的微信公众号资产`)
-            if (typeof companyName === 'string') {
-                const result: WechatInfo[] = await WechatOfficial(companyName);
-                if (result.length > 0) {
-                    for (const item of result) {
-                        pw.table.result.push({
-                            CompanyName: item.CompanyName,
-                            WechatName: item.WechatName,
-                            WechatNums: item.WechatNums,
-                            Qrcode: item.Qrcode,
-                            Logo: item.Logo,
-                            Introduction: item.Introduction,
-                        });
-                        pw.table.pageContent = pw.ctrl.watchResultChange(pw.table.result, pw.table.currentPage, pw.table.pageSize)
-                    }
-                }
-            }
-        });
-        Promise.all(promises).then(() => {
-            Callgologger("info", "已完成微信公众查询任务")
-            from.runningStatus = false
-        });
-    }
-    sleep(2000) // vx查的比较快，子公司查询延时2s执行，可以减少一次模糊查询的时间
+    let allCompany = [] as string[]
     const promises = companys.map(async companyName => {
         Callgologger("info", `正在收集${companyName}的子公司信息`)
         if (typeof companyName === 'string') {
@@ -87,6 +64,7 @@ function Collect() {
                         RegStatus: item.RegStatus,
                         Domains: item.Domains,
                     })
+                    allCompany.push(item.CompanyName!)
                     pc.table.pageContent = pc.ctrl.watchResultChange(pc.table.result, pc.table.currentPage, pc.table.pageSize)
                 }
             }
@@ -94,9 +72,35 @@ function Collect() {
     });
     Promise.all(promises).then(() => {
         Callgologger("info", "已完成子公司查询任务")
-        if (!from.wechat) from.runningStatus = false
+        if (from.wechat) {
+            const promises2 = allCompany.map(async companyName => {
+                Callgologger("info", `正在收集${companyName}的微信公众号资产`)
+                if (typeof companyName === 'string') {
+                    const result: WechatInfo[] = await WechatOfficial(companyName);
+                    if (Array.isArray(result) && result.length > 0) {
+                        for (const item of result) {
+                            pw.table.result.push({
+                                CompanyName: item.CompanyName,
+                                WechatName: item.WechatName,
+                                WechatNums: item.WechatNums,
+                                Qrcode: item.Qrcode,
+                                Logo: item.Logo,
+                                Introduction: item.Introduction,
+                            });
+                            pw.table.pageContent = pw.ctrl.watchResultChange(pw.table.result, pw.table.currentPage, pw.table.pageSize)
+                        }
+                    }
+                }
+            });
+            Promise.all(promises2).then(() => {
+                Callgologger("info", "已完成微信公众查询任务")
+                from.runningStatus = false
+            });
+        } else {
+            from.runningStatus = false
+        }
     });
-    
+
 }
 
 </script>
@@ -153,8 +157,10 @@ function Collect() {
                     <el-table-column prop="Investment" width="160px" label="投资数额" />
                     <el-table-column prop="RegStatus" width="100px" label="企业状态" align="center">
                         <template #default="scope">
-                            <el-tag v-if="scope.row.RegStatus === '存续'" type="success">{{ scope.row.RegStatus }}</el-tag>
-                            <el-tag v-else-if="scope.row.RegStatus === '注销'" type="danger">{{ scope.row.RegStatus }}</el-tag>
+                            <el-tag v-if="scope.row.RegStatus === '存续'" type="success">{{ scope.row.RegStatus
+                                }}</el-tag>
+                            <el-tag v-else-if="scope.row.RegStatus === '注销'" type="danger">{{ scope.row.RegStatus
+                                }}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="Domains" label="域名">
@@ -171,13 +177,13 @@ function Collect() {
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
                     <div></div>
-                    <el-pagination background @size-change="pc.ctrl.handleSizeChange" @current-change="pc.ctrl.handleCurrentChange"
-                        :pager-count="5" :current-page="pc.table.currentPage" :page-sizes="[20, 50, 100]"
-                        :page-size="pc.table.pageSize" layout="total, sizes, prev, pager, next"
-                        :total="pc.table.result.length">
+                    <el-pagination background @size-change="pc.ctrl.handleSizeChange"
+                        @current-change="pc.ctrl.handleCurrentChange" :pager-count="5"
+                        :current-page="pc.table.currentPage" :page-sizes="[20, 50, 100]" :page-size="pc.table.pageSize"
+                        layout="total, sizes, prev, pager, next" :total="pc.table.result.length">
                     </el-pagination>
                 </div>
-                
+
             </el-tab-pane>
             <el-tab-pane label="公众号" name="wechat">
                 <el-table :data="pw.table.pageContent" height="80vh" border :cell-style="{ height: '23px' }">
@@ -216,20 +222,21 @@ function Collect() {
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
                     <div></div>
-                    <el-pagination background @size-change="pw.ctrl.handleSizeChange" @current-change="pw.ctrl.handleCurrentChange"
-                        :pager-count="5" :current-page="pw.table.currentPage" :page-sizes="[20, 50, 100]"
-                        :page-size="pw.table.pageSize" layout="total, sizes, prev, pager, next"
-                        :total="pw.table.result.length">
+                    <el-pagination background @size-change="pw.ctrl.handleSizeChange"
+                        @current-change="pw.ctrl.handleCurrentChange" :pager-count="5"
+                        :current-page="pw.table.currentPage" :page-sizes="[20, 50, 100]" :page-size="pw.table.pageSize"
+                        layout="total, sizes, prev, pager, next" :total="pw.table.result.length">
                     </el-pagination>
                 </div>
-                
+
             </el-tab-pane>
         </el-tabs>
         <div class="custom_eltabs_titlebar">
-            <el-button type="primary" :icon="Plus" @click="from.newTask = true" v-if="!from.runningStatus">新建任务</el-button>
+            <el-button type="primary" :icon="Plus" @click="from.newTask = true"
+                v-if="!from.runningStatus">新建任务</el-button>
             <el-button type="primary" loading v-else>正在查询</el-button>
             <el-button style="margin-left: 5px;" color="#626aef"
-            @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">导出</el-button>
+                @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">导出</el-button>
         </div>
     </div>
 

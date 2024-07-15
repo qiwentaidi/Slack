@@ -41,10 +41,12 @@ func SynScan(ctx context.Context, address []Address2) {
 			pr := Connect(ret.Ip.To4().String(), int(ret.Port), synTimeout)
 			pr.IP = ret.Ip.To4().String()
 			pr.Port = int(ret.Port)
-			runtime.EventsEmit(ctx, "synPortScanLoading", pr)
+			runtime.EventsEmit(ctx, "portScanLoading", pr)
+			atomic.AddInt32(&id, 1)
+			runtime.EventsEmit(ctx, "progressID", id)
 		}
 		single <- struct{}{}
-		runtime.EventsEmit(ctx, "synScanComplete", "done")
+		runtime.EventsEmit(ctx, "scanComplete", "done")
 	}()
 	startIp := address[0].IP
 	// scanner
@@ -56,8 +58,6 @@ func SynScan(ctx context.Context, address []Address2) {
 	portScan := func(addr Address2) {
 		ss.WaitLimiter()
 		ss.Scan(addr.IP, addr.Port) // syn 不能并发，默认以网卡和驱动最高性能发包
-		atomic.AddInt32(&id, 1)
-		runtime.EventsEmit(ctx, "synProgressID", id)
 	}
 	// Pool - ping and port scan
 	var wgPing sync.WaitGroup

@@ -23,7 +23,7 @@ export async function ExportAssetToXlsx(r1: {}[], r2: {}[]) {
   // 创建一个新的工作簿
   let wb = XLSX.utils.book_new();
   // 自定义表头
-  let suheaders = ["公司名称", "股权比例", "投资数额", "域名"];
+  let suheaders = ["公司名称", "股权比例", "投资数额", "企业状态", "域名"];
   let weheaders = ["公司名称", "公众号名称", "微信号", "Logo", "二维码", "简介"];
   let ws1 = XLSX.utils.json_to_sheet(r1);
   let ws2 = XLSX.utils.json_to_sheet(r2);

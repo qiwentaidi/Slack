@@ -92,6 +92,18 @@ export namespace main {
 	
 	    }
 	}
+	export class HunterSearch {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new HunterSearch(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
 	export class PathInfo {
 	
 	

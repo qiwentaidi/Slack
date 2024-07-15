@@ -67,6 +67,8 @@ func main() {
 			TitleBar: &mac.TitleBar{
 				FullSizeContent: false,
 			},
+			WebviewIsTransparent: true,
+			WindowIsTranslucent:  false,
 		},
 		Windows: &windows.Options{
 			WebviewBrowserPath: "", // 可以让windows使用默认浏览器打开链接

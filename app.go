@@ -79,9 +79,13 @@ func (a *App) Callgologger(level, msg string) {
 }
 
 func (a *App) IsRoot() bool {
-	return os.Getuid() == 0
+	if runtime.GOOS == "windows" {
+		_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
+		return err == nil
+	} else {
+		return os.Getuid() == 0
+	}
 }
-
 func (a *App) GOOS() string {
 	return runtime.GOOS
 }
@@ -208,8 +212,8 @@ func (a *App) CheckCdn(domain string) string {
 	if err != nil {
 		return fmt.Sprintf("域名: %v 解析失败,%v", domain, err)
 	}
-	if len(cnames) == 0 {
-		return fmt.Sprintf("域名: %v 未解析到CNAME信息", domain)
+	if len(ips) == 1 && len(cnames) == 0 {
+		return fmt.Sprintf("域名: %v，解析到唯一IP %v，未解析到CNAME信息", domain, ips[0])
 	}
 	cdnData := core.ReadCDNFile(a.ctx, a.cdnFile)
 	ipList := strings.Join(ips, " | ")
@@ -250,43 +254,45 @@ func (a *App) InitTycHeader(token string) {
 // mode 0 = 查询子公司 . mode 1 = 查询公众号
 func (a *App) SubsidiariesAndDomains(query string, ratio int) []info.CompanyInfo {
 	tkm := info.CheckKeyMap(a.ctx, query)
+	time.Sleep(time.Second)
 	return info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyID, ratio)
 }
 
 func (a *App) WechatOfficial(query string) []info.WechatReulst {
 	tkm := info.CheckKeyMap(a.ctx, query)
+	time.Sleep(time.Second)
 	return info.WeChatOfficialAccounts(a.ctx, tkm.CompanyName, tkm.CompanyID)
 }
 
-// type HunterSearch struct {
-// 	Total string
-// 	Info  string
-// }
+type HunterSearch struct {
+	Total string
+	Info  string
+}
 
 // mode = 0 campanyName, mode = 1 domain or ip
-// func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
-// 	if mode == 0 {
-// 		str := fmt.Sprintf("icp.name=\"%v\"", target)
-// 		t, i := space.SearchTotal(api, str)
-// 		return HunterSearch{
-// 			Total: fmt.Sprint(t),
-// 			Info:  i,
-// 		}
-// 	} else {
-// 		var str string
-// 		// 处理网站域名是IP的情况
-// 		if util.RegIP.MatchString(target) {
-// 			str = fmt.Sprintf("ip=\"%v\"", target)
-// 		} else {
-// 			str = fmt.Sprintf("domain.suffix=\"%v\"", target)
-// 		}
-// 		t, i := space.SearchTotal(api, str)
-// 		return HunterSearch{
-// 			Total: fmt.Sprint(t),
-// 			Info:  i,
-// 		}
-// 	}
-// }
+func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
+	if mode == 0 {
+		str := fmt.Sprintf("icp.name=\"%v\"", target)
+		t, i := space.SearchTotal(api, str)
+		return HunterSearch{
+			Total: fmt.Sprint(t),
+			Info:  i,
+		}
+	} else {
+		var str string
+		// 处理网站域名是IP的情况
+		if util.RegIP.MatchString(target) {
+			str = fmt.Sprintf("ip=\"%v\"", target)
+		} else {
+			str = fmt.Sprintf("domain.suffix=\"%v\"", target)
+		}
+		t, i := space.SearchTotal(api, str)
+		return HunterSearch{
+			Total: fmt.Sprint(t),
+			Info:  i,
+		}
+	}
+}
 
 // dirsearch
 

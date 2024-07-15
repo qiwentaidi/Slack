@@ -44,10 +44,10 @@ func TcpScan(ctx context.Context, address []Address, workers, timeout int) {
 	var wg sync.WaitGroup
 	go func() {
 		for pr := range retChan {
-			runtime.EventsEmit(ctx, "tcpPortScanLoading", pr)
+			runtime.EventsEmit(ctx, "portScanLoading", pr)
 		}
 		close(single)
-		runtime.EventsEmit(ctx, "tcpScanComplete", "done")
+		runtime.EventsEmit(ctx, "scanComplete", "done")
 	}()
 	// port scan func
 	portScan := func(add Address) {
@@ -56,7 +56,7 @@ func TcpScan(ctx context.Context, address []Address, workers, timeout int) {
 		}
 		pr := Connect(add.IP, add.Port, timeout)
 		atomic.AddInt32(&id, 1)
-		runtime.EventsEmit(ctx, "tcpProgressID", id)
+		runtime.EventsEmit(ctx, "progressID", id)
 		if pr.Status {
 			pr.IP = add.IP
 			pr.Port = add.Port
@@ -109,7 +109,11 @@ func Connect(ip string, port, timeout int) PortResult {
 		}
 		pr.Link = fmt.Sprintf("%v://%v:%v", pr.Server, ip, port)
 		if pr.Server == "http" || pr.Server == "https" {
-			if _, b, err := clients.NewSimpleGetRequest(pr.Link, clients.DefaultClient()); err == nil {
+			if resp, b, err := clients.NewSimpleGetRequest(pr.Link, clients.DefaultClient()); err == nil {
+				// 过滤云防护
+				if resp.StatusCode == 422 {
+					pr.Status = false
+				}
 				if match := util.RegTitle.FindSubmatch(b); len(match) > 1 {
 					pr.HttpTitle = util.Str2UTF8(string(match[1]))
 				} else {

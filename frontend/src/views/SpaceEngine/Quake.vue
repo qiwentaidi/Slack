@@ -161,8 +161,8 @@
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="Grid" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="Grid" @click="exportData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Grid" @click="exportData">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Grid" @click="exportData">导出全部数据</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -237,7 +237,7 @@
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: #4CA87D;">{{ quake.message }}</span>
                 <el-pagination class="quake-pagin" background v-model:page-size="item.pageSize"
-                    :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next"
+                    :page-sizes="[10, 20, 50, 100, 200, 500]" layout="total, sizes, prev, pager, next"
                     @size-change="tableCtrl.handleSizeChange" @current-change="tableCtrl.handleCurrentChange"
                     :total="item.total" />
             </div>
@@ -267,13 +267,13 @@
 <script lang="ts" setup>
 import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
-import { Copy, ReadLine, generateRandomString } from '../../util';
+import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields } from '../../util';
 import { ExportToXlsx } from '../../export';
 import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData, RuleForm } from '../../interface';
 import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
 import { FaviconMd5, QuakeSearch, QuakeTips } from '../../../wailsjs/go/main/App';
 import global from '../../global';
-import { ElMessage, FormInstance, FormRules } from 'element-plus';
+import { ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus';
 import { FileDialog } from '../../../wailsjs/go/main/File';
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from '../../../wailsjs/go/main/Database';
 
@@ -593,7 +593,7 @@ const tableCtrl = ({
             }
         )
     },
-    handleOptionChange: function() {
+    handleOptionChange: function () {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.pageSize = 10
         tab.currentPage = 1
@@ -659,46 +659,55 @@ const tableCtrl = ({
         }
         return ips
     },
-    searchCsegment: function(ip: string) {
+    searchCsegment: function (ip: string) {
         let cSegment = ip.split('.').slice(0, 3).join('.') + ".0/24";
         tableCtrl.addTab("ip: " + cSegment, false)
     }
 })
 
-async function exportData(mode: number) {
+async function exportData() {
     if (table.editableTabs.length != 0) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        if (mode == 0) {
-            ExportToXlsx(["IP", "域名", "标题", "端口", "协议", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", tab.content)
+        if (tab.total <= 500) {
+            ExportToXlsx(["域名", "IP", "端口", "协议", "标题", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", transformArrayFields(tab.content))
         } else {
+            ElNotification.info({
+                title: "提示",
+                message: "正在进行全数据导出，API每页最大查询限度500，请稍后。",
+            });
             let temp = [{}]
+            temp.pop()
             let ipList = await tableCtrl.getIpList()
-            QuakeSearch(ipList, tab.title, 1, tab.total, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
-                (result: QuakeResult) => {
-                    if (result.Code != 0) {
-                        quake.message = result.Message!
-                        table.loading = false
-                        return
+            let index = 0
+            for (const num of splitInt(tab.total, 500)) {
+                index += 1
+                ElMessage("正在导出第" + index.toString() + "页");
+                QuakeSearch(ipList, tab.title, 1, tab.total, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+                    (result: QuakeResult) => {
+                        if (result.Code != 0) {
+                            quake.message = result.Message!
+                            table.loading = false
+                            return
+                        }
+                        result.Data?.forEach((item: QuakeData) => {
+                            temp.push({
+                                Host: item.Host,
+                                IP: item.IP,
+                                Port: item.Port,
+                                Protocol: item.Protocol,
+                                IcpName: item.IcpName,
+                                Component: item.Components,
+                                Title: item.Title,
+                                IcpNumber: item.IcpNumber,
+                                ISP: item.Isp,
+                                Position: item.Position,
+                            })
+                        });
                     }
-                    temp.pop()
-                    result.Data?.forEach((item: QuakeData) => {
-                        temp.push({
-                            Host: item.Host,
-                            IP: item.IP,
-                            Port: item.Port,
-                            Protocol: item.Protocol,
-                            IcpName: item.IcpName,
-                            Component: item.Components,
-                            Title: item.Title,
-                            IcpNumber: item.IcpNumber,
-                            ISP: item.Isp,
-                            Position: item.Position,
-                        })
-                    });
-                    ExportToXlsx(["IP", "域名", "标题", "端口", "协议", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", temp)
-                    temp = []
-                }
-            )
+                )
+                ExportToXlsx(["IP", "域名", "标题", "端口", "协议", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", temp)
+                temp = []
+            }
         }
     }
 }
@@ -807,5 +816,10 @@ async function exportData(mode: number) {
 
 .quake-pagin :deep(.el-pager li:hover) {
     color: #4CA87D;
+}
+
+.quake-pagin :deep(.el-select-dropdown__item.is-selected) {
+    color: #4CA87D;
+    font-weight: bold;
 }
 </style>

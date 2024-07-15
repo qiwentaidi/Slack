@@ -6,6 +6,10 @@ export function ActiveFingerScan(arg1, arg2) {
   return window['go']['main']['App']['ActiveFingerScan'](arg1, arg2);
 }
 
+export function AssetHunter(arg1, arg2, arg3) {
+  return window['go']['main']['App']['AssetHunter'](arg1, arg2, arg3);
+}
+
 export function Callgologger(arg1, arg2) {
   return window['go']['main']['App']['Callgologger'](arg1, arg2);
 }

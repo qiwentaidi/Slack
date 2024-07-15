@@ -36,6 +36,7 @@ type QuakeRawResult struct {
 	Data    []struct {
 		Components []struct {
 			ProductNameEn string `json:"product_name_en"`
+			ProductNameCn string `json:"product_name_cn"`
 			Version       string `json:"version"`
 		} `json:"components"`
 		Port    int `json:"port"`
@@ -204,7 +205,11 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 	for _, item := range qrk.Data {
 		var components []string
 		for _, v := range item.Components {
-			components = append(components, util.MergeNonEmpty([]string{v.ProductNameEn, v.Version}, "/"))
+			if v.ProductNameEn == "" {
+				components = append(components, util.MergeNonEmpty([]string{v.ProductNameCn, v.Version}, "/"))
+			} else {
+				components = append(components, util.MergeNonEmpty([]string{v.ProductNameEn, v.Version}, "/"))
+			}
 		}
 		qk.Data = append(qk.Data, QuakeData{
 			Components: components,
