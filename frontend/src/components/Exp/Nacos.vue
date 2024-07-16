@@ -61,13 +61,19 @@ const vulnerabilityGroup = [
 ]
 
 async function useVulnerability() {
-    const result: any = await CheckTarget(form.url, global.proxy)
-    if (result.Error) {
-        ElMessage.warning("目标不可达!")
-        return
+    if (!form.url.endsWith("/")) {
+        form.url += "/"
     }
-    if (!form.url.endsWith("\\")) {
-        form.url += "\\"
+    if (!form.service.endsWith("/")) {
+        form.service += "/download"
+    } else {
+        form.service += "download"
+    }
+    if (form.selectVulnerability == 3) {
+        if (form.service == "") {
+            ElMessage.warning("请输入服务端地址!")
+            return   
+        }
     }
     form.content = await AlibabaNacos(form.url,form.header ,form.selectVulnerability, form.username, form.password, form.command, form.service, global.proxy)
 }
