@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, ref } from 'vue';
+import { reactive, onMounted } from 'vue';
 import { InfoFilled, Search, Document, Link } from '@element-plus/icons-vue';
 import { FileDialog, CheckFileStat } from '../../../wailsjs/go/main/File';
 import { ElMessage } from 'element-plus';

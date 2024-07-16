@@ -6,6 +6,10 @@ export function ActiveFingerScan(arg1, arg2) {
   return window['go']['main']['App']['ActiveFingerScan'](arg1, arg2);
 }
 
+export function AlibabaNacos(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+  return window['go']['main']['App']['AlibabaNacos'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+}
+
 export function AssetHunter(arg1, arg2, arg3) {
   return window['go']['main']['App']['AssetHunter'](arg1, arg2, arg3);
 }
@@ -68,6 +72,10 @@ export function GOOS() {
 
 export function GoFetch(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['GoFetch'](arg1, arg2, arg3, arg4, arg5, arg6);
+}
+
+export function HikvsionProduct(arg1, arg2, arg3) {
+  return window['go']['main']['App']['HikvsionProduct'](arg1, arg2, arg3);
 }
 
 export function HostAlive(arg1, arg2) {
@@ -192,10 +200,6 @@ export function System(arg1, arg2) {
 
 export function ThinkDict(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
   return window['go']['main']['App']['ThinkDict'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-}
-
-export function UseDruid(arg1, arg2, arg3) {
-  return window['go']['main']['App']['UseDruid'](arg1, arg2, arg3);
 }
 
 export function WebPocLength() {

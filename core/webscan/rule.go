@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
@@ -101,11 +102,20 @@ type FingerPoc struct {
 }
 
 func ALLPoc() []string {
-	news := []string{}
-	for _, we := range WorkFlowDB {
-		news = append(news, we.PocsName...)
-	}
-	return util.RemoveDuplicates(FullPocName(news))
+	var files []string
+	root := util.HomeDir() + "/slack/config/pocs/"
+	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// 检查文件后缀名
+		if filepath.Ext(path) == ".yaml" {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files
 }
 
 func FullPocName(pocs []string) []string {

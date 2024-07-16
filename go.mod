@@ -32,11 +32,18 @@ require (
 	aead.dev/minisign v0.2.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/chromedp/cdproto v0.0.0-20240202021202-6d0b6a386732 // indirect
+	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/gobwas/httphead v0.1.0 // indirect
+	github.com/gobwas/pool v0.2.1 // indirect
+	github.com/gobwas/ws v1.3.2 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/jackpal/gateway v1.0.15 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/libp2p/go-netroute v0.2.1 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.23 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/projectdiscovery/stringsutil v0.0.2 // indirect
@@ -50,6 +57,7 @@ require (
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/bep/debounce v1.2.1 // indirect
+	github.com/chromedp/chromedp v0.9.5
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect

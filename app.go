@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -15,7 +16,8 @@ import (
 	"runtime"
 	"slack-wails/core"
 	"slack-wails/core/dirsearch"
-	alibaba "slack-wails/core/druid"
+	"slack-wails/core/exp/hikvision"
+	"slack-wails/core/exp/nacos"
 	"slack-wails/core/info"
 	"slack-wails/core/jsfind"
 	"slack-wails/core/portscan"
@@ -586,12 +588,31 @@ func (a *App) FaviconMd5(target string) string {
 	return hex.EncodeToString(sum)
 }
 
-func (a *App) UseDruid(target string, attackType int, proxy clients.Proxy) (result []string) {
-	druid := alibaba.NewDruid()
-	if attackType == 1 {
-		result, _ = druid.LoginBrute(target, clients.JudgeClient(proxy))
-	} else {
-		result, _ = druid.GetSession(target, clients.JudgeClient(proxy))
+func (a *App) AlibabaNacos(target, headers string, attackType int, username, password, command, service string, proxy clients.Proxy) string {
+	switch attackType {
+	case 0:
+		if nacos.CVE_2021_29441_Step1(target, username, password, clients.JudgeClient(proxy)) {
+			return "添加用户成功: \n username: " + username + "， password: " + password
+		}
+	case 1:
+		if nacos.CVE_2021_29441_Step2(target, username, clients.JudgeClient(proxy)) {
+			return "删除用户成功!"
+		}
+	case 2:
+		return nacos.CVE_2021_29442(target, clients.JudgeClient(proxy))
+	case 3:
+		return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.JudgeClient(proxy))
 	}
-	return
+	return target + "不存在该漏洞"
+}
+
+func (a *App) HikvsionProduct(target string, attackType int, proxy clients.Proxy) string {
+	switch attackType {
+	case 0:
+		body := hikvision.CVE_2017_7921_Snapshot(target, clients.JudgeClient(proxy))
+		return base64.RawStdEncoding.EncodeToString(body)
+	case 1:
+		return hikvision.CVE_2017_7921_Config(target, clients.JudgeClient(proxy))
+	}
+	return ""
 }

@@ -10,6 +10,8 @@ import {info} from '../models';
 
 export function ActiveFingerScan(arg1:Array<string>,arg2:clients.Proxy):Promise<void>;
 
+export function AlibabaNacos(arg1:string,arg2:string,arg3:number,arg4:string,arg5:string,arg6:string,arg7:string,arg8:clients.Proxy):Promise<string>;
+
 export function AssetHunter(arg1:number,arg2:string,arg3:string):Promise<main.HunterSearch>;
 
 export function Callgologger(arg1:string,arg2:string):Promise<void>;
@@ -41,6 +43,8 @@ export function Fscan2Txt(arg1:string):Promise<string>;
 export function GOOS():Promise<string>;
 
 export function GoFetch(arg1:string,arg2:string,arg3:any,arg4:Array<{[key: string]: string}>,arg5:number,arg6:clients.Proxy):Promise<structs.Response>;
+
+export function HikvsionProduct(arg1:string,arg2:number,arg3:clients.Proxy):Promise<string>;
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
 
@@ -103,8 +107,6 @@ export function SubsidiariesAndDomains(arg1:string,arg2:number):Promise<Array<in
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
 
 export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string,arg8:Array<string>):Promise<Array<string>>;
-
-export function UseDruid(arg1:string,arg2:number,arg3:clients.Proxy):Promise<Array<string>>;
 
 export function WebPocLength():Promise<number>;
 

@@ -89,18 +89,6 @@ function getURLs() : string[]{
     return urls ? urls : [];
 }
 
-// async function HunterCSVremoveDuplicates() {
-//     let filepath = await FileDialog("*.txt")
-//     let result = await HunterRemoveDuplicates(filepath)
-//     if (result) {
-//         ElNotification({
-//             message: `已去重数据${result.length}条`,
-//             type: 'success'
-//         })
-//     }
-// }
-
-
 </script>
 
 
