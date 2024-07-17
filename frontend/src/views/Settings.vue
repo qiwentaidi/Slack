@@ -100,22 +100,23 @@ import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, TestNuclei } from "../util";
 import { Edit } from '@element-plus/icons-vue';
 import { reactive } from "vue";
-import { ReadFile, WriteFile } from "../../wailsjs/go/main/File";
+import { ReadFile, SaveDataToFile, WriteFile } from "../../wailsjs/go/main/File";
 import { File } from '../interface';
 
-function saveConfig() {
+async function saveConfig() {
   global.space.fofaapi = global.space.fofaapi.replace(/[\r\n\s]/g, '');
   global.space.fofaemail = global.space.fofaemail.replace(/[\r\n\s]/g, '');
   global.space.fofakey = global.space.fofakey.replace(/[\r\n\s]/g, '');
   global.space.hunterkey = global.space.hunterkey.replace(/[\r\n\s]/g, '');
   global.space.quakekey = global.space.quakekey.replace(/[\r\n\s]/g, '');
-  localStorage.setItem('proxy', JSON.stringify(global.proxy));
-  localStorage.setItem('space', JSON.stringify(global.space));
-  localStorage.setItem('webscan', JSON.stringify(global.webscan));
-  ElNotification.success({
-    message: 'Save successful',
-    position: 'bottom-right'
-  })
+  var data = { proxy: global.proxy, space: global.space, jsfind: global.jsfind, webscan: global.webscan };
+  let result = await SaveDataToFile(data);
+  if (result) {
+    ElNotification.success({
+      message: 'Save successful',
+      position: 'bottom-right'
+    })
+  }
 };
 
 const ctrl = reactive({

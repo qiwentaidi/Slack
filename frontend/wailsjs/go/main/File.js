@@ -54,6 +54,10 @@ export function ReadFile(arg1) {
   return window['go']['main']['File']['ReadFile'](arg1);
 }
 
+export function ReadLocalStore() {
+  return window['go']['main']['File']['ReadLocalStore']();
+}
+
 export function ReadMemo(arg1) {
   return window['go']['main']['File']['ReadMemo'](arg1);
 }
@@ -72,6 +76,10 @@ export function Restart() {
 
 export function RunApp(arg1, arg2, arg3) {
   return window['go']['main']['File']['RunApp'](arg1, arg2, arg3);
+}
+
+export function SaveDataToFile(arg1) {
+  return window['go']['main']['File']['SaveDataToFile'](arg1);
 }
 
 export function SaveFile(arg1) {

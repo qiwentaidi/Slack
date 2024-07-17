@@ -2,7 +2,6 @@ package hikvision
 
 import (
 	"fmt"
-	"slack-wails/lib/clients"
 	"testing"
 )
 
@@ -11,6 +10,8 @@ func TestHikvision(t *testing.T) {
 	// resp := CVE_2017_7921_Snapshot(URL, clients.DefaultClient())
 	// fmt.Printf("resp: %v\n", resp)
 
-	resp := CVE_2017_7921_Config(URL, clients.DefaultClient())
+	// resp := CVE_2017_7921_Config(URL, clients.DefaultClient())
+	// fmt.Printf("resp: %v\n", resp)
+	resp := CheckLogin(URL, []string{"hik12345+", "Hik12345+", "admin12345", "12345"})
 	fmt.Printf("resp: %v\n", resp)
 }

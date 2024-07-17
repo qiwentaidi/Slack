@@ -78,10 +78,7 @@ async function uploadFile() {
     }
     let file: File = await ReadFile(path)
     if (file.Error) {
-        ElMessage({
-            type: "warning",
-            message: file.Message
-        })
+        ElMessage.warning(file.Message)
         return
     }
     form.target = file.Content!

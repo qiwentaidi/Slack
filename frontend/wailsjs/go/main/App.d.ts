@@ -44,7 +44,7 @@ export function GOOS():Promise<string>;
 
 export function GoFetch(arg1:string,arg2:string,arg3:any,arg4:Array<{[key: string]: string}>,arg5:number,arg6:clients.Proxy):Promise<structs.Response>;
 
-export function HikvsionProduct(arg1:string,arg2:number,arg3:clients.Proxy):Promise<string>;
+export function HikvsionCamera(arg1:string,arg2:number,arg3:Array<string>,arg4:string,arg5:clients.Proxy):Promise<string>;
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
 

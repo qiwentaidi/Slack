@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { ElMessage } from 'element-plus';
-import { AlibabaNacos, CheckTarget } from '../../../wailsjs/go/main/App';
+import { AlibabaNacos } from '../../../wailsjs/go/main/App';
 import { reactive } from 'vue';
 import global from "../../global/index"
+import { AddRightSubString } from '../../util';
 const form = reactive({
     url: "",
     username: "qioxzcio",
@@ -55,25 +56,21 @@ const vulnerabilityGroup = [
         value: 2
     },
     {
-        name: "DerbySqlinstalljar RCE",
+        name: "Derby SQLi 条件竞争 RCE",
         value: 3
     }
 ]
 
 async function useVulnerability() {
-    if (!form.url.endsWith("/")) {
-        form.url += "/"
-    }
+    form.url = AddRightSubString(form.url, "/")
     if (!form.service.endsWith("/")) {
         form.service += "/download"
     } else {
         form.service += "download"
     }
-    if (form.selectVulnerability == 3) {
-        if (form.service == "") {
-            ElMessage.warning("请输入服务端地址!")
-            return   
-        }
+    if (form.selectVulnerability == 3 && form.service == "") {
+        ElMessage.warning("请输入服务端地址!")
+        return   
     }
     form.content = await AlibabaNacos(form.url,form.header ,form.selectVulnerability, form.username, form.password, form.command, form.service, global.proxy)
 }

@@ -1,4 +1,4 @@
-import { CheckFileStat, InitConfig, UserHomeDir, ReadFile, RemoveOldConfig } from '../wailsjs/go/main/File';
+import { CheckFileStat, InitConfig, UserHomeDir, ReadFile, RemoveOldConfig, SaveDataToFile, ReadLocalStore } from '../wailsjs/go/main/File';
 import { ElLoading, ElNotification } from 'element-plus';
 import global from "./global";
 import { compareVersion, sleep } from './util';
@@ -53,29 +53,17 @@ export async function InitConfigFile(timeout: number) {
 }
 
 // 加载本地配置信息
-function LoadConfig() {
-  const allLocaolStorage = [
-    {
-      key: "proxy",
-      value: global.proxy,
-    },
-    {
-      key: "space",
-      value: global.space,
-    },
-    {
-      key: "jsfind",
-      value: global.jsfind,
-    },
-    {
-      key: "webscan",
-      value: global.webscan,
-    }
-  ];
-  allLocaolStorage.forEach(item => {
-    const v = localStorage.getItem(item.key)
-    if (v) {
-      Object.assign(item.value, JSON.parse(v));
-    }
-  });
+async function LoadConfig() {
+  let home = await UserHomeDir()
+  let stat = await CheckFileStat(home + "/slack/config.json")
+  if (!stat) {
+    var data = { proxy: global.proxy, space: global.space, jsfind: global.jsfind, webscan: global.webscan };
+    await SaveDataToFile(data);
+  } else {
+    let result = await ReadLocalStore()
+    Object.assign(global.proxy, result["proxy"])
+    Object.assign(global.space, result["space"])
+    Object.assign(global.jsfind, result["jsfind"])
+    Object.assign(global.webscan, result["webscan"])
+  }
 }

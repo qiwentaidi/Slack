@@ -275,7 +275,7 @@ async function SaveData(mode: number) {
                     temp.push(...result.Results!)
                 })
             }
-            ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", temp)
+            ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "组件", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", temp)
             temp = []
         }
     }
@@ -331,6 +331,15 @@ async function CopyDeduplicationURL() {
         Copy(temp.join("\n"))
         temp = []
     })
+}
+
+function formatProduct(raw: string) :string[] {
+    let result = [] as string[]
+    if (raw == "") {
+        return result
+    }
+    result = raw.split(",")
+    return result
 }
 </script>
 
@@ -428,7 +437,7 @@ async function CopyDeduplicationURL() {
                 <el-table-column type="index" label="#" width="60px" />
                 <el-table-column prop="URL" label="URL" width="300" :show-overflow-tooltip="true">
                     <template #default="scope">
-                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)">
+                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.URL != ''">
                         </el-button>
                         {{ scope.row.URL }}
                     </template>
@@ -442,6 +451,27 @@ async function CopyDeduplicationURL() {
                 <el-table-column prop="Domain" label="域名" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Protocol" label="协议" :filters='getColumnData("Protocol")'
                     :filter-method="filterHandlerProtocol" width="100" :show-overflow-tooltip="true" />
+                <el-table-column prop="Product" label="组件" width="200">
+                    <template #default="scope">
+                        <el-button type="primary" plain
+                            v-if="formatProduct(scope.row.Product).length > 0">
+                            <template #icon v-if="formatProduct(scope.row.Product).length > 1">
+                                <el-popover placement="bottom" :width="350" trigger="hover">
+                                    <template #reference>
+                                        <el-icon>
+                                            <Histogram />
+                                        </el-icon>
+                                    </template>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <el-tag type="primary" v-for="component in formatProduct(scope.row.Product)">{{ component
+                                            }}</el-tag>
+                                    </div>
+                                </el-popover>
+                            </template>
+                            {{ formatProduct(scope.row.Product)[0] }}
+                        </el-button>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="Region" label="地区" width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="ICP" label="备案号" width="150" :show-overflow-tooltip="true" />
             </el-table>

@@ -74,8 +74,8 @@ export function GoFetch(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['GoFetch'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
-export function HikvsionProduct(arg1, arg2, arg3) {
-  return window['go']['main']['App']['HikvsionProduct'](arg1, arg2, arg3);
+export function HikvsionCamera(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['HikvsionCamera'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function HostAlive(arg1, arg2) {

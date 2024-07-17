@@ -489,3 +489,20 @@ func getExecName() string {
 
 	return filepath.Base(execPath)
 }
+
+func (f *File) SaveDataToFile(data interface{}) bool {
+	content, _ := json.MarshalIndent(data, "", "  ")
+	if err := os.WriteFile(f.UserHomeDir()+"/slack/config.json", content, 0777); err != nil {
+		return false
+	}
+	return true
+}
+
+func (f *File) ReadLocalStore() map[string]interface{} {
+	var data map[string]interface{}
+	content, _ := os.ReadFile(f.UserHomeDir() + "/slack/config.json")
+	if err := json.Unmarshal(content, &data); err != nil {
+		return nil
+	}
+	return data
+}

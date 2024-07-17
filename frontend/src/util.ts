@@ -121,7 +121,7 @@ export async function formatURL(host: string): Promise<string[]> {
   return urls;
 }
 
-function AddRightSubString(str: string, sub: string) {
+export function AddRightSubString(str: string, sub: string) {
   if (str.endsWith(sub)) {
     return str;
   }

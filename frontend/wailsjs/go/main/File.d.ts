@@ -29,6 +29,8 @@ export function Path(arg1:string):Promise<main.PathInfo>;
 
 export function ReadFile(arg1:string):Promise<main.FileInfo>;
 
+export function ReadLocalStore():Promise<{[key: string]: any}>;
+
 export function ReadMemo(arg1:string):Promise<{[key: string]: string}>;
 
 export function RemoveOldClient():Promise<void>;
@@ -38,6 +40,8 @@ export function RemoveOldConfig():Promise<void>;
 export function Restart():Promise<void>;
 
 export function RunApp(arg1:string,arg2:string,arg3:string):Promise<boolean>;
+
+export function SaveDataToFile(arg1:any):Promise<boolean>;
 
 export function SaveFile(arg1:string):Promise<string>;
 

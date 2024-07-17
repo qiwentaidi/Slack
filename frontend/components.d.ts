@@ -63,7 +63,7 @@ declare module 'vue' {
     ElTag: typeof import('element-plus/es')['ElTag']
     ElText: typeof import('element-plus/es')['ElText']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
-    Hikvison: typeof import('./src/components/Exp/Hikvison.vue')['default']
+    Hikvision: typeof import('./src/components/Exp/Hikvision.vue')['default']
     Loading: typeof import('./src/components/Loading.vue')['default']
     LocalNavigation: typeof import('./src/components/LocalNavigation.vue')['default']
     Nacos: typeof import('./src/components/Exp/Nacos.vue')['default']

