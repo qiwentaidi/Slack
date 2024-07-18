@@ -25,8 +25,12 @@ sudo apt install golang-go
 # need install nodejs 15+
 sudo apt install nodejs npm
 
-# install gcc && webkit && libpcap
-sudo apt install build-essential libgtk-3-dev libwebkit2gtk-4.0-dev libpcap-dev 
+# install gcc && libpcap
+sudo apt install build-essential libgtk-3-dev libpcap-dev 
+
+# if apt can't be found 4.0-dev then install 4.1-dev
+1、sudo apt install libwebkit2gtk-4.0-dev
+2、sudo apt install libwebkit2gtk-4.1-dev
 
 # install wails to run app
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -106,7 +110,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ### 公司名称查资产
 
-![image-20231124155235223](assets/image-20231124155235223.png)
+![image-20240718104209501](assets/image-20240718104209501.png)
 
 ![image-20240412150938371](assets/image-20240412150938371.png)
 
@@ -122,7 +126,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ### FOFA
 
-![image-20231204000209352](assets/image-20231204000209352.png)
+![image-20240718103758587](assets/image-20240718103758587.png)
 
 ### 鹰图
 
@@ -255,10 +259,10 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 >
 >Q3: 新版Linux没有安装未找到 libwebkit2gtk-4.0-dev
 >
->A: 安装libwebkit2gtk-4.1.0 并安装Wails CLI 2.9.0+ ，通过设置编译tags支持
+>A: 安装libwebkit2gtk-4.1-dev 并安装Wails CLI 2.9.0+ ，通过设置编译tags支持
 >
 >``````sh
->apt install libwebkit2gtk-4.1.0
+>apt install libwebkit2gtk-4.1-dev
 >wails build -tags webkit2_41
 >``````
 ## MacOS
