@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"strconv"
 	"strings"
@@ -221,7 +222,12 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 			IcpNumber:  item.Service.HTTP.Icp.Main_licence.Licence,
 			IP:         item.IP,
 			Isp:        item.Location.Isp,
-			Position:   util.MergeNonEmpty([]string{item.Location.ProvinceCn, item.Location.CityCn, item.Location.DistrictCn}, "/"),
+			Position: util.MergePosition(structs.Position{
+				Province:  item.Location.ProvinceCn,
+				City:      item.Location.CityCn,
+				District:  item.Location.DistrictCn,
+				Connector: "/",
+			}),
 		})
 	}
 	qrk = QuakeRawResult{} // 清空内存

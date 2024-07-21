@@ -295,6 +295,18 @@ export namespace space {
 		    return a;
 		}
 	}
+	export class Result {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Result(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
 	export class TipsResult {
 	    code: number;
 	    message: string;
@@ -363,6 +375,18 @@ export namespace structs {
 	
 	    static createFrom(source: any = {}) {
 	        return new Response(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+	export class SpaceOption {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new SpaceOption(source);
 	    }
 	
 	    constructor(source: any = {}) {

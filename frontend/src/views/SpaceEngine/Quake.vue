@@ -220,7 +220,7 @@
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">
-                            <el-button link @click.prevent="tableCtrl.searchCsegment(scope.row.IP)">
+                            <el-button link @click.prevent="tableCtrl.addTab('ip: ' + CsegmentIpv4(scope.row.IP), false)">
                                 <template #icon>
                                     <svg t="1719219479838" class="icon" viewBox="0 0 1450 1024" version="1.1"
                                         xmlns="http://www.w3.org/2000/svg" p-id="5099" width="200" height="200">
@@ -267,7 +267,7 @@
 <script lang="ts" setup>
 import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
-import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields } from '../../util';
+import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4 } from '../../util';
 import { ExportToXlsx } from '../../export';
 import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData, RuleForm } from '../../interface';
 import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
@@ -659,10 +659,6 @@ const tableCtrl = ({
         }
         return ips
     },
-    searchCsegment: function (ip: string) {
-        let cSegment = ip.split('.').slice(0, 3).join('.') + ".0/24";
-        tableCtrl.addTab("ip: " + cSegment, false)
-    }
 })
 
 async function exportData() {

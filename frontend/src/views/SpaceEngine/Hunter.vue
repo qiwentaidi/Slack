@@ -45,6 +45,10 @@ const options = ({
     ],
     Data: [
         {
+            "syntax": 'domain.suffix="qianxin.com"',
+            "description": '搜索主域为"qianxin.com"的网站'
+        },
+        {
             "syntax": 'app.name="小米 Router"',
             "description": '搜索标记为”小米 Router“的资产'
         },
@@ -135,33 +139,33 @@ const form = reactive({
     defaultSever: '3',
     deduplication: false,
     tips: '',
-    loadAll: [] as HunterEntryTips[],
     batchdialog: false,
     batchURL: '',
     syntaxData: [] as RuleForm[],
 })
 
 const entry = ({
-    querySearchAsync: (queryString: string, cb: Function) => {
+    querySearchAsync: async (queryString: string, cb: Function) => {
         if (queryString.includes("=") || queryString == "") {
-            cb(form.loadAll);
+            cb([]);
             return
         }
-        entry.getTips(queryString)
-        cb(form.loadAll);
+        let tips = await entry.getTips(queryString)
+        cb(tips);
     },
     getTips: async function (queryString: string) {
         let result = await HunterTips(queryString)
-        form.loadAll = []
+        let tips = [] as HunterEntryTips[]
         if (result.code == 200) {
             for (const item of result.data.app) {
-                form.loadAll.push({
+                tips.push({
                     value: item.name,
                     assetNum: item.asset_num,
                     tags: item.tags
                 })
             }
         }
+        return tips
     },
     handleSelect: (item: Record<string, any>) => {
         form.query = `app.name="${item.value}"`
@@ -211,7 +215,7 @@ const tableCtrl = ({
                         return
                 }
             }
-            form.tips = result.message + " 共查询到数据:" + result.data.total + "条," + result.data.rest_quota
+            form.tips = result.message + "," + result.data.rest_quota
             const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
             tab.content!.pop()
             if (result.data.arr == null) {
@@ -276,7 +280,7 @@ const tableCtrl = ({
                     return
                 }
             }
-            form.tips = result.message + " 共查询到数据:" + result.data.total + "条," + result.data.rest_quota
+            form.tips = result.message + "," + result.data.rest_quota
             tab.content = [{}]
             tab.content.pop()
             result.data.arr.forEach((item: any) => {
@@ -319,7 +323,7 @@ const tableCtrl = ({
                     return
                 }
             }
-            form.tips = result.message + " 共查询到数据:" + result.data.total + "条," + result.data.rest_quota
+            form.tips = result.message + "," + result.data.rest_quota
             tab.content = [{}]
             tab.content.pop()
             result.data.arr.forEach((item: any) => {
@@ -582,7 +586,7 @@ async function CopyURL(mode: number) {
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
                 <el-pagination background v-model:page-size="item.pageSize" :page-sizes="[10, 50, 100]"
-                    layout="sizes, prev, pager, next" @size-change="tableCtrl.handleSizeChange"
+                    layout="total, sizes, prev, pager, next" @size-change="tableCtrl.handleSizeChange"
                     @current-change="tableCtrl.handleCurrentChange" :total="item.total" />
             </div>
         </el-tab-pane>

@@ -194,3 +194,22 @@ export interface DefaultKeyValue {
     value: string
     label: string
 }
+
+export interface Uncover {
+    title: string;
+    name: string;
+    content: UncoverData[];
+    total: number;
+    pageSize: number;
+    currentPage: number;
+}
+
+interface UncoverData {
+    URL: string
+    IP: string
+    Domain: string
+    Port: string
+    Protocol: string
+    Component: string
+    Source: string
+}

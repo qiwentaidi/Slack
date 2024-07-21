@@ -375,3 +375,7 @@ export function transformArrayFields<T extends AnyObject>(data: T[], delimiter: 
         return transformedItem as T;
     });
 }
+
+export function CsegmentIpv4(ip: string) :string {
+  return ip.split('.').slice(0, 3).join('.') + ".0/24";
+}

@@ -30,3 +30,19 @@ type TycCompanyInfo struct {
 	CompanyID   string
 	CompanyName string
 }
+
+type Position struct {
+	Country   string
+	Province  string
+	City      string
+	District  string
+	Connector string // 连接符
+}
+
+type SpaceOption struct {
+	FofaApi   string
+	FofaEmail string
+	FofaKey   string
+	HunterKey string
+	QuakeKey  string
+}

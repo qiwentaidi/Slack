@@ -95,6 +95,8 @@ html {
   position: absolute;
   width: calc(100% - 64px);
   bottom: 0;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .console-log div {

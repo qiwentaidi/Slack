@@ -80,21 +80,19 @@ async function InitDict() {
           </keep-alive>
         </router-view>
       </el-main>
-      <div class="console-log">
+      <el-footer class="console-log">
         <div>
-          <span class="margin-25">
+          <span>
             {{ breadcrumbItems(route.path, ' > ') }}
           </span>
-          <div class="margin-25">
-            <el-button link @click="showLogger = true">
-              <template #icon>
-                <img src="/console.svg">
-              </template>
-              Console
-            </el-button>
-          </div>
+          <el-button link @click="showLogger = true">
+            <template #icon>
+              <img src="/console.svg">
+            </template>
+            Console
+          </el-button>
         </div>
-      </div>
+      </el-footer>
     </el-container>
   </el-container>
   <!-- running logs -->
@@ -109,11 +107,5 @@ async function InitDict() {
 <style>
 .el-aside {
   width: 64px;
-}
-
-.margin-25 {
-  margin: 2.5vh;
-  font-size: 14px;
-  font-weight: 500;
 }
 </style>

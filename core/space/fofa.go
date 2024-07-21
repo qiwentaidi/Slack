@@ -13,8 +13,9 @@ import (
 	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/structs"
+	"slack-wails/lib/util"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -128,13 +129,6 @@ func FofaApiSearch(ctx context.Context, search, pageSize, pageNum, addr, email, 
 			fs.Message = "未查询到数据"
 		} else {
 			for i := 0; i < len(fr.Results); i++ {
-				var region string
-				// 排除直辖市重复显示
-				if fr.Results[i][7] == fr.Results[i][8] {
-					region = strings.Join([]string{fr.Results[i][6], fr.Results[i][7]}, "/")
-				} else {
-					region = strings.Join([]string{fr.Results[i][6], fr.Results[i][7], fr.Results[i][8]}, "/")
-				}
 				fs.Results = append(fs.Results, Results{
 					URL:      fr.Results[i][10],
 					Host:     fr.Results[i][0],
@@ -143,9 +137,14 @@ func FofaApiSearch(ctx context.Context, search, pageSize, pageNum, addr, email, 
 					Port:     fr.Results[i][4],
 					Domain:   fr.Results[i][3],
 					Protocol: fr.Results[i][5],
-					Region:   region,
-					ICP:      fr.Results[i][9],
-					Product:  fr.Results[i][11],
+					Region: util.MergePosition(structs.Position{
+						Country:   fr.Results[i][6],
+						Province:  fr.Results[i][7],
+						City:      fr.Results[i][8],
+						Connector: "/",
+					}),
+					ICP:     fr.Results[i][9],
+					Product: fr.Results[i][11],
 				})
 			}
 		}

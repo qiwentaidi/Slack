@@ -24,6 +24,7 @@ import global from "../../global"
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
 import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions, FofaResult } from '../../interface';
 import { UserHomeDir } from '../../../wailsjs/go/main/File';
+import usePagination from '../../usePagination';
 // 初始化时调用
 onMounted(() => {
     InitRule().then(err => {
@@ -52,7 +53,7 @@ onMounted(() => {
     EventsOn("nucleiResult", (result: any) => {
         const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
         dashboard.riskLevel[riskLevelKey]++;
-        form.vulResult.push({
+        vulPagination.table.result.push({
             vulID: result.ID,
             vulName: result.Name,
             protocoltype: result.Type.toLocaleUpperCase(),
@@ -64,6 +65,7 @@ onMounted(() => {
             description: result.Description,
             reference: result.Reference,
         })
+        vulPagination.table.pageContent = vulPagination.ctrl.watchResultChange(vulPagination.table.result, vulPagination.table.currentPage, vulPagination.table.pageSize)
     });
     EventsOn("webFingerScan", async (result: any) => {
         if (result.StatusCode == 0) {
@@ -74,7 +76,7 @@ onMounted(() => {
                 finger: result.Fingerprints
             })
             let temp = await sortFinger(result.Fingerprints)
-            form.fingerResult.push({
+            fingerPagination.table.result.push({
                 url: result.URL,
                 status: result.StatusCode,
                 length: result.Length,
@@ -84,6 +86,7 @@ onMounted(() => {
                 waf: "WAF: " + result.WAF,
                 fingerprint: temp,
             })
+            fingerPagination.table.pageContent = fingerPagination.ctrl.watchResultChange(fingerPagination.table.result, fingerPagination.table.currentPage, fingerPagination.table.pageSize)
         }
     });
     return () => {
@@ -91,8 +94,6 @@ onMounted(() => {
         EventsOff("webFingerScan");
     };
 })
-
-
 
 const form = reactive({
     url: '',
@@ -133,7 +134,8 @@ const form = reactive({
     noInteractsh: false,
 })
 
-
+let fingerPagination = usePagination(form.fingerResult, 50)
+let vulPagination = usePagination(form.vulResult, 50)
 
 const dashboard = reactive({
     reqErrorURLs: [] as string[],
@@ -358,187 +360,207 @@ function getClassBySeverity(severity: string) {
 </script>
 
 <template>
-    <el-card>
-        <template #header>
-            <div class="card-header">
-                <span>Dashboard</span>
-                <el-alert title="Nuclei engine is enabled" type="success" :closable="false" center show-icon
-                    style="width: 50%; height: 30px" v-if="dashboard.nucleiEnabled" />
-                <el-alert title="Nuclei engine is underfind, please configure the nuclei path in the settings"
-                    type="error" :closable="false" center show-icon style="width: 50%; height: 30px" v-else />
-                <div>
-                    <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
-                        v-if="!form.runnningStatus">新建任务</el-button>
-                    <el-button type="danger" :icon="VideoPause" @click="stopScan" v-else>停止任务</el-button>
+    <el-scrollbar height="92vh">
+        <el-card>
+            <template #header>
+                <div class="card-header">
+                    <span>Dashboard</span>
+                    <el-alert title="Nuclei engine is enabled" type="success" :closable="false" center show-icon
+                        style="width: 50%; height: 30px" v-if="dashboard.nucleiEnabled" />
+                    <el-alert title="Nuclei engine is underfind, please configure the nuclei path in the settings"
+                        type="error" :closable="false" center show-icon style="width: 50%; height: 30px" v-else />
+                    <div>
+                        <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
+                            v-if="!form.runnningStatus">新建任务</el-button>
+                        <el-button type="danger" :icon="VideoPause" @click="stopScan" v-else>停止任务</el-button>
+                    </div>
                 </div>
-            </div>
-        </template>
-        <el-row>
-            <el-col :span="2" v-for="(total, risk) in dashboard.riskLevel">
-                <el-statistic :title="risk.toLocaleUpperCase()" :value="total" />
-            </el-col>
-            <el-divider direction="vertical" style="height: 7vh;" />
-            <el-col :span="3">
-                <el-statistic title="指纹数量" :value="dashboard.fingerLength" />
-            </el-col>
-            <el-col :span="3">
-                <el-statistic title="漏洞数量" :value="dashboard.yamlPocsLength" />
-            </el-col>
-            <el-divider direction="vertical" style="height: 7vh;" />
-            <el-col :span="7">
-                <el-statistic :value="dashboard.reqErrorURLs.length">
-                    <template #title>
-                        <div style="display: inline-flex; align-items: center">
-                            失败数/目标数
-                            <el-popover placement="left" :width="350" trigger="hover"
-                                v-if="dashboard.reqErrorURLs.length >= 1">
-                                <el-scrollbar height="150px">
-                                    <p v-for="u in dashboard.reqErrorURLs" class="scrollbar-demo-item">
-                                        {{ u }}</p>
-                                </el-scrollbar>
-                                <template #reference>
-                                    <el-icon style="margin-left: 4px" :size="12">
-                                        <ZoomIn />
-                                    </el-icon>
-                                </template>
-                            </el-popover>
-                        </div>
-                    </template>
-                    <template #suffix>/{{ dashboard.count.toString() }}</template>
-                </el-statistic>
-            </el-col>
-        </el-row>
-    </el-card>
-    <div style="position: relative; margin-top: 10px;">
-        <el-tabs type="card">
-            <el-tab-pane label="指纹">
-                <el-table :data="form.fingerResult" border height="63vh" :cell-style="{ textAlign: 'center' }"
-                    :header-cell-style="{ 'text-align': 'center' }">
-                    <el-table-column fixed type="index" label="#" width="60px" />
-                    <el-table-column fixed prop="url" label="URL" width="300px" :show-overflow-tooltip="true">
-                        <template #default="scope">
-                            <!-- 设置el-dropdown后会导致元素偏移，需要div重新定位 -->
-                            <div class="cell-content">
-                                <el-dropdown :hide-on-click="false" trigger="click">
-                                    <el-link :underline="false">{{ scope.row.url }}</el-link>
-                                    <template #dropdown>
-                                        <el-dropdown-menu>
-                                            <el-dropdown-item :icon="CopyDocument"
-                                                @click="Copy(scope.row.url)">复制</el-dropdown-item>
-                                            <el-dropdown-item :icon="ChromeFilled"
-                                                @click="BrowserOpenURL(scope.row.url)">打开链接</el-dropdown-item>
-                                            <el-dropdown-item :icon="Promotion"
-                                                @click="uncover.dirsearch(scope.row.url)"
-                                                divided>联动目录扫描</el-dropdown-item>
-                                            <!-- <el-dropdown-item :icon="Promotion" @click="">联动JSFinder</el-dropdown-item> -->
-                                        </el-dropdown-menu>
+            </template>
+            <el-row>
+                <el-col :span="2" v-for="(total, risk) in dashboard.riskLevel">
+                    <el-statistic :title="risk.toLocaleUpperCase()" :value="total" />
+                </el-col>
+                <el-divider direction="vertical" style="height: 7vh;" />
+                <el-col :span="3">
+                    <el-statistic title="指纹数量" :value="dashboard.fingerLength" />
+                </el-col>
+                <el-col :span="3">
+                    <el-statistic title="漏洞数量" :value="dashboard.yamlPocsLength" />
+                </el-col>
+                <el-divider direction="vertical" style="height: 7vh;" />
+                <el-col :span="7">
+                    <el-statistic :value="dashboard.reqErrorURLs.length">
+                        <template #title>
+                            <div style="display: inline-flex; align-items: center">
+                                失败数/目标数
+                                <el-popover placement="left" :width="350" trigger="hover"
+                                    v-if="dashboard.reqErrorURLs.length >= 1">
+                                    <el-scrollbar height="150px">
+                                        <p v-for="u in dashboard.reqErrorURLs" class="scrollbar-demo-item">
+                                            {{ u }}</p>
+                                    </el-scrollbar>
+                                    <template #reference>
+                                        <el-icon style="margin-left: 4px" :size="12">
+                                            <ZoomIn />
+                                        </el-icon>
                                     </template>
-                                </el-dropdown>
+                                </el-popover>
                             </div>
                         </template>
-                    </el-table-column>
-                    <el-table-column prop="status" width="100px" label="Code"
-                        :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
-                        :show-overflow-tooltip="true" />
-                    <el-table-column prop="length" width="100px" label="Length"
-                        :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
-                        :show-overflow-tooltip="true" />
-                    <el-table-column prop="title" label="Title" />
-                    <el-table-column fixed="right" prop="fingerprint" width="350px">
-                        <template #header>
-                            <el-tooltip placement="left">
-                                <template #content>
-                                    · 普通指纹会呈现浅蓝色，workflow中存在漏洞的指纹会呈现浅红色<br />
-                                    · 若指纹标签会呈现填充红色，表示该指纹为敏感目录扫描得到<br />
-                                </template>
-                                <el-icon>
-                                    <QuestionFilled size="24" />
-                                </el-icon>
-                            </el-tooltip>
-                            Fingerprint
+                        <template #suffix>/{{ dashboard.count.toString() }}</template>
+                    </el-statistic>
+                </el-col>
+            </el-row>
+        </el-card>
+        <div style="position: relative; margin-top: 10px;">
+            <el-tabs type="card">
+                <el-tab-pane label="指纹">
+                    <el-table :data="fingerPagination.table.pageContent" border height="100vh" :cell-style="{ textAlign: 'center' }"
+                        :header-cell-style="{ 'text-align': 'center' }">
+                        <el-table-column fixed type="index" label="#" width="60px" />
+                        <el-table-column fixed prop="url" label="URL" width="300px" :show-overflow-tooltip="true">
+                            <template #default="scope">
+                                <!-- 设置el-dropdown后会导致元素偏移，需要div重新定位 -->
+                                <div class="cell-content">
+                                    <el-dropdown :hide-on-click="false" trigger="click">
+                                        <el-link :underline="false">{{ scope.row.url }}</el-link>
+                                        <template #dropdown>
+                                            <el-dropdown-menu>
+                                                <el-dropdown-item :icon="CopyDocument"
+                                                    @click="Copy(scope.row.url)">复制</el-dropdown-item>
+                                                <el-dropdown-item :icon="ChromeFilled"
+                                                    @click="BrowserOpenURL(scope.row.url)">打开链接</el-dropdown-item>
+                                                <el-dropdown-item :icon="Promotion"
+                                                    @click="uncover.dirsearch(scope.row.url)"
+                                                    divided>联动目录扫描</el-dropdown-item>
+                                                <!-- <el-dropdown-item :icon="Promotion" @click="">联动JSFinder</el-dropdown-item> -->
+                                            </el-dropdown-menu>
+                                        </template>
+                                    </el-dropdown>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="status" width="100px" label="Code"
+                            :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
+                            :show-overflow-tooltip="true" />
+                        <el-table-column prop="length" width="100px" label="Length"
+                            :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
+                            :show-overflow-tooltip="true" />
+                        <el-table-column prop="title" label="Title" />
+                        <el-table-column prop="fingerprint" width="350px">
+                            <template #header>
+                                <el-tooltip placement="left">
+                                    <template #content>
+                                        · 普通指纹会呈现浅蓝色，workflow中存在漏洞的指纹会呈现浅红色<br />
+                                        · 若指纹标签会呈现填充红色，表示该指纹为敏感目录扫描得到<br />
+                                    </template>
+                                    <el-icon>
+                                        <QuestionFilled size="24" />
+                                    </el-icon>
+                                </el-tooltip>
+                                Fingerprint
+                            </template>
+                            <template #default="scope">
+                                <div class="finger-container">
+                                    <el-tag v-for="finger in scope.row.fingerprint" :key="finger.name"
+                                        :type="finger.level === 1 ? 'danger' : 'primary'"
+                                        :effect="scope.row.detect === 'Default' ? 'light' : 'dark'">{{ finger.name
+                                        }}</el-tag>
+                                    <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <template #empty>
+                            <el-empty />
                         </template>
-                        <template #default="scope">
-                            <div class="finger-container">
-                                <el-tag v-for="finger in scope.row.fingerprint" :key="finger.name"
-                                    :type="finger.level === 1 ? 'danger' : 'primary'"
-                                    :effect="scope.row.detect === 'Default' ? 'light' : 'dark'">{{ finger.name
-                                    }}</el-tag>
-                                <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
-                            </div>
+                    </el-table>
+                    <div class="my-header" style="margin-top: 5px;">
+                        <div></div>
+                        <el-pagination background @size-change="fingerPagination.ctrl.handleSizeChange"
+                            @current-change="fingerPagination.ctrl.handleCurrentChange" :pager-count="5"
+                            :current-page="fingerPagination.table.currentPage" :page-sizes="[50, 100, 200]"
+                            :page-size="fingerPagination.table.pageSize" layout="total, sizes, prev, pager, next"
+                            :total="fingerPagination.table.result.length">
+                        </el-pagination>
+                    </div>
+                </el-tab-pane>
+                <el-tab-pane label="漏洞">
+                    <el-table :data="vulPagination.table.pageContent" border height="100vh" :cell-style="{ textAlign: 'center' }"
+                        :header-cell-style="{ 'text-align': 'center' }">
+                        <el-table-column type="expand">
+                            <template #default="props">
+                                <div>
+                                    <el-descriptions :column="2" border style="margin-bottom: 10px;">
+                                        <el-descriptions-item label="Name:">{{ props.row.vulName
+                                            }}</el-descriptions-item>
+                                        <el-descriptions-item label="Extracted:">{{ props.row.extInfo
+                                            }}</el-descriptions-item>
+                                        <el-descriptions-item label="Description:" :span="2">{{ props.row.description
+                                            }}</el-descriptions-item>
+                                        <el-descriptions-item label="Reference:" :span="2"
+                                            label-class-name="description">
+                                            <div v-for="item in props.row.reference.split(',')">
+                                                {{ item }}
+                                            </div>
+                                        </el-descriptions-item>
+                                    </el-descriptions>
+                                    <splitpanes class="default-theme">
+                                        <pane size="50">
+                                            <div class="pretty-response">{{
+                                                props.row.request }}</div>
+                                        </pane>
+                                        <pane size="50">
+                                            <div class="pretty-response">{{
+                                                props.row.response }}</div>
+                                        </pane>
+                                    </splitpanes>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="vulID" label="ID" width="250px" :show-overflow-tooltip="true" />
+                        <el-table-column prop="severity" width="150px" label="Severity"
+                            :filter-method="filterHandlerSeverity" :filters='getColumnData("severity")'>
+                            <template #default="scope">
+                                <span :class="getClassBySeverity(scope.row.severity)">{{ scope.row.severity }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="vulURL" label="URL" :show-overflow-tooltip="true" />
+                        <template #empty>
+                            <el-empty />
                         </template>
-                    </el-table-column>
-                    <template #empty>
-                        <el-empty />
+                    </el-table>
+                    <div class="my-header" style="margin-top: 5px;">
+                        <div></div>
+                        <el-pagination background @size-change="vulPagination.ctrl.handleSizeChange"
+                            @current-change="vulPagination.ctrl.handleCurrentChange" :pager-count="5"
+                            :current-page="vulPagination.table.currentPage" :page-sizes="[50, 100, 200]"
+                            :page-size="vulPagination.table.pageSize" layout="total, sizes, prev, pager, next"
+                            :total="vulPagination.table.result.length">
+                        </el-pagination>
+                    </div>
+                </el-tab-pane>
+            </el-tabs>
+            <el-space class="custom_eltabs_titlebar" :size="5">
+
+                <el-button :icon="RefreshRight" text bg type="danger"
+                    @click="NucleiEnabled(global.webscan.nucleiEngine)" v-show="!dashboard.nucleiEnabled">Reload
+                    Engine</el-button>
+
+                <el-dropdown>
+                    <el-button :icon="Menu" color="#D2DEE3" />
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
+                                :icon="CopyDocument">复制全部失败目标</el-dropdown-item>
+                            <el-dropdown-item :icon="Grid"
+                                @click="ExportWebScanToXlsx(transformArrayFields(form.fingerResult), transformArrayFields(form.vulResult))">
+                                导出Excel</el-dropdown-item>
+                        </el-dropdown-menu>
                     </template>
-                </el-table>
-            </el-tab-pane>
-            <el-tab-pane label="漏洞">
-                <el-table :data="form.vulResult" border height="63vh" :cell-style="{ textAlign: 'center' }"
-                    :header-cell-style="{ 'text-align': 'center' }">
-                    <el-table-column type="expand">
-                        <template #default="props">
-                            <div>
-                                <el-descriptions :column="2" border style="margin-bottom: 10px;">
-                                    <el-descriptions-item label="Name:">{{ props.row.vulName }}</el-descriptions-item>
-                                    <el-descriptions-item label="Extracted:">{{ props.row.extInfo
-                                        }}</el-descriptions-item>
-                                    <el-descriptions-item label="Description:" :span="2">{{ props.row.description
-                                        }}</el-descriptions-item>
-                                    <el-descriptions-item label="Reference:" :span="2" label-class-name="description">
-                                        <div v-for="item in props.row.reference.split(',')">
-                                            {{ item }}
-                                        </div>
-                                    </el-descriptions-item>
-                                </el-descriptions>
-                                <splitpanes class="default-theme">
-                                    <pane size="50">
-                                        <div class="pretty-response">{{
-                        props.row.request }}</div>
-                                    </pane>
-                                    <pane size="50">
-                                        <div class="pretty-response">{{
-                        props.row.response }}</div>
-                                    </pane>
-                                </splitpanes>
-                            </div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="vulID" label="ID" width="250px" :show-overflow-tooltip="true" />
-                    <!-- <el-table-column prop="protocoltype" label="Type" width="150px" /> -->
-                    <el-table-column prop="severity" width="150px" label="Severity"
-                        :filter-method="filterHandlerSeverity" :filters='getColumnData("severity")'>
-                        <template #default="scope">
-                            <span :class="getClassBySeverity(scope.row.severity)">{{ scope.row.severity }}</span>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="vulURL" label="URL" :show-overflow-tooltip="true" />
-                    <template #empty>
-                        <el-empty />
-                    </template>
-                </el-table>
-            </el-tab-pane>
-        </el-tabs>
-        <el-space class="custom_eltabs_titlebar" :size="5">
-
-            <el-button :icon="RefreshRight" text bg type="danger" @click="NucleiEnabled(global.webscan.nucleiEngine)"
-                v-show="!dashboard.nucleiEnabled">Reload
-                Engine</el-button>
-
-            <el-dropdown>
-                <el-button :icon="Menu" color="#D2DEE3" />
-                <template #dropdown>
-                    <el-dropdown-menu>
-                        <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
-                            :icon="CopyDocument">复制全部失败目标</el-dropdown-item>
-                        <el-dropdown-item :icon="Grid"
-                            @click="ExportWebScanToXlsx(transformArrayFields(form.fingerResult), transformArrayFields(form.vulResult))">
-                            导出Excel</el-dropdown-item>
-                    </el-dropdown-menu>
-                </template>
-            </el-dropdown>
-        </el-space>
-    </div>
-
+                </el-dropdown>
+            </el-space>
+        </div>
+    </el-scrollbar>
 
     <el-drawer v-model="form.newscanner" size="44%">
         <template #header>

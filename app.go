@@ -620,3 +620,7 @@ func (a *App) HikvsionCamera(target string, attackType int, passwordList []strin
 	}
 	return ""
 }
+
+func (a *App) UncoverSearch(query, types string, size int, option structs.SpaceOption) []space.Result {
+	return space.Uncover(a.ctx, query, types, size, option)
+}
