@@ -644,7 +644,6 @@ async function CopyURL(mode: number) {
     }
 
     .el-table__row:hover {
-        background-color: #f5f5f5 !important;
         color: #4874ED;
         cursor: pointer;
     }

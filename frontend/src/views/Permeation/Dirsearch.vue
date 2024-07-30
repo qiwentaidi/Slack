@@ -7,7 +7,7 @@ import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '../../global';
-import { FileDialog, List, OpenFolder, UserHomeDir } from '../../../wailsjs/go/main/File';
+import { CheckFileStat, FileDialog, List, OpenFolder, UserHomeDir } from '../../../wailsjs/go/main/File';
 import { Dir, DirScanOptions } from '../../interface';
 import usePagination from '../../usePagination';
 
@@ -57,7 +57,7 @@ onMounted(() => {
 
 const from = reactive({
     configPath: '',
-    url: '',
+    input: '',
     options: ['GET', 'POST', 'HEAD', 'OPTIONS'],
     defaultOption: 'GET',
     exts: 'php,aspx,asp,jsp,html,js',
@@ -67,7 +67,6 @@ const from = reactive({
     id: 0,
     currentRate: 0,
     errorCounts: 0,
-    alive: false,
     respDialog: false,
     content: "",
     dictList: [] as string[],
@@ -106,45 +105,47 @@ async function handleFileChange() {
     from.paths = Array.from(new Set(from.paths))
 }
 
+async function GetFilepath() {
+    let path = await FileDialog("*.txt")
+    if (path == "") {
+        return
+    }
+    from.input = path
+}
 async function dirscan() {
     // true is in running 
     if (!config.runningStatus) {
         let ds = new Dirsearch()
-        if (await ds.checkURL()) {
+        if (await ds.checkInput()) {
             ds.scanner()
         }
+    } else {
+        await StopDirScan()
+        config.runningStatus = false
+        ElNotification.error({
+            message: "用户已终止扫描任务",
+            position: 'bottom-right',
+        });
     }
 }
 
 
 class Dirsearch {
-    public async checkURL() {
-        if (from.url == "") {
-            ElMessage({
-                showClose: true,
-                message: '请输入URL',
-                type: 'warning',
-            })
+    public async checkInput() {
+        if (from.input == "" || from.input.endsWith("txt")) {
+            ElMessage.warning('请输入URL或者文件路径')
             return false
         }
-        if (!from.alive) {
-            let result: any = await GoFetch("GET", from.url, "", [{}], 10, proxys);
-            if (result.Error) {
-                ElMessage({
-                    showClose: true,
-                    message: 'URL格式错误或目标不可达',
-                    type: 'warning',
-                })
-                return false
-            }
+        // 检查时否为文件
+        let stat = await CheckFileStat(from.input)
+        if (!stat) {
+            ElMessage.warning('输入的文件路径不存在')
+            return
         }
         return true
     }
     public async init() {
         config.runningStatus = true
-        if (from.url[from.url.length - 1] !== "/") {
-            from.url += "/"
-        }
         if (config.customDict != "") {
             from.paths = SplitTextArea(config.customDict)
         } else {
@@ -167,7 +168,7 @@ class Dirsearch {
         let statuscodeFilter = control.psc()
         let option: DirScanOptions = {
             Method: from.defaultOption,
-            URL: from.url,
+            URL: from.input,
             Paths: from.paths,
             Workers: config.thread,
             Timeout: config.timeout,
@@ -185,16 +186,6 @@ class Dirsearch {
 }
 
 const control = ({
-    stop: async function () {
-        if (config.runningStatus) {
-            await StopDirScan()
-            config.runningStatus = false
-            ElNotification.error({
-                message: "用户已终止扫描任务",
-                position: 'bottom-right',
-            });
-        }
-    },
     format: function () {
         return `${from.id}/${global.temp.dirsearchPathConut} (${from.currentRate}/s)`
     },
@@ -250,18 +241,22 @@ const config = reactive({
     <el-form :model="from">
         <el-form-item>
             <div class="head">
-                <el-input v-model="from.url" placeholder="请输入URL地址">
+                <el-input v-model="from.input" placeholder="请输入URL地址或者选择目标文件">
                     <template #prepend>
                         <el-select v-model=from.defaultOption value=options style="width: 15vh;">
                             <el-option v-for="item in from.options" :value="item" :label="item" />
                         </el-select>
                     </template>
+                    <template #suffix>
+                        <el-button link :icon="Document" @click="GetFilepath" />
+                    </template>
                 </el-input>
-                <div class="two-end-space5">
-                    <el-button type="primary" @click="dirscan" v-if="!config.runningStatus">开始扫描</el-button>
-                    <el-button type="danger" @click="control.stop" v-else>停止扫描</el-button>
-                </div>
-                <el-button color="rgb(194, 194, 196)" @click="config.drawer = true">参数设置</el-button>
+                <el-space style="margin-left: 5px;">
+                    <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="dirscan">
+                        {{ config.runningStatus ? '停止扫描' : '开始扫描' }}
+                    </el-button>
+                    <el-button color="rgb(194, 194, 196)" @click="config.drawer = true">参数设置</el-button>
+                </el-space>
             </div>
         </el-form-item>
         <el-form-item>
@@ -269,10 +264,6 @@ const config = reactive({
                 <div>
                     <span>重定向跟随：</span>
                     <el-switch v-model="config.redirectClient" />
-                </div>
-                <div>
-                    <span>初始不判断存活：</span>
-                    <el-switch v-model="from.alive" />
                 </div>
                 <el-tag>字典大小:{{ global.temp.dirsearchPathConut }}</el-tag>
                 <el-tag>线程:{{ config.thread }}</el-tag>
@@ -363,8 +354,7 @@ const config = reactive({
                 <div class="head">
                     <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip
                         placeholder="不选择默认加载dicc字典" :max-collapse-tags="1">
-                        <el-option v-for="item in from.dictList" :label="item"
-                            :value="item" />
+                        <el-option v-for="item in from.dictList" :label="item" :value="item" />
                     </el-select>
                     <el-button-group style="width: 165px;">
                         <el-tooltip content="加载自定义字典">
@@ -382,7 +372,7 @@ const config = reactive({
             </el-form-item>
         </el-form>
     </el-drawer>
-    <el-table :data="pagination.table.pageContent" border style="height: 74vh;">
+    <el-table :data="pagination.table.pageContent" border style="height: 75vh;">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="Status" width="100px" label="状态码"
             :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
@@ -394,22 +384,14 @@ const config = reactive({
                     <template #content>Redirect to {{ scope.row.Location }}</template>
                     <el-button link @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.Location != ''">
                         <template #icon>
-                            <svg class="bi bi-shuffle" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M12.646 1.146a.5.5 0 0 1 .708 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708-.708L14.793 4l-2.147-2.146a.5.5 0 0 1 0-.708zm0 8a.5.5 0 0 1 .708 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708-.708L14.793 12l-2.147-2.146a.5.5 0 0 1 0-.708z" />
-                                <path fill-rule="evenodd"
-                                    d="M0 4a.5.5 0 0 1 .5-.5h2c3.053 0 4.564 2.258 5.856 4.226l.08.123c.636.97 1.224 1.865 1.932 2.539.718.682 1.538 1.112 2.632 1.112h2a.5.5 0 0 1 0 1h-2c-1.406 0-2.461-.57-3.321-1.388-.795-.755-1.441-1.742-2.055-2.679l-.105-.159C6.186 6.242 4.947 4.5 2.5 4.5h-2A.5.5 0 0 1 0 4z" />
-                                <path fill-rule="evenodd"
-                                    d="M0 12a.5.5 0 0 0 .5.5h2c3.053 0 4.564-2.258 5.856-4.226l.08-.123c.636-.97 1.224-1.865 1.932-2.539C11.086 4.93 11.906 4.5 13 4.5h2a.5.5 0 0 0 0-1h-2c-1.406 0-2.461.57-3.321 1.388-.795.755-1.441 1.742-2.055 2.679l-.105.159C6.186 9.758 4.947 11.5 2.5 11.5h-2a.5.5 0 0 0-.5.5z" />
-                            </svg>
+                            <img src="../../assets/icon/reduction.svg" style="width: 14px; height: 14px;">
                         </template>
                     </el-button>
                 </el-tooltip>
                 {{ scope.row.URL }}
             </template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="180px" align="center">
+        <el-table-column label="操作" width="180px" align="center">
             <template #default="scope">
                 <el-button type="primary" link @click.prevent="Copy(scope.row.URL)">复制</el-button>
                 <el-divider direction="vertical" />
@@ -422,7 +404,7 @@ const config = reactive({
             <el-empty />
         </template>
     </el-table>
-    <div class="my-header" style="margin-top: 10px;">
+    <div class="my-header" style="margin-top: 5px;">
         <el-progress :text-inside="true" :stroke-width="20" :percentage="from.percentage" :format="control.format"
             color="#5DC4F7" style="width: 40%;" />
         <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
@@ -436,9 +418,3 @@ const config = reactive({
         <pre class="pretty-response"><code>{{ from.content }}</code></pre>
     </el-dialog>
 </template>
-
-<style>
-.el-drawer__header {
-    margin-bottom: 0px;
-}
-</style>

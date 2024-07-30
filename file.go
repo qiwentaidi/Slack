@@ -20,6 +20,20 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
+var Userdict = map[string][]string{
+	"ftp":        {"ftp", "admin", "www", "web", "root", "db", "wwwroot", "data"},
+	"mysql":      {"root", "mysql"},
+	"mssql":      {"sa", "sql"},
+	"smb":        {"administrator", "admin", "guest"},
+	"rdp":        {"administrator", "admin", "guest"},
+	"postgresql": {"postgres", "admin"},
+	"ssh":        {"root", "admin"},
+	"mongodb":    {"root", "admin"},
+	"oracle":     {"sys", "system", "admin", "test", "web", "orcl"},
+}
+
+var Passwords = []string{"123456", "admin", "admin123", "root", "", "pass123", "pass@123", "password", "123123", "654321", "111111", "123", "1", "admin@123", "Admin@123", "admin123!@#", "{user}", "{user}1", "{user}111", "{user}123", "{user}@123", "{user}_123", "{user}#123", "{user}@111", "{user}@2019", "{user}@123#4", "P@ssw0rd!", "P@ssw0rd", "Passw0rd", "qwe123", "12345678", "test", "test123", "123qwe", "123qwe!@#", "123456789", "123321", "666666", "a123456.", "123456~a", "123456!a", "000000", "1234567890", "8888888", "!QAZ2wsx", "1qaz2wsx", "abc123", "abc123456", "1qaz@WSX", "a11111", "a12345", "Aa1234", "Aa1234.", "Aa12345", "a123456", "a123123", "Aa123123", "Aa123456", "Aa12345.", "sysadmin", "system", "1qaz!QAZ", "2wsx@WSX", "qwe123!@#", "Aa123456!", "A123456s!", "sa123456", "1q2w3e", "Charge123", "Aa123456789"}
+
 // File struct 文件操作
 type File struct {
 	ctx          context.Context
@@ -37,6 +51,22 @@ func NewFile() *File {
 		configPath:   home + "/slack/config",
 		downloadPath: home + "/Downloads/",
 	}
+}
+
+// 创建爆破字典
+func init() {
+	var userPath = util.HomeDir() + "/slack/portburte/username"
+	var passPath = util.HomeDir() + "/slack/portburte/password"
+	os.MkdirAll(userPath, 0755)
+	os.MkdirAll(passPath, 0755)
+	for name, dict := range Userdict {
+		file := fmt.Sprintf("%s/%s.txt", userPath, name)
+		// 文件不存在则需要创建
+		if _, err := os.Stat(file); err != nil {
+			os.WriteFile(file, []byte(strings.Join(dict, "\n")), 0644)
+		}
+	}
+	os.WriteFile(fmt.Sprintf("%s/password.txt", passPath), []byte(strings.Join(Passwords, "\n")), 0644)
 }
 
 func (f *File) FileDialog(ext string) string {
@@ -70,6 +100,10 @@ func (f *File) SaveFile(filename string) string {
 // 开始就要检测
 func (f *File) UserHomeDir() string {
 	return util.HomeDir()
+}
+
+func (f *File) IsMacOS() bool {
+	return rt.GOOS == "darwin"
 }
 
 // 传入路径获取到的信息
@@ -425,45 +459,30 @@ func (f *File) OpenFolder(filepath string) string {
 }
 
 // JAR | EXE | LNK | Other
-func (f *File) RunApp(jdk, types, filepath string) bool {
+func (f *File) RunApp(types, filepath string) bool {
 	var cmd *exec.Cmd
-	// bridge.HideExecWindow(cmd)
-	switch types {
-	case "JAR":
-		cmd = exec.Command(jdk, "-jar", filepath)
-	case "APP":
-		if rt.GOOS == "windows" {
+	if rt.GOOS == "windows" {
+		switch types {
+		case "JAR":
+			cmd = exec.Command("java", "-jar", filepath)
+		case "APP":
 			if path.Ext(filepath) == ".lnk" {
 				cmd = exec.Command("cmd", "/c", "start", filepath)
 			} else {
 				cmd = exec.Command(filepath)
 			}
-		}
-	default:
-		filepath, _ = getDirectoryPath(filepath)
-		if rt.GOOS == "windows" {
+		default:
+			filepath, _ = getDirectoryPath(filepath)
 			cmd = exec.Command("cmd", "/C", "start", "cmd", "/K", "cd /d", filepath)
-		} else if rt.GOOS == "darwin" {
-			// Construct the osascript command to open a new iTerm2 window
-			script := `tell application "iTerm"
-                        activate
-                        tell application "System Events"
-                            keystroke "t" using {command down}
-                        end tell
-                        delay 0.2
-                        tell current session of current window
-                            write text "cd ` + filepath + `"
-                        end tell
-                    end tell`
-			cmd = exec.Command("osascript", "-e", script)
 		}
+		go func() {
+			if err := cmd.Run(); err != nil {
+				return
+			}
+		}()
+		return true
 	}
-	go func() {
-		if err := cmd.Run(); err != nil {
-			return
-		}
-	}()
-	return true
+	return false
 }
 
 func getDirectoryPath(path string) (string, error) {

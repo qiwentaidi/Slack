@@ -243,7 +243,7 @@ const result = ref("");
       </el-form>
     </el-tab-pane>
   </el-tabs>
-  <pre class="pretty-response" style="height: 50vh"><code>{{ result }}</code></pre>
+  <pre class="pretty-response" style="height: 48vh"><code>{{ result }}</code></pre>
 </template>
 
 <style>

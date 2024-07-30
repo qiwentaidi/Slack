@@ -1,34 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted, computed } from "vue";
 import global from "./global";
 import Sidebar from "./components/Sidebar.vue";
-import { useRoute } from "vue-router";
+import Titlebar from "./components/Titlebar.vue";
 import { EventsOn } from "../wailsjs/runtime/runtime";
-import { CheckFileStat, UserHomeDir, Mkdir, WriteFile } from "../wailsjs/go/main/File";
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import en from 'element-plus/es/locale/lang/en'
+import { LogInfo } from "./interface";
 
-const route = useRoute();
-const showLogger = ref(false);
-
-function breadcrumbItems(label: string, separator: string) {
-  switch (label) {
-    case "/":
-      return "Home";
-    case "/settings":
-      return "Settings";
-    default:
-      return label.slice(1).split('/').join(separator);
-  }
-}
-
-interface MsgInfo {
-  Level: string
-  Msg: string
-}
+const locale = computed(() => (global.Language.value === 'zh' ? zhCn : en))
 
 const logArray = [] as string[]
 
 onMounted(() => {
-  InitDict()
   const levelClassMap: { [key: string]: string } = {
     "[INF]": "log-info",
     "[WRN]": "log-warning",
@@ -36,76 +20,34 @@ onMounted(() => {
     "[DEB]": "log-debug",
     "[SUC]": "log-success"
   };
-  EventsOn("gologger", (mi: MsgInfo) => {
-    const logClass = levelClassMap[mi.Level];
-    const logEntry = `<span class="${logClass}">${mi.Level}</span> ${mi.Msg}`;
+  EventsOn("gologger", (log: LogInfo) => {
+    const logClass = levelClassMap[log.Level];
+    const logEntry = `<span class="${logClass}">${log.Level}</span> ${log.Msg}`;
     logArray.push(logEntry);
-
+    // 最大存储数
     if (logArray.length > global.Logger.length) {
-      logArray.shift(); // 移除数组开头的元素
+      logArray.shift();
     }
-    // 将数组内容拼接成字符串
     global.Logger.value = logArray.join('\n');
   });
 })
-
-
-// 初始化字典
-async function InitDict() {
-  global.PATH.PortBurstPath = await UserHomeDir() + global.PATH.PortBurstPath
-  if (!(await CheckFileStat(global.PATH.PortBurstPath))) {
-    if (await Mkdir(global.PATH.PortBurstPath)) {
-      Mkdir(global.PATH.PortBurstPath + "/username")
-      Mkdir(global.PATH.PortBurstPath + "/password")
-      for (const item of global.dict.usernames) {
-        WriteFile("txt", `${global.PATH.PortBurstPath}/username/${item.name}.txt`, item.dic.join("\n"))
-      }
-      WriteFile("txt", `${global.PATH.PortBurstPath}/password/password.txt`, global.dict.passwords.join("\n"))
-    }
-  }
-}
 </script>
 
 <template>
+  <Titlebar />
   <el-container>
     <el-aside>
-      <Sidebar></Sidebar>
+      <Sidebar />
     </el-aside>
-    <el-container>
-      <el-main>
+    <el-main>
+      <el-config-provider :locale="locale">
         <!-- 一定要使用插槽否则keey-alive不会生效 -->
         <router-view v-slot="{ Component }">
           <keep-alive>
             <component :is="Component"></component>
           </keep-alive>
         </router-view>
-      </el-main>
-      <el-footer class="console-log">
-        <div>
-          <span>
-            {{ breadcrumbItems(route.path, ' > ') }}
-          </span>
-          <el-button link @click="showLogger = true">
-            <template #icon>
-              <img src="/console.svg">
-            </template>
-            Console
-          </el-button>
-        </div>
-      </el-footer>
-    </el-container>
+      </el-config-provider>
+    </el-main>
   </el-container>
-  <!-- running logs -->
-  <el-drawer v-model="showLogger" direction="ltr" size="50%">
-    <template #header>
-      <h4>运行日志</h4>
-    </template>
-    <div class="log-textarea" v-html="global.Logger.value"></div>
-  </el-drawer>
 </template>
-
-<style>
-.el-aside {
-  width: 64px;
-}
-</style>

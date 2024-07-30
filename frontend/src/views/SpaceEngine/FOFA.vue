@@ -650,7 +650,6 @@ function formatProduct(raw: string): string[] {
 
 <style scoped>
 .keyword-search :deep(.el-table__row:hover) {
-    background-color: #f5f5f5 !important;
     cursor: pointer;
 }
 

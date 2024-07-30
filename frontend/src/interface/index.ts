@@ -213,3 +213,8 @@ interface UncoverData {
     Component: string
     Source: string
 }
+
+export interface LogInfo {
+    Level: string
+    Msg: string
+}

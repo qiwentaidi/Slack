@@ -31,7 +31,7 @@
                         </el-popover>
                     </template>
                 </el-input>
-                <el-input v-model="uncover.size" style="width: 200px; height: 40px;">
+                <el-input v-model="uncover.size" @change="handleInput" style="width: 240px; height: 40px; margin-left: 5px;">
                     <template #prepend>
                         查询数量
                     </template>
@@ -179,6 +179,14 @@ const tableCtrl = ({
         table.editableTabs = tabs.filter((tab) => tab.name !== targetName)
     },
 })
+
+function handleInput(val: string) {
+    // Remove all non-numeric characters
+    console.log(val)
+    const numericValue = val.replace(/\D/g, '');
+    // Update the model value
+    uncover.size = Number(numericValue)
+}
 
 function handleComponents(info: string) {
     if (info.includes(",")) {

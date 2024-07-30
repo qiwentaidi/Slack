@@ -1,10 +1,10 @@
 <template>
-  <el-scrollbar max-height="87vh" style="height: 89vh;">
+  <el-scrollbar style="height: 87vh;">
     <el-collapse model-value="1">
       <el-collapse-item name="1"><template #title>
           <h2>{{ $t('aside.webscan') }}</h2>
         </template>
-        <el-form :inline="true" :model="global.proxy" label-width="auto" class="demo-form-inline">
+        <el-form>
           <el-form-item>
             <template #label>{{ $t('setting.engine') }}
               <el-tooltip placement="left">
@@ -16,11 +16,15 @@
                 </el-icon>
               </el-tooltip>
             </template>
-            <el-input v-model="global.webscan.nucleiEngine" :placeholder="$t('setting.nuclei_placeholder2')" clearable
-              style="width: 115vh;"></el-input>
-            <el-button type="primary" style="margin-left: 10px;" @click="TestNuclei()">{{ $t('setting.enable')
-              }}</el-button>
+            <el-input v-model="global.webscan.nucleiEngine" :placeholder="$t('setting.nuclei_placeholder2')" clearable>
+              <template #suffix>
+                <el-button type="primary" link @click="TestNuclei()">{{ $t('setting.enable')
+                  }}</el-button>
+              </template>
+            </el-input>
           </el-form-item>
+        </el-form>
+        <el-form :inline="true" :model="global.proxy" label-width="auto" class="demo-form-inline">
           <el-form-item :label="$t('setting.proxy')">
             <el-switch v-model="global.proxy.enabled" />
             <el-button type="primary" size="small" @click="TestProxy(0)" style="margin-left: 20px;"
@@ -68,6 +72,25 @@
         </el-form>
       </el-collapse-item>
       <el-collapse-item name="3"><template #title>
+          <h2>{{ $t('aside.display') }}</h2>
+        </template>
+        <el-form label-width="auto">
+          <el-form-item :label="$t('aside.language')">
+            <el-select v-model="global.Language.value" @change="changeLanguage" style="width: 150px;">
+              <el-option label="中文" value="zh"></el-option>
+              <el-option label="English" value="en"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('aside.theme')">
+            <el-switch v-model="theme" 
+            :active-action-icon="Moon" 
+            :inactive-action-icon="Sunny" 
+            style="--el-switch-on-color: #2C2C2C; --el-switch-off-color: "
+            @change="toggle" />
+          </el-form-item>
+        </el-form>
+      </el-collapse-item>
+      <el-collapse-item name="4"><template #title>
           <h2>{{ $t('aside.dict') }}</h2>
         </template>
         <div>
@@ -98,17 +121,36 @@
 import global from "../global"
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, TestNuclei } from "../util";
-import { Edit } from '@element-plus/icons-vue';
-import { reactive } from "vue";
-import { ReadFile, SaveDataToFile, WriteFile } from "../../wailsjs/go/main/File";
+import { Edit, Sunny, Moon } from '@element-plus/icons-vue';
+import { reactive, ref } from "vue";
+import { ReadFile, SaveDataToFile, UserHomeDir, WriteFile } from "../../wailsjs/go/main/File";
 import { File } from '../interface';
+import { useI18n } from "vue-i18n";
+import { useDark, useToggle } from '@vueuse/core'
 
+const theme = ref<boolean>(localStorage.getItem('theme') === 'dark' ? true : false)
+
+const isDark = useDark({
+  storageKey: 'theme',
+  valueDark: 'dark',
+  valueLight: 'light',
+})
+
+const toggle = useToggle(isDark)
+
+const { locale } = useI18n();
+const changeLanguage = (lang: string) => {
+  localStorage.setItem("language", lang);
+  locale.value = lang;
+}
+const removeInvisibleFiled = (filed: string) => {
+  filed = filed.replace(/[\r\n\s]/g, '');
+}
 async function saveConfig() {
-  global.space.fofaapi = global.space.fofaapi.replace(/[\r\n\s]/g, '');
-  global.space.fofaemail = global.space.fofaemail.replace(/[\r\n\s]/g, '');
-  global.space.fofakey = global.space.fofakey.replace(/[\r\n\s]/g, '');
-  global.space.hunterkey = global.space.hunterkey.replace(/[\r\n\s]/g, '');
-  global.space.quakekey = global.space.quakekey.replace(/[\r\n\s]/g, '');
+  let list = [global.space.fofaapi, global.space.fofaemail, global.space.fofakey, global.space.hunterkey, global.space.quakekey]
+  list.forEach(item => {
+    removeInvisibleFiled(item)
+  })
   var data = { proxy: global.proxy, space: global.space, jsfind: global.jsfind, webscan: global.webscan };
   let result = await SaveDataToFile(data);
   if (result) {
@@ -123,26 +165,20 @@ const ctrl = reactive({
   innerDrawer: false,
   currentDic: '',
   currentPath: '',
+  theme: 0,
 })
 
 async function ReadDict(path: string) {
-  let file: File = await ReadFile(global.PATH.PortBurstPath + path)
+  let home = await UserHomeDir()
+  let file: File = await ReadFile(home + global.PATH.PortBurstPath + path)
   ctrl.currentDic = file.Content!
 }
 
 async function SaveFile(path: string) {
-  let r = await WriteFile('txt', global.PATH.PortBurstPath + path, ctrl.currentDic)
-  if (r) {
-    ElMessage.success({
-      showClose: true,
-      message: 'success',
-    })
-  } else {
-    ElMessage.error({
-      showClose: true,
-      message: 'failed',
-    })
-  }
+  let home = await UserHomeDir()
+  WriteFile('txt', home + global.PATH.PortBurstPath + path, ctrl.currentDic).then(result => {
+    result ? ElMessage.success('保存成功!') : ElMessage.error('保存失败!')
+  })
 }
 </script>
 

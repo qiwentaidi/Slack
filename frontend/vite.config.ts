@@ -20,11 +20,5 @@ export default defineConfig({
         Components({
             resolvers: [ElementPlusResolver()],
         }),
-        // prismjsPlugin({
-	    //     languages: 'all', // 语言
-	    //     plugins: ['line-numbers','show-language','copy-to-clipboard','inline-color'],
-	    //     theme: 'base16-ateliersulphurpool.light',// 主题
-	    //     css: true,
-	    // })
     ],
 })

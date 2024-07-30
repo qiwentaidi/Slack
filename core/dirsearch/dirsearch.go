@@ -49,6 +49,12 @@ type Options struct {
 
 // method 请求类型
 func NewScanner(ctx context.Context, o Options) {
+	var urls []string
+	if util.IsURL(o.URL) {
+		urls = append(urls, o.URL)
+	} else {
+		urls = util.ReadLine(o.URL)
+	}
 	bodyLengthMap = make(map[string]int)
 	// 初始化请求信息
 	if o.Timeout == 0 {
@@ -66,24 +72,20 @@ func NewScanner(ctx context.Context, o Options) {
 		}
 	}
 	var id int32
-	count := len(o.Paths)
+	count := len(o.Paths) * len(urls)
 	single := make(chan struct{})
 	retChan := make(chan Result, count)
 	var wg sync.WaitGroup
 	go func() {
 		for pr := range retChan {
-			// fmt.Printf("pr: %v\n", pr)
 			runtime.EventsEmit(ctx, "dirsearchLoading", pr)
 		}
 		close(single)
 		runtime.EventsEmit(ctx, "dirsearchComplete", "done")
 	}()
 
-	dirScan := func(path string) {
-		if strings.HasPrefix(path, "/") {
-			path = strings.TrimLeft(path, "/")
-		}
-		r := Scan(ctx, o.URL+path, header, o, client)
+	dirScan := func(url string) {
+		r := Scan(ctx, url, header, o, client)
 		atomic.AddInt32(&id, 1)
 		runtime.EventsEmit(ctx, "dirsearchProgressID", id)
 		retChan <- r
@@ -94,14 +96,19 @@ func NewScanner(ctx context.Context, o Options) {
 		wg.Done()
 	})
 	defer threadPool.Release()
-	for _, path := range o.Paths {
-		if ExitFunc {
-			return
-		}
-		wg.Add(1)
-		threadPool.Invoke(path)
-		if o.Interval != 0 {
-			time.Sleep(time.Second * time.Duration(o.Interval))
+	for _, url := range urls {
+		for _, path := range o.Paths {
+			if ExitFunc {
+				return
+			}
+			if strings.HasPrefix(path, "/") {
+				path = strings.TrimLeft(path, "/")
+			}
+			wg.Add(1)
+			threadPool.Invoke(url + path)
+			if o.Interval != 0 {
+				time.Sleep(time.Second * time.Duration(o.Interval))
+			}
 		}
 	}
 	wg.Wait()

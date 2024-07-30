@@ -34,6 +34,10 @@ export function InsetItemNavigation(arg1, arg2) {
   return window['go']['main']['File']['InsetItemNavigation'](arg1, arg2);
 }
 
+export function IsMacOS() {
+  return window['go']['main']['File']['IsMacOS']();
+}
+
 export function List(arg1) {
   return window['go']['main']['File']['List'](arg1);
 }
@@ -74,8 +78,8 @@ export function Restart() {
   return window['go']['main']['File']['Restart']();
 }
 
-export function RunApp(arg1, arg2, arg3) {
-  return window['go']['main']['File']['RunApp'](arg1, arg2, arg3);
+export function RunApp(arg1, arg2) {
+  return window['go']['main']['File']['RunApp'](arg1, arg2);
 }
 
 export function SaveDataToFile(arg1) {

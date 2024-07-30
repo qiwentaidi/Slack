@@ -95,6 +95,22 @@ onMounted(() => {
     };
 })
 
+const dashboard = reactive({
+    reqErrorURLs: [] as string[],
+    riskLevel: {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        info: 0,
+    },
+    currentModule: "",
+    count: 0,
+    fingerLength: 0,
+    yamlPocsLength: 0,
+    nucleiEnabled: false
+})
+
 const form = reactive({
     url: '',
     keyword: '',
@@ -113,11 +129,13 @@ const form = reactive({
         },
         {
             label: "指纹漏洞扫描",
-            value: 2
+            value: 2,
+            disabled: dashboard.nucleiEnabled,
         },
         {
             label: "全部漏洞扫描",
-            value: 3
+            value: 3,
+            disabled: dashboard.nucleiEnabled,
         }
     ],
     thread: 50,
@@ -134,24 +152,21 @@ const form = reactive({
     noInteractsh: false,
 })
 
+function validateInput() {
+    const ipPatterns = [
+        /^(\d{1,3}\.){3}\d{1,3}$/, // 192.168.1.1
+        /^(\d{1,3}\.){3}\d{1,3}:\d{1,5}$/, // 192.168.0.1:6379
+        /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/, // www.baidu.com
+        /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+:\d{1,5}$/, // www.baidu.com:8080
+    ];
+    const lines = form.url.split('\n');
+    return lines.every(line =>
+        ipPatterns.some(pattern => pattern.test(line.trim()))
+    );
+}
+
 let fingerPagination = usePagination(form.fingerResult, 50)
 let vulPagination = usePagination(form.vulResult, 50)
-
-const dashboard = reactive({
-    reqErrorURLs: [] as string[],
-    riskLevel: {
-        critical: 0,
-        high: 0,
-        medium: 0,
-        low: 0,
-        info: 0,
-    },
-    currentModule: "",
-    count: 0,
-    fingerLength: 0,
-    yamlPocsLength: 0,
-    nucleiEnabled: false
-})
 
 async function sortFinger(Fingerprints: any) {
     const temp = [] as FingerLevel[]
@@ -175,6 +190,13 @@ async function sortFinger(Fingerprints: any) {
 async function startScan() {
     let ws = new Scanner
     form.newscanner = false // 隐藏界面
+    if (!validateInput()) {
+        ElMessage({
+            type: "warning",
+            message: "输入目标格式不正确",
+        })
+        return
+    }
     ws.init()
     await ws.infoScanner()
 }

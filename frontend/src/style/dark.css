@@ -1,0 +1,7 @@
+html.dark {
+    --sidebar-bg-color: #282828;
+    --sidebar-active-text-color: #fff;
+    --sidebar-text-color: #fff;
+    --menu-board-color: #DDDFE5;
+    --nav-hover-color: #c12828;
+}

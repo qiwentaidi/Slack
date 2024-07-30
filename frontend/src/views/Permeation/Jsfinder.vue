@@ -272,10 +272,6 @@ function getLength(arr: any) {
 </template>
 
 <style>
-.el-drawer__header {
-  margin-bottom: 0px;
-}
-
 .tag-container {
   margin-top: 5px;
   margin-bottom: 10px;

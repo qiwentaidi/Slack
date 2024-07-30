@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue';
 import { InfoFilled, Search, Document, Link } from '@element-plus/icons-vue';
-import { FileDialog, CheckFileStat } from '../../../wailsjs/go/main/File';
+import { FileDialog, CheckFileStat, UserHomeDir } from '../../../wailsjs/go/main/File';
 import { ElMessage } from 'element-plus';
 import async from 'async';
 import global from '../../global';
@@ -44,6 +44,7 @@ const config = reactive({
     content: [] as BruteResult[],
     defaultOption: "ftp",
     input: '',
+    runningStatus: false,
 })
 
 const addTarget = () => {
@@ -126,10 +127,12 @@ async function NewScanner() {
             passDict.push(...global.temp.thinkdict)
         }
     }
+    config.runningStatus = true
     config.content = []
-    global.dict.passwords = (await ReadLine(global.PATH.PortBurstPath + "/password/password.txt"))!
+    let home = await UserHomeDir()
+    global.dict.passwords = (await ReadLine(home + global.PATH.PortBurstPath + "/password/password.txt"))!
     for (var item of global.dict.usernames) {
-        item.dic = (await ReadLine(global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
+        item.dic = (await ReadLine(home + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
     }
     var id = 0
 
@@ -152,9 +155,9 @@ async function NewScanner() {
         }
     }, (err: any) => {
         Callgologger("info", "PortBrute Finished")
-        // ctrl.runningStatus = false
+        config.runningStatus = false
     });
-} ``
+}
 
 </script>
 

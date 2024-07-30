@@ -45,6 +45,8 @@ export default {
         'guarantee': '重保专区',
         'dict': '字典管理',
         'polymerization': '聚合搜索',
+        'display': '显示设置',
+        'theme': '主题',
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

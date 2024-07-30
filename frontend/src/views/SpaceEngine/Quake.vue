@@ -220,7 +220,8 @@
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">
-                            <el-button link @click.prevent="tableCtrl.addTab('ip: ' + CsegmentIpv4(scope.row.IP), false)">
+                            <el-button link
+                                @click.prevent="tableCtrl.addTab('ip: ' + CsegmentIpv4(scope.row.IP), false)">
                                 <template #icon>
                                     <svg t="1719219479838" class="icon" viewBox="0 0 1450 1024" version="1.1"
                                         xmlns="http://www.w3.org/2000/svg" p-id="5099" width="200" height="200">
@@ -664,47 +665,40 @@ const tableCtrl = ({
 async function exportData() {
     if (table.editableTabs.length != 0) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        if (tab.total <= 500) {
-            ExportToXlsx(["域名", "IP", "端口", "协议", "标题", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", transformArrayFields(tab.content))
-        } else {
-            ElNotification.info({
-                title: "提示",
-                message: "正在进行全数据导出，API每页最大查询限度500，请稍后。",
-            });
-            let temp = [{}]
-            temp.pop()
-            let ipList = await tableCtrl.getIpList()
-            let index = 0
-            for (const num of splitInt(tab.total, 500)) {
-                index += 1
-                ElMessage("正在导出第" + index.toString() + "页");
-                QuakeSearch(ipList, tab.title, 1, tab.total, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
-                    (result: QuakeResult) => {
-                        if (result.Code != 0) {
-                            quake.message = result.Message!
-                            table.loading = false
-                            return
-                        }
-                        result.Data?.forEach((item: QuakeData) => {
-                            temp.push({
-                                Host: item.Host,
-                                IP: item.IP,
-                                Port: item.Port,
-                                Protocol: item.Protocol,
-                                IcpName: item.IcpName,
-                                Component: item.Components,
-                                Title: item.Title,
-                                IcpNumber: item.IcpNumber,
-                                ISP: item.Isp,
-                                Position: item.Position,
-                            })
-                        });
-                    }
-                )
-                ExportToXlsx(["IP", "域名", "标题", "端口", "协议", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", temp)
-                temp = []
+        ElNotification.info({
+            title: "提示",
+            message: "正在进行全数据导出，API每页最大查询限度500，请稍后。",
+        });
+        let temp = [{}]
+        temp.pop()
+        let ipList = await tableCtrl.getIpList()
+        let index = 0
+        for (const num of splitInt(tab.total, 500)) {
+            index += 1
+            ElMessage("正在导出第" + index.toString() + "页");
+            let result: QuakeResult = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey)
+            if (result.Code != 0) {
+                quake.message = result.Message!
+                table.loading = false
+                return
             }
+            result.Data?.forEach((item: QuakeData) => {
+                temp.push({
+                    Host: item.Host,
+                    IP: item.IP,
+                    Port: item.Port,
+                    Protocol: item.Protocol,
+                    IcpName: item.IcpName,
+                    Component: item.Components,
+                    Title: item.Title,
+                    IcpNumber: item.IcpNumber,
+                    ISP: item.Isp,
+                    Position: item.Position,
+                })
+            });
         }
+        ExportToXlsx(["IP", "域名", "标题", "端口", "协议", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", transformArrayFields(temp))
+        temp = []
     }
 }
 </script>
@@ -715,7 +709,6 @@ async function exportData() {
 }
 
 .keyword-search :deep(.el-table__row:hover) {
-    background-color: #f5f5f5 !important;
     color: #4CA87D;
     cursor: pointer;
 }

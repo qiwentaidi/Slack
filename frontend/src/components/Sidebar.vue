@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Refresh, Setting } from "@element-plus/icons-vue";
-import { reactive, onMounted } from "vue";
-import { useI18n } from "vue-i18n";
-import about from "./About.vue";
+import { onMounted, ref } from "vue";
 import updateUI from "./Update.vue";
 import global from "../global";
 import menus from "../router/menu";
@@ -12,24 +10,15 @@ onMounted(() => {
   check.poc();
 });
 
-const { locale } = useI18n();
 
-const changeLanguage = (area: string) => {
-  localStorage.setItem("language", area);
-  locale.value = area;
-};
 
-const dg = reactive({
-  helpDialog: false,
-  updateDialog: false,
-  dictDialog: false,
-});
+const updateDialog = ref(false)
 </script>
 
 <template>
-  <div class="flex-box-v">
-    <el-menu :collapse="true" :router="true" :default-active="$route.path" active-text-color="#3875f6"
-      background-color="#F2F3F5" text-color="#000">
+  <div class="flex-box-v" style="height: calc(100vh - 35px);">
+    <el-menu :collapse="true" :router="true" :default-active="$route.path" active-text-color="--sidebar-active-text-color"
+      background-color="--sidebar-bg-color" text-color="--sidebar-text-color">
       <template v-for="menu in menus">
         <el-menu-item v-if="!menu.children" :index="menu.path">
           <el-icon>
@@ -52,8 +41,8 @@ const dg = reactive({
 
     <div class="copy-menu"></div>
 
-    <el-menu :collapse="true" active-text-color="#fff" background-color="#F2F3F5" text-color="#000">
-      <el-menu-item class="custom-menu-item" index="/update" @click="dg.updateDialog = true">
+    <el-menu :collapse="true" active-text-color="#fff" background-color="--sidebar-bg-color" text-color="#000">
+      <el-menu-item class="custom-menu-item" index="/update" @click="updateDialog = true">
         <el-icon class="aside">
           <Refresh />
         </el-icon>
@@ -69,39 +58,13 @@ const dg = reactive({
         </el-icon>
         <template #title><span>{{ $t("aside.setting") }}</span></template>
       </el-menu-item>
-      <el-sub-menu index="7">
-        <template #title>
-          <el-icon>
-            <img src="/more.svg" class="custom-svg">
-          </el-icon>
-          <span>{{ $t("aside.more") }}</span>
-        </template>
-        <el-sub-menu index="language">
-          <template #title><span>{{ $t("aside.language") }}</span></template>
-          <el-menu-item index="cn" @click="changeLanguage('zh')">{{
-      $t("aside.zh")
-    }}</el-menu-item>
-          <el-menu-item index="en" @click="changeLanguage('en')">{{
-      $t("aside.en")
-    }}</el-menu-item>
-        </el-sub-menu>
-        <el-menu-item index="about" @click="dg.helpDialog = true">{{
-      $t("aside.about")
-    }}</el-menu-item>
-      </el-sub-menu>
     </el-menu>
   </div>
 
   <!-- update -->
-  <el-dialog v-model="dg.updateDialog" title="更新通知" width="40%">
+  <el-dialog v-model="updateDialog" title="更新通知" width="40%">
     <updateUI></updateUI>
   </el-dialog>
-
-  <!-- about -->
-  <el-dialog v-model="dg.helpDialog" width="36%" center>
-    <about></about>
-  </el-dialog>
-  <!-- dict -->
 </template>
 
 <style>
@@ -151,10 +114,6 @@ const dg = reactive({
   /* 使用继承的文本颜色 */
 }
 
-.el-drawer__header {
-  margin-bottom: 0px;
-}
-
 .aside svg {
   height: 1.5em;
   width: 1.5em;
@@ -163,6 +122,7 @@ const dg = reactive({
 .custom-svg {
   height: 1.5em;
   width: 24px;
+  color: var(--sidebar-text-color);
 }
 
 .flex-box-v {
@@ -173,7 +133,7 @@ const dg = reactive({
 
 .copy-menu {
   flex-grow: 1;
-  background-color: #f2f3f5;
-  border-right: solid 1px rgb(220, 223, 230);
+  background-color: var(--sidebar-bg-color);
+  border-right: solid 1px var(--menu-board-color);
 }
 </style>

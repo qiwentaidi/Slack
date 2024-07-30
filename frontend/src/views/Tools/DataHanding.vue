@@ -2,7 +2,7 @@
 import { reactive } from 'vue'
 import { ExtractIP, Fscan2Txt } from '../../../wailsjs/go/main/App'
 import { ReadFile, FileDialog } from '../../../wailsjs/go/main/File'
-import { UploadFilled, Search } from '@element-plus/icons-vue';
+import { Search } from '@element-plus/icons-vue';
 import { ElMessage, ElNotification } from 'element-plus';
 import { File } from '../../interface';
 
@@ -83,7 +83,7 @@ function extractDomains() {
     form.result = Array.from(new Set(domains)).join('\n')
 }
 
-function getURLs() : string[]{
+function getURLs(): string[] {
     const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/g;
     const urls = form.input.match(urlPattern);
     return urls ? urls : [];
@@ -94,15 +94,18 @@ function getURLs() : string[]{
 
 <template>
     <div class="head">
-        <el-popover :width="200" trigger="contextmenu">
-            <template #reference>
-                <el-input v-model="form.input" resize='none' type="textarea" placeholder='粘贴文件内容或者右键上传' />
+        <ContextMenu>
+            <template #menu>
+                <div class="nav-item" @click="uploadFile">
+                    <img src="../../assets/icon/upload.svg" style="margin-left: 10px;">
+                    <span class="nav-text">上传文件</span>
+                </div>
             </template>
-            <el-button :icon="UploadFilled" text bg style="width: 100%;" @click="uploadFile">上传文件</el-button>
-        </el-popover>
-
+            <el-input v-model="form.input" resize='none' type="textarea" placeholder='粘贴文件内容或者右键上传'
+                style="height: 100%;" />
+        </ContextMenu>
         <el-space direction="vertical" style="margin-left: 5px; width: 25%; align-items:start;">
-            <el-button @click="FscanExtract" style="width: 250px;" type="primary">
+            <el-button @click="FscanExtract" style="width: 300px;" type="primary">
                 <template #icon>
                     <el-tooltip placement="left">
                         <template #content>可提取内容如下:<br />
@@ -119,16 +122,16 @@ function getURLs() : string[]{
                 </template>
                 Fscan结果提取
             </el-button>
-            <el-button @click="extract" style="width: 250px" type="success">
+            <el-button @click="extract" style="width: 300px" type="success">
                 IP提取
             </el-button>
-            <el-button @click="extractDomains" style="width: 250px" type="warning">
+            <el-button @click="extractDomains" style="width: 300px" type="warning">
                 提取URL中的域名
             </el-button>
-            <el-button @click="extractUrls" style="width: 250px" type="info">
+            <el-button @click="extractUrls" style="width: 300px" type="info">
                 URL提取
             </el-button>
-            <el-input v-model="form.dedupSplit">
+            <el-input v-model="form.dedupSplit" style="width: 300px">
                 <template #prepend>
                     数据去重
                     <el-tooltip placement="left">
@@ -144,7 +147,7 @@ function getURLs() : string[]{
             </el-input>
         </el-space>
     </div>
-    <el-input v-model="form.result" type="textarea" resize="none" style="height: 70%; margin-top: 10px;" />
+    <el-input v-model="form.result" type="textarea" style="height: 100%; margin-top: 10px;" />
 </template>
 <style>
 .el-textarea__inner {

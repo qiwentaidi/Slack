@@ -137,18 +137,6 @@ const MenuList = [
         },
       ]
     },
-    {
-      name: "aside.guard",
-      path: "/Guard",
-      icon: "Flag",
-      children: [
-        {
-          name: "aside.guarantee",
-          path: "/Guard/Guarantee",
-          icon: "/navigation/ahapt.png"
-        },
-      ]
-    },
   ]
 
   export default MenuList

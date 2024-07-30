@@ -25,8 +25,6 @@ let pc = usePagination(from.companyData, 20) // paginationCompany
 let pw = usePagination(from.wehcatData, 20) // paginationWehcat
 
 function Collect() {
-    from.newTask = false
-    from.runningStatus = true
     if (from.company === "") {
         ElMessage({
             showClose: true,
@@ -45,6 +43,8 @@ function Collect() {
     } else {
         from.token = from.token.replace(/[\r\n\s]/g, '')
     }
+    from.newTask = false
+    from.runningStatus = true
     const lines = from.company.split(/[(\r\n)\r\n]+/);
     let companys = lines.map(line => line.trim().replace(/\s+/g, ''));
     InitTycHeader(from.token)

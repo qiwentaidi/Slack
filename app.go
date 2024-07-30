@@ -241,7 +241,7 @@ func (a *App) InitIPResolved() {
 
 // subodomain
 func (a *App) LoadSubDict(configPath string) []string {
-	return util.LoadSubdomainDict(util.HomeDir()+configPath, "/dicc.txt")
+	return util.ReadLine(util.HomeDir() + configPath + "/dicc.txt")
 }
 
 func (a *App) Subdomain(subdomain string, timeout int) []string {

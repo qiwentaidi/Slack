@@ -19,6 +19,8 @@ export function InsetGroupNavigation(arg1:structs.Navigation):Promise<boolean>;
 
 export function InsetItemNavigation(arg1:string,arg2:structs.Children):Promise<boolean>;
 
+export function IsMacOS():Promise<boolean>;
+
 export function List(arg1:string):Promise<Array<string>>;
 
 export function Mkdir(arg1:string):Promise<boolean>;
@@ -39,7 +41,7 @@ export function RemoveOldConfig():Promise<void>;
 
 export function Restart():Promise<void>;
 
-export function RunApp(arg1:string,arg2:string,arg3:string):Promise<boolean>;
+export function RunApp(arg1:string,arg2:string):Promise<boolean>;
 
 export function SaveDataToFile(arg1:any):Promise<boolean>;
 

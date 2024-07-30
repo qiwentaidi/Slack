@@ -3,11 +3,10 @@ package util
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"os"
 	"slack-wails/lib/gologger"
 	"strings"
-
-	"github.com/wailsapp/wails/v2/pkg/logger"
 )
 
 func LoadDirsearchDict(ctx context.Context, filepath, old string, new []string) (dict []string) {
@@ -37,10 +36,10 @@ func LoadDirsearchDict(ctx context.Context, filepath, old string, new []string) 
 	return dict
 }
 
-func LoadSubdomainDict(defaultDict, filename string) (dict []string) {
-	file, err := os.Open(defaultDict + filename)
+func ReadLine(filepath string) (dict []string) {
+	file, err := os.Open(filepath)
 	if err != nil {
-		logger.NewFileLogger(filename).Debug(err.Error())
+		fmt.Printf("err: %v\n", err)
 	}
 	defer file.Close()
 	s := bufio.NewScanner(file)
@@ -49,5 +48,5 @@ func LoadSubdomainDict(defaultDict, filename string) (dict []string) {
 			dict = append(dict, s.Text())
 		}
 	}
-	return dict
+	return RemoveDuplicates(dict)
 }

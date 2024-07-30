@@ -3,7 +3,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light;
+  color-scheme: light dark;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -20,6 +20,14 @@ body {
 html {
   height: 100%;
   overflow: hidden;
+}
+
+.el-aside {
+  width: 64px;
+}
+
+.el-drawer__header {
+  margin-bottom: 0px;
 }
 
 .card-header {
@@ -93,19 +101,16 @@ html {
   height: 25px;
   background-color: #F2F3F5;
   position: absolute;
-  width: calc(100% - 64px);
+  width: 100%;
   bottom: 0;
   font-size: 14px;
   font-weight: 500;
-}
-
-.console-log div {
   display: flex;
   align-items: center;
-  height: 100%;
   flex-direction: row;
   justify-content: space-between;
 }
+
 
 .click-div:hover {
   background-color: #F3F3F5;
@@ -121,11 +126,6 @@ html {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.two-end-space5 {
-  margin-left: 5px;
-  margin-right: 5px;
 }
 
 .iframe {
@@ -161,4 +161,29 @@ html {
     border-radius: 0 3px 3px 0;
     /* 轨道的形状 */
   }
+}
+
+/* 菜单栏 */
+.nav-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 10px;
+
+  /* 设置右键菜单图标和文字之间的间距 */
+  img {
+    width: 16px; 
+    height: 16px; 
+    margin-right: -5px;
+  }
+}
+
+.nav-item:hover {
+  background-color: #E1E3E1;
+  border-radius: 5px;
+}
+
+.nav-text {
+  text-align: left;
+  margin-right: 10px;
 }

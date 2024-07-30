@@ -222,60 +222,58 @@ function handleCardContextMenu(event: MouseEvent) {
 
 
 <template>
-    <el-scrollbar height="85vh">
-        <div v-for="groups in localGroup.options.value" class="card-group">
-            <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
-                @contextmenu.prevent="handleCardContextMenu">
-                <div class="my-header" style="margin-bottom: 10px">
-                    <span style="font-weight: bold">{{ groups.Name }}</span>
-                    <el-popconfirm title="Are you sure to delete this?" @confirm="localGroup.deleteGroup(groups.Name)">
+    <div v-for="groups in localGroup.options.value" class="card-group">
+        <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
+            @contextmenu.prevent="handleCardContextMenu">
+            <div class="my-header" style="margin-bottom: 10px">
+                <span style="font-weight: bold">{{ groups.Name }}</span>
+                <el-popconfirm title="Are you sure to delete this?" @confirm="localGroup.deleteGroup(groups.Name)">
+                    <template #reference>
+                        <el-button :icon="DeleteFilled" link></el-button>
+                    </template>
+                </el-popconfirm>
+            </div>
+            <div v-if="groups.Children" class="button-grid">
+                <div v-for="item in groups.Children">
+                    <el-popover ref="popover" placement="right" :width="200" trigger="contextmenu">
+                        <el-menu class="right-click">
+                            <el-menu-item index="open" @click="localGroup.handleOpenFolder(item.Path)">
+                                <el-icon>
+                                    <FolderOpened />
+                                </el-icon>
+                                {{ $t("navigator.open_folder") }}</el-menu-item>
+                            <el-menu-item index="edit" @click="localGroup.editItem(groups.Name, {
+                                Name: item.Name,
+                                Type: item.Type,
+                                Path: item.Path,
+                            })">
+                                <el-icon>
+                                    <Edit />
+                                </el-icon>
+                                {{ $t("navigator.edit") }}</el-menu-item>
+                            <el-menu-item index="delete" @click="localGroup.deleteItem(groups.Name, {
+                                Name: item.Name,
+                                Type: item.Type,
+                                Path: item.Path,
+                            })">
+                                <el-icon>
+                                    <DeleteFilled />
+                                </el-icon>
+                                {{ $t("navigator.delete") }}</el-menu-item>
+                        </el-menu>
                         <template #reference>
-                            <el-button :icon="DeleteFilled" link></el-button>
+                            <el-button bg text @click="RunApp(item.Type, item.Path)">
+                                <template #icon>
+                                    <img :src="localGroup.getSvgPath(item.Type)" style="width: 16px;">
+                                </template>
+                                {{ item.Name }}
+                            </el-button>
                         </template>
-                    </el-popconfirm>
+                    </el-popover>
                 </div>
-                <div v-if="groups.Children" class="button-grid">
-                    <div v-for="item in groups.Children">
-                        <el-popover ref="popover" placement="right" :width="200" trigger="contextmenu">
-                            <el-menu class="right-click">
-                                <el-menu-item index="open" @click="localGroup.handleOpenFolder(item.Path)">
-                                    <el-icon>
-                                        <FolderOpened />
-                                    </el-icon>
-                                    {{ $t("navigator.open_folder") }}</el-menu-item>
-                                <el-menu-item index="edit" @click="localGroup.editItem(groups.Name, {
-                                    Name: item.Name,
-                                    Type: item.Type,
-                                    Path: item.Path,
-                                })">
-                                    <el-icon>
-                                        <Edit />
-                                    </el-icon>
-                                    {{ $t("navigator.edit") }}</el-menu-item>
-                                <el-menu-item index="delete" @click="localGroup.deleteItem(groups.Name, {
-                                    Name: item.Name,
-                                    Type: item.Type,
-                                    Path: item.Path,
-                                })">
-                                    <el-icon>
-                                        <DeleteFilled />
-                                    </el-icon>
-                                    {{ $t("navigator.delete") }}</el-menu-item>
-                            </el-menu>
-                            <template #reference>
-                                <el-button bg text @click="RunApp(global.webscan.java, item.Type, item.Path)">
-                                    <template #icon>
-                                        <img :src="localGroup.getSvgPath(item.Type)" style="width: 16px;">
-                                    </template>
-                                    {{ item.Name }}
-                                </el-button>
-                            </template>
-                        </el-popover>
-                    </div>
-                </div>
-            </el-card>
-        </div>
-    </el-scrollbar>
+            </div>
+        </el-card>
+    </div>
     <el-dialog v-model="global.temp.localAddItem" :title="$t('navigator.add_item')" width="500">
         <el-form label-width="auto">
             <el-form-item label="Group">

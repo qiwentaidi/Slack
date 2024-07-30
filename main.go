@@ -33,7 +33,7 @@ func main() {
 	err := wails.Run(&options.App{
 		Title:  "Slack",
 		Width:  1280,
-		Height: 768,
+		Height: 800,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
@@ -64,15 +64,13 @@ func main() {
 			db,
 		},
 		Mac: &mac.Options{
-			TitleBar: &mac.TitleBar{
-				FullSizeContent: false,
-			},
-			WebviewIsTransparent: true,
-			WindowIsTranslucent:  false,
+			TitleBar:            mac.TitleBarHiddenInset(),
+			WindowIsTranslucent: true,
 		},
 		Windows: &windows.Options{
 			WebviewBrowserPath: "", // 可以让windows使用默认浏览器打开链接
 		},
+		Frameless: rt.GOOS != "darwin",
 	})
 	if err != nil {
 		println("Error:", err.Error())
