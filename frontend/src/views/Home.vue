@@ -31,10 +31,15 @@ onMounted(async () => {
   </el-scrollbar>
 </template>
 
-<style scoped>
-.el-result:hover {
+<style>
+html.light .el-result:hover {
   cursor: pointer;
-  background-color: var(--nav-hover-color);
+  background-color: #f5f7fa;
+}
+
+html.dark .el-result:hover {
+  cursor: pointer;
+  background-color: #3c3c3c;
 }
 
 .appNavIcon .el-image__inner {

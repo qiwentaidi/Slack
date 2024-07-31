@@ -39,6 +39,7 @@ const Logger = reactive({
 const LOCAL_VERSION = "1.5.8"
 
 const Language = ref("zh")
+const Theme = ref(false)
 
 var PATH = {
     ConfigPath: "/slack/config",
@@ -360,5 +361,6 @@ export default {
     onlineOptions,
     portGroup,
     temp,
-    Language
+    Language,
+    Theme
 };

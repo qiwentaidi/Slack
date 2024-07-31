@@ -10,6 +10,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  --el-button-hover-text-color: #dde4ee;
 }
 
 body {
@@ -91,7 +93,6 @@ html {
   word-break: break-all;
   overflow-x: auto;
   height: 60vh;
-  background: #F2F2F2;
   border-radius: 5px;
   border: 1px solid #ccc;
   padding: 10px;
@@ -178,8 +179,13 @@ html {
   }
 }
 
-.nav-item:hover {
+html.light .nav-item:hover {
   background-color: #E1E3E1;
+  border-radius: 5px;
+}
+
+html.dark .nav-item:hover {
+  background-color: #3c3c3c;
   border-radius: 5px;
 }
 

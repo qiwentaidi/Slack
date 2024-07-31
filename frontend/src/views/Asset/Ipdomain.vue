@@ -132,6 +132,6 @@ function batchQuery() {
     justify-content: center;
     align-items: center;
     border-radius: 5px;
-    background-color: #f5f5f5;
+    background-color: var(--card-bg-color);
 }
 </style>

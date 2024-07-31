@@ -82,7 +82,7 @@
             </el-select>
           </el-form-item>
           <el-form-item :label="$t('aside.theme')">
-            <el-switch v-model="theme" 
+            <el-switch v-model="global.Theme.value" 
             :active-action-icon="Moon" 
             :inactive-action-icon="Sunny" 
             style="--el-switch-on-color: #2C2C2C; --el-switch-off-color: "
@@ -122,13 +122,11 @@ import global from "../global"
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, TestNuclei } from "../util";
 import { Edit, Sunny, Moon } from '@element-plus/icons-vue';
-import { reactive, ref } from "vue";
+import { reactive } from "vue";
 import { ReadFile, SaveDataToFile, UserHomeDir, WriteFile } from "../../wailsjs/go/main/File";
 import { File } from '../interface';
 import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
-
-const theme = ref<boolean>(localStorage.getItem('theme') === 'dark' ? true : false)
 
 const isDark = useDark({
   storageKey: 'theme',

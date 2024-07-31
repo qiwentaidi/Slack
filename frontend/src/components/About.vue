@@ -31,7 +31,6 @@ const issueAddress = "https://github.com/qiwentaidi/Slack/issues/new"
 <style>
 .bold {
     font-weight: bold;
-    color: black;
     font-size: 20px;
 }
 .slogan {

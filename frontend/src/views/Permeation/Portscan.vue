@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref } from 'vue';
+import { reactive, onMounted, ref, computed } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '../../util'
 import { ExportToXlsx } from '../../export'
@@ -131,7 +131,7 @@ function validateInput() {
     const ipPatterns = [
         /^(\d{1,3}\.){3}\d{1,3}$/, // 192.168.1.1
         /^(\d{1,3}\.){3}\d{1,3}\/(\d{1,2})$/, // 192.168.1.1/8, 192.168.1.1/16, 192.168.1.1/24
-        /^(\d{1,3}\.){3}\d{1,3}-((\d{1,3}\.){2}\d{1,3}|\d{1,3})$/, // 192.168.1.1-192.168.255.255, 192.168.1.1-255
+        /^(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3}|(\d{1,3}\.){2}\d{1,3}|\d{1,3}\)$/, // 192.168.1.1-192.168.255.255, 192.168.1.1-255
         /^(\d{1,3}\.){3}\d{1,3}:\d{1,5}$/, // 192.168.0.1:6379
         /^!((\d{1,3}\.){3}\d{1,3}(\/\d+)?|(\d{1,3}\.){2}\d{1,3}|\d{1,3})$/, // !192.168.1.6/28
         /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/, // domain
@@ -145,8 +145,15 @@ function validateInput() {
 async function NewScanner() {
     let mode = form.isSYN ? "syn" : "fully connected"
     Callgologger("info", "Port scan task loaded, current mode: " + mode)
-    const ps = new Scanner()
-    await ps.PortScanner()
+    if (!validateInput()) {
+            ElMessage({
+                type: "warning",
+                message: "输入目标格式不正确",
+            })
+            return
+        }
+    // const ps = new Scanner()
+    // await ps.PortScanner()
 }
 
 class Scanner {
@@ -360,7 +367,13 @@ function changeTableHeigth() {
     }
 }
 
-
+const titleStyle = computed(() => {
+    return global.Theme.value ? {
+        backgroundColor: '#333333',
+    } : {
+        backgroundColor: '#eee',
+    };
+})
 </script>
 
 <template>
@@ -409,7 +422,7 @@ function changeTableHeigth() {
         </el-card>
         <el-row :gutter="8" style="margin-top: 10px;">
             <el-col :span="10">
-                <div class="my-header" style="background-color: #eee;">
+                <div class="my-header" :style="titleStyle">
                     <span>IP:
                         <el-tooltip placement="right-end">
                             <template #content>
@@ -418,7 +431,6 @@ function changeTableHeigth() {
                                 192.168.1.1/8<br />
                                 192.168.1.1/16<br />
                                 192.168.1.1/24<br />
-                                192.168.1.1,192.168.1.2<br />
                                 192.168.1.1-192.168.255.255<br />
                                 192.168.1.1-255<br /><br />
                                 如果IP输入模式为192.168.0.1:6379此类形式，则只扫描该端口<br />
@@ -438,7 +450,7 @@ function changeTableHeigth() {
                 <el-input class="input" type="textarea" rows="3" v-model="form.target" resize="none" />
             </el-col>
             <el-col :span="4">
-                <span class="my-header" style="background-color: #eee;">
+                <span class="my-header" :style="titleStyle">
                     预设端口:
                 </span>
                 <el-scrollbar class="list-container" max-height="130px" style="width: 100%">
@@ -448,7 +460,7 @@ function changeTableHeigth() {
                 </el-scrollbar>
             </el-col>
             <el-col :span="10">
-                <div class="my-header" style="background-color: #eee;">
+                <div class="my-header" :style="titleStyle">
                     端口列表:
                     <el-button size="small" @click="form.portlist = ''">清空</el-button>
                 </div>
@@ -540,17 +552,28 @@ function changeTableHeigth() {
 }
 
 .list-container {
-    width: 20vh;
-    background-color: #ffffff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 20vh;   
     border-radius: 4px;
     text-align: center;
     max-height: 120px;
 }
 
-.list-item:hover {
+html.light .list-container {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+html.dark .list-container {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+html.light .list-item:hover {
     cursor: pointer;
     background-color: #EEF5FE;
+}
+
+html.dark .list-item:hover {
+    cursor: pointer;
+    background-color: #343535;
 }
 
 .list-item.selected {

@@ -1,7 +1,5 @@
 html.light {
     --sidebar-bg-color: #F2F3F5;
-    --sidebar-active-text-color: #3875f6;
-    --sidebar-text-color: #000;
-    --menu-board-color: rgb(220, 223, 230);
-    --nav-hover-color: #544f4f;
+    --sidebar-text-color: hsl(0, 0%, 0%);
+    --titlebar-hover-color: #dcdcdc;
 }

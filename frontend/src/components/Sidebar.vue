@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Refresh, Setting } from "@element-plus/icons-vue";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import updateUI from "./Update.vue";
 import global from "../global";
 import menus from "../router/menu";
@@ -10,56 +10,62 @@ onMounted(() => {
   check.poc();
 });
 
-
+const menuStyle = computed(() => {
+    return global.Theme.value ? { 
+      backgroundColor: '#333333'
+    } : {
+      backgroundColor: '#F2F3F5' 
+    };
+})
 
 const updateDialog = ref(false)
 </script>
 
 <template>
-  <div class="flex-box-v" style="height: calc(100vh - 35px);">
-    <el-menu :collapse="true" :router="true" :default-active="$route.path" active-text-color="--sidebar-active-text-color"
-      background-color="--sidebar-bg-color" text-color="--sidebar-text-color">
-      <template v-for="menu in menus">
-        <el-menu-item v-if="!menu.children" :index="menu.path">
-          <el-icon>
-            <img :src="menu.icon" class="custom-svg">
+  <el-menu :collapse="true" router :default-active="$route.path" :style="menuStyle">
+    <template v-for="menu in menus">
+      <el-menu-item v-if="!menu.children" :index="menu.path">
+        <el-icon size="24">
+          <svg viewBox="0 0 16 16" fill="" xmlns="http://www.w3.org/2000/svg">
+            <path fill=""
+              d="M2 13.5V7h1v6.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V7h1v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5zm11-11V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z" />
+            <path fill=""
+              d="M7.293 1.5a1 1 0 0 1 1.414 0l6.647 6.646a.5.5 0 0 1-.708.708L8 2.207 1.354 8.854a.5.5 0 1 1-.708-.708L7.293 1.5z" />
+          </svg>
+        </el-icon>
+        <template #title><span>{{ $t(menu.name) }}</span></template>
+      </el-menu-item>
+      <el-sub-menu :index="menu.path" v-else>
+        <template #title>
+          <el-icon size="24">
+            <component :is="menu.icon" />
           </el-icon>
-          <template #title><span>{{ $t(menu.name) }}</span></template>
-        </el-menu-item>
-        <el-sub-menu :index="menu.path" v-else>
-          <template #title>
-            <el-icon class="aside">
-              <component :is="menu.icon" />
-            </el-icon>
-            <span>{{ $t(menu.name) }}</span>
-          </template>
-          <el-menu-item v-for="item in menu.children" :key="item.path" :index="item.path">{{ $t(item.name)
-            }}</el-menu-item>
-        </el-sub-menu>
-      </template>
-    </el-menu>
+          <span>{{ $t(menu.name) }}</span>
+        </template>
+        <el-menu-item v-for="item in menu.children" :key="item.path" :index="item.path">{{ $t(item.name)
+          }}</el-menu-item>
+      </el-sub-menu>
+    </template>
 
-    <div class="copy-menu"></div>
+    <div style="flex-grow: 1;"></div>
 
-    <el-menu :collapse="true" active-text-color="#fff" background-color="--sidebar-bg-color" text-color="#000">
-      <el-menu-item class="custom-menu-item" index="/update" @click="updateDialog = true">
-        <el-icon class="aside">
-          <Refresh />
-        </el-icon>
-        <template #title><span>{{ $t("aside.update") }}</span></template>
-        <el-badge value="new" v-if="global.UPDATE.ClientStatus ||
-      global.UPDATE.PocStatus
+    <el-menu-item class="custom-menu-item" @click="updateDialog = true">
+      <el-icon size="24">
+        <Refresh />
+      </el-icon>
+      <template #title><span>{{ $t("aside.update") }}</span></template>
+      <el-badge value="new" v-if="global.UPDATE.ClientStatus ||
+        global.UPDATE.PocStatus
       " />
-      </el-menu-item>
+    </el-menu-item>
 
-      <el-menu-item class="custom-menu-item" @click="$router.push('/settings')">
-        <el-icon class="aside">
-          <setting />
-        </el-icon>
-        <template #title><span>{{ $t("aside.setting") }}</span></template>
-      </el-menu-item>
-    </el-menu>
-  </div>
+    <el-menu-item class="custom-menu-item" @click="$router.push('/settings')">
+      <el-icon size="24">
+        <setting />
+      </el-icon>
+      <template #title><span>{{ $t("aside.setting") }}</span></template>
+    </el-menu-item>
+  </el-menu>
 
   <!-- update -->
   <el-dialog v-model="updateDialog" title="更新通知" width="40%">
@@ -67,15 +73,25 @@ const updateDialog = ref(false)
   </el-dialog>
 </template>
 
-<style>
+<style scoped>
 .el-badge {
   margin-bottom: 80px;
   left: 15px;
   position: absolute;
 }
 
+.el-menu {
+  display: flex; 
+  flex-direction: column; 
+  height: calc(100vh - 35px);
+}
+
+.el-menu-item {
+  font-size: 16px;
+}
+
 .el-menu-item.is-active {
-  color: #000;
+  color: var(--sidebar-text-color);
 }
 
 .el-menu-item.is-active::before {
@@ -92,48 +108,12 @@ const updateDialog = ref(false)
   /* 轨道的形状 */
 }
 
-.el-menu-item {
-  font-size: 16px;
-}
 .el-sub-menu__title {
   font-size: 16px;
 }
 
 .custom-menu-item:hover {
-  /* 定义鼠标悬停时的样式 */
-  background-color: #f5f5f5;
-  /* 例如，使用一个浅灰色作为背景 */
-  color: #3875f6;
-}
-
-.custom-menu-item.is-active::before {
-  /* 定义激活状态时的样式 */
-  background-color: inherit;
-  /* 使用继承的背景颜色 */
-  color: inherit;
-  /* 使用继承的文本颜色 */
-}
-
-.aside svg {
-  height: 1.5em;
-  width: 1.5em;
-}
-
-.custom-svg {
-  height: 1.5em;
-  width: 24px;
-  color: var(--sidebar-text-color);
-}
-
-.flex-box-v {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-.copy-menu {
-  flex-grow: 1;
   background-color: var(--sidebar-bg-color);
-  border-right: solid 1px var(--menu-board-color);
+  color: #3875f6;
 }
 </style>

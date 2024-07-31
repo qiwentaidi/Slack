@@ -199,8 +199,8 @@ async function NewScanner() {
             </template>
         </el-input>
     </div>
-    <splitpanes class="default-theme" style="height: 75vh;">
-        <pane size="30">
+    <div style="display: flex ;height: 75vh;">
+        <div style="width: 30%; margin-right: 5px;">
             <el-input v-model="config.input" placeholder="主机地址">
                 <template #prepend>
                     <el-select v-model="config.defaultOption" style="width: 15vh;">
@@ -213,8 +213,8 @@ async function NewScanner() {
             </el-input>
             <el-input v-model="config.target" :placeholder="placeholder2" type="textarea" resize="none"
                 style="height: 94.5%;"></el-input>
-        </pane>
-        <pane size="70">
+        </div>
+        <div style="width: 70%;">
             <el-table border :data="config.content" :cell-style="{ textAlign: 'center' }"
                 :header-cell-style="{ 'text-align': 'center' }" style="width: 100%; height: 100% ;">
                 <el-table-column prop="Host" label="Host" />
@@ -226,8 +226,8 @@ async function NewScanner() {
                     <el-empty />
                 </template>
             </el-table>
-        </pane>
-    </splitpanes>
+        </div>
+    </div>
 </template>
 
 <style>

@@ -2,7 +2,7 @@ const MenuList = [
     {
       name: "aside.home",
       path: "/",
-      icon: "/home.svg",
+      icon: "",
     },
     {
       name: "aside.penetration",

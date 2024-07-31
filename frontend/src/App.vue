@@ -7,6 +7,14 @@ import { EventsOn } from "../wailsjs/runtime/runtime";
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
 import { LogInfo } from "./interface";
+import { useDark } from '@vueuse/core'
+
+// 初始化调用
+useDark({
+  storageKey: 'theme',
+  valueDark: 'dark',
+  valueLight: 'light',
+})
 
 const locale = computed(() => (global.Language.value === 'zh' ? zhCn : en))
 
