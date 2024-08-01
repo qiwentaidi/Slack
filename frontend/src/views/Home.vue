@@ -32,16 +32,6 @@ onMounted(async () => {
 </template>
 
 <style>
-html.light .el-result:hover {
-  cursor: pointer;
-  background-color: #f5f7fa;
-}
-
-html.dark .el-result:hover {
-  cursor: pointer;
-  background-color: #3c3c3c;
-}
-
 .appNavIcon .el-image__inner {
   height: 30px;
   width: 30px;

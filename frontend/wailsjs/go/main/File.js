@@ -46,6 +46,10 @@ export function Mkdir(arg1) {
   return window['go']['main']['File']['Mkdir'](arg1);
 }
 
+export function NetworkCardInfo() {
+  return window['go']['main']['File']['NetworkCardInfo']();
+}
+
 export function OpenFolder(arg1) {
   return window['go']['main']['File']['OpenFolder'](arg1);
 }

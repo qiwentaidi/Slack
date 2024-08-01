@@ -8,14 +8,22 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
 import { LogInfo } from "./interface";
 import { useDark } from '@vueuse/core'
+import { NetworkCardInfo } from "../wailsjs/go/main/File";
 
-// 初始化调用
+// 初始化网卡
+onMounted(async () => {
+  let list = await NetworkCardInfo()
+  global.temp.NetworkCardList.push(...list)
+});
+
+// 初始化主题
 useDark({
   storageKey: 'theme',
   valueDark: 'dark',
   valueLight: 'light',
 })
 
+// 初始化语言
 const locale = computed(() => (global.Language.value === 'zh' ? zhCn : en))
 
 const logArray = [] as string[]

@@ -93,7 +93,7 @@ function addGroup() {
             <el-divider direction="vertical" v-if="isMacOS" />
             <el-button-group :style="leftStyle">
                 <el-tooltip content="返回">
-                    <el-button text class="custom-button" @click="">
+                    <el-button text class="custom-button" @click="$router.back()">
                         <template #icon>
                             <el-icon size="16">
                                 <Back />
@@ -102,7 +102,7 @@ function addGroup() {
                     </el-button>
                 </el-tooltip>
                 <el-tooltip content="前进">
-                    <el-button text class="custom-button" @click="">
+                    <el-button text class="custom-button" @click="$router.forward()">
                         <template #icon>
                             <el-icon size="16">
                                 <Right />

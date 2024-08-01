@@ -62,9 +62,13 @@ export default {
         'delete': '删除',
     },
     setting: {
+        'scan': '扫描配置',
+        'mapping': '资产测绘',
+        'network_list': '网卡列表',
         'username': '用户名',
         'password': '密码',
-        'enable': '检测引擎',
+        'engine_enable': '检测引擎',
+        'enable': '启用',
         'mode': '模式',
         'address': '地址',
         'port': '端口',
@@ -72,7 +76,6 @@ export default {
         'save': '保存',
         'test_agent': '测试代理',
         'engine': 'Nuclei引擎',
-        "nuclei_placeholder1": "当不存在Nuclei的环境变量时需要配置此处，存在无需填写",
-        "nuclei_placeholder2": "请填写Nuclei的完整路径",
+        "nuclei_placeholder": "请填写Nuclei的完整路径，存在环境变量无需填写",
     }
 }

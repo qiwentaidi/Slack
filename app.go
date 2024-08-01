@@ -331,36 +331,52 @@ func (a *App) HostAlive(targets []string, Ping bool) []string {
 
 func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, thread, timeout int) {
 	portscan.ExitFunc = false
-	addrs := portscan.ParseTarget(ips, ports)
-	for _, target := range specialTargets {
-		temp := strings.Split(target, ":")
-		port, err := strconv.Atoi(temp[1]) // 如果后缀端口有误则继续
-		if err != nil {
-			continue
-		}
-		addrs = append(addrs, portscan.Address{
-			IP:   temp[0],
-			Port: port,
-		})
-	}
-	portscan.TcpScan(a.ctx, addrs, thread, timeout)
-}
+	addresses := make(chan portscan.Address)
 
-func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []int) {
-	portscan.ExitFunc = false
-	addrs := portscan.ParseTarget2(ips, util.IntArrayToUint16Array(ports))
-	for _, target := range specialTargets {
-		temp := strings.Split(target, ":")
-		port, err := strconv.ParseUint(temp[1], 10, 16) // 如果后缀端口有误则继续
-		if err != nil {
-			continue
+	go func() {
+		defer close(addresses)
+		// Generate addresses from ips and ports
+		for _, ip := range ips {
+			for _, port := range ports {
+				addresses <- portscan.Address{IP: ip, Port: port}
+			}
 		}
-		addrs = append(addrs, portscan.Address2{
-			IP:   net.IP(temp[0]),
-			Port: uint16(port),
-		})
-	}
-	portscan.SynScan(a.ctx, addrs)
+		// Generate addresses from special targets
+		for _, target := range specialTargets {
+			temp := strings.Split(target, ":")
+			port, err := strconv.Atoi(temp[1]) // Skip if port conversion fails
+			if err != nil {
+				continue
+			}
+			addresses <- portscan.Address{IP: temp[0], Port: port}
+		}
+	}()
+
+	portscan.TcpScan(a.ctx, addresses, thread, timeout)
+}
+func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint16) {
+	portscan.ExitFunc = false
+	addresses := make(chan portscan.Address2)
+	startIp := net.IP(ips[0])
+	go func() {
+		defer close(addresses)
+		// Generate addresses from ips and ports
+		for _, ip := range ips {
+			for _, port := range ports {
+				addresses <- portscan.Address2{IP: net.IP(ip), Port: port}
+			}
+		}
+		// Generate addresses from special targets
+		for _, target := range specialTargets {
+			temp := strings.Split(target, ":")
+			port, err := strconv.Atoi(temp[1]) // Skip if port conversion fails
+			if err != nil {
+				continue
+			}
+			addresses <- portscan.Address2{IP: net.IP(temp[0]), Port: uint16(port)}
+		}
+	}()
+	portscan.SynScan(a.ctx, startIp, addresses)
 }
 
 func (a *App) StopPortScan() {

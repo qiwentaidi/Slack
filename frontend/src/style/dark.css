@@ -2,5 +2,21 @@ html.dark {
     --sidebar-bg-color: #282828;
     --sidebar-text-color: #fff;
     --titlebar-hover-color: #303030; 
-    --card-bg-color: #282828;
+    
+    .grid-item {
+        background-color: var(--titlebar-hover-color);
+    }
+    .list-container {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+
+    .list-item:hover {
+        cursor: pointer;
+        background-color: #343535;
+    }    
+
+    .el-result:hover {
+        cursor: pointer;
+        background-color: #3c3c3c;
+      }
 }

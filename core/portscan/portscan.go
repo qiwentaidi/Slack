@@ -25,22 +25,10 @@ type PortResult struct {
 	HttpTitle string
 }
 
-func ParseTarget(ips []string, ports []int) (addrs []Address) {
-	for _, ip := range ips {
-		for _, port := range ports {
-			addrs = append(addrs, Address{
-				IP:   ip,
-				Port: port,
-			})
-		}
-	}
-	return
-}
-
-func TcpScan(ctx context.Context, address []Address, workers, timeout int) {
+func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int) {
 	var id int32
 	single := make(chan struct{})
-	retChan := make(chan PortResult, len(address))
+	retChan := make(chan PortResult)
 	var wg sync.WaitGroup
 	go func() {
 		for pr := range retChan {
@@ -70,7 +58,7 @@ func TcpScan(ctx context.Context, address []Address, workers, timeout int) {
 		wg.Done()
 	})
 	defer threadPool.Release()
-	for _, add := range address {
+	for add := range addresses {
 		if ExitFunc {
 			return
 		}

@@ -205,7 +205,7 @@ class Scanner {
             ips = await HostAlive((ips as any), config.ping)
         }
         if (form.isSYN) {
-            await NewSynScanner(specialTarget, ips, portsList)
+            await NewSynScanner(specialTarget,ips, portsList)
             return
         }
         await NewTcpScanner(specialTarget, ips, portsList, config.thread, config.timeout)
@@ -556,24 +556,6 @@ const titleStyle = computed(() => {
     border-radius: 4px;
     text-align: center;
     max-height: 120px;
-}
-
-html.light .list-container {
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-html.dark .list-container {
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-}
-
-html.light .list-item:hover {
-    cursor: pointer;
-    background-color: #EEF5FE;
-}
-
-html.dark .list-item:hover {
-    cursor: pointer;
-    background-color: #343535;
 }
 
 .list-item.selected {

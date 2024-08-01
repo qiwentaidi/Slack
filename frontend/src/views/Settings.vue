@@ -2,35 +2,34 @@
   <el-scrollbar style="height: 87vh;">
     <el-collapse model-value="1">
       <el-collapse-item name="1"><template #title>
-          <h2>{{ $t('aside.webscan') }}</h2>
+          <h2>{{ $t('setting.scan') }}</h2>
         </template>
-        <el-form>
-          <el-form-item>
-            <template #label>{{ $t('setting.engine') }}
-              <el-tooltip placement="left">
-                <template #content>
-                  {{ $t('setting.nuclei_placeholder1') }}
-                </template>
-                <el-icon>
-                  <QuestionFilled size="24" />
-                </el-icon>
-              </el-tooltip>
-            </template>
-            <el-input v-model="global.webscan.nucleiEngine" :placeholder="$t('setting.nuclei_placeholder2')" clearable>
+        <el-form label-width="auto">
+          <el-form-item :label="$t('setting.engine')">
+            <el-input v-model="global.webscan.nucleiEngine" :placeholder="$t('setting.nuclei_placeholder')" clearable>
               <template #suffix>
-                <el-button type="primary" link @click="TestNuclei()">{{ $t('setting.enable')
+                <el-button type="primary" link @click="TestNuclei()">{{ $t('setting.engine_enable')
                   }}</el-button>
               </template>
             </el-input>
           </el-form-item>
+          <el-form-item :label="$t('setting.network_list')">
+            <el-select v-model="global.temp.defaultNetwork">
+              <el-option v-for="value in global.temp.NetworkCardList" :label="value" :value="value" />
+            </el-select>
+          </el-form-item>
         </el-form>
+      </el-collapse-item>
+      <el-collapse-item name="2"><template #title>
+          <h2>{{ $t('setting.proxy') }}</h2>
+        </template>
         <el-form :inline="true" :model="global.proxy" label-width="auto" class="demo-form-inline">
-          <el-form-item :label="$t('setting.proxy')">
+          <el-form-item :label="$t('setting.enable')">
             <el-switch v-model="global.proxy.enabled" />
             <el-button type="primary" size="small" @click="TestProxy(0)" style="margin-left: 20px;"
               v-if="global.proxy.enabled">{{ $t('setting.test_agent') }}</el-button>
           </el-form-item>
-          <div v-if="global.proxy.enabled">
+          <div>
             <el-form-item :label="$t('setting.mode')">
               <el-select v-model="global.proxy.mode">
                 <el-option label="HTTP" value="HTTP" />
@@ -53,25 +52,24 @@
           </div>
         </el-form>
       </el-collapse-item>
-      <el-collapse-item name="2"><template #title>
-          <h2>{{ $t('aside.space_engine') }}</h2>
+      <el-collapse-item name="3"><template #title>
+          <h2>{{ $t('setting.mapping') }}</h2>
         </template>
         <el-form :model="global.space" label-width="auto">
-          <el-form-item label="FOFA" style="margin-top: 10px;">
-            <el-input v-model="global.space.fofaapi" placeholder="api address" clearable></el-input>
-            <el-input v-model="global.space.fofaemail" placeholder="email" clearable
-              style="margin-top: 5px;"></el-input>
-            <el-input v-model="global.space.fofakey" placeholder="key" clearable style="margin-top: 5px;"></el-input>
+          <el-form-item label="FOFA">
+            <el-input v-model="global.space.fofaapi" placeholder="api address" clearable />
+            <el-input v-model="global.space.fofaemail" placeholder="email" clearable style="margin-top: 5px;" />
+            <el-input v-model="global.space.fofakey" placeholder="key" clearable style="margin-top: 5px;" />
           </el-form-item>
           <el-form-item :label="$t('aside.hunter')">
-            <el-input v-model="global.space.hunterkey" placeholder="key" clearable></el-input>
+            <el-input v-model="global.space.hunterkey" placeholder="key" clearable />
           </el-form-item>
           <el-form-item :label="$t('aside.360quake')">
-            <el-input v-model="global.space.quakekey" placeholder="token" clearable></el-input>
+            <el-input v-model="global.space.quakekey" placeholder="token" clearable />
           </el-form-item>
         </el-form>
       </el-collapse-item>
-      <el-collapse-item name="3"><template #title>
+      <el-collapse-item name="4"><template #title>
           <h2>{{ $t('aside.display') }}</h2>
         </template>
         <el-form label-width="auto">
@@ -82,15 +80,12 @@
             </el-select>
           </el-form-item>
           <el-form-item :label="$t('aside.theme')">
-            <el-switch v-model="global.Theme.value" 
-            :active-action-icon="Moon" 
-            :inactive-action-icon="Sunny" 
-            style="--el-switch-on-color: #2C2C2C; --el-switch-off-color: "
-            @change="toggle" />
+            <el-switch v-model="global.Theme.value" :active-action-icon="Moon" :inactive-action-icon="Sunny"
+              style="--el-switch-on-color: #2C2C2C; --el-switch-off-color: " @change="toggle" />
           </el-form-item>
         </el-form>
       </el-collapse-item>
-      <el-collapse-item name="4"><template #title>
+      <el-collapse-item name="5"><template #title>
           <h2>{{ $t('aside.dict') }}</h2>
         </template>
         <div>

@@ -20,22 +20,10 @@ type Address2 struct {
 	Port uint16
 }
 
-func ParseTarget2(ips []string, ports []uint16) (addrs []Address2) {
-	for _, ip := range ips {
-		for _, port := range ports {
-			addrs = append(addrs, Address2{
-				IP:   net.ParseIP(ip),
-				Port: port,
-			})
-		}
-	}
-	return
-}
-
-func SynScan(ctx context.Context, address []Address2) {
+func SynScan(ctx context.Context, startIp net.IP, address <-chan Address2) {
 	var id int32
 	single := make(chan struct{})
-	retChan := make(chan port.OpenIpPort, len(address))
+	retChan := make(chan port.OpenIpPort)
 	go func() {
 		for ret := range retChan {
 			pr := Connect(ret.Ip.To4().String(), int(ret.Port), synTimeout)
@@ -48,11 +36,11 @@ func SynScan(ctx context.Context, address []Address2) {
 		single <- struct{}{}
 		runtime.EventsEmit(ctx, "scanComplete", "done")
 	}()
-	startIp := address[0].IP
 	// scanner
 	ss, err := syn.NewSynScanner(startIp, retChan, syn.DefaultSynOption)
 	if err != nil {
 		gologger.Error(ctx, "Permission denied, please run with sudo")
+		return
 	}
 	// port scan func
 	portScan := func(addr Address2) {
@@ -67,7 +55,7 @@ func SynScan(ctx context.Context, address []Address2) {
 		wgPing.Done()
 	})
 	defer poolPing.Release()
-	for _, addr := range address {
+	for addr := range address {
 		if ExitFunc {
 			return
 		}

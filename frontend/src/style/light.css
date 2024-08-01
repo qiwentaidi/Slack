@@ -2,4 +2,22 @@ html.light {
     --sidebar-bg-color: #F2F3F5;
     --sidebar-text-color: hsl(0, 0%, 0%);
     --titlebar-hover-color: #dcdcdc;
+
+    .grid-item {
+        background-color: #F5F5F5;
+    }
+
+    .list-container {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .list-item:hover {
+        cursor: pointer;
+        background-color: #EEF5FE;
+    }
+
+    .el-result:hover {
+        cursor: pointer;
+        background-color: #f5f7fa;
+    }
 }

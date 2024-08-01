@@ -11,6 +11,8 @@ import "element-plus/theme-chalk/el-notification.css";
 import 'element-plus/theme-chalk/el-loading.css'
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import global from "./global";
+import "./style/dark.css"
+import "./style/light.css"
 
 
 let theme = localStorage.getItem('theme') || "light"

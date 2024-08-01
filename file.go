@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"path"
@@ -524,4 +525,30 @@ func (f *File) ReadLocalStore() map[string]interface{} {
 		return nil
 	}
 	return data
+}
+
+func (f *File) NetworkCardInfo() (networks []string) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		gologger.Error(f.ctx, err)
+		return
+	}
+
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			gologger.Error(f.ctx, err)
+			continue
+		}
+
+		for _, addr := range addrs {
+			switch v := addr.(type) {
+			case *net.IPNet:
+				if v.IP.To4() != nil {
+					networks = append(networks, fmt.Sprintf("%s(%s)", iface.Name, v.IP.String()))
+				}
+			}
+		}
+	}
+	return
 }

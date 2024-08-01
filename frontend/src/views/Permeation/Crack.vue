@@ -128,6 +128,7 @@ async function NewScanner() {
         }
     }
     config.runningStatus = true
+    ElMessage("开始暴破")
     config.content = []
     let home = await UserHomeDir()
     global.dict.passwords = (await ReadLine(home + global.PATH.PortBurstPath + "/password/password.txt"))!
@@ -155,6 +156,7 @@ async function NewScanner() {
         }
     }, (err: any) => {
         Callgologger("info", "PortBrute Finished")
+        ElMessage("爆破结束")
         config.runningStatus = false
     });
 }

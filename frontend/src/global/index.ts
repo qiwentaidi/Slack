@@ -29,6 +29,8 @@ var temp = reactive({
     dirsearchStartTime: 0,
     thinkdict: [] as string[],
     localAddItem: false, 
+    defaultNetwork: "Auto",
+    NetworkCardList: ["Auto"]
 })
 
 const Logger = reactive({

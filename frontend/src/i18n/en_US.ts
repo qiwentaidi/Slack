@@ -43,7 +43,7 @@ export default {
         'crack': 'Crack',
         'guard': 'Guard',
         'guarantee': 'Important Period Guarantee',
-        'dict': 'Dictionary Management',
+        'dict': 'Dictionary',
         'polymerization': 'Polymerization',
         'display': 'Display',
         'theme': 'Theme',
@@ -62,9 +62,13 @@ export default {
         'delete': 'Delete',
     },
     setting: {
+        'scan': 'Scan',
+        'mapping': 'Mapping',
+        'network_list': 'Network Card List',
         'username': 'Username',
         'password': 'Password',
-        'enable': 'Test Engine',
+        'engine_enable': 'Test Engine',
+        'enable': 'Enable',
         'mode': 'Mode',
         'address': 'Address',
         'port': 'Port',
@@ -72,7 +76,6 @@ export default {
         'save': 'Save',
         'test_agent': 'Test Agent',
         'engine': 'Nuclei Engine',
-        "nuclei_placeholder1": "When there is no environment variable for Nuclei, it needs to be configured here. If it exists, it does not need to be filled in",
-        "nuclei_placeholder2": "Please fill in the complete path of Nuclei",
+        "nuclei_placeholder": "Please fill in the complete path of Nuclei. There are environment variables that do not need to be filled in",
     }
 }
