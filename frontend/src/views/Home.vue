@@ -10,7 +10,7 @@ onMounted(async () => {
 
 <template>
   <el-scrollbar height="92vh">
-    <template v-for="groups in MenuList">
+    <div v-for="groups in MenuList">
       <div v-if="groups.children" class="card-group">
         <el-card style="margin-bottom: 5px;">
           <div style="margin-bottom: 10px">
@@ -27,7 +27,7 @@ onMounted(async () => {
           </el-row>
         </el-card>
       </div>
-    </template>
+    </div>
   </el-scrollbar>
 </template>
 

@@ -437,8 +437,8 @@ function getClassBySeverity(severity: string) {
         <div style="position: relative; margin-top: 10px;">
             <el-tabs type="card">
                 <el-tab-pane label="指纹">
-                    <el-table :data="fingerPagination.table.pageContent" border height="100vh" :cell-style="{ textAlign: 'center' }"
-                        :header-cell-style="{ 'text-align': 'center' }">
+                    <el-table :data="fingerPagination.table.pageContent" border height="100vh"
+                        :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
                         <el-table-column fixed type="index" label="#" width="60px" />
                         <el-table-column fixed prop="url" label="URL" width="300px" :show-overflow-tooltip="true">
                             <template #default="scope">
@@ -507,8 +507,8 @@ function getClassBySeverity(severity: string) {
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="漏洞">
-                    <el-table :data="vulPagination.table.pageContent" border height="100vh" :cell-style="{ textAlign: 'center' }"
-                        :header-cell-style="{ 'text-align': 'center' }">
+                    <el-table :data="vulPagination.table.pageContent" border height="100vh"
+                        :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
                         <el-table-column type="expand">
                             <template #default="props">
                                 <div>
@@ -526,16 +526,12 @@ function getClassBySeverity(severity: string) {
                                             </div>
                                         </el-descriptions-item>
                                     </el-descriptions>
-                                    <splitpanes class="default-theme">
-                                        <pane size="50">
-                                            <div class="pretty-response">{{
-                                                props.row.request }}</div>
-                                        </pane>
-                                        <pane size="50">
-                                            <div class="pretty-response">{{
-                                                props.row.response }}</div>
-                                        </pane>
-                                    </splitpanes>
+                                    <div style="display: grid; grid-column: 2;">
+                                        <div class="pretty-response">{{
+                                            props.row.request }}</div>
+                                        <div class="pretty-response">{{
+                                            props.row.response }}</div>
+                                    </div>
                                 </div>
                             </template>
                         </el-table-column>

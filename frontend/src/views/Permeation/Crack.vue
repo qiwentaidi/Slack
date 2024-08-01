@@ -18,6 +18,7 @@ interface BruteResult {
 }
 
 onMounted(() => {
+    console.log(111)
     EventsOn("bruteResult", (result: BruteResult) => {
         let temp = result.Host.split(":")
         config.content.push({
