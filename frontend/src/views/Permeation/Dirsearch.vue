@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { GoFetch, LoadDirsearchDict, DirScan, StopDirScan } from "../../../wailsjs/go/main/App";
-import { ReadLine, SplitTextArea, Copy, proxys } from '../../util'
+import { SplitTextArea, Copy, proxys } from '../../util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-plus/icons-vue';
@@ -42,15 +42,19 @@ onMounted(() => {
     EventsOn("dirsearchProgressID", (id: number) => {
         from.id = id
         from.currentRate = Math.round(from.id / ((Date.now() - global.temp.dirsearchStartTime) / 1000));
-        from.percentage = Number(((from.id / global.temp.dirsearchPathConut) * 100).toFixed(2));
+        from.percentage = Number(((from.id / global.temp.dirsearchConut) * 100).toFixed(2));
     });
-    EventsOn("dirsearchComplete ", () => {
+    EventsOn("dirsearchCounts", (count: number) => {
+        global.temp.dirsearchConut = count
+    });
+    EventsOn("dirsearchComplete", () => {
         config.runningStatus = false
         from.percentage = 100
     });
     return () => {
         EventsOff("dirsearchLoading");
         EventsOff("dirsearchProgressID");
+        EventsOff("dirsearchCounts");
         EventsOff("dirsearchComplete");
     };
 });
@@ -91,18 +95,7 @@ async function handleFileChange() {
     if (path == "") {
         return
     }
-    let result = (await ReadLine(path))!
-    const extensions = from.exts.split(',');
-    for (const line of result) {
-        if (line.includes("%EXT%")) {
-            for (const ext of extensions) {
-                from.paths.push(line.replace('%EXT%', ext))
-            }
-        } else {
-            from.paths.push(line)
-        }
-    }
-    from.paths = Array.from(new Set(from.paths))
+    from.selectDict.push(path)
 }
 
 async function GetFilepath() {
@@ -132,7 +125,7 @@ async function dirscan() {
 
 class Dirsearch {
     public async checkInput() {
-        if (from.input == "" || from.input.endsWith("txt")) {
+        if (from.input == "" || !from.input.endsWith("txt")) {
             ElMessage.warning('请输入URL或者文件路径')
             return false
         }
@@ -156,7 +149,6 @@ class Dirsearch {
                 from.paths = result;
             });
         }
-        global.temp.dirsearchPathConut = from.paths.length
         from.id = 0
         from.errorCounts = 0
         pagination.ctrl.initTable()
@@ -187,7 +179,7 @@ class Dirsearch {
 
 const control = ({
     format: function () {
-        return `${from.id}/${global.temp.dirsearchPathConut} (${from.currentRate}/s)`
+        return `${from.id}/${global.temp.dirsearchConut} (${from.currentRate}/s)`
     },
     // Processing status codes
     psc: function (): number[] {
@@ -384,7 +376,7 @@ const config = reactive({
                     <template #content>Redirect to {{ scope.row.Location }}</template>
                     <el-button link @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.Location != ''">
                         <template #icon>
-                            <img src="../../assets/icon/reduction.svg" style="width: 14px; height: 14px;">
+                            <img src="../../assets/icon/redirect.svg" style="width: 14px; height: 14px;">
                         </template>
                     </el-button>
                 </el-tooltip>

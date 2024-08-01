@@ -26,6 +26,7 @@ var webscan = reactive({
 var temp = reactive({
     urlFingerMap: [] as URLFingerMap[],
     dirsearchPathConut: 0,
+    dirsearchConut: 0,
     dirsearchStartTime: 0,
     thinkdict: [] as string[],
     localAddItem: false, 

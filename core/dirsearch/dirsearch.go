@@ -55,6 +55,7 @@ func NewScanner(ctx context.Context, o Options) {
 	} else {
 		urls = util.ReadLine(o.URL)
 	}
+	runtime.EventsEmit(ctx, "dirsearchCounts", len(urls)*len(o.Paths))
 	bodyLengthMap = make(map[string]int)
 	// 初始化请求信息
 	if o.Timeout == 0 {
@@ -97,6 +98,9 @@ func NewScanner(ctx context.Context, o Options) {
 	})
 	defer threadPool.Release()
 	for _, url := range urls {
+		if !strings.HasSuffix(url, "/") {
+			url = url + "/"
+		}
 		for _, path := range o.Paths {
 			if ExitFunc {
 				return
