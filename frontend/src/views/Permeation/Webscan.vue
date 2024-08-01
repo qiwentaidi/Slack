@@ -154,10 +154,10 @@ const form = reactive({
 
 function validateInput() {
     const ipPatterns = [
-        /^(\d{1,3}\.){3}\d{1,3}$/, // 192.168.1.1
-        /^(\d{1,3}\.){3}\d{1,3}:\d{1,5}$/, // 192.168.0.1:6379
-        /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/, // www.baidu.com
-        /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+:\d{1,5}$/, // www.baidu.com:8080
+        /^(http:\/\/|https:\/\/)?(\d{1,3}\.){3}\d{1,3}(?:.*)/, // 192.168.1.1
+        /^(http:\/\/|https:\/\/)?(\d{1,3}\.){3}\d{1,3}:\d{1,5}(?:.*)/, // 192.168.0.1:6379
+        /^(http:\/\/|https:\/\/)?[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})(?:.*)/, // www.baidu.com
+        /^(http:\/\/|https:\/\/)?[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,}):\d{1,5}(?:.*)/, // www.baidu.com:8080
     ];
     const lines = form.url.split('\n');
     return lines.every(line =>

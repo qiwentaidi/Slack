@@ -135,8 +135,6 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240628172913333](assets/image-20240628172913333.png)
 
-聚合搜索
-
 ## 小工具
 
 ### 加解密模块
