@@ -10,13 +10,11 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-
-  --el-button-hover-text-color: #dde4ee;
 }
 
 body {
   margin: 0;
-  align-items: start;
+  width: 100% !important;
 }
 
 html {

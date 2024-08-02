@@ -8,14 +8,7 @@ import global from '../../global';
 import { ReadLine } from '../../util';
 import { PortBrute, Callgologger } from '../../../wailsjs/go/main/App';
 import { EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
-
-interface BruteResult {
-    Host: string
-    Port: string
-    Protocol: string
-    Username: string
-    Password: string
-}
+import { BruteResult } from '../../interface';
 
 onMounted(() => {
     console.log(111)
@@ -55,18 +48,6 @@ const addTarget = () => {
     }
     config.target += config.defaultOption + "://" + config.input
 }
-
-const placeholder = `
-1、使用内置字典时，账号密码输入框无效，要使用自己的字典请取消勾选使用内置字典
-
-2、账号密码框处支持单字段比如admin和txt字典路径，可以拖拽读取文件路径
-
-3、联想模式意为根据关键字段如出生年月或公司名等固定规律组成字典，需要在联想
-生成器模块生成结果才可以使用
-
-4、支持协议名: ftp、ssh、telnet、smb、oracle、mssql、mysql、rdp、
-postgresql、vnc、redis、memcached、mongodb
-`
 
 const placeholder2 = `e.g
 redis://10.0.0.1:6379
@@ -172,7 +153,7 @@ async function NewScanner() {
             <el-button type="primary" link :icon="Link" style="margin-left: 10px;" v-if="config.association"
                 @click="$router.push('/Tools/Thinkdict')">跳转到联想字典生成器</el-button>
         </div>
-        <el-tooltip :content="placeholder" placement="bottom">
+        <el-tooltip placement="bottom">
             <template #content>
                 1、使用内置字典时，账号密码输入框无效，要使用自己的字典请取消勾选使用内置字典<br />
                 2、账号密码框处支持单字段比如admin和txt字典路径，可以拖拽读取文件路径<br />

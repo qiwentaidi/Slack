@@ -22,12 +22,6 @@ onMounted(() => {
                 break
             case 1:
                 break
-            case 999:
-                ElNotification.error({
-                    message: result.Message,
-                    position: 'bottom-right',
-                });
-                break
             default:
                 pagination.table.result.push({
                     Status: result.Status,
@@ -167,7 +161,6 @@ class Dirsearch {
             BodyExclude: config.exclude,
             BodyLengthExcludeTimes: config.times,
             StatusCodeExclude: statuscodeFilter,
-            FailedCounts: config.failedCounts,
             Redirect: config.redirectClient,
             Interval: config.interval,
             CustomHeader: config.headers,
@@ -219,7 +212,6 @@ const config = reactive({
     timeout: 8,
     times: 5,
     interval: 0,
-    failedCounts: 0,
     exclude: "",
     headers: "",
     customDict: "",
@@ -265,6 +257,51 @@ const config = reactive({
             </el-space>
         </el-form-item>
     </el-form>
+    <el-table :data="pagination.table.pageContent" border style="height: 75vh;">
+        <el-table-column type="index" label="#" width="60px" />
+        <el-table-column prop="Status" width="100px" label="状态码"
+            :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
+        <el-table-column prop="Length" width="100px" label="长度"
+            :sort-method="(a: any, b: any) => { return a.Length - b.Length }" sortable />
+        <el-table-column prop="URL" label="目录路径" :show-overflow-tooltip="true">
+            <template #default="scope">
+                <el-tooltip placement="top">
+                    <template #content>Redirect to {{ scope.row.Location }}</template>
+                    <el-button link @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.Location != ''">
+                        <template #icon>
+                            <img src="../../assets/icon/redirect.svg" style="width: 14px; height: 14px;">
+                        </template>
+                    </el-button>
+                </el-tooltip>
+                {{ scope.row.URL }}
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" width="180px" align="center">
+            <template #default="scope">
+                <el-button type="primary" link @click.prevent="Copy(scope.row.URL)">复制</el-button>
+                <el-divider direction="vertical" />
+                <el-button type="primary" link @click.prevent="BrowserOpenURL(scope.row.URL)">打开</el-button>
+                <el-divider direction="vertical" />
+                <el-button type="primary" link @click.prevent="GetResponse(scope.row.URL)">查看</el-button>
+            </template>
+        </el-table-column>
+        <template #empty>
+            <el-empty />
+        </template>
+    </el-table>
+    <div class="my-header" style="margin-top: 5px;">
+        <el-progress :text-inside="true" :stroke-width="20" :percentage="from.percentage" :format="control.format"
+            color="#5DC4F7" style="width: 40%;" />
+        <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
+            @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+            :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
+            :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+            :total="pagination.table.result.length">
+        </el-pagination>
+    </div>
+    <el-dialog v-model="from.respDialog" title="Response" width="800">
+        <pre class="pretty-response"><code>{{ from.content }}</code></pre>
+    </el-dialog>
     <el-drawer v-model="config.drawer" size="60%">
         <template #header>
             <h3>设置高级参数</h3>
@@ -283,25 +320,13 @@ const config = reactive({
                 <template #label>
                     <span>过滤长度次数:</span>
                     <el-tooltip placement="left">
-                        <template #content>响应长度显示超过n次时不再显示<br />值为0时不过滤数据</template>
+                        <template #content>响应长度显示超过n次时不再显示，值为0时不过滤数据</template>
                         <el-icon>
                             <QuestionFilled size="24" />
                         </el-icon>
                     </el-tooltip>
                 </template>
                 <el-input-number v-model="config.times" :min="1" :max="10000" />
-            </el-form-item>
-            <el-form-item>
-                <template #label>
-                    <span>失败阈值:</span>
-                    <el-tooltip placement="left">
-                        <template #content>当目标未响应次数超过失败阈值时，目录扫描任务自动停止<br />值为0时不限制次数</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-input-number v-model="config.failedCounts" :min="0" />
             </el-form-item>
             <el-form-item>
                 <template #label>
@@ -348,7 +373,7 @@ const config = reactive({
                         placeholder="不选择默认加载dicc字典" :max-collapse-tags="1">
                         <el-option v-for="item in from.dictList" :label="item" :value="item" />
                     </el-select>
-                    <el-button-group style="width: 165px;">
+                    <el-space :size="2">
                         <el-tooltip content="加载自定义字典">
                             <el-button text bg :icon="Document" @click="handleFileChange()" />
                         </el-tooltip>
@@ -358,55 +383,10 @@ const config = reactive({
                         <el-tooltip content="刷新字典列表">
                             <el-button text bg :icon="RefreshRight" @click="getDictList()" />
                         </el-tooltip>
-                    </el-button-group>
+                    </el-space>
                 </div>
-                <el-input v-model="config.customDict" type="textarea" rows="5"></el-input>
+                <el-input v-model="config.customDict" type="textarea" rows="8"></el-input>
             </el-form-item>
         </el-form>
     </el-drawer>
-    <el-table :data="pagination.table.pageContent" border style="height: 75vh;">
-        <el-table-column type="index" label="#" width="60px" />
-        <el-table-column prop="Status" width="100px" label="状态码"
-            :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
-        <el-table-column prop="Length" width="100px" label="长度"
-            :sort-method="(a: any, b: any) => { return a.Length - b.Length }" sortable />
-        <el-table-column prop="URL" label="目录路径" :show-overflow-tooltip="true">
-            <template #default="scope">
-                <el-tooltip placement="top">
-                    <template #content>Redirect to {{ scope.row.Location }}</template>
-                    <el-button link @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.Location != ''">
-                        <template #icon>
-                            <img src="../../assets/icon/redirect.svg" style="width: 14px; height: 14px;">
-                        </template>
-                    </el-button>
-                </el-tooltip>
-                {{ scope.row.URL }}
-            </template>
-        </el-table-column>
-        <el-table-column label="操作" width="180px" align="center">
-            <template #default="scope">
-                <el-button type="primary" link @click.prevent="Copy(scope.row.URL)">复制</el-button>
-                <el-divider direction="vertical" />
-                <el-button type="primary" link @click.prevent="BrowserOpenURL(scope.row.URL)">打开</el-button>
-                <el-divider direction="vertical" />
-                <el-button type="primary" link @click.prevent="GetResponse(scope.row.URL)">查看</el-button>
-            </template>
-        </el-table-column>
-        <template #empty>
-            <el-empty />
-        </template>
-    </el-table>
-    <div class="my-header" style="margin-top: 5px;">
-        <el-progress :text-inside="true" :stroke-width="20" :percentage="from.percentage" :format="control.format"
-            color="#5DC4F7" style="width: 40%;" />
-        <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
-            @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
-            :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
-            :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
-            :total="pagination.table.result.length">
-        </el-pagination>
-    </div>
-    <el-dialog v-model="from.respDialog" title="Response" width="800">
-        <pre class="pretty-response"><code>{{ from.content }}</code></pre>
-    </el-dialog>
 </template>

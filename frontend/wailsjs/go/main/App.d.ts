@@ -90,7 +90,7 @@ export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Pro
 
 export function PortParse(arg1:string):Promise<Array<number>>;
 
-export function QuakeSearch(arg1:Array<string>,arg2:string,arg3:number,arg4:number,arg5:boolean,arg6:boolean,arg7:boolean,arg8:boolean,arg9:string):Promise<space.QuakeResult>;
+export function QuakeSearch(arg1:Array<string>,arg2:string,arg3:number,arg4:number,arg5:boolean,arg6:boolean,arg7:boolean,arg8:boolean,arg9:string,arg10:string):Promise<space.QuakeResult>;
 
 export function QuakeTips(arg1:string):Promise<space.QuakeTipsResult>;
 

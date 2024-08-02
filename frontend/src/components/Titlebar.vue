@@ -156,7 +156,7 @@ function addGroup() {
                     </el-button>
                 </el-tooltip>
                 <el-tooltip content="应用启动器(本功能会在wails v3进行重做)">
-                    <el-button text class="custom-button" @click="localDrawer = true" v-if="!isMacOS">
+                    <el-button text class="custom-button" @click="localDrawer = true" v-show="!isMacOS">
                         <template #icon>
                             <el-icon size="16">
                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"

@@ -19,15 +19,16 @@ const (
 )
 
 type QuakeRequestOptions struct {
-	Query    string
-	IpList   []string // 判断 IpList 是否为空决定是否为批量查询
-	PageNum  int
-	PageSize int
-	Latest   bool
-	CDN      bool
-	Invalid  bool
-	Honeypot bool
-	Token    string
+	Query      string
+	IpList     []string // 判断 IpList 是否为空决定是否为批量查询
+	PageNum    int
+	PageSize   int
+	Latest     bool
+	CDN        bool
+	Invalid    bool
+	Honeypot   bool
+	Token      string
+	CertCommon string // 让其他排除筛选的功能可以正常使用
 }
 
 // 原始数据中有用的字段
@@ -154,6 +155,22 @@ type QuakeUserInfo struct {
 	} `json:"meta"`
 }
 
+type ShortcutsMeta struct {
+	Meta    interface{} `json:"meta"`
+	Code    float64     `json:"code"`
+	Message string      `json:"message"`
+	Data    []struct {
+		Published      bool    `json:"published"`
+		Order          float64 `json:"order"`
+		Is_new         bool    `json:"is_new"`
+		Put_more_tools bool    `json:"put_more_tools"`
+		Id             string  `json:"id"`
+		Name           string  `json:"name"`
+		Description    string  `json:"description"`
+		Index          string  `json:"index"`
+	} `json:"data"`
+}
+
 func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 	var startIndex int
 	if o.PageNum == 1 {
@@ -175,7 +192,7 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
 	header.Set("X-QuakeToken", o.Token)
-	_, body, err := clients.NewRequest("POST", quakeServerApi, header, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
+	_, body, err := clients.NewRequest("POST", quakeServerApi, header, bytes.NewReader(bytesData), 10, false, clients.DefaultClient())
 	if err != nil {
 		return &QuakeResult{}
 	}
@@ -276,19 +293,43 @@ func SearchQuakeTips(query string) *QuakeTipsResult {
 	return &qs
 }
 
-// cdn -> 635fcbaacc57190bd8826d0b
-// honeypot -> 635fcb52cc57190bd8826d09
-// invalid -> 63734bfa9c27d4249ca7261c
+// 首次请求不能是带Shortcuts，需要在请求一次quake之后，获取到正确的cert_common值
 func getShortcuts(o *QuakeRequestOptions) []string {
-	var shortcuts []string
+	if o.CertCommon == "" {
+		return []string{}
+	}
+	var (
+		shortcutsMeta         ShortcutsMeta
+		cdn, honepot, invalid string
+		shortcuts             []string
+	)
+	header := http.Header{}
+	header.Set("Cookie", "cert_common="+o.CertCommon)
+	_, body, err := clients.NewRequest("GET", "https://quake.360.net/api/search/shortcuts/quake_service_unique", header, nil, 10, true, clients.DefaultClient())
+	if err != nil {
+		return shortcuts
+	}
+	json.Unmarshal(body, &shortcutsMeta)
+	for _, v := range shortcutsMeta.Data {
+		if v.Name == "排除CDN" {
+			cdn = v.Id
+		}
+		if v.Name == "排除蜜罐" {
+			honepot = v.Id
+		}
+		if v.Name == "过滤无效请求" {
+			invalid = v.Id
+		}
+	}
+
 	if o.CDN {
-		shortcuts = append(shortcuts, "635fcbaacc57190bd8826d0b")
+		shortcuts = append(shortcuts, cdn)
 	}
 	if o.Honeypot {
-		shortcuts = append(shortcuts, "635fcb52cc57190bd8826d09")
+		shortcuts = append(shortcuts, honepot)
 	}
 	if o.Invalid {
-		shortcuts = append(shortcuts, "635fcb0acc57190bd8826d0c")
+		shortcuts = append(shortcuts, invalid)
 	}
 	return shortcuts
 }

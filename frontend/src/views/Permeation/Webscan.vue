@@ -345,7 +345,6 @@ const uncover = {
             BodyExclude: "",
             BodyLengthExcludeTimes: 5,
             StatusCodeExclude: [404],
-            FailedCounts: 0,
             Redirect: false,
             Interval: 0,
             CustomHeader: "",

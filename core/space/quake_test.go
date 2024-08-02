@@ -7,7 +7,7 @@ import (
 
 func TestQuake(t *testing.T) {
 	qk := QuakeApiSearch(&QuakeRequestOptions{
-		`body="JHSoft.Web.AddMenu"|| app="Jinher-OA"`, []string{}, 1, 1, true, false, false, false, "",
+		`body="JHSoft.Web.AddMenu"|| app="Jinher-OA"`, []string{}, 1, 1, true, false, false, false, "", "",
 	})
 	fmt.Printf("qk: %v\n", qk)
 	// qr := SearchQuakeTips("jeecg")

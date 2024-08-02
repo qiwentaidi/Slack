@@ -140,17 +140,32 @@
                     <span class="mr">过滤无效请求</span>
                 </el-tooltip>
                 <el-switch v-model="options.switch.invalid" @change="tableCtrl.handleOptionChange"
-                    style="--el-switch-on-color: #4CA87D;" />
+                    :disabled="quake.certcommon.length == 0" style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
             <div>
                 <span class="mr">排除蜜罐</span><el-switch v-model="options.switch.honeypot"
-                    @change="tableCtrl.handleOptionChange" style="--el-switch-on-color: #4CA87D;" />
+                    :disabled="quake.certcommon.length == 0" @change="tableCtrl.handleOptionChange"
+                    style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
             <div>
                 <span class="mr">排除CDN</span><el-switch v-model="options.switch.cdn"
-                    @change="tableCtrl.handleOptionChange" style="--el-switch-on-color: #4CA87D;" />
+                    :disabled="quake.certcommon.length == 0" @change="tableCtrl.handleOptionChange"
+                    style="--el-switch-on-color: #4CA87D;" />
+            </div>
+            <el-divider direction="vertical" />
+            <div>
+                <span class="mr">CertCommon</span>
+                <el-input v-model="quake.certcommon" size="small" style="width: 250px;">
+                    <template #prefix>
+                        <el-tooltip content="由于排除字段的值为按时间自动生成，请填写网页版登录后的Cookie中的cert_common字段，排除才可正常使用">
+                            <el-icon>
+                                <QuestionFilled />
+                            </el-icon>
+                        </el-tooltip>
+                    </template>
+                </el-input>
             </div>
             <div style="flex-grow: 1;"></div>
             <el-dropdown>
@@ -266,7 +281,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled } from '@element-plus/icons-vue';
+import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4 } from '../../util';
 import { ExportToXlsx } from '../../export';
@@ -456,6 +471,7 @@ const quake = reactive({
     batchIps: "",
     batchFile: "",
     syntaxData: [] as RuleForm[],
+    certcommon: "",
 })
 
 const table = reactive({
@@ -467,6 +483,10 @@ const table = reactive({
 
 const tableCtrl = ({
     addTab: async (query: string, isBatch: boolean) => {
+        if (query == "") {
+            ElMessage.warning("请输入查询语句")
+            return
+        }
         const newTabName = `${++table.tabIndex}`
         let ipList = [] as string[]
         if (isBatch) {
@@ -483,7 +503,7 @@ const tableCtrl = ({
             ipList: ipList,
         });
         table.loading = true
-        QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+        QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
             (result: QuakeResult) => {
                 if (result.Code != 0) {
                     quake.message = result.Message!
@@ -534,7 +554,7 @@ const tableCtrl = ({
         tab.pageSize = val
         tab.currentPage = 1
         table.loading = true
-        QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+        QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
             (result: QuakeResult) => {
                 if (result.Code != 0) {
                     quake.message = result.Message!
@@ -566,7 +586,7 @@ const tableCtrl = ({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        QuakeSearch(tab.ipList, tab.title, tab.currentPage, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+        QuakeSearch(tab.ipList, tab.title, tab.currentPage, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
             (result: QuakeResult) => {
                 if (result.Code != 0) {
                     quake.message = result.Message!
@@ -599,7 +619,7 @@ const tableCtrl = ({
         tab.pageSize = 10
         tab.currentPage = 1
         table.loading = true
-        QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey).then(
+        QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
             (result: QuakeResult) => {
                 if (result.Code != 0) {
                     quake.message = result.Message!
@@ -665,18 +685,23 @@ const tableCtrl = ({
 async function exportData() {
     if (table.editableTabs.length != 0) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        ElNotification.info({
-            title: "提示",
-            message: "正在进行全数据导出，API每页最大查询限度500，请稍后。",
-        });
+        if (tab.total > 500) {
+            ElNotification.info({
+                title: "提示",
+                message: "正在进行全数据导出，API每页最大查询限度500，请稍后。",
+            });
+        }
+        let ipList = [] as string[]
         let temp = [{}]
         temp.pop()
-        let ipList = await tableCtrl.getIpList()
+        if (tab.isBatch) {
+            ipList = await tableCtrl.getIpList()
+        }
         let index = 0
         for (const num of splitInt(tab.total, 500)) {
             index += 1
             ElMessage("正在导出第" + index.toString() + "页");
-            let result: QuakeResult = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey)
+            let result: QuakeResult = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
             if (result.Code != 0) {
                 quake.message = result.Message!
                 table.loading = false

@@ -152,8 +152,8 @@ async function NewScanner() {
             })
             return
         }
-    // const ps = new Scanner()
-    // await ps.PortScanner()
+    const ps = new Scanner()
+    await ps.PortScanner()
 }
 
 class Scanner {

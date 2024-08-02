@@ -76,7 +76,6 @@ export interface DirScanOptions {
     BodyExclude: string;
     BodyLengthExcludeTimes: number;
     StatusCodeExclude: number[];
-    FailedCounts: number;
     Redirect: boolean;
     Interval: number;
     CustomHeader: string;
@@ -217,4 +216,12 @@ interface UncoverData {
 export interface LogInfo {
     Level: string
     Msg: string
+}
+
+export interface BruteResult {
+    Host: string
+    Port: string
+    Protocol: string
+    Username: string
+    Password: string
 }

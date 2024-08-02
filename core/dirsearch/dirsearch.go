@@ -3,7 +3,6 @@ package dirsearch
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"net/http"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
@@ -19,7 +18,6 @@ import (
 
 var (
 	ExitFunc      = false
-	errorCount    int32
 	bodyLengthMap map[string]int
 	mutex         = sync.Mutex{}
 )
@@ -126,12 +124,6 @@ func Scan(ctx context.Context, url string, header http.Header, o Options, client
 	resp, body, err := clients.NewRequest(o.Method, url, header, nil, o.Timeout, true, client)
 	if err != nil {
 		gologger.IntervalError(ctx, err)
-		atomic.AddInt32(&errorCount, 1)
-		if o.FailedCounts != 0 && errorCount >= o.FailedCounts {
-			result.Status = 999
-			result.Message = fmt.Sprintf("失败次数超过%d次，扫描任务已停止", o.FailedCounts)
-			return result
-		}
 		return result
 	}
 	if o.BodyExclude != "" && bytes.Contains(body, []byte(o.BodyExclude)) {
