@@ -115,17 +115,23 @@ async function dirscan() {
 
 class Dirsearch {
     public async checkInput() {
-        if (!from.input || !from.input.endsWith("txt")) {
+        if (!from.input) {
             ElMessage.warning('请输入URL或者文件路径')
             return false
         }
-        // 检查时否为文件
+
+        try {
+            new URL(from.input);
+            return true;
+        } catch (e) {
+
+        }
+
         let stat = await CheckFileStat(from.input)
         if (!stat) {
             ElMessage.warning('输入的文件路径不存在')
-            return
         }
-        return true
+        return stat
     }
     public async init() {
         config.runningStatus = true
@@ -139,6 +145,7 @@ class Dirsearch {
                 from.paths = result;
             });
         }
+        global.temp.dirsearchPathConut = from.paths.length
         from.id = 0
         from.errorCounts = 0
         pagination.ctrl.initTable()
