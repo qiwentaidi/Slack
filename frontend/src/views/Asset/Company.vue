@@ -25,20 +25,12 @@ let pc = usePagination(from.companyData, 20) // paginationCompany
 let pw = usePagination(from.wehcatData, 20) // paginationWehcat
 
 function Collect() {
-    if (from.company === "") {
-        ElMessage({
-            showClose: true,
-            message: '查询目标不能为空',
-            type: 'warning',
-        })
+    if (!from.company) {
+        ElMessage.warning('查询目标不能为空')
         return
     }
-    if (from.token == "") {
-        ElMessage({
-            showClose: true,
-            message: '天眼查Token为空，大概率会影响爬取结果，请先填写Token信息',
-            type: 'error',
-        })
+    if (!from.token) {
+        ElMessage.warning('天眼查Token为空，大概率会影响爬取结果，请先填写Token信息')
         return
     } else {
         from.token = from.token.replace(/[\r\n\s]/g, '')

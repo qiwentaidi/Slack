@@ -586,9 +586,6 @@ func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
 func (a *App) FaviconMd5(target string) string {
 	hasher := md5.New()
 	if _, err := os.Stat(target); err != nil {
-		if _, err := url.Parse(target); err != nil {
-			return ""
-		}
 		_, body, err := clients.NewSimpleGetRequest(target, clients.DefaultClient())
 		if err != nil {
 			return ""

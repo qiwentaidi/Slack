@@ -67,7 +67,7 @@ export async function ExportFile(
   content: string
 ) {
   const path = await SaveFile(filename);
-  if (path == "") {
+  if (!path) {
     return;
   }
   const result = await WriteFile(filetype, path, content);

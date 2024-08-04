@@ -68,7 +68,7 @@ async function useVulnerability() {
     } else {
         form.service += "download"
     }
-    if (form.selectVulnerability == 3 && form.service == "") {
+    if (form.selectVulnerability == 3 && !form.service) {
         ElMessage.warning("请输入服务端地址!")
         return   
     }

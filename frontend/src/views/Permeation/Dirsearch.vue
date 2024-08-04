@@ -86,17 +86,13 @@ function getDictList() {
 
 async function handleFileChange() {
     let path = await FileDialog("*.txt")
-    if (path == "") {
-        return
-    }
+    if (!path) return
     from.selectDict.push(path)
 }
 
 async function GetFilepath() {
     let path = await FileDialog("*.txt")
-    if (path == "") {
-        return
-    }
+    if (!path) return
     from.input = path
 }
 async function dirscan() {
@@ -119,7 +115,7 @@ async function dirscan() {
 
 class Dirsearch {
     public async checkInput() {
-        if (from.input == "" || !from.input.endsWith("txt")) {
+        if (!from.input || !from.input.endsWith("txt")) {
             ElMessage.warning('请输入URL或者文件路径')
             return false
         }
@@ -177,7 +173,7 @@ const control = ({
     // Processing status codes
     psc: function (): number[] {
         let temp: number[] = []
-        if (from.statusFilter !== "") {
+        if (from.statusFilter) {
             for (const block of from.statusFilter.split(",")) {
                 if (block.indexOf("-") !== -1) {
                     let c = block.split("-")

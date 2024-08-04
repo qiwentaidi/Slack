@@ -35,8 +35,7 @@ export async function InitConfigFile(timeout: number) {
   } else {
       let result:File = await ReadFile(homepath + global.PATH.LocalPocVersionFile)
       global.UPDATE.LocalPocVersion = result.Content!
-    if (global.UPDATE.LocalPocVersion == "" || compareVersion(global.UPDATE.LocalPocVersion, "0.0.4") != 1) {
-      loading.setText("检测到旧版本配置文件，正在移除...");
+    if (!global.UPDATE.LocalPocVersion || compareVersion(global.UPDATE.LocalPocVersion, "0.0.4") != 1) {
       await RemoveOldConfig();
       loading.setText("正在下载新配置文件...");
       let result = await InitConfig();

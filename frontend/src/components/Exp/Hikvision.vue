@@ -111,7 +111,7 @@ async function useVulnerability(mode: number) {
 
 async function uploadFile() {
     let path = await FileDialog("*.txt")
-    if (path == "") {
+    if (!path) {
         return
     }
     let file: File = await ReadFile(path)

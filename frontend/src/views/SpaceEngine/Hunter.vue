@@ -3,7 +3,7 @@ import { ExportToXlsx } from '../../export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
 import { Search, ChatLineSquare, ChromeFilled, CopyDocument, Grid, PictureRounded, Operation, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
-import { ApiSyntaxCheck, splitInt, Copy } from '../../util'
+import { splitInt, Copy } from '../../util'
 import { TableTabs, HunterEntryTips, RuleForm } from "../../interface"
 import global from "../../global"
 import {
@@ -146,7 +146,7 @@ const form = reactive({
 
 const entry = ({
     querySearchAsync: async (queryString: string, cb: Function) => {
-        if (queryString.includes("=") || queryString == "") {
+        if (queryString.includes("=") || !queryString) {
             cb([]);
             return
         }
@@ -171,7 +171,7 @@ const entry = ({
         form.query = `app.name="${item.value}"`
     },
     rowClick: function (row: any, column: any, event: Event) {
-        if (form.query == "") {
+        if (!form.query) {
             form.query = row.syntax
             return
         }
@@ -188,7 +188,10 @@ const table = reactive({
 
 const tableCtrl = ({
     addTab: (query: string) => {
-        if (!ApiSyntaxCheck(global.space.hunterkey)) return
+        if (!global.space.hunterkey) {
+            ElNotification.warning("请在设置处填写Hunter Key")
+            return
+        }
         const newTabName = `${++table.tabIndex}`
         table.editableTabs.push({
             title: query,
@@ -355,7 +358,7 @@ const tableCtrl = ({
         })
             .then(async ({ value }) => {
                 let hash = await FaviconMd5(value.trim())
-                if (hash == "") {
+                if (!hash) {
                     ElNotification.warning("目标不可达或者URL格式错误");
                     return
                 }

@@ -3,6 +3,7 @@ import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 // 在vite中使用 import.meta.glob 动态导入指定目录下的所有vue文件
 let modules = import.meta.glob(["../views/**/*.vue"]);
 
+// const directImportRouter = ["/Permeation/Crack", "/Permeation/Webscan", "/Permeation/Dirsearch"]
 const generateRoutes = () => {
   const routes: Array<RouteRecordRaw> = [];
   for (const path in modules) {
@@ -30,5 +31,21 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: routes,
 });
+
+// router.afterEach((to) => {
+//   if (to.path === "/") {
+//     console.log("Preloading components...");
+//     preloadComponents();
+//   }
+// });
+
+// const preloadComponents = async () => {
+//   for (const path in modules) {
+//     const routePath = path.replace('../views', '').replace('.vue', '');
+//     if (directImportRouter.includes(routePath)) {
+//       await modules[path](); // 预加载组件
+//     }
+//   }
+// };
 
 export default router;

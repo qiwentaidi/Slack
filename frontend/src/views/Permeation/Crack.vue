@@ -42,7 +42,7 @@ const config = reactive({
 })
 
 const addTarget = () => {
-    if (config.input == "") {
+    if (!config.input) {
         ElMessage.warning("请输入目标")
         return
     }

@@ -50,7 +50,7 @@ onMounted(() => {
 const update = ({
     poc: async function () {
         let err = await UpdatePocFile()
-        if (err == "") {
+        if (!err) {
             ElNotification.success("POC update success!");
         } else {
             ElNotification.error("POC update failed! " + err);

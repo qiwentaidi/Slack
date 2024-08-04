@@ -13,7 +13,7 @@ const form = reactive({
 })
 
 function FscanExtract() {
-    if (form.input !== "") {
+    if (form.input) {
         Fscan2Txt(form.input).then(
             result => {
                 form.result = result
@@ -24,7 +24,7 @@ function FscanExtract() {
 
 async function uploadFile() {
     let filepath = await FileDialog("*.txt")
-    if (filepath == "") {
+    if (!filepath) {
         return
     }
     let file: File = await ReadFile(filepath)

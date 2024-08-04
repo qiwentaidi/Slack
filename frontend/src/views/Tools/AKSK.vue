@@ -121,7 +121,7 @@ const wechatOption = ({
     result.value = jsonResult;
   },
   doRequest: async function (method: string, url: string) {
-    if (wechat.accessToken == "") {
+    if (!wechat.accessToken) {
       ElMessage.warning(warning);
       return;
     }
@@ -171,7 +171,7 @@ const dingdingOption = ({
     }
   },
   doRequest: async function (method: string, url: string, parameter: string) {
-    if (dingding.accessToken == "") {
+    if (!dingding.accessToken) {
       ElMessage.warning(warning);
       return;
     }

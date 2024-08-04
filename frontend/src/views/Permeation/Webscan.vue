@@ -18,7 +18,7 @@ import {
 } from '../../../wailsjs/go/main/App'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
-import { formatURL, ApiSyntaxCheck, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transformArrayFields } from '../../util'
+import { formatURL, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transformArrayFields } from '../../util'
 import { ExportWebScanToXlsx } from '../../export'
 import global from "../../global"
 import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
@@ -304,7 +304,8 @@ const uncover = {
         })
     },
     hunter: function () {
-        if (!ApiSyntaxCheck(global.space.hunterkey)) {
+        if (!global.space.hunterkey) {
+            ElNotification.warning("请在设置处填写Hunter Key")
             return
         }
         form.hunterDialog = false

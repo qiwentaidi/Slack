@@ -55,7 +55,7 @@ export function Copy(content: string) {
 }
 
 function isEmpty(obj: string) {
-  if (obj == "") {
+  if (!obj) {
     ElNotification.warning({
       message: "Copy data can't be empty",
       position: "bottom-right",
@@ -88,6 +88,10 @@ export function validateDomain(domain: string): boolean {
 }
 
 export function validateURL(url: string): boolean {
+  if (!url) {
+    ElMessage.warning("URL不能为空");
+    return false;
+  }
   try {
     new URL(url);
     return true;
@@ -146,15 +150,6 @@ export function compareVersion(version1: string, version2: string) {
   }
 
   return 0;
-}
-
-// hunter
-export function ApiSyntaxCheck(key: string) {
-  if (key == "") {
-    ElNotification.warning("请在设置处填写Hunter Key");
-    return false;
-  }
-  return true;
 }
 
 export async function ReadLine(filepath: string) {

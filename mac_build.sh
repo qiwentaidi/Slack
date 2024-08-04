@@ -1,0 +1,4 @@
+wails build -clean -platform=darwin/amd64
+create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-size 100  --icon "Slack.app" 200 190 --app-drop-link 600 185 --hide-extension "Slack.app" --volicon build/bin/Slack.app/Contents/Resources/iconfile.icns  "Slack-macos-amd64.dmg" build/bin/Slack.app
+wails build -clean -platform=darwin/arm64
+create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-size 100  --icon "Slack.app" 200 190 --app-drop-link 600 185 --hide-extension "Slack.app" --volicon build/bin/Slack.app/Contents/Resources/iconfile.icns  "Slack-macos-arm64.dmg" build/bin/Slack.app

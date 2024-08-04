@@ -149,7 +149,7 @@ function deleteRow(index: number) {
 }
 
 function onAddItem() {
-    if (reverse.name == "") {
+    if (!reverse.name) {
         ElMessage({
             showClose: true,
             message: "标题名称不能为空！",

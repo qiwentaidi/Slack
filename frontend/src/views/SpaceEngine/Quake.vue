@@ -283,7 +283,7 @@
 <script lang="ts" setup>
 import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
-import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4 } from '../../util';
+import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, validateURL } from '../../util';
 import { ExportToXlsx } from '../../export';
 import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData, RuleForm } from '../../interface';
 import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
@@ -381,7 +381,7 @@ const ruleFormRef = ref<FormInstance>()
 
 const syntax = ({
     querySearchAsync: (queryString: string, cb: Function) => {
-        if (queryString.includes(":") || queryString == "") {
+        if (queryString.includes(":") || !queryString) {
             cb(quake.tips)
             return
         }
@@ -407,7 +407,7 @@ const syntax = ({
         quake.query = `app:"${item.Product_name}"`
     },
     rowClick: function (row: any, column: any, event: Event) {
-        if (quake.query == "") {
+        if (!quake.query) {
             quake.query = row.key
             return
         }
@@ -483,7 +483,7 @@ const table = reactive({
 
 const tableCtrl = ({
     addTab: async (query: string, isBatch: boolean) => {
-        if (query == "") {
+        if (!query) {
             ElMessage.warning("请输入查询语句")
             return
         }
@@ -648,21 +648,18 @@ const tableCtrl = ({
         )
     },
     searchFavicon: function () {
-        let t = ""
-        if (quake.iconFile != "" && quake.iconURL != "") {
-            t = quake.batchFile
-        } else if (quake.iconFile != "") {
-            t = quake.batchFile
-        } else if (quake.iconURL != "") {
-            t = quake.iconURL
-        } else {
-            ElMessage.warning("请输入URL或者上传图标")
-            return
-        }
-        FaviconMd5(t).then((result: string) => {
-            tableCtrl.addTab(`favicon:` + result, false)
-        })
-    },
+    if (!quake.iconURL && !quake.iconFile) {
+        ElMessage.warning("请输入URL或者上传图标");
+        return;
+    }
+    let target = quake.iconFile || validateURL(quake.iconURL) ? quake.iconURL : quake.batchFile
+    if (!target) {
+        return;
+    }
+    FaviconMd5(target).then((result: string) => {
+        tableCtrl.addTab(`favicon:${result}`, false);
+    });
+},
     // type 0 choose txt , type 1 choose img
     handleFileupload: async function (type: number) {
         if (type == 0) {

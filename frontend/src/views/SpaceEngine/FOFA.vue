@@ -131,7 +131,7 @@ const syntax = ({
         }
     ],
     rowClick: function (row: any, column: any, event: Event) {
-        if (form.query == "") {
+        if (!form.query) {
             form.query = row.key
             return
         }
@@ -190,7 +190,7 @@ const syntax = ({
 
 const entry = ({
     querySearchAsync: async (queryString: string, cb: any) => {
-        if (queryString.includes("=") || queryString == "") {
+        if (queryString.includes("=") || !queryString) {
             cb([]);
             return
         }
@@ -213,13 +213,6 @@ const entry = ({
     },
     handleSelect: (item: Record<string, any>) => {
         form.query = `app="${item.value}"`
-    },
-    rowClick: function (row: any, column: any, event: Event) {
-        if (form.query == "") {
-            form.query = row.syntax
-            return
-        }
-        form.query += " && " + row.syntax
     },
 })
 
@@ -318,12 +311,8 @@ function IconHashSearch() {
     })
         .then(async ({ value }) => {
             let hash = await IconHash(value.trim())
-            if (hash == "") {
-                ElMessage({
-                    showClose: true,
-                    message: "目标错误或不可达",
-                    type: "warning",
-                });
+            if (!hash) {
+                ElMessage("目标错误或不可达");
                 return
             }
             tableCtrl.addTab(`icon_hash="${hash}"`)
@@ -441,12 +430,7 @@ async function CopyDeduplicationURL() {
 }
 
 function formatProduct(raw: string): string[] {
-    let result = [] as string[]
-    if (raw == "") {
-        return result
-    }
-    result = raw.split(",")
-    return result
+    return !raw ? [] : raw.split(",")
 }
 </script>
 
@@ -531,7 +515,7 @@ function formatProduct(raw: string): string[] {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="form.syntaxData" @row-click="entry.rowClick" class="hunter-keyword-search">
+                            <el-table :data="form.syntaxData" @row-click="syntax.rowClick" class="hunter-keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100">
