@@ -43,10 +43,10 @@
 
 <script lang="ts" setup>
 import { reactive } from 'vue'
-import { ThinkDict } from '../../../wailsjs/go/main/App'
+import { ThinkDict } from 'wailsjs/go/main/App'
 import { onMounted } from 'vue';
-import { Copy } from '../../util';
-import global from '../../global';
+import { Copy } from '@/util';
+import global from '@/global';
 
 onMounted(() => {
     dict.easyContent = dict.easyList.join("\n")

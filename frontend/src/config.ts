@@ -1,10 +1,10 @@
-import { CheckFileStat, InitConfig, UserHomeDir, ReadFile, RemoveOldConfig, SaveDataToFile, ReadLocalStore } from '../wailsjs/go/main/File';
+import { CheckFileStat, InitConfig, UserHomeDir, ReadFile, RemoveOldConfig, SaveDataToFile, ReadLocalStore } from 'wailsjs/go/main/File';
 import { ElLoading, ElNotification } from 'element-plus';
 import global from "./global";
 import { compareVersion, sleep } from './util';
 import router from "./router";
 import { File } from "./interface";
-import { CreateTable } from '../wailsjs/go/main/Database';
+import { CreateTable } from 'wailsjs/go/main/Database';
 
 function catchError(result: boolean, loading: any) {
   if (result) {

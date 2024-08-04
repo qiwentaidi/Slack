@@ -106,12 +106,12 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { Search, Management, ChromeFilled, Grid } from '@element-plus/icons-vue';
-import { Uncover } from '../../interface';
-import { UncoverSearch } from '../../../wailsjs/go/main/App';
-import global from '../../global';
-import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
-import { CsegmentIpv4 } from '../../util';
-import { ExportToXlsx } from '../../export';
+import { Uncover } from '@/interface';
+import { UncoverSearch } from 'wailsjs/go/main/App';
+import global from '@/global';
+import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
+import { CsegmentIpv4 } from '@/util';
+import { ExportToXlsx } from '@/export';
 
 const group = ["IP", "域名", "标题", "Body", "备案名称", "备案号"]
 

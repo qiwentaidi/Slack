@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, CopyDocument, Grid, Operation, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
-import { SplitTextArea, validateIP, validateDomain, splitInt, Copy } from '../../util'
-import { FofaResult, DefaultKeyValue, RuleForm, TableTabs } from "../../interface"
-import { ExportToXlsx } from '../../export'
-import { FofaTips, FofaSearch, IconHash } from '../../../wailsjs/go/main/App'
-import { BrowserOpenURL } from '../../../wailsjs/runtime'
+import { SplitTextArea, validateIP, validateDomain, splitInt, Copy } from '@/util'
+import { FofaResult, DefaultKeyValue, RuleForm, TableTabs } from "@/interface"
+import { ExportToXlsx } from '@/export'
+import { FofaTips, FofaSearch, IconHash } from 'wailsjs/go/main/App'
+import { BrowserOpenURL } from 'wailsjs/runtime'
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus';
-import global from "../../global"
-import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from '../../../wailsjs/go/main/Database';
+import global from "@/global"
+import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
 const form = reactive({
     query: '',
     fraud: false,

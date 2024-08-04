@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ElMessage, ElNotification } from 'element-plus';
-import { CheckFileStat, UserHomeDir } from '../../../../wailsjs/go/main/File';
-import { DownloadCyberChef, CyberChefLocalServer } from '../../../../wailsjs/go/main/App';
+import { CheckFileStat, UserHomeDir } from 'wailsjs/go/main/File';
+import { DownloadCyberChef, CyberChefLocalServer } from 'wailsjs/go/main/App';
 import { onMounted, ref, reactive } from 'vue';
-import { EventsOn, EventsOff } from '../../../../wailsjs/runtime/runtime';
+import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 const showIframe = ref(false);
 const isRemote = ref(false);
 const progress = ref(0);

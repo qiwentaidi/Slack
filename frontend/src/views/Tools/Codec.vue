@@ -2,7 +2,7 @@
 import Timestamp from './transcode/Timestamp.vue';
 import OA from './transcode/OA.vue';
 import Transcode from './transcode/Transcode.vue';
-import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
+import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 const cmd5 = "https://www.cmd5.com"
 </script>
 

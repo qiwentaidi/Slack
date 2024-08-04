@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { BrowserOpenURL } from "../../wailsjs/runtime/runtime";
-import global from "../global"
+import { BrowserOpenURL } from "wailsjs/runtime/runtime";
+import global from "@/global"
 const wikiAddress = "https://github.com/qiwentaidi/Slack/wiki/%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97"
 const projectAddress = "https://github.com/qiwentaidi/Slack/"
 const issueAddress = "https://github.com/qiwentaidi/Slack/issues/new"

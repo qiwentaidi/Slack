@@ -283,15 +283,15 @@
 <script lang="ts" setup>
 import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
-import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, validateURL } from '../../util';
-import { ExportToXlsx } from '../../export';
-import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData, RuleForm } from '../../interface';
-import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
-import { FaviconMd5, QuakeSearch, QuakeTips } from '../../../wailsjs/go/main/App';
-import global from '../../global';
+import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, validateURL } from '@/util';
+import { ExportToXlsx } from '@/export';
+import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData, RuleForm } from '@/interface';
+import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
+import { FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/main/App';
+import global from '@/global';
 import { ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus';
-import { FileDialog } from '../../../wailsjs/go/main/File';
-import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from '../../../wailsjs/go/main/Database';
+import { FileDialog } from 'wailsjs/go/main/File';
+import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
 
 const options = ({
     keywordActive: "基本信息",

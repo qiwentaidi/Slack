@@ -1,5 +1,5 @@
 import { reactive, ref } from 'vue'
-import { URLFingerMap } from '../interface'
+import { URLFingerMap } from '@/interface'
 
 var space = reactive({
     fofaapi: 'https://fofa.info/',

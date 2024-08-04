@@ -1,18 +1,14 @@
 <script setup lang="ts">
-import { ExportToXlsx } from '../../export'
+import { ExportToXlsx } from '@/export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
 import { Search, ChatLineSquare, ChromeFilled, CopyDocument, Grid, PictureRounded, Operation, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
-import { splitInt, Copy } from '../../util'
-import { TableTabs, HunterEntryTips, RuleForm } from "../../interface"
-import global from "../../global"
-import {
-    FaviconMd5,
-    HunterSearch,
-    HunterTips,
-} from '../../../wailsjs/go/main/App'
-import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from '../../../wailsjs/go/main/Database'
-import { BrowserOpenURL } from '../../../wailsjs/runtime'
+import { splitInt, Copy } from '@/util'
+import { TableTabs, HunterEntryTips, RuleForm } from "@/interface"
+import global from "@/global"
+import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/main/App'
+import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/main/Database'
+import { BrowserOpenURL } from 'wailsjs/runtime'
 
 const options = ({
     Server: [

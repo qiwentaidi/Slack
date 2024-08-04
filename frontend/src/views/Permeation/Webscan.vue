@@ -15,16 +15,16 @@ import {
     Callgologger,
     LoadDirsearchDict,
     DirScan
-} from '../../../wailsjs/go/main/App'
+} from 'wailsjs/go/main/App'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
-import { formatURL, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transformArrayFields } from '../../util'
-import { ExportWebScanToXlsx } from '../../export'
-import global from "../../global"
-import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
-import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions, FofaResult } from '../../interface';
-import { UserHomeDir } from '../../../wailsjs/go/main/File';
-import usePagination from '../../usePagination';
+import { formatURL, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transformArrayFields } from '@/util'
+import { ExportWebScanToXlsx } from '@/export'
+import global from "@/global"
+import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
+import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions, FofaResult } from '@/interface';
+import { UserHomeDir } from 'wailsjs/go/main/File';
+import usePagination from '@/usePagination';
 // 初始化时调用
 onMounted(() => {
     InitRule().then(err => {

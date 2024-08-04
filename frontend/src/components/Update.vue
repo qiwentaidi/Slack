@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Download } from "@element-plus/icons-vue";
-import global from "../global"
-import { UpdatePocFile, DownloadLastestClient, Restart } from "../../wailsjs/go/main/File";
+import global from "@/global"
+import { UpdatePocFile, DownloadLastestClient, Restart } from "wailsjs/go/main/File";
 import { ElMessageBox, ElNotification } from "element-plus";
 import { onMounted, ref } from "vue";
-import { EventsOn, EventsOff } from "../../wailsjs/runtime/runtime";
-
+import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
 
 onMounted(() => {
     // 监听下载进度事件

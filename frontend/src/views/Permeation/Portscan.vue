@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, computed } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
-import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '../../util'
-import { ExportToXlsx } from '../../export'
+import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '@/util'
+import { ExportToXlsx } from '@/export'
 import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Grid, Search, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
-import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from '../../../wailsjs/go/main/App'
-import { ReadFile, FileDialog } from '../../../wailsjs/go/main/File'
-import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
-import global from '../../global'
+import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from 'wailsjs/go/main/App'
+import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
+import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
+import global from '@/global'
 import async from 'async';
-import { URLFingerMap, PortScanData, File } from '../../interface';
-import usePagination from '../../usePagination';
+import { URLFingerMap, PortScanData, File } from '@/interface';
+import usePagination from '@/usePagination';
 
 // syn 扫描模式
 onMounted(() => {

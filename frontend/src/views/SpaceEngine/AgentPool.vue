@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import async from 'async';
 import { Search, Filter, QuestionFilled } from '@element-plus/icons-vue';
-import { splitInt } from '../../util'
-import { ExportTXT } from '../../export'
+import { splitInt } from '@/util'
+import { ExportTXT } from '@/export'
 import { reactive, onMounted } from 'vue';
-import { Sock5Connect, FofaSearch } from '../../../wailsjs/go/main/App'
-import global from "../../global"
-import { Check, InsertAgentPool, SearchAgentPool, DeleteAgentPoolField, DeleteAllField } from '../../../wailsjs/go/main/Database';
+import { Sock5Connect, FofaSearch } from 'wailsjs/go/main/App'
+import global from "@/global"
+import { Check, InsertAgentPool, SearchAgentPool, DeleteAgentPoolField, DeleteAllField } from 'wailsjs/go/main/Database';
 import { ElMessage } from 'element-plus';
-import { FofaResult } from '../../interface';
+import { FofaResult } from '@/interface';
 
 onMounted(async () => {
     let stat = await Check()

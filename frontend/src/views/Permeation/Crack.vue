@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue';
 import { InfoFilled, Search, Document, Link } from '@element-plus/icons-vue';
-import { FileDialog, CheckFileStat, UserHomeDir } from '../../../wailsjs/go/main/File';
+import { FileDialog, CheckFileStat, UserHomeDir } from 'wailsjs/go/main/File';
 import { ElMessage } from 'element-plus';
 import async from 'async';
-import global from '../../global';
-import { ReadLine } from '../../util';
-import { PortBrute, Callgologger } from '../../../wailsjs/go/main/App';
-import { EventsOn, EventsOff } from '../../../wailsjs/runtime/runtime';
-import { BruteResult } from '../../interface';
+import global from '@/global';
+import { ReadLine } from '@/util';
+import { PortBrute, Callgologger } from 'wailsjs/go/main/App';
+import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
+import { BruteResult } from '@/interface';
 
 onMounted(() => {
     console.log(111)

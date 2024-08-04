@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MenuList from "../router/menu";
+import MenuList from "@/router/menu";
 
 </script>
 

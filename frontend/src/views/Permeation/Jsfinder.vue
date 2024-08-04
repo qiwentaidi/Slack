@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { Copy, CopyALL, formatURL } from '../../util';
-import { JSFind } from '../../../wailsjs/go/main/App';
+import { Copy, CopyALL, formatURL } from '@/util';
+import { JSFind } from 'wailsjs/go/main/App';
 import { QuestionFilled, Search, CopyDocument, Link } from '@element-plus/icons-vue';
 import async from 'async';
-import global from "../../global";
+import global from "@/global";
 import { ElNotification, ElMessage } from 'element-plus';
-import { BrowserOpenURL } from '../../../wailsjs/runtime/runtime';
+import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 const config = reactive({
   urls: "",
   loading: false,

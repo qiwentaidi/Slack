@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
-import { ExtractIP, Fscan2Txt } from '../../../wailsjs/go/main/App'
-import { ReadFile, FileDialog } from '../../../wailsjs/go/main/File'
+import { ExtractIP, Fscan2Txt } from 'wailsjs/go/main/App'
+import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
 import { Search } from '@element-plus/icons-vue';
 import { ElMessage, ElNotification } from 'element-plus';
-import { File } from '../../interface';
+import { File } from '@/interface';
 
 const form = reactive({
     result: '',
@@ -89,21 +89,18 @@ function getURLs(): string[] {
     return urls ? urls : [];
 }
 
+const menus = [
+    {
+        label: "上传文件",
+        click: uploadFile,
+    }
+]
 </script>
 
 
 <template>
     <div class="head">
-        <ContextMenu>
-            <template #menu>
-                <div class="nav-item" @click="uploadFile">
-                    <img src="../../assets/icon/upload.svg" style="margin-left: 10px;">
-                    <span class="nav-text">上传文件</span>
-                </div>
-            </template>
-            <el-input v-model="form.input" resize='none' type="textarea" placeholder='粘贴文件内容或者右键上传'
-                style="height: 100%;" />
-        </ContextMenu>
+        <el-input v-model="form.input" resize='none' type="textarea" placeholder='粘贴文件内容或者右键上传' v-menus:right="menus" />
         <el-space direction="vertical" style="margin-left: 5px; width: 25%; align-items:start;">
             <el-button @click="FscanExtract" style="width: 300px;" type="primary">
                 <template #icon>

@@ -113,13 +113,13 @@
 </template>
 
 <script lang="ts" setup>
-import global from "../global"
+import global from "@/global"
 import { ElMessage, ElNotification } from 'element-plus';
-import { TestProxy, TestNuclei } from "../util";
+import { TestProxy, TestNuclei } from "@/util";
 import { Edit, Sunny, Moon } from '@element-plus/icons-vue';
 import { reactive } from "vue";
-import { ReadFile, SaveDataToFile, UserHomeDir, WriteFile } from "../../wailsjs/go/main/File";
-import { File } from '../interface';
+import { ReadFile, SaveDataToFile, UserHomeDir, WriteFile } from "wailsjs/go/main/File";
+import { File } from '@/interface';
 import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
 

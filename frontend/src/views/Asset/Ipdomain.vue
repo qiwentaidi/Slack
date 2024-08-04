@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
-import { ICPInfo, CheckCdn, Ip138IpHistory, Ip138Subdomain } from '../../../wailsjs/go/main/App'
+import { ICPInfo, CheckCdn, Ip138IpHistory, Ip138Subdomain } from 'wailsjs/go/main/App'
 import { Document, UploadFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
-import { SplitTextArea } from '../../util';
+import { SplitTextArea } from '@/util';
 import async from 'async'
 
 const domain = reactive({

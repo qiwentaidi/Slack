@@ -3,12 +3,12 @@ import { onMounted, computed } from "vue";
 import global from "./global";
 import Sidebar from "./components/Sidebar.vue";
 import Titlebar from "./components/Titlebar.vue";
-import { EventsOn } from "../wailsjs/runtime/runtime";
+import { EventsOn } from "wailsjs/runtime/runtime";
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
 import { LogInfo } from "./interface";
 import { useDark } from '@vueuse/core'
-import { NetworkCardInfo } from "../wailsjs/go/main/File";
+import { NetworkCardInfo } from "wailsjs/go/main/File";
 import { InitConfigFile } from "./config";
 
 // 初始化网卡

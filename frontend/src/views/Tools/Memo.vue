@@ -52,9 +52,9 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
-import { CheckFileStat, InitMemo, ReadMemo } from '../../../wailsjs/go/main/File';
-import { UserHomeDir } from '../../../wailsjs/go/main/File';
-import { Copy } from '../../util';
+import { CheckFileStat, InitMemo, ReadMemo } from 'wailsjs/go/main/File';
+import { UserHomeDir } from 'wailsjs/go/main/File';
+import { Copy } from '@/util';
 onMounted(async () => {
     handleChange(data.memo[0])
     let fp = await UserHomeDir() + "/slack/memo.txt"

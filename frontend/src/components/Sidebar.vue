@@ -2,9 +2,10 @@
 import { Refresh, Setting } from "@element-plus/icons-vue";
 import { computed, onMounted, ref } from "vue";
 import updateUI from "./Update.vue";
-import global from "../global";
-import menus from "../router/menu";
-import { check } from "../util";
+import global from "@/global/index";
+import menus from "@/router/menu";
+import { check } from "@/util";
+import homeIcon from "../assets/icon/home.svg"
 onMounted(() => {
   check.client();
   check.poc();
@@ -26,12 +27,7 @@ const updateDialog = ref(false)
     <template v-for="menu in menus">
       <el-menu-item v-if="!menu.children" :index="menu.path">
         <el-icon size="24">
-          <svg viewBox="0 0 16 16" fill="" xmlns="http://www.w3.org/2000/svg">
-            <path fill=""
-              d="M2 13.5V7h1v6.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V7h1v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5zm11-11V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z" />
-            <path fill=""
-              d="M7.293 1.5a1 1 0 0 1 1.414 0l6.647 6.646a.5.5 0 0 1-.708.708L8 2.207 1.354 8.854a.5.5 0 1 1-.708-.708L7.293 1.5z" />
-          </svg>
+          <homeIcon />
         </el-icon>
         <template #title><span>{{ $t(menu.name) }}</span></template>
       </el-menu-item>

@@ -16,9 +16,11 @@
     "element-plus": "^2.7.6",
     "jsencrypt": "^3.3.2",
     "sm-crypto": "^0.3.13",
+    "vite-svg-loader": "^5.1.0",
     "vue": "^3.2.37",
     "vue-i18n": "^9.9.0",
     "vue-router": "^4.0.13",
+    "vue3-menus": "^1.1.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

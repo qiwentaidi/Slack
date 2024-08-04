@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import global from "../../global";
+import global from "@/global";
 import async from 'async';
-import { ReadLine } from '../../util'
-import { ExportToXlsx } from '../../export'
+import { ReadLine } from '@/util'
+import { ExportToXlsx } from '@/export'
 import { reactive, ref } from "vue";
-import { Subdomain, InitIPResolved, LoadSubDict } from "../../../wailsjs/go/main/App";
-import { FileDialog } from "../../../wailsjs/go/main/File";
+import { Subdomain, InitIPResolved, LoadSubDict } from "wailsjs/go/main/App";
+import { FileDialog } from "wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import { onMounted } from 'vue';
 import { Loading } from '@element-plus/icons-vue';

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ElMessage } from 'element-plus';
-import { AlibabaNacos } from '../../../wailsjs/go/main/App';
+import { AlibabaNacos } from 'wailsjs/go/main/App';
 import { reactive } from 'vue';
-import global from "../../global/index"
-import { AddRightSubString } from '../../util';
+import global from "@/global/index"
+import { AddRightSubString } from '@/util';
 const form = reactive({
     url: "",
     username: "qioxzcio",

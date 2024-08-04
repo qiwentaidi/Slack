@@ -13,6 +13,7 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import global from "./global";
 import "./style/dark.css"
 import "./style/light.css"
+import { directive } from 'vue3-menus';
 
 
 let theme = localStorage.getItem('theme') || "light"
@@ -28,6 +29,8 @@ export default (app: App<Element>) => {
 };
 
 const app = createApp(AppComponent)
+app.directive('menus', directive); // 注册指令
+
 // 使得comonent 可以正确渲染el-icon
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)

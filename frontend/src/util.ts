@@ -5,16 +5,16 @@ import {
   GoFetch,
   NucleiEnabled,
   Sock5Connect,
-} from "../wailsjs/go/main/App";
+} from "wailsjs/go/main/App";
 import {
   CheckFileStat,
   ReadFile,
   RemoveOldClient,
   UserHomeDir,
-} from "../wailsjs/go/main/File";
+} from "wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
 import { URLFingerMap, ProxyOptions, File } from "./interface";
-import { ClipboardSetText } from "../wailsjs/runtime/runtime";
+import { ClipboardSetText } from "wailsjs/runtime/runtime";
 
 export var proxys: ProxyOptions; // wails2.9之后替换原来的null
 

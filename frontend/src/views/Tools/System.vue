@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import {
-    System
-} from '../../../wailsjs/go/main/App'
+import { System } from 'wailsjs/go/main/App'
 import { onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 // 初始化时调用

@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
-import { GoFetch, LoadDirsearchDict, DirScan, StopDirScan } from "../../../wailsjs/go/main/App";
-import { SplitTextArea, Copy, proxys } from '../../util'
+import { GoFetch, LoadDirsearchDict, DirScan, StopDirScan } from "wailsjs/go/main/App";
+import { SplitTextArea, Copy, proxys } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
-import { BrowserOpenURL, EventsOn, EventsOff } from '../../../wailsjs/runtime'
+import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
-import global from '../../global';
-import { CheckFileStat, FileDialog, List, OpenFolder, UserHomeDir } from '../../../wailsjs/go/main/File';
-import { Dir, DirScanOptions } from '../../interface';
-import usePagination from '../../usePagination';
+import global from '@/global';
+import { CheckFileStat, FileDialog, List, OpenFolder, UserHomeDir } from 'wailsjs/go/main/File';
+import { Dir, DirScanOptions } from '@/interface';
+import usePagination from '@/usePagination';
 
 
 onMounted(() => {

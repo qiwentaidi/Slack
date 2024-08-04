@@ -14,7 +14,15 @@
       "ESNext",
       "DOM"
     ],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "wailsjs/*": [
+        "./wailsjs/*"
+      ],
+    }
   },
   "include": [
     "src/**/*.ts",
@@ -26,5 +34,5 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ]
+  ],
 }

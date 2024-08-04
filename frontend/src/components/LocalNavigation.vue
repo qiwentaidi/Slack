@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, ref } from "vue";
-import { LocalOpitons, Child } from "../interface";
-import global from "../global";
+import { LocalOpitons, Child } from "@/interface";
+import global from "@/global";
 import { DeleteFilled, Edit, FolderOpened, Document } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
-import { OnFileDrop, EventsOn } from "../../wailsjs/runtime/runtime";
-import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog } from "../../wailsjs/go/main/File";
-import { GOOS } from "../../wailsjs/go/main/App";
+import { OnFileDrop, EventsOn } from "wailsjs/runtime/runtime";
+import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog } from "wailsjs/go/main/File";
+import { GOOS } from "wailsjs/go/main/App";
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
