@@ -9,9 +9,12 @@ import en from 'element-plus/es/locale/lang/en'
 import { LogInfo } from "./interface";
 import { useDark } from '@vueuse/core'
 import { NetworkCardInfo } from "../wailsjs/go/main/File";
+import { InitConfigFile } from "./config";
 
 // 初始化网卡
 onMounted(async () => {
+  // 初始化时调用
+  await InitConfigFile(500);
   let list = await NetworkCardInfo()
   global.temp.NetworkCardList.push(...list)
 });

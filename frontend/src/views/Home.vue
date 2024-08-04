@@ -1,11 +1,6 @@
 <script setup lang="ts">
-import { InitConfigFile } from "../config";
-import { onMounted } from "vue";
 import MenuList from "../router/menu";
-// 初始化时调用
-onMounted(async () => {
-  await InitConfigFile(1000);
-});
+
 </script>
 
 <template>
