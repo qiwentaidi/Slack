@@ -31,7 +31,7 @@ var temp = reactive({
     thinkdict: [] as string[],
     localAddItem: false, 
     defaultNetwork: "Auto",
-    NetworkCardList: ["Auto"]
+    NetworkCardList: ["Auto"],
 })
 
 const Logger = reactive({
@@ -45,6 +45,7 @@ const Language = ref("zh")
 const Theme = ref(false)
 
 var PATH = {
+    homedir: "",
     ConfigPath: "/slack/config",
     LocalPocVersionFile: "/slack/config/version",
     PortBurstPath: "/slack/portburte"

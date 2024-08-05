@@ -15,7 +15,6 @@ import "./style/dark.css"
 import "./style/light.css"
 import { directive } from 'vue3-menus';
 
-
 let theme = localStorage.getItem('theme') || "light"
 
 global.Theme.value  = theme == "dark" ? true : false

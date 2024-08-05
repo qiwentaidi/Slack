@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { ElMessage, ElNotification } from 'element-plus';
-import { CheckFileStat, UserHomeDir } from 'wailsjs/go/main/File';
+import { CheckFileStat } from 'wailsjs/go/main/File';
 import { DownloadCyberChef, CyberChefLocalServer } from 'wailsjs/go/main/App';
 import { onMounted, ref, reactive } from 'vue';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
+import global from '@/global';
 const showIframe = ref(false);
 const isRemote = ref(false);
 const progress = ref(0);
@@ -33,7 +34,7 @@ onMounted(() => {
 });
 
 onMounted(async () => {
-    if (await CheckFileStat(await UserHomeDir() + "/slack/CyberChef")) {
+    if (await CheckFileStat(global.PATH.homedir + "/slack/CyberChef")) {
         config.LocalENV = true
         ElNotification.success({
             message: '检测到本地环境存在，优先使用本地环境',

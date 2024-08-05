@@ -48,9 +48,9 @@ export function HikvsionCamera(arg1:string,arg2:number,arg3:Array<string>,arg4:s
 
 export function HostAlive(arg1:Array<string>,arg2:boolean):Promise<Array<string>>;
 
-export function HunterSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean):Promise<space.HunterResult>;
+export function HunterSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean):Promise<structs.HunterResult>;
 
-export function HunterTips(arg1:string):Promise<space.HunterTipsResult>;
+export function HunterTips(arg1:string):Promise<structs.HunterTips>;
 
 export function ICPInfo(arg1:string):Promise<string>;
 

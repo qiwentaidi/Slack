@@ -8,13 +8,19 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
 import { LogInfo } from "./interface";
 import { useDark } from '@vueuse/core'
-import { NetworkCardInfo } from "wailsjs/go/main/File";
+import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/main/File";
 import { InitConfigFile } from "./config";
+import { check } from "@/util";
 
-// 初始化网卡
 onMounted(async () => {
-  // 初始化时调用
+  // 初始化目录
+  global.PATH.homedir = await UserHomeDir();
+  // 初始化配置文件
   await InitConfigFile(500);
+  // 检测更新
+  check.client();
+  check.poc();
+  // 初始化网卡
   let list = await NetworkCardInfo()
   global.temp.NetworkCardList.push(...list)
 });

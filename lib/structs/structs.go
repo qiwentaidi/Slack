@@ -46,3 +46,57 @@ type SpaceOption struct {
 	HunterKey string
 	QuakeKey  string
 }
+
+type HunterTips struct {
+	Code int `json:"code"`
+	Data struct {
+		App []struct {
+			Name     string   `json:"name"`
+			AssetNum int      `json:"asset_num"`
+			Tags     []string `json:"tags"`
+		} `json:"app"`
+		Collect []interface{} `json:"collect"`
+	} `json:"data"`
+	Message string `json:"message"`
+}
+
+// Hunter数据的结构体
+type HunterResult struct {
+	Code int64 `json:"code"`
+	Data struct {
+		AccountType string `json:"account_type"`
+		Arr         []struct {
+			AsOrg        string `json:"as_org"`
+			Banner       string `json:"banner"`
+			BaseProtocol string `json:"base_protocol"`
+			City         string `json:"city"`
+			Company      string `json:"company"`
+			Component    []struct {
+				Name    string `json:"name"`
+				Version string `json:"version"`
+			} `json:"component"`
+			Country        string `json:"country"`
+			Domain         string `json:"domain"`
+			IP             string `json:"ip"`
+			IsRisk         string `json:"is_risk"`
+			IsRiskProtocol string `json:"is_risk_protocol"`
+			IsWeb          string `json:"is_web"`
+			Isp            string `json:"isp"`
+			Number         string `json:"number"`
+			Os             string `json:"os"`
+			Port           int64  `json:"port"`
+			Protocol       string `json:"protocol"`
+			Province       string `json:"province"`
+			StatusCode     int64  `json:"status_code"`
+			UpdatedAt      string `json:"updated_at"`
+			URL            string `json:"url"`
+			WebTitle       string `json:"web_title"`
+		} `json:"arr"`
+		ConsumeQuota string `json:"consume_quota"`
+		RestQuota    string `json:"rest_quota"`
+		SyntaxPrompt string `json:"syntax_prompt"`
+		Time         int64  `json:"time"`
+		Total        int64  `json:"total"`
+	} `json:"data"`
+	Message string `json:"message"`
+}

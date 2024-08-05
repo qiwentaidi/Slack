@@ -75,6 +75,8 @@ func (a *App) Callgologger(level, msg string) {
 		gologger.Warning(a.ctx, msg)
 	case "error":
 		gologger.Error(a.ctx, msg)
+	case "success":
+		gologger.Success(a.ctx, msg)
 	default:
 		gologger.Debug(a.ctx, msg)
 	}
@@ -503,11 +505,11 @@ func (a *App) WebPocLength() int {
 
 // hunter
 
-func (a *App) HunterTips(query string) *space.HunterTipsResult {
+func (a *App) HunterTips(query string) *structs.HunterTips {
 	return space.SearchHunterTips(query)
 }
 
-func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, deduplication bool) *space.HunterResult {
+func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, deduplication bool) *structs.HunterResult {
 	hr := space.HunterApiSearch(api, query, pageSize, pageNum, times, asset, deduplication)
 	time.Sleep(time.Second * 2)
 	return hr

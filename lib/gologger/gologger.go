@@ -10,7 +10,7 @@ import (
 
 const (
 	Level_INFO    = "[INF]"
-	Level_WARN    = "[WAR]"
+	Level_WARN    = "[WRN]"
 	Level_ERROR   = "[ERR]"
 	Level_DEBUG   = "[DEB]"
 	Level_Success = "[SUC]"
@@ -57,7 +57,7 @@ func Success(ctx context.Context, i interface{}) {
 }
 
 func Msg(i interface{}) string {
-	return fmt.Sprintf("%s %v", currentTime(), i)
+	return fmt.Sprintf("[%s] %v", currentTime(), i)
 }
 
 func currentTime() string {

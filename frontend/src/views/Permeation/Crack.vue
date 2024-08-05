@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, onMounted } from 'vue';
 import { InfoFilled, Search, Document, Link } from '@element-plus/icons-vue';
-import { FileDialog, CheckFileStat, UserHomeDir } from 'wailsjs/go/main/File';
+import { FileDialog, CheckFileStat } from 'wailsjs/go/main/File';
 import { ElMessage } from 'element-plus';
 import async from 'async';
 import global from '@/global';
@@ -112,10 +112,9 @@ async function NewScanner() {
     config.runningStatus = true
     ElMessage("开始暴破")
     config.content = []
-    let home = await UserHomeDir()
-    global.dict.passwords = (await ReadLine(home + global.PATH.PortBurstPath + "/password/password.txt"))!
+    global.dict.passwords = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/password/password.txt"))!
     for (var item of global.dict.usernames) {
-        item.dic = (await ReadLine(home + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
+        item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
     }
     var id = 0
 

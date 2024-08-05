@@ -13,6 +13,7 @@ import onlineIcon from "@/assets/icon/online.svg"
 import runnerIcon from "@/assets/icon/apprunner.svg"
 import maxmizeIcon from "@/assets/icon/maximize.svg"
 import reductionIcon from "@/assets/icon/reduction.svg"
+import consoleIcon from "@/assets/icon/console.svg"
 
 const isMax = ref(false)
 const isMacOS = ref(false)
@@ -38,8 +39,6 @@ function setTitle(path: string) {
     switch (path) {
         case "/":
             return "Home";
-        case "/settings":
-            return "Settings";
         default:
             return path.split('/').slice(-1)[0];
     }
@@ -67,10 +66,6 @@ const titlebarStyle = computed(() => {
     };
 })
 
-const svgReverseFill = computed(() => {
-    return global.Theme.value ? '#333333' : '#F9F9F9'
-})
-
 const searchFilter = ref("");
 const filteredOptions = computed(() => {
     if (!searchFilter.value) {
@@ -90,6 +85,80 @@ function addGroup() {
         (localNavigationRef.value as any).addGroup();
     }
 }
+
+const routerControl = [
+    {
+        label: "返回",
+        icon: Back,
+        action: () => {
+            window.history.back();
+        },
+    },
+    {
+        label: "前进",
+        icon: Right,
+        action: () => {
+            window.history.forward();
+        }
+    },
+]
+
+const appControl = [
+    {
+        label: "关于",
+        icon: aboutIcon,
+        action: () => {
+            aboutDialog.value = true
+        },
+        showMacOS: true,
+    },
+    {
+        label: "运行日志",
+        icon: consoleIcon,
+        action: () => {
+            showLogger.value = true
+        },
+        showMacOS: true,
+    },
+    {
+        label: "应用启动器(本功能会在wails v3进行重做)",
+        icon: runnerIcon,
+        action: () => {
+            localDrawer.value = true
+        },
+        showMacOS: false,
+    },
+    {
+        label: "在线导航",
+        icon: onlineIcon,
+        action: () => {
+            onlineDrawer.value = true
+        },
+        showMacOS: true,
+    },
+]
+
+const windowsControl = computed(() => [
+    {
+        icon: Minus,
+        action: () => {
+            WindowMinimise();
+        },
+    },
+    {
+        icon: isMax.value ? reductionIcon : maxmizeIcon,
+        action: () => {
+            WindowToggleMaximise();
+        },
+    },
+    {
+        icon: Close,
+        action: () => {
+            Quit();
+        },
+        class: 'close',
+    },
+]);
 </script>
 
 <template>
@@ -97,22 +166,11 @@ function addGroup() {
         <div :style="macStyle">
             <el-divider direction="vertical" v-if="isMacOS" />
             <el-button-group :style="leftStyle">
-                <el-tooltip content="返回">
-                    <el-button text class="custom-button" @click="$router.back()">
-                        <template #icon>
-                            <el-icon size="16">
-                                <Back />
-                            </el-icon>
-                        </template>
-                    </el-button>
-                </el-tooltip>
-                <el-tooltip content="前进">
-                    <el-button text class="custom-button" @click="$router.forward()">
-                        <template #icon>
-                            <el-icon size="16">
-                                <Right />
-                            </el-icon>
-                        </template>
+                <el-tooltip v-for="item in routerControl" :content="item.label">
+                    <el-button text class="custom-button" @click="item.action">
+                        <el-icon :size="16">
+                            <component :is="item.icon" />
+                        </el-icon>
                     </el-button>
                 </el-tooltip>
             </el-button-group>
@@ -122,48 +180,11 @@ function addGroup() {
         </div>
         <div style="display: flex">
             <el-button-group :style="rightStyle">
-                <el-tooltip :content="$t('aside.about')">
-                    <el-button class="custom-button" text @click="aboutDialog = true">
+                <el-tooltip v-for="item in appControl" :content="item.label">
+                    <el-button class="custom-button" text @click="item.action" v-show="item.showMacOS">
                         <template #icon>
-                            <el-icon size="16">
-                               <aboutIcon />
-                            </el-icon>
-                        </template>
-                    </el-button>
-                </el-tooltip>
-                <el-tooltip content="运行日志">
-                    <el-button class="custom-button" text @click="showLogger = true">
-                        <template #icon>
-                            <el-icon size="16">
-                                <svg t="1722163018715" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                                    xmlns="http://www.w3.org/2000/svg" p-id="12142" width="200" height="200">
-                                    <path
-                                        d="M956.8 128H67.2A67.2 67.2 0 0 0 0 195.2v633.6A67.2 67.2 0 0 0 67.2 896h889.6a67.2 67.2 0 0 0 67.2-67.2V195.2A67.2 67.2 0 0 0 956.8 128z m3.2 704H64V192h896v640z"
-                                        fill="" p-id="12143"></path>
-                                    <path d="M96 224v576h832V224H96z" :fill="svgReverseFill" p-id="12144"></path>
-                                    <path
-                                        d="M294.624 694.624l-45.248-45.248L386.752 512l-137.376-137.376 45.248-45.248L477.248 512z"
-                                        fill="" p-id="12144"></path>
-                                    <path d="M768 704h-256v-64h256v64z" fill="" p-id="12144"></path>
-                                </svg>
-                            </el-icon>
-                        </template>
-                    </el-button>
-                </el-tooltip>
-                <el-tooltip content="应用启动器(本功能会在wails v3进行重做)">
-                    <el-button text class="custom-button" @click="localDrawer = true" v-show="!isMacOS">
-                        <template #icon>
-                            <el-icon size="16">
-                               <runnerIcon />
-                            </el-icon>
-                        </template>
-                    </el-button>
-                </el-tooltip>
-                <el-tooltip content="在线导航">
-                    <el-button text class="custom-button" @click="onlineDrawer = true">
-                        <template #icon>
-                            <el-icon size="16">
-                                <onlineIcon />
+                            <el-icon :size="16">
+                                <component :is="item.icon" />
                             </el-icon>
                         </template>
                     </el-button>
@@ -172,27 +193,10 @@ function addGroup() {
             <div v-if="!isMacOS">
                 <el-divider direction="vertical" />
                 <el-button-group>
-                    <el-button text @click="WindowMinimise">
+                    <el-button v-for="item in windowsControl" :class="item.class!" text @click="item.action">
                         <template #icon>
                             <el-icon size="16">
-                                <Minus />
-                            </el-icon>
-                        </template>
-                    </el-button>
-                    <el-button text @click="WindowToggleMaximise">
-                        <template #icon>
-                            <el-icon size="16" v-show="!isMax">
-                                <maxmizeIcon />
-                            </el-icon>
-                            <el-icon size="16" v-show="isMax">
-                                <reductionIcon />
-                            </el-icon>
-                        </template>
-                    </el-button>
-                    <el-button text class="close" @click="Quit">
-                        <template #icon>
-                            <el-icon size="16">
-                                <Close />
+                                <component :is="item.icon" />
                             </el-icon>
                         </template>
                     </el-button>
@@ -263,10 +267,10 @@ function addGroup() {
 .titlebar {
     display: flex;
     width: 100%;
-    height: 35px;
+    height: var(--titlebar-height);
 
     .el-button {
-        height: 35px;
+        height: var(--titlebar-height);
         border-radius: 0;
     }
 
@@ -276,10 +280,6 @@ function addGroup() {
         height: 28px;
         width: 35px;
         border-radius: 10px;
-    }
-
-    .custom-button img {
-        width: 16px;
     }
 }
 
@@ -307,16 +307,11 @@ function addGroup() {
     cursor: default;
 }
 
-img {
-    width: 14px;
-}
-
-html.light .el-button.is-text:not(.is-disabled):hover {
+html.light .el-button.is-text:hover {
     background-color: #EDEDED;
 }
 
-.el-button.is-text:not(.is-disabled).close:hover {
+.el-button.is-text.close:hover {
     background-color: red;
-    color: #fff;
 }
 </style>

@@ -7,7 +7,7 @@ import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '@/global';
-import { CheckFileStat, FileDialog, List, OpenFolder, UserHomeDir } from 'wailsjs/go/main/File';
+import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/main/File';
 import { Dir, DirScanOptions } from '@/interface';
 import usePagination from '@/usePagination';
 
@@ -76,12 +76,10 @@ const from = reactive({
 
 let pagination = usePagination(from.result, 50)
 
-function getDictList() {
+async function getDictList() {
     from.selectDict = []
-    UserHomeDir().then(async (home: any) => {
-        from.configPath = home + "/slack/config/dirsearch"
-        from.dictList = await List(from.configPath)
-    })
+    from.configPath = global.PATH.homedir + "/slack/config/dirsearch"
+    from.dictList = await List(from.configPath)
 }
 
 async function handleFileChange() {

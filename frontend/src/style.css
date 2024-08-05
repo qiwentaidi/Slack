@@ -10,6 +10,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  --titlebar-height: 35px;
 }
 
 body {
@@ -24,6 +26,8 @@ html {
 
 .el-aside {
   width: 64px;
+  position: relative;
+  transition: width 0.3s;
 }
 
 .el-drawer__header {
@@ -54,23 +58,23 @@ html {
 }
 
 .log-info {
-  color: lightblue;
+  color: #518BE1;
 }
 
 .log-warning {
-  color: #D2BB85;
+  color: #FF8800;
 }
 
 .log-error {
-  color: #E58C77;
+  color: #FF0000;
 }
 
 .log-debug {
-  color: rgb(13, 85, 13);
+  color: #57B435;
 }
 
 .log-success {
-  color: #6FC3AE;
+  color: #00FF00;
 }
 
 .my-header {

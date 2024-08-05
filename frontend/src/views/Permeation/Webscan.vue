@@ -23,7 +23,6 @@ import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions, FofaResult } from '@/interface';
-import { UserHomeDir } from 'wailsjs/go/main/File';
 import usePagination from '@/usePagination';
 // 初始化时调用
 onMounted(() => {
@@ -333,7 +332,7 @@ const uncover = {
             message: "已将目标联动至目录扫描",
             position: "bottom-right"
         })
-        let dfp = await UserHomeDir() + "/slack/config/dirsearch/dicc.txt"
+        let dfp = global.PATH.homedir + "/slack/config/dirsearch/dicc.txt"
         let paths = await LoadDirsearchDict([dfp], "php,aspx,asp,jsp,html,js".split(','))
         global.temp.dirsearchPathConut = paths.length
         global.temp.dirsearchStartTime = Date.now()

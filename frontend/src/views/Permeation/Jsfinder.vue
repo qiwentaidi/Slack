@@ -79,11 +79,7 @@ async function JSFinder() {
   var urls = [] as string[]
   urls = await formatURL(config.urls)
   if (urls.length == 0) {
-    ElMessage({
-      showClose: true,
-      message: "可用目标为空",
-      type: "warning",
-    });
+    ElMessage.warning("可用目标为空");
     return
   }
   config.loading = true
@@ -158,6 +154,28 @@ function getLength(arr: any) {
     return 0
   }
 }
+
+const menus = [
+    {
+        label: "复制",
+        click: (menu: any, arg: any) => {
+          Copy(arg.data.Filed)
+        }
+    },
+    {
+        label: "复制来源",
+        click: (menu: any, arg: any) => {
+          Copy(arg.data.Source)
+        },
+        divided: true,
+    },
+    {
+        label: "打开来源链接",
+        click: (menu: any, arg: any) => {
+          BrowserOpenURL(arg.data.Source)
+        }
+    }
+]
 </script>
 <template>
   <el-form label-width="auto">
@@ -204,28 +222,7 @@ function getLength(arr: any) {
         </div>
         <!-- CONTENT -->
         <div class="tag-container">
-          <el-popover placement="right-end" trigger="contextmenu" v-for="(ls, index) in item.data.value" :key="index">
-            <template #reference>
-              <el-tag :type="item.tagType.value">{{ ls.Filed }}</el-tag>
-            </template>
-            <el-menu class="right-click">
-              <el-menu-item index="copy" @click="Copy(ls.Filed)">
-                <el-icon>
-                  <CopyDocument />
-                </el-icon>
-                复制</el-menu-item>
-              <el-menu-item index="copy-source" @click="Copy(ls.Source)">
-                <el-icon>
-                  <CopyDocument />
-                </el-icon>
-                复制来源</el-menu-item>
-              <el-menu-item index="open-source" @click="BrowserOpenURL(ls.Source)">
-                <el-icon>
-                  <Link />
-                </el-icon>
-                打开来源链接</el-menu-item>
-            </el-menu>
-          </el-popover>
+            <el-tag v-for="(ls, index) in item.data.value" :data="ls"  :type="item.tagType.value" v-menus:right="menus">{{ ls.Filed }}</el-tag>
         </div>
       </div>
     </el-scrollbar>

@@ -1,22 +1,17 @@
 <script setup lang="ts">
 import { Refresh, Setting } from "@element-plus/icons-vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import updateUI from "./Update.vue";
 import global from "@/global/index";
 import menus from "@/router/menu";
-import { check } from "@/util";
 import homeIcon from "../assets/icon/home.svg"
-onMounted(() => {
-  check.client();
-  check.poc();
-});
 
 const menuStyle = computed(() => {
-    return global.Theme.value ? { 
-      backgroundColor: '#333333'
-    } : {
-      backgroundColor: '#F2F3F5' 
-    };
+  return global.Theme.value ? {
+    backgroundColor: '#333333'
+  } : {
+    backgroundColor: '#F2F3F5'
+  };
 })
 
 const updateDialog = ref(false)
@@ -55,7 +50,7 @@ const updateDialog = ref(false)
       " />
     </el-menu-item>
 
-    <el-menu-item class="custom-menu-item" @click="$router.push('/settings')">
+    <el-menu-item class="custom-menu-item" @click="$router.push('/Settings')">
       <el-icon size="24">
         <setting />
       </el-icon>
@@ -77,9 +72,9 @@ const updateDialog = ref(false)
 }
 
 .el-menu {
-  display: flex; 
-  flex-direction: column; 
-  height: calc(100vh - 35px);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--titlebar-height));
 }
 
 .el-menu-item {

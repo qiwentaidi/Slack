@@ -53,11 +53,11 @@
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { CheckFileStat, InitMemo, ReadMemo } from 'wailsjs/go/main/File';
-import { UserHomeDir } from 'wailsjs/go/main/File';
 import { Copy } from '@/util';
+import global from '@/global';
 onMounted(async () => {
     handleChange(data.memo[0])
-    let fp = await UserHomeDir() + "/slack/memo.txt"
+    let fp = global.PATH.homedir + "/slack/memo.txt"
     if (await CheckFileStat(fp)) {
         let kv = await ReadMemo(fp)
         data.memo = Object.entries(kv).map(([label, value]) => ({
@@ -183,6 +183,6 @@ async function save() {
             temp += `[${item.label}]\n${item.value.trim()}`
         }
     });
-    InitMemo(await UserHomeDir() + "/slack/memo.txt", temp)
+    InitMemo(global.PATH.homedir + "/slack/memo.txt", temp)
 }
 </script>

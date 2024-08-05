@@ -118,7 +118,7 @@ import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, TestNuclei } from "@/util";
 import { Edit, Sunny, Moon } from '@element-plus/icons-vue';
 import { reactive } from "vue";
-import { ReadFile, SaveDataToFile, UserHomeDir, WriteFile } from "wailsjs/go/main/File";
+import { ReadFile, SaveDataToFile, WriteFile } from "wailsjs/go/main/File";
 import { File } from '@/interface';
 import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
@@ -162,14 +162,12 @@ const ctrl = reactive({
 })
 
 async function ReadDict(path: string) {
-  let home = await UserHomeDir()
-  let file: File = await ReadFile(home + global.PATH.PortBurstPath + path)
+  let file: File = await ReadFile(global.PATH.homedir + global.PATH.PortBurstPath + path)
   ctrl.currentDic = file.Content!
 }
 
 async function SaveFile(path: string) {
-  let home = await UserHomeDir()
-  WriteFile('txt', home + global.PATH.PortBurstPath + path, ctrl.currentDic).then(result => {
+  WriteFile('txt', global.PATH.homedir + global.PATH.PortBurstPath + path, ctrl.currentDic).then(result => {
     result ? ElMessage.success('保存成功!') : ElMessage.error('保存失败!')
   })
 }

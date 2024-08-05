@@ -10,7 +10,6 @@ import {
   CheckFileStat,
   ReadFile,
   RemoveOldClient,
-  UserHomeDir,
 } from "wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
 import { URLFingerMap, ProxyOptions, File } from "./interface";
@@ -234,17 +233,13 @@ const download = {
 export const check = {
   // poc
   poc: async function () {
-    let pcfg = await CheckFileStat(
-      (await UserHomeDir()) + global.PATH.LocalPocVersionFile
-    );
+    let pcfg = await CheckFileStat(global.PATH.homedir + global.PATH.LocalPocVersionFile);
     if (!pcfg) {
       global.UPDATE.LocalPocVersion = "版本文件不存在";
       global.UPDATE.PocStatus = false;
       return;
     } else {
-      let file: File = await ReadFile(
-        (await UserHomeDir()) + global.PATH.LocalPocVersionFile
-      );
+      let file: File = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile);
       global.UPDATE.LocalPocVersion = file.Content!;
     }
     let resp: any = await GoFetch(
