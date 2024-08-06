@@ -1,7 +1,6 @@
-package core
+package subdomain
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"slack-wails/lib/qqwry"
@@ -22,9 +21,8 @@ type SubdomainResult struct {
 var (
 	IPResolved map[string]int
 	mutex      sync.Mutex
-	database   *qqwry.QQwry
-	cdndata    map[string][]string
-	onec       sync.Once
+	Database   *qqwry.QQwry
+	Cdndata    map[string][]string
 )
 
 // 初始化IP纯真库
@@ -38,32 +36,29 @@ func InitQqwry(qqwryFile string) {
 		logger.NewDefaultLogger().Debug("qqwry init err:" + err.Error())
 		return
 	} else {
-		database = d
+		Database = d
 	}
 }
 
 // 采用递归判断暴破层级
-func BurstSubdomain(ctx context.Context, subdomains string, timeout int, qqwryFile, cdnFile string) *SubdomainResult {
-	onec.Do(func() {
-		cdndata = ReadCDNFile(ctx, cdnFile)
-		InitQqwry(qqwryFile)
-	})
+func Burst(subdomains string, timeout int, qqwryFile, cdnFile string) *SubdomainResult {
 	var sr SubdomainResult
 	addrs, cnames, err := Resolution(subdomains, timeout)
 	if err == nil {
 		sr.Cname = cnames
 	outloop:
-		for _, cdns := range cdndata {
-			for _, cdn := range cdns {
-				for _, cname := range cnames {
-					if strings.Contains(cname, cdn) { // 识别到cdn
-						sr.Notes = fmt.Sprintf("在CNAME中识别到CDN字段%v", cdn)
-						break outloop
-					} else if strings.Contains(cname, "cdn") {
-						sr.Notes = fmt.Sprintf("在CNAME %v中检测到cdn关键字", cname)
+		for _, cname := range cnames {
+			for name, cdns := range Cdndata {
+				for _, cdn := range cdns {
+					if strings.Contains(cname, cdn) {
+						sr.Notes = fmt.Sprintf("识别到CDN信息: %v", name)
 						break outloop
 					}
 				}
+			}
+			if strings.Contains(cname, "cdn") {
+				sr.Notes = fmt.Sprintf("在CNAME %v中检测到cdn关键字", cname)
+				break outloop
 			}
 		}
 		for _, ip := range addrs {
@@ -75,7 +70,7 @@ func BurstSubdomain(ctx context.Context, subdomains string, timeout int, qqwryFi
 			}
 			mutex.Lock()
 			IPResolved[ip]++
-			if IPResolved[ip] > 5 { // 解析到该IP5次以上加入黑名单
+			if IPResolved[ip] > 5 { // 解析到该IP5次以上就不再显示
 				addrs = util.RemoveElement(addrs, ip)
 			}
 			mutex.Unlock()
@@ -95,12 +90,12 @@ func FindWithIP(query string) (bool, string, error) {
 }
 
 func Find(query string) (string, error) {
-	result, err := database.Find(query)
+	result, err := Database.Find(query)
 	if err != nil {
 		return "", err
 	}
-	if strings.Contains(result.String(), "对方和您在同一内部网") {
-		return "", err
-	}
+	// if strings.Contains(result.String(), "对方和您在同一内部网") {
+	// 	return "", err
+	// }
 	return result.String(), err
 }

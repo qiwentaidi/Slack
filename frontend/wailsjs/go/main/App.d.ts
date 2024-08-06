@@ -68,6 +68,8 @@ export function Ip138IpHistory(arg1:string):Promise<string>;
 
 export function Ip138Subdomain(arg1:string):Promise<string>;
 
+export function IpLocation(arg1:string):Promise<string>;
+
 export function IsHighRisk(arg1:string):Promise<boolean>;
 
 export function IsRoot():Promise<boolean>;

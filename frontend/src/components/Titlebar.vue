@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Close, Minus, Search, Plus, InfoFilled, Back, Right } from '@element-plus/icons-vue';
+import { Close, Minus, Search, Plus, InfoFilled, Back, Right, Avatar } from '@element-plus/icons-vue';
 import { Quit, WindowMinimise, WindowToggleMaximise } from "wailsjs/runtime/runtime";
 import { IsMacOS } from "wailsjs/go/main/File";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
@@ -14,6 +14,7 @@ import runnerIcon from "@/assets/icon/apprunner.svg"
 import maxmizeIcon from "@/assets/icon/maximize.svg"
 import reductionIcon from "@/assets/icon/reduction.svg"
 import consoleIcon from "@/assets/icon/console.svg"
+import githubIcon from "@/assets/icon/github.svg"
 
 const isMax = ref(false)
 const isMacOS = ref(false)
@@ -23,6 +24,7 @@ const showLogger = ref(false)
 const route = useRoute();
 const aboutDialog = ref(false)
 const updateDialog = ref(false)
+const aboutIndex = ref(0)
 
 window.addEventListener('resize', () => {
     if (screen.availWidth <= window.innerWidth && screen.availHeight <= window.innerHeight) {
@@ -159,6 +161,19 @@ const windowsControl = computed(() => [
         class: 'close',
     },
 ]);
+
+const options = [
+    {
+        label: "关于项目",
+        value: 0,
+        icon: githubIcon,
+    },
+    {
+        label: "联系方式",
+        value: 1,
+        icon: Avatar,
+    },
+]
 </script>
 
 <template>
@@ -254,8 +269,23 @@ const windowsControl = computed(() => [
         <div class="log-textarea" v-html="global.Logger.value"></div>
     </el-drawer>
     <!-- about -->
-    <el-dialog v-model="aboutDialog" width="36%" center>
-        <about></about>
+    <el-dialog v-model="aboutDialog" width="36%">
+        <template #title>
+            <el-segmented v-model="aboutIndex" :options="options">
+                <template #default="{ item }">
+                    <div style="display: flex;">
+                        <el-icon :size="16" style="margin-right: 5px;">
+                            <component :is="item.icon" />
+                        </el-icon>
+                        <div>{{ item.label }}</div>
+                    </div>
+                </template>
+            </el-segmented>
+        </template>
+        <div style="text-align: center;">
+            <about v-show="aboutIndex == 0"></about>
+            <img v-show="aboutIndex != 0" src="../assets/icon/wechat.png" style="height: 208px;">
+        </div>
     </el-dialog>
     <!-- update -->
     <el-dialog v-model="updateDialog" title="更新通知" width="40%">

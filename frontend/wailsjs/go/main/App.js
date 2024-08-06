@@ -122,6 +122,10 @@ export function Ip138Subdomain(arg1) {
   return window['go']['main']['App']['Ip138Subdomain'](arg1);
 }
 
+export function IpLocation(arg1) {
+  return window['go']['main']['App']['IpLocation'](arg1);
+}
+
 export function IsHighRisk(arg1) {
   return window['go']['main']['App']['IsHighRisk'](arg1);
 }

@@ -1,60 +1,60 @@
 <script setup lang="ts">
 import { Refresh, Setting } from "@element-plus/icons-vue";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import updateUI from "./Update.vue";
 import global from "@/global/index";
 import menus from "@/router/menu";
-import homeIcon from "../assets/icon/home.svg"
-
-const menuStyle = computed(() => {
-  return global.Theme.value ? {
-    backgroundColor: '#333333'
-  } : {
-    backgroundColor: '#F2F3F5'
-  };
-})
+import router from "@/router";
 
 const updateDialog = ref(false)
+
+const bottomControl = [
+  {
+    label: "aside.update",
+    icon: Refresh,
+    action: () => {
+      updateDialog.value = true
+    }
+  },
+  {
+    label: "aside.setting",
+    icon: Setting,
+    action: () => {
+      router.push('/Settings')
+    }
+  },
+]
 </script>
 
 <template>
-  <el-menu :collapse="true" router :default-active="$route.path" :style="menuStyle">
+  <el-menu :collapse="true" router :default-active="$route.path">
     <template v-for="menu in menus">
       <el-menu-item v-if="!menu.children" :index="menu.path">
         <el-icon size="24">
-          <homeIcon />
+          <component :is="menu.icon" />
         </el-icon>
         <template #title><span>{{ $t(menu.name) }}</span></template>
       </el-menu-item>
       <el-sub-menu :index="menu.path" v-else>
         <template #title>
-          <el-icon size="24">
+          <el-icon :size="24">
             <component :is="menu.icon" />
           </el-icon>
           <span>{{ $t(menu.name) }}</span>
         </template>
-        <el-menu-item v-for="item in menu.children" :key="item.path" :index="item.path">{{ $t(item.name)
-          }}</el-menu-item>
+        <el-menu-item v-for="item in menu.children" :key="item.path" :index="item.path"><span>{{ $t(item.name)
+          }}</span></el-menu-item>
       </el-sub-menu>
     </template>
 
     <div style="flex-grow: 1;"></div>
 
-    <el-menu-item class="custom-menu-item" @click="updateDialog = true">
+    <el-menu-item v-for="(item, index) in bottomControl" @click="item.action">
       <el-icon size="24">
-        <Refresh />
+        <component :is="item.icon" />
       </el-icon>
-      <template #title><span>{{ $t("aside.update") }}</span></template>
-      <el-badge value="new" v-if="global.UPDATE.ClientStatus ||
-        global.UPDATE.PocStatus
-      " />
-    </el-menu-item>
-
-    <el-menu-item class="custom-menu-item" @click="$router.push('/Settings')">
-      <el-icon size="24">
-        <setting />
-      </el-icon>
-      <template #title><span>{{ $t("aside.setting") }}</span></template>
+      <template #title><span>{{ $t(item.label) }}</span></template>
+      <el-badge value="new" v-if="index == 0 && (global.UPDATE.ClientStatus || global.UPDATE.PocStatus)" />
     </el-menu-item>
   </el-menu>
 
@@ -75,10 +75,16 @@ const updateDialog = ref(false)
   display: flex;
   flex-direction: column;
   height: calc(100vh - var(--titlebar-height));
+  background-color: var(--sidebar-bg-color);
 }
 
 .el-menu-item {
   font-size: 16px;
+}
+
+.el-menu-item:hover {
+  background-color: var(--sidebar-bg-color);
+  color: #3875f6;
 }
 
 .el-menu-item.is-active {
@@ -101,10 +107,5 @@ const updateDialog = ref(false)
 
 .el-sub-menu__title {
   font-size: 16px;
-}
-
-.custom-menu-item:hover {
-  background-color: var(--sidebar-bg-color);
-  color: #3875f6;
-}
+} 
 </style>

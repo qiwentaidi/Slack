@@ -5,6 +5,9 @@ import { DownloadCyberChef, CyberChefLocalServer } from 'wailsjs/go/main/App';
 import { onMounted, ref, reactive } from 'vue';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import global from '@/global';
+import fishIcon from '@/assets/icon/fish.svg'
+import bearIcon from '@/assets/icon/bear.svg'
+
 const showIframe = ref(false);
 const isRemote = ref(false);
 const progress = ref(0);
@@ -36,10 +39,7 @@ onMounted(() => {
 onMounted(async () => {
     if (await CheckFileStat(global.PATH.homedir + "/slack/CyberChef")) {
         config.LocalENV = true
-        ElNotification.success({
-            message: '检测到本地环境存在，优先使用本地环境',
-            duration: 2000,
-        })
+        ElNotification.success('检测到本地环境存在，优先使用本地环境')
         loadLocal()
     }
 });
@@ -79,20 +79,20 @@ async function loadLocal() {
         <div>
             <el-result title="本地加载" sub-title="需要下载CyberChef环境，后续会在本机8731端口启动一个简单HTTP服务，适用部分内网环境，一次下载后续优先使用">
                 <template #icon>
-                    <el-image src="/fish.png" />
+                    <fishIcon />
                 </template>
                 <template #extra>
                     <el-button type="primary" @click="startDownload()" v-if="!config.LocalENV">开始下载</el-button>
-                    <el-button type="primary" @click="loadLocal()" v-if="config.LocalENV">就选你了</el-button>
+                    <el-button type="primary" @click="loadLocal()" v-if="config.LocalENV">选择</el-button>
                 </template>
             </el-result>
         </div>
         <el-result title="远程加载" sub-title="远程内嵌官网站点，网络不好可能会加载失败，但不用下载环境">
             <template #icon>
-                <el-image src="/bear.png" />
+                <bearIcon />
             </template>
             <template #extra>
-                <el-button type="primary" @click="loadRemote()">就选你了</el-button>
+                <el-button type="primary" @click="loadRemote()">选择</el-button>
             </template>
         </el-result>
     </div>

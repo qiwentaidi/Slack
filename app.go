@@ -22,6 +22,7 @@ import (
 	"slack-wails/core/jsfind"
 	"slack-wails/core/portscan"
 	"slack-wails/core/space"
+	"slack-wails/core/subdomain"
 	"slack-wails/core/webscan"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
@@ -162,10 +163,10 @@ func (a *App) System(content string, mode int) [][]string {
 	}
 }
 
-var onec sync.Once
+var CyberChefLoader sync.Once
 
 func (a *App) CyberChefLocalServer() {
-	onec.Do(func() {
+	CyberChefLoader.Do(func() {
 		go func() {
 			// 定义要服务的目录
 			dir := util.HomeDir() + "/slack/CyberChef/"
@@ -211,18 +212,23 @@ func (App) Ip138IpHistory(domain string) string {
 func (App) Ip138Subdomain(domain string) string {
 	return info.Ip138Subdomain(domain)
 }
+
+var cdndataLoader sync.Once
+
 func (a *App) CheckCdn(domain string) string {
-	ips, cnames, err := core.Resolution(domain, 10)
+	ips, cnames, err := subdomain.Resolution(domain, 10)
 	if err != nil {
 		return fmt.Sprintf("域名: %v 解析失败,%v", domain, err)
 	}
 	if len(ips) == 1 && len(cnames) == 0 {
 		return fmt.Sprintf("域名: %v，解析到唯一IP %v，未解析到CNAME信息", domain, ips[0])
 	}
-	cdnData := core.ReadCDNFile(a.ctx, a.cdnFile)
+	cdndataLoader.Do(func() {
+		subdomain.Cdndata = subdomain.ReadCDNFile(a.ctx, a.cdnFile)
+	})
 	ipList := strings.Join(ips, " | ")
 	for _, cname := range cnames {
-		for name, cdns := range cdnData {
+		for name, cdns := range subdomain.Cdndata {
 			for _, cdn := range cdns {
 				if strings.Contains(cname, cdn) {
 					return fmt.Sprintf("域名: %v，识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v", domain, cname, name, ipList)
@@ -238,7 +244,7 @@ func (a *App) CheckCdn(domain string) string {
 
 // 初始化IP记录器
 func (a *App) InitIPResolved() {
-	core.IPResolved = make(map[string]int)
+	subdomain.IPResolved = make(map[string]int)
 }
 
 // subodomain
@@ -246,8 +252,16 @@ func (a *App) LoadSubDict(configPath string) []string {
 	return util.ReadLine(util.HomeDir() + configPath + "/dicc.txt")
 }
 
-func (a *App) Subdomain(subdomain string, timeout int) []string {
-	sr := core.BurstSubdomain(a.ctx, subdomain, timeout, a.qqwryFile, a.cdnFile)
+var qqwryLoader sync.Once
+
+func (a *App) Subdomain(domain string, timeout int) []string {
+	qqwryLoader.Do(func() {
+		subdomain.InitQqwry(a.qqwryFile)
+	})
+	cdndataLoader.Do(func() {
+		subdomain.Cdndata = subdomain.ReadCDNFile(a.ctx, a.cdnFile)
+	})
+	sr := subdomain.Burst(domain, timeout, a.qqwryFile, a.cdnFile)
 	return []string{sr.Subdomain, strings.Join(sr.Cname, " | "), strings.Join(sr.Ips, " | "), sr.Notes}
 }
 
@@ -639,4 +653,15 @@ func (a *App) HikvsionCamera(target string, attackType int, passwordList []strin
 
 func (a *App) UncoverSearch(query, types string, size int, option structs.SpaceOption) []space.Result {
 	return space.Uncover(a.ctx, query, types, size, option)
+}
+
+func (a *App) IpLocation(ip string) string {
+	qqwryLoader.Do(func() {
+		subdomain.InitQqwry(a.qqwryFile)
+	})
+	result, err := subdomain.Database.Find(ip)
+	if err != nil {
+		return ""
+	}
+	return result.String()
 }

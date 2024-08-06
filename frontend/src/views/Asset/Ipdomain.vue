@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { ICPInfo, CheckCdn, Ip138IpHistory, Ip138Subdomain } from 'wailsjs/go/main/App'
-import { Document, UploadFilled } from '@element-plus/icons-vue';
+import { Document, UploadFilled, Promotion } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
-import { SplitTextArea } from '@/util';
+import { Copy, SplitTextArea } from '@/util';
 import async from 'async'
+import router from '@/router';
 
 const domain = reactive({
     input: '',
@@ -57,6 +58,11 @@ function batchQuery() {
         ElMessage.success("CheckCdn Finished")
     });
 }
+
+function CopyAndJump() {
+    Copy(domain.cdn)
+    router.push("/Tools/DataHanding")
+}
 </script>
 
 <template>
@@ -78,21 +84,26 @@ function batchQuery() {
         <el-card shadow="never" class="grid-item">
             <div class="my-header">
                 <span class="title">CDN信息:</span>
-                <el-popover placement="left" :width="350" trigger="click">
-                    <template #reference>
-                        <div>
-                            <el-tooltip content="批量查询">
-                                <el-button :icon="Document"></el-button>
-                            </el-tooltip>
+                <div style="display: flex;">
+                    <el-popover placement="left" :width="350" trigger="click">
+                        <template #reference>
+                            <div>
+                                <el-tooltip content="批量查询">
+                                    <el-button :icon="Document"></el-button>
+                                </el-tooltip>
+                            </div>
+                        </template>
+                        <el-button text bg :icon="UploadFilled" style="width: 100%; margin-bottom: 5px;">选择域名文件</el-button>
+                        <el-input v-model="domain.batch" type="textarea" rows="5" placeholder="请输入域名，按换行分割"></el-input>
+                        <div class="my-header" style="margin-top: 5px;">
+                            <div></div>
+                            <el-button type="primary" @click="batchQuery">开始批量查询</el-button>
                         </div>
-                    </template>
-                    <el-button text bg :icon="UploadFilled" style="width: 100%; margin-bottom: 5px;">选择域名文件</el-button>
-                    <el-input v-model="domain.batch" type="textarea" rows="5" placeholder="请输入域名，按换行分割"></el-input>
-                    <div class="my-header" style="margin-top: 5px;">
-                        <div></div>
-                        <el-button type="primary" @click="batchQuery">开始批量查询</el-button>
-                    </div>
-                </el-popover>
+                    </el-popover>
+                    <el-tooltip content="复制内容并跳转到数据处理">
+                        <el-button :icon="Promotion" @click="CopyAndJump"/>
+                    </el-tooltip>
+                </div>
             </div>
             <el-input v-model="domain.cdn" type="textarea" rows="12" resize="none" style="margin-top: 10px;"></el-input>
 

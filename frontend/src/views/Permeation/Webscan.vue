@@ -401,7 +401,7 @@ function getClassBySeverity(severity: string) {
                 <el-col :span="2" v-for="(total, risk) in dashboard.riskLevel">
                     <el-statistic :title="risk.toLocaleUpperCase()" :value="total" />
                 </el-col>
-                <el-divider direction="vertical" style="height: 7vh;" />
+                <el-divider direction="vertical" />
                 <el-col :span="3">
                     <el-statistic title="指纹数量" :value="dashboard.fingerLength" />
                 </el-col>

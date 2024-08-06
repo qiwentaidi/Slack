@@ -1,8 +1,10 @@
+import homeIcon from "../assets/icon/home.svg"
+
 const MenuList = [
     {
       name: "aside.home",
       path: "/",
-      icon: "",
+      icon: homeIcon,
     },
     {
       name: "aside.penetration",
