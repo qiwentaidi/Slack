@@ -7,12 +7,13 @@ import MenuList from "@/router/menu";
   <el-scrollbar height="92vh">
     <div v-for="groups in MenuList">
       <div v-if="groups.children" class="card-group">
-        <el-card style="margin-bottom: 5px;">
-          <div style="margin-bottom: 10px">
+        <el-divider>{{ $t(groups.name) }}</el-divider>
+        <!-- <el-card style="margin-bottom: 5px;"> -->
+          <!-- <div style="margin-bottom: 10px">
             <span style="font-weight: bold">{{ $t(groups.name) }}</span>
-          </div>
+          </div> -->
           <el-row>
-            <el-col :lg="4" v-for="item in groups.children">
+            <el-col :lg="6" v-for="item in groups.children">
               <el-result :title="$t(item.name)" @click="$router.push(item.path)">
                 <template #icon>
                   <el-image class="appNavIcon" :src="item.icon" />
@@ -20,7 +21,7 @@ import MenuList from "@/router/menu";
               </el-result>
             </el-col>
           </el-row>
-        </el-card>
+        <!-- </el-card> -->
       </div>
     </div>
   </el-scrollbar>

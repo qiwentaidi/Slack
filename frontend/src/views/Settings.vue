@@ -95,9 +95,9 @@
             <el-table-column label="操作" width="250" align="center">
               <template #default="scope">
                 <el-button type="primary" link :icon="Edit"
-                  @click="ctrl.innerDrawer = true; ctrl.currentPath = '/username/' + scope.row.name + '.txt'; ReadDict(ctrl.currentPath)">用户名</el-button>
+                  @click="ctrl.innerDrawer = true; ctrl.currentPath = '/username/' + scope.row.name + '.txt'; ReadDict(ctrl.currentPath)">{{ $t('setting.username') }}</el-button>
                 <el-button type="primary" link :icon="Edit"
-                  @click="ctrl.innerDrawer = true; ctrl.currentPath = '/password/password.txt'; ReadDict(ctrl.currentPath)">密码</el-button>
+                  @click="ctrl.innerDrawer = true; ctrl.currentPath = '/password/password.txt'; ReadDict(ctrl.currentPath)">{{ $t('setting.password') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -132,6 +132,8 @@ const isDark = useDark({
 const toggle = useToggle(isDark)
 
 const { locale } = useI18n();
+
+global.Language.value = locale.value
 const changeLanguage = (lang: string) => {
   localStorage.setItem("language", lang);
   locale.value = lang;
