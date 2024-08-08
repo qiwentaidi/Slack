@@ -270,7 +270,7 @@ const options = [
     </el-drawer>
     <!-- about -->
     <el-dialog v-model="aboutDialog" width="36%">
-        <template #title>
+        <template #header>
             <el-segmented v-model="aboutIndex" :options="options">
                 <template #default="{ item }">
                     <div style="display: flex;">

@@ -65,6 +65,7 @@ export interface Dir {
     URL: string;
     Location: string;
     Length: number;
+    Body: string;
 }
 
 export interface DirScanOptions {

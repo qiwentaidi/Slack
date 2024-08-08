@@ -129,7 +129,7 @@
                 </template>
             </el-autocomplete>
         </el-form-item>
-        <el-form-item style="display: flex; align-items: center; width: 100%;">
+        <el-form-item>
             <div>
                 <span class="mr">最新数据</span><el-switch v-model="options.switch.latest"
                     @change="tableCtrl.handleOptionChange" style="--el-switch-on-color: #4CA87D;" />
@@ -187,9 +187,9 @@
         @tab-remove="tableCtrl.removeTab" class="quake-tabs">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 65vh;">
+            <el-table :data="item.content" border style="width: 100%;height: 67vh;">
                 <el-table-column prop="IP" fixed label="IP" width="150" />
-                <el-table-column prop="Host" fixed label="域名" width="200">
+                <el-table-column prop="Host" fixed label="域名" width="200" :show-overflow-tooltip="true">
                     <template #default="scope">
                         <span v-if="scope.row.Host != scope.row.IP">{{ scope.row.Host }}</span>
                         <span v-else>--</span>
@@ -251,9 +251,9 @@
                 </el-table-column>
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
-                <span style="color: #4CA87D;">{{ quake.message }}</span>
-                <el-pagination class="quake-pagin" background v-model:page-size="item.pageSize"
-                    :page-sizes="[10, 20, 50, 100, 200, 500]" layout="total, sizes, prev, pager, next"
+                <span style="color: #4CA87D; font-size: 14px;">{{ quake.message }}</span>
+                <el-pagination size="small" class="quake-pagin" background v-model:page-size="item.pageSize"
+                    :page-sizes="[10, 20, 50, 100, 200, 500]" layout="total, sizes, prev, pager, next, jumper"
                     @size-change="tableCtrl.handleSizeChange" @current-change="tableCtrl.handleCurrentChange"
                     :total="item.total" />
             </div>

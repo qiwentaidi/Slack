@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Grid, RefreshRight, Menu, Promotion } from '@element-plus/icons-vue';
 import {
     InitRule,
@@ -52,7 +52,7 @@ onMounted(() => {
     EventsOn("nucleiResult", (result: any) => {
         const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
         dashboard.riskLevel[riskLevelKey]++;
-        vulPagination.table.result.push({
+        vp.table.result.push({
             vulID: result.ID,
             vulName: result.Name,
             protocoltype: result.Type.toLocaleUpperCase(),
@@ -64,7 +64,7 @@ onMounted(() => {
             description: result.Description,
             reference: result.Reference,
         })
-        vulPagination.table.pageContent = vulPagination.ctrl.watchResultChange(vulPagination.table.result, vulPagination.table.currentPage, vulPagination.table.pageSize)
+        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table.result, vp.table.currentPage, vp.table.pageSize)
     });
     EventsOn("webFingerScan", async (result: any) => {
         if (result.StatusCode == 0) {
@@ -75,7 +75,7 @@ onMounted(() => {
                 finger: result.Fingerprints
             })
             let temp = await sortFinger(result.Fingerprints)
-            fingerPagination.table.result.push({
+            fp.table.result.push({
                 url: result.URL,
                 status: result.StatusCode,
                 length: result.Length,
@@ -85,7 +85,7 @@ onMounted(() => {
                 waf: "WAF: " + result.WAF,
                 fingerprint: temp,
             })
-            fingerPagination.table.pageContent = fingerPagination.ctrl.watchResultChange(fingerPagination.table.result, fingerPagination.table.currentPage, fingerPagination.table.pageSize)
+            fp.table.pageContent = fp.ctrl.watchResultChange(fp.table.result, fp.table.currentPage, fp.table.pageSize)
         }
     });
     return () => {
@@ -107,7 +107,7 @@ const dashboard = reactive({
     count: 0,
     fingerLength: 0,
     yamlPocsLength: 0,
-    nucleiEnabled: false
+    nucleiEnabled: false,
 })
 
 const form = reactive({
@@ -151,6 +151,9 @@ const form = reactive({
     noInteractsh: false,
 })
 
+const detailDialog = ref(false)
+const selectedRow = ref();
+
 function validateInput() {
     const ipPatterns = [
         /^(http:\/\/|https:\/\/)?(\d{1,3}\.){3}\d{1,3}(?:.*)/, // 192.168.1.1
@@ -164,8 +167,8 @@ function validateInput() {
     );
 }
 
-let fingerPagination = usePagination(form.fingerResult, 50)
-let vulPagination = usePagination(form.vulResult, 50)
+let fp = usePagination(form.fingerResult, 50)
+let vp = usePagination(form.vulResult, 50)
 
 async function sortFinger(Fingerprints: any) {
     const temp = [] as FingerLevel[]
@@ -356,13 +359,6 @@ const uncover = {
 function filterHandlerSeverity(value: string, row: any): boolean {
     return row.severity === value;
 }
-
-function getColumnData(prop: string): any[] {
-    let protocols = new Set(form.vulResult.map((item: any) => item[prop]));
-    let newArray = Array.from(protocols).map(protocol => ({ text: protocol, value: protocol }))
-    return newArray
-}
-
 // 设置css样式
 function getClassBySeverity(severity: string) {
     switch (severity) {
@@ -436,7 +432,7 @@ function getClassBySeverity(severity: string) {
         <div style="position: relative; margin-top: 10px;">
             <el-tabs type="card">
                 <el-tab-pane label="指纹">
-                    <el-table :data="fingerPagination.table.pageContent" border height="100vh"
+                    <el-table :data="fp.table.pageContent" border stripe height="100vh"
                         :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
                         <el-table-column fixed type="index" label="#" width="60px" />
                         <el-table-column fixed prop="url" label="URL" width="300px" :show-overflow-tooltip="true">
@@ -497,62 +493,49 @@ function getClassBySeverity(severity: string) {
                     </el-table>
                     <div class="my-header" style="margin-top: 5px;">
                         <div></div>
-                        <el-pagination background @size-change="fingerPagination.ctrl.handleSizeChange"
-                            @current-change="fingerPagination.ctrl.handleCurrentChange" :pager-count="5"
-                            :current-page="fingerPagination.table.currentPage" :page-sizes="[50, 100, 200]"
-                            :page-size="fingerPagination.table.pageSize" layout="total, sizes, prev, pager, next"
-                            :total="fingerPagination.table.result.length">
+                        <el-pagination background @size-change="fp.ctrl.handleSizeChange"
+                            @current-change="fp.ctrl.handleCurrentChange" :pager-count="5"
+                            :current-page="fp.table.currentPage" :page-sizes="[50, 100, 200]"
+                            :page-size="fp.table.pageSize" layout="total, sizes, prev, pager, next"
+                            :total="fp.table.result.length">
                         </el-pagination>
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="漏洞">
-                    <el-table :data="vulPagination.table.pageContent" border height="100vh"
+                    <el-table :data="vp.table.pageContent" stripe border height="100vh"
                         :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
-                        <el-table-column type="expand">
-                            <template #default="props">
-                                <div>
-                                    <el-descriptions :column="2" border style="margin-bottom: 10px;">
-                                        <el-descriptions-item label="Name:">{{ props.row.vulName
-                                            }}</el-descriptions-item>
-                                        <el-descriptions-item label="Extracted:">{{ props.row.extInfo
-                                            }}</el-descriptions-item>
-                                        <el-descriptions-item label="Description:" :span="2">{{ props.row.description
-                                            }}</el-descriptions-item>
-                                        <el-descriptions-item label="Reference:" :span="2"
-                                            label-class-name="description">
-                                            <div v-for="item in props.row.reference.split(',')">
-                                                {{ item }}
-                                            </div>
-                                        </el-descriptions-item>
-                                    </el-descriptions>
-                                    <div style="display: grid; grid-column: 2;">
-                                        <div class="pretty-response">{{
-                                            props.row.request }}</div>
-                                        <div class="pretty-response">{{
-                                            props.row.response }}</div>
-                                    </div>
-                                </div>
-                            </template>
-                        </el-table-column>
                         <el-table-column prop="vulID" label="ID" width="250px" :show-overflow-tooltip="true" />
-                        <el-table-column prop="severity" width="150px" label="Severity"
-                            :filter-method="filterHandlerSeverity" :filters='getColumnData("severity")'>
+                        <el-table-column prop="severity" width="150px" label="Severity" 
+                            :filter-method="filterHandlerSeverity" :filters="[
+                                { text: 'INFO', value: 'INFO' },
+                                { text: 'LOW', value: 'LOW' },
+                                { text: 'MEDIUM', value: 'MEDIUM' },
+                                { text: 'HIGH', value: 'HIGH' },
+                                { text: 'CRITICAL', value: 'CRITICAL' },
+                            ]">
                             <template #default="scope">
                                 <span :class="getClassBySeverity(scope.row.severity)">{{ scope.row.severity }}</span>
                             </template>
                         </el-table-column>
                         <el-table-column prop="vulURL" label="URL" :show-overflow-tooltip="true" />
+                        <el-table-column label="操作" width="120px">
+                            <template #default="scope">
+                                <el-button type="primary" link @click="detailDialog = true; selectedRow = scope.row">
+                                    查看详情
+                                </el-button>
+                            </template>
+                        </el-table-column>
                         <template #empty>
                             <el-empty />
                         </template>
                     </el-table>
                     <div class="my-header" style="margin-top: 5px;">
                         <div></div>
-                        <el-pagination background @size-change="vulPagination.ctrl.handleSizeChange"
-                            @current-change="vulPagination.ctrl.handleCurrentChange" :pager-count="5"
-                            :current-page="vulPagination.table.currentPage" :page-sizes="[50, 100, 200]"
-                            :page-size="vulPagination.table.pageSize" layout="total, sizes, prev, pager, next"
-                            :total="vulPagination.table.result.length">
+                        <el-pagination background @size-change="vp.ctrl.handleSizeChange"
+                            @current-change="vp.ctrl.handleCurrentChange" :pager-count="5"
+                            :current-page="vp.table.currentPage" :page-sizes="[50, 100, 200]"
+                            :page-size="vp.table.pageSize" layout="total, sizes, prev, pager, next"
+                            :total="vp.table.result.length">
                         </el-pagination>
                     </div>
                 </el-tab-pane>
@@ -564,7 +547,7 @@ function getClassBySeverity(severity: string) {
                     Engine</el-button>
 
                 <el-dropdown>
-                    <el-button :icon="Menu" color="#D2DEE3" />
+                    <el-button :icon="Menu" text bg />
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
@@ -649,6 +632,32 @@ function getClassBySeverity(severity: string) {
         <div>
             <el-button type="primary" @click="startScan"
                 style="left: 45%;bottom: 10px; position: absolute;">开始任务</el-button>
+        </div>
+    </el-drawer>
+    <el-drawer v-model="detailDialog" size="70%">
+        <template #header>
+            <el-button text bg>
+                <template #icon><Notebook /></template>漏洞详情</el-button>
+        </template>
+        <div v-if="selectedRow">
+            <el-descriptions :column="2" border style="margin-bottom: 10px;">
+                <el-descriptions-item label="Name:">{{ selectedRow.vulName
+                    }}</el-descriptions-item>
+                <el-descriptions-item label="Extracted:">{{ selectedRow.extInfo
+                    }}</el-descriptions-item>
+                <el-descriptions-item label="Description:" :span="2">{{ selectedRow.description
+                    }}</el-descriptions-item>
+                <el-descriptions-item label="Reference:" :span="2"
+                    label-class-name="description">
+                    <div v-for="item in selectedRow.reference.split(',')">
+                        {{ item }}
+                    </div>
+                </el-descriptions-item>
+            </el-descriptions>
+            <div style="display: flex">
+                <div class="pretty-response" style="font-size: small;">{{ selectedRow.request }}</div>
+                <div class="pretty-response" style="font-size: small;">{{ selectedRow.response }}</div>
+            </div>
         </div>
     </el-drawer>
     <el-dialog v-model="form.fofaDialog" title="导入FOFA目标(MAX 10000)" width="50%" center>

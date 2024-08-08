@@ -24,7 +24,7 @@
             </el-table>
         </div>
         <div style="width: 70%; margin-left: 10px;">
-            <pre class="pretty-response" style="margin: 0; height: auto;"><code>{{ reverse.show }}</code></pre>
+            <highlightjs language="bash" :code="reverse.show"></highlightjs>            
             <el-button type="primary" style="float: right; margin-top: 10px;"
                 @click="Copy(reverse.show)">复制</el-button>
         </div>

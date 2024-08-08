@@ -27,7 +27,7 @@ type Result struct {
 	URL      string
 	Location string
 	Length   int
-	Message  string
+	Body     string
 }
 
 type Options struct {
@@ -71,9 +71,8 @@ func NewScanner(ctx context.Context, o Options) {
 		}
 	}
 	var id int32
-	count := len(o.Paths) * len(urls)
 	single := make(chan struct{})
-	retChan := make(chan Result, count)
+	retChan := make(chan Result)
 	var wg sync.WaitGroup
 	go func() {
 		for pr := range retChan {
@@ -136,6 +135,7 @@ func Scan(ctx context.Context, url string, header http.Header, o Options, client
 		result.Status = 1
 		return result
 	}
+	result.Body = string(body)
 	result.Length = len(body)
 	// 记录同一状态码下长度出现次数，当次数超过o.BodyLengthExcludeTimes时，将状态码设置为1，过滤显示
 	mutex.Lock()

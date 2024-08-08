@@ -14,6 +14,17 @@ import global from "./global";
 import "./style/dark.css"
 import "./style/light.css"
 import { directive } from 'vue3-menus';
+//引入依赖和语言
+import hljs from "highlight.js/lib/core";
+import hljsVuePlugin from "@highlightjs/vue-plugin";
+//按需引入语言
+import bash from "highlight.js/lib/languages/bash";
+import html from "highlight.js/lib/languages/vbscript-html";
+import json from "highlight.js/lib/languages/json";
+
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("html", html);
+hljs.registerLanguage("json", json);
 
 let theme = localStorage.getItem('theme') || "light"
 
@@ -35,4 +46,4 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.use(router).use(i18n).mount("#app");
+app.use(router).use(i18n).use(hljsVuePlugin).mount("#app");

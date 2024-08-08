@@ -131,7 +131,7 @@ const syntax = ({
 
 const form = reactive({
     query: '',
-    defaultTime: '0',
+    defaultTime: '2',
     defaultSever: '3',
     deduplication: false,
     tips: '',
@@ -501,42 +501,47 @@ async function CopyURL(mode: number) {
                 <template #default="{ item }">
                     <el-space>
                         <span>{{ item.value }}</span>
-                        <span>({{ item.assetNum }} 条数据)</span>
+                        <el-divider direction="vertical" />
+                        <span>数量: {{ item.assetNum }}</span>
+                        <el-divider direction="vertical" />
                         <el-tag v-for="label in item.tags">{{ label }}</el-tag>
                     </el-space>
                 </template>
             </el-autocomplete>
         </el-form-item>
+        <el-form-item>
+            <el-space>
+                <el-select v-model="form.defaultTime" style="width: 120px;">
+                    <el-option v-for="item in options.Time" :key="item.value" :label="item.label" :value="item.value"
+                        style="text-align: center;" />
+                </el-select>
+                <el-select v-model="form.defaultSever" style="width: 160px;">
+                    <el-option v-for="item in options.Server" :key="item.value" :label="item.label" :value="item.value"
+                        style="text-align: center;" />
+                </el-select>
+                <el-tooltip content="需要权益积分">
+                    <el-checkbox v-model="form.deduplication">数据去重</el-checkbox>
+                </el-tooltip>
+            </el-space>
+            <div style="flex-grow: 1;"></div>
+            <el-dropdown>
+                <el-button :icon="Operation" text bg />
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+            </el-dropdown>
+        </el-form-item>
     </el-form>
-    <div class="my-header">
-        <el-space>
-            <el-select v-model="form.defaultTime" style="width: 120px;">
-                <el-option v-for="item in options.Time" :key="item.value" :label="item.label" :value="item.value"
-                    style="text-align: center;" />
-            </el-select>
-            <el-select v-model="form.defaultSever" style="width: 160px;">
-                <el-option v-for="item in options.Server" :key="item.value" :label="item.label" :value="item.value"
-                    style="text-align: center;" />
-            </el-select>
-            <el-checkbox v-model="form.deduplication" size="large">数据去重(需权益积分)</el-checkbox>
-        </el-space>
-        <el-dropdown>
-            <el-button :icon="Operation" color="#D2DEE3" />
-            <template #dropdown>
-                <el-dropdown-menu>
-                    <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                    <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
-                    <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
-                    <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
-                </el-dropdown-menu>
-            </template>
-        </el-dropdown>
-    </div>
     <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" style="margin-top: 10px;" closable
         @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 65vh;">
+            <el-table :data="item.content" border style="width: 100%;height: 66vh;">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" width="200" :show-overflow-tooltip="true">
                     <template #default="scope">
@@ -585,7 +590,7 @@ async function CopyURL(mode: number) {
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
                 <el-pagination background v-model:page-size="item.pageSize" :page-sizes="[10, 50, 100]"
-                    layout="total, sizes, prev, pager, next" @size-change="tableCtrl.handleSizeChange"
+                    layout="total, sizes, prev, pager, next, jumper" @size-change="tableCtrl.handleSizeChange"
                     @current-change="tableCtrl.handleCurrentChange" :total="item.total" />
             </div>
         </el-tab-pane>

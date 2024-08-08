@@ -369,3 +369,21 @@ export function transformArrayFields<T extends AnyObject>(data: T[], delimiter: 
 export function CsegmentIpv4(ip: string) :string {
   return ip.split('.').slice(0, 3).join('.') + ".0/24";
 }
+
+//将utf-8编码的字符转换为gbk编码的字符
+export function utf8toGbk(word: string) {
+  var encoder = new TextEncoder();
+  var decoder = new TextDecoder('utf-8');
+  var data = encoder.encode(word);
+  var result = decoder.decode(data);
+  return result;
+}
+
+//将gbk编码的字符转换为utf-8编码的字符
+export function gbktoUtf8(word: string) {
+  var encoder = new TextEncoder();
+  var decoder = new TextDecoder('gbk');
+  var data = encoder.encode(word);
+  var result = decoder.decode(data);
+  return result;
+}

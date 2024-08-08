@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { reactive } from 'vue';
-import { GoFetch, LoadDirsearchDict, DirScan, StopDirScan } from "wailsjs/go/main/App";
-import { SplitTextArea, Copy, proxys } from '@/util'
+import { reactive, ref } from 'vue';
+import { LoadDirsearchDict, DirScan, StopDirScan } from "wailsjs/go/main/App";
+import { SplitTextArea, Copy } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-plus/icons-vue';
@@ -10,7 +10,7 @@ import global from '@/global';
 import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/main/File';
 import { Dir, DirScanOptions } from '@/interface';
 import usePagination from '@/usePagination';
-
+import redirectIcon from '@/assets/icon/redirect.svg'
 
 onMounted(() => {
     // 获取当前全部字典
@@ -28,6 +28,7 @@ onMounted(() => {
                     Length: result.Length,
                     URL: result.URL,
                     Location: result.Location,
+                    Body: result.Body,
                 })
                 pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
                 break
@@ -194,16 +195,13 @@ const control = ({
     }
 })
 
-async function GetResponse(url: string) {
+function DispalyResponse(response: string) {
     from.respDialog = true
-    let result: any = await GoFetch(from.defaultOption, url, "", [{}], 10, proxys);
-    if (result.Error) {
-        from.content = '目的地址响应超时'
-    }
     try {
-        from.content = JSON.parse(result.Body);
+        
+        from.content = JSON.parse(response);
     } catch (error) {
-        from.content = result.Body
+        from.content = response
     }
 }
 
@@ -220,6 +218,8 @@ const config = reactive({
     runningStatus: false,
 })
 
+const options = ["Pretty", "Raw"]
+const optionIndex = ref("Pretty")
 </script>
 
 <template>
@@ -270,7 +270,9 @@ const config = reactive({
                     <template #content>Redirect to {{ scope.row.Location }}</template>
                     <el-button link @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.Location != ''">
                         <template #icon>
-                            <img src="../../assets/icon/redirect.svg" style="width: 14px; height: 14px;">
+                            <el-icon>
+                                <redirectIcon />
+                            </el-icon>
                         </template>
                     </el-button>
                 </el-tooltip>
@@ -283,7 +285,7 @@ const config = reactive({
                 <el-divider direction="vertical" />
                 <el-button type="primary" link @click.prevent="BrowserOpenURL(scope.row.URL)">打开</el-button>
                 <el-divider direction="vertical" />
-                <el-button type="primary" link @click.prevent="GetResponse(scope.row.URL)">查看</el-button>
+                <el-button type="primary" link @click.prevent="DispalyResponse(scope.row.Body)">查看</el-button>
             </template>
         </el-table-column>
         <template #empty>
@@ -300,8 +302,12 @@ const config = reactive({
             :total="pagination.table.result.length">
         </el-pagination>
     </div>
-    <el-dialog v-model="from.respDialog" title="Response" width="800">
-        <pre class="pretty-response"><code>{{ from.content }}</code></pre>
+    <el-dialog v-model="from.respDialog" width="800">
+        <template #header>
+            <el-segmented v-model="optionIndex" :options="options"></el-segmented>
+        </template>
+        <pre class="pretty-response" v-if="optionIndex == 'Raw'"><code>{{ from.content }}</code></pre>
+        <highlightjs autodetect :code="from.content" v-else></highlightjs>            
     </el-dialog>
     <el-drawer v-model="config.drawer" size="60%">
         <template #header>

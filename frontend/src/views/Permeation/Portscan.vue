@@ -361,7 +361,7 @@ function changeTableHeigth() {
     form.hideDashboard = !form.hideDashboard
     var portscanTable = document.getElementById('portscan-table')!
     if (!form.hideDashboard) {
-        portscanTable.style.height = '51.5vh'
+        portscanTable.style.height = '50.5vh'
     } else {
         portscanTable.style.height = '80.5vh'
     }
@@ -472,7 +472,7 @@ const titleStyle = computed(() => {
         <el-tabs v-model="form.activeName">
             <el-tab-pane label="结果输出" name="1">
                 <el-table :data="pagination.table.pageContent" border id="portscan-table"
-                    @selection-change="pagination.ctrl.handleSelectChange" style="height: 51.5vh;">
+                    @selection-change="pagination.ctrl.handleSelectChange" style="height: 50.5vh;">
                     <el-table-column type="selection" width="42px" />
                     <el-table-column prop="IP" label="Host" />
                     <el-table-column prop="Port" label="Port" width="100px" />
@@ -521,7 +521,7 @@ const titleStyle = computed(() => {
                     </template>
                 </el-input>
                 <el-dropdown>
-                    <el-button :icon="Menu" color="#D2DEE3" />
+                    <el-button :icon="Menu" text bg />
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item @click="moreOperate.CopyURLs('url', pagination.table.result)"

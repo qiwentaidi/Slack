@@ -230,11 +230,7 @@ const tableCtrl = ({
         table.loading = true
         let result: FofaResult = await FofaSearch(query, "100", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
         if (result.Error) {
-            ElMessage({
-                showClose: true,
-                message: result.Message,
-                type: "warning",
-            });
+            ElMessage.warning(result.Message);
             table.loading = false
             return
         }
@@ -270,34 +266,30 @@ const tableCtrl = ({
         table.acvtiveNames = activeName
         table.editableTabs = tabs.filter((tab) => tab.name !== targetName)
     },
-    handleSizeChange: (val: any) => {
+    handleSizeChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
-        FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult) => {
-            form.tips = result.Message!
-            if (result.Error) {
-                table.loading = false
-                return
-            }
-            tab.content = result.Results!;
-            tab.total = result.Size!
-        })
+        let result: FofaResult = await FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        form.tips = result.Message!
         table.loading = false
+        if (result.Error) {
+            return
+        }
+        tab.content = result.Results!;
+        tab.total = result.Size!
     },
-    handleCurrentChange: (val: any) => {
+    handleCurrentChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult) => {
-            form.tips = result.Message!
-            if (result.Error) {
-                table.loading = false
-                return
-            }
-            tab.content = result.Results!;
-            tab.total = result.Size!
-        })
+        let result: FofaResult = await FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        form.tips = result.Message!
         table.loading = false
+        if (result.Error) {
+            return
+        }
+        tab.content = result.Results!;
+        tab.total = result.Size!
     }
 })
 
@@ -515,7 +507,8 @@ function formatProduct(raw: string): string[] {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="form.syntaxData" @row-click="syntax.rowClick" class="hunter-keyword-search">
+                            <el-table :data="form.syntaxData" @row-click="syntax.rowClick"
+                                class="hunter-keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100">
@@ -538,29 +531,31 @@ function formatProduct(raw: string): string[] {
                 </template>
             </el-autocomplete>
         </el-form-item>
+        <el-form-item>
+            <div>
+                <el-checkbox v-model="form.fraud">排除干扰(专业版)</el-checkbox>
+                <el-checkbox v-model="form.cert">证书(个人版)</el-checkbox>
+            </div>
+            <div style="flex: 1;"></div>
+            <el-dropdown>
+                <el-button :icon="Operation" text bg />
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="CopyDocument"
+                            @click="CopyDeduplicationURL">去重复制前1w条URL</el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+            </el-dropdown>
+        </el-form-item>
     </el-form>
-    <div class="my-header" style="margin-bottom: 10px;">
-        <div>
-            <el-checkbox v-model="form.fraud">排除干扰(专业版)</el-checkbox>
-            <el-checkbox v-model="form.cert">证书(个人版)</el-checkbox>
-        </div>
-        <el-dropdown>
-            <el-button :icon="Operation" color="#D2DEE3" />
-            <template #dropdown>
-                <el-dropdown-menu>
-                    <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                    <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
-                    <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
-                    <el-dropdown-item :icon="CopyDocument" @click="CopyDeduplicationURL">去重复制前1w条URL</el-dropdown-item>
-                </el-dropdown-menu>
-            </template>
-        </el-dropdown>
-    </div>
     <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" closable
         @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 65vh;">
+            <el-table :data="item.content" border style="width: 100%;height: 67vh;">
                 <el-table-column type="index" label="#" width="60px" />
                 <el-table-column prop="URL" label="URL" width="300" :show-overflow-tooltip="true">
                     <template #default="scope">
@@ -592,7 +587,7 @@ function formatProduct(raw: string): string[] {
                                     <div style="display: flex; flex-direction: column;">
                                         <el-tag type="primary" v-for="component in formatProduct(scope.row.Product)">{{
                                             component
-                                            }}</el-tag>
+                                        }}</el-tag>
                                     </div>
                                 </el-popover>
                             </template>
@@ -605,8 +600,8 @@ function formatProduct(raw: string): string[] {
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
-                <el-pagination background v-model:page-size="item.pageSize" :page-sizes="[100, 500, 1000]"
-                    layout="total, sizes, prev, pager, next" @size-change="tableCtrl.handleSizeChange"
+                <el-pagination size="small" background v-model:page-size="item.pageSize" :page-sizes="[100, 500, 1000]"
+                    layout="total, sizes, prev, pager, next, jumper" @size-change="tableCtrl.handleSizeChange"
                     @current-change="tableCtrl.handleCurrentChange" :total="item.total" />
             </div>
         </el-tab-pane>

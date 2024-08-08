@@ -9,11 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@highlightjs/vue-plugin": "^2.1.0",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^20.9.1",
     "async": "^3.2.5",
     "crypto-js": "^4.2.0",
     "element-plus": "^2.7.6",
+    "highlight.js": "^11.10.0",
     "jsencrypt": "^3.3.2",
     "sm-crypto": "^0.3.13",
     "vite-svg-loader": "^5.1.0",
