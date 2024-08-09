@@ -9,8 +9,8 @@ const cmd5 = "https://www.cmd5.com"
 
 <template>
     <div style="position: relative;">
-        <el-tabs style="height: 100%; width: 100%;">
-            <el-tab-pane label="编码转换">
+        <el-tabs>
+            <el-tab-pane label="编码转换" style="height: 100vh;">
                 <Transcode></Transcode>
             </el-tab-pane>
             <el-tab-pane label="时间戳">

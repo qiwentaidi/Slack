@@ -66,11 +66,12 @@ export interface Dir {
     Location: string;
     Length: number;
     Body: string;
+    Recursion: number;
 }
 
 export interface DirScanOptions {
     Method: string;
-    URL: string;
+    URLs: string[];
     Paths: string[];
     Workers: number;
     Timeout: number;
@@ -80,6 +81,7 @@ export interface DirScanOptions {
     Redirect: boolean;
     Interval: number;
     CustomHeader: string;
+    Recursion: number;
 }
 
 export interface ProxyOptions {

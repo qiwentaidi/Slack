@@ -23,16 +23,17 @@ var (
 )
 
 type Result struct {
-	Status   int
-	URL      string
-	Location string
-	Length   int
-	Body     string
+	Status    int
+	URL       string
+	Location  string
+	Length    int
+	Body      string
+	Recursion int
 }
 
 type Options struct {
 	Method                 string
-	URL                    string
+	URLs                   []string
 	Paths                  []string
 	Workers                int
 	Timeout                int
@@ -43,17 +44,12 @@ type Options struct {
 	Redirect               bool
 	Interval               int
 	CustomHeader           string
+	Recursion              int
 }
 
 // method 请求类型
 func NewScanner(ctx context.Context, o Options) {
-	var urls []string
-	if util.IsURL(o.URL) {
-		urls = append(urls, o.URL)
-	} else {
-		urls = util.ReadLine(o.URL)
-	}
-	runtime.EventsEmit(ctx, "dirsearchCounts", len(urls)*len(o.Paths))
+	runtime.EventsEmit(ctx, "dirsearchCounts", len(o.URLs)*len(o.Paths))
 	bodyLengthMap = make(map[string]int)
 	// 初始化请求信息
 	if o.Timeout == 0 {
@@ -76,6 +72,7 @@ func NewScanner(ctx context.Context, o Options) {
 	var wg sync.WaitGroup
 	go func() {
 		for pr := range retChan {
+			pr.Recursion = o.Recursion
 			runtime.EventsEmit(ctx, "dirsearchLoading", pr)
 		}
 		close(single)
@@ -94,7 +91,7 @@ func NewScanner(ctx context.Context, o Options) {
 		wg.Done()
 	})
 	defer threadPool.Release()
-	for _, url := range urls {
+	for _, url := range o.URLs {
 		if !strings.HasSuffix(url, "/") {
 			url = url + "/"
 		}
@@ -120,6 +117,7 @@ func NewScanner(ctx context.Context, o Options) {
 // status 1 表示被排除显示在外，不计入前端ERROR请求中
 func Scan(ctx context.Context, url string, header http.Header, o Options, client *http.Client) Result {
 	var result Result
+	result.URL = url
 	resp, body, err := clients.NewRequest(o.Method, url, header, nil, o.Timeout, true, client)
 	if err != nil {
 		gologger.IntervalError(ctx, err)
@@ -145,6 +143,5 @@ func Scan(ctx context.Context, url string, header http.Header, o Options, client
 	}
 	mutex.Unlock()
 	result.Location = resp.Header.Get("Location")
-	result.URL = url
 	return result
 }

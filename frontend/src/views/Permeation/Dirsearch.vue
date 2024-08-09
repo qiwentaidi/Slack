@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { LoadDirsearchDict, DirScan, StopDirScan } from "wailsjs/go/main/App";
-import { SplitTextArea, Copy } from '@/util'
+import { SplitTextArea, Copy, ReadLine } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-plus/icons-vue';
@@ -29,6 +29,7 @@ onMounted(() => {
                     URL: result.URL,
                     Location: result.Location,
                     Body: result.Body,
+                    Recursion: result.Recursion,
                 })
                 pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
                 break
@@ -113,6 +114,7 @@ async function dirscan() {
 
 
 class Dirsearch {
+    urls = [] as string[]
     public async checkInput() {
         if (!from.input) {
             ElMessage.warning('请输入URL或者文件路径')
@@ -154,20 +156,41 @@ class Dirsearch {
     public async scanner() {
         await this.init()
         let statuscodeFilter = control.psc()
-        let option: DirScanOptions = {
-            Method: from.defaultOption,
-            URL: from.input,
-            Paths: from.paths,
-            Workers: config.thread,
-            Timeout: config.timeout,
-            BodyExclude: config.exclude,
-            BodyLengthExcludeTimes: config.times,
-            StatusCodeExclude: statuscodeFilter,
-            Redirect: config.redirectClient,
-            Interval: config.interval,
-            CustomHeader: config.headers,
+        if (await CheckFileStat(from.input)) {
+            let lines = await ReadLine(from.input)
+            if (!lines) {
+                ElMessage.warning("文件不能为空")
+                return
+            }
+            this.urls = lines
+        } else {
+            this.urls = [from.input]
         }
-        await DirScan(option)
+        
+        for (let i = 0; i <= config.recursion; i++) {
+            let option: DirScanOptions = {
+                Method: from.defaultOption,
+                URLs: this.urls,
+                Paths: from.paths,
+                Workers: config.thread,
+                Timeout: config.timeout,
+                BodyExclude: config.exclude,
+                BodyLengthExcludeTimes: config.times,
+                StatusCodeExclude: statuscodeFilter,
+                Redirect: config.redirectClient,
+                Interval: config.interval,
+                CustomHeader: config.headers,
+                Recursion: i,
+            }
+            if (i > 0) {
+                option.URLs = pagination.table.result.filter(item => (item.Status == 200 && item.Recursion == i - 1))
+                .map(line => { return line.URL })
+            }
+            if (option.URLs.length == 0) {
+                return
+            }
+            await DirScan(option)
+        }
         config.runningStatus = false
     }
 }
@@ -198,8 +221,10 @@ const control = ({
 function DispalyResponse(response: string) {
     from.respDialog = true
     try {
-        
-        from.content = JSON.parse(response);
+        const parsedContent = JSON.parse(response);
+         // Converts the object back to a JSON string with pretty-printing
+         // code must be string to highlightjs
+        from.content = JSON.stringify(parsedContent, null, 2);
     } catch (error) {
         from.content = response
     }
@@ -216,6 +241,7 @@ const config = reactive({
     customDict: "",
     redirectClient: false,
     runningStatus: false,
+    recursion: 0,
 })
 
 const options = ["Pretty", "Raw"]
@@ -250,6 +276,7 @@ const optionIndex = ref("Pretty")
                     <span>重定向跟随：</span>
                     <el-switch v-model="config.redirectClient" />
                 </div>
+                <el-tag>递归层级:{{ config.recursion }}</el-tag>
                 <el-tag>字典大小:{{ global.temp.dirsearchPathConut }}</el-tag>
                 <el-tag>线程:{{ config.thread }}</el-tag>
                 <el-tooltip placement="bottom" content="请求失败数量">
@@ -279,6 +306,7 @@ const optionIndex = ref("Pretty")
                 {{ scope.row.URL }}
             </template>
         </el-table-column>
+        <el-table-column prop="Recursion" width="100px" label="递归层级" />
         <el-table-column label="操作" width="180px" align="center">
             <template #default="scope">
                 <el-button type="primary" link @click.prevent="Copy(scope.row.URL)">复制</el-button>
@@ -322,6 +350,18 @@ const optionIndex = ref("Pretty")
             </el-form-item>
             <el-form-item label="请求间隔(s):">
                 <el-input-number v-model="config.interval" :min="0" :max="60" />
+            </el-form-item>
+            <el-form-item>
+                <template #label>
+                    <span>递归层级</span>
+                    <el-tooltip placement="left">
+                        <template #content>对响应码为200的路径继续进行扫描</template>
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-input-number v-model="config.recursion" :min="0" :max="5" />
             </el-form-item>
             <el-form-item>
                 <template #label>

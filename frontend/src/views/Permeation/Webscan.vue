@@ -341,7 +341,7 @@ const uncover = {
         global.temp.dirsearchStartTime = Date.now()
         let option: DirScanOptions = {
             Method: "GET",
-            URL: url,
+            URLs: [url],
             Paths: paths,
             Workers: 25,
             Timeout: 8,
@@ -351,6 +351,7 @@ const uncover = {
             Redirect: false,
             Interval: 0,
             CustomHeader: "",
+            Recursion: 0,
         }
         await DirScan(option)
     }
