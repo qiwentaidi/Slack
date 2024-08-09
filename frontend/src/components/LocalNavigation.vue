@@ -222,7 +222,7 @@ function handleCardContextMenu(event: MouseEvent) {
 
 
 <template>
-    <div v-for="groups in localGroup.options.value" class="card-group">
+    <div v-for="groups in localGroup.options.value">
         <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
             @contextmenu.prevent="handleCardContextMenu">
             <div class="my-header" style="margin-bottom: 10px">

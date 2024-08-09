@@ -1,5 +1,5 @@
 <template>
-    <el-form v-model="quake" @submit.native.prevent="tableCtrl.addTab(quake.query, false)">
+    <el-form v-model="quake" @keydown.enter.native.prevent="tableCtrl.addTab(quake.query, false)">
         <el-form-item>
             <el-autocomplete v-model="quake.query" placeholder="Search..." :fetch-suggestions="syntax.querySearchAsync"
                 @select="syntax.handleSelect" :trigger-on-focus="false" :debounce="1000" style="width: 100%;">
@@ -176,8 +176,8 @@
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="Grid" @click="exportData">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="Grid" @click="exportData">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="exportData">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="exportData">导出全部数据</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -281,7 +281,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowDown, CopyDocument, Document, Grid, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
+import { Search, ArrowDown, CopyDocument, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, validateURL } from '@/util';
 import { ExportToXlsx } from '@/export';
@@ -292,6 +292,7 @@ import global from '@/global';
 import { ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus';
 import { FileDialog } from 'wailsjs/go/main/File';
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
+import exportIcon from '@/assets/icon/doucment-export.svg'
 
 const options = ({
     keywordActive: "基本信息",

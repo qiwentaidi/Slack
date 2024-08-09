@@ -196,7 +196,7 @@ async function Delelte(host: string) {
                     </el-popover>
                     代理池爬取
                 </template>
-                <div class="pretty-response">{{ form.socksLogger }}</div>
+                <el-input v-model="form.socksLogger" type="textarea" resize="none" style="height: 82vh;" />
                 <el-progress :percentage="form.percentage" :text-inside="true" :stroke-width="20"
                     style="margin-top: 5px" color="#5DC4F7" />
             </el-tab-pane>
@@ -232,3 +232,9 @@ async function Delelte(host: string) {
         <el-button type="primary" @click="NewSock5Crawl(2)" class="custom_eltabs_titlebar" v-else>导出存活目标</el-button>
     </div>
 </template>
+
+<style scoped>
+.el-textarea__inner {
+    height: 100%;
+}
+</style>

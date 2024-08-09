@@ -20,7 +20,7 @@ export default {
         'systeminfo': 'AV/Patch Detection',
         'data_handing': 'Data Handing',
         'memorandum': 'Memorandum',
-        'associate_dictionary_generator': 'Associate Dictionary Generator',
+        'associate_dictionary_generator': 'Dictionary Generator',
         'aksk': 'Wechat/DingDing',
         'update': 'Update',
         'setting': 'Settings',

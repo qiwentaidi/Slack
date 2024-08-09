@@ -74,6 +74,5 @@ func Ip138Subdomain(domain string) string {
 			subdomain += domain + "\n"
 		}
 	})
-
 	return subdomain
 }

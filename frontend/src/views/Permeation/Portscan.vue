@@ -3,7 +3,7 @@ import { reactive, onMounted, ref, computed } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '@/util'
 import { ExportToXlsx } from '@/export'
-import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Grid, Search, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
+import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Search, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from 'wailsjs/go/main/App'
 import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
@@ -11,6 +11,7 @@ import global from '@/global'
 import async from 'async';
 import { URLFingerMap, PortScanData, File } from '@/interface';
 import usePagination from '@/usePagination';
+import exportIcon from '@/assets/icon/doucment-export.svg'
 
 // syn 扫描模式
 onMounted(() => {
@@ -361,9 +362,9 @@ function changeTableHeigth() {
     form.hideDashboard = !form.hideDashboard
     var portscanTable = document.getElementById('portscan-table')!
     if (!form.hideDashboard) {
-        portscanTable.style.height = '50.5vh'
+        portscanTable.style.height = '53vh'
     } else {
-        portscanTable.style.height = '80.5vh'
+        portscanTable.style.height = '82vh'
     }
 }
 
@@ -438,7 +439,7 @@ const titleStyle = computed(() => {
                                 排除IP可以在可支持输入的IP格式前加!:<br />
                                 !192.168.1.6/28<br />
                                 <br />
-                                域名格式: www.expamle.com
+                                域名格式: www.expamle.com (SYN不支持)
                             </template>
                             <el-icon style="width: 13px;">
                                 <QuestionFilled />
@@ -472,7 +473,7 @@ const titleStyle = computed(() => {
         <el-tabs v-model="form.activeName">
             <el-tab-pane label="结果输出" name="1">
                 <el-table :data="pagination.table.pageContent" border id="portscan-table"
-                    @selection-change="pagination.ctrl.handleSelectChange" style="height: 50.5vh;">
+                    @selection-change="pagination.ctrl.handleSelectChange" style="height: 53vh;">
                     <el-table-column type="selection" width="42px" />
                     <el-table-column prop="IP" label="Host" />
                     <el-table-column prop="Port" label="Port" width="100px" />
@@ -491,9 +492,9 @@ const titleStyle = computed(() => {
                     </template>
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
-                    <el-progress :text-inside="true" :stroke-width="20" :percentage="form.percentage" color="#5DC4F7"
+                    <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage" color="#5DC4F7"
                         style="width: 40%;" />
-                    <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
+                    <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
                         @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
                         :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100, 200, 500]"
                         :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
@@ -530,7 +531,7 @@ const titleStyle = computed(() => {
                                 :icon="CopyDocument">复制全部可爆破协议</el-dropdown-item>
                             <el-dropdown-item @click="moreOperate.CopySelectLinks()"
                                 :icon="CopyDocument">复制选中目标</el-dropdown-item>
-                            <el-dropdown-item :icon="Grid"
+                            <el-dropdown-item :icon="exportIcon"
                                 @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)" divided>
                                 导出Excel</el-dropdown-item>
                             <el-dropdown-item @click="moreOperate.Linkage('webscan')" :icon="Promotion"

@@ -83,7 +83,7 @@ const MenuList = [
         {
           name: "aside.360quake",
           path: "/SpaceEngine/Quake",
-          icon: "/navigation/360.ico"
+          icon: "/navigation/360.png"
         },
         {
           name: "aside.polymerization",

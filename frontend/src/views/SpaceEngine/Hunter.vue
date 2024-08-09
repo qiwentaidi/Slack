@@ -2,13 +2,14 @@
 import { ExportToXlsx } from '@/export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Search, ChatLineSquare, ChromeFilled, CopyDocument, Grid, PictureRounded, Operation, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
+import { Search, ChatLineSquare, ChromeFilled, CopyDocument, PictureRounded, Operation, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { splitInt, Copy } from '@/util'
 import { TableTabs, HunterEntryTips, RuleForm } from "@/interface"
 import global from "@/global"
 import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/main/App'
 import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/main/Database'
 import { BrowserOpenURL } from 'wailsjs/runtime'
+import exportIcon from '@/assets/icon/doucment-export.svg'
 
 const options = ({
     Server: [
@@ -428,7 +429,7 @@ async function CopyURL(mode: number) {
 </script>
 
 <template>
-    <el-form v-model="form" @submit.native.prevent="tableCtrl.addTab(form.query)">
+    <el-form v-model="form" @keydown.enter.native.prevent="tableCtrl.addTab(form.query)">
         <el-form-item>
             <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
                 @select="entry.handleSelect" :debounce="1000" style="width: 100%;">
@@ -525,11 +526,15 @@ async function CopyURL(mode: number) {
             </el-space>
             <div style="flex-grow: 1;"></div>
             <el-dropdown>
-                <el-button :icon="Operation" text bg />
+                <el-button type="primary" text bg>
+                    更多功能<el-icon class="el-icon--right">
+                        <ArrowDown />
+                    </el-icon>
+                </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="Grid" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="Grid" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="SaveData(1)">导出全部数据</el-dropdown-item>
                         <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
                         <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
                     </el-dropdown-menu>

@@ -22,6 +22,7 @@ function startSearch() {
         ElMessage.warning("请输入正确域名")
         return
     }
+    ElMessage.info("正在查询...")
     CheckCdn(domain.input).then(result => {
         domain.cdn = result
     })
@@ -32,11 +33,19 @@ function startSearch() {
     )
     Ip138IpHistory(domain.input).then(
         result => {
+            if (!result) {
+                domain.history = "暂无历史解析"
+                return
+            }
             domain.history = result
         }
     )
     Ip138Subdomain(domain.input).then(
         result => {
+            if (!result) {
+                domain.subdomain = "暂无子域名记录"
+                return
+            }
             domain.subdomain = result
         }
     )

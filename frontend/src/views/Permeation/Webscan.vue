@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Grid, RefreshRight, Menu, Promotion } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, RefreshRight, Menu, Promotion } from '@element-plus/icons-vue';
 import {
     InitRule,
     FofaSearch,
@@ -24,6 +24,8 @@ import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions, FofaResult } from '@/interface';
 import usePagination from '@/usePagination';
+import exportIcon from '@/assets/icon/doucment-export.svg'
+
 // 初始化时调用
 onMounted(() => {
     InitRule().then(err => {
@@ -505,7 +507,7 @@ function getClassBySeverity(severity: string) {
                 <el-tab-pane label="漏洞">
                     <el-table :data="vp.table.pageContent" stripe border height="100vh"
                         :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
-                        <el-table-column prop="vulID" label="ID" width="250px" :show-overflow-tooltip="true" />
+                        <el-table-column prop="vulID" label="Template" width="250px" :show-overflow-tooltip="true" />
                         <el-table-column prop="severity" width="150px" label="Severity" 
                             :filter-method="filterHandlerSeverity" :filters="[
                                 { text: 'INFO', value: 'INFO' },
@@ -553,7 +555,7 @@ function getClassBySeverity(severity: string) {
                         <el-dropdown-menu>
                             <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
                                 :icon="CopyDocument">复制全部失败目标</el-dropdown-item>
-                            <el-dropdown-item :icon="Grid"
+                            <el-dropdown-item :icon="exportIcon"
                                 @click="ExportWebScanToXlsx(transformArrayFields(form.fingerResult), transformArrayFields(form.vulResult))">
                                 导出Excel</el-dropdown-item>
                         </el-dropdown-menu>

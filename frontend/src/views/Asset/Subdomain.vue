@@ -8,7 +8,9 @@ import { Subdomain, InitIPResolved, LoadSubDict } from "wailsjs/go/main/App";
 import { FileDialog } from "wailsjs/go/main/File";
 import { ElMessage } from 'element-plus'
 import { onMounted } from 'vue';
-import { Loading, Grid } from '@element-plus/icons-vue';
+import { Loading } from '@element-plus/icons-vue';
+import exportIcon from '@/assets/icon/doucment-export.svg'
+
 
 // 初始化时调用
 onMounted(() => {
@@ -106,7 +108,7 @@ async function handleFileChange() {
                 <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
                     }}</el-button>
             </el-space>
-            <el-button :icon="Grid" style="margin-left: auto;"
+            <el-button :icon="exportIcon" style="margin-left: auto;"
                 @click="ExportToXlsx(['子域名', 'CNAME', 'IPS', '备注'], '子域名暴破', 'subdomain', sbr)">
                 导出Excel</el-button>
         </el-form-item>

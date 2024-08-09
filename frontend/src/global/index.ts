@@ -156,7 +156,7 @@ var onlineOptions = [
             {
                 name: "Quake",
                 url: "https://quake.360.net/",
-                icon: "/navigation/360.ico"
+                icon: "/navigation/360.png"
             },
             {
                 name: "Censys",

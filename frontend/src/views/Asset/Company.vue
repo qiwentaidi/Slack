@@ -7,6 +7,7 @@ import { ExportAssetToXlsx } from '@/export'
 import { CompanyInfo, WechatInfo } from "@/interface";
 import usePagination from "@/usePagination";
 import { transformArrayFields } from "@/util";
+import exportIcon from '@/assets/icon/doucment-export.svg'
 
 const from = reactive({
     newTask: false,
@@ -227,8 +228,8 @@ function Collect() {
             <el-button type="primary" :icon="Plus" @click="from.newTask = true"
                 v-if="!from.runningStatus">新建任务</el-button>
             <el-button type="primary" loading v-else>正在查询</el-button>
-            <el-button style="margin-left: 5px;" color="#626aef"
-                @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">导出</el-button>
+            <el-button :icon="exportIcon" text bg style="margin-left: 5px;"
+                @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">导出Excel</el-button>
         </div>
     </div>
 

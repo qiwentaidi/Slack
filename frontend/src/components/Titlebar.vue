@@ -196,7 +196,7 @@ const options = [
         <div style="display: flex">
             <el-button-group :style="rightStyle">
                 <el-tooltip v-for="item in appControl" :content="item.label">
-                    <el-button class="custom-button" text @click="item.action" v-show="item.showMacOS">
+                    <el-button class="custom-button" text @click="item.action" v-show="!isMacOS || item.showMacOS">
                         <template #icon>
                             <el-icon :size="16">
                                 <component :is="item.icon" />
