@@ -81,8 +81,8 @@ const dnsServerList = [
         value: "180.76.76.76:53"
     },
     {
-        label: "阿里",
-        value: "223.5.5.5:53"
+        label: "腾讯",
+        value: "119.29.29.29:53"
     },
     {
         label: "阿里",
@@ -90,7 +90,7 @@ const dnsServerList = [
     }
 ]
 
-const selectDnsServer = ref(["223.5.5.5:53", "114.114.114.114:53"])
+const selectDnsServer = ref(["223.6.6.6:53", "8.8.8.8:53"])
 
 const config = reactive({
     thread: 600,

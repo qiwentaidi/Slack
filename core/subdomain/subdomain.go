@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	DefaultDnsServers = []string{"223.5.5.5:53", "114.114.114.114:53", "8.8.8.8:53"}
+	DefaultDnsServers = []string{"223.6.6.6:53", "8.8.8.8:53"}
 	ExitFunc          = false
 )
 

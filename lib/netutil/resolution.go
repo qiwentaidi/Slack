@@ -48,7 +48,7 @@ func LookupHostWithServers(domain, domainServers string, timeout int) ([]string,
 func LookupCNAME(domain string, domainServers []string, timeout int) (cnames []string, err error) {
 	for _, domainServer := range domainServers {
 		cnames, err = LookupCNAMEWithServer(domain, domainServer, timeout)
-		if err == nil {
+		if err == nil && len(cnames) != 0 {
 			return cnames, nil
 		}
 	}

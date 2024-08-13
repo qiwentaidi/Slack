@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue';
 import { Copy, CopyALL, formatURL } from '@/util';
 import { JSFind } from 'wailsjs/go/main/App';
-import { QuestionFilled, Search, CopyDocument, Link } from '@element-plus/icons-vue';
+import { QuestionFilled, Search } from '@element-plus/icons-vue';
 import async from 'async';
 import global from "@/global";
 import { ElNotification, ElMessage } from 'element-plus';

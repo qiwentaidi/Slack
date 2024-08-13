@@ -2,7 +2,7 @@
 import { ExportToXlsx } from '@/export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Search, ChatLineSquare, ChromeFilled, CopyDocument, PictureRounded, Operation, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
+import { Search, ChatLineSquare, ChromeFilled, CopyDocument, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { splitInt, Copy } from '@/util'
 import { TableTabs, HunterEntryTips, RuleForm } from "@/interface"
 import global from "@/global"
