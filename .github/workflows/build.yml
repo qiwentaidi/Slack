@@ -1,4 +1,4 @@
-name: "example"
+name: "Slack Build"
 on:
   workflow_dispatch:
     # This Action only starts when you go to Actions and manually run the workflow.
@@ -7,7 +7,7 @@ jobs:
   package:
     strategy:
       matrix:
-        platform: [windows-latest, macos-latest, linux-latest]
+        platform: [windows-latest, macos-latest, ubuntu-latest]
         go-version: [1.22]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -17,9 +17,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
       # You may need to manually build you frontend manually here, unless you have configured frontend build and install commands in wails.json.
       - name: Get Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -30,17 +30,17 @@ jobs:
         if: matrix.platform == 'macos-latest'
         uses: actions/upload-artifact@v2
         with:
-          name: wails-binaries-macos
+          name: Slack-macos-amd64
           path: build/bin/*
       - name: upload artifacts windows
         if: matrix.platform == 'windows-latest'
         uses: actions/upload-artifact@v2
         with:
-          name: wails-binaries-windows
+          name: Slack-windows-amd64
           path: build/bin/*
       - name: upload artifacts linux
-        if: matrix.platform == 'linux-latest'
+        if: matrix.platform == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
-            name: wails-binaries-linux
+            name: Slack-linux-amd64
             path: build/bin/*
