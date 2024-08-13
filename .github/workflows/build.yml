@@ -29,7 +29,12 @@ jobs:
       - name: Get Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-      - name: Build Wails app
+      - name: Build Wails app on Ubuntu
+        if: matrix.platform == 'ubuntu-latest'
+        run: wails build -tags webkit2_41
+
+      - name: Build Wails app on Other Platforms
+        if: matrix.platform != 'ubuntu-latest'
         run: wails build
 
       - name: Upload Artifacts macOS
