@@ -1,7 +1,7 @@
 package waf
 
 import (
-	"slack-wails/core/subdomain"
+	"slack-wails/lib/netutil"
 	"slack-wails/lib/util"
 	"strings"
 )
@@ -37,7 +37,7 @@ type WAF struct {
 	Name   string
 }
 
-func IsWAF(host string) *WAF {
+func IsWAF(host string, dnsServers []string) *WAF {
 	// 如果是IP则直接返回
 	if util.RegIP.MatchString(host) {
 		return &WAF{}
@@ -45,7 +45,7 @@ func IsWAF(host string) *WAF {
 	if strings.Contains(host, ":") {
 		host = strings.Split(host, ":")[0]
 	}
-	cnames, err := subdomain.LookupCNAME(host, subdomain.DnsServers, 3)
+	cnames, err := netutil.LookupCNAME(host, dnsServers, 3)
 	if err != nil || len(cnames) == 0 {
 		return &WAF{}
 	}

@@ -8,7 +8,7 @@ import MenuList from "@/router/menu";
       <div v-if="groups.children">
         <el-divider><span style="font-size: large;">{{ $t(groups.name) }}</span></el-divider>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <el-card shadow="hover" class="card" v-for="item in groups.children" @click="$router.push(item.path)">
+          <el-card shadow="hover" class="card" v-for="item in groups.children" @click="$router.push(groups.path + item.path)">
             <div style="display: flex;">
               <div class="card-content">
                 <!-- 左侧图片 -->

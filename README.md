@@ -113,9 +113,9 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240412150938371](assets/image-20240412150938371.png)
 
-### 子域名暴破
+### 子域名收集
 
-![image-20240222154726647](assets/image-20240222154726647.png)
+![image-20240813113905572](assets/image-20240813113905572.png)
 
 ### 域名信息查询
 
@@ -159,7 +159,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ### WeChat/DingDing
 
-![image-20240512003433659](assets/image-20240512003433659.png)
+![image-20240813114647370](assets/image-20240813114647370.png)
 
 # 联系方式
 

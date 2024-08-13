@@ -59,11 +59,11 @@ func NewScanner(ctx context.Context, o Options) {
 	if o.Redirect {
 		client = clients.DefaultClient()
 	}
-	var header = http.Header{}
+	var header = map[string]string{}
 	if o.CustomHeader != "" {
 		for _, single := range strings.Split(o.CustomHeader, "\n") {
 			temp := strings.Split(single, ":")
-			header.Set(temp[0], temp[1])
+			header[temp[0]] = temp[1]
 		}
 	}
 	var id int32
@@ -115,7 +115,7 @@ func NewScanner(ctx context.Context, o Options) {
 }
 
 // status 1 表示被排除显示在外，不计入前端ERROR请求中
-func Scan(ctx context.Context, url string, header http.Header, o Options, client *http.Client) Result {
+func Scan(ctx context.Context, url string, header map[string]string, o Options, client *http.Client) Result {
 	var result Result
 	result.URL = url
 	resp, body, err := clients.NewRequest(o.Method, url, header, nil, o.Timeout, true, client)

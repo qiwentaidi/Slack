@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	rt "runtime"
+	"slack-wails/core/subdomain"
 	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
@@ -107,7 +108,7 @@ func NewFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
 			IconHash:      FaviconHash(u.Scheme, target, clients.DefaultClient()),
 			StatusCode:    resp.StatusCode,
 			Banner:        GetBanner(&u),
-			Waf:           *waf.IsWAF(u.Host),
+			Waf:           *waf.IsWAF(u.Host, subdomain.DefaultDnsServers),
 		}
 		retChan <- InfoResult{
 			URL:          target,

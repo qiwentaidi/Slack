@@ -1,10 +1,10 @@
 <template>
   <el-scrollbar style="height: 87vh;">
-    <el-collapse model-value="1">
+    <el-collapse model-value="1" accordion>
       <el-collapse-item name="1"><template #title>
           <h2>{{ $t('setting.scan') }}</h2>
         </template>
-        <el-form label-width="auto">
+        <el-form :model="global.webscan" label-width="auto">
           <el-form-item :label="$t('setting.engine')">
             <el-input v-model="global.webscan.nucleiEngine" :placeholder="$t('setting.nuclei_placeholder')" clearable>
               <template #suffix>
@@ -47,7 +47,8 @@
               <el-input v-model="global.proxy.username" clearable></el-input>
             </el-form-item>
             <el-form-item :label="$t('setting.password')">
-              <el-input v-model="global.proxy.password" clearable></el-input>
+              <el-input v-model="global.proxy.password" type="password" show-password
+              ></el-input>
             </el-form-item>
           </div>
         </el-form>
@@ -57,15 +58,42 @@
         </template>
         <el-form :model="global.space" label-width="auto">
           <el-form-item label="FOFA">
-            <el-input v-model="global.space.fofaapi" placeholder="api address" clearable />
-            <el-input v-model="global.space.fofaemail" placeholder="email" clearable style="margin-top: 5px;" />
-            <el-input v-model="global.space.fofakey" placeholder="key" clearable style="margin-top: 5px;" />
+            <el-input v-model="global.space.fofaapi" placeholder="API address" clearable />
+            <el-input v-model="global.space.fofaemail" placeholder="Email" clearable style="margin-top: 5px;" />
+            <el-input v-model="global.space.fofakey" placeholder="API key" clearable style="margin-top: 5px;" />
           </el-form-item>
           <el-form-item :label="$t('aside.hunter')">
-            <el-input v-model="global.space.hunterkey" placeholder="key" clearable />
+            <el-input v-model="global.space.hunterkey" placeholder="API key" clearable />
           </el-form-item>
           <el-form-item :label="$t('aside.360quake')">
-            <el-input v-model="global.space.quakekey" placeholder="token" clearable />
+            <el-input v-model="global.space.quakekey" placeholder="API key" clearable />
+          </el-form-item>
+          <el-alert type="info" show-icon :closable="false" style="margin-bottom: 5px;">
+            <span>下方API可用于收集子域名信息，在使用子域名收集模块请配置（优先推荐配置Chao，免费且不限次数）</span>
+          </el-alert>
+          <el-form-item label="Chaos">
+            <el-input v-model="global.space.chaos" placeholder="API key">
+              <template #suffix>
+                <el-button link type="primary" :icon="UserFilled" @click="BrowserOpenURL(chaosURL)">注册</el-button>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item label="Bevigil">
+            <el-input v-model="global.space.bevigil" placeholder="API key">
+              <template #suffix>
+                <el-button link type="primary" :icon="UserFilled" @click="BrowserOpenURL(bevigilURL)">注册</el-button>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item label="Securitytrails">
+            <el-input v-model="global.space.securitytrails" placeholder="API key">
+              <template #suffix>
+                <el-button link type="primary" :icon="UserFilled" @click="BrowserOpenURL(securitytrailsURL)">注册</el-button>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item label="Zoomeye">
+            <el-input v-model="global.space.zoomeye" placeholder="API key" />
           </el-form-item>
         </el-form>
       </el-collapse-item>
@@ -95,9 +123,11 @@
             <el-table-column label="操作" width="250" align="center">
               <template #default="scope">
                 <el-button type="primary" link :icon="Edit"
-                  @click="ctrl.innerDrawer = true; ctrl.currentPath = '/username/' + scope.row.name + '.txt'; ReadDict(ctrl.currentPath)">{{ $t('setting.username') }}</el-button>
+                  @click="ctrl.innerDrawer = true; ctrl.currentPath = '/username/' + scope.row.name + '.txt'; ReadDict(ctrl.currentPath)">{{
+                    $t('setting.username') }}</el-button>
                 <el-button type="primary" link :icon="Edit"
-                  @click="ctrl.innerDrawer = true; ctrl.currentPath = '/password/password.txt'; ReadDict(ctrl.currentPath)">{{ $t('setting.password') }}</el-button>
+                  @click="ctrl.innerDrawer = true; ctrl.currentPath = '/password/password.txt'; ReadDict(ctrl.currentPath)">{{
+                    $t('setting.password') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -116,12 +146,17 @@
 import global from "@/global"
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, TestNuclei } from "@/util";
-import { Edit, Sunny, Moon } from '@element-plus/icons-vue';
+import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
 import { reactive } from "vue";
 import { ReadFile, SaveDataToFile, WriteFile } from "wailsjs/go/main/File";
 import { File } from '@/interface';
 import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
+import { BrowserOpenURL } from "wailsjs/runtime/runtime";
+
+const bevigilURL =  "https://bevigil.com/osint-api"
+const chaosURL = "https://cloud.projectdiscovery.io/"
+const securitytrailsURL = "https://securitytrails.com/"
 
 const isDark = useDark({
   storageKey: 'theme',
@@ -138,29 +173,27 @@ const changeLanguage = (lang: string) => {
   localStorage.setItem("language", lang);
   locale.value = lang;
 }
-const removeInvisibleFiled = (filed: string) => {
-  filed = filed.replace(/[\r\n\s]/g, '');
-}
-async function saveConfig() {
-  let list = [global.space.fofaapi, global.space.fofaemail, global.space.fofakey, global.space.hunterkey, global.space.quakekey]
-  list.forEach(item => {
-    removeInvisibleFiled(item)
-  })
+
+const saveConfig = () => {
+  // 获取space的所有value值
+  let list = Object.entries(global.space).map(([key, value]) => value);
+  // 去除不可见字符
+  list = list.map(item => item.replace(/[\r\n\s]/g, ''));
   var data = { proxy: global.proxy, space: global.space, jsfind: global.jsfind, webscan: global.webscan };
-  let result = await SaveDataToFile(data);
-  if (result) {
-    ElNotification.success({
-      message: 'Save successful',
-      position: 'bottom-right'
-    })
-  }
+  SaveDataToFile(data).then(result => {
+    if (result) {
+      ElNotification.success({
+        message: 'Save successful',
+        position: 'bottom-right'
+      })
+    }
+  })
 };
 
 const ctrl = reactive({
   innerDrawer: false,
   currentDic: '',
   currentPath: '',
-  theme: 0,
 })
 
 async function ReadDict(path: string) {

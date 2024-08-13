@@ -1,4 +1,4 @@
-package subdomain
+package netutil
 
 import (
 	"context"
@@ -12,11 +12,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var DnsServers = []string{"223.5.5.5:53", "114.114.114.114:53"}
-
-func Resolution(domain string, timeout int) (ips, cname []string, err error) {
-	cname, err = LookupCNAME(domain, DnsServers, timeout)
-	ips, _ = LookupHost(domain, DnsServers, timeout)
+func Resolution(domain string, dnsServers []string, timeout int) (ips, cname []string, err error) {
+	cname, err = LookupCNAME(domain, dnsServers, timeout)
+	ips, _ = LookupHost(domain, dnsServers, timeout)
 	return util.RemoveDuplicates(ips), cname, err
 }
 

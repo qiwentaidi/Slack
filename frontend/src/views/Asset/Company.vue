@@ -152,7 +152,7 @@ function Collect() {
                         <template #default="scope">
                             <el-tag v-if="scope.row.RegStatus === '存续'" type="success">{{ scope.row.RegStatus
                                 }}</el-tag>
-                            <el-tag v-else-if="scope.row.RegStatus === '注销'" type="danger">{{ scope.row.RegStatus
+                            <el-tag v-else type="danger">{{ scope.row.RegStatus
                                 }}</el-tag>
                         </template>
                     </el-table-column>

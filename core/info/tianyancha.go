@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
@@ -87,20 +86,21 @@ type TycResult struct {
 }
 
 var (
-	gethead   = http.Header{}
-	posthead  = http.Header{}
+	gethead   = map[string]string{}
+	posthead  = map[string]string{}
 	TycKeyMap = make(map[string]structs.TycCompanyInfo)
 )
 
 func InitHEAD(token string) {
-	gethead.Set("Version", "TYC-Web")
-	gethead.Set("X-Auth-Token", token)
-	gethead.Set("User-Agent", util.RandomUA())
-
-	posthead.Set("Version", "TYC-Web")
-	posthead.Set("X-Auth-Token", token)
-	posthead.Set("Content-Type", "application/json")
-	posthead.Set("User-Agent", util.RandomUA())
+	gethead = map[string]string{
+		"Version":      "TYC-Web",
+		"X-Auth-Token": token,
+	}
+	posthead = map[string]string{
+		"Version":      "TYC-Web",
+		"X-Auth-Token": token,
+		"Content-Type": "application/json",
+	}
 }
 
 // 要根据ID值查子公司

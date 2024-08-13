@@ -4,6 +4,7 @@ import { Quit, WindowMinimise, WindowToggleMaximise } from "wailsjs/runtime/runt
 import { IsMacOS } from "wailsjs/go/main/File";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import global from "@/global";
+import { onlineOptions }  from '@/stores/online';
 import { useRoute } from "vue-router";
 import { ref, computed } from "vue";
 import about from "./About.vue";
@@ -71,9 +72,9 @@ const titlebarStyle = computed(() => {
 const searchFilter = ref("");
 const filteredOptions = computed(() => {
     if (!searchFilter.value) {
-        return global.onlineOptions;
+        return onlineOptions;
     }
-    return global.onlineOptions.map((group) => ({
+    return onlineOptions.map((group) => ({
         ...group,
         value: group.value.filter((item) =>
             item.name.toLowerCase().includes(searchFilter.value.toLowerCase())

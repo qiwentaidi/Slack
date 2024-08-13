@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"regexp"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/util"
 	"strconv"
 	"strings"
 	"time"
@@ -19,9 +18,9 @@ var acwscv2 = ""
 
 // 返回域名组，延时防止请求过快
 func Beianx(company string) ([]string, error) {
-	h := http.Header{}
-	h.Set("User-Agent", util.RandomUA())
-	h.Set("Cookie", "acw_sc__v2="+acwscv2)
+	h := map[string]string{
+		"Cookie": "acw_sc__v2=" + acwscv2,
+	}
 	_, body, err := clients.NewRequest("GET", "https://www.beianx.cn/search/"+company, h, nil, 10, true, http.DefaultClient)
 	if err != nil && len(body) == 17132 { // 符合长度表示存在acw_sc__v2校验，需要获取acw_sc__v2的值，再次执行函数即可
 		arg1 := getArg1FromHTML(string(body))

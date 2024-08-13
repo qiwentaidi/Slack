@@ -266,7 +266,7 @@ const optionIndex = ref("Pretty")
                     <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="dirscan">
                         {{ config.runningStatus ? '停止扫描' : '开始扫描' }}
                     </el-button>
-                    <el-button color="rgb(194, 194, 196)" @click="config.drawer = true">参数设置</el-button>
+                    <el-button text bg @click="config.drawer = true">参数设置</el-button>
                 </el-space>
             </div>
         </el-form-item>

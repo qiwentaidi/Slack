@@ -570,14 +570,14 @@ function getClassBySeverity(severity: string) {
             <h4>新建扫描任务</h4>
             <el-button link @click="form.fofaDialog = true">
                 <template #icon>
-                    <img src="/fofa.ico">
+                    <img src="/app/fofa.ico">
                 </template>
                 FOFA
             </el-button>
             <el-divider direction="vertical" />
             <el-button link @click="form.hunterDialog = true">
                 <template #icon>
-                    <img src="/hunter.ico" style="width: 16px; height: 16px;">
+                    <img src="/app/hunter.ico" style="width: 16px; height: 16px;">
                 </template>
                 Hunter
             </el-button>

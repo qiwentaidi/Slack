@@ -11,7 +11,7 @@ type Status struct {
 type Response struct {
 	Error  bool
 	Proto  string
-	Header []map[string]string
+	Header map[string]string
 	Body   string
 }
 
@@ -99,4 +99,24 @@ type HunterResult struct {
 		Total        int64  `json:"total"`
 	} `json:"data"`
 	Message string `json:"message"`
+}
+
+const (
+	EnumerationMode = 0
+	ApiMode         = 1
+	MixedMode       = 2
+)
+
+type SubdomainOption struct {
+	Mode                int
+	Domains             []string
+	Subs                []string
+	ChaosApi            string
+	ZoomeyeApi          string
+	SecuritytrailsApi   string
+	BevigilApi          string
+	Thread              int // 解析线程
+	Timeout             int // 仅枚举模式启用时生效
+	ResolveExcludeTimes int // 解析过滤IP次数
+	DnsServers          []string
 }

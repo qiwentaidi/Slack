@@ -102,10 +102,6 @@ export function IconHash(arg1) {
   return window['go']['main']['App']['IconHash'](arg1);
 }
 
-export function InitIPResolved() {
-  return window['go']['main']['App']['InitIPResolved']();
-}
-
 export function InitRule() {
   return window['go']['main']['App']['InitRule']();
 }
@@ -140,10 +136,6 @@ export function JSFind(arg1, arg2) {
 
 export function LoadDirsearchDict(arg1, arg2) {
   return window['go']['main']['App']['LoadDirsearchDict'](arg1, arg2);
-}
-
-export function LoadSubDict(arg1) {
-  return window['go']['main']['App']['LoadSubDict'](arg1);
 }
 
 export function NewSynScanner(arg1, arg2, arg3) {
@@ -190,8 +182,12 @@ export function StopPortScan() {
   return window['go']['main']['App']['StopPortScan']();
 }
 
-export function Subdomain(arg1, arg2) {
-  return window['go']['main']['App']['Subdomain'](arg1, arg2);
+export function StopSubdomain() {
+  return window['go']['main']['App']['StopSubdomain']();
+}
+
+export function Subdomain(arg1) {
+  return window['go']['main']['App']['Subdomain'](arg1);
 }
 
 export function SubsidiariesAndDomains(arg1, arg2) {

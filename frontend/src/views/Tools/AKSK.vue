@@ -108,7 +108,7 @@ const wechatOption = ({
   ],
   checksecret: async function () {
     let url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat.appid}&secret=${wechat.secert}`
-    let response: any = await GoFetch("GET", url, "", [{}], 10, proxys);
+    let response: any = await GoFetch("GET", url, "", {}, 10, proxys);
     if (response.Error) {
       result.value += "请求失败\n";
       return;
@@ -125,7 +125,7 @@ const wechatOption = ({
       ElMessage.warning(warning);
       return;
     }
-    let response: any = await GoFetch(method, url + wechat.accessToken, "", [{}], 10, proxys);
+    let response: any = await GoFetch(method, url + wechat.accessToken, "", {}, 10, proxys);
     result.value = JSON.parse(response.Body);
   }
 })
@@ -158,7 +158,7 @@ const dingdingOption = ({
     }
   ],
   checksecret: async function () {
-    let response: any = await GoFetch("GET", `https://oapi.dingtalk.com/gettoken?appkey=${dingding.appid}&appsecret=${dingding.secert}`, "", [{}], 10, proxys)
+    let response: any = await GoFetch("GET", `https://oapi.dingtalk.com/gettoken?appkey=${dingding.appid}&appsecret=${dingding.secert}`, "", {}, 10, proxys)
     if (response.Error) {
       result.value += "请求失败\n";
       return;
@@ -181,7 +181,7 @@ const dingdingOption = ({
     } else {
       body = parameter
     }
-    let response: any = await GoFetch(method, url + dingding.accessToken, body, [{}], 10, proxys);
+    let response: any = await GoFetch(method, url + dingding.accessToken, body, {}, 10, proxys);
     result.value = JSON.parse(response.Body);
   },
   addUser: async function () {
@@ -204,12 +204,12 @@ const dingdingOption = ({
 	"dept_id_list":"1",
 	"userid":"${rdm}"
 }`
-    let response: any = await GoFetch("POST", `https://oapi.dingtalk.com/topapi/v2/user/create?access_token=${dingding.accessToken}`, body, [{}], 10, proxys)
+    let response: any = await GoFetch("POST", `https://oapi.dingtalk.com/topapi/v2/user/create?access_token=${dingding.accessToken}`, body, {}, 10, proxys)
     result.value = `当前添加用户userid为: ${rdm}\n\n${JSON.parse(response.Body)}`
   },
   delUser: async function () {
     let body = `{ "userid":"${dingding.userid}" }`
-    let response: any = await GoFetch("POST", `https://oapi.dingtalk.com/topapi/v2/user/delete?access_token=${dingding.accessToken}`, body, [{}], 10, proxys)
+    let response: any = await GoFetch("POST", `https://oapi.dingtalk.com/topapi/v2/user/delete?access_token=${dingding.accessToken}`, body, {}, 10, proxys)
     result.value = JSON.parse(response.Body);
   }
 })

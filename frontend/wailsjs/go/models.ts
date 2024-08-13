@@ -406,6 +406,18 @@ export namespace structs {
 	
 	    }
 	}
+	export class SubdomainOption {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new SubdomainOption(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
 
 }
 

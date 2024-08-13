@@ -55,7 +55,7 @@ func NotFollowClient() *http.Client {
 	}
 }
 
-func NewRequest(method, url string, headers http.Header, body io.Reader, timeout int, closeRespBody bool, client *http.Client) (*http.Response, []byte, error) {
+func NewRequest(method, url string, headers map[string]string, body io.Reader, timeout int, closeRespBody bool, client *http.Client) (*http.Response, []byte, error) {
 	requestTimeout := time.Duration(timeout) * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
@@ -63,10 +63,9 @@ func NewRequest(method, url string, headers http.Header, body io.Reader, timeout
 	if err != nil {
 		return nil, nil, err
 	}
-	if headers != nil {
-		r.Header = headers
-	} else {
-		r.Header.Set("User-Agent", util.RandomUA())
+	r.Header.Set("User-Agent", util.RandomUA())
+	for key, value := range headers {
+		r.Header.Set(key, value)
 	}
 	resp, err := client.Do(r.WithContext(ctx))
 	if err != nil {

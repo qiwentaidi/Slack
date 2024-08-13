@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net/http"
 	"regexp"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
@@ -19,9 +18,9 @@ var (
 )
 
 func SeoChinaz(ctx context.Context, domain string) (string, string, string) {
-	h := http.Header{}
-	h.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.97")
-	h.Add("Content-Type", "text/html; charset=utf-8")
+	h := map[string]string{
+		"Content-Type": "text/html; charset=utf-8",
+	}
 	_, b, err := clients.NewRequest("GET", "https://seo.chinaz.com/"+domain, h, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		gologger.Warning(ctx, err)

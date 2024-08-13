@@ -4,8 +4,26 @@ import { ref } from "vue";
 import updateUI from "./Update.vue";
 import global from "@/global/index";
 import menus from "@/router/menu";
+import router from "@/router";
 
 const updateDialog = ref(false)
+
+const bottomControl = [
+  {
+    label: "aside.update",
+    icon: Refresh,
+    action: () => {
+      updateDialog.value = true
+    }
+  },
+  {
+    label: "aside.setting",
+    icon: Setting,
+    action: () => {
+      router.push('/Settings')
+    }
+  },
+]
 </script>
 
 <template>
@@ -24,28 +42,19 @@ const updateDialog = ref(false)
           </el-icon>
           <span>{{ $t(menu.name) }}</span>
         </template>
-        <el-menu-item v-for="item in menu.children" :key="item.path" :index="item.path"><span>{{ $t(item.name)
+        <el-menu-item v-for="item in menu.children" :key="item.path" :index="menu.path + item.path"><span>{{ $t(item.name)
           }}</span></el-menu-item>
       </el-sub-menu>
     </template>
 
     <div style="flex-grow: 1;"></div>
 
-    <el-menu-item @click="updateDialog = true">
+    <el-menu-item v-for="(item, index) in bottomControl" @click="item.action">
       <el-icon size="24">
-        <Refresh />
+        <component :is="item.icon" />
       </el-icon>
-      <template #title><span>{{ $t("aside.update") }}</span></template>
-      <el-badge value="new" v-if="global.UPDATE.ClientStatus ||
-        global.UPDATE.PocStatus
-      " />
-    </el-menu-item>
-
-    <el-menu-item @click="$router.push('/Settings')">
-      <el-icon size="24">
-        <setting />
-      </el-icon>
-      <template #title><span>{{ $t("aside.setting") }}</span></template>
+      <template #title><span>{{ $t(item.label) }}</span></template>
+      <el-badge value="new" v-if="index == 0 && (global.UPDATE.ClientStatus || global.UPDATE.PocStatus)" />
     </el-menu-item>
   </el-menu>
 

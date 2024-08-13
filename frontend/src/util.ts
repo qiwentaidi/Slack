@@ -171,7 +171,7 @@ export async function TestProxy(mode: number) {
       ":" +
       global.proxy.port;
     if (global.proxy.mode == "HTTP") {
-      let resp: any = await GoFetch("GET", proxyURL, "", [{}], 10, proxys);
+      let resp: any = await GoFetch("GET", proxyURL, "", {}, 10, proxys);
       if (resp.Error) {
         ElNotification.warning("The proxy is unreachable");
         return false;
@@ -242,14 +242,7 @@ export const check = {
       let file: File = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile);
       global.UPDATE.LocalPocVersion = file.Content!;
     }
-    let resp: any = await GoFetch(
-      "GET",
-      download.RemotePocVersion,
-      "",
-      [{}],
-      10,
-      proxys
-    );
+    let resp: any = await GoFetch("GET", download.RemotePocVersion, "", {}, 10, proxys);
     if (resp.Error == true) {
       global.UPDATE.PocContent = "检测更新失败";
       global.UPDATE.PocStatus = false;
@@ -261,14 +254,7 @@ export const check = {
           global.UPDATE.RemotePocVersion
         ) == -1
       ) {
-        let result: any = GoFetch(
-          "GET",
-          download.PocUpdateCentent,
-          "",
-          [{}],
-          10,
-          proxys
-        );
+        let result: any = await GoFetch("GET", download.RemotePocVersion, "", {}, 10, proxys);
         global.UPDATE.PocContent = result.Body;
         global.UPDATE.PocStatus = true;
       } else {
@@ -283,7 +269,7 @@ export const check = {
       "GET",
       download.RemoteClientVersion,
       "",
-      [{}],
+      {},
       10,
       proxys
     );
@@ -298,14 +284,7 @@ export const check = {
           global.UPDATE.RemoteClientVersion
         ) == -1
       ) {
-        let result: any = await GoFetch(
-          "GET",
-          download.ClientUpdateCentent,
-          "",
-          [{}],
-          10,
-          proxys
-        );
+        let result: any = await GoFetch("GET", download.RemotePocVersion, "", {}, 10, proxys);
         global.UPDATE.ClientContent = result.Body!;
         global.UPDATE.ClientStatus = true;
       } else {
@@ -368,22 +347,4 @@ export function transformArrayFields<T extends AnyObject>(data: T[], delimiter: 
 
 export function CsegmentIpv4(ip: string) :string {
   return ip.split('.').slice(0, 3).join('.') + ".0/24";
-}
-
-//将utf-8编码的字符转换为gbk编码的字符
-export function utf8toGbk(word: string) {
-  var encoder = new TextEncoder();
-  var decoder = new TextDecoder('utf-8');
-  var data = encoder.encode(word);
-  var result = decoder.decode(data);
-  return result;
-}
-
-//将gbk编码的字符转换为utf-8编码的字符
-export function gbktoUtf8(word: string) {
-  var encoder = new TextEncoder();
-  var decoder = new TextDecoder('gbk');
-  var data = encoder.encode(word);
-  var result = decoder.decode(data);
-  return result;
 }

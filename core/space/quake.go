@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
@@ -189,9 +188,10 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 	data["latest"] = o.Latest
 	data["shortcuts"] = getShortcuts(o)
 	bytesData, _ := json.Marshal(data)
-	header := http.Header{}
-	header.Set("Content-Type", "application/json")
-	header.Set("X-QuakeToken", o.Token)
+	header := map[string]string{
+		"Content-Type": "application/json",
+		"X-QuakeToken": o.Token,
+	}
 	_, body, err := clients.NewRequest("POST", quakeServerApi, header, bytes.NewReader(bytesData), 10, false, clients.DefaultClient())
 	if err != nil {
 		return &QuakeResult{}
@@ -253,8 +253,10 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 
 // 查询剩余积分
 func QuakeUserSearch(token string) int {
-	header := http.Header{}
-	header.Set("X-QuakeToken", token)
+	header := map[string]string{
+		"Content-Type": "application/json",
+		"X-QuakeToken": token,
+	}
 	_, body, err := clients.NewRequest("GET", quakeUserApi, header, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		return 0
@@ -282,9 +284,9 @@ type QuakeTipsData struct {
 func SearchQuakeTips(query string) *QuakeTipsResult {
 	var qs QuakeTipsResult
 	jsonData := fmt.Sprintf(`{"app_name":"%v","device":{"UUID":"aa963dba-1bfa-54cf-9fdd-7b9be5a30890"}}`, query)
-	header := http.Header{}
-	header.Set("Content-Type", "application/json")
-	header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.112 Safari/537.36")
+	header := map[string]string{
+		"Content-Type": "application/json",
+	}
 	_, b, err := clients.NewRequest("POST", quakeTipsApi, header, strings.NewReader(jsonData), 10, true, clients.DefaultClient())
 	if err != nil {
 		return &qs
@@ -303,8 +305,9 @@ func getShortcuts(o *QuakeRequestOptions) []string {
 		cdn, honepot, invalid string
 		shortcuts             []string
 	)
-	header := http.Header{}
-	header.Set("Cookie", "cert_common="+o.CertCommon)
+	header := map[string]string{
+		"Cookie": "cert_common=" + o.CertCommon,
+	}
 	_, body, err := clients.NewRequest("GET", "https://quake.360.net/api/search/shortcuts/quake_service_unique", header, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		return shortcuts

@@ -42,7 +42,7 @@ export function Fscan2Txt(arg1:string):Promise<string>;
 
 export function GOOS():Promise<string>;
 
-export function GoFetch(arg1:string,arg2:string,arg3:any,arg4:Array<{[key: string]: string}>,arg5:number,arg6:clients.Proxy):Promise<structs.Response>;
+export function GoFetch(arg1:string,arg2:string,arg3:any,arg4:{[key: string]: string},arg5:number,arg6:clients.Proxy):Promise<structs.Response>;
 
 export function HikvsionCamera(arg1:string,arg2:number,arg3:Array<string>,arg4:string,arg5:clients.Proxy):Promise<string>;
 
@@ -57,8 +57,6 @@ export function ICPInfo(arg1:string):Promise<string>;
 export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 
 export function IconHash(arg1:string):Promise<string>;
-
-export function InitIPResolved():Promise<void>;
 
 export function InitRule():Promise<boolean>;
 
@@ -77,8 +75,6 @@ export function IsRoot():Promise<boolean>;
 export function JSFind(arg1:string,arg2:string):Promise<jsfind.FindSomething>;
 
 export function LoadDirsearchDict(arg1:Array<string>,arg2:Array<string>):Promise<Array<string>>;
-
-export function LoadSubDict(arg1:string):Promise<Array<string>>;
 
 export function NewSynScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>):Promise<void>;
 
@@ -102,7 +98,9 @@ export function StopDirScan():Promise<void>;
 
 export function StopPortScan():Promise<void>;
 
-export function Subdomain(arg1:string,arg2:number):Promise<Array<string>>;
+export function StopSubdomain():Promise<void>;
+
+export function Subdomain(arg1:structs.SubdomainOption):Promise<void>;
 
 export function SubsidiariesAndDomains(arg1:string,arg2:number):Promise<Array<info.CompanyInfo>>;
 

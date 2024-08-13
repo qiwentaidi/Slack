@@ -26,6 +26,7 @@ import (
 	"slack-wails/core/webscan"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/netutil"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"strconv"
@@ -95,19 +96,13 @@ func (a *App) GOOS() string {
 	return runtime.GOOS
 }
 
-func (a *App) GoFetch(method, target string, body interface{}, headers []map[string]string, timeout int, proxy clients.Proxy) *structs.Response {
+func (a *App) GoFetch(method, target string, body interface{}, headers map[string]string, timeout int, proxy clients.Proxy) *structs.Response {
 	if _, err := url.Parse(target); err != nil {
 		return &structs.Response{
 			Error:  true,
 			Proto:  "",
 			Header: nil,
 			Body:   "",
-		}
-	}
-	hhhhheaders := http.Header{}
-	for _, head := range headers {
-		for k, v := range head {
-			hhhhheaders.Set(k, v)
 		}
 	}
 	var content []byte
@@ -117,7 +112,7 @@ func (a *App) GoFetch(method, target string, body interface{}, headers []map[str
 	} else {
 		content = []byte(body.(string))
 	}
-	resp, b, err := clients.NewRequest(method, target, hhhhheaders, bytes.NewReader(content), 10, true, clients.JudgeClient(proxy))
+	resp, b, err := clients.NewRequest(method, target, headers, bytes.NewReader(content), 10, true, clients.JudgeClient(proxy))
 	if err != nil {
 		return &structs.Response{
 			Error:  true,
@@ -126,20 +121,16 @@ func (a *App) GoFetch(method, target string, body interface{}, headers []map[str
 			Body:   "",
 		}
 	}
-	var headerArray []map[string]string
+	headerMap := make(map[string]string)
 	for key, values := range resp.Header {
 		// 对于每个键，创建一个新的 map 并添加键值对
-		headerMap := make(map[string]string)
 		headerMap["key"] = key
 		headerMap["value"] = strings.Join(values, " ")
-
-		// 将 map 添加到切片中
-		headerArray = append(headerArray, headerMap)
 	}
 	return &structs.Response{
 		Error:  false,
 		Proto:  resp.Proto,
-		Header: headerArray,
+		Header: headerMap,
 		Body:   string(b),
 	}
 }
@@ -216,7 +207,7 @@ func (App) Ip138Subdomain(domain string) string {
 var cdndataLoader sync.Once
 
 func (a *App) CheckCdn(domain string) string {
-	ips, cnames, err := subdomain.Resolution(domain, 10)
+	ips, cnames, err := netutil.Resolution(domain, subdomain.DefaultDnsServers, 10)
 	if err != nil {
 		return fmt.Sprintf("域名: %v 解析失败,%v", domain, err)
 	}
@@ -224,7 +215,7 @@ func (a *App) CheckCdn(domain string) string {
 		return fmt.Sprintf("域名: %v，解析到唯一IP %v，未解析到CNAME信息", domain, ips[0])
 	}
 	cdndataLoader.Do(func() {
-		subdomain.Cdndata = subdomain.ReadCDNFile(a.ctx, a.cdnFile)
+		subdomain.Cdndata = netutil.ReadCDNFile(a.ctx, a.cdnFile)
 	})
 	ipList := strings.Join(ips, " | ")
 	for _, cname := range cnames {
@@ -242,29 +233,44 @@ func (a *App) CheckCdn(domain string) string {
 	return fmt.Sprintf("域名: %v，未识别到CDN信息，解析到IP为: %v CNAME: %v", domain, ipList, strings.Join(cnames, ","))
 }
 
-// 初始化IP记录器
-func (a *App) InitIPResolved() {
-	subdomain.IPResolved = make(map[string]int)
-}
-
-// subodomain
-func (a *App) LoadSubDict(configPath string) []string {
-	return util.ReadLine(util.HomeDir() + configPath + "/dicc.txt")
-}
-
 var qqwryLoader sync.Once
 
-func (a *App) Subdomain(domain string, timeout int) []string {
+func (a *App) IpLocation(ip string) string {
+	qqwryLoader.Do(func() {
+		subdomain.InitQqwry(a.qqwryFile)
+	})
+	result, err := subdomain.Database.Find(ip)
+	if err != nil {
+		return ""
+	}
+	return result.String()
+}
+func (a *App) Subdomain(o structs.SubdomainOption) {
 	qqwryLoader.Do(func() {
 		subdomain.InitQqwry(a.qqwryFile)
 	})
 	cdndataLoader.Do(func() {
-		subdomain.Cdndata = subdomain.ReadCDNFile(a.ctx, a.cdnFile)
+		subdomain.Cdndata = netutil.ReadCDNFile(a.ctx, a.cdnFile)
 	})
-	sr := subdomain.Burst(domain, timeout, a.qqwryFile, a.cdnFile)
-	return []string{sr.Subdomain, strings.Join(sr.Cname, " | "), strings.Join(sr.Ips, " | "), sr.Notes}
+	subdomain.ExitFunc = false
+	switch o.Mode {
+	case structs.EnumerationMode:
+		for _, domain := range o.Domains {
+			subdomain.MultiThreadResolution(a.ctx, domain, []string{}, "Enumeration", o)
+		}
+	case structs.ApiMode:
+		subdomain.ApiPolymerization(a.ctx, o)
+	default:
+		subdomain.ApiPolymerization(a.ctx, o)
+		for _, domain := range o.Domains {
+			subdomain.MultiThreadResolution(a.ctx, domain, []string{}, "Enumeration", o)
+		}
+	}
 }
 
+func (a *App) StopSubdomain() {
+	subdomain.ExitFunc = true
+}
 func (a *App) InitTycHeader(token string) {
 	info.InitHEAD(token)
 }
@@ -653,15 +659,4 @@ func (a *App) HikvsionCamera(target string, attackType int, passwordList []strin
 
 func (a *App) UncoverSearch(query, types string, size int, option structs.SpaceOption) []space.Result {
 	return space.Uncover(a.ctx, query, types, size, option)
-}
-
-func (a *App) IpLocation(ip string) string {
-	qqwryLoader.Do(func() {
-		subdomain.InitQqwry(a.qqwryFile)
-	})
-	result, err := subdomain.Database.Find(ip)
-	if err != nil {
-		return ""
-	}
-	return result.String()
 }

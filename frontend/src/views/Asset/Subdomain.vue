@@ -1,127 +1,327 @@
 <script lang="ts" setup>
 import global from "@/global";
-import async from 'async';
-import { ReadLine } from '@/util'
+import { Copy, ReadLine, transformArrayFields, validateDomain } from '@/util'
 import { ExportToXlsx } from '@/export'
-import { reactive, ref } from "vue";
-import { Subdomain, InitIPResolved, LoadSubDict } from "wailsjs/go/main/App";
-import { FileDialog } from "wailsjs/go/main/File";
-import { ElMessage } from 'element-plus'
-import { onMounted } from 'vue';
-import { Loading } from '@element-plus/icons-vue';
+import { reactive, ref, onMounted } from "vue";
+import { Subdomain } from "wailsjs/go/main/App";
+import { CheckFileStat, FileDialog } from "wailsjs/go/main/File";
+import { ElMessage, ElNotification } from 'element-plus'
+import { Menu, CopyDocument } from '@element-plus/icons-vue';
 import exportIcon from '@/assets/icon/doucment-export.svg'
+import usePagination from "@/usePagination";
+import { SubdomainInfo, SubdomainOption } from "@/interface";
+import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
 
-
-// 初始化时调用
 onMounted(() => {
-    sbr.value = [];
+    EventsOn("subdomainLoading", (result: SubdomainInfo) => {
+        if (result.Source == "Enumeration") {
+            let r = pagination.table.result.find(item => item.Subdomain == result.Subdomain)
+            if (r != undefined) {
+                return
+            }
+        }
+        pagination.table.result.push(result)
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
+    });
+    EventsOn("subdomainProgressID", (id: number) => {
+        config.id = id
+        config.percentage = Number(((config.id / config.count) * 100).toFixed(2));
+    });
+    EventsOn("subdomainCounts", (count: number) => {
+        config.count = count
+    });
+    EventsOn("subdomainComplete", (message: string) => {
+        ElMessage.info(message)
+        config.runningStatus = false
+        config.percentage = 100
+    });
+    return () => {
+        EventsOff("subdomainLoading");
+        EventsOff("subdomainComplete");
+    };
 });
-const from = reactive({
-    domain: "",
+
+const runnerOptions = [
+
+    {
+        label: "枚举模式",
+        value: 0,
+    },
+    {
+        label: "查询模式",
+        value: 1,
+        tips: "通过API查询"
+    },
+    {
+        label: "混合模式",
+        value: 2,
+        tips: "先查询后枚举"
+    },
+]
+
+const currentRunner = ref(1);
+const result = ref([] as SubdomainInfo[]);
+const pagination = usePagination(result.value, 50)
+const input = ref("");
+const dnsServerList = [
+    {
+        label: "谷歌",
+        value: "8.8.8.8:53"
+    },
+    {
+        label: "谷歌",
+        value: "8.8.4.4:53"
+    },
+    {
+        label: "‌电信",
+        value: "114.114.114.114:53"
+    },
+    {
+        label: "百度",
+        value: "180.76.76.76:53"
+    },
+    {
+        label: "阿里",
+        value: "223.5.5.5:53"
+    },
+    {
+        label: "阿里",
+        value: "223.6.6.6:53"
+    }
+]
+
+const selectDnsServer = ref(["223.5.5.5:53", "114.114.114.114:53"])
+
+const config = reactive({
     thread: 600,
     timeout: 5,
-    tips: '选择子域字典(默认加载dicc.txt)',
+    resolveExcludeTimes: 5,
     subs: [] as string[],
+    subFilepath: "",
     percentage: 0,
     id: 0,
+    count: 0,
     runningStatus: false,
+    drawer: false,
 });
-const sbr = ref([{}]);
-async function BurstSubdomain() {
-    from.runningStatus = true
-    sbr.value = [];
-    from.id = 0;
-    InitIPResolved();
-    if (from.subs.length === 0) {
-        from.subs = await LoadSubDict(global.PATH.ConfigPath + "/subdomain")
-        from.tips = `loaded ${from.subs.length} dicts`
-    }
-    async.eachLimit(from.subs, from.thread, (sub: string, callback: () => void) => {
-        from.id++;
-        from.percentage = Number(((from.id / from.subs.length) * 100).toFixed(2));
-        if (!from.runningStatus) {
-            return
+
+async function NewTask() {
+    if (!config.runningStatus) {
+        let task = new Runner()
+        if (await task.checkInput()) {
+            await task.NewRunner()
         }
-        Subdomain(sub + "." + from.domain, from.timeout).then((result) => {
-            if (result[2].length > 0) {
-                sbr.value.push({
-                    subdomains: result[0],
-                    cname: result[1],
-                    ips: result[2],
-                    notes: result[3],
-                });
-            }
-            callback();
-        });
-    }, (err: any) => {
-        if (err) {
-            ElMessage.error(err)
-        } else {
-            ElMessage({
-                showClose: true,
-                message: '子域名暴破已完成',
-                type: 'success',
-            })
-        }
-        from.runningStatus = false
-    });
-}
-function stop() {
-    if (from.runningStatus == true) {
-        from.runningStatus = false
-        ElMessage({
-            showClose: true,
-            message: '已停止任务',
-            type: 'warning',
-        })
+    } else {
+       config.runningStatus = false
+       ElNotification.error({
+           message: "用户已终止扫描任务",
+           position: 'bottom-right',
+       });
     }
 }
 
+class Runner {
+    public async checkInput() {
+        if (input.value == '') {
+            ElMessage.warning("请输入域名或者域名文件")
+            return false
+        }
+        if (validateDomain(input.value)) {
+            return true
+        }
+        let stat = await CheckFileStat(input.value)
+        if (!stat) {
+            ElMessage.warning('输入的文件路径不存在')
+        }
+        return stat
+    }
+
+    public async NewRunner() {
+        let domains = [] as string[]
+        if (await CheckFileStat(input.value)) {
+            domains = (await ReadLine(input.value))!
+        } else {
+            domains = [input.value]
+        }
+        if (currentRunner.value == 1 && (!global.space.chaos) && (!global.space.bevigil) && (!global.space.securitytrails) && (!global.space.zoomeye)) {
+            ElMessage.warning("请至少填写一个API进行查询")
+            return
+        }
+        config.runningStatus = true
+        config.id = 0;
+        if (currentRunner.value != 1 && config.subs.length == 0) {
+            config.subs = (await ReadLine(global.PATH.homedir + "/slack/config/subdomain/dicc.txt"))!
+        }
+        let option: SubdomainOption = {
+            Mode: currentRunner.value,
+            Domains: domains,
+            Subs: config.subs,
+            Thread: config.thread,
+            Timeout: config.timeout,
+            DnsServers: selectDnsServer.value,
+            ResolveExcludeTimes: 5,
+            BevigilApi: global.space.bevigil,
+            ChaosApi: global.space.chaos,
+            SecuritytrailsApi: global.space.securitytrails,
+            ZoomeyeApi: global.space.zoomeye,
+        }
+        await Subdomain(option)
+    }
+}
 async function handleFileChange() {
-    let path = await FileDialog("*.txt")
-    from.subs = (await ReadLine(path))!
-    from.tips = `loaded ${from.subs.length} dicts`;
+    config.subFilepath = await FileDialog("*.txt")
+    config.subs = (await ReadLine(config.subFilepath))!
+}
+
+async function handleTargetFileChange() {
+    input.value = await FileDialog("*.txt")
+}
+
+const CopyDomains = () => {
+    let subdomains = pagination.table.result.map(item => {
+        return item.Subdomain
+    })
+    Copy(subdomains.join("\n"))
 }
 </script>
 
 <template>
-    <el-form :model="from">
+    <el-form :model="config">
         <el-form-item>
             <div class="head">
-                <el-input v-model="from.domain" placeholder="请输入域名,仅支持单域名" style="margin-right: 10px;" />
-                <el-button type="primary" @click="BurstSubdomain" v-if="!from.runningStatus">开始任务</el-button>
-                <el-button type="danger" @click="stop" v-else>停止任务</el-button>
+                <el-input v-model="input" placeholder="请输入域名或域名文件列表" style="margin-right: 10px;">
+                    <template #prepend>
+                        <el-select v-model="currentRunner" style="width: 150px">
+                            <el-option v-for="item in runnerOptions" :key="item.value" :label="item.label"
+                                :value="item.value" style="width: 260px;">
+                                <span style="float: left">{{ item.label }}</span>
+                                <span class="tips">
+                                    {{ item.tips }}
+                                </span>
+                            </el-option>
+                        </el-select>
+                    </template>
+                    <template #suffix>
+                        <el-button link @click="handleTargetFileChange()">
+                            <el-icon>
+                                <Document />
+                            </el-icon>
+                        </el-button>
+                    </template>
+                </el-input>
+                <el-button type="primary" @click="NewTask" v-if="!config.runningStatus">开始任务</el-button>
+                <el-button type="danger" @click="NewTask" v-else>停止任务</el-button>
+                <el-button text bg @click="config.drawer = true">参数设置</el-button>
             </div>
         </el-form-item>
         <el-form-item>
             <el-space>
-                <div>
-                    <span>线程数量：</span>
-                    <el-input-number v-model="from.thread" :min="600" :max="10000" controls-position="right">
-                    </el-input-number>
-                </div>
-                <div>
-                    <span>解析超时(s)：</span>
-                    <el-input-number v-model="from.timeout" :min="1" :max="20" controls-position="right">
-                    </el-input-number>
-                </div>
-                <el-button type="primary" :icon="Loading" @click="handleFileChange()">{{ from.tips
-                    }}</el-button>
+                <el-tag>子域字典大小:{{ config.subs.length }}</el-tag>
+                <el-tag>线程:{{ config.thread }}</el-tag>
+                <el-tag type="info">tips: 运行状态可通过右上角运行日志查看</el-tag>
             </el-space>
-            <el-button :icon="exportIcon" style="margin-left: auto;"
-                @click="ExportToXlsx(['子域名', 'CNAME', 'IPS', '备注'], '子域名暴破', 'subdomain', sbr)">
-                导出Excel</el-button>
+            <el-dropdown style="margin-left: auto;">
+                <el-button :icon="Menu" text bg />
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item
+                            @click="ExportToXlsx(['主域名', '子域名', 'IPS', '是否为CDN', 'CDN名称', '来源'], '子域名暴破', 'subdomain', transformArrayFields(pagination.table.result))"
+                            :icon="exportIcon">导出Excel</el-dropdown-item>
+                        <el-dropdown-item
+                            @click="CopyDomains()"
+                            :icon="CopyDocument" divided>复制所有子域名</el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+            </el-dropdown>
         </el-form-item>
     </el-form>
-    <el-table :data="sbr" border style="height: 75vh; margin-bottom: 10px;">
+    <el-table :data="pagination.table.pageContent" border :cell-style="{ textAlign: 'center' }" 
+    :header-cell-style="{ 'text-align': 'center' }" style="height: 76vh;">
         <el-table-column type="index" label="#" width="60px" />
-        <el-table-column prop="subdomains" label="子域名" :show-overflow-tooltip="true" />
-        <el-table-column prop="cname" label="CNAME" :show-overflow-tooltip="true" />
-        <el-table-column prop="ips" label="IPs" :show-overflow-tooltip="true" />
-        <el-table-column prop="notes" label="备注" :show-overflow-tooltip="true" />
+        <el-table-column prop="Domain" label="主域名" />
+        <el-table-column prop="Subdomain" label="子域名" />
+        <el-table-column prop="Ips" label="IPs" />
+        <el-table-column prop="CdnName" label="CDN/WAF" width="150px">
+            <template #default="scope">
+                <el-tag type="error" v-if="scope.row.IsCdn">{{ scope.row.CdnName }}</el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column prop="Source" label="来源" width="120px" />
         <template #empty>
-            <el-empty description="点击开始任务获取数据"></el-empty>
+            <el-empty></el-empty>
         </template>
     </el-table>
-    <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" color="#5DC4F7" />
+    <div class="my-header" style="margin-top: 5px;">
+        <el-progress :text-inside="true" :stroke-width="18" :percentage="config.percentage" color="#5DC4F7"
+            style="width: 40%;" />
+        <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
+            @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+            :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
+            :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+            :total="pagination.table.result.length">
+        </el-pagination>
+    </div>
+    <el-drawer v-model="config.drawer" size="50%">
+        <template #header>
+            <h3>设置高级参数</h3>
+        </template>
+        <el-form :model="config" label-width="auto">
+            <el-form-item label="线程数量">
+                <el-input-number v-model="config.thread" :min="600" :max="10000" controls-position="right">
+                </el-input-number>
+            </el-form-item>
+            <el-form-item label="解析超时(s)">
+                <el-input-number v-model="config.timeout" :min="1" :max="20" controls-position="right">
+                </el-input-number>
+            </el-form-item>
+            <el-form-item>
+                <template #label>
+                    <span>过滤IP次数</span>
+                    <el-tooltip placement="left">
+                        <template #content>设置次数可以有效过滤泛解析数据，确保在泛解析<br />
+                            的域名中获取到不同的IP信息，次数为0表示不过滤
+                        </template>
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-input-number v-model="config.resolveExcludeTimes" :min="0" :max="1000" controls-position="right">
+                </el-input-number>
+            </el-form-item>
+            <el-form-item label="DNS Servers">
+                <el-select v-model="selectDnsServer" multiple clearable collapse-tags collapse-tags-tooltip
+                    :max-collapse-tags="3">
+                    <el-option v-for="item in dnsServerList" :key="item.value"
+                        :label="item.value"
+                        :value="item.value">
+                        <span style="float: left">{{ item.value }}</span>
+                        <span class="tips">
+                            {{ item.label }}
+                        </span>
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="子域字典选择">
+                <el-input v-model="config.subFilepath">
+                    <template #suffix>
+                        <el-button link @click="handleFileChange">
+                            <el-icon>
+                                <Document />
+                            </el-icon>
+                        </el-button>
+                    </template>
+                </el-input>
+            </el-form-item>
+        </el-form>
+    </el-drawer>
 </template>
+
+
+<style>
+.tips {
+    float: right;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
+}
+</style>

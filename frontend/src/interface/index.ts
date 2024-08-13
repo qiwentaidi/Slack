@@ -228,3 +228,26 @@ export interface BruteResult {
     Username: string
     Password: string
 }
+
+export interface SubdomainOption {
+    Mode: number
+    Domains: string[]
+    Subs: string[]
+    ChaosApi: string
+    ZoomeyeApi: string
+    SecuritytrailsApi: string
+    BevigilApi: string
+    Thread: number // 解析线程
+    Timeout: number // 仅枚举模式启用时生效
+    ResolveExcludeTimes: number // 解析过滤IP次数
+    DnsServers: string[]
+}
+
+export interface SubdomainInfo {
+    Domain: string
+    Subdomain: string
+    Ips: string[]
+    IsCdn: boolean
+    CdnName: string
+    Source: string
+}

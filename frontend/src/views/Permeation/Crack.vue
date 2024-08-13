@@ -11,7 +11,6 @@ import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { BruteResult } from '@/interface';
 
 onMounted(() => {
-    console.log(111)
     EventsOn("bruteResult", (result: BruteResult) => {
         let temp = result.Host.split(":")
         config.content.push({
