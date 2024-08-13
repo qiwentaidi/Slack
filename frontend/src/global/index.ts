@@ -11,6 +11,7 @@ var space = reactive({
     bevigil: '',
     zoomeye: '',
     securitytrails: '',
+    github: '',
 })
 
 var proxy = reactive({

@@ -7,6 +7,7 @@ import (
 	"os"
 	"slack-wails/core/subdomain/bevigil"
 	"slack-wails/core/subdomain/chaos"
+	"slack-wails/core/subdomain/github"
 	"slack-wails/core/subdomain/securitytrails"
 	"slack-wails/core/subdomain/zoomeye"
 	"slack-wails/core/waf"
@@ -202,6 +203,10 @@ func ApiPolymerization(ctx context.Context, o structs.SubdomainOption) {
 					subdomains = append(subdomains, item.Name)
 				}
 			}
+		}
+		if o.GethubApi != "" {
+			result := github.FetchHosts(ctx, domain, o.GethubApi)
+			subdomains = append(subdomains, result...)
 		}
 		if o.SecuritytrailsApi != "" {
 			sh := securitytrails.FetchHosts(ctx, domain, o.SecuritytrailsApi)

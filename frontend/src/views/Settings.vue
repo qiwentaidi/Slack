@@ -95,6 +95,9 @@
           <el-form-item label="Zoomeye">
             <el-input v-model="global.space.zoomeye" placeholder="API key" />
           </el-form-item>
+          <el-form-item label="Github">
+            <el-input v-model="global.space.github" placeholder="Settings -> Developer settings -> Presonal access tokens" />
+          </el-form-item>
         </el-form>
       </el-collapse-item>
       <el-collapse-item name="4"><template #title>
