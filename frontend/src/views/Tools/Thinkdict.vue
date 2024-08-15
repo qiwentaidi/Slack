@@ -31,11 +31,11 @@
     <el-row style="margin-top: 10px;">
         <el-col :lg="5">
             拼接字典
-            <el-input type="textarea" rows="25" v-model="dict.easyContent" />
+            <el-input type="textarea" :rows="25" v-model="dict.easyContent" />
         </el-col>
         <el-col :lg="5" style="margin-left: 10px; margin-right: 10px"> 
             结果
-            <el-input type="textarea" rows="25" v-model="r.result" />
+            <el-input type="textarea" :rows="25" v-model="r.result" />
         </el-col>
             <h2>共生成结果:{{ r.count }}个</h2>
     </el-row>

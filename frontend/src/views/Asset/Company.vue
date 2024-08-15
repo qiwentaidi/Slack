@@ -15,6 +15,7 @@ const from = reactive({
     wechat: true,
     company: '',
     defaultHold: 100,
+    subcompanyLevel: 1,
     token: '',
     activeName: 'subcompany',
     runningStatus: false,
@@ -47,16 +48,10 @@ function Collect() {
     const promises = companys.map(async companyName => {
         Callgologger("info", `正在收集${companyName}的子公司信息`)
         if (typeof companyName === 'string') {
-            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.defaultHold);
+            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold);
             if (result.length > 0) {
+                pc.table.result.push(...result)
                 for (const item of result) {
-                    pc.table.result.push({
-                        CompanyName: item.CompanyName,
-                        Holding: item.Holding,
-                        Investment: item.Investment,
-                        RegStatus: item.RegStatus,
-                        Domains: item.Domains,
-                    })
                     allCompany.push(item.CompanyName!)
                     pc.table.pageContent = pc.ctrl.watchResultChange(pc.table.result, pc.table.currentPage, pc.table.pageSize)
                 }
@@ -71,17 +66,8 @@ function Collect() {
                 if (typeof companyName === 'string') {
                     const result: WechatInfo[] = await WechatOfficial(companyName);
                     if (Array.isArray(result) && result.length > 0) {
-                        for (const item of result) {
-                            pw.table.result.push({
-                                CompanyName: item.CompanyName,
-                                WechatName: item.WechatName,
-                                WechatNums: item.WechatNums,
-                                Qrcode: item.Qrcode,
-                                Logo: item.Logo,
-                                Introduction: item.Introduction,
-                            });
-                            pw.table.pageContent = pw.ctrl.watchResultChange(pw.table.result, pw.table.currentPage, pw.table.pageSize)
-                        }
+                        pw.table.result.push(...result);
+                        pw.table.pageContent = pw.ctrl.watchResultChange(pw.table.result, pw.table.currentPage, pw.table.pageSize)
                     }
                 }
             });
@@ -119,6 +105,9 @@ function Collect() {
                 </template>
                 <el-input-number v-model="from.defaultHold" :min="1" :max="100"></el-input-number>
             </el-form-item>
+            <el-form-item label="子公司层级:">
+                <el-input-number v-model="from.subcompanyLevel" :min="1" :max="3"></el-input-number>
+            </el-form-item>
             <el-form-item label="其他查询内容:">
                 <el-checkbox v-model="from.wechat" label="公众号" />
             </el-form-item>
@@ -133,7 +122,7 @@ function Collect() {
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-input v-model="from.token" type="textarea" rows="4"></el-input>
+                <el-input v-model="from.token" type="textarea" :rows="4"></el-input>
             </el-form-item>
             <el-form-item class="align-right">
                 <el-button type="primary" @click="Collect">开始查询</el-button>
@@ -150,7 +139,8 @@ function Collect() {
                     <el-table-column prop="Investment" width="160px" label="投资数额" />
                     <el-table-column prop="RegStatus" width="100px" label="企业状态" align="center">
                         <template #default="scope">
-                            <el-tag v-if="scope.row.RegStatus === '存续'" type="success">{{ scope.row.RegStatus
+                            <el-tag v-if="scope.row.RegStatus === '存续' || scope.row.RegStatus === 'ok'"
+                                type="success">{{ scope.row.RegStatus
                                 }}</el-tag>
                             <el-tag v-else type="danger">{{ scope.row.RegStatus
                                 }}</el-tag>
@@ -208,7 +198,7 @@ function Collect() {
                             </el-popover>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="Introduction" label="简介" :show-overflow-tooltip="true" />
+                    <el-table-column prop="Introduction" label="简介" />
                     <template #empty>
                         <el-empty />
                     </template>

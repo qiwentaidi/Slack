@@ -46,6 +46,8 @@ export default {
         'display': '显示设置',
         'theme': '主题',
         'workflow': '工作流',
+        'isic': '互联网敏感信息采集',
+        'script': '脚本',
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

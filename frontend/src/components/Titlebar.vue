@@ -16,9 +16,9 @@ import maxmizeIcon from "@/assets/icon/maximize.svg"
 import reductionIcon from "@/assets/icon/reduction.svg"
 import consoleIcon from "@/assets/icon/console.svg"
 import githubIcon from "@/assets/icon/github.svg"
+import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/change';
 
 const isMax = ref(false)
-const isMacOS = ref(false)
 const onlineDrawer = ref(false)
 const localDrawer = ref(false)
 const showLogger = ref(false)
@@ -36,7 +36,7 @@ window.addEventListener('resize', () => {
 });
 
 IsMacOS().then(res => {
-    isMacOS.value = res
+    global.temp.isMacOS = res
 })
 function setTitle(path: string) {
     switch (path) {
@@ -46,28 +46,6 @@ function setTitle(path: string) {
             return path.split('/').slice(-1)[0];
     }
 }
-
-const rightStyle = computed(() => {
-    return isMacOS.value ? { marginRight: '3.5px' } : {};
-})
-
-const leftStyle = computed(() => {
-    return !isMacOS.value ? { marginLeft: '3.5px' } : {};
-})
-
-const macStyle = computed(() => {
-    return isMacOS.value ? { marginLeft: '5.5%' } : {};
-})
-
-const titlebarStyle = computed(() => {
-    return global.Theme.value ? {
-        backgroundColor: '#333333',
-        borderBottom: '1px solid #3B3B3B'
-    } : {
-        backgroundColor: '#F9F9F9',
-        borderBottom: '1px solid #E6E6E6'
-    };
-})
 
 const searchFilter = ref("");
 const filteredOptions = computed(() => {
@@ -180,7 +158,7 @@ const options = [
 <template>
     <div class="titlebar" :style="titlebarStyle">
         <div :style="macStyle">
-            <el-divider direction="vertical" v-if="isMacOS" />
+            <el-divider direction="vertical" v-if="global.temp.isMacOS" />
             <el-button-group :style="leftStyle">
                 <el-tooltip v-for="item in routerControl" :content="item.label">
                     <el-button text class="custom-button" @click="item.action">
@@ -197,7 +175,7 @@ const options = [
         <div style="display: flex">
             <el-button-group :style="rightStyle">
                 <el-tooltip v-for="item in appControl" :content="item.label">
-                    <el-button class="custom-button" text @click="item.action" v-show="!isMacOS || item.showMacOS">
+                    <el-button class="custom-button" text @click="item.action" v-show="!global.temp.isMacOS || item.showMacOS">
                         <template #icon>
                             <el-icon :size="16">
                                 <component :is="item.icon" />
@@ -206,7 +184,7 @@ const options = [
                     </el-button>
                 </el-tooltip>
             </el-button-group>
-            <div v-if="!isMacOS">
+            <div v-if="!global.temp.isMacOS">
                 <el-divider direction="vertical" />
                 <el-button-group>
                     <el-button v-for="item in windowsControl" :class="item.class!" text @click="item.action">

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, RefreshRight, Menu, Promotion } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, RefreshRight, Menu, Promotion, Filter } from '@element-plus/icons-vue';
 import {
     InitRule,
     FofaSearch,
@@ -10,7 +10,6 @@ import {
     ActiveFingerScan,
     IsHighRisk,
     NucleiScanner,
-    NucleiEnabled,
     WebPocLength,
     Callgologger,
     LoadDirsearchDict,
@@ -18,7 +17,7 @@ import {
 } from 'wailsjs/go/main/App'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
-import { formatURL, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transformArrayFields } from '@/util'
+import { formatURL, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transformArrayFields, TestNuclei } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
@@ -44,10 +43,7 @@ onMounted(() => {
             })
         }
     })
-
-    NucleiEnabled(global.webscan.nucleiEngine).then(enable => {
-        enable ? dashboard.nucleiEnabled = true : dashboard.nucleiEnabled = false
-    })
+    TestNuclei()
 });
 
 onMounted(() => {
@@ -96,6 +92,25 @@ onMounted(() => {
     };
 })
 
+const module = [
+    {
+        label: "指纹扫描",
+        value: 0
+    },
+    {
+        label: "指纹+敏感目录扫描",
+        value: 1
+    },
+    {
+        label: "指纹漏洞扫描",
+        value: 2,
+    },
+    {
+        label: "全部漏洞扫描",
+        value: 3,
+    }
+]
+
 const dashboard = reactive({
     reqErrorURLs: [] as string[],
     riskLevel: {
@@ -109,7 +124,6 @@ const dashboard = reactive({
     count: 0,
     fingerLength: 0,
     yamlPocsLength: 0,
-    nucleiEnabled: false,
 })
 
 const form = reactive({
@@ -119,26 +133,6 @@ const form = reactive({
     riskOptions: ["critical", "high", "medium", "low"],
     newscanner: false,
     currentModule: 0,
-    module: [
-        {
-            label: "指纹扫描",
-            value: 0
-        },
-        {
-            label: "指纹+敏感目录扫描",
-            value: 1
-        },
-        {
-            label: "指纹漏洞扫描",
-            value: 2,
-            disabled: dashboard.nucleiEnabled,
-        },
-        {
-            label: "全部漏洞扫描",
-            value: 3,
-            disabled: dashboard.nucleiEnabled,
-        }
-    ],
     thread: 50,
     vulResult: [] as Vulnerability[],
     fingerResult: [] as FingerprintTable[],
@@ -245,7 +239,7 @@ class Scanner {
             });
             return
         }
-        dashboard.currentModule = form.module[form.currentModule].label
+        dashboard.currentModule = module[form.currentModule].label
         // 指纹扫描      
         Callgologger("info", `Webscan task loaded, current: ${this.urls.length}，当前扫描模式: ${dashboard.currentModule}`)
         Callgologger("info", '正在进行指纹扫描 ...')
@@ -386,7 +380,7 @@ function getClassBySeverity(severity: string) {
                 <div class="card-header">
                     <span>Dashboard</span>
                     <el-alert title="Nuclei engine is enabled" type="success" :closable="false" center show-icon
-                        style="width: 50%; height: 30px" v-if="dashboard.nucleiEnabled" />
+                        style="width: 50%; height: 30px" v-if="global.temp.nucleiEnabled" />
                     <el-alert title="Nuclei engine is underfind, please configure the nuclei path in the settings"
                         type="error" :closable="false" center show-icon style="width: 50%; height: 30px" v-else />
                     <div>
@@ -508,7 +502,7 @@ function getClassBySeverity(severity: string) {
                     <el-table :data="vp.table.pageContent" stripe border height="100vh"
                         :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
                         <el-table-column prop="vulID" label="Template" width="250px" :show-overflow-tooltip="true" />
-                        <el-table-column prop="severity" width="150px" label="Severity" 
+                        <el-table-column prop="severity" width="150px" label="Severity"
                             :filter-method="filterHandlerSeverity" :filters="[
                                 { text: 'INFO', value: 'INFO' },
                                 { text: 'LOW', value: 'LOW' },
@@ -516,6 +510,9 @@ function getClassBySeverity(severity: string) {
                                 { text: 'HIGH', value: 'HIGH' },
                                 { text: 'CRITICAL', value: 'CRITICAL' },
                             ]">
+                            <template #filter-icon>
+                                <Filter />
+                            </template>
                             <template #default="scope">
                                 <span :class="getClassBySeverity(scope.row.severity)">{{ scope.row.severity }}</span>
                             </template>
@@ -545,8 +542,8 @@ function getClassBySeverity(severity: string) {
             </el-tabs>
             <el-space class="custom_eltabs_titlebar" :size="5">
 
-                <el-button :icon="RefreshRight" text bg type="danger"
-                    @click="NucleiEnabled(global.webscan.nucleiEngine)" v-show="!dashboard.nucleiEnabled">Reload
+                <el-button :icon="RefreshRight" text bg type="danger" @click="TestNuclei()"
+                    v-show="!global.temp.nucleiEnabled">Reload
                     Engine</el-button>
 
                 <el-dropdown>
@@ -565,7 +562,7 @@ function getClassBySeverity(severity: string) {
         </div>
     </el-scrollbar>
 
-    <el-drawer v-model="form.newscanner" size="44%">
+    <el-drawer v-model="form.newscanner" size="48%">
         <template #header>
             <h4>新建扫描任务</h4>
             <el-button link @click="form.fofaDialog = true">
@@ -597,7 +594,7 @@ function getClassBySeverity(severity: string) {
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-input v-model="form.url" type="textarea" rows="6" clearable></el-input>
+                <el-input v-model="form.url" type="textarea" :rows="6" clearable></el-input>
             </el-form-item>
             <el-form-item>
                 <template #label>模式:
@@ -613,7 +610,12 @@ function getClassBySeverity(severity: string) {
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-segmented v-model="form.currentModule" :options="form.module" style="width: 100%;" />
+                <el-radio-group v-model="form.currentModule">
+                    <el-radio-button label="指纹扫描" :value="0" />
+                    <el-radio-button label="指纹+敏感目录扫描" :value="1" />
+                    <el-radio-button label="指纹漏洞扫描" :value="2" :disable="!global.temp.nucleiEnabled" />
+                    <el-radio-button label="全部漏洞扫描" :value="3" :disable="!global.temp.nucleiEnabled" />
+                </el-radio-group>
             </el-form-item>
             <div v-if="form.currentModule == 3">
                 <el-form-item label="关键字:" class="bottom">
@@ -640,7 +642,9 @@ function getClassBySeverity(severity: string) {
     <el-drawer v-model="detailDialog" size="70%">
         <template #header>
             <el-button text bg>
-                <template #icon><Notebook /></template>漏洞详情</el-button>
+                <template #icon>
+                    <Notebook />
+                </template>漏洞详情</el-button>
         </template>
         <div v-if="selectedRow">
             <el-descriptions :column="2" border style="margin-bottom: 10px;">
@@ -650,8 +654,7 @@ function getClassBySeverity(severity: string) {
                     }}</el-descriptions-item>
                 <el-descriptions-item label="Description:" :span="2">{{ selectedRow.description
                     }}</el-descriptions-item>
-                <el-descriptions-item label="Reference:" :span="2"
-                    label-class-name="description">
+                <el-descriptions-item label="Reference:" :span="2" label-class-name="description">
                     <div v-for="item in selectedRow.reference.split(',')">
                         {{ item }}
                     </div>

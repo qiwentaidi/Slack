@@ -3,6 +3,8 @@ html.dark {
     --sidebar-text-color: #fff;
     --titlebar-hover-color: #303030;
     --response-bg-color: #1c1b1b;
+    --home-bg-color: #1E1E1E;
+    --nav-item-hover-color: #3c3c3c;
     
     .grid-item {
         background-color: var(--titlebar-hover-color);

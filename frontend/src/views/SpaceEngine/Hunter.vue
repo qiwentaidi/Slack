@@ -613,7 +613,7 @@ async function CopyURL(mode: number) {
                 <el-input v-model="syntax.ruleForm.name" maxlength="30" show-word-limit></el-input>
             </el-form-item>
             <el-form-item label="语法内容" prop="desc">
-                <el-input v-model="syntax.ruleForm.desc" type="textarea" rows="10" maxlength="1024"
+                <el-input v-model="syntax.ruleForm.desc" type="textarea" :rows="10" maxlength="1024"
                     show-word-limit></el-input>
             </el-form-item>
             <el-form-item class="align-right">

@@ -6,15 +6,20 @@ import MenuList from "@/router/menu";
   <el-scrollbar height="92vh">
     <div v-for="groups in MenuList">
       <div v-if="groups.children">
-        <el-divider><span style="font-size: large;">{{ $t(groups.name) }}</span></el-divider>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <el-divider>
+          <div class="custom-header">
+            <el-icon :size="24"><component :is=groups.icon /></el-icon>
+            <span>{{ $t(groups.name) }}</span>
+          </div>
+        </el-divider>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 10px;">
           <el-card shadow="hover" class="card" v-for="item in groups.children" @click="$router.push(groups.path + item.path)">
             <div style="display: flex;">
               <div class="card-content">
                 <!-- 左侧图片 -->
-                <el-image class="appNavIcon" :src="item.icon" />
+                <el-image :src="item.icon" style="width: 24px;" />
                 <!-- 右侧内容 -->
-                <span class="card-text">{{ $t(item.name) }}</span>
+                <span>{{ $t(item.name) }}</span>
               </div>
               <el-icon :size="30" class="location-icon">
                 <DArrowRight />
@@ -27,10 +32,33 @@ import MenuList from "@/router/menu";
   </el-scrollbar>
 </template>
 
-<style>
+<style scoped>
+.custom-header {
+  display: flex;
+  align-items: center;
+  font-size: large;
+  font-weight: bold;
+}
+
+.custom-header span {
+  margin-left: 10px;
+}
+
 .card {
   width: 24%;
   position: relative; /* 确保图标相对于此容器进行绝对定位 */
+
+  .card-content {
+    display: flex;
+    align-items: center;
+    text-align: left;
+  }
+  
+  span {
+    margin-left: 5px;
+    font-weight: bold;
+  }
+
 }
 
 .card:hover {
@@ -48,19 +76,6 @@ import MenuList from "@/router/menu";
   }
 }
 
-
-.card-content {
-  display: flex;
-  align-items: center;
-  text-align: left;
-}
-
-
-.card-text {
-  margin-left: 5px;
-  font-weight: bold;
-}
-
 /* 跳转图标 */
 .location-icon {
   position: absolute;
@@ -71,8 +86,4 @@ import MenuList from "@/router/menu";
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.appNavIcon .el-image__inner {
-  height: 25px;
-  width: 25px;
-}
 </style>

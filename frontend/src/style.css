@@ -26,8 +26,8 @@ html {
 
 .el-aside {
   width: 64px;
-  position: relative;
-  transition: width 0.3s;
+  /* position: relative;
+  transition: width 0.3s; */
 }
 
 .el-drawer__header {
@@ -170,17 +170,16 @@ html {
   }
 }
 
-html.light .nav-item:hover {
-  background-color: #E1E3E1;
-  border-radius: 5px;
-}
-
-html.dark .nav-item:hover {
-  background-color: #3c3c3c;
+.nav-item:hover {
+  background-color: var(--nav-item-hover-color);
   border-radius: 5px;
 }
 
 .nav-text {
   text-align: left;
   margin-right: 10px;
+}
+
+.el-divider__text {
+  background-color: var(--home-bg-color);
 }

@@ -14,6 +14,7 @@ import {
 import Loading from "./components/Loading.vue";
 import { URLFingerMap, ProxyOptions, File } from "./interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
+import { computed } from "vue";
 
 export var proxys: ProxyOptions; // wails2.9之后替换原来的null
 
@@ -207,9 +208,17 @@ export async function TestProxy(mode: number) {
 export async function TestNuclei() {
   NucleiEnabled(global.webscan.nucleiEngine).then((result) => {
     if (result) {
-      ElNotification.success("Nuclei engine is enabled");
+      global.temp.nucleiEnabled = true
+      ElNotification.success({
+        message: "Nuclei engine is enabled",
+        duration: 2000,
+      });
     } else {
-      ElNotification.error("Nuclei engine is disable");
+      global.temp.nucleiEnabled = false
+      ElNotification.error({
+        message: "Nuclei engine is disable",
+        duration: 2000,
+      });
     }
   });
 }

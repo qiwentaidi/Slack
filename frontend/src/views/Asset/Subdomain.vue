@@ -164,6 +164,7 @@ class Runner {
             ChaosApi: global.space.chaos,
             SecuritytrailsApi: global.space.securitytrails,
             ZoomeyeApi: global.space.zoomeye,
+            GithubApi: global.space.github,
         }
         await Subdomain(option)
     }

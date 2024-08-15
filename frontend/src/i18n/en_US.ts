@@ -46,6 +46,8 @@ export default {
         'display': 'Display',
         'theme': 'Theme',
         'workflow': 'Workflow',
+        'isic': 'Internet Info Collection',
+        'script': 'Script',
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

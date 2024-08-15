@@ -572,14 +572,22 @@ function formatProduct(raw: string): string[] {
                     </template>
                 </el-table-column>
                 <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
-                    :filter-method="filterHandlerTitle" width="200" :show-overflow-tooltip="true" />
+                    :filter-method="filterHandlerTitle" width="200" :show-overflow-tooltip="true">
+                    <template #filter-icon>
+                        <Filter />
+                    </template>
+                </el-table-column>
                 <el-table-column prop="IP" label="IP" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Port" label="端口" width="100"
                     :sort-method="(a: any, b: any) => { return a.Port - b.Port }" sortable
                     :show-overflow-tooltip="true" />
                 <el-table-column prop="Domain" label="域名" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Protocol" label="协议" :filters='getColumnData("Protocol")'
-                    :filter-method="filterHandlerProtocol" width="100" :show-overflow-tooltip="true" />
+                    :filter-method="filterHandlerProtocol" width="100" :show-overflow-tooltip="true">
+                    <template #filter-icon>
+                        <Filter />
+                    </template>
+                </el-table-column>
                 <el-table-column prop="Product" label="组件" width="200">
                     <template #default="scope">
                         <el-button type="primary" plain v-if="formatProduct(scope.row.Product).length > 0">
@@ -620,7 +628,7 @@ function formatProduct(raw: string): string[] {
                 <el-input v-model="syntax.ruleForm.name" maxlength="30" show-word-limit></el-input>
             </el-form-item>
             <el-form-item label="语法内容" prop="desc">
-                <el-input v-model="syntax.ruleForm.desc" type="textarea" rows="10" maxlength="1024"
+                <el-input v-model="syntax.ruleForm.desc" type="textarea" :rows="10" maxlength="1024"
                     show-word-limit></el-input>
             </el-form-item>
             <el-form-item class="align-right">

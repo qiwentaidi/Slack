@@ -19,6 +19,7 @@ import (
 	"slack-wails/core/exp/hikvision"
 	"slack-wails/core/exp/nacos"
 	"slack-wails/core/info"
+	"slack-wails/core/isic"
 	"slack-wails/core/jsfind"
 	"slack-wails/core/portscan"
 	"slack-wails/core/space"
@@ -275,17 +276,45 @@ func (a *App) InitTycHeader(token string) {
 	info.InitHEAD(token)
 }
 
-// mode 0 = 查询子公司 . mode 1 = 查询公众号
-func (a *App) SubsidiariesAndDomains(query string, ratio int) []info.CompanyInfo {
+func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int) []info.CompanyInfo {
 	tkm := info.CheckKeyMap(a.ctx, query)
 	time.Sleep(time.Second)
-	return info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyID, ratio)
+	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false)
+	var secondCompanyNames []string
+	if subLevel >= 2 {
+		for _, r := range result {
+			if r.CompanyName == tkm.CompanyName { // 跳过本级单位查询
+				continue
+			}
+			secondCompanyNames = append(secondCompanyNames, r.CompanyName)
+			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true)
+			result = append(result, secondResult...)
+			time.Sleep(time.Second)
+		}
+	}
+	if subLevel == 3 {
+		for _, r := range result {
+			if util.ArrayContains(r.CompanyName, secondCompanyNames) { // 已经查询过的二级IP跳过
+				continue
+			}
+			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true)
+			result = append(result, secondResult...)
+			time.Sleep(time.Second)
+		}
+	}
+	return result
 }
 
 func (a *App) WechatOfficial(query string) []info.WechatReulst {
-	tkm := info.CheckKeyMap(a.ctx, query)
+	var companyId string
+	for _, tkm := range info.TycKeyMap {
+		if tkm.CompanyName == query {
+			companyId = tkm.CompanyId
+			break
+		}
+	}
 	time.Sleep(time.Second)
-	return info.WeChatOfficialAccounts(a.ctx, tkm.CompanyName, tkm.CompanyID)
+	return info.WeChatOfficialAccounts(a.ctx, query, companyId)
 }
 
 type HunterSearch struct {
@@ -659,4 +688,8 @@ func (a *App) HikvsionCamera(target string, attackType int, passwordList []strin
 
 func (a *App) UncoverSearch(query, types string, size int, option structs.SpaceOption) []space.Result {
 	return space.Uncover(a.ctx, query, types, size, option)
+}
+
+func (a *App) GitDorks(target, dork, apikey string) *isic.GithubResult {
+	return isic.GithubApiQuery(a.ctx, fmt.Sprintf("%s %s", target, dork), apikey)
 }

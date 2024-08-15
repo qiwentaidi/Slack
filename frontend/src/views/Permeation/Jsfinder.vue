@@ -249,7 +249,7 @@ const menus = [
         <el-switch v-model="config.otherURL" inline-prompt active-text="关闭" inactive-text="开启"></el-switch>
       </el-form-item>
       <el-form-item label="白名单域名:" class="el-margin" v-show="config.otherURL">
-        <el-input v-model="global.jsfind.whiteList" type="textarea" rows="5"></el-input>
+        <el-input v-model="global.jsfind.whiteList" type="textarea" :rows="5"></el-input>
       </el-form-item>
       <el-form-item label="标记颜色:">
         <el-descriptions :column="1" border style="width: 100%;">

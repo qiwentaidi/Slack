@@ -61,7 +61,7 @@
                             <div class="batch-search">
                                 <el-alert type="info" :closable="false" title="上传包含IP/域名的.txt文件，数量不超过1000个" show-icon />
                                 <el-button class="upload" :icon="UploadFilled">上传文件</el-button>
-                                <el-input v-model="quake.batchIps" type="textarea" rows="5"
+                                <el-input v-model="quake.batchIps" type="textarea" :rows="5"
                                     placeholder="请输入IP/域名，每行一个，多个请换行输入"></el-input>
                                 <div class="my-header">
                                     <div></div>
@@ -267,7 +267,7 @@
                 <el-input v-model="syntax.ruleForm.name" maxlength="30" show-word-limit></el-input>
             </el-form-item>
             <el-form-item label="语法内容" prop="desc">
-                <el-input v-model="syntax.ruleForm.desc" type="textarea" rows="10" maxlength="1024"
+                <el-input v-model="syntax.ruleForm.desc" type="textarea" :rows="10" maxlength="1024"
                     show-word-limit></el-input>
             </el-form-item>
             <el-form-item class="align-right">

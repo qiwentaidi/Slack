@@ -403,7 +403,7 @@ const optionIndex = ref("Pretty")
                 <el-input v-model="from.statusFilter" placeholder="支持200,300 | 200-300,400-500"></el-input>
             </el-form-item>
             <el-form-item label="自定义请求头:">
-                <el-input v-model="config.headers" placeholder="以键:值形式输入，多行请用换行分割" type="textarea" rows="3"></el-input>
+                <el-input v-model="config.headers" placeholder="以键:值形式输入，多行请用换行分割" type="textarea" :rows="3"></el-input>
             </el-form-item>
             <el-form-item>
                 <template #label>
@@ -432,7 +432,7 @@ const optionIndex = ref("Pretty")
                         </el-tooltip>
                     </el-space>
                 </div>
-                <el-input v-model="config.customDict" type="textarea" rows="8"></el-input>
+                <el-input v-model="config.customDict" type="textarea" :rows="8"></el-input>
             </el-form-item>
         </el-form>
     </el-drawer>

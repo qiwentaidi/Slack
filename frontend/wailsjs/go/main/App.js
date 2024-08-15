@@ -70,6 +70,10 @@ export function GOOS() {
   return window['go']['main']['App']['GOOS']();
 }
 
+export function GitDorks(arg1, arg2, arg3) {
+  return window['go']['main']['App']['GitDorks'](arg1, arg2, arg3);
+}
+
 export function GoFetch(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['GoFetch'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
@@ -190,8 +194,8 @@ export function Subdomain(arg1) {
   return window['go']['main']['App']['Subdomain'](arg1);
 }
 
-export function SubsidiariesAndDomains(arg1, arg2) {
-  return window['go']['main']['App']['SubsidiariesAndDomains'](arg1, arg2);
+export function SubsidiariesAndDomains(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SubsidiariesAndDomains'](arg1, arg2, arg3);
 }
 
 export function System(arg1, arg2) {

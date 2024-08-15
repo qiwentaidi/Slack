@@ -16,20 +16,20 @@
     </div>
     <el-row :gutter="8" style="margin-top: 10px;">
         <el-col :span="14">
-            <div class="my-header" style="background-color: #eee;">
+            <div class="my-header" :style="titleStyle">
                 <span>目标地址:
 
                 </span>
                 <el-button size="small" @click="uploadFile">目标导入</el-button>
             </div>
-            <el-input v-model="form.url" type="textarea" rows="5" resize="none" placeholder="请输入URL根路径"></el-input>
+            <el-input v-model="form.url" type="textarea" :rows="5" resize="none" placeholder="请输入URL根路径"></el-input>
         </el-col>
         <el-col :span="10">
-            <div class="my-header" style="background-color: #eee;">
+            <div class="my-header" :style="titleStyle">
                 密码口令:
                 <el-button size="small" @click="form.passwordList = ''">清空</el-button>
             </div>
-            <el-input v-model="form.passwordList" type="textarea" rows="5" resize="none"></el-input>
+            <el-input v-model="form.passwordList" type="textarea" :rows="5" resize="none"></el-input>
         </el-col>
     </el-row>
 
@@ -46,6 +46,7 @@ import { Picture } from '@element-plus/icons-vue';
 import { HikvsionCamera } from 'wailsjs/go/main/App';
 import global from '@/global';
 import { formatURL } from '@/util';
+import { titleStyle } from '@/stores/change';
 import { FileDialog, ReadFile } from 'wailsjs/go/main/File';
 import { File } from '@/interface';
 import { ElMessage } from 'element-plus';

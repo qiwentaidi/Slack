@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref, computed } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '@/util'
 import { ExportToXlsx } from '@/export'
@@ -12,6 +12,7 @@ import async from 'async';
 import { URLFingerMap, PortScanData, File } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
+import { titleStyle } from '@/stores/change';
 
 // syn 扫描模式
 onMounted(() => {
@@ -367,14 +368,6 @@ function changeTableHeigth() {
         portscanTable.style.height = '82vh'
     }
 }
-
-const titleStyle = computed(() => {
-    return global.Theme.value ? {
-        backgroundColor: '#333333',
-    } : {
-        backgroundColor: '#eee',
-    };
-})
 </script>
 
 <template>
@@ -448,7 +441,7 @@ const titleStyle = computed(() => {
                     </span>
                     <el-button size="small" @click="uploadFile">IP导入</el-button>
                 </div>
-                <el-input class="input" type="textarea" rows="3" v-model="form.target" resize="none" />
+                <el-input class="input" type="textarea" :rows="3" v-model="form.target" resize="none" />
             </el-col>
             <el-col :span="4">
                 <span class="my-header" :style="titleStyle">
@@ -465,7 +458,7 @@ const titleStyle = computed(() => {
                     端口列表:
                     <el-button size="small" @click="form.portlist = ''">清空</el-button>
                 </div>
-                <el-input class="input" type="textarea" rows="3" v-model="form.portlist" resize="none" />
+                <el-input class="input" type="textarea" :rows="3" v-model="form.portlist" resize="none" />
             </el-col>
         </el-row>
     </div>

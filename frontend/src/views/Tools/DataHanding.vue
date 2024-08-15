@@ -138,12 +138,12 @@ const appControl = [
         <el-main>
             <el-form label-width="50px">
                 <el-form-item label="内容">
-                    <el-input v-model="form.input" type="textarea" rows="7" placeholder='请输入内容或者右键上传文件'
+                    <el-input v-model="form.input" type="textarea" :rows="7" placeholder='请输入内容或者右键上传文件'
                         v-menus:right="menus" />
                 </el-form-item>
 
                 <el-form-item label="结果">
-                    <el-input v-model="form.result" type="textarea" rows="15" />
+                    <el-input v-model="form.result" type="textarea" :rows="15" />
                 </el-form-item>
 
                 <el-form-item>

@@ -35,7 +35,7 @@
                 <el-input v-model="reverse.name"></el-input>
             </el-form-item>
             <el-form-item label="内容:">
-                <el-input v-model="reverse.content" type="textarea" rows="5"></el-input>
+                <el-input v-model="reverse.content" type="textarea" :rows="5"></el-input>
             </el-form-item>
         </el-form>
         <template #footer>

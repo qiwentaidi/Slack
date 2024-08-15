@@ -3,6 +3,8 @@ html.light {
     --sidebar-text-color: hsl(0, 0%, 0%);
     --titlebar-hover-color: #dcdcdc;
     --response-bg-color: #f6f6f6;
+    --home-bg-color: #fff;
+    --nav-item-hover-color: #E1E3E1;
 
     .grid-item {
         background-color: #F5F5F5;

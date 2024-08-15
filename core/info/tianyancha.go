@@ -54,7 +54,7 @@ type TycResult struct {
 			LegalPersonName  string      `json:"legalPersonName"`
 			Logo             interface{} `json:"logo"`
 			Alias            string      `json:"alias"`
-			ID               int64       `json:"id"`
+			ID               int64       `json:"id"` // 子公司的companyId
 			Amount           string      `json:"amount"`
 			EstiblishTime    int64       `json:"estiblishTime"`
 			LegalPersonID    int         `json:"legalPersonId"`
@@ -103,7 +103,7 @@ func InitHEAD(token string) {
 	}
 }
 
-// 要根据ID值查子公司
+// 要根据ID值查子公司，只有本部公司需要走这个接口查询
 func GetCompanyID(ctx context.Context, company string) (string, string) {
 	var company_id, company_name string
 	data := make(map[string]interface{})
@@ -128,13 +128,14 @@ func GetCompanyID(ctx context.Context, company string) (string, string) {
 type CompanyInfo struct {
 	CompanyName string
 	Holding     string
-	Investment  string
+	Investment  string // 投资比例
 	RegStatus   string
 	Domains     []string
+	CompanyId   string
 }
 
-// 返回查询公司的名称和子公司的名称
-func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int) (Asset []CompanyInfo) {
+// 返回查询公司的名称和子公司的名称, isSecond 是否为二次查询
+func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int, isSecond bool) (Asset []CompanyInfo) {
 	data := make(map[string]interface{})
 	data["gid"] = companyId
 	data["pageSize"] = 100
@@ -150,19 +151,21 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 	}
 	var qr TycResult
 	json.Unmarshal(b, &qr)
-	// 获取到本公司对应的域名
-	var domains []string
-	domains, _ = Beianx(companyName)
-	Asset = append(Asset, CompanyInfo{companyName, "本公司", "", qr.State, util.RemoveDuplicates(domains)})
+	// 获取到本公司对应的域名，若是二次查询跳过
+	if !isSecond {
+		var domains []string
+		domains, _ = Beianx(companyName)
+		Asset = append(Asset, CompanyInfo{companyName, "本公司", "", qr.State, util.RemoveDuplicates(domains), companyId})
+	}
 	for _, result := range qr.Data.Result {
 		gq, _ := strconv.Atoi(strings.TrimSuffix(result.Percent, "%"))
 		if gq <= 100 && gq >= ratio { // 提取在控股范围内的子公司
 			gologger.Info(ctx, fmt.Sprintf("%v", result.Name))
 			var subsidiaryDomains []string
-			if result.RegStatus == "存续" { // 注销的公司不用查备案
+			if result.RegStatus == "存续" || result.RegStatus == "ok" { // 注销的公司不用查备案
 				subsidiaryDomains, _ = Beianx(result.Name)
 			}
-			Asset = append(Asset, CompanyInfo{result.Name, result.Percent, result.Amount, result.RegStatus, util.RemoveDuplicates(subsidiaryDomains)})
+			Asset = append(Asset, CompanyInfo{result.Name, result.Percent, result.Amount, result.RegStatus, util.RemoveDuplicates(subsidiaryDomains), fmt.Sprint(result.ID)})
 		}
 	}
 	return
@@ -237,7 +240,7 @@ func CheckKeyMap(ctx context.Context, query string) structs.TycCompanyInfo {
 		}
 		TycKeyMap[query] = structs.TycCompanyInfo{
 			CompanyName: fuzzName,
-			CompanyID:   companyId,
+			CompanyId:   companyId,
 		}
 	}
 	return TycKeyMap[query]

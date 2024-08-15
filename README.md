@@ -15,61 +15,46 @@
 
 # 运行代码
 
-## 安装环境
+## 安装依赖
 
-Linux/Debian
+- **Go 1.20+**
+- **Node.js 16+**
+- **Wails 2.9+** 
+  - `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
 
-```sh
-# need install Go 1.20+
-sudo apt install golang-go
+### Linux/Debian
 
-# need install nodejs 15+
-sudo apt install nodejs npm
+- **build-essential**
+- **libgtk-3-dev**
+- **libpcap-dev**
+- **libwebkit2gtk-4.0-dev or libwebkit2gtk-4.1-dev**
+  - 安装`libwebkit2gtk-4.1-dev`编译应用时需要增加 `-tags webkit2_41`
 
-# install gcc && libpcap
-sudo apt install build-essential libgtk-3-dev libpcap-dev 
+### Windows
 
-# if apt can't be found 4.0-dev then install 4.1-dev
-1、sudo apt install libwebkit2gtk-4.0-dev
-2、sudo apt install libwebkit2gtk-4.1-dev
+- **Gcc**
+  - `https://github.com/niXman/mingw-builds-binaries/releases`
 
-# install wails to run app
-go install github.com/wailsapp/wails/v2/cmd/wails@latest
+### Mac
 
-git clone https://github.com/qiwentaidi/Slack.git
-```
-
-Windows
-
-```sh
-# need install Go 1.20+ && nodejs 15+
-# download gcc(https://github.com/niXman/mingw-builds-binaries/releases) and configure environment variables
-
-# install wails to run app
-go install github.com/wailsapp/wails/v2/cmd/wails@latest
-
-git clone https://github.com/qiwentaidi/Slack.git
-```
+- **xcode-select**
 
 ## 编译/调试
 
 ``````sh
-cd Slack
-# used for debugging while writing code
-wails dev 
+git clone https://github.com/qiwentaidi/Slack.git && cd Slack
 
-# build executable file on /build/bin
-wails build
+wails dev # 调试模式运行
 
-# open web console in executable file
-wails build -debug -devtools
+wails build # 编译应用 文件存在于build/bin路径下
+
+wails build -debug -devtools # 编译可开启调试模式应用
 ``````
 
 `Mac build dmg`
 
 ``````sh
-# need build Slack.app first
-
+# 需要先编译完Slack.app
 brew install create-dmg
 
 create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-size 100  --icon "Slack.app" 200 190 --app-drop-link 600 185 --hide-extension "Slack.app" --volicon build/bin/Slack.app/Contents/Resources/iconfile.icns  "Slack.dmg" build/bin/Slack.app
@@ -79,7 +64,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ## 首页
 
-![image-20240801105341219](assets/image-20240801105341219.png)
+![image-20240815172649991](assets/image-20240815172649991.png)
 
 ## 渗透测试
 
@@ -121,6 +106,10 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240629003953025](assets/image-20240629003953025.png)
 
+### 互联网敏感信息收集
+
+![image-20240815172353721](assets/image-20240815172353721.png)
+
 ## 空间引擎
 
 ### FOFA
@@ -134,6 +123,8 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 ### Quake
 
 ![image-20240628172913333](assets/image-20240628172913333.png)
+
+### 聚合搜索
 
 ## 小工具
 

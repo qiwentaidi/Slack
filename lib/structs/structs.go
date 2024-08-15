@@ -27,7 +27,7 @@ type Children struct {
 }
 
 type TycCompanyInfo struct {
-	CompanyID   string
+	CompanyId   string
 	CompanyName string
 }
 

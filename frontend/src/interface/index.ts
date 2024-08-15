@@ -237,6 +237,7 @@ export interface SubdomainOption {
     ZoomeyeApi: string
     SecuritytrailsApi: string
     BevigilApi: string
+    GithubApi: string
     Thread: number // 解析线程
     Timeout: number // 仅枚举模式启用时生效
     ResolveExcludeTimes: number // 解析过滤IP次数
@@ -250,4 +251,12 @@ export interface SubdomainInfo {
     IsCdn: boolean
     CdnName: string
     Source: string
+}
+
+export interface ISICResult {
+    Query: string
+    Status: boolean
+    Total: number
+    Items: string[]
+    Link: string
 }

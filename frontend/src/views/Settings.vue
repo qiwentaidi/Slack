@@ -121,7 +121,7 @@
         </template>
         <div>
           <el-alert type="info" :closable="false" show-icon>内置字典密码所有协议通用</el-alert>
-          <el-table :data="global.dict.usernames" stripe style="width: 100%" @row-dblclick="">
+          <el-table :data="global.dict.usernames" stripe style="width: 100%">
             <el-table-column prop="name" label="服务名称" />
             <el-table-column label="操作" width="250" align="center">
               <template #default="scope">
@@ -140,7 +140,7 @@
   </el-scrollbar>
   <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
   <el-drawer v-model="ctrl.innerDrawer" title="字典管理" :append-to-body="true">
-    <el-input type="textarea" rows="20" v-model="ctrl.currentDic"></el-input>
+    <el-input type="textarea" :rows="20" v-model="ctrl.currentDic"></el-input>
     <el-button type="primary" style="margin-top: 10px; float: right;" @click="SaveFile(ctrl.currentPath)">保存</el-button>
   </el-drawer>
 </template>

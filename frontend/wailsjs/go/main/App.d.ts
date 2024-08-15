@@ -5,6 +5,7 @@ import {main} from '../models';
 import {structs} from '../models';
 import {dirsearch} from '../models';
 import {space} from '../models';
+import {isic} from '../models';
 import {jsfind} from '../models';
 import {info} from '../models';
 
@@ -41,6 +42,8 @@ export function FofaTips(arg1:string):Promise<space.TipsResult>;
 export function Fscan2Txt(arg1:string):Promise<string>;
 
 export function GOOS():Promise<string>;
+
+export function GitDorks(arg1:string,arg2:string,arg3:string):Promise<isic.GithubResult>;
 
 export function GoFetch(arg1:string,arg2:string,arg3:any,arg4:{[key: string]: string},arg5:number,arg6:clients.Proxy):Promise<structs.Response>;
 
@@ -102,7 +105,7 @@ export function StopSubdomain():Promise<void>;
 
 export function Subdomain(arg1:structs.SubdomainOption):Promise<void>;
 
-export function SubsidiariesAndDomains(arg1:string,arg2:number):Promise<Array<info.CompanyInfo>>;
+export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number):Promise<Array<info.CompanyInfo>>;
 
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
 

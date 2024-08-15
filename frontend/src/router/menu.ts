@@ -1,5 +1,6 @@
-import homeIcon from "../assets/icon/home.svg"
-import toolsIcon from "../assets/icon/tools.svg"
+import homeIcon from "@/assets/icon/home.svg"
+import toolsIcon from "@/assets/icon/tools.svg"
+import mappingIcon from "@/assets/icon/mapping.svg"
 
 const MenuList = [
     {
@@ -69,12 +70,17 @@ const MenuList = [
           path: "/Ipdomain",
           icon: "/app/domain.png"
         },
+        {
+          name: "aside.isic",
+          path: "/ISICollection",
+          icon: "/app/internet.png"
+        },
       ]
     },
     {
       name: "aside.space_engine",
       path: "/SpaceEngine",
-      icon: "Monitor",
+      icon: mappingIcon,
       children: [
         {
           name: "aside.fofa",
