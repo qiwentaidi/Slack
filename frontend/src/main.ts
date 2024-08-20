@@ -13,18 +13,17 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import global from "./global";
 import "./style/dark.css"
 import "./style/light.css"
-import { directive } from 'vue3-menus';
 //引入依赖和语言
 import hljs from "highlight.js/lib/core";
 import hljsVuePlugin from "@highlightjs/vue-plugin";
 //按需引入语言
 import bash from "highlight.js/lib/languages/bash";
-import html from "highlight.js/lib/languages/vbscript-html";
-import json from "highlight.js/lib/languages/json";
+import yaml from "highlight.js/lib/languages/yaml";
+import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
+import ContextMenu from '@imengyu/vue3-context-menu'
 
 hljs.registerLanguage("bash", bash);
-hljs.registerLanguage("html", html);
-hljs.registerLanguage("json", json);
+hljs.registerLanguage("yaml", yaml);
 
 let theme = localStorage.getItem('theme') || "light"
 
@@ -39,11 +38,10 @@ export default (app: App<Element>) => {
 };
 
 const app = createApp(AppComponent)
-app.directive('menus', directive); // 注册指令
 
 // 使得comonent 可以正确渲染el-icon
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.use(router).use(i18n).use(hljsVuePlugin).mount("#app");
+app.use(router).use(i18n).use(hljsVuePlugin).use(ContextMenu).mount("#app");

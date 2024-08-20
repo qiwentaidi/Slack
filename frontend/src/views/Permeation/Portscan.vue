@@ -432,7 +432,7 @@ function changeTableHeigth() {
                                 排除IP可以在可支持输入的IP格式前加!:<br />
                                 !192.168.1.6/28<br />
                                 <br />
-                                域名格式: www.expamle.com (SYN不支持)
+                                域名格式: www.example.com (SYN不支持)
                             </template>
                             <el-icon style="width: 13px;">
                                 <QuestionFilled />
@@ -541,21 +541,6 @@ function changeTableHeigth() {
 
 
 <style>
-.el-textarea__inner {
-    height: 100%;
-}
-
-.list-container {
-    width: 20vh;   
-    border-radius: 4px;
-    text-align: center;
-    max-height: 120px;
-}
-
-.list-item.selected {
-    background-color: #a4c1e7;
-}
-
 .input {
     height: 120px;
 }

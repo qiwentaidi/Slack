@@ -5,23 +5,23 @@ import updateUI from "./Update.vue";
 import global from "@/global/index";
 import menus from "@/router/menu";
 import router from "@/router";
-// import scriptIcon from '@/assets/icon/script.svg'
+import pocIcon from '@/assets/icon/pocmanagement.svg'
 
 const updateDialog = ref(false)
 
 const bottomControl = [
-  // {
-  //   label: "aside.script",
-  //   icon: scriptIcon,
-  //   action: () => {
-      
-  //   }
-  // },
   {
     label: "aside.update",
     icon: Refresh,
     action: () => {
       updateDialog.value = true
+    }
+  },
+  {
+    label: "aside.poc_manage",
+    icon: pocIcon,
+    action: () => {
+      router.push('/PocManagement')
     }
   },
   {

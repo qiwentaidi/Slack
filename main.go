@@ -50,11 +50,9 @@ func main() {
 			}
 		}(),
 		OnDomReady: func(ctx context.Context) {
-			if rt.GOOS == "darwin" {
-				runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
-					runtime.EventsEmit(ctx, "wails-drop", paths)
-				})
-			}
+			runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
+
+			})
 		},
 		MinWidth:  1280,
 		MinHeight: 768,

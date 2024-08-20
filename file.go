@@ -230,10 +230,6 @@ func (*File) ReadMemo(filepath string) map[string]string {
 	return keyValueMap
 }
 
-func (*File) Mkdir(dir string) bool {
-	return os.Mkdir(dir, 0777) == nil
-}
-
 func (*File) WriteFile(filetype, path, content string) bool {
 	var buf []byte
 	switch filetype {
@@ -445,7 +441,7 @@ func (f *File) OpenFolder(filepath string) string {
 	var cmd *exec.Cmd
 	switch rt.GOOS {
 	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", filepath)
+		cmd = exec.Command("explorer", "/select,"+filepath)
 	case "darwin":
 		cmd = exec.Command("open", filepath)
 	default:
@@ -459,31 +455,52 @@ func (f *File) OpenFolder(filepath string) string {
 	return ""
 }
 
-// JAR | EXE | LNK | Other
+// 给定一个路径，在打开所在文件夹的命令行
+func (f *File) OpenTerminal(filepath string) string {
+	filepath, err := getDirectoryPath(filepath)
+	if err != nil {
+		return err.Error()
+	}
+	var cmd *exec.Cmd
+	switch rt.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/C", "start", "cmd", "/K", "cd /d", filepath)
+	case "darwin":
+		cmd = exec.Command("open", "-a", "Terminal", filepath)
+	default:
+		cmd = exec.Command("gnome-terminal", "--working-directory", filepath)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err = cmd.Run(); err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
 func (f *File) RunApp(types, filepath string) bool {
 	var cmd *exec.Cmd
-	if rt.GOOS == "windows" {
-		switch types {
-		case "JAR":
-			cmd = exec.Command("java", "-jar", filepath)
-		case "APP":
-			if path.Ext(filepath) == ".lnk" {
-				cmd = exec.Command("cmd", "/c", "start", filepath)
-			} else {
-				cmd = exec.Command(filepath)
-			}
-		default:
-			filepath, _ = getDirectoryPath(filepath)
-			cmd = exec.Command("cmd", "/C", "start", "cmd", "/K", "cd /d", filepath)
+	switch types {
+	case "JAR":
+		cmd = exec.Command("java", "-jar", filepath)
+	case "APP":
+		if path.Ext(filepath) == ".lnk" || path.Ext(filepath) == ".bat" || path.Ext(filepath) == "" {
+			cmd = exec.Command("cmd", "/c", "start", filepath)
+		} else if path.Ext(filepath) == ".url" {
+			runtime.BrowserOpenURL(f.ctx, filepath)
+		} else {
+			cmd = exec.Command(filepath)
 		}
-		go func() {
-			if err := cmd.Run(); err != nil {
-				return
-			}
-		}()
+	default:
+		f.OpenTerminal(filepath)
 		return true
 	}
-	return false
+	go func() {
+		if err := cmd.Run(); err != nil {
+			return
+		}
+	}()
+	return true
 }
 
 func getDirectoryPath(path string) (string, error) {

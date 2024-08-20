@@ -111,7 +111,8 @@ func ALLPoc() []string {
 
 		// 检查文件后缀名
 		if filepath.Ext(path) == ".yaml" {
-			files = append(files, path)
+			fileName := strings.TrimSuffix(filepath.Base(path), ".yaml")
+			files = append(files, fileName)
 		}
 		return nil
 	})
@@ -381,79 +382,67 @@ func dataCheckInt(op int16, dataSource int, dataRule int) bool {
 	return false
 }
 
-type WorkFlowEntity struct {
-	RootType bool
-	DirType  bool
-	BaseType bool
-	PocsName []string
-}
+var WorkFlowDB map[string][]string
 
-var WorkFlowDB map[string]WorkFlowEntity
-
-func InitAll(webfinger, activefinger, workflow string) bool {
+func InitAll(webfinger, activefinger string) bool {
 	FingerprintDB = nil
-	WorkFlowDB = nil
 	if err := InitFingprintDB(webfinger); err != nil {
 		return false
 	}
 	if err := InitActiveScanPath(activefinger); err != nil {
 		return false
 	}
-
-	if err := InitWorkflow(workflow); err != nil {
-		return false
-	}
 	return true
 }
 func InitWorkflow(workflowFile string) error {
-	WorkFlowDB = make(map[string]WorkFlowEntity)
+	WorkFlowDB = make(map[string][]string)
 	data, err := os.ReadFile(workflowFile)
 	if err != nil {
 		return err
 	}
-	fps := make(map[string]map[string][]string)
-	err = yaml.Unmarshal(data, &fps)
+	err = yaml.Unmarshal(data, &WorkFlowDB)
 	if err != nil {
 		return err
 	}
-	for productName, rulesInterface := range fps {
-		_, ok := WorkFlowDB[productName]
-		if ok {
-			we := WorkFlowDB[productName]
-			types := rulesInterface["type"]
-			pocs := rulesInterface["pocs"]
-			for _, v := range types {
-				if strings.ToLower(v) == "root" {
-					we.RootType = true
-				} else if strings.ToLower(v) == "dir" {
-					we.DirType = true
-				} else if strings.ToLower(v) == "base" {
-					we.BaseType = true
-				}
-			}
-			for _, v := range pocs {
-				if util.GetItemInArray(we.PocsName, v) == -1 {
-					we.PocsName = append(we.PocsName, v)
-				}
-			}
-			WorkFlowDB[productName] = we
-		} else {
-			var workflowEntity WorkFlowEntity
-			types := rulesInterface["type"]
-			pocs := rulesInterface["pocs"]
-			for _, v := range types {
-				if strings.ToLower(v) == "root" {
-					workflowEntity.RootType = true
-				} else if strings.ToLower(v) == "dir" {
-					workflowEntity.DirType = true
-				} else if strings.ToLower(v) == "base" {
-					workflowEntity.BaseType = true
-				}
-			}
-			workflowEntity.PocsName = append(workflowEntity.PocsName, pocs...)
-			workflowEntity.PocsName = util.RemoveDuplicates(workflowEntity.PocsName)
-			WorkFlowDB[productName] = workflowEntity
-		}
-	}
 	return nil
 }
+
+// type TemplateInfo struct {
+// 	Tags string `yaml:"tags"`
+// }
+
+// type Template struct {
+// 	Info TemplateInfo `yaml:"info"`
+// }
+
+// func GetTagsList(templateDir string) map[string][]string {
+// 	// 初始化字典
+// 	tagsDict := make(map[string][]string)
+// 	// 遍历所有模板文件
+// 	filepath.WalkDir(templateDir, func(path string, d fs.DirEntry, err error) error {
+// 		if err != nil {
+// 			return err
+// 		}
+// 		if !d.IsDir() && strings.HasSuffix(d.Name(), ".yaml") {
+// 			file, err := os.ReadFile(path)
+// 			if err != nil {
+// 				fmt.Printf("Error reading file %s: %v\n", path, err)
+// 				return nil
+// 			}
+
+// 			var template Template
+// 			err = yaml.Unmarshal(file, &template)
+// 			if err != nil {
+// 				fmt.Printf("Error parsing file %s: %v\n", path, err)
+// 				return nil
+// 			}
+
+// 			if template.Info.Tags != "" {
+// 				tags := strings.Split(template.Info.Tags, ",")
+// 				tagsDict[d.Name()] = tags
+// 			}
+// 		}
+// 		return nil
+// 	})
+// 	return tagsDict
+// }

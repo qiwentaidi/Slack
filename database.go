@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
+	"slack-wails/core/webscan"
 	"slack-wails/lib/util"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -97,8 +99,75 @@ func (d *Database) CreateTable() bool {
 	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS hunter_syntax ( name TEXT, content TEXT );
 	CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );
 	CREATE TABLE IF NOT EXISTS fofa_syntax ( name TEXT, content TEXT );
-	CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );`)
+	CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );
+	CREATE TABLE IF NOT EXISTS poc_workflow ( fingerprint TEXT, poc_path TEXT );`)
 	return err == nil
+}
+
+func (d *Database) InitPocWorkflow() bool {
+	var workflowFile = util.HomeDir() + "/slack/config/workflow.yaml"
+	if _, err := os.Stat(workflowFile); err != nil {
+		return false
+	}
+	var count int
+	err := d.DB.QueryRow(`SELECT COUNT(*) FROM poc_workflow`).Scan(&count)
+	if err != nil {
+		log.Println(err)
+		count = 0
+	}
+	if count == 0 {
+		// 初始化工作流，如果成功，写入数据库
+		err = webscan.InitWorkflow(workflowFile)
+		if err != nil {
+			return false
+		}
+		// 将 webscan.WorkFlowDB 数据写入数据库
+		tx, err := d.DB.Begin()
+		if err != nil {
+			return false
+		}
+
+		stmt, err := tx.Prepare(`INSERT INTO poc_workflow (fingerprint, poc_path) VALUES (?, ?)`)
+		if err != nil {
+			tx.Rollback()
+			return false
+		}
+		defer stmt.Close()
+		for fingerprint, pocPaths := range webscan.WorkFlowDB {
+			for _, pocPath := range pocPaths {
+				_, err := stmt.Exec(fingerprint, pocPath)
+				if err != nil {
+					tx.Rollback()
+					return false
+				}
+			}
+		}
+
+		err = tx.Commit()
+		return err == nil
+	} else {
+		// 载入数据库中的数据到 webscan.WorkFlowDB
+		rows, err := d.DB.Query(`SELECT fingerprint, poc_path FROM poc_workflow`)
+		if err != nil {
+			return false
+		}
+		defer rows.Close()
+		webscan.WorkFlowDB = make(map[string][]string)
+
+		for rows.Next() {
+			var fingerprint, pocPath string
+			if err := rows.Scan(&fingerprint, &pocPath); err != nil {
+				continue
+			}
+			webscan.WorkFlowDB[fingerprint] = append(webscan.WorkFlowDB[fingerprint], pocPath)
+		}
+
+		return rows.Err() == nil
+	}
+}
+
+func (d *Database) GetFingerPocMap() map[string][]string {
+	return webscan.WorkFlowDB
 }
 
 type Syntax struct {

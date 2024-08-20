@@ -39,7 +39,6 @@ import (
 // App struct
 type App struct {
 	ctx              context.Context
-	workflowFile     string
 	webfingerFile    string
 	activefingerFile string
 	cdnFile          string
@@ -53,7 +52,6 @@ type App struct {
 func NewApp() *App {
 	home := util.HomeDir()
 	return &App{
-		workflowFile:     home + "/slack/config/workflow.yaml",
 		webfingerFile:    home + "/slack/config/webfinger.yaml",
 		activefingerFile: home + "/slack/config/dir.yaml",
 		cdnFile:          home + "/slack/config/cdn.yaml",
@@ -93,10 +91,6 @@ func (a *App) IsRoot() bool {
 		return os.Getuid() == 0
 	}
 }
-func (a *App) GOOS() string {
-	return runtime.GOOS
-}
-
 func (a *App) GoFetch(method, target string, body interface{}, headers map[string]string, timeout int, proxy clients.Proxy) *structs.Response {
 	if _, err := url.Parse(target); err != nil {
 		return &structs.Response{
@@ -500,7 +494,7 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
 
 // 仅在执行时调用一次
 func (a *App) InitRule() bool {
-	return webscan.InitAll(a.webfingerFile, a.activefingerFile, a.workflowFile)
+	return webscan.InitAll(a.webfingerFile, a.activefingerFile)
 }
 
 // webscan
@@ -510,17 +504,18 @@ func (a *App) FingerLength() int {
 }
 
 func (a *App) FingerScan(target []string, proxy clients.Proxy) {
-	webscan.NewFingerScan(a.ctx, target, proxy)
+	fs := webscan.NewFingerScanner(a.ctx, target, proxy)
+	fs.NewFingerScan()
 }
 
 func (a *App) ActiveFingerScan(target []string, proxy clients.Proxy) {
-	webscan.NewActiveFingerScan(a.ctx, target, proxy)
+	fs := webscan.NewFingerScanner(a.ctx, target, proxy)
+	fs.NewActiveFingerScan()
 }
-
 func (a *App) IsHighRisk(fingerprint string) bool {
-	for name, wfe := range webscan.WorkFlowDB {
+	for name, pocs := range webscan.WorkFlowDB {
 		if fingerprint == name {
-			return len(wfe.PocsName) > 0
+			return len(pocs) > 0
 		}
 	}
 	return false
@@ -548,8 +543,8 @@ func (a *App) NucleiEnabled(nucleiPath string) bool {
 	return nc.Enabled(a.ctx)
 }
 
-func (a *App) WebPocLength() int {
-	return len(webscan.ALLPoc())
+func (a *App) WebPocFiles() []string {
+	return webscan.ALLPoc()
 }
 
 // hunter

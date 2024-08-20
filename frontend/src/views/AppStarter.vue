@@ -1,66 +1,49 @@
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from "element-plus";
-import { reactive, ref } from "vue";
+import { reactive, ref, h } from "vue";
 import { LocalOpitons, Child } from "@/interface";
-import global from "@/global";
 import { DeleteFilled, Edit, FolderOpened, Document } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
-import { OnFileDrop, EventsOn } from "wailsjs/runtime/runtime";
-import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog } from "wailsjs/go/main/File";
-import { GOOS } from "wailsjs/go/main/App";
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+import { OnFileDrop } from "wailsjs/runtime/runtime";
+import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal } from "wailsjs/go/main/File";
+import ContextMenu from '@imengyu/vue3-context-menu'
+import groupIcon from "@/assets/icon/tag-group.svg"
+import tagIcon from "@/assets/icon/tag.svg"
+import { defaultIconSize } from "@/stores/style";
+import consoleIcon from '@/assets/icon/console.svg'
+import appIcon from '@/assets/icon/app.svg'
+import javaIcon from '@/assets/icon/java.svg'
+import itermIcon from '@/assets/icon/iterm.svg'
 
 onMounted(async () => {
-    let os = await GOOS()
-    // windows
     OnFileDrop((x, y, paths) => {
-        if (os == "windows") {
-            let card = localGroup.options.value.find(item => item.Name === config.mouseOnGroupName)
-            paths.forEach(p => {
-                Path(p).then((pathinfo: any) => {
-                    if (card) {
-                        let c = {
-                            Name: pathinfo.Name,
-                            Type: localGroup.getExtType(pathinfo.Ext),
-                            Path: p
-                        }
-                        if (!card.Children) {
-                            card.Children = [c];
-                        } else {
-                            card.Children.push(c)
-                        }
-                        InsetItemNavigation(config.mouseOnGroupName, c)
-                    }
-                })
-            })
-        }
+        let card = localGroup.options.value.find(item => item.Name === config.mouseOnGroupName)
+        paths.forEach(async p => {
+            let pathinfo: any = await Path(p)
+            if (pathinfo.Ext != "url")
+            if (card) {
+                let c = {
+                    Name: pathinfo.Name,
+                    Type: localGroup.getExtType(pathinfo.Ext),
+                    Path: p
+                }
+                if (!card.Children) {
+                    card.Children = [c];
+                } else {
+                    card.Children.push(c)
+                }
+                InsetItemNavigation(config.mouseOnGroupName, c)
+            }
+        })
     }, true)
     GetLocalNaConfig().then((result: LocalOpitons[]) => {
         if (result) {
             localGroup.options.value.push(...result)
-        }
-    })
-    // macos
-    EventsOn("wails-drop", (paths: string[]) => {
-        let card = localGroup.options.value.find(item => item.Name === config.mouseOnGroupName)
-        paths.forEach(p => {
-            Path(p).then((pathinfo: any) => {
-                if (card) {
-                    let c = {
-                        Name: pathinfo.Name,
-                        Type: localGroup.getExtType(pathinfo.Ext),
-                        Path: p
-                    }
-                    if (!card.Children) {
-                        card.Children = [c];
-                    } else {
-                        card.Children.push(c)
-                    }
-                    InsetItemNavigation(config.mouseOnGroupName, c)
-                }
+        } else {
+            ElMessageBox.alert('可以通过右键添加分组，再通过分组右键添加启动应用', 'Tips', {
+                confirmButtonText: 'OK',
             })
-        })
+        }
     })
 })
 
@@ -76,6 +59,7 @@ const config = reactive({
     editType: "",
     editChild: {} as Child,
     editGroupName: "", // 正在被编辑的组名
+    addItemDialog: false,
 })
 
 const localGroup = ({
@@ -84,26 +68,26 @@ const localGroup = ({
     getGroupNames: function () {
         return localGroup.options.value.map(item => item.Name)
     },
-    getSvgPath: function (type: string) {
+    chooseSvg: function (type: string) {
         switch (type) {
             case "JAR":
-                return "/navigation/java.svg"
+                return javaIcon
             case "APP":
-                return "/navigation/app.svg"
+                return appIcon
             default:
-                return "/navigation/iterm.svg"
+                return itermIcon
         }
     },
     getExtType: function (type: string) {
         if (type == "JAR") {
             return type
-        } else if (type == "LNK" || type == "EXE") {
+        } else if (type == "LNK" || type == "EXE" || type == "URL" || type == "BAT") {
             return "APP"
         }
         return "CMD"
     },
     addGroup: function () {
-        ElMessageBox.prompt('Name', t("navigator.add_group"), {
+        ElMessageBox.prompt('请输入名称(不能重名)', "添加分组", {
             confirmButtonText: 'OK',
             cancelButtonText: 'Cancel',
             inputPattern: /.+/,
@@ -144,6 +128,7 @@ const localGroup = ({
             }
             InsetItemNavigation(config.defualtGroupName, child)
         }
+        config.addItemDialog = false
     },
     deleteGroup: function (name: string) {
         localGroup.options.value = localGroup.options.value.filter(item => item.Name !== name)
@@ -199,105 +184,153 @@ const localGroup = ({
         }
     },
     selectFile: async function () {
-        let result = await FileDialog("")
-        config.path = result
+        config.path = await FileDialog("")
     },
 })
 
-// 暴露addGroup方法供其他地方调用
-defineExpose({
-    addGroup: localGroup.addGroup
-})
+function handDivContextMenu(e: MouseEvent) {
+    e.preventDefault();
+    //show our menu
+    ContextMenu.showContextMenu({
+        x: e.x,
+        y: e.y,
+        items: [
+            {
+                label: "添加分组",
+                icon: h(groupIcon, defaultIconSize),
+                onClick: () => {
+                    localGroup.addGroup()
+                }
+            },
+        ]
+    });
+}
+function handleCardContextMenu(e: MouseEvent, groups: any) {
+    //prevent the browser's default menu
+    e.preventDefault();
+    //show our menu
+    ContextMenu.showContextMenu({
+        x: e.x,
+        y: e.y,
+        items: [
+            {
+                label: "添加元素",
+                icon: h(tagIcon, defaultIconSize),
+                onClick: () => {
+                    config.addItemDialog = true
+                }
+            },
+            {
+                label: "添加分组",
+                icon: h(groupIcon, defaultIconSize),
+                divided: true,
+                onClick: () => {
+                    localGroup.addGroup()
+                }
+            },
+            {
+                label: "删除分组",
+                icon: h(DeleteFilled, defaultIconSize),
+                onClick: () => {
+                    localGroup.deleteGroup(groups.Name)
+                }
+            },
+        ]
+    });
+}
 
-const showCardPopover = ref(false)
-const xRef = ref(0)
-const yRef = ref(0)
-function handleCardContextMenu(event: MouseEvent) {
-    event.preventDefault()
-    showCardPopover.value = true
-    xRef.value = event.clientX
-    yRef.value = event.clientY
+function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
+    e.preventDefault();
+    ContextMenu.showContextMenu({
+        x: e.x,
+        y: e.y,
+        items: [
+            {
+                label: "打开文件夹",
+                icon: h(FolderOpened, defaultIconSize),
+                onClick: () => {
+                    localGroup.handleOpenFolder(item.Path)
+                }
+            },
+            {
+                label: "打开文件所在命令行",
+                icon: h(consoleIcon, defaultIconSize),
+                onClick: () => {
+                    OpenTerminal(item.Path)
+                }
+            },
+            {
+                label: "编辑",
+                icon: h(Edit, defaultIconSize),
+                onClick: () => {
+                    localGroup.editItem(groups.Name, {
+                        Name: item.Name,
+                        Type: item.Type,
+                        Path: item.Path,
+                    })
+                }
+            },
+            {
+                label: "删除",
+                icon: h(DeleteFilled, defaultIconSize),
+                onClick: () => {
+                    localGroup.deleteItem(groups.Name, {
+                        Name: item.Name,
+                        Type: item.Type,
+                        Path: item.Path,
+                    })
+                }
+            },
+        ]
+    });
 }
 </script>
 
 
 <template>
-    <div v-for="groups in localGroup.options.value">
-        <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
-            @contextmenu.prevent="handleCardContextMenu">
-            <div class="my-header" style="margin-bottom: 10px">
-                <span style="font-weight: bold">{{ groups.Name }}</span>
-                <el-popconfirm title="Are you sure to delete this?" @confirm="localGroup.deleteGroup(groups.Name)">
-                    <template #reference>
-                        <el-button :icon="DeleteFilled" link></el-button>
-                    </template>
-                </el-popconfirm>
-            </div>
-            <div v-if="groups.Children" class="button-grid">
-                <div v-for="item in groups.Children">
-                    <el-popover ref="popover" placement="right" :width="200" trigger="contextmenu">
-                        <el-menu class="right-click">
-                            <el-menu-item index="open" @click="localGroup.handleOpenFolder(item.Path)">
-                                <el-icon>
-                                    <FolderOpened />
-                                </el-icon>
-                                {{ $t("navigator.open_folder") }}</el-menu-item>
-                            <el-menu-item index="edit" @click="localGroup.editItem(groups.Name, {
-                                Name: item.Name,
-                                Type: item.Type,
-                                Path: item.Path,
-                            })">
-                                <el-icon>
-                                    <Edit />
-                                </el-icon>
-                                {{ $t("navigator.edit") }}</el-menu-item>
-                            <el-menu-item index="delete" @click="localGroup.deleteItem(groups.Name, {
-                                Name: item.Name,
-                                Type: item.Type,
-                                Path: item.Path,
-                            })">
-                                <el-icon>
-                                    <DeleteFilled />
-                                </el-icon>
-                                {{ $t("navigator.delete") }}</el-menu-item>
-                        </el-menu>
+    <el-scrollbar height="92vh" @contextmenu.prevent="handDivContextMenu($event)">
+        <div v-for="groups in localGroup.options.value" style="margin-bottom: 10px;">
+            <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
+                @contextmenu.stop @contextmenu.prevent="handleCardContextMenu($event, groups)">
+                <div class="my-header" style="margin-bottom: 10px">
+                    <span style="font-weight: bold">{{ groups.Name }}</span>
+                    <el-popconfirm title="Are you sure to delete this?" @confirm="localGroup.deleteGroup(groups.Name)">
                         <template #reference>
-                            <el-button bg text @click="RunApp(item.Type, item.Path)">
-                                <template #icon>
-                                    <img :src="localGroup.getSvgPath(item.Type)" style="width: 16px;">
-                                </template>
-                                {{ item.Name }}
-                            </el-button>
+                            <el-button :icon="DeleteFilled" link></el-button>
                         </template>
-                    </el-popover>
+                    </el-popconfirm>
                 </div>
-            </div>
-        </el-card>
-    </div>
-    <el-dialog v-model="global.temp.localAddItem" :title="$t('navigator.add_item')" width="500">
+                <div v-if="groups.Children" class="button-grid">
+                    <div v-for="item in groups.Children">
+                        <el-button bg text :icon="localGroup.chooseSvg(item.Type)" @contextmenu.stop @click="RunApp(item.Type, item.Path)"
+                            @contextmenu.prevent="handleButtonContextMenu($event, groups, item)">
+                            {{ item.Name }}
+                        </el-button>
+                    </div>
+                </div>
+            </el-card>
+        </div>
+    </el-scrollbar>
+    <el-dialog v-model="config.addItemDialog" :title="$t('navigator.add_item')" width="500">
         <el-form label-width="auto">
-            <el-form-item label="Group">
+            <el-form-item label="组名">
                 <el-select v-model="config.defualtGroupName">
                     <el-option v-for="name in localGroup.getGroupNames()" :value="name">{{ name }}</el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="Name">
+            <el-form-item label="名称">
                 <el-input v-model="config.name" />
             </el-form-item>
-            <el-form-item label="Type">
+            <el-form-item label="类型">
                 <el-radio-group v-model="config.defaultType">
                     <el-radio border v-for="item in localGroup.openGroup" :key="item" :value="item">{{ item
                         }}</el-radio>
                 </el-radio-group>
             </el-form-item>
-            <el-form-item label="Path">
+            <el-form-item label="路径">
                 <el-input v-model="config.path">
                     <template #suffix>
-                        <el-button link @click="localGroup.selectFile()">
-                            <template #icon>
-                                <Document />
-                            </template>
-                        </el-button>
+                        <el-button :icon="Document" link @click="localGroup.selectFile()" />
                     </template>
                 </el-input>
             </el-form-item>
@@ -312,25 +345,23 @@ function handleCardContextMenu(event: MouseEvent) {
     </el-dialog>
     <el-dialog v-model="config.editDialog" :title="$t('navigator.edit_item')" width="500">
         <el-form label-width="auto">
-            <el-form-item label="Name">
+            <el-form-item label="名称">
                 <el-input v-model="config.editName" />
             </el-form-item>
-            <el-form-item label="Type">
+            <el-form-item label="类型">
                 <el-radio-group v-model="config.editType">
                     <el-radio border v-for="item in localGroup.openGroup" :key="item" :value="item">{{ item
                         }}</el-radio>
                 </el-radio-group>
             </el-form-item>
-            <el-form-item label="Path">
+            <el-form-item label="路径">
                 <el-input v-model="config.editPath"></el-input>
             </el-form-item>
         </el-form>
         <template #footer>
-            <div class="dialog-footer">
-                <el-button type="primary" @click="localGroup.saveEdit">
-                    Save
-                </el-button>
-            </div>
+            <el-button type="primary" @click="localGroup.saveEdit">
+                保存
+            </el-button>
         </template>
     </el-dialog>
 </template>
@@ -340,21 +371,11 @@ function handleCardContextMenu(event: MouseEvent) {
 .button-grid {
     display: flex;
     flex-wrap: wrap;
-    margin-left: -10px;
-    /* 调整左边距以抵消子元素的左边距 */
-}
-
-.button-grid .el-button {
-    margin-left: 10px;
-    /* 设置按钮的左边距 */
-    margin-bottom: 10px;
-    /* 设置按钮的下边距 */
-    flex: 0 1 auto;
-    /* 按钮根据内容自动调整宽度 */
+    gap: 10px;
 }
 
 .drop-enable {
     --wails-drop-target: drop;
-    width: 100%;
+    width: 99%;
 }
 </style>

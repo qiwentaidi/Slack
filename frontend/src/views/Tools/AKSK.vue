@@ -292,8 +292,3 @@ const result = ref("");
   <pre class="pretty-response" style="height: 48vh"><code>{{ result }}</code></pre>
 </template>
 
-<style>
-.el-textarea__inner {
-  height: 100%;
-}
-</style>

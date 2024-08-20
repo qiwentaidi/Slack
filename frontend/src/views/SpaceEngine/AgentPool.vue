@@ -234,7 +234,5 @@ async function Delelte(host: string) {
 </template>
 
 <style scoped>
-.el-textarea__inner {
-    height: 100%;
-}
+
 </style>

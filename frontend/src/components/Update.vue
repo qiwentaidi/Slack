@@ -5,6 +5,7 @@ import { UpdatePocFile, DownloadLastestClient, Restart } from "wailsjs/go/main/F
 import { ElMessageBox, ElNotification } from "element-plus";
 import { onMounted, ref } from "vue";
 import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
+import { marked } from 'marked';
 
 onMounted(() => {
     // 监听下载进度事件
@@ -75,6 +76,10 @@ const customColorMethod = (percentage: number) => {
     }
     return '#67c23a'
 }
+
+function renderedMarkdown(content: string) {
+    return marked.parse(content);
+}
 </script>
 
 <template>
@@ -88,8 +93,8 @@ const customColorMethod = (percentage: number) => {
                 <span v-else>{{ global.UPDATE.PocContent }}</span>
             </div>
         </template>
-        <el-scrollbar style="height: 100px;" class="pretty-response" v-if="global.UPDATE.PocStatus">
-            {{ global.UPDATE.PocContent }}
+        <el-scrollbar v-if="global.UPDATE.PocStatus">
+            <div v-html="renderedMarkdown(global.UPDATE.PocContent)"></div>
         </el-scrollbar>
     </el-card>
 
@@ -103,11 +108,17 @@ const customColorMethod = (percentage: number) => {
                 <span v-else>{{ global.UPDATE.ClientContent }}</span>
             </div>
         </template>
-        <el-scrollbar style="height: 100px;" class="pretty-response" v-if="global.UPDATE.ClientStatus">
-            {{ global.UPDATE.ClientContent }}
+        <el-scrollbar v-if="global.UPDATE.ClientStatus">
+            <div v-html="renderedMarkdown(global.UPDATE.ClientContent)"></div>
         </el-scrollbar>
     </el-card>
     <div style="margin-top: 5px;" v-if="update.downloadRunningStatus.value">正在下载中，请等待下载完成...
         <el-progress :percentage="update.progress.value" :color="customColorMethod"></el-progress>
     </div>
 </template>
+
+<style scoped>
+.el-scrollbar {
+    height: 150px;
+}
+</style>

@@ -47,7 +47,7 @@ export default {
         'theme': 'Theme',
         'workflow': 'Workflow',
         'isic': 'Internet Info Collection',
-        'script': 'Script',
+        'poc_manage': 'Poc Management',
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

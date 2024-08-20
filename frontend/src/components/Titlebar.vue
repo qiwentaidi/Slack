@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Close, Minus, Search, Plus, InfoFilled, Back, Right, Avatar } from '@element-plus/icons-vue';
+import { Close, Minus, Search, Back, Right, Avatar } from '@element-plus/icons-vue';
 import { Quit, WindowMinimise, WindowToggleMaximise } from "wailsjs/runtime/runtime";
 import { IsMacOS } from "wailsjs/go/main/File";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
@@ -16,11 +16,11 @@ import maxmizeIcon from "@/assets/icon/maximize.svg"
 import reductionIcon from "@/assets/icon/reduction.svg"
 import consoleIcon from "@/assets/icon/console.svg"
 import githubIcon from "@/assets/icon/github.svg"
-import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/change';
+import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/style';
+import router from '@/router';
 
 const isMax = ref(false)
 const onlineDrawer = ref(false)
-const localDrawer = ref(false)
 const showLogger = ref(false)
 const route = useRoute();
 const aboutDialog = ref(false)
@@ -60,13 +60,6 @@ const filteredOptions = computed(() => {
     }));
 });
 
-const localNavigationRef = ref();
-function addGroup() {
-    if (localNavigationRef.value) {
-        (localNavigationRef.value as any).addGroup();
-    }
-}
-
 const routerControl = [
     {
         label: "返回",
@@ -91,7 +84,6 @@ const appControl = [
         action: () => {
             aboutDialog.value = true
         },
-        showMacOS: true,
     },
     {
         label: "运行日志",
@@ -99,15 +91,13 @@ const appControl = [
         action: () => {
             showLogger.value = true
         },
-        showMacOS: true,
     },
     {
-        label: "应用启动器(本功能会在wails v3进行重做)",
+        label: "应用启动器",
         icon: runnerIcon,
         action: () => {
-            localDrawer.value = true
+            router.push('/AppStarter')
         },
-        showMacOS: false,
     },
     {
         label: "在线导航",
@@ -115,7 +105,6 @@ const appControl = [
         action: () => {
             onlineDrawer.value = true
         },
-        showMacOS: true,
     },
 ]
 
@@ -175,7 +164,7 @@ const options = [
         <div style="display: flex">
             <el-button-group :style="rightStyle">
                 <el-tooltip v-for="item in appControl" :content="item.label">
-                    <el-button class="custom-button" text @click="item.action" v-show="!global.temp.isMacOS || item.showMacOS">
+                    <el-button class="custom-button" text @click="item.action">
                         <template #icon>
                             <el-icon :size="16">
                                 <component :is="item.icon" />
@@ -221,28 +210,22 @@ const options = [
         </div>
     </el-drawer>
     <!-- 本地导航 -->
-    <el-drawer v-model="localDrawer" direction="rtl" size="70%">
+    <!-- <el-drawer v-model="localDrawer" direction="rtl" size="70%">
         <template #header>
-            <el-tooltip>
+            <h4>启动器<el-tooltip>
                 <template #content>
                     1、添加组后会出现卡片组，名称不支持重复<br />
                     2、卡片新增后可以从桌面或者文件夹拖入元素或者右上角添加元素<br />
                     3、右键元素可以编辑已有信息、打开文件夹、删除<br />
                     4、对于CMD应用，Windows会进入当前应用路径的CMD窗口<br />
                 </template>
-                <el-button bg text :icon="InfoFilled">使用须知</el-button>
-            </el-tooltip>
-            <el-button-group>
-                <el-button @click="addGroup">
-                    <template #icon>
-                        <img src="../assets/icon/group.svg">
-                    </template>
-                    添加组</el-button>
-                <el-button :icon="Plus" @click="global.temp.localAddItem = true">添加元素</el-button>
-            </el-button-group>
+                <el-icon>
+                    <InfoFilled />
+                </el-icon>
+            </el-tooltip></h4>
         </template>
-        <LocalNavigation ref="localNavigationRef" />
-    </el-drawer>
+        <LocalNavigation />
+    </el-drawer> -->
     <!-- running logs -->
     <el-drawer v-model="showLogger" title="运行日志" direction="rtl" size="50%">
         <div class="log-textarea" v-html="global.Logger.value"></div>

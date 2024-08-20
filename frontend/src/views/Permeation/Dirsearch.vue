@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 import { LoadDirsearchDict, DirScan, StopDirScan } from "wailsjs/go/main/App";
 import { SplitTextArea, Copy, ReadLine } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
@@ -166,7 +166,7 @@ class Dirsearch {
         } else {
             this.urls = [from.input]
         }
-        
+
         for (let i = 0; i <= config.recursion; i++) {
             let option: DirScanOptions = {
                 Method: from.defaultOption,
@@ -184,7 +184,7 @@ class Dirsearch {
             }
             if (i > 0) {
                 option.URLs = pagination.table.result.filter(item => (item.Status == 200 && item.Recursion == i - 1))
-                .map(line => { return line.URL })
+                    .map(line => { return line.URL })
             }
             if (option.URLs.length == 0) {
                 return
@@ -222,8 +222,7 @@ function DispalyResponse(response: string) {
     from.respDialog = true
     try {
         const parsedContent = JSON.parse(response);
-         // Converts the object back to a JSON string with pretty-printing
-         // code must be string to highlightjs
+        // Converts the object back to a JSON string with pretty-printing
         from.content = JSON.stringify(parsedContent, null, 2);
     } catch (error) {
         from.content = response
@@ -243,9 +242,6 @@ const config = reactive({
     runningStatus: false,
     recursion: 0,
 })
-
-const options = ["Pretty", "Raw"]
-const optionIndex = ref("Pretty")
 </script>
 
 <template>
@@ -330,12 +326,8 @@ const optionIndex = ref("Pretty")
             :total="pagination.table.result.length">
         </el-pagination>
     </div>
-    <el-dialog v-model="from.respDialog" width="800">
-        <template #header>
-            <el-segmented v-model="optionIndex" :options="options"></el-segmented>
-        </template>
-        <pre class="pretty-response" v-if="optionIndex == 'Raw'"><code>{{ from.content }}</code></pre>
-        <highlightjs autodetect :code="from.content" v-else></highlightjs>            
+    <el-dialog v-model="from.respDialog" title="Response" width="800">
+        <pre class="pretty-response"><code>{{ from.content }}</code></pre>
     </el-dialog>
     <el-drawer v-model="config.drawer" size="60%">
         <template #header>
@@ -415,23 +407,23 @@ const optionIndex = ref("Pretty")
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <div class="head">
-                    <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip
-                        placeholder="不选择默认加载dicc字典" :max-collapse-tags="1">
-                        <el-option v-for="item in from.dictList" :label="item" :value="item" />
-                    </el-select>
-                    <el-space :size="2">
-                        <el-tooltip content="加载自定义字典">
-                            <el-button text bg :icon="Document" @click="handleFileChange()" />
-                        </el-tooltip>
-                        <el-tooltip content="打开文件夹">
-                            <el-button text bg :icon="FolderOpened" @click="OpenFolder(from.configPath)" />
-                        </el-tooltip>
-                        <el-tooltip content="刷新字典列表">
-                            <el-button text bg :icon="RefreshRight" @click="getDictList()" />
-                        </el-tooltip>
-                    </el-space>
-                </div>
+                <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip
+                    placeholder="不选择默认加载dicc字典" :max-collapse-tags="1">
+                    <template #prefix>
+                        <el-button-group>
+                            <el-tooltip content="加载自定义字典">
+                                <el-button link :icon="Document" @click="handleFileChange()" />
+                            </el-tooltip>
+                            <el-tooltip content="打开文件夹">
+                                <el-button link :icon="FolderOpened" @click="OpenFolder(from.configPath)" />
+                            </el-tooltip>
+                            <el-tooltip content="刷新字典列表">
+                                <el-button link :icon="RefreshRight" @click="getDictList()" />
+                            </el-tooltip>
+                        </el-button-group>
+                    </template>
+                    <el-option v-for="item in from.dictList" :label="item" :value="item" />
+                </el-select>
                 <el-input v-model="config.customDict" type="textarea" :rows="8"></el-input>
             </el-form-item>
         </el-form>

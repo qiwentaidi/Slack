@@ -4,7 +4,7 @@ import global from "./global";
 import { compareVersion, sleep } from './util';
 import router from "./router";
 import { File } from "./interface";
-import { CreateTable } from 'wailsjs/go/main/Database';
+import { CreateTable, InitPocWorkflow } from 'wailsjs/go/main/Database';
 
 function catchError(result: boolean, loading: any) {
   if (result) {
@@ -42,6 +42,7 @@ export async function InitConfigFile(timeout: number) {
       catchError(result, loading)
     }
   }
+  await InitPocWorkflow()
   // 联动
   loading.setText('正在初始化联动模块中...')
   const waitRouter = ["/Permeation/Crack", "/Permeation/Webscan", "/Permeation/Dirsearch", "/"]

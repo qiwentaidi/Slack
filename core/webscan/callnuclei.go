@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	rt "runtime"
 	"slack-wails/lib/bridge"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
@@ -102,7 +101,7 @@ func (nc *NucleiCaller) ReportDirStat() error {
 }
 
 func (nc *NucleiCaller) Enabled(ctx context.Context) bool {
-	cmd := NewExeCommand(nc.NucleiPath, "--version")
+	cmd := exec.Command(nc.NucleiPath, "--version")
 	bridge.HideExecWindow(cmd)
 	out, err := cmd.CombinedOutput()
 	gologger.Debug(ctx, string(out))
@@ -116,10 +115,10 @@ func (nc *NucleiCaller) Enabled(ctx context.Context) bool {
 func (nc *NucleiCaller) TargetBindFingerPocs(target string, fingerprints []string) FingerPoc {
 	var fp FingerPoc
 	fp.URL = target
-	for fn1, we := range WorkFlowDB {
+	for fn1, pocs := range WorkFlowDB {
 		for _, fn2 := range fingerprints {
 			if fn1 == fn2 {
-				fp.PocFiles = append(fp.PocFiles, FullPocName(we.PocsName)...)
+				fp.PocFiles = append(fp.PocFiles, FullPocName(pocs)...)
 			}
 		}
 	}
@@ -154,8 +153,8 @@ func (nc *NucleiCaller) ReadNucleiJson(ctx context.Context) error {
 
 // Finger POC
 func (nc *NucleiCaller) CallerFP(ctx context.Context, pe FingerPoc) error {
-	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", strings.Join(pe.PocFiles, ","), "-je", result, nc.Interactsh}
-	cmd := NewExeCommand(nc.NucleiPath, nc.CommandLine...)
+	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", strings.Join(util.RemoveDuplicates(pe.PocFiles), ","), "-je", result, nc.Interactsh}
+	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	bridge.HideExecWindow(cmd)
 	if err := cmd.Run(); err != nil {
 		return err
@@ -179,7 +178,7 @@ func (nc *NucleiCaller) CallerAP(ctx context.Context, target string, keywords []
 			nc.CommandLine = append(nc.CommandLine, []string{"-t", strings.Join(pocs, ",")}...)
 		}
 	}
-	cmd := NewExeCommand(nc.NucleiPath, nc.CommandLine...)
+	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	bridge.HideExecWindow(cmd) // 让windows执行cmd时无窗口
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("callerap err: %v", err)
@@ -197,15 +196,4 @@ func (nc *NucleiCaller) FilterPoc(pocs, keywords []string) []string {
 		}
 	}
 	return news
-}
-
-// mac用户在编译成 .app文件时可能会无法识别nuclei的系统环境变了，需要使用sh的环境变量去调用
-func NewExeCommand(name string, arg ...string) *exec.Cmd {
-	var args []string
-	args = append(args, name)
-	args = append(args, arg...)
-	if rt.GOOS == "darwin" {
-		return exec.Command("sh", "-c", strings.Join(args, " "))
-	}
-	return exec.Command(name, arg...)
 }

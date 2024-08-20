@@ -263,7 +263,7 @@ export const check = {
           global.UPDATE.RemotePocVersion
         ) == -1
       ) {
-        let result: any = await GoFetch("GET", download.RemotePocVersion, "", {}, 10, proxys);
+        let result: any = await GoFetch("GET", download.PocUpdateCentent, "", {}, 10, proxys);
         global.UPDATE.PocContent = result.Body;
         global.UPDATE.PocStatus = true;
       } else {
@@ -274,14 +274,7 @@ export const check = {
   },
   // client
   client: async function () {
-    let resp: any = await GoFetch(
-      "GET",
-      download.RemoteClientVersion,
-      "",
-      {},
-      10,
-      proxys
-    );
+    let resp: any = await GoFetch("GET", download.RemoteClientVersion, "", {}, 10, proxys);
     if (resp.Error) {
       global.UPDATE.RemoteClientVersion = "检测更新失败";
       global.UPDATE.ClientStatus = false;
@@ -293,7 +286,7 @@ export const check = {
           global.UPDATE.RemoteClientVersion
         ) == -1
       ) {
-        let result: any = await GoFetch("GET", download.RemotePocVersion, "", {}, 10, proxys);
+        let result: any = await GoFetch("GET", download.ClientUpdateCentent, "", {}, 10, proxys);
         global.UPDATE.ClientContent = result.Body!;
         global.UPDATE.ClientStatus = true;
       } else {

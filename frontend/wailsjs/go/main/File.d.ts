@@ -23,11 +23,11 @@ export function IsMacOS():Promise<boolean>;
 
 export function List(arg1:string):Promise<Array<string>>;
 
-export function Mkdir(arg1:string):Promise<boolean>;
-
 export function NetworkCardInfo():Promise<Array<string>>;
 
 export function OpenFolder(arg1:string):Promise<string>;
+
+export function OpenTerminal(arg1:string):Promise<string>;
 
 export function Path(arg1:string):Promise<main.PathInfo>;
 

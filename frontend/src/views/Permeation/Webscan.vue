@@ -10,7 +10,7 @@ import {
     ActiveFingerScan,
     IsHighRisk,
     NucleiScanner,
-    WebPocLength,
+    WebPocFiles,
     Callgologger,
     LoadDirsearchDict,
     DirScan
@@ -32,8 +32,8 @@ onMounted(() => {
             FingerLength().then(leng => {
                 dashboard.fingerLength = leng
             })
-            WebPocLength().then((leng: number) => {
-                dashboard.yamlPocsLength = leng
+            WebPocFiles().then((files: string[]) => {
+                dashboard.yamlPocsLength = files.length
             })
         } else {
             ElMessage({
@@ -213,8 +213,8 @@ class Scanner {
     urls = [] as string[]
     public init() {
         global.temp.urlFingerMap = []
-        form.fingerResult = []
-        form.vulResult = []
+        fp.table.result = []
+        vp.table.result = []
         dashboard.riskLevel.critical = 0
         dashboard.riskLevel.high = 0
         dashboard.riskLevel.medium = 0

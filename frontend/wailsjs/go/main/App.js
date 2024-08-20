@@ -66,10 +66,6 @@ export function Fscan2Txt(arg1) {
   return window['go']['main']['App']['Fscan2Txt'](arg1);
 }
 
-export function GOOS() {
-  return window['go']['main']['App']['GOOS']();
-}
-
 export function GitDorks(arg1, arg2, arg3) {
   return window['go']['main']['App']['GitDorks'](arg1, arg2, arg3);
 }
@@ -210,8 +206,8 @@ export function UncoverSearch(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['UncoverSearch'](arg1, arg2, arg3, arg4);
 }
 
-export function WebPocLength() {
-  return window['go']['main']['App']['WebPocLength']();
+export function WebPocFiles() {
+  return window['go']['main']['App']['WebPocFiles']();
 }
 
 export function WechatOfficial(arg1) {

@@ -1,13 +1,14 @@
 <script lang="ts" setup>
-import { reactive } from 'vue'
+import { reactive, h } from 'vue'
 import { ExtractIP, Fscan2Txt, IpLocation } from 'wailsjs/go/main/App'
 import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
-import { Search, QuestionFilled, Location } from '@element-plus/icons-vue';
+import { Search, QuestionFilled, Location, UploadFilled } from '@element-plus/icons-vue';
 import { ElMessage, ElNotification } from 'element-plus';
 import { File } from '@/interface';
 import extractIcon from '@/assets/icon/extract.svg'
 import { SplitTextArea } from '@/util';
 import async from 'async';
+import ContextMenu from '@imengyu/vue3-context-menu'
 
 const form = reactive({
     result: '',
@@ -78,13 +79,6 @@ function getURLs(): string[] {
     return urls ? urls : [];
 }
 
-const menus = [
-    {
-        label: "上传文件",
-        click: uploadFile,
-    }
-]
-
 const appControl = [
     {
         label: "IP提取",
@@ -130,6 +124,30 @@ const appControl = [
         },
     },
 ]
+
+function onContextMenu(e: MouseEvent) {
+    //prevent the browser's default menu
+    e.preventDefault();
+    //show your menu
+    ContextMenu.showContextMenu({
+        x: e.x,
+        y: e.y,
+        items: [
+            {
+                label: "上传文件",
+                icon: h(UploadFilled, {
+                    style: {
+                        width: '16px',
+                        height: '16px',
+                    }
+                }),
+                onClick: () => {
+                    uploadFile()
+                }
+            },
+        ]
+    });
+}
 </script>
 
 
@@ -139,9 +157,8 @@ const appControl = [
             <el-form label-width="50px">
                 <el-form-item label="内容">
                     <el-input v-model="form.input" type="textarea" :rows="7" placeholder='请输入内容或者右键上传文件'
-                        v-menus:right="menus" />
+                        @contextmenu.prevent="onContextMenu($event)" />
                 </el-form-item>
-
                 <el-form-item label="结果">
                     <el-input v-model="form.result" type="textarea" :rows="15" />
                 </el-form-item>
@@ -193,12 +210,3 @@ const appControl = [
         </el-main>
     </el-scrollbar>
 </template>
-<style>
-.el-textarea__inner {
-    height: 100%;
-}
-
-.fieldset {
-    border-radius: 5px;
-}
-</style>

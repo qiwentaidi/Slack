@@ -30,3 +30,8 @@ export const leftStyle = computed(() => {
 export const macStyle = computed(() => {
     return global.temp.isMacOS ? { marginLeft: '5.5%' } : {};
 })
+
+export const defaultIconSize = {
+    width: '16px',
+    height: '16px',
+}

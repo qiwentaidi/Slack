@@ -10,6 +10,10 @@ export function DeleteAgentPoolField(arg1:string):Promise<boolean>;
 
 export function DeleteAllField(arg1:string):Promise<boolean>;
 
+export function GetFingerPocMap():Promise<{[key: string]: Array<string>}>;
+
+export function InitPocWorkflow():Promise<boolean>;
+
 export function InsertAgentPool(arg1:string):Promise<boolean>;
 
 export function InsertFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;

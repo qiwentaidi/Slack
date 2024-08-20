@@ -24,12 +24,6 @@ html {
   overflow: hidden;
 }
 
-.el-aside {
-  width: 64px;
-  /* position: relative;
-  transition: width 0.3s; */
-}
-
 .el-drawer__header {
   margin-bottom: 0px;
 }
@@ -182,4 +176,24 @@ html {
 
 .el-divider__text {
   background-color: var(--home-bg-color);
+}
+
+.el-textarea__inner {
+  height: 100%;
+}
+
+.list-container {
+  width: 20vh;   
+  border-radius: 5px;
+  text-align: center;
+  max-height: 120px;
+}
+
+.list-item.selected {
+  background-color: var(--list-item-selected-color);
+}
+
+.list-item:hover {
+  cursor: pointer;
+  background-color: var(--list-item-hover-color);
 }

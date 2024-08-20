@@ -5,6 +5,8 @@ html.light {
     --response-bg-color: #f6f6f6;
     --home-bg-color: #fff;
     --nav-item-hover-color: #E1E3E1;
+    --list-item-hover-color: #EDEDED;
+    --list-item-selected-color: #E6E6E6;
 
     .grid-item {
         background-color: #F5F5F5;
@@ -12,11 +14,6 @@ html.light {
 
     .list-container {
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .list-item:hover {
-        cursor: pointer;
-        background-color: #EEF5FE;
     }
 
     .el-result:hover {
@@ -33,7 +30,7 @@ html.light {
         word-break: break-all;
         border-radius: 5px;
         border: 1px solid #ccc;
-        max-height: 60vh;
+        max-height: 100vh;
     }
 
     code.hljs {

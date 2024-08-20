@@ -57,38 +57,48 @@ type InfoResult struct {
 	WAF          string
 }
 
-func NewFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
+type FingerScanner struct {
+	ctx   context.Context
+	urls  []*url.URL
+	proxy clients.Proxy
+}
+
+func NewFingerScanner(ctx context.Context, target []string, proxy clients.Proxy) *FingerScanner {
+	urls := []*url.URL{}
+	for _, t := range target {
+		u, err := url.Parse(t)
+		if err != nil {
+			continue
+		}
+		urls = append(urls, u)
+	}
+	return &FingerScanner{
+		ctx:   ctx,
+		urls:  urls,
+		proxy: proxy,
+	}
+}
+
+func (fs *FingerScanner) NewFingerScan() {
 	var wg sync.WaitGroup
-	client := clients.JudgeClient(proxy)
+	client := clients.JudgeClient(fs.proxy)
 	single := make(chan struct{})
-	retChan := make(chan InfoResult, len(targets))
+	retChan := make(chan InfoResult, len(fs.urls))
 	go func() {
 		for pr := range retChan {
-			runtime.EventsEmit(ctx, "webFingerScan", pr)
+			runtime.EventsEmit(fs.ctx, "webFingerScan", pr)
 		}
 		close(single)
 	}()
 	// 指纹扫描
-	fscan := func(target string) {
+	fscan := func(u *url.URL) {
 		if ExitFunc {
 			return
 		}
-		if !strings.HasPrefix(target, "http") {
-			if fulltarget, err := clients.IsWeb(target, client); err != nil {
-				retChan <- InfoResult{
-					URL:        target,
-					StatusCode: 0,
-				}
-				return
-			} else {
-				target = fulltarget
-			}
-		}
-		u := HostPort(target)
-		resp, body, _ := clients.NewSimpleGetRequest(target, client)
+		resp, body, _ := clients.NewSimpleGetRequest(u.String(), client)
 		if resp == nil {
 			retChan <- InfoResult{
-				URL:        target,
+				URL:        u.String(),
 				StatusCode: 0,
 			}
 			return
@@ -98,35 +108,35 @@ func NewFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
 		ti := &TargetINFO{
 			HeadeString:   string(headers),
 			ContentType:   content_type,
-			Cert:          GetTLSString(u.Scheme, fmt.Sprintf("%s:%d", u.Host, u.Port)),
+			Cert:          GetTLSString(u.Scheme, u.Host),
 			BodyString:    string(body),
 			Path:          u.Path,
 			Title:         title,
 			Server:        server,
 			ContentLength: len(body),
-			Port:          u.Port,
-			IconHash:      FaviconHash(u.Scheme, target, clients.DefaultClient()),
+			Port:          fs.GetPort(u),
+			IconHash:      FaviconHash(u, client),
 			StatusCode:    resp.StatusCode,
-			Banner:        GetBanner(&u),
-			Waf:           *waf.IsWAF(u.Host, subdomain.DefaultDnsServers),
+			Banner:        fs.GetBanner(u),
+			Waf:           *waf.IsWAF(u.Hostname(), subdomain.DefaultDnsServers),
 		}
 		retChan <- InfoResult{
-			URL:          target,
+			URL:          u.String(),
 			StatusCode:   ti.StatusCode,
 			Length:       ti.ContentLength,
 			Title:        ti.Title,
-			Fingerprints: FingerScan(ctx, ti, FingerprintDB),
+			Fingerprints: FingerScan(fs.ctx, ti, FingerprintDB),
 			IsWAF:        ti.Waf.Exsits,
 			WAF:          ti.Waf.Name,
 		}
 	}
 	threadPool, _ := ants.NewPoolWithFunc(50, func(target interface{}) {
-		t := target.(string)
+		t := target.(*url.URL)
 		fscan(t)
 		wg.Done()
 	})
 	defer threadPool.Release()
-	for _, target := range targets {
+	for _, target := range fs.urls {
 		if ExitFunc {
 			return
 		}
@@ -135,7 +145,7 @@ func NewFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
 	}
 	wg.Wait()
 	close(retChan)
-	gologger.Info(ctx, "FingerScan Finished")
+	gologger.Info(fs.ctx, "FingerScan Finished")
 	<-single
 }
 
@@ -145,15 +155,15 @@ type TFP struct {
 	Path        string
 }
 
-func NewActiveFingerScan(ctx context.Context, targets []string, proxy clients.Proxy) {
+func (fs *FingerScanner) NewActiveFingerScan() {
 	var wg sync.WaitGroup
 	var matched bool
-	client := clients.JudgeClient(proxy)
+	client := clients.JudgeClient(fs.proxy)
 	single := make(chan struct{})
-	retChan := make(chan InfoResult, len(targets))
+	retChan := make(chan InfoResult, len(fs.urls))
 	go func() {
 		for pr := range retChan {
-			runtime.EventsEmit(ctx, "webFingerScan", pr)
+			runtime.EventsEmit(fs.ctx, "webFingerScan", pr)
 		}
 		close(single)
 		// runtime.EventsEmit(ctx, "webFingerScanComplete", "done")
@@ -162,7 +172,7 @@ func NewActiveFingerScan(ctx context.Context, targets []string, proxy clients.Pr
 	threadPool, _ := ants.NewPoolWithFunc(10, func(tfp interface{}) {
 		defer wg.Done()
 		fp := tfp.(TFP)
-		u := HostPort(fp.Target)
+		u, _ := url.Parse(fp.Target)
 		resp, body, _ := clients.NewSimpleGetRequest(fp.Target+fp.Path, client)
 		if resp == nil {
 			return
@@ -178,12 +188,12 @@ func NewActiveFingerScan(ctx context.Context, targets []string, proxy clients.Pr
 			Title:         title,
 			Server:        server,
 			ContentLength: len(body),
-			Port:          u.Port,
+			Port:          fs.GetPort(u),
 			IconHash:      "",
 			StatusCode:    resp.StatusCode,
 			Banner:        "",
 		}
-		result := FingerScan(ctx, ti, ActiveFingerprintDB)
+		result := FingerScan(fs.ctx, ti, ActiveFingerprintDB)
 		// 多路径匹配时如果某一路径匹配到就立刻停止
 		if len(result) > 0 && fp.Fingerprint == result[0] {
 			retChan <- InfoResult{
@@ -197,7 +207,7 @@ func NewActiveFingerScan(ctx context.Context, targets []string, proxy clients.Pr
 		}
 	})
 	defer threadPool.Release()
-	for _, target := range targets {
+	for _, target := range fs.urls {
 		for fingername, paths := range Sensitive {
 			matched = false
 			for _, path := range paths {
@@ -209,7 +219,7 @@ func NewActiveFingerScan(ctx context.Context, targets []string, proxy clients.Pr
 				}
 				wg.Add(1)
 				threadPool.Invoke(TFP{
-					Target:      target,
+					Target:      target.String(),
 					Fingerprint: fingername,
 					Path:        path,
 				})
@@ -218,7 +228,7 @@ func NewActiveFingerScan(ctx context.Context, targets []string, proxy clients.Pr
 	}
 	wg.Wait()
 	close(retChan)
-	gologger.Info(ctx, "ActiveFingerScan Finished")
+	gologger.Info(fs.ctx, "ActiveFingerScan Finished")
 	<-single
 }
 
@@ -396,8 +406,8 @@ func parseIcons(doc *goquery.Document) []string {
 }
 
 // 获取favicon hash值
-func FaviconHash(scheme, url string, client *http.Client) string {
-	_, body, err := clients.NewSimpleGetRequest(url, client)
+func FaviconHash(u *url.URL, client *http.Client) string {
+	_, body, err := clients.NewSimpleGetRequest(u.String(), client)
 	if err != nil {
 		return ""
 	}
@@ -412,9 +422,9 @@ func FaviconHash(scheme, url string, client *http.Client) string {
 		finalLink = iconLink
 		// 如果为 // 开头采用与网站同协议
 	} else if strings.HasPrefix(iconLink, "//") {
-		finalLink = scheme + ":" + iconLink
+		finalLink = u.Scheme + ":" + iconLink
 	} else {
-		finalLink = url + iconLink
+		finalLink = fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, iconLink)
 	}
 	resp, body, err := clients.NewSimpleGetRequest(finalLink, client)
 	if err == nil && resp.StatusCode == 200 {
@@ -422,42 +432,25 @@ func FaviconHash(scheme, url string, client *http.Client) string {
 	}
 	return ""
 }
-
-type URLINFO struct {
-	Scheme string
-	Host   string
-	Port   int
-	Path   string
+func (fs *FingerScanner) GetPort(u *url.URL) int {
+	if u.Port() == "" {
+		switch u.Scheme {
+		case "http":
+			return 80
+		case "https":
+			return 443
+		}
+	}
+	port, _ := strconv.Atoi(u.Port())
+	return port
 }
 
-func HostPort(target string) URLINFO {
-	var host string
-	var port int
-	u, err := url.Parse(target)
-	if err != nil {
-		return URLINFO{}
-	}
-	if strings.Contains(u.Host, ":") {
-		host = strings.Split(u.Host, ":")[0]
-		port, _ = strconv.Atoi(strings.Split(u.Host, ":")[1])
-	} else {
-		host = u.Host
-		port = 80
-	}
-	return URLINFO{
-		Scheme: u.Scheme,
-		Host:   host,
-		Port:   port,
-		Path:   u.Path,
-	}
-}
-
-func GetBanner(u *URLINFO) string {
+func (fs *FingerScanner) GetBanner(u *url.URL) string {
 	if strings.HasPrefix(u.Scheme, "http") {
 		return ""
 	}
 	scanner := gonmap.New()
-	_, response := scanner.Scan(u.Host, u.Port, time.Second*time.Duration(10))
+	_, response := scanner.Scan(u.Host, fs.GetPort(u), time.Second*time.Duration(10))
 	if response != nil {
 		return response.Raw
 	}

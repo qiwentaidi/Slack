@@ -61,7 +61,7 @@ onMounted(() => {
 <template>
   <Titlebar />
   <el-container>
-    <el-aside>
+    <el-aside style="width: 64px;">
       <Sidebar />
     </el-aside>
     <el-main>

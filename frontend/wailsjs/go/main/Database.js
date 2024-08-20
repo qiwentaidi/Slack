@@ -18,6 +18,14 @@ export function DeleteAllField(arg1) {
   return window['go']['main']['Database']['DeleteAllField'](arg1);
 }
 
+export function GetFingerPocMap() {
+  return window['go']['main']['Database']['GetFingerPocMap']();
+}
+
+export function InitPocWorkflow() {
+  return window['go']['main']['Database']['InitPocWorkflow']();
+}
+
 export function InsertAgentPool(arg1) {
   return window['go']['main']['Database']['InsertAgentPool'](arg1);
 }

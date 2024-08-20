@@ -34,7 +34,6 @@ var temp = reactive({
     dirsearchConut: 0,
     dirsearchStartTime: 0,
     thinkdict: [] as string[],
-    localAddItem: false, 
     defaultNetwork: "Auto",
     NetworkCardList: ["Auto"],
     nucleiEnabled: false,
@@ -46,7 +45,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "1.6.0"
+const LOCAL_VERSION = "1.6.1"
 
 const Language = ref("zh")
 const Theme = ref(false)

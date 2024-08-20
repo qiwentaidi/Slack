@@ -41,8 +41,6 @@ export function FofaTips(arg1:string):Promise<space.TipsResult>;
 
 export function Fscan2Txt(arg1:string):Promise<string>;
 
-export function GOOS():Promise<string>;
-
 export function GitDorks(arg1:string,arg2:string,arg3:string):Promise<isic.GithubResult>;
 
 export function GoFetch(arg1:string,arg2:string,arg3:any,arg4:{[key: string]: string},arg5:number,arg6:clients.Proxy):Promise<structs.Response>;
@@ -113,6 +111,6 @@ export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:s
 
 export function UncoverSearch(arg1:string,arg2:string,arg3:number,arg4:structs.SpaceOption):Promise<Array<space.Result>>;
 
-export function WebPocLength():Promise<number>;
+export function WebPocFiles():Promise<Array<string>>;
 
 export function WechatOfficial(arg1:string):Promise<Array<info.WechatReulst>>;

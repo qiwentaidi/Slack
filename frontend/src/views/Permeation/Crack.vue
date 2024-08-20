@@ -211,9 +211,3 @@ async function NewScanner() {
         </div>
     </div>
 </template>
-
-<style>
-.el-textarea__inner {
-    height: 100%;
-}
-</style>

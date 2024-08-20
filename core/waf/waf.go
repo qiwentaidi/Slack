@@ -42,9 +42,6 @@ func IsWAF(host string, dnsServers []string) *WAF {
 	if util.RegIP.MatchString(host) {
 		return &WAF{}
 	}
-	if strings.Contains(host, ":") {
-		host = strings.Split(host, ":")[0]
-	}
 	cnames, err := netutil.LookupCNAME(host, dnsServers, 3)
 	if err != nil || len(cnames) == 0 {
 		return &WAF{}

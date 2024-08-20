@@ -47,7 +47,7 @@ export default {
         'theme': '主题',
         'workflow': '工作流',
         'isic': '互联网敏感信息采集',
-        'script': '脚本',
+        'poc_manage': 'Poc管理',
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

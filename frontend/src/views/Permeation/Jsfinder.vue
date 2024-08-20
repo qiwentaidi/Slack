@@ -1,18 +1,21 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, h } from 'vue';
 import { Copy, CopyALL, formatURL } from '@/util';
 import { JSFind } from 'wailsjs/go/main/App';
-import { QuestionFilled, Search } from '@element-plus/icons-vue';
+import { QuestionFilled, Search, CopyDocument, ChromeFilled } from '@element-plus/icons-vue';
 import async from 'async';
 import global from "@/global";
 import { ElNotification, ElMessage } from 'element-plus';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
+import ContextMenu from '@imengyu/vue3-context-menu'
+
 const config = reactive({
   urls: "",
   loading: false,
   otherURL: false,
   drawer: false,
   perfixURL: '',
+  showContextMenu: false,
 })
 
 const typeOptions = [
@@ -156,26 +159,76 @@ function getLength(arr: any) {
 }
 
 const menus = [
-    {
-        label: "复制",
-        click: (menu: any, arg: any) => {
-          Copy(arg.data.Filed)
-        }
-    },
-    {
-        label: "复制来源",
-        click: (menu: any, arg: any) => {
-          Copy(arg.data.Source)
-        },
-        divided: true,
-    },
-    {
-        label: "打开来源链接",
-        click: (menu: any, arg: any) => {
-          BrowserOpenURL(arg.data.Source)
-        }
+  {
+    label: "复制",
+    click: (menu: any, arg: any) => {
+      Copy(arg.data.Filed)
     }
+  },
+  {
+    label: "复制来源",
+    click: (menu: any, arg: any) => {
+      Copy(arg.data.Source)
+    },
+    divided: true,
+  },
+  {
+    label: "打开来源链接",
+    click: (menu: any, arg: any) => {
+      BrowserOpenURL(arg.data.Source)
+    }
+  }
 ]
+
+function onContextMenu(e: MouseEvent, data: any) {
+  //prevent the browser's default menu
+  e.preventDefault();
+  //show our menu
+  ContextMenu.showContextMenu({
+    x: e.x,
+    y: e.y,
+    items: [
+      {
+        label: "复制",
+        icon: h(CopyDocument, {
+          style: {
+            width: '16px',
+            height: '16px',
+          }
+        }),
+        onClick: () => {
+          Copy(data.Filed)
+        }
+      },
+      {
+        label: "复制来源",
+        icon: h(CopyDocument, {
+          style: {
+            width: '16px',
+            height: '16px',
+          }
+        }),
+        divided: true,
+        onClick: () => {
+          Copy(data.Filed)
+        }
+      },
+      {
+        label: "打开来源链接",
+        icon: h(ChromeFilled, {
+          style: {
+            width: '16px',
+            height: '16px',
+          }
+        }),
+        onClick: () => {
+          BrowserOpenURL(data.Source)
+        }
+      },
+    ]
+  });
+}
+
 </script>
 <template>
   <el-form label-width="auto">
@@ -222,7 +275,8 @@ const menus = [
         </div>
         <!-- CONTENT -->
         <div class="tag-container">
-            <el-tag v-for="(ls, index) in item.data.value" :data="ls"  :type="item.tagType.value" v-menus:right="menus">{{ ls.Filed }}</el-tag>
+          <el-tag v-for="data in item.data.value" :type="item.tagType.value"
+            @contextmenu.prevent="onContextMenu($event, data)">{{ data.Filed }}</el-tag>
         </div>
       </div>
     </el-scrollbar>
