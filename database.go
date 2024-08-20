@@ -3,10 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"slack-wails/core/webscan"
 	"slack-wails/lib/util"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/wailsapp/wails/v2/pkg/logger"
@@ -104,6 +104,8 @@ func (d *Database) CreateTable() bool {
 	return err == nil
 }
 
+var mutex sync.Mutex
+
 func (d *Database) InitPocWorkflow() bool {
 	var workflowFile = util.HomeDir() + "/slack/config/workflow.yaml"
 	if _, err := os.Stat(workflowFile); err != nil {
@@ -112,7 +114,7 @@ func (d *Database) InitPocWorkflow() bool {
 	var count int
 	err := d.DB.QueryRow(`SELECT COUNT(*) FROM poc_workflow`).Scan(&count)
 	if err != nil {
-		log.Println(err)
+		fmt.Printf("err: %v\n", err)
 		count = 0
 	}
 	if count == 0 {
@@ -152,16 +154,18 @@ func (d *Database) InitPocWorkflow() bool {
 			return false
 		}
 		defer rows.Close()
+		mutex.Lock()
 		webscan.WorkFlowDB = make(map[string][]string)
-
+		mutex.Unlock()
 		for rows.Next() {
 			var fingerprint, pocPath string
 			if err := rows.Scan(&fingerprint, &pocPath); err != nil {
 				continue
 			}
+			mutex.Lock()
 			webscan.WorkFlowDB[fingerprint] = append(webscan.WorkFlowDB[fingerprint], pocPath)
+			mutex.Unlock()
 		}
-
 		return rows.Err() == nil
 	}
 }

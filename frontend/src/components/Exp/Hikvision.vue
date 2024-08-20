@@ -46,7 +46,7 @@ import { Picture } from '@element-plus/icons-vue';
 import { HikvsionCamera } from 'wailsjs/go/main/App';
 import global from '@/global';
 import { formatURL } from '@/util';
-import { titleStyle } from '@/stores/change';
+import { titleStyle } from '@/stores/style';
 import { FileDialog, ReadFile } from 'wailsjs/go/main/File';
 import { File } from '@/interface';
 import { ElMessage } from 'element-plus';

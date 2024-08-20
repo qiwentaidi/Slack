@@ -2,7 +2,7 @@
 import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, ref, h } from "vue";
 import { LocalOpitons, Child } from "@/interface";
-import { DeleteFilled, Edit, FolderOpened, Document } from "@element-plus/icons-vue";
+import { DeleteFilled, Edit, FolderOpened, Document, CloseBold } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
 import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal } from "wailsjs/go/main/File";
@@ -25,7 +25,8 @@ onMounted(async () => {
                 let c = {
                     Name: pathinfo.Name,
                     Type: localGroup.getExtType(pathinfo.Ext),
-                    Path: p
+                    Path: p,
+                    Target: "",
                 }
                 if (!card.Children) {
                     card.Children = [c];
@@ -52,11 +53,13 @@ const config = reactive({
     defualtGroupName: "",
     name: "",
     path: "",
+    target: "",
     mouseOnGroupName: "", // 鼠标移入时的组名
     editDialog: false,
     editName: "",
     editPath: "",
     editType: "",
+    editTarget: "",
     editChild: {} as Child,
     editGroupName: "", // 正在被编辑的组名
     addItemDialog: false,
@@ -119,7 +122,8 @@ const localGroup = ({
             let child = {
                 Name: config.name,
                 Type: config.defaultType,
-                Path: config.path
+                Path: config.path,
+                Target: config.target
             }
             if (!card.Children) {
                 card.Children = [child];
@@ -151,6 +155,7 @@ const localGroup = ({
         config.editName = child.Name
         config.editType = child.Type
         config.editPath = child.Path
+        config.editTarget = child.Target
         config.editChild = child
         config.editGroupName = groupName
     },
@@ -164,6 +169,7 @@ const localGroup = ({
                     localGroup.options.value[groupIndex].Children![index].Name = config.editName;
                     localGroup.options.value[groupIndex].Children![index].Type = config.editType;
                     localGroup.options.value[groupIndex].Children![index].Path = config.editPath;
+                    localGroup.options.value[groupIndex].Children![index].Target = config.editTarget;
                     SaveNavigation(localGroup.options.value);
                     config.editDialog = false;
                 }
@@ -267,6 +273,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         Name: item.Name,
                         Type: item.Type,
                         Path: item.Path,
+                        Target: item.Target
                     })
                 }
             },
@@ -278,17 +285,34 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         Name: item.Name,
                         Type: item.Type,
                         Path: item.Path,
+                        Target: item.Target
                     })
                 }
             },
         ]
     });
 }
+
+const isShowTips = ref(true);
 </script>
 
 
 <template>
     <el-scrollbar height="92vh" @contextmenu.prevent="handDivContextMenu($event)">
+        <div class="tip custom-block" v-show="isShowTips">
+            <div class="my-header">
+                <p class="custom-block-title">TIP</p><el-button :icon="CloseBold" link @click="isShowTips = false"></el-button>
+            </div>
+            <ul>
+                <li>
+                    jar应用在默认点击启动时，会使用以java -jar启动应用
+                </li>
+                <li>如果默认配置无法满足使用，可以通过填写目标自定义启动命令<strong>*类型必须为CMD</strong>，%path%关键词可以自动替换为应用路径</li>
+                <li>
+                    e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为: <code>java -javaagent:%path% -jar %path%</code>
+                </li>
+            </ul>
+        </div>
         <div v-for="groups in localGroup.options.value" style="margin-bottom: 10px;">
             <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
                 @contextmenu.stop @contextmenu.prevent="handleCardContextMenu($event, groups)">
@@ -302,7 +326,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 </div>
                 <div v-if="groups.Children" class="button-grid">
                     <div v-for="item in groups.Children">
-                        <el-button bg text :icon="localGroup.chooseSvg(item.Type)" @contextmenu.stop @click="RunApp(item.Type, item.Path)"
+                        <el-button bg text :icon="localGroup.chooseSvg(item.Type)" @contextmenu.stop @click="RunApp(item.Type, item.Path, item.Target)"
                             @contextmenu.prevent="handleButtonContextMenu($event, groups, item)">
                             {{ item.Name }}
                         </el-button>
@@ -326,6 +350,9 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                     <el-radio border v-for="item in localGroup.openGroup" :key="item" :value="item">{{ item
                         }}</el-radio>
                 </el-radio-group>
+            </el-form-item>
+            <el-form-item label="目标">
+                <el-input v-model="config.target" placeholder="自定义启动命令，正常为空" />
             </el-form-item>
             <el-form-item label="路径">
                 <el-input v-model="config.path">
@@ -354,6 +381,9 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         }}</el-radio>
                 </el-radio-group>
             </el-form-item>
+            <el-form-item label="目标">
+                <el-input v-model="config.editTarget"></el-input>
+            </el-form-item>
             <el-form-item label="路径">
                 <el-input v-model="config.editPath"></el-input>
             </el-form-item>
@@ -377,5 +407,17 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
 .drop-enable {
     --wails-drop-target: drop;
     width: 99%;
+}
+
+.custom-block.tip {
+    padding: 8px 16px;
+    background-color: var(--block-tip-bg-color);
+    border-radius: 4px;
+    border-left: 5px solid var(--el-color-primary);
+    margin-bottom: 10px;
+}
+
+.custom-block .custom-block-title {
+    font-weight: 700;
 }
 </style>

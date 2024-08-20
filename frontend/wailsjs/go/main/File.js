@@ -82,8 +82,8 @@ export function Restart() {
   return window['go']['main']['File']['Restart']();
 }
 
-export function RunApp(arg1, arg2) {
-  return window['go']['main']['File']['RunApp'](arg1, arg2);
+export function RunApp(arg1, arg2, arg3) {
+  return window['go']['main']['File']['RunApp'](arg1, arg2, arg3);
 }
 
 export function SaveDataToFile(arg1) {

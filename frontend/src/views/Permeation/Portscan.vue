@@ -12,7 +12,7 @@ import async from 'async';
 import { URLFingerMap, PortScanData, File } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
-import { titleStyle } from '@/stores/change';
+import { titleStyle } from '@/stores/style';
 
 // syn 扫描模式
 onMounted(() => {

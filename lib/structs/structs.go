@@ -21,9 +21,10 @@ type Navigation struct {
 }
 
 type Children struct {
-	Name string
-	Type string
-	Path string
+	Name   string
+	Type   string
+	Path   string
+	Target string
 }
 
 type TycCompanyInfo struct {

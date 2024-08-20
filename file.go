@@ -478,26 +478,44 @@ func (f *File) OpenTerminal(filepath string) string {
 	return ""
 }
 
-func (f *File) RunApp(types, filepath string) bool {
+func (f *File) RunApp(types, filepath, target string) bool {
 	var cmd *exec.Cmd
 	switch types {
 	case "JAR":
 		cmd = exec.Command("java", "-jar", filepath)
 	case "APP":
-		if path.Ext(filepath) == ".lnk" || path.Ext(filepath) == ".bat" || path.Ext(filepath) == "" {
-			cmd = exec.Command("cmd", "/c", "start", filepath)
-		} else if path.Ext(filepath) == ".url" {
-			runtime.BrowserOpenURL(f.ctx, filepath)
-		} else {
+		if rt.GOOS != "windows" {
+			runtime.MessageDialog(f.ctx, runtime.MessageDialogOptions{
+				Title:         "提示",
+				Message:       "仅提供Windows用户运行App类型",
+				Type:          runtime.InfoDialog,
+				DefaultButton: "Ok",
+			})
+			return false
+		}
+		switch path.Ext(filepath) {
+		case ".exe":
 			cmd = exec.Command(filepath)
+		case ".url":
+			runtime.BrowserOpenURL(f.ctx, filepath)
+			return true
+		default:
+			cmd = exec.Command("cmd", "/c", "start", filepath)
 		}
 	default:
-		f.OpenTerminal(filepath)
-		return true
+		if target == "" {
+			f.OpenTerminal(filepath)
+			return true
+		}
+		target = strings.ReplaceAll(target, "%path%", filepath)
+		args := strings.Split(target, " ")
+		cmd = exec.Command(args[0], args[1:]...)
 	}
 	go func() {
 		if err := cmd.Run(); err != nil {
 			return
+		} else {
+			gologger.Debug(f.ctx, err)
 		}
 	}()
 	return true

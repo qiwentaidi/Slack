@@ -121,6 +121,7 @@ export interface Child {
     Name: string;
     Type: string;
     Path: string;
+    Target: string;
 }
 
 export interface File {

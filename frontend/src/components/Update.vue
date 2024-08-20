@@ -5,8 +5,7 @@ import { UpdatePocFile, DownloadLastestClient, Restart } from "wailsjs/go/main/F
 import { ElMessageBox, ElNotification } from "element-plus";
 import { onMounted, ref } from "vue";
 import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
-import { marked } from 'marked';
-
+import { renderedMarkdown } from "@/util";
 onMounted(() => {
     // 监听下载进度事件
     EventsOn("clientDownloadProgress", (p: number) => {
@@ -75,10 +74,6 @@ const customColorMethod = (percentage: number) => {
         return '#e6a23c'
     }
     return '#67c23a'
-}
-
-function renderedMarkdown(content: string) {
-    return marked.parse(content);
 }
 </script>
 

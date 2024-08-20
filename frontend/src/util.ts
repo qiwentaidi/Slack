@@ -14,7 +14,7 @@ import {
 import Loading from "./components/Loading.vue";
 import { URLFingerMap, ProxyOptions, File } from "./interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
-import { computed } from "vue";
+import { marked } from 'marked';
 
 export var proxys: ProxyOptions; // wails2.9之后替换原来的null
 
@@ -349,4 +349,8 @@ export function transformArrayFields<T extends AnyObject>(data: T[], delimiter: 
 
 export function CsegmentIpv4(ip: string) :string {
   return ip.split('.').slice(0, 3).join('.') + ".0/24";
+}
+
+export function renderedMarkdown(content: string) {
+  return marked.parse(content);
 }
