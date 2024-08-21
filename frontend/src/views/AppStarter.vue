@@ -2,18 +2,21 @@
 import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, ref, h } from "vue";
 import { LocalOpitons, Child } from "@/interface";
-import { DeleteFilled, Edit, FolderOpened, Document, CloseBold } from "@element-plus/icons-vue";
+import { DeleteFilled, Edit, FolderOpened, Document, Menu, InfoFilled } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
 import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal } from "wailsjs/go/main/File";
 import ContextMenu from '@imengyu/vue3-context-menu'
 import groupIcon from "@/assets/icon/tag-group.svg"
 import tagIcon from "@/assets/icon/tag.svg"
-import { defaultIconSize } from "@/stores/style";
+import { appStartStyle, defaultIconSize } from "@/stores/style";
 import consoleIcon from '@/assets/icon/console.svg'
 import appIcon from '@/assets/icon/app.svg'
 import javaIcon from '@/assets/icon/java.svg'
 import itermIcon from '@/assets/icon/iterm.svg'
+import buttonIcon from '@/assets/icon/button.svg'
+import gridIcon from '@/assets/icon/grid.svg'
+import global from "@/global";
 
 onMounted(async () => {
     OnFileDrop((x, y, paths) => {
@@ -21,20 +24,20 @@ onMounted(async () => {
         paths.forEach(async p => {
             let pathinfo: any = await Path(p)
             if (pathinfo.Ext != "url")
-            if (card) {
-                let c = {
-                    Name: pathinfo.Name,
-                    Type: localGroup.getExtType(pathinfo.Ext),
-                    Path: p,
-                    Target: "",
+                if (card) {
+                    let c = {
+                        Name: pathinfo.Name,
+                        Type: localGroup.getExtType(pathinfo.Ext),
+                        Path: p,
+                        Target: "",
+                    }
+                    if (!card.Children) {
+                        card.Children = [c];
+                    } else {
+                        card.Children.push(c)
+                    }
+                    InsetItemNavigation(config.mouseOnGroupName, c)
                 }
-                if (!card.Children) {
-                    card.Children = [c];
-                } else {
-                    card.Children.push(c)
-                }
-                InsetItemNavigation(config.mouseOnGroupName, c)
-            }
         })
     }, true)
     GetLocalNaConfig().then((result: LocalOpitons[]) => {
@@ -135,8 +138,22 @@ const localGroup = ({
         config.addItemDialog = false
     },
     deleteGroup: function (name: string) {
-        localGroup.options.value = localGroup.options.value.filter(item => item.Name !== name)
-        SaveNavigation(localGroup.options.value)
+        ElMessageBox.confirm(
+            '确定删除该分组?',
+            'Warning',
+            {
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Cancel',
+                type: 'warning',
+            }
+        )
+            .then(() => {
+                localGroup.options.value = localGroup.options.value.filter(item => item.Name !== name)
+                SaveNavigation(localGroup.options.value)
+            })
+            .catch(() => {
+
+            })
     },
     deleteItem: function (groupName: string, child: Child) {
         localGroup.options.value = localGroup.options.value.map(group => {
@@ -207,6 +224,26 @@ function handDivContextMenu(e: MouseEvent) {
                 onClick: () => {
                     localGroup.addGroup()
                 }
+            },
+            {
+                label: "视图模式",
+                icon: h(Menu, defaultIconSize),
+                children: [
+                    {
+                        label: "图标模式",
+                        icon: h(gridIcon, defaultIconSize),
+                        onClick: () => {
+                            global.temp.isGrid = true
+                        }
+                    },
+                    {
+                        label: "按钮模式",
+                        icon: h(buttonIcon, defaultIconSize),
+                        onClick: () => {
+                            global.temp.isGrid = false
+                        }
+                    },
+                ]
             },
         ]
     });
@@ -299,37 +336,52 @@ const isShowTips = ref(true);
 
 <template>
     <el-scrollbar height="92vh" @contextmenu.prevent="handDivContextMenu($event)">
-        <div class="tip custom-block" v-show="isShowTips">
-            <div class="my-header">
-                <p class="custom-block-title">TIP</p><el-button :icon="CloseBold" link @click="isShowTips = false"></el-button>
-            </div>
-            <ul>
-                <li>
-                    jar应用在默认点击启动时，会使用以java -jar启动应用
-                </li>
-                <li>如果默认配置无法满足使用，可以通过填写目标自定义启动命令<strong>*类型必须为CMD</strong>，%path%关键词可以自动替换为应用路径</li>
-                <li>
-                    e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为: <code>java -javaagent:%path% -jar %path%</code>
-                </li>
-            </ul>
-        </div>
+        <el-collapse style="width: 99%;">
+            <el-collapse-item name="1">
+                <template #title>
+                    <el-icon>
+                        <InfoFilled />
+                    </el-icon>
+                    <p class="custom-block-title">Tips</p>
+                </template>
+                <div class="tip custom-block" v-show="isShowTips">
+                    <ul>
+                        <li>
+                            jar应用在默认点击启动时，会使用以java -jar启动应用
+                        </li>
+                        <li>如果默认配置无法满足使用，可以通过填写目标自定义启动命令<strong>(类型必须为CMD)</strong>，%path%关键词可以自动替换为应用路径</li>
+                        <li>
+                            e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为:
+                            <code>java -javaagent:%path% -jar %path%</code>
+                        </li>
+                    </ul>
+                </div>
+            </el-collapse-item>
+        </el-collapse>
+
         <div v-for="groups in localGroup.options.value" style="margin-bottom: 10px;">
             <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
                 @contextmenu.stop @contextmenu.prevent="handleCardContextMenu($event, groups)">
-                <div class="my-header" style="margin-bottom: 10px">
+                <div class="my-header" style="margin-bottom: 20px">
                     <span style="font-weight: bold">{{ groups.Name }}</span>
-                    <el-popconfirm title="Are you sure to delete this?" @confirm="localGroup.deleteGroup(groups.Name)">
-                        <template #reference>
-                            <el-button :icon="DeleteFilled" link></el-button>
-                        </template>
-                    </el-popconfirm>
+                    <el-button :icon="DeleteFilled" link @click="localGroup.deleteGroup(groups.Name)"></el-button>
                 </div>
-                <div v-if="groups.Children" class="button-grid">
-                    <div v-for="item in groups.Children">
-                        <el-button bg text :icon="localGroup.chooseSvg(item.Type)" @contextmenu.stop @click="RunApp(item.Type, item.Path, item.Target)"
+                <div v-if="groups.Children" :style="appStartStyle">
+                    <div v-for="(item, index) in groups.Children" :key="index">
+                        <div class="card-content" v-show="global.temp.isGrid" @contextmenu.stop
+                            @click="RunApp(item.Type, item.Path, item.Target)"
                             @contextmenu.prevent="handleButtonContextMenu($event, groups, item)">
-                            {{ item.Name }}
-                        </el-button>
+                            <component :is="localGroup.chooseSvg(item.Type)" style="width: 40px; height: 40px;">
+                            </component>
+                            <span class="fixed-length-span">{{ item.Name }}</span>
+                        </div>
+                        <div v-show="!global.temp.isGrid">
+                            <el-button bg text :icon="localGroup.chooseSvg(item.Type)" @contextmenu.stop
+                                @click="RunApp(item.Type, item.Path, item.Target)"
+                                @contextmenu.prevent="handleButtonContextMenu($event, groups, item)">
+                                {{ item.Name }}
+                            </el-button>
+                        </div>
                     </div>
                 </div>
             </el-card>
@@ -363,11 +415,9 @@ const isShowTips = ref(true);
             </el-form-item>
         </el-form>
         <template #footer>
-            <div class="dialog-footer">
-                <el-button type="primary" @click="localGroup.addItem">
-                    OK
-                </el-button>
-            </div>
+            <el-button type="primary" @click="localGroup.addItem">
+                OK
+            </el-button>
         </template>
     </el-dialog>
     <el-dialog v-model="config.editDialog" :title="$t('navigator.edit_item')" width="500">
@@ -398,10 +448,36 @@ const isShowTips = ref(true);
 
 
 <style scoped>
-.button-grid {
+.card-content {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    /* 内容容器为 flex 容器 */
+    flex-direction: column;
+    /* 子元素竖直排列 */
+    align-items: center;
+    /* 垂直居中 */
+    padding: 5px;
+}
+
+.card-content:hover {
+    background-color: var(--list-item-hover-color);
+    cursor: pointer;
+    padding: 5px;
+}
+
+.icon {
+    width: 40px;
+    height: 40px;
+}
+
+.fixed-length-span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    text-align: center;
+    max-width: 60px;
+    font-size: 12px;
+    margin-top: 10px;
 }
 
 .drop-enable {
@@ -410,14 +486,15 @@ const isShowTips = ref(true);
 }
 
 .custom-block.tip {
-    padding: 8px 16px;
+    padding: 0px 16px;
     background-color: var(--block-tip-bg-color);
     border-radius: 4px;
     border-left: 5px solid var(--el-color-primary);
     margin-bottom: 10px;
 }
 
-.custom-block .custom-block-title {
+.custom-block-title {
     font-weight: 700;
+    margin-left: 5px;
 }
 </style>

@@ -38,6 +38,7 @@ var temp = reactive({
     NetworkCardList: ["Auto"],
     nucleiEnabled: false,
     isMacOS: false,
+    isGrid: true,
 })
 
 const Logger = reactive({

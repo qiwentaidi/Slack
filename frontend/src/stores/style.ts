@@ -35,3 +35,15 @@ export const defaultIconSize = {
     width: '16px',
     height: '16px',
 }
+
+export const appStartStyle = computed(() => {
+    return global.temp.isGrid ? { 
+        display: 'grid',
+        gridTemplateColumns: 'repeat(10, 1fr)',
+        gap: '10px' 
+    } : {
+        display: 'flex',
+        FlexWrap: 'wrap',
+        gap: '10px'
+    };
+})
