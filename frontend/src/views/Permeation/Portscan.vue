@@ -266,7 +266,7 @@ async function EzWebscan(ips: string[]) {
             .filter(item => item.finger.length > 0 && item.url)
             .map(item => ({ url: item.url, finger: item.finger }));
         async.eachLimit(deduplicateUrlFingerMap(filteredUrlFingerprints), 10, async (ufm: URLFingerMap, callback: () => void) => {
-            await NucleiScanner(0, ufm.url, ufm.finger, global.webscan.nucleiEngine, false, "", "")
+            await NucleiScanner(0, ufm.url, ufm.finger, global.webscan.nucleiEngine, false, [], "")
             id++
             if (id == filteredUrlFingerprints.length) {
                 callback()

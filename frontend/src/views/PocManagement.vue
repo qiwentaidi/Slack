@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
-import { ExecSqlStatement } from 'wailsjs/go/main/Database';
 import { Search, CirclePlusFilled } from "@element-plus/icons-vue";
 import { FileDialog, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/main/File';
 import global from '@/global';
@@ -145,10 +144,6 @@ async function savePoc() {
 async function deletePoc(pocName: string, finerprints: string[]) {
     let filepath = global.PATH.homedir + "/slack/config/pocs/" + pocName + ".yaml"
     if (await RemoveFile(filepath)) {
-        let deleteStmt = `DELETE FROM poc_workflow WHERE fingerprint = ? AND poc_path = ?;`
-        for (const finger of finerprints) {
-            await ExecSqlStatement(deleteStmt, [finger, filepath])
-        }
         ElMessage.success("Poc deleted successfully")
     } else {
         ElMessage.warning("Poc delete failed")
