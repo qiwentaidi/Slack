@@ -52,12 +52,7 @@ export interface FingerprintTable {
     detect: string;
     existsWaf: boolean;
     waf: string;
-    fingerprint: FingerLevel[];
-}
-
-export interface FingerLevel {
-    name: string;
-    level: number; // level 0 is default , level 1 is high risk
+    fingerprint: string[];
 }
 
 export interface Dir {
@@ -194,8 +189,8 @@ export interface QuakeTipsData {
 
 
 export interface DefaultKeyValue {
+    text: string
     value: string
-    label: string
 }
 
 export interface Uncover {
@@ -260,4 +255,9 @@ export interface ISICResult {
     Total: number
     Items: string[]
     Link: string
+}
+
+export interface PocDetail {
+    Name: string
+    AssociatedFingerprint: string[]
 }

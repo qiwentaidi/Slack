@@ -16,12 +16,12 @@ onMounted(() => {
     EventsOn("subdomainLoading", (result: SubdomainInfo) => {
         if (result.Source == "Enumeration") {
             let r = pagination.table.result.find(item => item.Subdomain == result.Subdomain)
-            if (r != undefined) {
+            if (r == undefined) {
                 return
             }
         }
         pagination.table.result.push(result)
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
     });
     EventsOn("subdomainProgressID", (id: number) => {
         config.id = id

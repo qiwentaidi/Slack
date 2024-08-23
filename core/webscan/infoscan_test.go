@@ -1,7 +1,6 @@
 package webscan
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -52,7 +51,4 @@ func TestInfoscan(t *testing.T) {
 	// url := "https://oa.shanghai-cjsw.com/"
 	// hash := FaviconHash("https", url, clients.DefaultClient())
 	// fmt.Printf("hash: %v\n", hash)
-	for _, s := range ALLPoc() {
-		fmt.Printf("s: %v\n", s)
-	}
 }

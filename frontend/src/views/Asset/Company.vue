@@ -53,7 +53,7 @@ function Collect() {
                 pc.table.result.push(...result)
                 for (const item of result) {
                     allCompany.push(item.CompanyName!)
-                    pc.table.pageContent = pc.ctrl.watchResultChange(pc.table.result, pc.table.currentPage, pc.table.pageSize)
+                    pc.table.pageContent = pc.ctrl.watchResultChange(pc.table)
                 }
             }
         }
@@ -67,7 +67,7 @@ function Collect() {
                     const result: WechatInfo[] = await WechatOfficial(companyName);
                     if (Array.isArray(result) && result.length > 0) {
                         pw.table.result.push(...result);
-                        pw.table.pageContent = pw.ctrl.watchResultChange(pw.table.result, pw.table.currentPage, pw.table.pageSize)
+                        pw.table.pageContent = pw.ctrl.watchResultChange(pw.table)
                     }
                 }
             });

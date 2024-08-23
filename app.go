@@ -44,8 +44,8 @@ type App struct {
 	cdnFile          string
 	qqwryFile        string
 	avFile           string
-	// bruteFile        string
-	defaultPath string
+	templateDir      string
+	defaultPath      string
 }
 
 // NewApp creates a new App application struct
@@ -57,8 +57,8 @@ func NewApp() *App {
 		cdnFile:          home + "/slack/config/cdn.yaml",
 		qqwryFile:        home + "/slack/config/qqwry.dat",
 		avFile:           home + "/slack/config/antivirues.yaml",
-		// bruteFile:        home + "/slack/portburte",
-		defaultPath: home + "/slack/",
+		templateDir:      home + "/slack/config/pocs",
+		defaultPath:      home + "/slack/",
 	}
 }
 
@@ -494,13 +494,17 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
 
 // 仅在执行时调用一次
 func (a *App) InitRule() bool {
-	return webscan.InitAll(a.webfingerFile, a.activefingerFile)
+	return webscan.InitAll(a.webfingerFile, a.activefingerFile, a.templateDir)
 }
 
 // webscan
 
-func (a *App) FingerLength() int {
-	return len(webscan.FingerprintDB)
+func (a *App) FingerprintList() []string {
+	var fingers []string
+	for _, item := range webscan.FingerprintDB {
+		fingers = append(fingers, item.ProductName)
+	}
+	return fingers
 }
 
 func (a *App) FingerScan(target []string, proxy clients.Proxy) {
@@ -512,29 +516,19 @@ func (a *App) ActiveFingerScan(target []string, proxy clients.Proxy) {
 	fs := webscan.NewFingerScanner(a.ctx, target, proxy)
 	fs.NewActiveFingerScan()
 }
-func (a *App) IsHighRisk(fingerprint string) bool {
-	for name, pocs := range webscan.WorkFlowDB {
-		if fingerprint == name {
-			return len(pocs) > 0
-		}
-	}
-	return false
-}
 
 // 在漏扫开始时，需要轮询结果
 // mode = 0  表示扫指纹漏洞， mode = 1 表示扫全漏洞
-func (a *App) NucleiScanner(mode int, target string, fingerprints []string, nucleiPath string, interactsh bool, keywords, severity string) {
+func (a *App) NucleiScanner(mode int, target string, tags []string, nucleiPath string, interactsh bool, customTags []string, severity string) {
 	nc := webscan.NewNucleiCaller(nucleiPath, interactsh, severity)
 	nc.ReportDirStat()
 	if mode == 0 {
-		pe := nc.TargetBindFingerPocs(target, fingerprints)
-		nc.CallerFP(a.ctx, pe)
+		nc.CallerFP(a.ctx, webscan.FingerPoc{
+			URL:  target,
+			Tags: tags,
+		})
 	} else {
-		keys := []string{}
-		if keywords != "" {
-			keys = strings.Split(keywords, ",")
-		}
-		nc.CallerAP(a.ctx, target, keys)
+		nc.CallerAP(a.ctx, target, customTags)
 	}
 }
 
@@ -543,8 +537,8 @@ func (a *App) NucleiEnabled(nucleiPath string) bool {
 	return nc.Enabled(a.ctx)
 }
 
-func (a *App) WebPocFiles() []string {
-	return webscan.ALLPoc()
+func (a *App) GetFingerPocMap() map[string][]string {
+	return webscan.WorkFlowDB
 }
 
 // hunter

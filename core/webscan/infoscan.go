@@ -55,6 +55,7 @@ type InfoResult struct {
 	Fingerprints []string
 	IsWAF        bool
 	WAF          string
+	Detect       string
 }
 
 type FingerScanner struct {
@@ -128,6 +129,7 @@ func (fs *FingerScanner) NewFingerScan() {
 			Fingerprints: FingerScan(fs.ctx, ti, FingerprintDB),
 			IsWAF:        ti.Waf.Exsits,
 			WAF:          ti.Waf.Name,
+			Detect:       "Default",
 		}
 	}
 	threadPool, _ := ants.NewPoolWithFunc(50, func(target interface{}) {
@@ -202,6 +204,7 @@ func (fs *FingerScanner) NewActiveFingerScan() {
 				Length:       ti.ContentLength,
 				Title:        ti.Title,
 				Fingerprints: []string{fp.Fingerprint},
+				Detect:       "Active",
 			}
 			matched = true
 		}

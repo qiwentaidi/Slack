@@ -70,6 +70,10 @@ export function ReadMemo(arg1) {
   return window['go']['main']['File']['ReadMemo'](arg1);
 }
 
+export function RemoveFile(arg1) {
+  return window['go']['main']['File']['RemoveFile'](arg1);
+}
+
 export function RemoveOldClient() {
   return window['go']['main']['File']['RemoveOldClient']();
 }

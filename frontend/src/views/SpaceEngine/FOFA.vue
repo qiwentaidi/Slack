@@ -202,12 +202,11 @@ const entry = ({
     getTips: async function (queryString: string) {
         let tips = [] as DefaultKeyValue[]
         let result: any = await FofaTips(queryString)
-        console.log(result)
         if (result.code == 0) {
             for (const item of result.data) {
                 tips.push({
                     value: item.name,
-                    label: item.company
+                    text: item.company
                 })
             }
         }
@@ -528,7 +527,7 @@ function formatProduct(raw: string): string[] {
                     <div>
                         <span>{{ item.value }}</span>
                         <el-divider direction="vertical" />
-                        <span style="color: #559FF8;">{{ item.label }}</span>
+                        <span style="color: #559FF8;">{{ item.text }}</span>
                     </div>
                 </template>
             </el-autocomplete>

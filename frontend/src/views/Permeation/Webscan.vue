@@ -5,12 +5,11 @@ import {
     InitRule,
     FofaSearch,
     HunterSearch,
-    FingerLength,
+    FingerprintList,
     FingerScan,
     ActiveFingerScan,
-    IsHighRisk,
     NucleiScanner,
-    WebPocFiles,
+    GetFingerPocMap,
     Callgologger,
     LoadDirsearchDict,
     DirScan
@@ -21,30 +20,45 @@ import { formatURL, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transform
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { URLFingerMap, Vulnerability, FingerLevel, FingerprintTable, DirScanOptions, FofaResult } from '@/interface';
+import { URLFingerMap, Vulnerability, FingerprintTable, DirScanOptions, FofaResult } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 
 // 初始化时调用
-onMounted(() => {
-    InitRule().then(err => {
-        if (err) {
-            FingerLength().then(leng => {
-                dashboard.fingerLength = leng
-            })
-            WebPocFiles().then((files: string[]) => {
-                dashboard.yamlPocsLength = files.length
-            })
-        } else {
-            ElMessage({
-                showClose: true,
-                message: "初始化指纹规则失败，请检查配置文件",
-                type: "error"
-            })
-        }
+onMounted(async () => {
+    let err = await InitRule()
+    if (!err) {
+        ElMessage({
+            showClose: true,
+            message: "初始化指纹规则失败，请检查配置文件",
+            type: "error"
+        })
+        return
+    }
+    FingerprintList().then(list => {
+        dashboard.fingerLength = list.length
     })
+    const pocMap = await GetFingerPocMap();
+    dashboard.yamlPocsLength = Object.keys(pocMap).length
+
+    const addedTags = new Set();
+
+    for (const tags of Object.values(pocMap)) {
+        for (const tag of tags) {
+            if (!addedTags.has(tag)) {
+                fingerOptions.value.push({
+                    label: tag,
+                    value: tag,
+                });
+                addedTags.add(tag);
+            }
+        }
+    }
     TestNuclei()
 });
+
+
+const fingerOptions = ref<{ label: string, value: string }[]>([])
 
 onMounted(() => {
     EventsOn("nucleiResult", (result: any) => {
@@ -62,7 +76,7 @@ onMounted(() => {
             description: result.Description,
             reference: result.Reference,
         })
-        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table.result, vp.table.currentPage, vp.table.pageSize)
+        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
     });
     EventsOn("webFingerScan", async (result: any) => {
         if (result.StatusCode == 0) {
@@ -72,18 +86,17 @@ onMounted(() => {
                 url: result.URL,
                 finger: result.Fingerprints
             })
-            let temp = await sortFinger(result.Fingerprints)
             fp.table.result.push({
                 url: result.URL,
                 status: result.StatusCode,
                 length: result.Length,
                 title: result.Title,
-                detect: "Default",
+                detect: result.Detect,
                 existsWaf: result.IsWAF,
                 waf: "WAF: " + result.WAF,
-                fingerprint: temp,
+                fingerprint: result.Fingerprints,
             })
-            fp.table.pageContent = fp.ctrl.watchResultChange(fp.table.result, fp.table.currentPage, fp.table.pageSize)
+            fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
         }
     });
     return () => {
@@ -128,7 +141,7 @@ const dashboard = reactive({
 
 const form = reactive({
     url: '',
-    keyword: '',
+    tags: [] as string[],
     risk: [] as string[],
     riskOptions: ["critical", "high", "medium", "low"],
     newscanner: false,
@@ -165,25 +178,6 @@ function validateInput() {
 
 let fp = usePagination(form.fingerResult, 50)
 let vp = usePagination(form.vulResult, 50)
-
-async function sortFinger(Fingerprints: any) {
-    const temp = [] as FingerLevel[]
-    for (const finger of Fingerprints) {
-        if (await IsHighRisk(finger)) {
-            temp.push({
-                name: finger,
-                level: 1
-            })
-        } else {
-            temp.push({
-                name: finger,
-                level: 0
-            })
-        }
-    }
-    return temp
-}
-
 
 async function startScan() {
     let ws = new Scanner
@@ -260,7 +254,7 @@ class Scanner {
                 if (!form.runnningStatus) {
                     return
                 }
-                await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, form.noInteractsh, form.keyword, form.risk.join(","))
+                await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, form.noInteractsh, form.tags, form.risk.join(","))
                 count++
                 if (count == global.temp.urlFingerMap.length) {
                     callback()
@@ -463,11 +457,7 @@ function getClassBySeverity(severity: string) {
                         <el-table-column prop="title" label="Title" />
                         <el-table-column prop="fingerprint" width="350px">
                             <template #header>
-                                <el-tooltip placement="left">
-                                    <template #content>
-                                        · 普通指纹会呈现浅蓝色，workflow中存在漏洞的指纹会呈现浅红色<br />
-                                        · 若指纹标签会呈现填充红色，表示该指纹为敏感目录扫描得到<br />
-                                    </template>
+                                <el-tooltip placement="left" content="若指纹标签会呈现填充色，表示该指纹为敏感目录扫描得到">
                                     <el-icon>
                                         <QuestionFilled size="24" />
                                     </el-icon>
@@ -476,9 +466,8 @@ function getClassBySeverity(severity: string) {
                             </template>
                             <template #default="scope">
                                 <div class="finger-container">
-                                    <el-tag v-for="finger in scope.row.fingerprint" :key="finger.name"
-                                        :type="finger.level === 1 ? 'danger' : 'primary'"
-                                        :effect="scope.row.detect === 'Default' ? 'light' : 'dark'">{{ finger.name
+                                    <el-tag v-for="finger in scope.row.fingerprint" :key="finger"
+                                        :effect="scope.row.detect === 'Default' ? 'light' : 'dark'">{{ finger
                                         }}</el-tag>
                                     <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
                                 </div>
@@ -618,8 +607,9 @@ function getClassBySeverity(severity: string) {
                 </el-radio-group>
             </el-form-item>
             <div v-if="form.currentModule == 3">
-                <el-form-item label="关键字:" class="bottom">
-                    <el-input v-model="form.keyword" placeholder="根据id判断','分割关键字" clearable></el-input>
+                <el-form-item label="标签:" class="bottom">
+                    <el-select-v2 v-model="form.tags" placeholder="POC必须要填写tags信息，相关指纹可通过此处查找" filterable
+                        :options="fingerOptions" multiple />
                 </el-form-item>
                 <el-form-item label="风险等级:" class="bottom">
                     <el-select v-model="form.risk" placeholder="未选择即默认不进行筛选" multiple clearable style="width: 100%;">

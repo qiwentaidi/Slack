@@ -175,7 +175,7 @@ html {
 }
 
 .el-divider__text {
-  background-color: var(--home-bg-color);
+  background-color: var(--el-fill-color-blank);
 }
 
 .el-textarea__inner {
@@ -196,4 +196,8 @@ html {
 .list-item:hover {
   cursor: pointer;
   background-color: var(--list-item-hover-color);
+}
+
+.el-card__body {
+  padding: 10px;
 }

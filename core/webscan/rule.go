@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -97,8 +98,8 @@ func InitActiveScanPath(activefingerFile string) error {
 }
 
 type FingerPoc struct {
-	URL      string
-	PocFiles []string
+	URL  string
+	Tags []string
 }
 
 func ALLPoc() []string {
@@ -384,7 +385,7 @@ func dataCheckInt(op int16, dataSource int, dataRule int) bool {
 
 var WorkFlowDB map[string][]string
 
-func InitAll(webfinger, activefinger string) bool {
+func InitAll(webfinger, activefinger, template string) bool {
 	FingerprintDB = nil
 	if err := InitFingprintDB(webfinger); err != nil {
 		return false
@@ -392,57 +393,48 @@ func InitAll(webfinger, activefinger string) bool {
 	if err := InitActiveScanPath(activefinger); err != nil {
 		return false
 	}
+	if err := GetTagsList(template); err != nil {
+		return false
+	}
 	return true
 }
-func InitWorkflow(workflowFile string) error {
-	WorkFlowDB = make(map[string][]string)
-	data, err := os.ReadFile(workflowFile)
-	if err != nil {
-		return err
-	}
-	err = yaml.Unmarshal(data, &WorkFlowDB)
-	if err != nil {
-		return err
-	}
-	return nil
+
+type TemplateInfo struct {
+	Tags string `yaml:"tags"`
 }
 
-// type TemplateInfo struct {
-// 	Tags string `yaml:"tags"`
-// }
+type Template struct {
+	Info TemplateInfo `yaml:"info"`
+}
 
-// type Template struct {
-// 	Info TemplateInfo `yaml:"info"`
-// }
+func GetTagsList(templateDir string) error {
+	WorkFlowDB = make(map[string][]string)
+	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
+		return err
+	}
+	// 遍历所有模板文件
+	filepath.WalkDir(templateDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && strings.HasSuffix(d.Name(), ".yaml") {
+			file, err := os.ReadFile(path)
+			if err != nil {
+				return nil
+			}
+			var template Template
+			err = yaml.Unmarshal(file, &template)
+			if err != nil {
+				return nil
+			}
 
-// func GetTagsList(templateDir string) map[string][]string {
-// 	// 初始化字典
-// 	tagsDict := make(map[string][]string)
-// 	// 遍历所有模板文件
-// 	filepath.WalkDir(templateDir, func(path string, d fs.DirEntry, err error) error {
-// 		if err != nil {
-// 			return err
-// 		}
-// 		if !d.IsDir() && strings.HasSuffix(d.Name(), ".yaml") {
-// 			file, err := os.ReadFile(path)
-// 			if err != nil {
-// 				fmt.Printf("Error reading file %s: %v\n", path, err)
-// 				return nil
-// 			}
-
-// 			var template Template
-// 			err = yaml.Unmarshal(file, &template)
-// 			if err != nil {
-// 				fmt.Printf("Error parsing file %s: %v\n", path, err)
-// 				return nil
-// 			}
-
-// 			if template.Info.Tags != "" {
-// 				tags := strings.Split(template.Info.Tags, ",")
-// 				tagsDict[d.Name()] = tags
-// 			}
-// 		}
-// 		return nil
-// 	})
-// 	return tagsDict
-// }
+			if template.Info.Tags != "" {
+				tags := strings.Split(template.Info.Tags, ",")
+				poc := strings.TrimSuffix(d.Name(), ".yaml")
+				WorkFlowDB[poc] = tags
+			}
+		}
+		return nil
+	})
+	return nil
+}

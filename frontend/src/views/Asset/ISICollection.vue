@@ -163,7 +163,7 @@ async function Collect() {
                     Items: result.Items,
                     Link: result.Link,
                 })
-                pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
+                pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
             } else {
                 Callgologger("info", `${t} ${d} 搜索结果为空，已跳过`)
             }

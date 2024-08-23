@@ -31,7 +31,7 @@ onMounted(() => {
                     Body: result.Body,
                     Recursion: result.Recursion,
                 })
-                pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
+                pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
                 break
         }
     });

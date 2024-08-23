@@ -46,12 +46,12 @@ export function FaviconMd5(arg1) {
   return window['go']['main']['App']['FaviconMd5'](arg1);
 }
 
-export function FingerLength() {
-  return window['go']['main']['App']['FingerLength']();
-}
-
 export function FingerScan(arg1, arg2) {
   return window['go']['main']['App']['FingerScan'](arg1, arg2);
+}
+
+export function FingerprintList() {
+  return window['go']['main']['App']['FingerprintList']();
 }
 
 export function FofaSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
@@ -64,6 +64,10 @@ export function FofaTips(arg1) {
 
 export function Fscan2Txt(arg1) {
   return window['go']['main']['App']['Fscan2Txt'](arg1);
+}
+
+export function GetFingerPocMap() {
+  return window['go']['main']['App']['GetFingerPocMap']();
 }
 
 export function GitDorks(arg1, arg2, arg3) {
@@ -120,10 +124,6 @@ export function Ip138Subdomain(arg1) {
 
 export function IpLocation(arg1) {
   return window['go']['main']['App']['IpLocation'](arg1);
-}
-
-export function IsHighRisk(arg1) {
-  return window['go']['main']['App']['IsHighRisk'](arg1);
 }
 
 export function IsRoot() {
@@ -204,10 +204,6 @@ export function ThinkDict(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
 
 export function UncoverSearch(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['UncoverSearch'](arg1, arg2, arg3, arg4);
-}
-
-export function WebPocFiles() {
-  return window['go']['main']['App']['WebPocFiles']();
 }
 
 export function WechatOfficial(arg1) {

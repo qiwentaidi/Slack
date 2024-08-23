@@ -6,7 +6,7 @@ import { ExportTXT } from '@/export'
 import { reactive, onMounted } from 'vue';
 import { Sock5Connect, FofaSearch } from 'wailsjs/go/main/App'
 import global from "@/global"
-import { Check, InsertAgentPool, SearchAgentPool, DeleteAgentPoolField, DeleteAllField } from 'wailsjs/go/main/Database';
+import { Check, SearchAgentPool, ExecSqlStatement } from 'wailsjs/go/main/Database';
 import { ElMessage } from 'element-plus';
 import { FofaResult } from '@/interface';
 
@@ -96,12 +96,13 @@ async function NewSock5Crawl(step: number) {
             })
         }
         if (form.pool.length > 0) {
-            await DeleteAllField("agent_pool")
+            await ExecSqlStatement("DELETE FROM agent_pool", ["agent_pool"])
             form.pool = []
         }
+        let insertStmt = "INSERT INTO agent_pool(hosts) VALUES(?)"
         for (const host of tempHosts) {
             form.pool.push({ Host: host })
-            await InsertAgentPool(host)
+            await ExecSqlStatement(insertStmt, [host])
         }
     } else if (step == 2) {
         let hosts = [] as string[]
@@ -162,7 +163,8 @@ async function TestConnection(host: string) {
 }
 
 async function Delelte(host: string) {
-    let result = await DeleteAgentPoolField(host)
+    let deleteStmt = `DELETE FROM agent_pool WHERE hosts = ?;`
+    let result = await ExecSqlStatement(deleteStmt, [host])
     if (result) {
         form.pool = form.pool.filter(item => item.Host !== host)
     } else {

@@ -10,24 +10,8 @@ export function CreateTable() {
   return window['go']['main']['Database']['CreateTable']();
 }
 
-export function DeleteAgentPoolField(arg1) {
-  return window['go']['main']['Database']['DeleteAgentPoolField'](arg1);
-}
-
-export function DeleteAllField(arg1) {
-  return window['go']['main']['Database']['DeleteAllField'](arg1);
-}
-
-export function GetFingerPocMap() {
-  return window['go']['main']['Database']['GetFingerPocMap']();
-}
-
-export function InitPocWorkflow() {
-  return window['go']['main']['Database']['InitPocWorkflow']();
-}
-
-export function InsertAgentPool(arg1) {
-  return window['go']['main']['Database']['InsertAgentPool'](arg1);
+export function ExecSqlStatement(arg1, arg2) {
+  return window['go']['main']['Database']['ExecSqlStatement'](arg1, arg2);
 }
 
 export function InsertFavGrammarFiled(arg1, arg2, arg3) {

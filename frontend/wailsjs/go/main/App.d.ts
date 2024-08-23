@@ -31,15 +31,17 @@ export function ExtractIP(arg1:string):Promise<string>;
 
 export function FaviconMd5(arg1:string):Promise<string>;
 
-export function FingerLength():Promise<number>;
-
 export function FingerScan(arg1:Array<string>,arg2:clients.Proxy):Promise<void>;
+
+export function FingerprintList():Promise<Array<string>>;
 
 export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean):Promise<space.FofaSearchResult>;
 
 export function FofaTips(arg1:string):Promise<space.TipsResult>;
 
 export function Fscan2Txt(arg1:string):Promise<string>;
+
+export function GetFingerPocMap():Promise<{[key: string]: Array<string>}>;
 
 export function GitDorks(arg1:string,arg2:string,arg3:string):Promise<isic.GithubResult>;
 
@@ -69,8 +71,6 @@ export function Ip138Subdomain(arg1:string):Promise<string>;
 
 export function IpLocation(arg1:string):Promise<string>;
 
-export function IsHighRisk(arg1:string):Promise<boolean>;
-
 export function IsRoot():Promise<boolean>;
 
 export function JSFind(arg1:string,arg2:string):Promise<jsfind.FindSomething>;
@@ -83,7 +83,7 @@ export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<n
 
 export function NucleiEnabled(arg1:string):Promise<boolean>;
 
-export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:boolean,arg6:string,arg7:string):Promise<void>;
+export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:boolean,arg6:Array<string>,arg7:string):Promise<void>;
 
 export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Promise<void>;
 
@@ -110,7 +110,5 @@ export function System(arg1:string,arg2:number):Promise<Array<any>>;
 export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string,arg8:Array<string>):Promise<Array<string>>;
 
 export function UncoverSearch(arg1:string,arg2:string,arg3:number,arg4:structs.SpaceOption):Promise<Array<space.Result>>;
-
-export function WebPocFiles():Promise<Array<string>>;
 
 export function WechatOfficial(arg1:string):Promise<Array<info.WechatReulst>>;

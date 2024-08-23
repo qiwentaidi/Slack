@@ -273,7 +273,7 @@ const result = ref("");
         </el-form>
       </el-tab-pane>
     </el-tabs>
-    <el-space class="custom_eltabs_titlebar" :size="5">
+    <el-space class="custom_eltabs_titlebar" :size="5" style="margin-right: 5px;">
       <el-popover placement="left" :width="630" :height="300" trigger="hover">
         <template #reference>
           <el-button :icon="QuestionFilled" text>微信错误码详情</el-button>

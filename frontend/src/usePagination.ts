@@ -6,31 +6,28 @@ interface PaginationState<T> {
     result: T[];
     pageContent: T[];
     selectRows: T[];
+    temp: T[];
 }
 
-interface PaginationController {
+interface PaginationController<T> {
     handleSizeChange: (val: number) => void;
     handleCurrentChange: (val: number) => void;
     handleSelectChange: (rows:any[]) => void;
     getColumnData: (prop: string) => any[];
-    watchResultChange: (result: any[], currentPage: number, pageSize: number) => any[];
+    watchResultChange: (table: PaginationState<T>) => T[];
     initTable: () => void; // 初始化表格数据
 }
 
-function usePagination<T>(data: T[], initialPageSize: number): { table: PaginationState<T>, ctrl: PaginationController } {
+function usePagination<T>(data: T[], initialPageSize: number): { table: PaginationState<T>, ctrl: PaginationController<T> } {
     const table = shallowReactive<PaginationState<T>>({
         currentPage: 1,
         pageSize: initialPageSize,
         result: data,
         pageContent: data.slice(0, initialPageSize),
         selectRows: [],
+        temp: [],
     });
-    watch(() => table.result, (newResult: T[]) => {
-        const start = (table.currentPage - 1) * table.pageSize;
-        const end = table.currentPage * table.pageSize;
-        table.pageContent = newResult.slice(start, end);
-    });
-    const ctrl: PaginationController = {
+    const ctrl: PaginationController<T> = {
         handleSizeChange: (val: number) => {
             table.pageSize = val;
             table.currentPage = 1;
@@ -46,8 +43,10 @@ function usePagination<T>(data: T[], initialPageSize: number): { table: Paginati
         getColumnData: (prop: string) => {
             return table.result.map((item: any) => item[prop]);
         },
-        watchResultChange: (result: any[], currentPage: number, pageSize: number) => {
-            return result.slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize)
+        watchResultChange: (table: PaginationState<T>) => {
+            const start = (table.currentPage - 1) * table.pageSize;
+            const end = table.currentPage * table.pageSize;
+            return table.result.slice(start, end);
         },
         initTable: () => {
             table.result = []

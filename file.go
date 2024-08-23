@@ -381,6 +381,10 @@ func (f *File) RemoveOldClient() {
 	}
 }
 
+func (f *File) RemoveFile(file string) bool {
+	return os.Remove(file) == nil
+}
+
 var (
 	na         = util.HomeDir() + "/slack/navogation.json"
 	navigation []structs.Navigation

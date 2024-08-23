@@ -112,19 +112,6 @@ func (nc *NucleiCaller) Enabled(ctx context.Context) bool {
 	return strings.Contains(string(out), "Nuclei Engine Version")
 }
 
-func (nc *NucleiCaller) TargetBindFingerPocs(target string, fingerprints []string) FingerPoc {
-	var fp FingerPoc
-	fp.URL = target
-	for fn1, pocs := range WorkFlowDB {
-		for _, fn2 := range fingerprints {
-			if fn1 == fn2 {
-				fp.PocFiles = append(fp.PocFiles, FullPocName(pocs)...)
-			}
-		}
-	}
-	return fp
-}
-
 func (nc *NucleiCaller) ReadNucleiJson(ctx context.Context) error {
 	b, err := os.ReadFile(result)
 	if err != nil {
@@ -153,7 +140,7 @@ func (nc *NucleiCaller) ReadNucleiJson(ctx context.Context) error {
 
 // Finger POC
 func (nc *NucleiCaller) CallerFP(ctx context.Context, pe FingerPoc) error {
-	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", strings.Join(util.RemoveDuplicates(pe.PocFiles), ","), "-je", result, nc.Interactsh}
+	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", pocFile, "-tags", strings.Join(util.RemoveDuplicates(pe.Tags), ","), "-je", result, nc.Interactsh}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	bridge.HideExecWindow(cmd)
 	if err := cmd.Run(); err != nil {
@@ -163,20 +150,14 @@ func (nc *NucleiCaller) CallerFP(ctx context.Context, pe FingerPoc) error {
 }
 
 // ALL POC
-func (nc *NucleiCaller) CallerAP(ctx context.Context, target string, keywords []string) error {
-	var pocs []string
-	nc.CommandLine = []string{"-duc", "-u", target, "-je", result, nc.Interactsh}
+func (nc *NucleiCaller) CallerAP(ctx context.Context, target string, tags []string) error {
+	nc.CommandLine = []string{"-duc", "-u", target, "-t", pocFile, "-je", result, nc.Interactsh}
 	// 风险等级、关键词筛选
-	if nc.Severity == "" && len(keywords) == 0 {
-		nc.CommandLine = append(nc.CommandLine, []string{"-t", pocFile}...)
-	} else {
-		if nc.Severity != "" {
-			nc.CommandLine = append(nc.CommandLine, []string{"-s", nc.Severity}...)
-		}
-		if len(keywords) != 0 {
-			pocs = nc.FilterPoc(ALLPoc(), keywords)
-			nc.CommandLine = append(nc.CommandLine, []string{"-t", strings.Join(pocs, ",")}...)
-		}
+	if nc.Severity != "" {
+		nc.CommandLine = append(nc.CommandLine, []string{"-s", nc.Severity}...)
+	}
+	if len(tags) != 0 {
+		nc.CommandLine = append(nc.CommandLine, []string{"-tags", strings.Join(tags, ",")}...)
 	}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	bridge.HideExecWindow(cmd) // 让windows执行cmd时无窗口

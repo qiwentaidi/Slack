@@ -25,7 +25,7 @@ onMounted(() => {
             Link: p.Link,
             HttpTitle: p.HttpTitle,
         })
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
     });
     // 进度条
     EventsOn("progressID", (id: number) => {
@@ -92,7 +92,6 @@ const options = ({
     filterField: function () {
         const filter = form.filter.trim();
         if (table.filterId == 0) {
-            console.log("filter id" + table.filterId)
             table.temp = pagination.table.result
             table.filterId++
         }
@@ -117,7 +116,7 @@ const options = ({
             pagination.table.result = table.temp;
         }
         pagination.table.currentPage = 1; // 重置分页
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table.result, pagination.table.currentPage, pagination.table.pageSize)
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
     }
 })
 
@@ -363,7 +362,7 @@ function changeTableHeigth() {
     form.hideDashboard = !form.hideDashboard
     var portscanTable = document.getElementById('portscan-table')!
     if (!form.hideDashboard) {
-        portscanTable.style.height = '53vh'
+        portscanTable.style.height = '55vh'
     } else {
         portscanTable.style.height = '82vh'
     }
@@ -466,7 +465,7 @@ function changeTableHeigth() {
         <el-tabs v-model="form.activeName">
             <el-tab-pane label="结果输出" name="1">
                 <el-table :data="pagination.table.pageContent" border id="portscan-table"
-                    @selection-change="pagination.ctrl.handleSelectChange" style="height: 53vh;">
+                    @selection-change="pagination.ctrl.handleSelectChange" style="height: 55vh;">
                     <el-table-column type="selection" width="42px" />
                     <el-table-column prop="IP" label="Host" />
                     <el-table-column prop="Port" label="Port" width="100px" />

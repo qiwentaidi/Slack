@@ -37,6 +37,8 @@ export function ReadLocalStore():Promise<{[key: string]: any}>;
 
 export function ReadMemo(arg1:string):Promise<{[key: string]: string}>;
 
+export function RemoveFile(arg1:string):Promise<boolean>;
+
 export function RemoveOldClient():Promise<void>;
 
 export function RemoveOldConfig():Promise<void>;
