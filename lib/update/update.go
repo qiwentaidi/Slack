@@ -5,12 +5,14 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
 	"os"
 	"path"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
 	"time"
 
@@ -21,12 +23,12 @@ import (
 const lastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
 
 // https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
-func UpdatePoc(configPath string) error {
+func UpdatePoc(ctx context.Context, configPath string) error {
 	if err := os.RemoveAll(configPath + "config"); err != nil {
 		return err
 	}
 	time.Sleep(time.Second * 2)
-	if !InitConfig(configPath) {
+	if !InitConfig(ctx, configPath) {
 		return errors.New("update poc failed")
 	}
 	return nil
@@ -133,21 +135,29 @@ func roundToTwoDecimals(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
-func InitConfig(configPath string) bool {
+func InitConfig(ctx context.Context, configPath string) bool {
 	var defaultFile = util.HomeDir() + "/slack/"
 	os.MkdirAll(configPath, 0777)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
 	_, b, err := clients.NewSimpleGetRequest(latestConfigVersion, http.DefaultClient)
 	if err != nil {
+		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
+			Title:         "提示",
+			Message:       "检查配置文件版本失败",
+			Type:          runtime.InfoDialog,
+			DefaultButton: "Ok",
+		})
 		return false
 	}
-	configFileZip := lastestPocUrl + "v" + string(b) + "/config.zip"
+	configFileZip := fmt.Sprintf("%sv%s/config.zip", lastestPocUrl, string(b))
 	fileName, err := download(configFileZip, defaultFile)
 	if err != nil {
+		gologger.Error(ctx, err)
 		return false
 	}
 	uz := util.NewUnzip()
-	if _, err := uz.Extract(defaultFile+fileName, configPath); err != nil {
+	if _, err := uz.Extract(defaultFile+fileName, defaultFile); err != nil {
+		gologger.Error(ctx, err)
 		return false
 	}
 	os.Remove(util.HomeDir() + "/slack/config.zip")

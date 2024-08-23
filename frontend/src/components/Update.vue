@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Download } from "@element-plus/icons-vue";
 import global from "@/global"
-import { UpdatePocFile, DownloadLastestClient, Restart } from "wailsjs/go/main/File";
-import { ElMessageBox, ElNotification } from "element-plus";
+import { UpdatePocFile, DownloadLastestClient, Restart, ReadFile } from "wailsjs/go/main/File";
+import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import { onMounted, ref } from "vue";
 import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
 import { renderedMarkdown } from "@/util";
+import { File } from "@/interface";
+
 onMounted(() => {
     // 监听下载进度事件
     EventsOn("clientDownloadProgress", (p: number) => {
@@ -48,9 +50,12 @@ onMounted(() => {
 
 const update = ({
     poc: async function () {
+        ElMessage.info("正在下载更新内容");
         let err = await UpdatePocFile()
         if (!err) {
             ElNotification.success("POC update success!");
+            let result:File = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile)
+            global.UPDATE.LocalPocVersion = result.Content!
         } else {
             ElNotification.error("POC update failed! " + err);
         }

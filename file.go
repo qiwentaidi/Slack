@@ -178,14 +178,14 @@ func (f *File) ReadFile(filename string) *FileInfo {
 }
 
 func (f *File) UpdatePocFile() string {
-	if err := update.UpdatePoc(f.configPath); err != nil {
+	if err := update.UpdatePoc(f.ctx, f.configPath); err != nil {
 		return err.Error()
 	}
 	return ""
 }
 
 func (f *File) InitConfig() bool {
-	return update.InitConfig(f.configPath)
+	return update.InitConfig(f.ctx, util.HomeDir()+"/slack/")
 }
 
 func (*File) InitMemo(filepath, content string) bool {
