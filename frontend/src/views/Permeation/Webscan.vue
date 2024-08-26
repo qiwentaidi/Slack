@@ -516,7 +516,7 @@ function getClassBySeverity(severity: string) {
                             <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
                                 :icon="CopyDocument">复制全部失败目标</el-dropdown-item>
                             <el-dropdown-item :icon="exportIcon"
-                                @click="ExportWebScanToXlsx(transformArrayFields(form.fingerResult), transformArrayFields(form.vulResult))">
+                                @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformArrayFields(vp.table.result))">
                                 导出Excel</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>

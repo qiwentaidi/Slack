@@ -11,6 +11,7 @@ import (
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
 	"strings"
+	"sync"
 
 	"gopkg.in/yaml.v2"
 )
@@ -407,6 +408,8 @@ type Template struct {
 	Info TemplateInfo `yaml:"info"`
 }
 
+var mutx sync.RWMutex
+
 func GetTagsList(templateDir string) error {
 	WorkFlowDB = make(map[string][]string)
 	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
@@ -431,7 +434,9 @@ func GetTagsList(templateDir string) error {
 			if template.Info.Tags != "" {
 				tags := strings.Split(template.Info.Tags, ",")
 				poc := strings.TrimSuffix(d.Name(), ".yaml")
+				mutx.Lock()
 				WorkFlowDB[poc] = tags
+				mutx.Unlock()
 			}
 		}
 		return nil

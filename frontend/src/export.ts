@@ -35,22 +35,33 @@ export async function ExportAssetToXlsx(r1: {}[], r2: {}[]) {
   await ExportFile("base64", "asset.xlsx", b64);
 }
 
+// vulID: string;
+// vulName: string;
+// protocoltype: string;
+// severity: string;
+// vulURL: string;
+// request: string;
+// response: string;
+// extInfo: string;
+// reference: string;
+// description: string;
+
 export async function ExportWebScanToXlsx(r1: {}[], r2: {}[]) {
-    // 创建一个新的工作簿
-    let wb = XLSX.utils.book_new();
-    // 自定义表头
-    let fingerheaders = ["URL", "Code", "Length", "Title", "Detection", "Fingerprint"];
-    let vulheaders = ["Name", "Type", "Risk", "URL"];
-    let ws1 = XLSX.utils.json_to_sheet(r1);
-    let ws2 = XLSX.utils.json_to_sheet(r2);
-    XLSX.utils.sheet_add_aoa(ws1, [fingerheaders], { origin: "A1" });
-    XLSX.utils.sheet_add_aoa(ws2, [vulheaders], { origin: "A1" });
-    XLSX.utils.book_append_sheet(wb, ws1, "指纹");
-    XLSX.utils.book_append_sheet(wb, ws2, "漏洞");
-    const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-    await ExportFile("base64", "webscan.xlsx", b64);
+  // 创建一个新的工作簿
+  let wb = XLSX.utils.book_new();
+  // 自定义表头
+  let fingerheaders = ["URL", "Code", "Length", "Title", "Detection", "isWAF", "WAF Name", "Fingerprint"];
+  let vulheaders = ["Template", "Name", "Type" ,"Severity", "URL", "Request", "Response", "ExtInfo", "Reference", "Description"];
+  let ws1 = XLSX.utils.json_to_sheet(r1);
+  let ws2 = XLSX.utils.json_to_sheet(r2);
+  XLSX.utils.sheet_add_aoa(ws1, [fingerheaders], { origin: "A1" });
+  XLSX.utils.sheet_add_aoa(ws2, [vulheaders], { origin: "A1" });
+  XLSX.utils.book_append_sheet(wb, ws1, "指纹");
+  XLSX.utils.book_append_sheet(wb, ws2, "漏洞");
+  const b64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+  await ExportFile("base64", "webscan.xlsx", b64);
 }
-  
+
 
 export async function ExportTXT(filename: string, result: string[]) {
   //文件内容
