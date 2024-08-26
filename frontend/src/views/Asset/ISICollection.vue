@@ -6,7 +6,7 @@
             </template>
             <el-input v-model="parameter.target" 
             type="textarea" :rows="5" 
-            resize="none" placeholder="可以搜索例如域名或者公司名称等信息" style="width: 40vh;"></el-input>
+            resize="none" placeholder="可以搜索例如域名或者公司名称等信息，多关键词使用换行分割" style="width: 40vh;"></el-input>
         </el-form-item>
         <el-form-item>
             <template #label>
@@ -31,8 +31,8 @@
             <div>
                 <el-text>项目参考<el-link @click="BrowserOpenURL('https://github.com/obheda12/GitDorker')">GitDorks</el-link>，
                     需要配置<el-link @click="$router.push('/Settings')">Github API</el-link>，内容查看最多100条</el-text>
-                <el-button @click="Collect" :icon="Search" v-if="!parameter.runningStatus">开始收集</el-button>
-                <el-button loading v-else>正在查询</el-button>
+                <el-button @click="Collect" v-if="!parameter.runningStatus">开始收集</el-button>
+                <el-button type="danger" @click="stopscan" v-else>停止收集</el-button>
             </div>
         </el-form-item>
     </el-form>
@@ -91,8 +91,8 @@ import { onMounted, reactive, ref, watch } from 'vue';
 import { Callgologger, GitDorks } from 'wailsjs/go/main/App';
 import dorks from '@/stores/dorks'
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
-import { ElMessage } from 'element-plus';
-import { Search, ChromeFilled } from '@element-plus/icons-vue';
+import { ElMessage, ElNotification } from 'element-plus';
+import { ChromeFilled } from '@element-plus/icons-vue';
 
 const parameter = reactive({
     target: '',
@@ -152,8 +152,14 @@ async function Collect() {
     }
     parameter.count = targets.length * dorks.length
     parameter.runningStatus = true
+    parameter.id = 0
+    pagination.table.result = []
+    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
     for (const t of targets) {
         for (const d of dorks) {
+            if (!parameter.runningStatus) {
+                return
+            }
             let result:any = await GitDorks(t, d, global.space.github)
             if (result.Status && Number(result.Total) > 0) {
                 pagination.table.result.push({
@@ -175,6 +181,13 @@ async function Collect() {
     parameter.runningStatus = false
 }
 
+function stopscan() {
+    parameter.runningStatus = false
+    ElNotification.error({
+        message: "用户已终止扫描",
+        position: "bottom-right",
+    })
+}
 function showDialog(list: string[]) {
     dialogTableVisible.value = true
     gridData.value = list

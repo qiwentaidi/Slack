@@ -50,7 +50,7 @@ import { eldividerStyle } from "@/stores/style";
 }
 
 .card {
-  width: 24%;
+  width: calc(25% - 10px);
   position: relative;
   /* 确保图标相对于此容器进行绝对定位 */
 

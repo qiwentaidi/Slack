@@ -95,6 +95,7 @@ const portGroup = [
 ]
 
 var dict = ({
+    options: ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "rdp", "postgresql", "vnc", "redis", "memcached", "mongodb"],
     usernames: [
         {
             name: "FTP",

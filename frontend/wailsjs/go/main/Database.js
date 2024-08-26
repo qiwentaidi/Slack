@@ -14,6 +14,10 @@ export function ExecSqlStatement(arg1, arg2) {
   return window['go']['main']['Database']['ExecSqlStatement'](arg1, arg2);
 }
 
+export function GetAllPathsAndTimes() {
+  return window['go']['main']['Database']['GetAllPathsAndTimes']();
+}
+
 export function InsertFavGrammarFiled(arg1, arg2, arg3) {
   return window['go']['main']['Database']['InsertFavGrammarFiled'](arg1, arg2, arg3);
 }
@@ -28,4 +32,8 @@ export function SearchAgentPool() {
 
 export function SelectAllSyntax(arg1) {
   return window['go']['main']['Database']['SelectAllSyntax'](arg1);
+}
+
+export function UpdateOrInsertPath(arg1) {
+  return window['go']['main']['Database']['UpdateOrInsertPath'](arg1);
 }

@@ -209,23 +209,6 @@ const options = [
             </el-card>
         </div>
     </el-drawer>
-    <!-- 本地导航 -->
-    <!-- <el-drawer v-model="localDrawer" direction="rtl" size="70%">
-        <template #header>
-            <h4>启动器<el-tooltip>
-                <template #content>
-                    1、添加组后会出现卡片组，名称不支持重复<br />
-                    2、卡片新增后可以从桌面或者文件夹拖入元素或者右上角添加元素<br />
-                    3、右键元素可以编辑已有信息、打开文件夹、删除<br />
-                    4、对于CMD应用，Windows会进入当前应用路径的CMD窗口<br />
-                </template>
-                <el-icon>
-                    <InfoFilled />
-                </el-icon>
-            </el-tooltip></h4>
-        </template>
-        <LocalNavigation />
-    </el-drawer> -->
     <!-- running logs -->
     <el-drawer v-model="showLogger" title="运行日志" direction="rtl" size="50%">
         <div class="log-textarea" v-html="global.Logger.value"></div>

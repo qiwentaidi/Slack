@@ -1,18 +1,18 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
-import { Copy, SplitTextArea, deduplicateUrlFingerMap } from '@/util'
+import { Copy, SplitTextArea } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Search, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
-import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled } from 'wailsjs/go/main/App'
+import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger } from 'wailsjs/go/main/App'
 import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
-import async from 'async';
-import { URLFingerMap, PortScanData, File } from '@/interface';
+import { PortScanData, File } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import { titleStyle } from '@/stores/style';
+import { LinkCrack, LinkWebscan } from '@/linkage';
 
 // syn 扫描模式
 onMounted(() => {
@@ -217,11 +217,11 @@ class Scanner {
         Callgologger("info", "Portscan task is ending")
         if (config.webscan) {
             ips = moreOperate.getHTTPLinks(pagination.table.result)
-            EzWebscan(ips)
+            LinkWebscan(ips)
         }
         if (config.crack) {
             ips = pagination.ctrl.getColumnData("Link")
-            EzCrack(ips)
+            LinkCrack(ips)
         }
     }
 }
@@ -255,57 +255,6 @@ function updatePorts(radio: number) {
     }
 }
 
-async function EzWebscan(ips: string[]) {
-    let id = 0
-    global.temp.urlFingerMap = []
-    Callgologger("info", `正在将WEB目标联动网站扫描，共计加载目标: ${ips.length}`)
-    await FingerScan(ips, global.proxy)
-    await ActiveFingerScan(ips, global.proxy)
-    if (await NucleiEnabled(global.webscan.nucleiEngine)) {
-        const filteredUrlFingerprints = global.temp.urlFingerMap
-            .filter(item => item.finger.length > 0 && item.url)
-            .map(item => ({ url: item.url, finger: item.finger }));
-        async.eachLimit(deduplicateUrlFingerMap(filteredUrlFingerprints), 10, async (ufm: URLFingerMap, callback: () => void) => {
-            await NucleiScanner(0, ufm.url, ufm.finger, global.webscan.nucleiEngine, false, [], "")
-            id++
-            if (id == filteredUrlFingerprints.length) {
-                callback()
-            }
-        }, (err: any) => {
-            Callgologger("info", "Webscan Finished")
-            ElNotification.success({
-                message: "Webscan Finished",
-                position: "bottom-right"
-            })
-        })
-    } else {
-        Callgologger("error", `Nuclei引擎无效，无法进行漏洞扫描，已结束！`)
-    }
-}
-
-const needBrute = ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "rdp", "postgresql", "vnc", "redis", "memcached", "mongodb"]
-
-function EzCrack(ips: string[]) {
-    let id = 0
-    async.eachLimit(ips, 20, async (target: string, callback: () => void) => {
-        let protocol = target.split("://")[0]
-        let userDict = global.dict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
-        if (needBrute.includes(protocol)) {
-            Callgologger("info", target + " is start brute")
-        }
-        await PortBrute(target, userDict, global.dict.passwords)
-        id++
-        if (id == ips.length) {
-            callback()
-        }
-    }, (err: any) => {
-        Callgologger("info", "PortBrute Finished")
-        ElNotification.success({
-            message: "Crack Finished",
-            position: "bottom-right"
-        })
-    });
-}
 
 const moreOperate = ({
     getHTTPLinks: function (result: PortScanData[]): string[] {
@@ -316,7 +265,7 @@ const moreOperate = ({
 
     getBruteLinks: function (result: PortScanData[]): string[] {
         return result
-            .filter(line => needBrute.some(brute => line.Link.startsWith(brute)))
+            .filter(line => global.dict.options.some(brute => line.Link.startsWith(brute)))
             .map(line => line.Link);
     },
     // 复制端口扫描中的所有HTTP链接
@@ -350,10 +299,10 @@ const moreOperate = ({
         }
         if (mode == "webscan") {
             ElNotification.success(`已发送${targets.length}个目标到网站扫描`)
-            EzWebscan(targets)
+            LinkWebscan(targets)
         } else {
             ElNotification.success(`已发送${targets.length}个目标到暴破与未授权检测`)
-            EzCrack(targets)
+            LinkCrack(targets)
         }
     },
 })

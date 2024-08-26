@@ -8,6 +8,7 @@ import global from "@/global";
 import { ElNotification, ElMessage } from 'element-plus';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import ContextMenu from '@imengyu/vue3-context-menu'
+import { defaultIconSize } from '@/stores/style';
 
 const config = reactive({
   urls: "",
@@ -158,28 +159,6 @@ function getLength(arr: any) {
   }
 }
 
-const menus = [
-  {
-    label: "复制",
-    click: (menu: any, arg: any) => {
-      Copy(arg.data.Filed)
-    }
-  },
-  {
-    label: "复制来源",
-    click: (menu: any, arg: any) => {
-      Copy(arg.data.Source)
-    },
-    divided: true,
-  },
-  {
-    label: "打开来源链接",
-    click: (menu: any, arg: any) => {
-      BrowserOpenURL(arg.data.Source)
-    }
-  }
-]
-
 function onContextMenu(e: MouseEvent, data: any) {
   //prevent the browser's default menu
   e.preventDefault();
@@ -190,37 +169,22 @@ function onContextMenu(e: MouseEvent, data: any) {
     items: [
       {
         label: "复制",
-        icon: h(CopyDocument, {
-          style: {
-            width: '16px',
-            height: '16px',
-          }
-        }),
+        icon: h(CopyDocument, defaultIconSize),
         onClick: () => {
           Copy(data.Filed)
         }
       },
       {
         label: "复制来源",
-        icon: h(CopyDocument, {
-          style: {
-            width: '16px',
-            height: '16px',
-          }
-        }),
+        icon: h(CopyDocument, defaultIconSize),
         divided: true,
         onClick: () => {
-          Copy(data.Filed)
+          Copy(data.Source)
         }
       },
       {
         label: "打开来源链接",
-        icon: h(ChromeFilled, {
-          style: {
-            width: '16px',
-            height: '16px',
-          }
-        }),
+        icon: h(ChromeFilled, defaultIconSize),
         onClick: () => {
           BrowserOpenURL(data.Source)
         }

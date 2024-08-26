@@ -6,7 +6,9 @@ export function Check():Promise<boolean>;
 
 export function CreateTable():Promise<boolean>;
 
-export function ExecSqlStatement(arg1:string,arg2:Array<any>):Promise<boolean>;
+export function ExecSqlStatement(arg1:string,arg2:Array<string>):Promise<boolean>;
+
+export function GetAllPathsAndTimes():Promise<Array<main.pathTimes>>;
 
 export function InsertFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
@@ -15,3 +17,5 @@ export function RemoveFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promi
 export function SearchAgentPool():Promise<Array<string>>;
 
 export function SelectAllSyntax(arg1:string):Promise<Array<main.Syntax>>;
+
+export function UpdateOrInsertPath(arg1:string):Promise<boolean>;

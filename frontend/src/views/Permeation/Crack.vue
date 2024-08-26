@@ -26,8 +26,6 @@ onMounted(() => {
     };
 });
 
-const options = ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "rdp", "postgresql", "vnc", "redis", "memcached", "mongodb"]
-
 const config = reactive({
     builtIn: true,
     association: false,
@@ -186,7 +184,7 @@ async function NewScanner() {
             <el-input v-model="config.input" placeholder="主机地址">
                 <template #prepend>
                     <el-select v-model="config.defaultOption" style="width: 15vh;">
-                        <el-option v-for="value in options" :label="value" :value="value" />
+                        <el-option v-for="value in global.dict.options" :label="value" :value="value" />
                     </el-select>
                 </template>
                 <template #append>

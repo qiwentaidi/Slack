@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { LoadDirsearchDict, DirScan, StopDirScan } from "wailsjs/go/main/App";
 import { SplitTextArea, Copy, ReadLine } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
@@ -11,10 +11,22 @@ import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/main/Fil
 import { Dir, DirScanOptions } from '@/interface';
 import usePagination from '@/usePagination';
 import redirectIcon from '@/assets/icon/redirect.svg'
+import { GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/main/Database';
 
 onMounted(() => {
     // 获取当前全部字典
     getDictList()
+    GetAllPathsAndTimes().then((result:any) => {
+        if (Array.isArray(result)) {
+            for (const item of result) {
+                pathTimes.table.result.push({
+                    path: item.Path,
+                    times: item.Times,
+                })
+            }
+        }
+        pathTimes.table.pageContent = pathTimes.ctrl.watchResultChange(pathTimes.table)
+    })
     EventsOn("dirsearchLoading", (result: any) => {
         switch (result.Status) {
             case 0:
@@ -23,6 +35,14 @@ onMounted(() => {
             case 1:
                 break
             default:
+                if (result.Status == 200 || result.Status == 500) {
+                    try {
+                        let url = new URL(result.URL);
+                        UpdateOrInsertPath(url.pathname.substring(1))
+                    } catch (error) {
+                        console.log(error)
+                    }
+                }
                 pagination.table.result.push({
                     Status: result.Status,
                     Length: result.Length,
@@ -76,8 +96,10 @@ const from = reactive({
     result: [] as Dir[],
 })
 
-let pagination = usePagination(from.result, 50)
+const pathHistory = ref<{path: string, times: number}[]>([])
 
+let pagination = usePagination(from.result, 50)
+let pathTimes = usePagination(pathHistory.value, 50)
 async function getDictList() {
     from.selectDict = []
     from.configPath = global.PATH.homedir + "/slack/config/dirsearch"
@@ -242,6 +264,16 @@ const config = reactive({
     runningStatus: false,
     recursion: 0,
 })
+
+function copyHistory(length: number) {
+    // 对 items 进行排序，按 times 值降序排列
+    const sortedItems = pathTimes.table.result.sort((a, b) => b.times - a.times);
+    // 截取前 xxx 项
+    const topItems = sortedItems.slice(0, length);
+    // 提取 path 值
+    const topPaths = topItems.map(item => item.path);
+    config.customDict = topPaths.join("\n")
+}
 </script>
 
 <template>
@@ -425,6 +457,43 @@ const config = reactive({
                     <el-option v-for="item in from.dictList" :label="item" :value="item" />
                 </el-select>
                 <el-input v-model="config.customDict" type="textarea" :rows="8"></el-input>
+            </el-form-item>
+            <el-form-item class="align-right">
+                <template #label>
+                    <span>字典扫描记录:</span>
+                    <el-tooltip placement="left">
+                        <template #content>每次应用启动时，会加载历史响应码为200，500路径扫描记录次数<br />
+                        数据不会实时更新，复制功能会将Topxx个记录复制到字典列表中
+                        </template>
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-table :data="pathTimes.table.pageContent" border style="width: 100%; height: 50vh;">
+                    <el-table-column prop="path">
+                        <template #header>
+                            <el-text><span>路径</span>
+                                <el-divider direction="vertical" />
+                                <el-button size="small" text bg @click="copyHistory(100)">复制Top100</el-button>
+                                <el-divider direction="vertical" />
+                                <el-button size="small" text bg @click="copyHistory(1000)">复制Top1000</el-button>
+                            </el-text>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="times" label="出现次数" width="200" 
+                    :sort-method="(a: any, b: any) => { return a.times - b.times }" sortable >
+                    </el-table-column>
+                    <template #empty>
+                        <el-empty />
+                    </template>
+                </el-table>
+                <el-pagination size="small" background @size-change="pathTimes.ctrl.handleSizeChange"
+                    @current-change="pathTimes.ctrl.handleCurrentChange" :pager-count="5"
+                    :current-page="pathTimes.table.currentPage" :page-sizes="[50, 100, 200]"
+                    :page-size="pathTimes.table.pageSize" layout="total, sizes, prev, pager, next"
+                    :total="pathTimes.table.result.length" style="margin-top: 5px;">
+                </el-pagination>
             </el-form-item>
         </el-form>
     </el-drawer>

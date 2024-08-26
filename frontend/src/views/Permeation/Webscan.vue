@@ -11,8 +11,6 @@ import {
     NucleiScanner,
     GetFingerPocMap,
     Callgologger,
-    LoadDirsearchDict,
-    DirScan
 } from 'wailsjs/go/main/App'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
@@ -20,9 +18,10 @@ import { formatURL, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transform
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { URLFingerMap, Vulnerability, FingerprintTable, DirScanOptions, FofaResult } from '@/interface';
+import { URLFingerMap, Vulnerability, FingerprintTable, FofaResult } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
+import { LinkDirsearch } from '@/linkage';
 
 // 初始化时调用
 onMounted(async () => {
@@ -167,8 +166,7 @@ function validateInput() {
     const ipPatterns = [
         /^(http:\/\/|https:\/\/)?(\d{1,3}\.){3}\d{1,3}(?:.*)/, // 192.168.1.1
         /^(http:\/\/|https:\/\/)?(\d{1,3}\.){3}\d{1,3}:\d{1,5}(?:.*)/, // 192.168.0.1:6379
-        /^(http:\/\/|https:\/\/)?[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})(?:.*)/, // www.baidu.com
-        /^(http:\/\/|https:\/\/)?[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,}):\d{1,5}(?:.*)/, // www.baidu.com:8080
+        /^(http:\/\/|https:\/\/)?([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})*)(?::\d{1,5})?(?:.*)/, // www.baidu.com
     ];
     const lines = form.url.split('\n');
     return lines.every(line =>
@@ -235,7 +233,7 @@ class Scanner {
         }
         dashboard.currentModule = module[form.currentModule].label
         // 指纹扫描      
-        Callgologger("info", `Webscan task loaded, current: ${this.urls.length}，当前扫描模式: ${dashboard.currentModule}`)
+        Callgologger("info", `网站扫描任务已加载, 当前目标数量: ${this.urls.length}，当前扫描模式: ${dashboard.currentModule}`)
         Callgologger("info", '正在进行指纹扫描 ...')
         let count = 0
         let mode = 0
@@ -320,31 +318,7 @@ const uncover = {
             });
         })
     },
-    dirsearch: async function (url: string) {
-        ElNotification.success({
-            message: "已将目标联动至目录扫描",
-            position: "bottom-right"
-        })
-        let dfp = global.PATH.homedir + "/slack/config/dirsearch/dicc.txt"
-        let paths = await LoadDirsearchDict([dfp], "php,aspx,asp,jsp,html,js".split(','))
-        global.temp.dirsearchPathConut = paths.length
-        global.temp.dirsearchStartTime = Date.now()
-        let option: DirScanOptions = {
-            Method: "GET",
-            URLs: [url],
-            Paths: paths,
-            Workers: 25,
-            Timeout: 8,
-            BodyExclude: "",
-            BodyLengthExcludeTimes: 5,
-            StatusCodeExclude: [404],
-            Redirect: false,
-            Interval: 0,
-            CustomHeader: "",
-            Recursion: 0,
-        }
-        await DirScan(option)
-    }
+    
 }
 
 function filterHandlerSeverity(value: string, row: any): boolean {
@@ -439,7 +413,7 @@ function getClassBySeverity(severity: string) {
                                                 <el-dropdown-item :icon="ChromeFilled"
                                                     @click="BrowserOpenURL(scope.row.url)">打开链接</el-dropdown-item>
                                                 <el-dropdown-item :icon="Promotion"
-                                                    @click="uncover.dirsearch(scope.row.url)"
+                                                    @click="LinkDirsearch(scope.row.url)"
                                                     divided>联动目录扫描</el-dropdown-item>
                                                 <!-- <el-dropdown-item :icon="Promotion" @click="">联动JSFinder</el-dropdown-item> -->
                                             </el-dropdown-menu>

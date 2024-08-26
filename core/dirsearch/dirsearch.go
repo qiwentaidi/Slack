@@ -133,15 +133,16 @@ func Scan(ctx context.Context, url string, header map[string]string, o Options, 
 		result.Status = 1
 		return result
 	}
-	result.Body = string(body)
 	result.Length = len(body)
 	// 记录同一状态码下长度出现次数，当次数超过o.BodyLengthExcludeTimes时，将状态码设置为1，过滤显示
 	mutex.Lock()
 	bodyLengthMap[resp.Status]++
 	if bodyLengthMap[resp.Status] > o.BodyLengthExcludeTimes {
 		result.Status = 1
+		return result
 	}
 	mutex.Unlock()
+	result.Body = string(body)
 	result.Location = resp.Header.Get("Location")
 	return result
 }
