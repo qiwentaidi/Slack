@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -14,24 +13,12 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
-	"time"
 
 	"github.com/minio/selfupdate"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 const LastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
-
-func UpdatePoc(ctx context.Context, configPath string) error {
-	if err := os.RemoveAll(configPath + "config"); err != nil {
-		return err
-	}
-	time.Sleep(time.Second * 2)
-	if !InitConfig(ctx) {
-		return errors.New("update poc failed")
-	}
-	return nil
-}
 
 func download(target, dest string) (string, error) {
 	fileName := path.Base(target)

@@ -55,6 +55,9 @@ onMounted(() => {
     }
     global.Logger.value = logArray.join('\n');
   });
+  EventsOn("nuclei-pid", (pid: number) => {
+    global.temp.currentPid = pid;
+  });
 })
 </script>
 

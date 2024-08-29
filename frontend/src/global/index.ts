@@ -39,6 +39,7 @@ var temp = reactive({
     nucleiEnabled: false,
     isMacOS: false,
     isGrid: true,
+    currentPid: 0,
 })
 
 const Logger = reactive({

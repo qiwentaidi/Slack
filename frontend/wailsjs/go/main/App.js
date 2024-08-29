@@ -134,6 +134,10 @@ export function JSFind(arg1, arg2) {
   return window['go']['main']['App']['JSFind'](arg1, arg2);
 }
 
+export function Kill(arg1) {
+  return window['go']['main']['App']['Kill'](arg1);
+}
+
 export function LoadDirsearchDict(arg1, arg2) {
   return window['go']['main']['App']['LoadDirsearchDict'](arg1, arg2);
 }

@@ -10,6 +10,7 @@ import {
     NucleiScanner,
     GetFingerPocMap,
     Callgologger,
+    Kill,
 } from 'wailsjs/go/main/App'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
@@ -192,6 +193,7 @@ async function startScan() {
 
 function stopScan() {
     if (form.runnningStatus) {
+        Kill(global.temp.currentPid)
         form.runnningStatus = false
         ElMessage({
             showClose: true,
@@ -238,6 +240,7 @@ class Scanner {
         let mode = 0
         await FingerScan(this.urls, global.proxy)
         if (form.currentModule == 1 || form.currentModule == 2) {
+            global.temp.currentPid = 0
             const urlArray: string[] = global.temp.urlFingerMap.map(item => item.url);
             Callgologger("info", '正在进行主动指纹探测 ...')
             await ActiveFingerScan(urlArray, global.proxy)
@@ -322,6 +325,16 @@ function getClassBySeverity(severity: string) {
         default:
             return 'severity-info';
     }
+}
+
+function transformedResult() {
+    return vp.table.result.map(({ vulID, vulName, severity, vulURL, extInfo }) => ({
+        vulID,
+        vulName,
+        severity,
+        vulURL,
+        extInfo,
+    }))
 }
 </script>
 
@@ -500,7 +513,7 @@ function getClassBySeverity(severity: string) {
                             <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
                                 :icon="CopyDocument">复制全部失败目标</el-dropdown-item>
                             <el-dropdown-item :icon="exportIcon"
-                                @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformArrayFields(vp.table.result))">
+                                @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformedResult())">
                                 导出Excel</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>

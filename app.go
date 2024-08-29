@@ -12,8 +12,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
-	"runtime"
+	rt "runtime"
 	"slack-wails/core"
 	"slack-wails/core/dirsearch"
 	"slack-wails/core/exp/hikvision"
@@ -34,6 +35,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -84,7 +87,7 @@ func (a *App) Callgologger(level, msg string) {
 }
 
 func (a *App) IsRoot() bool {
-	if runtime.GOOS == "windows" {
+	if rt.GOOS == "windows" {
 		_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
 		return err == nil
 	} else {
@@ -681,4 +684,25 @@ func (a *App) UncoverSearch(query, types string, size int, option structs.SpaceO
 
 func (a *App) GitDorks(target, dork, apikey string) *isic.GithubResult {
 	return isic.GithubApiQuery(a.ctx, fmt.Sprintf("%s %s", target, dork), apikey)
+}
+
+func (a *App) Kill(pid int) {
+	if pid == 0 {
+		return
+	}
+	var cmd *exec.Cmd
+	if rt.GOOS != "windows" {
+		cmd = exec.Command("kill", "-9", fmt.Sprintf("%d", pid))
+
+	} else {
+		cmd = exec.Command("taskkill", "/PID", fmt.Sprintf("%d", pid), "/F")
+	}
+	if err := cmd.Run(); err != nil {
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Title:         "提示",
+			Message:       "终止Nuclei进程失败",
+			Type:          runtime.ErrorDialog,
+			DefaultButton: "Ok",
+		})
+	}
 }

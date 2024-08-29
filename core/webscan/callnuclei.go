@@ -142,9 +142,11 @@ func (nc *NucleiCaller) CallerFP(ctx context.Context, pe FingerPoc) error {
 	nc.CommandLine = []string{"-duc", "-u", pe.URL, "-t", pocFile, "-tags", strings.Join(util.RemoveDuplicates(pe.Tags), ","), "-je", result, nc.Interactsh}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	bridge.HideExecWindow(cmd)
-	if err := cmd.Run(); err != nil {
+	if err := cmd.Start(); err != nil {
 		return err
 	}
+	runtime.EventsEmit(ctx, "nuclei-pid", cmd.Process.Pid)
+	cmd.Wait()
 	return nc.ReadNucleiJson(ctx)
 }
 
@@ -160,9 +162,11 @@ func (nc *NucleiCaller) CallerAP(ctx context.Context, target string, tags []stri
 	}
 	cmd := exec.Command(nc.NucleiPath, nc.CommandLine...)
 	bridge.HideExecWindow(cmd) // 让windows执行cmd时无窗口
-	if err := cmd.Run(); err != nil {
+	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("callerap err: %v", err)
 	}
+	runtime.EventsEmit(ctx, "nuclei-pid", cmd.Process.Pid)
+	cmd.Wait()
 	return nc.ReadNucleiJson(ctx)
 }
 
