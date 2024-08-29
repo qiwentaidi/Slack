@@ -55,7 +55,7 @@ export function SaveJsonFile(arg1:any):Promise<boolean>;
 
 export function SaveNavigation(arg1:Array<structs.Navigation>):Promise<boolean>;
 
-export function UpdatePocFile():Promise<string>;
+export function UpdatePocFile(arg1:string):Promise<boolean>;
 
 export function UserHomeDir():Promise<string>;
 

@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { Refresh, Setting } from "@element-plus/icons-vue";
-import { ref } from "vue";
 import updateUI from "./Update.vue";
 import global from "@/global/index";
 import menus from "@/router/menu";
 import router from "@/router";
 import pocIcon from '@/assets/icon/pocmanagement.svg'
 
-const updateDialog = ref(false)
-
 const bottomControl = [
   {
     label: "aside.update",
     icon: Refresh,
     action: () => {
-      updateDialog.value = true
+      global.UPDATE.updateDialog = true
     }
   },
   {
@@ -67,7 +64,7 @@ const bottomControl = [
   </el-menu>
 
   <!-- update -->
-  <el-dialog v-model="updateDialog" title="更新通知" width="40%">
+  <el-dialog v-model="global.UPDATE.updateDialog" title="更新通知" width="40%">
     <updateUI></updateUI>
   </el-dialog>
 </template>

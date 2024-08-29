@@ -65,6 +65,7 @@ var UPDATE = reactive({
     RemoteClientVersion: "",
     PocContent: "",
     ClientContent: "",
+    updateDialog: false,
 })
 
 const portGroup = [

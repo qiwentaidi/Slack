@@ -494,7 +494,7 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
 
 // 仅在执行时调用一次
 func (a *App) InitRule() bool {
-	return webscan.InitAll(a.webfingerFile, a.activefingerFile, a.templateDir)
+	return webscan.InitAll(a.ctx, a.webfingerFile, a.activefingerFile, a.templateDir)
 }
 
 // webscan

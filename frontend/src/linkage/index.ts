@@ -1,9 +1,9 @@
 import { deduplicateUrlFingerMap } from '@/util'
-import { Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled, LoadDirsearchDict, DirScan } from 'wailsjs/go/main/App'
+import { Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled, LoadDirsearchDict, DirScan, HunterSearch } from 'wailsjs/go/main/App'
 import global from '@/global'
 import async from 'async';
 import { DirScanOptions, URLFingerMap } from '@/interface';
-import { ElNotification } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 
 
 export async function LinkWebscan(ips: string[]) {
@@ -17,6 +17,9 @@ export async function LinkWebscan(ips: string[]) {
             .filter(item => item.finger.length > 0 && item.url)
             .map(item => ({ url: item.url, finger: item.finger }));
         async.eachLimit(deduplicateUrlFingerMap(filteredUrlFingerprints), 10, async (ufm: URLFingerMap, callback: () => void) => {
+            if (ufm.finger.length == 0) {
+                return
+            }
             await NucleiScanner(0, ufm.url, ufm.finger, global.webscan.nucleiEngine, false, [], "")
             id++
             if (id == filteredUrlFingerprints.length) {
@@ -80,4 +83,29 @@ export async function LinkDirsearch(url: string) {
         Recursion: 0,
     }
     await DirScan(option)
+}
+
+export async function LinkHunter(query: string, count: string) {
+    if (!global.space.hunterkey) {
+        ElNotification.warning("请在设置处填写Hunter Key")
+        return
+    }
+    ElMessage.info("正在导入鹰图数据，请稍后...")
+    let urls = <string[]>[]
+    let result:any = await HunterSearch(global.space.hunterkey, query, count, "1", "0", "3", false)
+    if (result.code !== 200) {
+        if (result.code == 40205) {
+            ElMessage(result.message)
+        } else {
+            ElMessage({
+                message: result.message,
+                type: "error",
+            });
+            return
+        }
+    }
+    result.data.arr.forEach((item: any) => {
+        urls.push(item.url)
+    });
+    return urls
 }

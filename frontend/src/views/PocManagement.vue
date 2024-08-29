@@ -232,9 +232,8 @@ async function deletePoc(pocName: string, finerprints: string[]) {
                     <Notebook />
                 </template>漏洞详情</el-button>
         </template>
-        <div class="my-header">
-            <div></div>
-            <el-button @click="Copy(content)">复制</el-button>
+        <div class="controls">
+            <el-button type="primary" link @click="Copy(content)">复制</el-button>
         </div>
         <highlightjs language="yaml" :code="content"></highlightjs>
     </el-drawer>
@@ -243,5 +242,12 @@ async function deletePoc(pocName: string, finerprints: string[]) {
 <style scoped>
 :deep(.el-card__header) {
     padding: 5px;
+}
+
+.controls {
+    position: absolute;
+    top: 90px;
+    right: 30px;
+    z-index: 1000; /* Ensure it's above the code */
 }
 </style>

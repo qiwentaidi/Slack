@@ -106,8 +106,8 @@ export function SaveNavigation(arg1) {
   return window['go']['main']['File']['SaveNavigation'](arg1);
 }
 
-export function UpdatePocFile() {
-  return window['go']['main']['File']['UpdatePocFile']();
+export function UpdatePocFile(arg1) {
+  return window['go']['main']['File']['UpdatePocFile'](arg1);
 }
 
 export function UserHomeDir() {

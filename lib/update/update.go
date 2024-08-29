@@ -20,15 +20,14 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-const lastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
+const LastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
 
-// https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/v0.0.2/afrog-pocs.zip
 func UpdatePoc(ctx context.Context, configPath string) error {
 	if err := os.RemoveAll(configPath + "config"); err != nil {
 		return err
 	}
 	time.Sleep(time.Second * 2)
-	if !InitConfig(ctx, configPath) {
+	if !InitConfig(ctx) {
 		return errors.New("update poc failed")
 	}
 	return nil
@@ -135,9 +134,9 @@ func roundToTwoDecimals(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
-func InitConfig(ctx context.Context, configPath string) bool {
+func InitConfig(ctx context.Context) bool {
 	var defaultFile = util.HomeDir() + "/slack/"
-	os.MkdirAll(configPath, 0777)
+	os.MkdirAll(defaultFile, 0777)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
 	_, b, err := clients.NewSimpleGetRequest(latestConfigVersion, http.DefaultClient)
 	if err != nil {
@@ -149,7 +148,7 @@ func InitConfig(ctx context.Context, configPath string) bool {
 		})
 		return false
 	}
-	configFileZip := fmt.Sprintf("%sv%s/config.zip", lastestPocUrl, string(b))
+	configFileZip := fmt.Sprintf("%sv%s/config.zip", LastestPocUrl, string(b))
 	fileName, err := download(configFileZip, defaultFile)
 	if err != nil {
 		gologger.Error(ctx, err)

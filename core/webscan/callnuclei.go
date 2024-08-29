@@ -104,9 +104,8 @@ func (nc *NucleiCaller) Enabled(ctx context.Context) bool {
 	cmd := exec.Command(nc.NucleiPath, "--version")
 	bridge.HideExecWindow(cmd)
 	out, err := cmd.CombinedOutput()
-	gologger.Debug(ctx, string(out))
+	gologger.Info(ctx, string(out))
 	if err != nil {
-		gologger.Debug(ctx, err)
 		return false
 	}
 	return strings.Contains(string(out), "Nuclei Engine Version")

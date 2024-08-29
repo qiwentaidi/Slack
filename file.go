@@ -177,15 +177,26 @@ func (f *File) ReadFile(filename string) *FileInfo {
 	}
 }
 
-func (f *File) UpdatePocFile() string {
-	if err := update.UpdatePoc(f.ctx, f.configPath); err != nil {
-		return err.Error()
+func (f *File) UpdatePocFile(version string) bool {
+	var defaultFile = util.HomeDir() + "/slack/"
+	os.MkdirAll(defaultFile, 0777)
+	configFileZip := fmt.Sprintf("%sv%s/config.zip", update.LastestPocUrl, version)
+	_, err := update.NewDownload(f.ctx, configFileZip, defaultFile, "pocDownloadProgress", "")
+	if err != nil {
+		gologger.Error(f.ctx, err)
+		return false
 	}
-	return ""
+	uz := util.NewUnzip()
+	if _, err := uz.Extract(defaultFile+"config.zip", defaultFile); err != nil {
+		gologger.Error(f.ctx, err)
+		return false
+	}
+	os.Remove(util.HomeDir() + "/slack/config.zip")
+	return true
 }
 
 func (f *File) InitConfig() bool {
-	return update.InitConfig(f.ctx, util.HomeDir()+"/slack/")
+	return update.InitConfig(f.ctx)
 }
 
 func (*File) InitMemo(filepath, content string) bool {
@@ -305,7 +316,6 @@ func (f *File) DownloadLastestClient() structs.Status {
 				Msg:   err.Error(),
 			}
 		}
-		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "mac-success")
 		return structs.Status{
 			Error: false,
 			Msg:   "Update success!",
@@ -323,7 +333,6 @@ func (f *File) DownloadLastestClient() structs.Status {
 				Msg:   err.Error(),
 			}
 		}
-		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "win-success")
 		return structs.Status{
 			Error: false,
 			Msg:   "Update success!",
@@ -345,7 +354,6 @@ func (f *File) DownloadLastestClient() structs.Status {
 		}
 		os.Rename(dir+"/"+getExecName()+".new", dir+"/"+getExecName()) // 下载完成就覆盖旧的文件
 		os.Chmod(dir+"/"+getExecName(), 0755)                          // 赋予文件执行权限
-		runtime.EventsEmit(f.ctx, "clientDownloadComplete", "linux-success")
 		return structs.Status{
 			Error: false,
 			Msg:   "Update success!",

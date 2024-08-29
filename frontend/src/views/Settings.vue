@@ -2,7 +2,7 @@
   <el-container style="height: 100vh;">
     <el-aside width="200px">
       <el-menu default-active="0">
-        <el-menu-item v-for="item in settingOption" :index="item.show" @click="currentDisplay = item.show">
+        <el-menu-item v-for="(item, index) in settingOption" :index="index" @click="item.action">
           <el-icon>
             <component :is="item.icon" />
           </el-icon>
@@ -59,36 +59,33 @@
         </div>
       </el-form>
       <el-form :model="global.space" label-width="auto" v-show="currentDisplay == '2'">
-        <h3>{{ $t(settingOption[2].name) }}</h3>
+        <h3>{{ $t(settingOption[2].name) }}<el-divider direction="vertical" />Ⓓ标识符API主要用于收集子域名信息</h3>
         <el-form-item label="FOFA">
           <el-input v-model="global.space.fofaapi" placeholder="API address" clearable />
           <el-input v-model="global.space.fofaemail" placeholder="Email" clearable style="margin-top: 5px;" />
           <el-input v-model="global.space.fofakey" placeholder="API key" clearable style="margin-top: 5px;" />
         </el-form-item>
-        <el-form-item :label="$t('aside.hunter')">
+        <el-form-item label="Hunter">
           <el-input v-model="global.space.hunterkey" placeholder="API key" clearable />
         </el-form-item>
-        <el-form-item :label="$t('aside.360quake')">
+        <el-form-item label="Quake">
           <el-input v-model="global.space.quakekey" placeholder="API key" clearable />
         </el-form-item>
-        <el-alert type="info" show-icon :closable="false" style="margin-bottom: 5px;">
-          <span>下方API可用于收集子域名信息，在使用子域名收集模块请配置（优先推荐配置Chao，免费且不限次数）</span>
-        </el-alert>
-        <el-form-item label="Chaos">
-          <el-input v-model="global.space.chaos" placeholder="API key">
+        <el-form-item label="ChaosⒹ">
+          <el-input v-model="global.space.chaos" placeholder="Priority recommendation configuration API key">
             <template #suffix>
               <el-button link type="primary" :icon="UserFilled" @click="BrowserOpenURL(chaosURL)">注册</el-button>
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="Bevigil">
+        <el-form-item label="BevigilⒹ">
           <el-input v-model="global.space.bevigil" placeholder="API key">
             <template #suffix>
               <el-button link type="primary" :icon="UserFilled" @click="BrowserOpenURL(bevigilURL)">注册</el-button>
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="Securitytrails">
+        <el-form-item label="SecuritytrailsⒹ">
           <el-input v-model="global.space.securitytrails" placeholder="API key">
             <template #suffix>
               <el-button link type="primary" :icon="UserFilled"
@@ -96,10 +93,10 @@
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="Zoomeye">
+        <el-form-item label="ZoomeyeⒹ">
           <el-input v-model="global.space.zoomeye" placeholder="API key" />
         </el-form-item>
-        <el-form-item label="Github">
+        <el-form-item label="GithubⒹ">
           <el-input v-model="global.space.github"
             placeholder="Settings -> Developer settings -> Presonal access tokens" />
         </el-form-item>
@@ -119,8 +116,7 @@
         </el-form-item>
       </el-form>
       <div v-show="currentDisplay == '4'">
-        <h3>{{ $t(settingOption[4].name) }}</h3>
-        <el-alert type="info" :closable="false" show-icon>内置字典密码所有协议通用</el-alert>
+        <h3>{{ $t(settingOption[4].name) }}<el-divider direction="vertical" />密码所有协议通用</h3>
         <el-table :data="global.dict.usernames" stripe style="width: 100%">
           <el-table-column prop="name" label="服务名称" />
           <el-table-column label="操作" width="250" align="center">
@@ -141,13 +137,32 @@
     <el-input type="textarea" :rows="20" v-model="ctrl.currentDic"></el-input>
     <el-button type="primary" style="margin-top: 10px; float: right;" @click="SaveFile(ctrl.currentPath)">保存</el-button>
   </el-drawer>
+  <!-- about -->
+  <el-dialog v-model="aboutDialog" width="36%">
+        <template #header>
+            <el-segmented v-model="aboutIndex" :options="options">
+                <template #default="{ item }">
+                    <div style="display: flex;">
+                        <el-icon :size="16" style="margin-right: 5px;">
+                            <component :is="item.icon" />
+                        </el-icon>
+                        <div>{{ item.label }}</div>
+                    </div>
+                </template>
+            </el-segmented>
+        </template>
+        <div style="text-align: center;">
+            <about v-show="aboutIndex == 0"></about>
+            <img v-show="aboutIndex != 0" src="../assets/icon/wechat.png" style="height: 208px;">
+        </div>
+    </el-dialog>
 </template>
 
 <script lang="ts" setup>
 import global from "@/global"
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, TestNuclei } from "@/util";
-import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
+import { Edit, Sunny, Moon, UserFilled, Avatar } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, SaveDataToFile, WriteFile } from "wailsjs/go/main/File";
 import { File } from '@/interface';
@@ -159,6 +174,8 @@ import themeIcon from "@/assets/icon/theme.svg"
 import proxyIcon from "@/assets/icon/proxy.svg"
 import dictmanagerIcon from "@/assets/icon/dict.svg"
 import layersIcon from "@/assets/icon/layers.svg"
+import githubIcon from "@/assets/icon/github.svg"
+import aboutIcon from "@/assets/icon/about.svg"
 
 const bevigilURL = "https://bevigil.com/osint-api"
 const chaosURL = "https://cloud.projectdiscovery.io/"
@@ -217,31 +234,64 @@ const settingOption = [
   {
     name: 'setting.scan',
     icon: scanIcon,
-    show: '0',
+    action: () => {
+      currentDisplay.value = '0'
+    }
   },
   {
     name: 'setting.proxy',
     icon: proxyIcon,
-    show: '1',
+    action: () => {
+      currentDisplay.value = '1'
+    }
   },
   {
     name: 'setting.mapping',
     icon: layersIcon,
-    show: '2',
+    action: () => {
+      currentDisplay.value = '2'
+    }
   },
   {
     name: 'aside.display',
     icon: themeIcon,
-    show: '3',
+    action: () => {
+      currentDisplay.value = '3'
+    }
   },
   {
     name: 'aside.dict',
     icon: dictmanagerIcon,
-    show: '4',
+    action: () => {
+      currentDisplay.value = '4'
+    }
+  },
+  {
+    name: 'aside.about',
+    icon: aboutIcon,
+    action: () => {
+      aboutDialog.value = true
+    }
   },
 ]
 
 const currentDisplay = ref('0')
+
+const options = [
+    {
+        label: "关于项目",
+        value: 0,
+        icon: githubIcon,
+    },
+    {
+        label: "联系方式",
+        value: 1,
+        icon: Avatar,
+    },
+]
+
+const aboutDialog = ref(false)
+const aboutIndex = ref(0)
 </script>
 
 <style scoped>

@@ -37,7 +37,7 @@ type RuleData struct {
 var FingerprintDB []FingerPEntity
 var ActiveFingerprintDB []FingerPEntity
 
-func InitFingprintDB(fingerprintFile string) error {
+func InitFingprintDB(ctx context.Context, fingerprintFile string) error {
 	data, err := os.ReadFile(fingerprintFile)
 	if err != nil {
 		return err
@@ -61,6 +61,8 @@ func InitFingprintDB(fingerprintFile string) error {
 				}
 			}
 		}
+	} else {
+		gologger.Error(ctx, err)
 	}
 	for productName, ruleLs := range m {
 		for _, ruleL := range ruleLs {
@@ -386,9 +388,9 @@ func dataCheckInt(op int16, dataSource int, dataRule int) bool {
 
 var WorkFlowDB map[string][]string
 
-func InitAll(webfinger, activefinger, template string) bool {
+func InitAll(ctx context.Context, webfinger, activefinger, template string) bool {
 	FingerprintDB = nil
-	if err := InitFingprintDB(webfinger); err != nil {
+	if err := InitFingprintDB(ctx, webfinger); err != nil {
 		return false
 	}
 	if err := InitActiveScanPath(activefinger); err != nil {

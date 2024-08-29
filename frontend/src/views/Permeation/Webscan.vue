@@ -4,7 +4,6 @@ import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, R
 import {
     InitRule,
     FofaSearch,
-    HunterSearch,
     FingerprintList,
     FingerScan,
     ActiveFingerScan,
@@ -21,7 +20,7 @@ import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { URLFingerMap, Vulnerability, FingerprintTable, FofaResult } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
-import { LinkDirsearch } from '@/linkage';
+import { LinkDirsearch, LinkHunter } from '@/linkage';
 
 // 初始化时调用
 onMounted(async () => {
@@ -252,6 +251,9 @@ class Scanner {
                 if (!form.runnningStatus) {
                     return
                 }
+                if (ufm.finger.length == 0) {
+                    return
+                }
                 await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, form.noInteractsh, form.tags, form.risk.join(","))
                 count++
                 if (count == global.temp.urlFingerMap.length) {
@@ -293,30 +295,12 @@ const uncover = {
             }
         })
     },
-    hunter: function () {
-        if (!global.space.hunterkey) {
-            ElNotification.warning("请在设置处填写Hunter Key")
-            return
-        }
+    hunter: async function () {
         form.hunterDialog = false
-        ElMessage("正在导入鹰图数据，请稍后...")
-        HunterSearch(global.space.hunterkey, form.query, form.defaultNum, "1", "0", "3", false).then(result => {
-            if (result.code !== 200) {
-                if (result.code == 40205) {
-                    ElMessage(result.message)
-                } else {
-                    ElMessage({
-                        message: result.message,
-                        type: "error",
-                    });
-                    return
-                }
-            }
-            form.url = ""
-            result.data.arr.forEach((item: any) => {
-                form.url += item.url + "\n"
-            });
-        })
+        let urls = await LinkHunter(form.query, form.defaultNum)
+        if (urls != undefined) {
+            form.url = urls.join("\n")
+        }
     },
     
 }

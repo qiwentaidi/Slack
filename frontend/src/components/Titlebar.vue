@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Close, Minus, Search, Back, Right, Avatar } from '@element-plus/icons-vue';
+import { Close, Minus, Search, Back, Right } from '@element-plus/icons-vue';
 import { Quit, WindowMinimise, WindowToggleMaximise } from "wailsjs/runtime/runtime";
 import { IsMacOS } from "wailsjs/go/main/File";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
@@ -7,15 +7,12 @@ import global from "@/global";
 import { onlineOptions }  from '@/stores/online';
 import { useRoute } from "vue-router";
 import { ref, computed } from "vue";
-import about from "./About.vue";
 import updateUI from "./Update.vue";
-import aboutIcon from "@/assets/icon/about.svg"
 import onlineIcon from "@/assets/icon/online.svg"
 import runnerIcon from "@/assets/icon/apprunner.svg"
 import maxmizeIcon from "@/assets/icon/maximize.svg"
 import reductionIcon from "@/assets/icon/reduction.svg"
 import consoleIcon from "@/assets/icon/console.svg"
-import githubIcon from "@/assets/icon/github.svg"
 import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/style';
 import router from '@/router';
 
@@ -23,9 +20,7 @@ const isMax = ref(false)
 const onlineDrawer = ref(false)
 const showLogger = ref(false)
 const route = useRoute();
-const aboutDialog = ref(false)
 const updateDialog = ref(false)
-const aboutIndex = ref(0)
 
 window.addEventListener('resize', () => {
     if (screen.availWidth <= window.innerWidth && screen.availHeight <= window.innerHeight) {
@@ -79,13 +74,6 @@ const routerControl = [
 
 const appControl = [
     {
-        label: "关于",
-        icon: aboutIcon,
-        action: () => {
-            aboutDialog.value = true
-        },
-    },
-    {
         label: "运行日志",
         icon: consoleIcon,
         action: () => {
@@ -130,18 +118,7 @@ const windowsControl = computed(() => [
     },
 ]);
 
-const options = [
-    {
-        label: "关于项目",
-        value: 0,
-        icon: githubIcon,
-    },
-    {
-        label: "联系方式",
-        value: 1,
-        icon: Avatar,
-    },
-]
+
 </script>
 
 <template>
@@ -213,25 +190,6 @@ const options = [
     <el-drawer v-model="showLogger" title="运行日志" direction="rtl" size="50%">
         <div class="log-textarea" v-html="global.Logger.value"></div>
     </el-drawer>
-    <!-- about -->
-    <el-dialog v-model="aboutDialog" width="36%">
-        <template #header>
-            <el-segmented v-model="aboutIndex" :options="options">
-                <template #default="{ item }">
-                    <div style="display: flex;">
-                        <el-icon :size="16" style="margin-right: 5px;">
-                            <component :is="item.icon" />
-                        </el-icon>
-                        <div>{{ item.label }}</div>
-                    </div>
-                </template>
-            </el-segmented>
-        </template>
-        <div style="text-align: center;">
-            <about v-show="aboutIndex == 0"></about>
-            <img v-show="aboutIndex != 0" src="../assets/icon/wechat.png" style="height: 208px;">
-        </div>
-    </el-dialog>
     <!-- update -->
     <el-dialog v-model="updateDialog" title="更新通知" width="40%">
         <updateUI></updateUI>
