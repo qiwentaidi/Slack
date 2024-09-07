@@ -72,6 +72,11 @@ export var onlineOptions = [
                 url: "https://sou.xiaolanben.com/pc",
                 icon: "/navigation/xiaolanben.png"
             },
+            {
+                name: "商机宝",
+                url: "https://shangjibao.baidu.com/businessRecommand/dynamicRecommand",
+                icon: "/navigation/shangjibao.png"
+            },
         ],
     },
     {
@@ -207,6 +212,11 @@ export var onlineOptions = [
     {
         label: 'aside.en_and_de',
         value: [
+            {
+                name: "CMD5",
+                url: "https://www.cmd5.com/",
+                icon: "/navigation/cmd5.ico"
+            },
             {
                 name: "JS混淆解密",
                 url: "https://dev-coco.github.io/Online-Tools/JavaScript-Deobfuscator.html#google_vignette",

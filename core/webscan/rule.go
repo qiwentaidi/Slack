@@ -16,6 +16,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type InitConfig struct{}
+
+func NewConfig() *InitConfig {
+	return &InitConfig{}
+}
+
 var fps map[string]interface{}
 
 type FingerPEntity struct {
@@ -34,10 +40,15 @@ type RuleData struct {
 	All   string // body="123"
 }
 
-var FingerprintDB []FingerPEntity
-var ActiveFingerprintDB []FingerPEntity
+type ActiveFingerPEntity struct {
+	Path []string
+	Fpe  []FingerPEntity
+}
 
-func InitFingprintDB(ctx context.Context, fingerprintFile string) error {
+var FingerprintDB []FingerPEntity
+var ActiveFingerprintDB []ActiveFingerPEntity
+
+func (ic *InitConfig) InitFingprintDB(ctx context.Context, fingerprintFile string) error {
 	data, err := os.ReadFile(fingerprintFile)
 	if err != nil {
 		return err
@@ -62,7 +73,7 @@ func InitFingprintDB(ctx context.Context, fingerprintFile string) error {
 			}
 		}
 	} else {
-		gologger.Error(ctx, err)
+		return err
 	}
 	for productName, ruleLs := range m {
 		for _, ruleL := range ruleLs {
@@ -71,30 +82,28 @@ func InitFingprintDB(ctx context.Context, fingerprintFile string) error {
 	}
 	return nil
 }
-
-var Sensitive map[string][]string
-
-type SensitivePath struct {
-	Name string
-	Path []string
-}
-
-func InitActiveScanPath(activefingerFile string) error {
+func (ic *InitConfig) InitActiveScanPath(activefingerFile string) error {
 	data, err := os.ReadFile(activefingerFile)
 	if err != nil {
 		return err
 	}
-	Sensitive = make(map[string][]string)
-	err = yaml.Unmarshal(data, &Sensitive)
+	sensitive := make(map[string][]string)
+	err = yaml.Unmarshal(data, &sensitive)
 	if err != nil {
 		return err
 	}
-	for _, fpe := range FingerprintDB {
-		for name := range Sensitive {
+	for name, paths := range sensitive {
+		var fpes []FingerPEntity
+		for _, fpe := range FingerprintDB {
 			if fpe.ProductName == name {
-				ActiveFingerprintDB = append(ActiveFingerprintDB, fpe)
-				break
+				fpes = append(fpes, fpe)
 			}
+		}
+		if len(fpes) != 0 {
+			ActiveFingerprintDB = append(ActiveFingerprintDB, ActiveFingerPEntity{
+				Path: paths,
+				Fpe:  fpes,
+			})
 		}
 	}
 	return nil
@@ -178,7 +187,6 @@ func getRuleData(rule string) RuleData {
 			start = i + 1
 			break
 		}
-
 	}
 	key := rule[start : pos-ti]
 
@@ -388,15 +396,18 @@ func dataCheckInt(op int16, dataSource int, dataRule int) bool {
 
 var WorkFlowDB map[string][]string
 
-func InitAll(ctx context.Context, webfinger, activefinger, template string) bool {
+func (ic *InitConfig) InitAll(ctx context.Context, webfinger, activefinger, template string) bool {
 	FingerprintDB = nil
-	if err := InitFingprintDB(ctx, webfinger); err != nil {
+	if err := ic.InitFingprintDB(ctx, webfinger); err != nil {
+		gologger.Error(ctx, err)
 		return false
 	}
-	if err := InitActiveScanPath(activefinger); err != nil {
+	if err := ic.InitActiveScanPath(activefinger); err != nil {
+		gologger.Error(ctx, err)
 		return false
 	}
 	if err := GetTagsList(template); err != nil {
+		gologger.Error(ctx, err)
 		return false
 	}
 	return true

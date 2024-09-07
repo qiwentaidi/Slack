@@ -48,7 +48,7 @@
             <el-input v-model="global.proxy.address" clearable></el-input>
           </el-form-item>
           <el-form-item :label="$t('setting.port')">
-            <el-input-number v-model="global.proxy.port" :min="1" :max="65535" style="width: 220px;"></el-input-number>
+            <el-input-number v-model.number="global.proxy.port" :min="1" :max="65535" style="width: 220px;"></el-input-number>
           </el-form-item>
           <el-form-item :label="$t('setting.username')">
             <el-input v-model="global.proxy.username" clearable></el-input>
@@ -131,6 +131,9 @@
           </el-table-column>
         </el-table>
       </div>
+      <div v-show="currentDisplay == '5'">
+        <el-card>ddddocr</el-card>
+      </div>
     </el-main>
   </el-container>
   <el-drawer v-model="ctrl.innerDrawer" title="字典管理" :append-to-body="true">
@@ -176,6 +179,7 @@ import dictmanagerIcon from "@/assets/icon/dict.svg"
 import layersIcon from "@/assets/icon/layers.svg"
 import githubIcon from "@/assets/icon/github.svg"
 import aboutIcon from "@/assets/icon/about.svg"
+import scriptIcon from "@/assets/icon/script.svg"
 
 const bevigilURL = "https://bevigil.com/osint-api"
 const chaosURL = "https://cloud.projectdiscovery.io/"
@@ -266,6 +270,13 @@ const settingOption = [
       currentDisplay.value = '4'
     }
   },
+  // {
+  //   name: 'aside.script',
+  //   icon: scriptIcon,
+  //   action: () => {
+  //     currentDisplay.value = '5'
+  //   }
+  // },
   {
     name: 'aside.about',
     icon: aboutIcon,

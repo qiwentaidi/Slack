@@ -1,25 +1,28 @@
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue';
-import { InfoFilled, Search, Document, Link } from '@element-plus/icons-vue';
-import { FileDialog, CheckFileStat } from 'wailsjs/go/main/File';
+import { reactive, onMounted, ref } from 'vue';
+import { Document, Edit, Setting, UploadFilled } from '@element-plus/icons-vue';
+import resultIcon from '@/assets/icon/result.svg'
 import { ElMessage } from 'element-plus';
 import async from 'async';
 import global from '@/global';
-import { ReadLine } from '@/util';
-import { PortBrute, Callgologger } from 'wailsjs/go/main/App';
+import { Copy, ReadLine, SplitTextArea, UploadContextMenu, UploadFileAndRead } from '@/util';
+import { PortBrute, Callgologger, StopPortBrute } from 'wailsjs/go/main/App';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { BruteResult } from '@/interface';
+import usePagination from '@/usePagination';
+import { CheckFileStat, FileDialog } from 'wailsjs/go/main/File';
 
 onMounted(() => {
     EventsOn("bruteResult", (result: BruteResult) => {
         let temp = result.Host.split(":")
-        config.content.push({
+        pagination.table.result.push({
             Host: temp[0],
             Port: temp[1],
             Protocol: result.Protocol,
             Username: result.Username,
             Password: result.Password,
         })
+        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
     });
     return () => {
         EventsOff("bruteResult");
@@ -27,43 +30,34 @@ onMounted(() => {
 });
 
 const config = reactive({
-    builtIn: true,
-    association: false,
+    builtInUsername: true,
+    builtInPassword: true,
     username: '',
     password: '',
     target: '',
-    content: [] as BruteResult[],
     defaultOption: "ftp",
     input: '',
     runningStatus: false,
+    thread: 20,
 })
 
-const addTarget = () => {
+async function addTarget() {
     if (!config.input) {
         ElMessage.warning("请输入目标")
         return
     }
-    config.target += config.defaultOption + "://" + config.input
-}
-
-const placeholder2 = `e.g
-redis://10.0.0.1:6379
-mysql://10.0.0.1:3306
-`
-
-async function selectDict(input: string) {
-    let filepath = await FileDialog("*.txt")
-    if (input == "username") {
-        config.username = filepath
+    let stat = await CheckFileStat(config.input)
+    if (stat) {
+        let lines = (await ReadLine(config.input))!
+        for (const line of lines) {
+            config.target += config.defaultOption + "://" + line + "\n"
+        }
         return
     }
-    config.password = filepath
+    config.target += config.defaultOption + "://" + config.input
 }
-
 async function NewScanner() {
     let url = [] as string[]
-    let passDict = [] as string[]
-    let userDict = [] as string[]
     for (const item of config.target.split("\n")) {
         if (item.includes("://")) {
             url.push(item)
@@ -76,56 +70,38 @@ async function NewScanner() {
         })
         return
     }
-    // 非内置模式处理字典
-    if (!config.builtIn) {
-        if (config.username != "") {
-            let result = await CheckFileStat(config.username) // 文件不存在则为单用户名
-            if (!result) {
-                userDict.push(config.username)
-            } else {
-                userDict = (await ReadLine(config.username))!
-            }
-        }
-        if (config.password != "") {
-            let result = await CheckFileStat(config.password)
-            if (!result) {
-                passDict.push(config.password)
-            } else {
-                passDict = (await ReadLine(config.password))!
-            }
+    let passDict = [] as string[]
+    let userDict = [] as string[]
+    pagination.ctrl.initTable()
+    if (config.builtInUsername) {
+        for (var item of global.dict.usernames) {
+            item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
         }
     }
-    // 仅勾选联想模式
-    if (config.association) {
-        if (global.temp.thinkdict.length == 0) {
-            ElMessage({
-                message: "未生成联想字典",
-                type: "warning"
-            })
-        } else {
-            passDict.push(...global.temp.thinkdict)
+    if (config.builtInPassword) {
+        passDict = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/password/password.txt"))!
+        passDict.push("")
+    }
+    if (config.username != "") {
+        let users = SplitTextArea(config.username)
+        for (var item of global.dict.usernames) {
+            item.dic.push(...users)
         }
     }
+    if (config.password != "") {
+        let pass = SplitTextArea(config.password)
+        passDict.push(...pass)
+    }
+    ElMessage.info("任务已开始")
+    activeRef.value++
     config.runningStatus = true
-    ElMessage("开始暴破")
-    config.content = []
-    global.dict.passwords = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/password/password.txt"))!
-    for (var item of global.dict.usernames) {
-        item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
-    }
     var id = 0
-
-    async.eachLimit(url, 20, async (target: string, callback: () => void) => {
+    async.eachLimit(url, config.thread, async (target: string, callback: () => void) => {
+        if (!config.runningStatus) {
+            callback()
+        }
         let protocol = target.split("://")[0]
-        // 如果原字典不为空则采用内置字典
-        if (userDict.length == 0) {
-            userDict = global.dict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
-        }
-        if (passDict.length == 0) {
-            passDict = global.dict.passwords
-        } else {
-            passDict.push("") // 增加空密码
-        }
+        userDict = global.dict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
         Callgologger("info", target + " is start brute")
         await PortBrute(target, userDict, passDict)
         id++
@@ -134,69 +110,133 @@ async function NewScanner() {
         }
     }, (err: any) => {
         Callgologger("info", "PortBrute Finished")
-        ElMessage("爆破结束")
         config.runningStatus = false
     });
 }
 
+function stopScan() {
+    if (config.runningStatus) {
+        StopPortBrute()
+        config.runningStatus = false
+        ElMessage({
+            showClose: true,
+            message: "用户已终止任务",
+        });
+    }
+}
+
+const activeRef = ref(1)
+function NextStep() {
+    if (activeRef.value == 3) return
+    activeRef.value++
+}
+
+function Back() {
+    if (activeRef.value == 1) return
+    activeRef.value--
+}
+
+async function uploadFile() {
+    config.target = await UploadFileAndRead()
+}
+
+async function uploadUserFile() {
+    config.username = await UploadFileAndRead()
+}
+
+async function uploadPassFile() {
+    config.password = await UploadFileAndRead()
+}
+
+async function getFilepath() {
+    let path = await FileDialog("*.txt")
+    if (!path) return
+    config.input = path
+}
+
+const result = ref<BruteResult[]>([])
+
+const pagination = usePagination(result.value, 20)
+
+function checkinput() {
+    if (config.username.length == 0) {
+        config.builtInUsername = true
+    }
+    if (config.password.length == 0) {
+        config.builtInPassword = true
+    }
+}
 </script>
 
 <template>
-    <div class="my-header">
-        <div style="display: flex;">
-            <el-checkbox v-model="config.builtIn" label="内置字典" />
-            <el-checkbox v-model="config.association" label="联想模式" />
-            <el-button type="primary" link :icon="Link" style="margin-left: 10px;" v-if="config.association"
-                @click="$router.push('/Tools/Thinkdict')">跳转到联想字典生成器</el-button>
-        </div>
-        <el-tooltip placement="bottom">
-            <template #content>
-                1、使用内置字典时，账号密码输入框无效，要使用自己的字典请取消勾选使用内置字典<br />
-                2、账号密码框处支持单字段比如admin和txt字典路径，可以拖拽读取文件路径<br />
-                3、联想模式意为根据关键字段如出生年月或公司名等固定规律组成字典<br />
-                4、支持协议名: ftp、ssh、telnet、smb、oracle、mssql、mysql、rdp、vnc、redis<br />
-                postgresql、memcached、mongodb<br />
-            </template>
-            <el-button :icon="InfoFilled" link>使用须知</el-button>
-        </el-tooltip>
-        <el-button type="primary" :icon="Search" @click="NewScanner">开始暴破</el-button>
-    </div>
-    <div style="margin-top: 10px; margin-bottom: 10px;">
-        <el-input v-model="config.username" :disabled="config.builtIn" style="margin-bottom: 10px;">
-            <template #prepend>
-                账号
-            </template>
-            <template #suffix>
-                <el-button link :icon="Document" @click="selectDict('username')" :disabled="config.builtIn"></el-button>
-            </template>
-        </el-input>
-        <el-input v-model="config.password" :disabled="config.builtIn">
-            <template #prepend>
-                密码
-            </template>
-            <template #suffix>
-                <el-button link :icon="Document" @click="selectDict" :disabled="config.builtIn"></el-button>
-            </template>
-        </el-input>
-    </div>
-    <div style="display: flex ;height: 75vh;">
-        <div style="width: 30%; margin-right: 5px;">
-            <el-input v-model="config.input" placeholder="主机地址">
-                <template #prepend>
-                    <el-select v-model="config.defaultOption" style="width: 15vh;">
-                        <el-option v-for="value in global.dict.options" :label="value" :value="value" />
-                    </el-select>
-                </template>
-                <template #append>
-                    <el-button @click="addTarget">添加</el-button>
-                </template>
-            </el-input>
-            <el-input v-model="config.target" :placeholder="placeholder2" type="textarea" resize="none"
-                style="height: 94.5%;"></el-input>
-        </div>
-        <div style="width: 70%;">
-            <el-table border :data="config.content" :cell-style="{ textAlign: 'center' }"
-                :header-cell-style="{ 'text-align': 'center' }" style="width: 100%; height: 100% ;">
+    <div style="height: 100%; position: relative;">
+        <el-steps :active="activeRef" simple>
+            <el-step title="输入目标" :icon="Edit" />
+            <el-step title="设置参数" :icon="Setting" />
+            <el-step title="结果输出" :icon="resultIcon" />
+        </el-steps>
+        <div style="margin-top: 20px;"></div>
+        <el-form label-width="auto" v-show="activeRef == 1">
+            <el-form-item label="目标:">
+                <el-input v-model="config.target" placeholder="请输入目标或者右键上传
+目标仅支持换行分割
+扫描默认端口 ssh://10.0.0.1
+指定端口 redis://10.0.0.1:6380
+
+Mongodb、Memcachedb仅支持未授权检测
+" type="textarea" resize="none" @contextmenu.prevent="UploadContextMenu($event, uploadFile)"
+                    style="height: 50vh; width: 60%;"></el-input>
+            </el-form-item>
+            <el-form-item label="添加目标:">
+                <el-input v-model="config.input" placeholder="请输入主机地址或者文件路径添加目标前缀" style="width: 60%;">
+                    <template #prepend>
+                        <el-select v-model="config.defaultOption" style="width: 15vh;">
+                            <el-option v-for="value in global.dict.options" :label="value" :value="value" />
+                        </el-select>
+                    </template>
+                    <template #suffix>
+                        <el-button link :icon="Document" @click="getFilepath"></el-button>
+                    </template>
+                    <template #append>
+                        <el-button @click="addTarget">添加</el-button>
+                    </template>
+                </el-input>
+            </el-form-item>
+            <el-form-item label="复制前缀:">
+                <el-button v-for="item in global.dict.options" @click="Copy(item + '://')">{{ item }}</el-button>
+            </el-form-item>
+        </el-form>
+        <el-form label-width="auto" v-show="activeRef == 2">
+            <el-form-item label="目标并发:">
+                <el-input-number v-model="config.thread"></el-input-number>
+            </el-form-item>
+            <el-form-item label="用户字典:">
+                <el-input v-model="config.username" type="textarea" :rows="5" @input="checkinput"></el-input>
+                <div style="display: flex;">
+                    <el-checkbox v-model="config.builtInUsername"
+                        :disabled="config.username.length == 0">使用默认用户字典</el-checkbox>
+                    <el-button link type="primary" :icon="UploadFilled" @click="uploadUserFile"
+                        style="margin-inline: 10px;">
+                        上传文件
+                    </el-button>
+                    <el-tag type="info" style="margin-top: 5px;">Tips: 默认字典可通过 设置-> 字典管理处修改</el-tag>
+                </div>
+            </el-form-item>
+            <el-form-item label="密码字典:">
+                <el-input v-model="config.password" type="textarea" :rows="5" @input="checkinput"></el-input>
+                <div style="display: flex;">
+                    <el-checkbox v-model="config.builtInPassword"
+                        :disabled="config.password.length == 0">使用默认密码字典</el-checkbox>
+                    <el-button link type="primary" :icon="UploadFilled" @click="uploadPassFile"
+                        style="margin-left: 10px;">
+                        上传文件
+                    </el-button>
+                </div>
+            </el-form-item>
+        </el-form>
+        <div v-show="activeRef == 3">
+            <el-table border :data="pagination.table.pageContent" :cell-style="{ textAlign: 'center' }"
+                :header-cell-style="{ 'text-align': 'center' }" style="height: 79vh">
                 <el-table-column prop="Host" label="Host" />
                 <el-table-column prop="Port" label="Port" />
                 <el-table-column prop="Protocol" label="Protocol" />
@@ -206,6 +246,24 @@ async function NewScanner() {
                     <el-empty />
                 </template>
             </el-table>
+            <div class="my-header" style="margin-top: 5px;">
+                <el-button type="primary" @click="Back" v-show="activeRef == 3 && !config.runningStatus">上一步</el-button>
+                <el-button type="danger" @click="stopScan" v-show="config.runningStatus">结束任务</el-button>
+                <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
+                    @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+                    :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100]"
+                    :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+                    :total="pagination.table.result.length">
+                </el-pagination>
+            </div>
+        </div>
+
+
+        <div style="position: absolute; bottom: 0; right: 0;">
+            <el-button type="primary" @click="Back" v-show="activeRef == 2">上一步</el-button>
+            <el-button type="primary" @click="NextStep" v-show="activeRef == 1">下一步</el-button>
+            <el-button type="primary" @click="activeRef = 3" v-show="activeRef == 1">查看联动结果</el-button>
+            <el-button type="primary" @click="NewScanner" v-show="activeRef == 2">开始任务</el-button>
         </div>
     </div>
 </template>

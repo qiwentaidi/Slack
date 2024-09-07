@@ -3,13 +3,14 @@ import { ExportToXlsx } from '@/export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
 import { Search, ChatLineSquare, ChromeFilled, CopyDocument, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
-import { splitInt, Copy } from '@/util'
+import { splitInt, Copy, CsegmentIpv4 } from '@/util'
 import { TableTabs, HunterEntryTips, RuleForm } from "@/interface"
 import global from "@/global"
 import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/main/App'
 import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/main/Database'
 import { BrowserOpenURL } from 'wailsjs/runtime'
 import exportIcon from '@/assets/icon/doucment-export.svg'
+import csegmentIcon from '@/assets/icon/csegment.svg'
 
 const options = ({
     Server: [
@@ -174,6 +175,13 @@ const entry = ({
         }
         form.query += " && " + row.syntax
     },
+    rowClick2: function (row: any, column: any, event: Event) {
+        if (!form.query) {
+            form.query = row.Content
+            return
+        }
+        form.query += " && " + row.Content
+    },
 })
 
 const table = reactive({
@@ -199,6 +207,7 @@ const tableCtrl = ({
             currentPage: 1,
         });
         table.loading = true
+        table.acvtiveNames = newTabName
         HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
             if (result.code !== 200) {
                 switch (result.code) {
@@ -240,7 +249,6 @@ const tableCtrl = ({
                 })
             });
             tab.total = result.data.total
-            table.acvtiveNames = newTabName
             table.loading = false
         })
     },
@@ -426,6 +434,11 @@ async function CopyURL(mode: number) {
         temp = []
     }
 }
+
+function searchCsegmentIpv4(ip: string) {
+    let ipv4 = CsegmentIpv4(ip)
+    tableCtrl.addTab(`ip="${ipv4}"`)
+}
 </script>
 
 <template>
@@ -481,12 +494,12 @@ async function CopyURL(mode: number) {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="form.syntaxData" @row-click="entry.rowClick" class="hunter-keyword-search">
+                            <el-table :data="form.syntaxData" @row-click="entry.rowClick2" class="hunter-keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100">
                                     <template #default="scope">
-                                        <el-button type="text"
+                                        <el-button link
                                             @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
                                         </el-button>
                                     </template>
@@ -548,14 +561,7 @@ async function CopyURL(mode: number) {
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 66vh;">
                 <el-table-column type="index" fixed label="#" width="60px" />
-                <el-table-column prop="URL" fixed label="URL" width="200" :show-overflow-tooltip="true">
-                    <template #default="scope">
-                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)"
-                            v-show="scope.row.URL != ''" />
-                        {{ scope.row.URL }}
-                    </template>
-
-                </el-table-column>
+                <el-table-column prop="URL" fixed label="URL" width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" fixed label="IP" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Port" fixed label="端口/服务" width="120">
                     <template #default="scope">
@@ -591,6 +597,19 @@ async function CopyURL(mode: number) {
                 <el-table-column prop="ISP" label="运营商" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="120" :show-overflow-tooltip="true" />
                 <el-table-column prop="UpdateTime" label="更新时间" width="150" :show-overflow-tooltip="true" />
+                <el-table-column fixed="right" label="操作" width="100" align="center">
+                    <template #default="scope">
+                        <el-tooltip content="打开链接" placement="top">
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" />
+                        </el-tooltip>
+                        <el-divider direction="vertical" />
+                        <el-tooltip content="C段查询" placement="top">
+                            <el-button link :icon="csegmentIcon"
+                                @click.prevent="searchCsegmentIpv4(scope.row.IP)">
+                            </el-button>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>

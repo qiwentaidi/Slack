@@ -9,6 +9,7 @@ import (
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
+	"sync"
 	"time"
 
 	"strconv"
@@ -231,6 +232,8 @@ func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) 
 	return
 }
 
+var me sync.RWMutex
+
 func CheckKeyMap(ctx context.Context, query string) structs.TycCompanyInfo {
 	if _, ok := TycKeyMap[query]; !ok {
 		companyId, fuzzName := GetCompanyID(ctx, query) // 获得到一个模糊匹配后，关联度最高的名称
@@ -238,10 +241,12 @@ func CheckKeyMap(ctx context.Context, query string) structs.TycCompanyInfo {
 			var isFuzz = fmt.Sprintf("天眼查模糊匹配名称为%v ——> %v,已替换原有名称进行查.", query, fuzzName)
 			gologger.Info(ctx, isFuzz)
 		}
+		me.Lock()
 		TycKeyMap[query] = structs.TycCompanyInfo{
 			CompanyName: fuzzName,
 			CompanyId:   companyId,
 		}
+		me.Unlock()
 	}
 	return TycKeyMap[query]
 }

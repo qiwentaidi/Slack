@@ -48,6 +48,7 @@ export default {
         'workflow': '工作流',
         'isic': '互联网敏感信息采集',
         'poc_manage': 'Poc管理',
+        'script': '脚本管理',
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

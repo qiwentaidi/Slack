@@ -399,7 +399,6 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 			addresses <- portscan.Address{IP: temp[0], Port: port}
 		}
 	}()
-
 	portscan.TcpScan(a.ctx, addresses, thread, timeout)
 }
 func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint16) {
@@ -411,7 +410,9 @@ func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint1
 		// Generate addresses from ips and ports
 		for _, ip := range ips {
 			for _, port := range ports {
-				addresses <- portscan.Address2{IP: net.IP(ip), Port: port}
+				addr := portscan.Address2{IP: net.IP(ip), Port: port}
+				fmt.Printf("addr: %v\n", addr)
+				addresses <- addr
 			}
 		}
 		// Generate addresses from special targets
@@ -433,7 +434,12 @@ func (a *App) StopPortScan() {
 
 // 端口暴破
 func (a *App) PortBrute(host string, usernames, passwords []string) {
+	portscan.ExitBruteFunc = false
 	portscan.PortBrute(a.ctx, host, usernames, passwords)
+}
+
+func (a *App) StopPortBrute() {
+	portscan.ExitBruteFunc = true
 }
 
 // fofa
@@ -497,10 +503,17 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
 
 // 仅在执行时调用一次
 func (a *App) InitRule() bool {
-	return webscan.InitAll(a.ctx, a.webfingerFile, a.activefingerFile, a.templateDir)
+	ic := webscan.NewConfig()
+	return ic.InitAll(a.ctx, a.webfingerFile, a.activefingerFile, a.templateDir)
 }
 
 // webscan
+
+// 在经过前端输入校验后，url.Parse肯定不会出现error
+func (a *App) URLParse(rawURL string) *url.URL {
+	u, _ := url.Parse(rawURL)
+	return u
+}
 
 func (a *App) FingerprintList() []string {
 	var fingers []string
@@ -510,33 +523,40 @@ func (a *App) FingerprintList() []string {
 	return fingers
 }
 
-func (a *App) FingerScan(target []string, proxy clients.Proxy) {
-	fs := webscan.NewFingerScanner(a.ctx, target, proxy)
-	fs.NewFingerScan()
-}
-
-func (a *App) ActiveFingerScan(target []string, proxy clients.Proxy) {
-	fs := webscan.NewFingerScanner(a.ctx, target, proxy)
-	fs.NewActiveFingerScan()
-}
-
-// 在漏扫开始时，需要轮询结果
-// mode = 0  表示扫指纹漏洞， mode = 1 表示扫全漏洞
-func (a *App) NucleiScanner(mode int, target string, tags []string, nucleiPath string, interactsh bool, customTags []string, severity string) {
-	nc := webscan.NewNucleiCaller(nucleiPath, interactsh, severity)
-	nc.ReportDirStat()
-	if mode == 0 {
-		nc.CallerFP(a.ctx, webscan.FingerPoc{
-			URL:  target,
-			Tags: tags,
-		})
-	} else {
-		nc.CallerAP(a.ctx, target, customTags)
+func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, deepScan, rootPath, callNuclei bool, o webscan.NucleiOption) {
+	s := webscan.NewFingerScanner(a.ctx, target, proxy, thread, deepScan, rootPath)
+	s.NewFingerScan()
+	if deepScan {
+		s.NewActiveFingerScan(rootPath)
+	}
+	if callNuclei {
+		nc := webscan.NewNucleiCaller(o.Engine, o.Interactsh, o.Severity, o.Proxy)
+		nc.ReportDirStat()
+		gologger.Info(a.ctx, "正在进行漏洞扫描 ...")
+		// mode = 0  表示扫指纹漏洞， mode = 1 表示扫全漏洞
+		switch o.Mode {
+		case 1:
+			for target := range s.URLWithFingerprintMap() {
+				err := nc.CallerAP(a.ctx, target, o.CustomTags)
+				gologger.Error(a.ctx, err)
+			}
+		default:
+			for target, tags := range s.URLWithFingerprintMap() {
+				err := nc.CallerFP(a.ctx, webscan.FingerPoc{
+					URL:  target,
+					Tags: util.RemoveDuplicates(tags),
+				})
+				gologger.Error(a.ctx, err)
+			}
+		}
+		gologger.Info(a.ctx, "漏洞扫描已结束 ...")
 	}
 }
 
 func (a *App) NucleiEnabled(nucleiPath string) bool {
-	nc := webscan.NewNucleiCaller(nucleiPath, false, "")
+	nc := webscan.NewNucleiCaller(nucleiPath, false, "", clients.Proxy{
+		Enabled: false,
+	})
 	return nc.Enabled(a.ctx)
 }
 

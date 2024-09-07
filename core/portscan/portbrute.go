@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -14,6 +15,8 @@ type Burte struct {
 	Username string
 	Password string
 }
+
+var ExitBruteFunc = false
 
 func WrapperTcpWithTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
 	d := &net.Dialer{Timeout: timeout}
@@ -29,11 +32,37 @@ func WrapperTCP(network, address string, forward *net.Dialer) (net.Conn, error) 
 	return conn, nil
 }
 
+var DefaultPorts = map[string]string{
+	"ftp":        "21",
+	"ssh":        "22",
+	"telnet":     "23",
+	"smb":        "445", // SMB 通常使用445端口
+	"oracle":     "1521",
+	"mssql":      "1433",
+	"mysql":      "3306",
+	"rdp":        "3389",
+	"postgresql": "5432",
+	"vnc":        "5900",
+	"redis":      "6379",
+	"memcached":  "11211",
+	"mongodb":    "27017",
+}
+
+// AddDefaultPort 检查并为给定的主机添加默认端口号
+func AddDefaultPort(scheme, host string) string {
+	if strings.Contains(host, ":") {
+		return host
+	}
+	defaultPort := DefaultPorts[scheme]
+	return host + ":" + defaultPort
+}
+
 func PortBrute(ctx context.Context, host string, usernames, passwords []string) {
 	u, err := url.Parse(host)
 	if err != nil {
 		return
 	}
+	u.Host = AddDefaultPort(u.Scheme, u.Host)
 	switch u.Scheme {
 	case "ftp":
 		FtpScan(ctx, u.Host, usernames, passwords)

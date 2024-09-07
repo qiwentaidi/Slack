@@ -2,7 +2,7 @@ package crack
 
 import "testing"
 
-func TestXxx(t *testing.T) {
+func TestCheckLogin(t *testing.T) {
 	s1 := Steps{
 		Xpath: `//*[@id="loginForm"]/fieldset/div[2]/input`,
 		Dict:  []string{"druid", "admin"},

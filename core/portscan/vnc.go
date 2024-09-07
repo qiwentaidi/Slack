@@ -13,6 +13,9 @@ import (
 
 func VncScan(ctx context.Context, host string, passwords []string) {
 	for _, pass := range passwords {
+		if ExitBruteFunc {
+			return
+		}
 		pass = strings.Replace(pass, "{user}", "vnc", -1)
 		flag, err := VncConn(host, pass)
 		if flag && err == nil {

@@ -1,14 +1,11 @@
 <script lang="ts" setup>
-import { reactive, h } from 'vue'
+import { reactive } from 'vue'
 import { ExtractIP, Fscan2Txt, IpLocation } from 'wailsjs/go/main/App'
-import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
-import { Search, QuestionFilled, Location, UploadFilled } from '@element-plus/icons-vue';
-import { ElMessage, ElNotification } from 'element-plus';
-import { File } from '@/interface';
+import { Search, QuestionFilled, Location } from '@element-plus/icons-vue';
+import { ElNotification } from 'element-plus';
 import extractIcon from '@/assets/icon/extract.svg'
-import { SplitTextArea } from '@/util';
+import { SplitTextArea, UploadContextMenu, UploadFileAndRead } from '@/util';
 import async from 'async';
-import ContextMenu from '@imengyu/vue3-context-menu'
 
 const form = reactive({
     result: '',
@@ -27,19 +24,7 @@ function FscanExtract() {
 }
 
 async function uploadFile() {
-    let filepath = await FileDialog("*.txt")
-    if (!filepath) {
-        return
-    }
-    let file: File = await ReadFile(filepath)
-    if (file.Error) {
-        ElMessage({
-            type: "warning",
-            message: file.Message
-        })
-        return
-    }
-    form.input = file.Content!
+    form.input = await UploadFileAndRead()
 }
 
 function Deduplication() {
@@ -124,30 +109,6 @@ const appControl = [
         },
     },
 ]
-
-function onContextMenu(e: MouseEvent) {
-    //prevent the browser's default menu
-    e.preventDefault();
-    //show your menu
-    ContextMenu.showContextMenu({
-        x: e.x,
-        y: e.y,
-        items: [
-            {
-                label: "上传文件",
-                icon: h(UploadFilled, {
-                    style: {
-                        width: '16px',
-                        height: '16px',
-                    }
-                }),
-                onClick: () => {
-                    uploadFile()
-                }
-            },
-        ]
-    });
-}
 </script>
 
 
@@ -157,7 +118,7 @@ function onContextMenu(e: MouseEvent) {
             <el-form label-width="50px">
                 <el-form-item label="内容">
                     <el-input v-model="form.input" type="textarea" :rows="7" placeholder='请输入内容或者右键上传文件'
-                        @contextmenu.prevent="onContextMenu($event)" />
+                        @contextmenu.prevent="UploadContextMenu($event, uploadFile)" />
                 </el-form-item>
                 <el-form-item label="结果">
                     <el-input v-model="form.result" type="textarea" :rows="15" />

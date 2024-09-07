@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { Close, Minus, Search, Back, Right } from '@element-plus/icons-vue';
-import { Quit, WindowMinimise, WindowToggleMaximise } from "wailsjs/runtime/runtime";
+import { Close, Minus, Search, Back, Right, RefreshRight } from '@element-plus/icons-vue';
+import { Quit, WindowMinimise, WindowReload, WindowToggleMaximise } from "wailsjs/runtime/runtime";
 import { IsMacOS } from "wailsjs/go/main/File";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import global from "@/global";
@@ -68,6 +68,13 @@ const routerControl = [
         icon: Right,
         action: () => {
             window.history.forward();
+        }
+    },
+    {
+        label: "刷新",
+        icon: RefreshRight,
+        action: () => {
+            WindowReload()
         }
     },
 ]

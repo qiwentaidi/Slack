@@ -15,6 +15,9 @@ import (
 func SshScan(ctx context.Context, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
+			if ExitBruteFunc {
+				return
+			}
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := SshConn(host, user, pass)
 			if flag && err == nil {

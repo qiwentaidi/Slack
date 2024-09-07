@@ -28,6 +28,11 @@ func RdpScan(ctx context.Context, host string, usernames, passwords []string) {
 	limiter := make(chan bool, 10) // 限制协程数量
 	for _, user := range usernames {
 		for _, pass := range passwords {
+			if ExitBruteFunc {
+				close(limiter)
+				wg.Wait()
+				return
+			}
 			pass = strings.Replace(pass, "{user}", string(user), -1)
 			wg.Add(1)
 			limiter <- true

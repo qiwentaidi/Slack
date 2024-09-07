@@ -7,9 +7,9 @@ import {dirsearch} from '../models';
 import {space} from '../models';
 import {isic} from '../models';
 import {jsfind} from '../models';
+import {webscan} from '../models';
 import {info} from '../models';
-
-export function ActiveFingerScan(arg1:Array<string>,arg2:clients.Proxy):Promise<void>;
+import {url} from '../models';
 
 export function AlibabaNacos(arg1:string,arg2:string,arg3:number,arg4:string,arg5:string,arg6:string,arg7:string,arg8:clients.Proxy):Promise<string>;
 
@@ -30,8 +30,6 @@ export function DownloadCyberChef(arg1:string):Promise<void>;
 export function ExtractIP(arg1:string):Promise<string>;
 
 export function FaviconMd5(arg1:string):Promise<string>;
-
-export function FingerScan(arg1:Array<string>,arg2:clients.Proxy):Promise<void>;
 
 export function FingerprintList():Promise<Array<string>>;
 
@@ -83,9 +81,9 @@ export function NewSynScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<n
 
 export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>,arg4:number,arg5:number):Promise<void>;
 
-export function NucleiEnabled(arg1:string):Promise<boolean>;
+export function NewWebScanner(arg1:Array<string>,arg2:clients.Proxy,arg3:number,arg4:boolean,arg5:boolean,arg6:boolean,arg7:webscan.NucleiOption):Promise<void>;
 
-export function NucleiScanner(arg1:number,arg2:string,arg3:Array<string>,arg4:string,arg5:boolean,arg6:Array<string>,arg7:string):Promise<void>;
+export function NucleiEnabled(arg1:string):Promise<boolean>;
 
 export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Promise<void>;
 
@@ -99,6 +97,8 @@ export function Sock5Connect(arg1:string,arg2:number,arg3:number,arg4:string,arg
 
 export function StopDirScan():Promise<void>;
 
+export function StopPortBrute():Promise<void>;
+
 export function StopPortScan():Promise<void>;
 
 export function StopSubdomain():Promise<void>;
@@ -110,6 +110,8 @@ export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number):Prom
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
 
 export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string,arg8:Array<string>):Promise<Array<string>>;
+
+export function URLParse(arg1:string):Promise<url.URL>;
 
 export function UncoverSearch(arg1:string,arg2:string,arg3:number,arg4:structs.SpaceOption):Promise<Array<space.Result>>;
 

@@ -26,6 +26,9 @@ func RedisScan(ctx context.Context, host string, passwords []string) {
 		gologger.Info(ctx, fmt.Sprintf("redis://%s is no unauthorized access", host))
 	}
 	for _, pass := range passwords {
+		if ExitBruteFunc {
+			return
+		}
 		pass = strings.Replace(pass, "{user}", "redis", -1)
 		flag, err := RedisConn(host, pass)
 		if flag && err == nil {

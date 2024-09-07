@@ -12,32 +12,39 @@
 </p>
 
 
+# 支持的平台
+
+- Windows 10/11 AMD64/ARM64
+- MacOS 10.13+ AMD64
+- MacOS 11.0+ ARM64
+- Linux AMD64/ARM64
 
 # 运行代码
 
 ## 安装依赖
 
-- **Go 1.20+**
-- **Node.js 16+**
-- **Wails 2.9+** 
-  - `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- Go 1.20+
+- Node.js 16+
+- Wails 2.9+  `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
 
-### Linux/Debian
+### Linux
 
-- **build-essential**
-- **libgtk-3-dev**
-- **libpcap-dev**
-- **libwebkit2gtk-4.0-dev or libwebkit2gtk-4.1-dev**
-  - 安装`libwebkit2gtk-4.1-dev`编译应用时需要增加 `-tags webkit2_41`
+- build-essential
+- libgtk-3-dev
+- libpcap-dev
+- libwebkit2gtk-4.0-dev or libwebkit2gtk-4.1-dev
+
+> [!NOTE]
+>
+> 新版`Linux`安装`libwebkit2gtk-4.1-dev`编译应用时需要增加 `-tags webkit2_41`
 
 ### Windows
 
-- **Gcc**
-  - `https://github.com/niXman/mingw-builds-binaries/releases`
+- [gcc](https://github.com/niXman/mingw-builds-binaries/releases)
 
 ### Mac
 
-- **xcode-select**
+- xcode-select（已默认安装）
 
 ## 编译/调试
 

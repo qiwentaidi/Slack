@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, CopyDocument, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
-import { SplitTextArea, validateIP, validateDomain, splitInt, Copy } from '@/util'
+import { SplitTextArea, validateIP, validateDomain, splitInt, Copy, CsegmentIpv4 } from '@/util'
 import { FofaResult, DefaultKeyValue, RuleForm, TableTabs } from "@/interface"
 import { ExportToXlsx } from '@/export'
 import { FofaTips, FofaSearch, IconHash } from 'wailsjs/go/main/App'
@@ -10,6 +10,7 @@ import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus';
 import global from "@/global"
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
+import csegmentIcon from '@/assets/icon/csegment.svg'
 
 const form = reactive({
     query: '',
@@ -139,6 +140,13 @@ const syntax = ({
         }
         form.query += " && " + row.key
     },
+    rowClick2: function (row: any, column: any, event: Event) {
+        if (!form.query) {
+            form.query = row.Content
+            return
+        }
+        form.query += " && " + row.Content
+    },
     starDialog: ref(false),
     rules: reactive<FormRules<RuleForm>>({
         name: [
@@ -243,11 +251,11 @@ const tableCtrl = ({
             pageSize: 100,
             currentPage: 1,
         });
+        table.acvtiveNames = newTabName
         form.tips = result.Message!
         const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
         tab.content = result.Results!;
         tab.total = result.Size!
-        table.acvtiveNames = newTabName
         table.loading = false
     },
     removeTab: (targetName: string) => {
@@ -372,7 +380,10 @@ async function SaveData(mode: number) {
 
 function getColumnData(prop: string): any[] {
     const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-    let protocols = new Set(tab.content!.map((item: any) => item[prop]));
+    if (tab.content == null || tab.content == undefined) {
+        return []
+    }
+    let protocols = new Set(tab.content.map((item: any) => item[prop]));
     let newArray = Array.from(protocols).map(protocol => ({ text: protocol, value: protocol }))
     return newArray
 }
@@ -424,6 +435,11 @@ async function CopyDeduplicationURL() {
 
 function formatProduct(raw: string): string[] {
     return !raw ? [] : raw.split(",")
+}
+
+function searchCsegmentIpv4(ip: string) {
+    let ipv4 = CsegmentIpv4(ip)
+    tableCtrl.addTab(`ip="${ipv4}"`)
 }
 </script>
 
@@ -508,13 +524,13 @@ function formatProduct(raw: string): string[] {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="form.syntaxData" @row-click="syntax.rowClick"
+                            <el-table :data="form.syntaxData" @row-click="syntax.rowClick2"
                                 class="hunter-keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100">
                                     <template #default="scope">
-                                        <el-button type="text"
+                                        <el-button link
                                             @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
                                         </el-button>
                                     </template>
@@ -561,15 +577,8 @@ function formatProduct(raw: string): string[] {
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: 67vh;">
-                <el-table-column type="index" label="#" width="60px" />
-                <el-table-column prop="URL" label="URL" width="300" :show-overflow-tooltip="true">
-                    <template #default="scope">
-                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)"
-                            v-show="scope.row.URL != ''">
-                        </el-button>
-                        {{ scope.row.URL }}
-                    </template>
-                </el-table-column>
+                <el-table-column type="index" fixed label="#" width="60px" />
+                <el-table-column prop="URL" fixed label="URL" width="300" :show-overflow-tooltip="true" />
                 <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
                     :filter-method="filterHandlerTitle" width="200" :show-overflow-tooltip="true">
                     <template #filter-icon>
@@ -610,6 +619,19 @@ function formatProduct(raw: string): string[] {
                 </el-table-column>
                 <el-table-column prop="Region" label="地区" width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="ICP" label="备案号" width="150" :show-overflow-tooltip="true" />
+                <el-table-column fixed="right" label="操作" width="100" align="center">
+                    <template #default="scope">
+                        <el-tooltip content="打开链接" placement="top">
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" />
+                        </el-tooltip>
+                        <el-divider direction="vertical" />
+                        <el-tooltip content="C段查询" placement="top">
+                            <el-button link :icon="csegmentIcon"
+                                @click.prevent="searchCsegmentIpv4(scope.row.IP)">
+                            </el-button>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>

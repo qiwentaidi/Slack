@@ -48,6 +48,7 @@ export default {
         'workflow': 'Workflow',
         'isic': 'Internet Info Collection',
         'poc_manage': 'Poc Management',
+        'script': 'Script',
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

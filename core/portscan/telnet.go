@@ -17,6 +17,9 @@ func TelenetScan(ctx context.Context, host string, usernames, passwords []string
 	serverType := getTelnetServerType(h, p)
 	for _, user := range usernames {
 		for _, pass := range passwords {
+			if ExitBruteFunc {
+				return
+			}
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := TelnetConn(h, user, pass, p, serverType)
 			if flag && err == nil {

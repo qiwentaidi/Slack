@@ -51,11 +51,6 @@ const MenuList = [
       icon: "OfficeBuilding",
       children: [
         {
-          name: "aside.workflow",
-          path: "/Workflow",
-          icon: "/app/workflow.png",
-        },
-        {
           name: "aside.asset_from_company",
           path: "/Company",
           icon: "/app/company.png",

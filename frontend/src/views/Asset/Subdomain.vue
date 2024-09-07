@@ -42,7 +42,6 @@ onMounted(() => {
 });
 
 const runnerOptions = [
-
     {
         label: "枚举模式",
         value: 0,
@@ -219,7 +218,7 @@ const CopyDomains = () => {
             <el-space>
                 <el-tag>子域字典大小:{{ config.subs.length }}</el-tag>
                 <el-tag>线程:{{ config.thread }}</el-tag>
-                <el-tag type="info">tips: 运行状态可通过右上角运行日志查看</el-tag>
+                <el-tag type="info">Tips: 运行状态可通过右上角运行日志查看</el-tag>
             </el-space>
             <el-dropdown style="margin-left: auto;">
                 <el-button :icon="Menu" text bg />

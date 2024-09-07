@@ -139,8 +139,6 @@ func Scan(ctx context.Context, url string, header map[string]string, o Options, 
 	bodyLengthMap[resp.Status]++
 	if bodyLengthMap[resp.Status] > o.BodyLengthExcludeTimes {
 		result.Status = 1
-		mutex.Unlock()
-		return result
 	}
 	mutex.Unlock()
 	result.Body = string(body)

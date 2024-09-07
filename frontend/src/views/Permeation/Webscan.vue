@@ -1,27 +1,26 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref } from 'vue'
+import { reactive, onMounted, ref, h } from 'vue'
 import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, RefreshRight, Menu, Promotion, Filter } from '@element-plus/icons-vue';
 import {
     InitRule,
     FofaSearch,
     FingerprintList,
-    FingerScan,
-    ActiveFingerScan,
-    NucleiScanner,
+    NewWebScanner,
     GetFingerPocMap,
     Callgologger,
     Kill,
 } from 'wailsjs/go/main/App'
-import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
-import { formatURL, TestProxy, Copy, CopyALL, deduplicateUrlFingerMap, transformArrayFields, TestNuclei } from '@/util'
+import { formatURL2, TestProxy, Copy, CopyALL, transformArrayFields, TestNuclei } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { URLFingerMap, Vulnerability, FingerprintTable, FofaResult } from '@/interface';
+import { Vulnerability, FingerprintTable, FofaResult, NulceiOptions } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import { LinkDirsearch, LinkHunter } from '@/linkage';
+import ContextMenu from '@imengyu/vue3-context-menu'
+import { defaultIconSize } from '@/stores/style';
 
 // 初始化时调用
 onMounted(async () => {
@@ -61,6 +60,7 @@ const fingerOptions = ref<{ label: string, value: string }[]>([])
 
 onMounted(() => {
     EventsOn("nucleiResult", (result: any) => {
+        console.log(result)
         const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
         dashboard.riskLevel[riskLevelKey]++;
         vp.table.result.push({
@@ -81,10 +81,6 @@ onMounted(() => {
         if (result.StatusCode == 0) {
             dashboard.reqErrorURLs.push(result.URL)
         } else {
-            global.temp.urlFingerMap.push({
-                url: result.URL,
-                finger: result.Fingerprints
-            })
             fp.table.result.push({
                 url: result.URL,
                 status: result.StatusCode,
@@ -157,6 +153,7 @@ const form = reactive({
     query: '',
     runnningStatus: false,
     noInteractsh: false,
+    rootPathScan: true,
 })
 
 const detailDialog = ref(false)
@@ -169,9 +166,15 @@ function validateInput() {
         /^(http:\/\/|https:\/\/)?([a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})*)(?::\d{1,5})?(?:.*)/, // www.baidu.com
     ];
     const lines = form.url.split('\n');
-    return lines.every(line =>
-        ipPatterns.some(pattern => pattern.test(line.trim()))
-    );
+    return lines.every(line => {
+        const trimmedLine = line.trim();
+        // 允许空行，跳过空行的验证
+        if (trimmedLine === '') {
+            return true;
+        }
+        // 对非空行进行正则匹配
+        return ipPatterns.some(pattern => pattern.test(trimmedLine));
+    });
 }
 
 let fp = usePagination(form.fingerResult, 50)
@@ -188,7 +191,7 @@ async function startScan() {
         return
     }
     ws.init()
-    await ws.infoScanner()
+    await ws.RunScanner()
 }
 
 function stopScan() {
@@ -217,12 +220,12 @@ class Scanner {
         dashboard.currentModule = ""
         form.runnningStatus = true
     }
-    public async infoScanner() {
+    public async RunScanner() {
         // 检查先行条件
         if (!await TestProxy(1)) {
             return
         }
-        this.urls = Array.from(new Set(await formatURL(form.url))) // 处理目标
+        this.urls = await formatURL2(form.url) // 处理目标
         dashboard.count = this.urls.length
         if (this.urls.length == 0) {
             ElMessage({
@@ -236,43 +239,32 @@ class Scanner {
         // 指纹扫描      
         Callgologger("info", `网站扫描任务已加载, 当前目标数量: ${this.urls.length}，当前扫描模式: ${dashboard.currentModule}`)
         Callgologger("info", '正在进行指纹扫描 ...')
-        let count = 0
         let mode = 0
-        await FingerScan(this.urls, global.proxy)
-        if (form.currentModule == 1 || form.currentModule == 2) {
+        let deepScan = false
+        let callNuclei = false
+        if (form.currentModule != 0) {
+            deepScan = true
             global.temp.currentPid = 0
-            const urlArray: string[] = global.temp.urlFingerMap.map(item => item.url);
-            Callgologger("info", '正在进行主动指纹探测 ...')
-            await ActiveFingerScan(urlArray, global.proxy)
         }
         if (form.currentModule == 2 || form.currentModule == 3) {
+            callNuclei = true
             if (form.currentModule == 3) {
                 mode = 1
             }
-            Callgologger("info", `正在进行${dashboard.currentModule} ...`)
-            async.eachLimit(deduplicateUrlFingerMap(global.temp.urlFingerMap), 10, async (ufm: URLFingerMap, callback: () => void) => {
-                if (!form.runnningStatus) {
-                    return
-                }
-                if (ufm.finger.length == 0) {
-                    return
-                }
-                await NucleiScanner(mode, ufm.url, ufm.finger, global.webscan.nucleiEngine, form.noInteractsh, form.tags, form.risk.join(","))
-                count++
-                if (count == global.temp.urlFingerMap.length) {
-                    callback()
-                }
-            }, () => {
-                Callgologger("info", "漏洞扫描已扫描结束")
-                this.done()
-                form.runnningStatus = false
-            })
-        } else {
-            Callgologger("info", "漏洞扫描已扫描结束")
-            this.done()
-            form.runnningStatus = false
         }
 
+        let option: NulceiOptions = {
+            Mode: mode,
+            CustomTags: form.tags,
+            Engine: global.webscan.nucleiEngine,
+            Risk: form.risk.join(","),
+            Interactsh: form.noInteractsh,
+            Proxy: global.proxy
+        }
+
+        await NewWebScanner(this.urls, global.proxy, form.thread ,deepScan, form.rootPathScan, callNuclei, option)
+        this.done()
+        form.runnningStatus = false
     }
     public async done() {
         ElNotification.success({
@@ -305,7 +297,7 @@ const uncover = {
             form.url = urls.join("\n")
         }
     },
-    
+
 }
 
 function filterHandlerSeverity(value: string, row: any): boolean {
@@ -335,6 +327,54 @@ function transformedResult() {
         vulURL,
         extInfo,
     }))
+}
+
+function handleContextMenu(row: any, column: any, e: MouseEvent) {
+    //prevent the browser's default menu
+    e.preventDefault();
+    //show our menu
+    ContextMenu.showContextMenu({
+        x: e.x,
+        y: e.y,
+        items: [
+            {
+                label: "复制链接",
+                icon: h(CopyDocument, defaultIconSize),
+                onClick: () => {
+                    Copy(row.url)
+                }
+            },
+            {
+                label: "打开链接",
+                icon: h(ChromeFilled, defaultIconSize),
+                divided: true,
+                onClick: () => {
+                    BrowserOpenURL(row.url)
+                }
+            },
+            {
+                label: "联动目录扫描",
+                icon: h(Promotion, defaultIconSize),
+                onClick: () => {
+                    LinkDirsearch(row.url)
+                }
+            },
+        ]
+    });
+}
+
+function BatchBrowserOpenURL() {
+    const selectRows = JSON.parse(JSON.stringify(fp.table.selectRows));
+    let targets = selectRows.map((item: any) => item.url)
+    for (const item of targets) {
+        BrowserOpenURL(item)
+    }
+}
+
+function BatchCopyURL() {
+    const selectRows = JSON.parse(JSON.stringify(fp.table.selectRows));
+    let targets = selectRows.map((item: any) => item.url)
+    CopyALL(targets)
 }
 </script>
 
@@ -392,33 +432,13 @@ function transformedResult() {
             </el-row>
         </el-card>
         <div style="position: relative; margin-top: 10px;">
-            <el-tabs type="card">
+            <el-tabs type="border-card">
                 <el-tab-pane label="指纹">
-                    <el-table :data="fp.table.pageContent" border stripe height="100vh"
-                        :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
-                        <el-table-column fixed type="index" label="#" width="60px" />
-                        <el-table-column fixed prop="url" label="URL" width="300px" :show-overflow-tooltip="true">
-                            <template #default="scope">
-                                <!-- 设置el-dropdown后会导致元素偏移，需要div重新定位 -->
-                                <div class="cell-content">
-                                    <el-dropdown :hide-on-click="false" trigger="click">
-                                        <el-link :underline="false">{{ scope.row.url }}</el-link>
-                                        <template #dropdown>
-                                            <el-dropdown-menu>
-                                                <el-dropdown-item :icon="CopyDocument"
-                                                    @click="Copy(scope.row.url)">复制</el-dropdown-item>
-                                                <el-dropdown-item :icon="ChromeFilled"
-                                                    @click="BrowserOpenURL(scope.row.url)">打开链接</el-dropdown-item>
-                                                <el-dropdown-item :icon="Promotion"
-                                                    @click="LinkDirsearch(scope.row.url)"
-                                                    divided>联动目录扫描</el-dropdown-item>
-                                                <!-- <el-dropdown-item :icon="Promotion" @click="">联动JSFinder</el-dropdown-item> -->
-                                            </el-dropdown-menu>
-                                        </template>
-                                    </el-dropdown>
-                                </div>
-                            </template>
-                        </el-table-column>
+                    <el-table :data="fp.table.pageContent" stripe height="100vh"
+                        @selection-change="fp.ctrl.handleSelectChange" :cell-style="{ textAlign: 'center' }"
+                        :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleContextMenu">
+                        <el-table-column type="selection" width="55px" />
+                        <el-table-column fixed prop="url" label="URL" width="300px" :show-overflow-tooltip="true" />
                         <el-table-column prop="status" width="100px" label="Code"
                             :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
                             :show-overflow-tooltip="true" />
@@ -450,7 +470,7 @@ function transformedResult() {
                     </el-table>
                     <div class="my-header" style="margin-top: 5px;">
                         <div></div>
-                        <el-pagination background @size-change="fp.ctrl.handleSizeChange"
+                        <el-pagination size="small" background @size-change="fp.ctrl.handleSizeChange"
                             @current-change="fp.ctrl.handleCurrentChange" :pager-count="5"
                             :current-page="fp.table.currentPage" :page-sizes="[50, 100, 200]"
                             :page-size="fp.table.pageSize" layout="total, sizes, prev, pager, next"
@@ -459,8 +479,8 @@ function transformedResult() {
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="漏洞">
-                    <el-table :data="vp.table.pageContent" stripe border height="100vh"
-                        :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
+                    <el-table :data="vp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
+                        :header-cell-style="{ 'text-align': 'center' }">
                         <el-table-column prop="vulID" label="Template" width="250px" :show-overflow-tooltip="true" />
                         <el-table-column prop="severity" width="150px" label="Severity"
                             :filter-method="filterHandlerSeverity" :filters="[
@@ -477,7 +497,7 @@ function transformedResult() {
                                 <span :class="getClassBySeverity(scope.row.severity)">{{ scope.row.severity }}</span>
                             </template>
                         </el-table-column>
-                        <el-table-column prop="vulURL" label="URL" :show-overflow-tooltip="true" />
+                        <el-table-column prop="vulURL" label="URL" />
                         <el-table-column label="操作" width="120px">
                             <template #default="scope">
                                 <el-button type="primary" link @click="detailDialog = true; selectedRow = scope.row">
@@ -491,7 +511,7 @@ function transformedResult() {
                     </el-table>
                     <div class="my-header" style="margin-top: 5px;">
                         <div></div>
-                        <el-pagination background @size-change="vp.ctrl.handleSizeChange"
+                        <el-pagination size="small" background @size-change="vp.ctrl.handleSizeChange"
                             @current-change="vp.ctrl.handleCurrentChange" :pager-count="5"
                             :current-page="vp.table.currentPage" :page-sizes="[50, 100, 200]"
                             :page-size="vp.table.pageSize" layout="total, sizes, prev, pager, next"
@@ -502,7 +522,7 @@ function transformedResult() {
             </el-tabs>
             <el-space class="custom_eltabs_titlebar" :size="5">
 
-                <el-button :icon="RefreshRight" text bg type="danger" @click="TestNuclei()"
+                <el-button :icon="RefreshRight" text type="danger" @click="TestNuclei()"
                     v-show="!global.temp.nucleiEnabled">Reload
                     Engine</el-button>
 
@@ -512,7 +532,10 @@ function transformedResult() {
                         <el-dropdown-menu>
                             <el-dropdown-item @click="CopyALL(dashboard.reqErrorURLs)"
                                 :icon="CopyDocument">复制全部失败目标</el-dropdown-item>
-                            <el-dropdown-item :icon="exportIcon"
+                            <el-dropdown-item @click="BatchCopyURL()" :icon="CopyDocument">复制选中目标</el-dropdown-item>
+                            <el-dropdown-item @click="BatchBrowserOpenURL" :icon="ChromeFilled"
+                                divided>打开选中目标</el-dropdown-item>
+                            <el-dropdown-item :icon="exportIcon" divided
                                 @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformedResult())">
                                 导出Excel</el-dropdown-item>
                         </el-dropdown-menu>
@@ -522,7 +545,7 @@ function transformedResult() {
         </div>
     </el-scrollbar>
 
-    <el-drawer v-model="form.newscanner" size="48%">
+    <el-drawer v-model="form.newscanner" size="50%">
         <template #header>
             <h4>新建扫描任务</h4>
             <el-button link @click="form.fofaDialog = true">
@@ -558,7 +581,7 @@ function transformedResult() {
             </el-form-item>
             <el-form-item>
                 <template #label>模式:
-                    <el-tooltip placement="left">
+                    <el-tooltip>
                         <template #content>
                             1、指纹扫描: 只进行指纹，不会探测敏感目录<br />
                             2、指纹漏洞扫描: 指纹+敏感目录探测，扫描完成后扫描指纹对应POC<br />
@@ -591,8 +614,18 @@ function transformedResult() {
             <el-form-item label="指纹线程:">
                 <el-input-number controls-position="right" v-model="form.thread" :min="1" :max="2000" />
             </el-form-item>
+            <el-form-item>
+                <template #label>根路径扫描:
+                    <el-tooltip placement="left" content="启用后主动指纹只拼接根路径，否则会拼接完整URL">
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-switch v-model="form.rootPathScan" />
+            </el-form-item>
             <el-form-item label="禁用反连:">
-                <el-checkbox v-model="form.noInteractsh" />
+                <el-switch v-model="form.noInteractsh" />
             </el-form-item>
         </el-form>
         <div>
@@ -608,14 +641,14 @@ function transformedResult() {
                 </template>漏洞详情</el-button>
         </template>
         <div v-if="selectedRow">
-            <el-descriptions :column="2" border style="margin-bottom: 10px;">
+            <el-descriptions :column="1" border style="margin-bottom: 10px;">
                 <el-descriptions-item label="Name:">{{ selectedRow.vulName
                     }}</el-descriptions-item>
                 <el-descriptions-item label="Extracted:">{{ selectedRow.extInfo
                     }}</el-descriptions-item>
-                <el-descriptions-item label="Description:" :span="2">{{ selectedRow.description
+                <el-descriptions-item label="Description:">{{ selectedRow.description
                     }}</el-descriptions-item>
-                <el-descriptions-item label="Reference:" :span="2" label-class-name="description">
+                <el-descriptions-item label="Reference:" label-class-name="description">
                     <div v-for="item in selectedRow.reference.split(',')">
                         {{ item }}
                     </div>
@@ -722,10 +755,5 @@ function transformedResult() {
     display: flex;
     align-items: center;
     text-align: center
-}
-
-.cell-content {
-    display: flex;
-    justify-content: center;
 }
 </style>

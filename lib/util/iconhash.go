@@ -14,7 +14,7 @@ import (
 // Mmh3Hash32 计算 mmh3 hash
 func Mmh3Hash32(raw []byte) string {
 	var h32 hash.Hash32 = murmur3.New32()
-	_, err := h32.Write([]byte(raw))
+	_, err := h32.Write(raw)
 	if err == nil {
 		return fmt.Sprint(int32(h32.Sum32()))
 	} else {

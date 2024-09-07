@@ -97,7 +97,7 @@
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="quake.syntaxData" @row-click="syntax.rowClick">
+                            <el-table :data="quake.syntaxData" @row-click="syntax.rowClick2">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100">
@@ -228,23 +228,15 @@
                 <el-table-column prop="IcpNumber" label="ICP编号" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="ISP" label="运营商" width="100" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="200" :show-overflow-tooltip="true" />
-                <el-table-column fixed="right" label="操作" width="100">
+                <el-table-column fixed="right" label="操作" width="100" align="center">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="top">
                             <el-button link :icon="ChromeFilled" @click.prevent="options.openHttpLink(scope.row)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">
-                            <el-button link
+                            <el-button link :icon="csegmentIcon"
                                 @click.prevent="tableCtrl.addTab('ip: ' + CsegmentIpv4(scope.row.IP), false)">
-                                <template #icon>
-                                    <svg t="1719219479838" class="icon" viewBox="0 0 1450 1024" version="1.1"
-                                        xmlns="http://www.w3.org/2000/svg" p-id="5099" width="200" height="200">
-                                        <path
-                                            d="M1055.229398 0c204.270977 0 352.3973 139.935005 352.3973 339.939672 0 5.972836-4.52229 10.83643-10.153821 10.83643h-122.869761c-9.04458 0-16.382635-7.423381-17.321223-17.065245-8.617949-114.166486-86.606116-192.325306-201.369886-192.325306-141.556204 0-221.250896 111.777352-221.250895 312.464628V575.098742c0 197.615532 79.950671 308.027664 221.165569 308.027664 114.337139 0 192.154654-73.039247 201.455212-179.35572 0.853262-9.471211 8.276644-16.894592 17.40655-16.894592h123.040413c5.631531 0 10.153821 4.863595 10.15382 10.83643 0 190.533456-148.808933 326.116824-352.3973 326.116824-238.401467 0-375.691359-168.775269-375.691359-449.498542V453.935505c0-282.771102 137.375219-453.850179 375.435381-453.850179zM552.31664 850.019832c20.136989 0 36.434297 16.638613 36.434297 37.202233v55.80335a36.860928 36.860928 0 0 1-36.434297 37.287559H79.097409a36.860928 36.860928 0 0 1-36.434298-37.287559v-55.80335c0-20.56362 16.297309-37.202233 36.434298-37.202233h473.219231zM461.358887 477.656195c20.051662 0 36.348971 16.638613 36.348971 37.202233v55.888676a36.860928 36.860928 0 0 1-36.348971 37.202234H79.097409A36.860928 36.860928 0 0 1 42.663111 570.832431v-55.888676c0-20.478293 16.297309-37.202233 36.434298-37.202233h382.261478z m90.957753-372.363636c20.136989 0 36.434297 16.72394 36.434297 37.287559v55.80335a36.860928 36.860928 0 0 1-36.434297 37.287559H79.097409A36.860928 36.860928 0 0 1 42.663111 198.383468v-55.80335c0-20.56362 16.297309-37.287559 36.434298-37.287559h473.219231z"
-                                            fill="#A3A9B3" p-id="5100"></path>
-                                    </svg>
-                                </template>
                             </el-button>
                         </el-tooltip>
                     </template>
@@ -293,6 +285,7 @@ import { ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus
 import { FileDialog } from 'wailsjs/go/main/File';
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
+import csegmentIcon from '@/assets/icon/csegment.svg'
 
 const options = ({
     keywordActive: "基本信息",
@@ -408,11 +401,18 @@ const syntax = ({
         quake.query = `app:"${item.Product_name}"`
     },
     rowClick: function (row: any, column: any, event: Event) {
-        if (!quake.query) {
+        if (quake.query == "") {
             quake.query = row.key
             return
         }
         quake.query += " AND " + row.key
+    },
+    rowClick2: function (row: any, column: any, event: Event) {
+        if (quake.query == "") {
+            quake.query = row.Content
+            return
+        }
+        quake.query += " AND " + row.Content
     },
     starDialog: ref(false),
     rules: reactive<FormRules<RuleForm>>({
@@ -504,6 +504,7 @@ const tableCtrl = ({
             ipList: ipList,
         });
         table.loading = true
+        table.acvtiveNames = newTabName
         QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
             (result: QuakeResult) => {
                 if (result.Code != 0) {
@@ -531,7 +532,6 @@ const tableCtrl = ({
                 table.loading = false
             }
         )
-        table.acvtiveNames = newTabName
     },
     removeTab: (targetName: string) => {
         const tabs = table.editableTabs

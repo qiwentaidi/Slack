@@ -4,7 +4,6 @@ import Timestamp from './transcode/Timestamp.vue';
 import OA from './transcode/OA.vue';
 import Transcode from './transcode/Transcode.vue';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
-const cmd5 = "https://www.cmd5.com"
 </script>
 
 <template>
@@ -34,7 +33,6 @@ const cmd5 = "https://www.cmd5.com"
                 </template>
                 打开本地环境
             </el-button>
-            <el-button text bg type="primary" @click="BrowserOpenURL(cmd5)">CMD5</el-button>
         </div>
     </div>
 </template>

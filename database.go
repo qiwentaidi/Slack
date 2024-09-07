@@ -61,7 +61,7 @@ func (d *Database) CreateTable() bool {
 	return err == nil
 }
 
-func (d *Database) ExecSqlStatement(query string, args ...string) bool {
+func (d *Database) ExecSqlStatement(query string, args ...interface{}) bool {
 	d.lock.Lock()         // 加锁，防止其他读写操作
 	defer d.lock.Unlock() // 函数退出时解锁
 	stmt, err := d.DB.Prepare(query)
@@ -73,7 +73,7 @@ func (d *Database) ExecSqlStatement(query string, args ...string) bool {
 	if err != nil {
 		return false
 	}
-	_, err = stmt.Exec(args)
+	_, err = stmt.Exec(args...)
 	if err != nil {
 		tx.Rollback()
 		logger.NewDefaultLogger().Debug(err.Error())

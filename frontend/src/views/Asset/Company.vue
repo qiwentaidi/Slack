@@ -8,11 +8,14 @@ import { CompanyInfo, WechatInfo } from "@/interface";
 import usePagination from "@/usePagination";
 import { transformArrayFields } from "@/util";
 import exportIcon from '@/assets/icon/doucment-export.svg'
+import global from "@/global";
+import { LinkSubdomain } from "@/linkage";
 
 const from = reactive({
     newTask: false,
     domain: true,
     wechat: true,
+    subdomain: false,
     company: '',
     defaultHold: 100,
     subcompanyLevel: 1,
@@ -37,6 +40,10 @@ function Collect() {
     } else {
         from.token = from.token.replace(/[\r\n\s]/g, '')
     }
+    if (from.subdomain && global.space.bevigil == "" && global.space.chaos == "" && global.space.zoomeye == "" && global.space.securitytrails == "" && global.space.github == "") {
+        ElMessage.warning('未配置任何域名收集模块API，请在设置中至少配置一个')
+        return
+    }
     from.newTask = false
     from.runningStatus = true
     const lines = from.company.split(/[(\r\n)\r\n]+/);
@@ -45,19 +52,26 @@ function Collect() {
     pc.ctrl.initTable()
     pw.ctrl.initTable()
     let allCompany = [] as string[]
+    let allSubdomain = [] as string[]
     const promises = companys.map(async companyName => {
         Callgologger("info", `正在收集${companyName}的子公司信息`)
         if (typeof companyName === 'string') {
             const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold);
             if (result.length > 0) {
                 pc.table.result.push(...result)
+                pc.table.pageContent = pc.ctrl.watchResultChange(pc.table)
                 for (const item of result) {
                     allCompany.push(item.CompanyName!)
-                    pc.table.pageContent = pc.ctrl.watchResultChange(pc.table)
+                    if (from.subdomain && item.Domains!.length > 0) {
+                        allSubdomain.push(...item.Domains!)
+                    }
                 }
             }
         }
     });
+    if (allSubdomain.length != 0) {
+        LinkSubdomain(allSubdomain)
+    }
     Promise.all(promises).then(() => {
         Callgologger("info", "已完成子公司查询任务")
         if (from.wechat) {
@@ -110,6 +124,7 @@ function Collect() {
             </el-form-item>
             <el-form-item label="其他查询内容:">
                 <el-checkbox v-model="from.wechat" label="公众号" />
+                <el-checkbox v-model="from.subdomain" label="联动子域名收集" />
             </el-form-item>
             <el-form-item>
                 <template #label>

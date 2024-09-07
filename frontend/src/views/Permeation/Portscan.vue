@@ -343,14 +343,14 @@ function changeTableHeigth() {
                 </el-col>
                 <el-divider direction="vertical" style="height: 4vh;" />
                 <el-col :span="4">
-                    <el-input v-model="config.timeout">
+                    <el-input v-model.number="config.timeout">
                         <template #prepend>
                             指纹超时
                         </template>
                     </el-input>
                 </el-col>
                 <el-col :span="4">
-                    <el-input v-model="config.thread">
+                    <el-input v-model.number="config.thread">
                         <template #prepend>
                             线程数量
                         </template>
@@ -415,7 +415,7 @@ function changeTableHeigth() {
             <el-tab-pane label="结果输出" name="1">
                 <el-table :data="pagination.table.pageContent" border id="portscan-table"
                     @selection-change="pagination.ctrl.handleSelectChange" style="height: 55vh;">
-                    <el-table-column type="selection" width="42px" />
+                    <el-table-column type="selection" width="55px" align="center" />
                     <el-table-column prop="IP" label="Host" />
                     <el-table-column prop="Port" label="Port" width="100px" />
                     <el-table-column prop="Server" label="Fingerprint" />

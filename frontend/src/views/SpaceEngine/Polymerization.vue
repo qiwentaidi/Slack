@@ -31,7 +31,7 @@
                         </el-popover>
                     </template>
                 </el-input>
-                <el-input v-model="uncover.size" @change="handleInput" style="width: 240px; height: 40px; margin-left: 5px;">
+                <el-input v-model.number="uncover.size" @change="handleInput" style="width: 240px; height: 40px; margin-left: 5px;">
                     <template #prepend>
                         查询数量
                     </template>

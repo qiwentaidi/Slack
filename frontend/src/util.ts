@@ -8,6 +8,7 @@ import {
 } from "wailsjs/go/main/App";
 import {
   CheckFileStat,
+  FileDialog,
   ReadFile,
   RemoveOldClient,
 } from "wailsjs/go/main/File";
@@ -16,6 +17,9 @@ import { URLFingerMap, ProxyOptions, File } from "./interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
 import platform from 'platform';
+import ContextMenu from '@imengyu/vue3-context-menu'
+import { h } from 'vue'
+import { UploadFilled } from '@element-plus/icons-vue';
 
 export var proxys: ProxyOptions; // wails2.9之后替换原来的null
 
@@ -124,6 +128,27 @@ export async function formatURL(host: string): Promise<string[]> {
     urls.push(AddRightSubString(target, "/"));
   }
   return urls;
+}
+
+export async function formatURL2(host: string): Promise<string[]> {
+  let urls: Array<string> = [];
+  for (var target of SplitTextArea(host)) {
+    if (!target.startsWith("http")) {
+      const result: any = await CheckTarget(host, global.proxy);
+      if (!result.Error) {
+        target = result.Msg;
+      }
+    }
+    urls.push(TrimRightSubString(target, "/"));
+  }
+  return urls;
+}
+
+export function TrimRightSubString(str: string, sub: string) {
+  if (str.endsWith(sub)) {
+    return str.substring(0, str.length - sub.length);
+  }
+  return str;
 }
 
 export function AddRightSubString(str: string, sub: string) {
@@ -303,20 +328,6 @@ export async function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-export function deduplicateUrlFingerMap(
-  urlFingerMap: URLFingerMap[]
-): URLFingerMap[] {
-  const seenUrls = new Set<string>();
-  return urlFingerMap.filter((item) => {
-    if (seenUrls.has(item.url)) {
-      return false;
-    } else {
-      seenUrls.add(item.url);
-      return true;
-    }
-  });
-}
-
 export function generateRandomString(length: number): string {
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -333,22 +344,22 @@ type AnyObject = { [key: string]: any };
 
 // 将对象中的数组字段转换为自定义拼接符的字符串
 export function transformArrayFields<T extends AnyObject>(data: T[], delimiter: string = '|'): T[] {
-    return data.map(item => {
-        const transformedItem: AnyObject = {};
-        for (const key in item) {
-            if (item.hasOwnProperty(key)) {
-                if (Array.isArray(item[key])) {
-                    transformedItem[key] = item[key].map((subItem: any) => JSON.stringify(subItem)).join(delimiter);
-                } else {
-                    transformedItem[key] = item[key];
-                }
-            }
+  return data.map(item => {
+    const transformedItem: AnyObject = {};
+    for (const key in item) {
+      if (item.hasOwnProperty(key)) {
+        if (Array.isArray(item[key])) {
+          transformedItem[key] = item[key].map((subItem: any) => JSON.stringify(subItem)).join(delimiter);
+        } else {
+          transformedItem[key] = item[key];
         }
-        return transformedItem as T;
-    });
+      }
+    }
+    return transformedItem as T;
+  });
 }
 
-export function CsegmentIpv4(ip: string) :string {
+export function CsegmentIpv4(ip: string): string {
   return ip.split('.').slice(0, 3).join('.') + ".0/24";
 }
 
@@ -358,12 +369,62 @@ export function renderedMarkdown(content: string) {
 
 export function GOOS() {
   if (platform.os.family.includes('OS X')) {
-      return "darwin"
+    return "darwin"
   } else if (platform.os.family.includes('Window')) {
-      return "windows"
+    return "windows"
   } else if (platform.os.family.includes('Linux')) {
-      return "linux"
+    return "linux"
   } else {
-      return "unknown"
+    return "unknown"
+  }
+}
+
+export async function UploadFileAndRead() {
+  let filepath = await FileDialog("*.txt")
+  if (!filepath) {
+    return ""
+  }
+  let file: File = await ReadFile(filepath)
+  if (file.Error) {
+    ElMessage({
+      type: "warning",
+      message: file.Message
+    })
+    return ""
+  }
+  return file.Content!
+}
+
+export function UploadContextMenu(e: MouseEvent, callback: Function) {
+  //prevent the browser's default menu
+  e.preventDefault();
+  //show your menu
+  ContextMenu.showContextMenu({
+    x: e.x,
+    y: e.y,
+    items: [
+      {
+        label: "上传文件",
+        icon: h(UploadFilled, {
+          style: {
+            width: '16px',
+            height: '16px',
+          }
+        }),
+        onClick: () => {
+          callback();
+        }
+      },
+    ]
+  });
+}
+
+export function getBasicURL(rawURL: string) {
+  try {
+      const url = new URL(rawURL);
+      return `${url.protocol}//${url.host}`;
+  } catch (error) {
+      console.error("Invalid URL:", error);
+      return undefined;
   }
 }

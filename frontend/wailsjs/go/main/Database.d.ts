@@ -6,7 +6,7 @@ export function Check():Promise<boolean>;
 
 export function CreateTable():Promise<boolean>;
 
-export function ExecSqlStatement(arg1:string,arg2:Array<string>):Promise<boolean>;
+export function ExecSqlStatement(arg1:string,arg2:Array<any>):Promise<boolean>;
 
 export function GetAllPathsAndTimes():Promise<Array<main.pathTimes>>;
 

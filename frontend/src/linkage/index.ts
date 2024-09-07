@@ -1,40 +1,25 @@
-import { deduplicateUrlFingerMap } from '@/util'
-import { Callgologger, PortBrute, FingerScan, ActiveFingerScan, NucleiScanner, NucleiEnabled, LoadDirsearchDict, DirScan, HunterSearch } from 'wailsjs/go/main/App'
+import { Callgologger, PortBrute, NewWebScanner, NucleiEnabled, LoadDirsearchDict, DirScan, HunterSearch, Subdomain } from 'wailsjs/go/main/App'
 import global from '@/global'
 import async from 'async';
-import { DirScanOptions, URLFingerMap } from '@/interface';
+import { DirScanOptions, NulceiOptions, SubdomainOption } from '@/interface';
 import { ElMessage, ElNotification } from 'element-plus';
 
 
 export async function LinkWebscan(ips: string[]) {
-    let id = 0
-    global.temp.urlFingerMap = []
-    Callgologger("info", `正在将WEB目标联动网站扫描，共计加载目标: ${ips.length}`)
-    await FingerScan(ips, global.proxy)
-    await ActiveFingerScan(ips, global.proxy)
-    if (await NucleiEnabled(global.webscan.nucleiEngine)) {
-        const filteredUrlFingerprints = global.temp.urlFingerMap
-            .filter(item => item.finger.length > 0 && item.url)
-            .map(item => ({ url: item.url, finger: item.finger }));
-        async.eachLimit(deduplicateUrlFingerMap(filteredUrlFingerprints), 10, async (ufm: URLFingerMap, callback: () => void) => {
-            if (ufm.finger.length == 0) {
-                return
-            }
-            await NucleiScanner(0, ufm.url, ufm.finger, global.webscan.nucleiEngine, false, [], "")
-            id++
-            if (id == filteredUrlFingerprints.length) {
-                callback()
-            }
-        }, (err: any) => {
-            Callgologger("info", "Webscan Finished")
-            ElNotification.success({
-                message: "Webscan Finished",
-                position: "bottom-right"
-            })
-        })
-    } else {
-        Callgologger("error", `Nuclei引擎无效，无法进行漏洞扫描，已结束！`)
+    if (!(await NucleiEnabled(global.webscan.nucleiEngine))) {
+        ElMessage.warning(`Nuclei引擎无效，无法进行漏洞扫描，已结束！`)
+        return
     }
+    let option: NulceiOptions = {
+        Mode: 0,
+        CustomTags: [],
+        Engine: global.webscan.nucleiEngine,
+        Risk: "",
+        Interactsh: false,
+        Proxy: global.proxy
+    }
+
+    await NewWebScanner(ips, global.proxy, 50 ,true, true, true, option)
 }
 
 export function LinkCrack(ips: string[]) {
@@ -108,4 +93,23 @@ export async function LinkHunter(query: string, count: string) {
         urls.push(item.url)
     });
     return urls
+}
+
+export async function LinkSubdomain(domains: string[]) {
+    Callgologger("info", `正在对${domains.length}个域名进行子域名查询，请稍后...`)
+    let option: SubdomainOption = {
+        Mode: 1,
+        Domains: domains,
+        Subs: [],
+        Thread: 10,
+        Timeout: 5,
+        DnsServers: ["223.6.6.6:53", "8.8.8.8:53"],
+        ResolveExcludeTimes: 5,
+        BevigilApi: global.space.bevigil,
+        ChaosApi: global.space.chaos,
+        SecuritytrailsApi: global.space.securitytrails,
+        ZoomeyeApi: global.space.zoomeye,
+        GithubApi: global.space.github,
+    }
+    await Subdomain(option)
 }

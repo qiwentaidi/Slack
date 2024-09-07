@@ -15,6 +15,9 @@ import (
 func PostgresScan(ctx context.Context, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
+			if ExitBruteFunc {
+				return
+			}
 			pass = strings.Replace(pass, "{user}", string(user), -1)
 			flag, err := PostgresConn(host, user, pass)
 			if flag && err == nil {

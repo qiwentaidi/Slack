@@ -16,6 +16,9 @@ import (
 func SmbScan(ctx context.Context, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
+			if ExitBruteFunc {
+				return
+			}
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := doWithTimeOut(host, user, pass)
 			if flag && err == nil {

@@ -450,3 +450,37 @@ export namespace structs {
 
 }
 
+export namespace url {
+	
+	export class URL {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new URL(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+
+}
+
+export namespace webscan {
+	
+	export class NucleiOption {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new NucleiOption(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+
+}
+
