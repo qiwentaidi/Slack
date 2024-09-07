@@ -119,6 +119,12 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240907203934509](assets/image-20240907203934509.png)
 
+## 应用启动器
+
+用于管理繁琐的脚本，可以自定义启动命令，支持`cmd`打开文件所在命令行、`java`以`java -jar`命令启动`java GUI`应用、`App`打开`exe GUI`
+
+![image-20240907234517306](assets/image-20240907234517306.png)
+
 可视化日志（右上角终端符号打开）
 
 ![image-20240907181024885](assets/image-20240907181024885.png)
