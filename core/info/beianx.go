@@ -3,6 +3,7 @@ package info
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"slack-wails/lib/clients"
@@ -17,16 +18,19 @@ import (
 var acwscv2 = ""
 
 // 返回域名组，延时防止请求过快
-func Beianx(company string) ([]string, error) {
+func Beianx(company, machine string) ([]string, error) {
 	h := map[string]string{
-		"Cookie": "acw_sc__v2=" + acwscv2,
+		"Cookie": fmt.Sprintf("acw_sc__v2=%s;machine_str=%s", acwscv2, machine),
 	}
-	_, body, err := clients.NewRequest("GET", "https://www.beianx.cn/search/"+company, h, nil, 10, true, http.DefaultClient)
-	if err != nil && len(body) == 17132 { // 符合长度表示存在acw_sc__v2校验，需要获取acw_sc__v2的值，再次执行函数即可
+	resp, body, err := clients.NewRequest("GET", "https://www.beianx.cn/search/"+company, h, nil, 10, true, http.DefaultClient)
+	if err != nil && resp.StatusCode == 401 {
+		return []string{}, errors.New("未设置Cookie machine_str 字段")
+	}
+	if err != nil && len(body) == 1326 { // 符合长度表示存在acw_sc__v2校验，需要获取acw_sc__v2的值，再次执行函数即可
 		arg1 := getArg1FromHTML(string(body))
 		acwscv2 = getAcwScV2(arg1)
 		time.Sleep(time.Second)
-		return Beianx(company)
+		return Beianx(company, machine)
 	}
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
 	if err != nil {

@@ -67,97 +67,61 @@ brew install create-dmg
 create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-size 100  --icon "Slack.app" 200 190 --app-drop-link 600 185 --hide-extension "Slack.app" --volicon build/bin/Slack.app/Contents/Resources/iconfile.icns  "Slack.dmg" build/bin/Slack.app
 ``````
 
-# 模块介绍
+# 首页
 
-## 首页
+![image-20240907162449101](assets/image-20240907162449101.png)
 
-![image-20240815172649991](assets/image-20240815172649991.png)
+# 特色功能介绍
 
-## 渗透测试
+## 端口扫描
 
-### 网站扫描
+可以联动网站扫描以及协议爆破
 
-![image-20240510214011206](assets/image-20240510214011206.png)
+![image-20240907203539971](assets/image-20240907203539971.png)
 
-![image-20240510214144484](assets/image-20240510214144484.png)
+![image-20240907203539971](assets/image-20240510214011206.png)
 
-### 主机扫描
+![image-20240907203539971](assets/image-20240510214144484.png)
 
-![image-20240628171638340](assets/image-20240628171638340.png)
+## 公司信息查询
 
-### 暴破与未授权检测
+可以通过输入公司名称一步完成IP、域名的收集
 
-![image-20240628173000629](assets/image-20240628173000629.png)
+![image-20240907180729539](assets/image-20240907180729539.png)
 
-### 目录扫描
+![image-20240907180805041](assets/image-20240907180805041.png)
 
-![image-20240410135353422](assets/image-20240410135353422.png)
+![image-20240907202829701](assets/image-20240907202829701.png)
 
-### JSFinder
+## 空间搜索
 
-![image-20240425150345629](assets/image-20240425150345629.png)
+`FOFA`、`Hunter`、`Quake`查询功能，保留搜索提示、语法收藏以及数据可视性的同时，增加特色功能区，减少数据导出操作。
 
-## 资产收集
+![image-20240907172923247](assets/image-20240907172923247.png)
 
-### 公司名称查资产
+![image-20240907172244822](assets/image-20240907172244822.png)
 
-![image-20240718104209501](assets/image-20240718104209501.png)
+![image-20240907172356305](assets/image-20240907172356305.png)
 
-![image-20240412150938371](assets/image-20240412150938371.png)
+![image-20240907172750605](assets/image-20240907172750605.png)
 
-### 子域名收集
+![image-20240907173203880](assets/image-20240907173203880.png)
 
-![image-20240813113905572](assets/image-20240813113905572.png)
+## 加解密模块
 
-### 域名信息查询
+可通过下载`CyberChef`集成环境实现本地调用
 
-![image-20240629003953025](assets/image-20240629003953025.png)
+![image-20240907172017116](assets/image-20240907172017116.png)
 
-### 互联网敏感信息收集
+## 数据处理
 
-![image-20240815172353721](assets/image-20240815172353721.png)
+针对日常工作中一些常见的数据进行处理，例如提取Fscan结果、提取IP、数据去重等
 
-## 空间引擎
+![image-20240907203934509](assets/image-20240907203934509.png)
 
-### FOFA
+可视化日志（右上角终端符号打开）
 
-![image-20240718103758587](assets/image-20240718103758587.png)
-
-### 鹰图
-
-![image-20240620234045723](assets/image-20240620234045723.png)
-
-### Quake
-
-![image-20240628172913333](assets/image-20240628172913333.png)
-
-### 聚合搜索
-
-## 小工具
-
-### 加解密模块
-
-![image-20240628172153383](assets/image-20240628172153383.png)
-
-### 数据处理
-
-![image-20240628172250510](assets/image-20240628172250510.png)
-
-### 杀软/补丁识别
-
-![image-20240628172737827](assets/image-20240628172737827.png)
-
-### 反弹Shell生成
-
-![image-20240628172826365](assets/image-20240628172826365.png)
-
-### 备忘录
-
-![image-20240628172702349](assets/image-20240628172702349.png)
-
-### WeChat/DingDing
-
-![image-20240813114647370](assets/image-20240813114647370.png)
+![image-20240907181024885](assets/image-20240907181024885.png)
 
 # 联系方式
 

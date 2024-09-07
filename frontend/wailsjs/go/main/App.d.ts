@@ -105,7 +105,7 @@ export function StopSubdomain():Promise<void>;
 
 export function Subdomain(arg1:structs.SubdomainOption):Promise<void>;
 
-export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number):Promise<Array<info.CompanyInfo>>;
+export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number,arg4:boolean,arg5:string):Promise<Array<info.CompanyInfo>>;
 
 export function System(arg1:string,arg2:number):Promise<Array<any>>;
 

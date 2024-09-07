@@ -13,9 +13,9 @@ import { LinkSubdomain } from "@/linkage";
 
 const from = reactive({
     newTask: false,
-    domain: true,
     wechat: true,
-    subdomain: false,
+    domain: false,
+    linkSubdomain: false,
     company: '',
     defaultHold: 100,
     subcompanyLevel: 1,
@@ -23,24 +23,30 @@ const from = reactive({
     activeName: 'subcompany',
     runningStatus: false,
     companyData: [] as CompanyInfo[],
-    wehcatData: [] as WechatInfo[]
+    wehcatData: [] as WechatInfo[],
+    machineStr: ''
 })
 
 let pc = usePagination(from.companyData, 20) // paginationCompany
 let pw = usePagination(from.wehcatData, 20) // paginationWehcat
 
 function Collect() {
-    if (!from.company) {
+    if (from.company == "") {
         ElMessage.warning('查询目标不能为空')
         return
     }
-    if (!from.token) {
+    if (from.token == "") {
         ElMessage.warning('天眼查Token为空，大概率会影响爬取结果，请先填写Token信息')
         return
     } else {
         from.token = from.token.replace(/[\r\n\s]/g, '')
     }
-    if (from.subdomain && global.space.bevigil == "" && global.space.chaos == "" && global.space.zoomeye == "" && global.space.securitytrails == "" && global.space.github == "") {
+    if (from.domain && from.machineStr == "") {
+        ElMessage.warning('MachineStr为空，无法进行子域名查询，请先配置该内容')
+    } else {
+        from.machineStr = from.machineStr.replace(/[\r\n\s]/g, '')
+    }
+    if (from.linkSubdomain && global.space.bevigil == "" && global.space.chaos == "" && global.space.zoomeye == "" && global.space.securitytrails == "" && global.space.github == "") {
         ElMessage.warning('未配置任何域名收集模块API，请在设置中至少配置一个')
         return
     }
@@ -56,24 +62,24 @@ function Collect() {
     const promises = companys.map(async companyName => {
         Callgologger("info", `正在收集${companyName}的子公司信息`)
         if (typeof companyName === 'string') {
-            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold);
+            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain,from.machineStr);
             if (result.length > 0) {
                 pc.table.result.push(...result)
                 pc.table.pageContent = pc.ctrl.watchResultChange(pc.table)
                 for (const item of result) {
                     allCompany.push(item.CompanyName!)
-                    if (from.subdomain && item.Domains!.length > 0) {
+                    if (from.linkSubdomain && item.Domains!.length > 0) {
                         allSubdomain.push(...item.Domains!)
                     }
                 }
             }
         }
     });
-    if (allSubdomain.length != 0) {
-        LinkSubdomain(allSubdomain)
-    }
     Promise.all(promises).then(() => {
         Callgologger("info", "已完成子公司查询任务")
+        if (allSubdomain.length != 0) {
+            LinkSubdomain(allSubdomain)
+        }
         if (from.wechat) {
             const promises2 = allCompany.map(async companyName => {
                 Callgologger("info", `正在收集${companyName}的微信公众号资产`)
@@ -96,6 +102,9 @@ function Collect() {
 
 }
 
+function recheckLinkSubdomain() {
+    if (!from.domain) { from.linkSubdomain = false}
+}
 </script>
 
 
@@ -124,7 +133,8 @@ function Collect() {
             </el-form-item>
             <el-form-item label="其他查询内容:">
                 <el-checkbox v-model="from.wechat" label="公众号" />
-                <el-checkbox v-model="from.subdomain" label="联动子域名收集" />
+                <el-checkbox v-model="from.domain" label="查询子域名" @change="recheckLinkSubdomain" />
+                <el-checkbox v-model="from.linkSubdomain" label="联动子域名收集" :disabled="!from.domain"/>
             </el-form-item>
             <el-form-item>
                 <template #label>
@@ -138,6 +148,19 @@ function Collect() {
                     </el-tooltip>
                 </template>
                 <el-input v-model="from.token" type="textarea" :rows="4"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <template #label>
+                    MachineStr:
+                    <el-tooltip placement="right">
+                        <template #content>由于https://www.beianx.cn/备案查域名新增校验机制<br />
+                            需要在此处填入Cookie头中machine_str字段的值</template>
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-input v-model="from.machineStr"></el-input>
             </el-form-item>
             <el-form-item class="align-right">
                 <el-button type="primary" @click="Collect">开始查询</el-button>

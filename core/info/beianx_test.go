@@ -6,6 +6,7 @@ import (
 )
 
 func TestBeianx(t *testing.T) {
-	ips := Ip138IpHistory("bilibili.com")
-	fmt.Printf("ips: %v\n", ips)
+	domains, err := Beianx("浙江大学", "d1794d1e-e24c-4d99-xxxx-177bd4d26b3c")
+	fmt.Printf("err: %v\n", err)
+	fmt.Printf("domains: %v\n", domains)
 }

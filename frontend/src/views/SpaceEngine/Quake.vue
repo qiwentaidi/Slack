@@ -178,6 +178,7 @@
                     <el-dropdown-menu>
                         <el-dropdown-item :icon="exportIcon" @click="exportData">导出当前查询页数据</el-dropdown-item>
                         <el-dropdown-item :icon="exportIcon" @click="exportData">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -363,10 +364,16 @@ const options = ({
         cdn: false,
     }),
     openHttpLink: function (row: any) {
-        if (row.Protocol == "http") {
-            BrowserOpenURL("http://" + row.Host + ":" + row.Port)
+        let host = ""
+        if (row.Host == "") {
+            host = row.Host
+        } else {
+            host = row.IP
+        }
+        if (row.Protocol == "http") { 
+            BrowserOpenURL("http://" + host + ":" + row.Port)
         } else if (row.Protocol == "http/ssl") {
-            BrowserOpenURL("https://" + row.Host + ":" + row.Port)
+            BrowserOpenURL("https://" + host + ":" + row.Port)
         }
     }
 })
@@ -679,6 +686,29 @@ const tableCtrl = ({
         return ips
     },
 })
+
+async function CopyURL() {
+    if (table.editableTabs.length != 0) {
+        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        var temp = [];
+        for (const line of tab.content!) {
+            let host = ""
+            if ((line as any)["Host"] == "") {
+                host = (line as any)["Host"]
+            } else {
+                host = (line as any)["IP"]
+            }
+            if ((line as any)["Protocol"] == "http") {
+                temp.push("http://" + host + ":" + (line as any)["Port"])
+            } else if ((line as any)["Protocol"] == "http/ssl") {
+                temp.push("https://" + host + ":" + (line as any)["Port"])
+            }
+            temp.push()
+        }
+        Copy(temp.join("\n"))
+        temp = []
+    }
+}
 
 async function exportData() {
     if (table.editableTabs.length != 0) {

@@ -119,7 +119,7 @@ function CopyAndJump() {
         </el-card>
         <el-card shadow="never" class="grid-item">
             <el-text><el-icon><img src="/ip138.ico"></el-icon><span class="title">子域名:</span></el-text>
-            <el-input v-model="domain.subdomain" type="textarea" rows="12" resize="none"
+            <el-input v-model="domain.subdomain" type="textarea" :rows="12" resize="none"
                 style="margin-top: 10px;"></el-input>
         </el-card>
         <el-card shadow="never" class="grid-item">

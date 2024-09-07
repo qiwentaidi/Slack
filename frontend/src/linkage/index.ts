@@ -96,10 +96,14 @@ export async function LinkHunter(query: string, count: string) {
 }
 
 export async function LinkSubdomain(domains: string[]) {
-    Callgologger("info", `正在对${domains.length}个域名进行子域名查询，请稍后...`)
+    let rootDomains = <string[]>[]
+    for (const domain of domains) {
+        rootDomains.push(getRootDomain(domain))
+    }
+    Callgologger("info", `正在对${rootDomains.length}个域名进行子域名查询，请稍后...`)
     let option: SubdomainOption = {
         Mode: 1,
-        Domains: domains,
+        Domains: rootDomains,
         Subs: [],
         Thread: 10,
         Timeout: 5,
@@ -112,4 +116,13 @@ export async function LinkSubdomain(domains: string[]) {
         GithubApi: global.space.github,
     }
     await Subdomain(option)
+}
+
+function getRootDomain(hostname: string) {
+    var parts = hostname.split('.'); // 拆分域名部分
+    if (parts.length > 2) {
+        // 如果域名有子域名（例如：sub.example.com）
+        return parts.slice(-2).join('.'); // 返回最后两部分（例如：example.com）
+    }
+    return hostname; // 如果没有子域名，直接返回（例如：example.com）
 }

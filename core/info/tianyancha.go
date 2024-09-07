@@ -136,7 +136,7 @@ type CompanyInfo struct {
 }
 
 // 返回查询公司的名称和子公司的名称, isSecond 是否为二次查询
-func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int, isSecond bool) (Asset []CompanyInfo) {
+func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int, isSecond bool, searchDomain bool, machine string) (Asset []CompanyInfo) {
 	data := make(map[string]interface{})
 	data["gid"] = companyId
 	data["pageSize"] = 100
@@ -155,7 +155,12 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 	// 获取到本公司对应的域名，若是二次查询跳过
 	if !isSecond {
 		var domains []string
-		domains, _ = Beianx(companyName)
+		if searchDomain {
+			domains, err = Beianx(companyName, machine)
+			if err != nil {
+				gologger.Debug(ctx, err)
+			}
+		}
 		Asset = append(Asset, CompanyInfo{companyName, "本公司", "", qr.State, util.RemoveDuplicates(domains), companyId})
 	}
 	for _, result := range qr.Data.Result {
@@ -163,8 +168,11 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 		if gq <= 100 && gq >= ratio { // 提取在控股范围内的子公司
 			gologger.Info(ctx, fmt.Sprintf("%v", result.Name))
 			var subsidiaryDomains []string
-			if result.RegStatus == "存续" || result.RegStatus == "ok" { // 注销的公司不用查备案
-				subsidiaryDomains, _ = Beianx(result.Name)
+			if (result.RegStatus == "存续" || result.RegStatus == "ok") && searchDomain { // 注销的公司不用查备案
+				subsidiaryDomains, err = Beianx(result.Name, machine)
+				if err != nil {
+					gologger.Debug(ctx, err)
+				}
 			}
 			Asset = append(Asset, CompanyInfo{result.Name, result.Percent, result.Amount, result.RegStatus, util.RemoveDuplicates(subsidiaryDomains), fmt.Sprint(result.ID)})
 		}

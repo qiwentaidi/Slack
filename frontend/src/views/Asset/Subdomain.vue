@@ -243,7 +243,7 @@ const CopyDomains = () => {
         <el-table-column prop="Ips" label="IPs" />
         <el-table-column prop="CdnName" label="CDN/WAF" width="150px">
             <template #default="scope">
-                <el-tag type="error" v-if="scope.row.IsCdn">{{ scope.row.CdnName }}</el-tag>
+                <el-tag type="danger" v-if="scope.row.IsCdn">{{ scope.row.CdnName }}</el-tag>
             </template>
         </el-table-column>
         <el-table-column prop="Source" label="来源" width="120px" />
