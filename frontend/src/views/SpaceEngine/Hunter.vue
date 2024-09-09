@@ -582,10 +582,10 @@ function searchCsegmentIpv4(ip: string) {
                                             scope.row.Component.length }}条</el-button>
                                 </template>
                                 <template #default>
-                                    <div style="display: flex; flex-direction: column;">
-                                        <el-tag v-for="component in scope.row.Component">{{ component.name +
+                                    <el-space direction="vertical">
+                                        <el-tag round v-for="component in scope.row.Component" style="width: 320px;">{{ component.name +
                                             component.version }}</el-tag>
-                                    </div>
+                                    </el-space>
                                 </template>
                             </el-popover>
                         </el-space>

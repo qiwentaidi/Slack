@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, RefreshRight, Menu, Promotion, Filter } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, RefreshRight, Menu, Promotion, Filter, View, DeleteFilled, UploadFilled } from '@element-plus/icons-vue';
 import {
     InitRule,
     FofaSearch,
@@ -9,21 +9,26 @@ import {
     GetFingerPocMap,
     Callgologger,
     Kill,
+    LoadNulceiResult,
 } from 'wailsjs/go/main/App'
-import { ElMessage, ElNotification } from 'element-plus';
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import { formatURL2, TestProxy, Copy, CopyALL, transformArrayFields, TestNuclei } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { Vulnerability, FingerprintTable, FofaResult, NulceiOptions } from '@/interface';
+import { Vulnerability, FingerprintTable, FofaResult, NulceiOptions, File } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
+import historyIcon from '@/assets/icon/history.svg'
 import { LinkDirsearch, LinkHunter } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize } from '@/stores/style';
+import { FileDialog, List, ReadFile, RemoveFile } from 'wailsjs/go/main/File';
+import * as XLSX from "xlsx";
 
 // 初始化时调用
 onMounted(async () => {
+    ListNucleiScanResult()
     let err = await InitRule()
     if (!err) {
         ElMessage({
@@ -262,7 +267,7 @@ class Scanner {
             Proxy: global.proxy
         }
 
-        await NewWebScanner(this.urls, global.proxy, form.thread ,deepScan, form.rootPathScan, callNuclei, option)
+        await NewWebScanner(this.urls, global.proxy, form.thread, deepScan, form.rootPathScan, callNuclei, option)
         this.done()
         form.runnningStatus = false
     }
@@ -375,6 +380,77 @@ function BatchCopyURL() {
     const selectRows = JSON.parse(JSON.stringify(fp.table.selectRows));
     let targets = selectRows.map((item: any) => item.url)
     CopyALL(targets)
+}
+
+const history = ref(false)
+const historyData = ref(<{ taskTime: string, fileName: string, filePath: string, fileSize: number }[]>[])
+
+async function ListNucleiScanResult() {
+    let fileList = await List(global.PATH.homedir + "/slack/web_report")
+    fileList.forEach((file: any) => {
+        if (file.Path.endsWith(".json")) {
+            historyData.value.push({
+                taskTime: file.ModTime,
+                fileName: file.BaseName,
+                filePath: file.Path,
+                fileSize: file.Size
+            })
+        }
+    });
+}
+
+async function removeNucleiHistroy(filepath: string, fileSize: number, index: number) {
+    if (fileSize == 2) {
+        RemoveFile(filepath).then(bool => {
+            if (bool) {
+                historyData.value.splice(index, 1)
+                ElMessage.success({
+                    message: "删除成功",
+                    grouping: true,
+                })
+                return
+            }
+            ElMessage.warning("删除文件失败!")
+        })
+        return
+    }
+    ElMessageBox.confirm(
+        '确定删除该任务记录?',
+        'Warning',
+        {
+            confirmButtonText: 'OK',
+            cancelButtonText: 'Cancel',
+            type: 'warning',
+        }
+    )
+        .then(() => {
+            RemoveFile(filepath).then(bool => {
+                if (bool) {
+                    historyData.value.splice(index, 1)
+                    ElMessage.success({
+                        message: "删除成功",
+                        grouping: true,
+                    })
+                    return
+                }
+                ElMessage.warning("删除文件失败!")
+            })
+        })
+        .catch(() => {
+
+        })
+}
+
+async function loadNucleiHistoryTask(filepath: string) {
+    dashboard.riskLevel.critical = 0
+    dashboard.riskLevel.high = 0
+    dashboard.riskLevel.medium = 0
+    dashboard.riskLevel.low = 0
+    dashboard.riskLevel.info = 0
+    vp.table.result = []
+    vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
+    LoadNulceiResult(filepath)
+    history.value = false
 }
 </script>
 
@@ -520,12 +596,22 @@ function BatchCopyURL() {
                     </div>
                 </el-tab-pane>
             </el-tabs>
-            <el-space class="custom_eltabs_titlebar" :size="5">
-
-                <el-button :icon="RefreshRight" text type="danger" @click="TestNuclei()"
+            <el-space class="custom_eltabs_titlebar" :size="2">
+                <el-button :icon="RefreshRight" text bg type="danger" @click="TestNuclei()"
                     v-show="!global.temp.nucleiEnabled">Reload
                     Engine</el-button>
-
+                <el-tooltip content="漏洞扫描任务历史">
+                    <el-button text bg @click="history = true">
+                        <template #icon>
+                            <el-icon :size="16">
+                                <historyIcon />
+                            </el-icon>
+                        </template>
+                    </el-button>
+                </el-tooltip>
+                <!-- <el-tooltip content="导入指纹扫描结果">
+                    <el-button text bg :icon="UploadFilled" @click="readXlsxFingerprint"></el-button>
+                </el-tooltip> -->
                 <el-dropdown>
                     <el-button :icon="Menu" text bg />
                     <template #dropdown>
@@ -692,6 +778,31 @@ function BatchCopyURL() {
             </el-button>
         </template>
     </el-dialog>
+    <el-drawer v-model="history" size="50%">
+        <template #header>
+            <el-text><el-icon :size="18">
+                    <historyIcon />
+                </el-icon>漏洞扫描任务历史<el-tag>仅在初始化时加载</el-tag></el-text>
+        </template>
+        <el-table :data="historyData">
+            <el-table-column prop="fileName" label="文件名称"></el-table-column>
+            <el-table-column prop="taskTime" label="任务时间"></el-table-column>
+            <el-table-column prop="fileSize" label="文件大小" width="100px"></el-table-column>
+            <el-table-column label="操作" width="180px" align="center">
+                <template #default="scope">
+                    <el-button-group>
+                        <el-button :icon="View" link
+                            @click.prevent="loadNucleiHistoryTask(scope.row.filePath)"></el-button>
+                        <el-button :icon="DeleteFilled" link
+                            @click.prevent="removeNucleiHistroy(scope.row.filePath, scope.row.fileSize, scope.$index)"></el-button>
+                    </el-button-group>
+                </template>
+            </el-table-column>
+            <template #empty>
+                <el-empty></el-empty>
+            </template>
+        </el-table>
+    </el-drawer>
 </template>
 
 <style>

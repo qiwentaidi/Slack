@@ -218,7 +218,7 @@ const CopyDomains = () => {
             <el-space>
                 <el-tag>子域字典大小:{{ config.subs.length }}</el-tag>
                 <el-tag>线程:{{ config.thread }}</el-tag>
-                <el-tag type="info">Tips: 运行状态可通过右上角运行日志查看</el-tag>
+                <el-tag type="info">Tips: 建议均使用查询模式进行子域名收集，优点在于不用消耗本地的网络资源且搜集快</el-tag>
             </el-space>
             <el-dropdown style="margin-left: auto;">
                 <el-button :icon="Menu" text bg />

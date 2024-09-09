@@ -134,6 +134,10 @@ export function LoadDirsearchDict(arg1, arg2) {
   return window['go']['main']['App']['LoadDirsearchDict'](arg1, arg2);
 }
 
+export function LoadNulceiResult(arg1) {
+  return window['go']['main']['App']['LoadNulceiResult'](arg1);
+}
+
 export function NewSynScanner(arg1, arg2, arg3) {
   return window['go']['main']['App']['NewSynScanner'](arg1, arg2, arg3);
 }

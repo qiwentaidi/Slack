@@ -109,6 +109,18 @@ export namespace main {
 	
 	    }
 	}
+	export class FileListInfo {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new FileListInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
 	export class HunterSearch {
 	
 	

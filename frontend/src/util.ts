@@ -13,7 +13,7 @@ import {
   RemoveOldClient,
 } from "wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
-import { URLFingerMap, ProxyOptions, File } from "./interface";
+import { ProxyOptions, File } from "./interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
 import platform from 'platform';

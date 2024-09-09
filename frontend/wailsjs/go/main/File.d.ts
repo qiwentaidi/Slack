@@ -21,7 +21,7 @@ export function InsetItemNavigation(arg1:string,arg2:structs.Children):Promise<b
 
 export function IsMacOS():Promise<boolean>;
 
-export function List(arg1:string):Promise<Array<string>>;
+export function List(arg1:string):Promise<Array<main.FileListInfo>>;
 
 export function NetworkCardInfo():Promise<Array<string>>;
 

@@ -9,7 +9,7 @@ const issueAddress = "https://github.com/qiwentaidi/Slack/issues/new"
 <template>
     <el-space direction="vertical" :size="8">
         <img src="/slack.svg" style="height: 8em; margin-bottom: 5px;">
-        <span class="bold">Slack <el-tag round type="info" size="small" style="margin-bottom: 2px;">{{ "v" +
+        <span class="bold">Slack <el-tag round type="info" style="margin-bottom: 2px;">{{ "v" +
         global.LOCAL_VERSION }}</el-tag></span>
         <span class="slogan">{{ $t('aside.slogan') }}</span>
 
@@ -23,6 +23,10 @@ const issueAddress = "https://github.com/qiwentaidi/Slack/issues/new"
             <el-link @click="BrowserOpenURL(wikiAddress)">{{
         $t('aside.update_log') }}</el-link>
         </div>
+        <div></div>
+        <div></div>
+        <span>联系我们</span>
+        <img src="@/assets/icon/wechat.png" style="height: 208px;">
     </el-space>
 </template>
 

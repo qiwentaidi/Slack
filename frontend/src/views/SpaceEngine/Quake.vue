@@ -215,10 +215,10 @@
                                             <Histogram />
                                         </el-icon>
                                     </template>
-                                    <div style="display: flex; flex-direction: column;">
-                                        <el-tag type="success" v-for="component in scope.row.Component">{{ component
-                                            }}</el-tag>
-                                    </div>
+                                    <el-space direction="vertical">
+                                        <el-tag round type="success" v-for="component in scope.row.Component" style="width: 320px;">
+                                            {{ component }}</el-tag>
+                                    </el-space>
                                 </el-popover>
                             </template>
                             {{ scope.row.Component[0] }}

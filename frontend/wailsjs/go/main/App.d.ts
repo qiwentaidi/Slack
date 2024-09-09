@@ -77,6 +77,8 @@ export function Kill(arg1:number):Promise<void>;
 
 export function LoadDirsearchDict(arg1:Array<string>,arg2:Array<string>):Promise<Array<string>>;
 
+export function LoadNulceiResult(arg1:string):Promise<void>;
+
 export function NewSynScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>):Promise<void>;
 
 export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>,arg4:number,arg5:number):Promise<void>;

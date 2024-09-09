@@ -129,14 +129,32 @@ func (f *File) Path(p string) PathInfo {
 	}
 }
 
-func (f *File) List(path string) []string {
-	var files []string
+type FileListInfo struct {
+	Path     string
+	Name     string
+	BaseName string
+	ModTime  string
+	Size     int64
+}
+
+func (f *File) List(path string) []FileListInfo {
+	var files []FileListInfo
 	filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() {
-			files = append(files, p)
+			// 提取文件名
+			filename := filepath.Base(p)
+			// 去除文件后缀
+			baseName := strings.TrimSuffix(filename, filepath.Ext(filename))
+			files = append(files, FileListInfo{
+				Path:     p,
+				Name:     filename,
+				BaseName: baseName, // 存储去除后缀的文件名
+				ModTime:  info.ModTime().Format("2006-01-02 15:04:05"),
+				Size:     info.Size(),
+			})
 		}
 		return nil
 	})

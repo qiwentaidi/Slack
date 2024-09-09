@@ -606,11 +606,10 @@ function searchCsegmentIpv4(ip: string) {
                                             <Histogram />
                                         </el-icon>
                                     </template>
-                                    <div style="display: flex; flex-direction: column;">
-                                        <el-tag type="primary" v-for="component in formatProduct(scope.row.Product)">{{
-                                            component
-                                        }}</el-tag>
-                                    </div>
+                                    <el-space direction="vertical">
+                                        <el-tag round type="primary" v-for="component in formatProduct(scope.row.Product)"
+                                        style="width: 320px;">{{ component }}</el-tag>
+                                    </el-space>
                                 </el-popover>
                             </template>
                             {{ formatProduct(scope.row.Product)[0] }}

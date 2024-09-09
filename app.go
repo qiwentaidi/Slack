@@ -726,3 +726,7 @@ func (a *App) Kill(pid int) {
 		})
 	}
 }
+
+func (a *App) LoadNulceiResult(reportJson string) {
+	webscan.NewNucleiCaller("", true, "", clients.Proxy{}).ReadNucleiJson(a.ctx, reportJson)
+}

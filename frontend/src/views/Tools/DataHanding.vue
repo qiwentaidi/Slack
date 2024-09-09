@@ -4,6 +4,8 @@ import { ExtractIP, Fscan2Txt, IpLocation } from 'wailsjs/go/main/App'
 import { Search, QuestionFilled, Location } from '@element-plus/icons-vue';
 import { ElNotification } from 'element-plus';
 import extractIcon from '@/assets/icon/extract.svg'
+import phoneIcon from '@/assets/icon/phone.svg'
+import idcardIcon from '@/assets/icon/idcard.svg'
 import { SplitTextArea, UploadContextMenu, UploadFileAndRead } from '@/util';
 import async from 'async';
 
@@ -60,9 +62,22 @@ function extractDomains() {
 
 function getURLs(): string[] {
     const urlPattern = /https?:\/\/[^\s/$.?#].[^\s]*/g;
-    const urls = form.input.match(urlPattern);
-    return urls ? urls : [];
+    const urls = form.input.match(urlPattern) || [];
+    return Array.from(new Set(urls))
 }
+
+function getPhoneNumbers(): string[] {
+    const PhoneRegex = /(?<![A-Za-z0-9])((?:(?:\+|00)86)?1(?:(?:3\d)|(?:4[5-79])|(?:5[0-35-9])|(?:6[5-7])|(?:7[0-8])|(?:8\d)|(?:9[189]))\d{8})(?![A-Za-z0-9])/g;
+    const phoneNumbers = form.input.match(PhoneRegex) || [];
+    return Array.from(new Set(phoneNumbers))
+}
+
+function getIdCards(): string[] {
+    const IDCardRegex = /[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]/g;
+    const idcards = form.input.match(IDCardRegex) || [];
+    return Array.from(new Set(idcards))
+}
+
 
 const appControl = [
     {
@@ -94,7 +109,7 @@ const appControl = [
     },
     {
         label: "提取URL中的域名",
-        type: "warning",
+        type: "info",
         icon: extractIcon,
         action: () => {
             extractDomains()
@@ -105,7 +120,23 @@ const appControl = [
         type: "info",
         icon: extractIcon,
         action: () => {
-            form.result = Array.from(new Set(getURLs())).join('\n')
+            form.result = getURLs().join('\n')
+        },
+    },
+    {
+        label: "手机号提取",
+        type: "warning",
+        icon: phoneIcon,
+        action: () => {
+            form.result = getPhoneNumbers().join('\n')
+        },
+    },
+    {
+        label: "身份证提取",
+        type: "warning",
+        icon: idcardIcon,
+        action: () => {
+            form.result = getIdCards().join('\n')
         },
     },
 ]
@@ -151,21 +182,21 @@ const appControl = [
                             </template>
                             {{ item.label }}
                         </el-button>
-                        <el-input v-model="form.dedupSplit" style="width: 300px;">
-                            <template #prepend>
-                                数据去重
-                                <el-tooltip placement="left">
-                                    <template #content>输入分隔字符后转换成数组，然后去重，换行输入\n</template>
-                                    <el-icon>
-                                        <QuestionFilled size="24" />
-                                    </el-icon>
-                                </el-tooltip>
-                            </template>
-                            <template #suffix>
-                                <el-button :icon="Search" link @click="Deduplication"></el-button>
-                            </template>
-                        </el-input>
                     </el-space>
+                    <el-input v-model="form.dedupSplit" style="width: 300px; margin-top: 10px;">
+                        <template #prepend>
+                            数据去重
+                            <el-tooltip placement="left">
+                                <template #content>输入分隔字符后转换成数组，然后去重，换行输入\n</template>
+                                <el-icon>
+                                    <QuestionFilled size="24" />
+                                </el-icon>
+                            </el-tooltip>
+                        </template>
+                        <template #suffix>
+                            <el-button :icon="Search" link @click="Deduplication"></el-button>
+                        </template>
+                    </el-input>
                 </el-form-item>
             </el-form>
         </el-main>

@@ -2,7 +2,7 @@
   <el-container style="height: 100vh;">
     <el-aside width="200px">
       <el-menu default-active="0">
-        <el-menu-item v-for="(item, index) in settingOption" :index="index" @click="item.action">
+        <el-menu-item v-for="(item, index) in settingOption" :index="index.toString()" @click="selectItem">
           <el-icon>
             <component :is="item.icon" />
           </el-icon>
@@ -102,7 +102,7 @@
         </el-form-item>
         <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
       </el-form>
-      <el-form label-width="auto" v-show="currentDisplay == '3'">
+      <el-form  :model="global.Theme" label-width="auto" v-show="currentDisplay == '3'">
         <h3>{{ $t(settingOption[3].name) }}</h3>
         <el-form-item :label="$t('aside.language')">
           <el-select v-model="global.Language.value" @change="changeLanguage" style="width: 150px;">
@@ -131,8 +131,8 @@
           </el-table-column>
         </el-table>
       </div>
-      <div v-show="currentDisplay == '5'">
-        <el-card>ddddocr</el-card>
+      <div style="display: flex; justify-content: center; align-items: center;" v-show="currentDisplay == '5'">
+        <about></about>
       </div>
     </el-main>
   </el-container>
@@ -140,32 +140,13 @@
     <el-input type="textarea" :rows="20" v-model="ctrl.currentDic"></el-input>
     <el-button type="primary" style="margin-top: 10px; float: right;" @click="SaveFile(ctrl.currentPath)">保存</el-button>
   </el-drawer>
-  <!-- about -->
-  <el-dialog v-model="aboutDialog" width="36%">
-        <template #header>
-            <el-segmented v-model="aboutIndex" :options="options">
-                <template #default="{ item }">
-                    <div style="display: flex;">
-                        <el-icon :size="16" style="margin-right: 5px;">
-                            <component :is="item.icon" />
-                        </el-icon>
-                        <div>{{ item.label }}</div>
-                    </div>
-                </template>
-            </el-segmented>
-        </template>
-        <div style="text-align: center;">
-            <about v-show="aboutIndex == 0"></about>
-            <img v-show="aboutIndex != 0" src="../assets/icon/wechat.png" style="height: 208px;">
-        </div>
-    </el-dialog>
 </template>
 
 <script lang="ts" setup>
 import global from "@/global"
-import { ElMessage, ElNotification } from 'element-plus';
+import { ElMessage, ElNotification, MenuItemRegistered } from 'element-plus';
 import { TestProxy, TestNuclei } from "@/util";
-import { Edit, Sunny, Moon, UserFilled, Avatar } from '@element-plus/icons-vue';
+import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, SaveDataToFile, WriteFile } from "wailsjs/go/main/File";
 import { File } from '@/interface';
@@ -177,7 +158,6 @@ import themeIcon from "@/assets/icon/theme.svg"
 import proxyIcon from "@/assets/icon/proxy.svg"
 import dictmanagerIcon from "@/assets/icon/dict.svg"
 import layersIcon from "@/assets/icon/layers.svg"
-import githubIcon from "@/assets/icon/github.svg"
 import aboutIcon from "@/assets/icon/about.svg"
 import scriptIcon from "@/assets/icon/script.svg"
 
@@ -238,71 +218,38 @@ const settingOption = [
   {
     name: 'setting.scan',
     icon: scanIcon,
-    action: () => {
-      currentDisplay.value = '0'
-    }
   },
   {
     name: 'setting.proxy',
     icon: proxyIcon,
-    action: () => {
-      currentDisplay.value = '1'
-    }
   },
   {
     name: 'setting.mapping',
     icon: layersIcon,
-    action: () => {
-      currentDisplay.value = '2'
-    }
   },
   {
     name: 'aside.display',
     icon: themeIcon,
-    action: () => {
-      currentDisplay.value = '3'
-    }
   },
   {
     name: 'aside.dict',
     icon: dictmanagerIcon,
-    action: () => {
-      currentDisplay.value = '4'
-    }
   },
   // {
   //   name: 'aside.script',
   //   icon: scriptIcon,
-  //   action: () => {
-  //     currentDisplay.value = '5'
-  //   }
   // },
   {
     name: 'aside.about',
     icon: aboutIcon,
-    action: () => {
-      aboutDialog.value = true
-    }
   },
 ]
 
 const currentDisplay = ref('0')
 
-const options = [
-    {
-        label: "关于项目",
-        value: 0,
-        icon: githubIcon,
-    },
-    {
-        label: "联系方式",
-        value: 1,
-        icon: Avatar,
-    },
-]
-
-const aboutDialog = ref(false)
-const aboutIndex = ref(0)
+function selectItem(item: MenuItemRegistered) {
+  currentDisplay.value = item.index
+}
 </script>
 
 <style scoped>
