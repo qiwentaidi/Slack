@@ -314,7 +314,7 @@ function copyHistory(length: number) {
             </el-space>
         </el-form-item>
     </el-form>
-    <el-table :data="pagination.table.pageContent" border style="height: 75vh;">
+    <el-table :data="pagination.table.pageContent" border style="height: 74vh;">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="Status" width="100px" label="状态码"
             :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
@@ -350,9 +350,9 @@ function copyHistory(length: number) {
         </template>
     </el-table>
     <div class="my-header" style="margin-top: 5px;">
-        <el-progress :text-inside="true" :stroke-width="20" :percentage="from.percentage" :format="control.format"
+        <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
             color="#5DC4F7" style="width: 40%;" />
-        <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
+        <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
             @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
             :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
             :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"

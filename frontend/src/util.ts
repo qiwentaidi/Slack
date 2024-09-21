@@ -3,7 +3,6 @@ import global from "./global";
 import {
   CheckTarget,
   GoFetch,
-  NucleiEnabled,
   Sock5Connect,
 } from "wailsjs/go/main/App";
 import {
@@ -229,24 +228,6 @@ export async function TestProxy(mode: number) {
     }
   }
   return true;
-}
-
-export async function TestNuclei() {
-  NucleiEnabled(global.webscan.nucleiEngine).then((result) => {
-    if (result) {
-      global.temp.nucleiEnabled = true
-      ElNotification.success({
-        message: "Nuclei engine is enabled",
-        duration: 2000,
-      });
-    } else {
-      global.temp.nucleiEnabled = false
-      ElNotification.error({
-        message: "Nuclei engine is disable",
-        duration: 2000,
-      });
-    }
-  });
 }
 
 export function currentTimestamp() {

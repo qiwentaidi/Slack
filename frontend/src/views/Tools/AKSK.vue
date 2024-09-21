@@ -5,6 +5,7 @@ import { QuestionFilled, InfoFilled } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { generateRandomString, proxys } from "@/util";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
+import CustomTabs from "@/components/CustomTabs.vue";
 
 const warning = "First, need to obtain the accesstoken"
 
@@ -217,7 +218,7 @@ const result = ref("");
 </script>
 
 <template>
-  <div style="position: relative; margin-top: 10px;">
+  <CustomTabs>
     <el-tabs type="border-card" style="height: 40%">
       <el-tab-pane label="Wechat">
         <el-form label-width="auto">
@@ -273,21 +274,23 @@ const result = ref("");
         </el-form>
       </el-tab-pane>
     </el-tabs>
-    <el-space class="custom_eltabs_titlebar" :size="5" style="margin-right: 5px;">
-      <el-popover placement="left" :width="630" :height="300" trigger="hover">
-        <template #reference>
-          <el-button :icon="QuestionFilled" text>微信错误码详情</el-button>
-        </template>
-        <el-table :data="wechatOption.responseDescription" style="height: 50vh">
-          <el-table-column width="100" property="code" label="错误码" />
-          <el-table-column width="200" property="describe" label="错误描述" />
-          <el-table-column width="300" property="solution" label="解决方案" />
-        </el-table>
-      </el-popover>
-      <el-button :icon="InfoFilled" text type="warning"
-        @click="BrowserOpenURL('https://open.dingtalk.com/document/orgapp/delete-a-user')">钉钉API使用详情</el-button>
-    </el-space>
-  </div>
+    <template #ctrl>
+      <el-space :size="2">
+        <el-popover placement="left" :width="630" :height="300" trigger="hover">
+          <template #reference>
+            <el-button :icon="QuestionFilled" text>微信错误码详情</el-button>
+          </template>
+          <el-table :data="wechatOption.responseDescription" style="height: 50vh">
+            <el-table-column width="100" property="code" label="错误码" />
+            <el-table-column width="200" property="describe" label="错误描述" />
+            <el-table-column width="300" property="solution" label="解决方案" />
+          </el-table>
+        </el-popover>
+        <el-button :icon="InfoFilled" text type="warning"
+          @click="BrowserOpenURL('https://open.dingtalk.com/document/orgapp/delete-a-user')">钉钉API使用详情</el-button>
+      </el-space>
+    </template>
+  </CustomTabs>
 
   <pre class="pretty-response" style="height: 48vh"><code>{{ result }}</code></pre>
 </template>

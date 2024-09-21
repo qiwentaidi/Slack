@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref } from 'vue';
+import { reactive, onMounted, ref, h } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea } from '@/util'
 import { ExportToXlsx } from '@/export'
-import { QuestionFilled, ChromeFilled, Menu, Promotion, CopyDocument, Search, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
+import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger } from 'wailsjs/go/main/App'
 import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
@@ -11,8 +11,10 @@ import global from '@/global'
 import { PortScanData, File } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
-import { titleStyle } from '@/stores/style';
+import { defaultIconSize, titleStyle } from '@/stores/style';
 import { LinkCrack, LinkWebscan } from '@/linkage';
+import ContextMenu from '@imengyu/vue3-context-menu'
+import CustomTabs from '@/components/CustomTabs.vue';
 
 // syn 扫描模式
 onMounted(() => {
@@ -307,14 +309,52 @@ const moreOperate = ({
     },
 })
 
-function changeTableHeigth() {
-    form.hideDashboard = !form.hideDashboard
-    var portscanTable = document.getElementById('portscan-table')!
-    if (!form.hideDashboard) {
-        portscanTable.style.height = '55vh'
-    } else {
-        portscanTable.style.height = '82vh'
-    }
+function handleContextMenu(row: any, column: any, e: MouseEvent) {
+    //prevent the browser's default menu
+    e.preventDefault();
+    //show our menu
+    ContextMenu.showContextMenu({
+        x: e.x,
+        y: e.y,
+        items: [
+            {
+                label: "复制全部URL",
+                icon: h(CopyDocument, defaultIconSize),
+                onClick: () => {
+                    moreOperate.CopyURLs('url', pagination.table.result)
+                }
+            },
+            {
+                label: "复制全部可爆破协议",
+                icon: h(CopyDocument, defaultIconSize),
+                onClick: () => {
+                    moreOperate.CopyURLs('brute', pagination.table.result)
+                }
+            },
+            {
+                label: "复制选中目标",
+                divided: true,
+                icon: h(CopyDocument, defaultIconSize),
+                onClick: () => {
+                    moreOperate.CopySelectLinks()
+                }
+            },
+            {
+                label: "联动网站扫描",
+                icon: h(Promotion, defaultIconSize),
+                onClick: () => {
+                    moreOperate.Linkage('webscan')
+                }
+            },
+            {
+                label: "联动暴破与未授权检测",
+                icon: h(Promotion, defaultIconSize),
+                onClick: () => {
+                    moreOperate.Linkage('crack')
+                }
+            },
+        ]
+    });
 }
 </script>
 
@@ -410,11 +450,12 @@ function changeTableHeigth() {
             </el-col>
         </el-row>
     </div>
-    <div style="position: relative;">
-        <el-tabs v-model="form.activeName">
+    <CustomTabs>
+        <el-tabs v-model="form.activeName" type="border-card">
             <el-tab-pane label="结果输出" name="1">
-                <el-table :data="pagination.table.pageContent" border id="portscan-table"
-                    @selection-change="pagination.ctrl.handleSelectChange" style="height: 55vh;">
+                <el-table :data="pagination.table.pageContent"
+                    @selection-change="pagination.ctrl.handleSelectChange"
+                    @row-contextmenu="handleContextMenu" style="height: 100vh;">
                     <el-table-column type="selection" width="55px" align="center" />
                     <el-table-column prop="IP" label="Host" />
                     <el-table-column prop="Port" label="Port" width="100px" />
@@ -444,14 +485,8 @@ function changeTableHeigth() {
                 </div>
             </el-tab-pane>
         </el-tabs>
-        <div class="custom_eltabs_titlebar">
-            <el-space>
-                <el-button link @click="changeTableHeigth">
-                    <template #icon>
-                        <ArrowUpBold v-if="!form.hideDashboard" />
-                        <ArrowDownBold v-else />
-                    </template>
-                </el-button>
+        <template #ctrl>
+            <el-space :size="2">
                 <el-input v-model="form.filter" placeholder="Filter">
                     <template #prepend>
                         <el-select v-model="form.defaultFilterGroup" style="width: 120px;">
@@ -462,29 +497,13 @@ function changeTableHeigth() {
                         <el-button :icon="Search" @click="options.filterField" link></el-button>
                     </template>
                 </el-input>
-                <el-dropdown>
-                    <el-button :icon="Menu" text bg />
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item @click="moreOperate.CopyURLs('url', pagination.table.result)"
-                                :icon="CopyDocument">复制全部URL</el-dropdown-item>
-                            <el-dropdown-item @click="moreOperate.CopyURLs('brute', pagination.table.result)"
-                                :icon="CopyDocument">复制全部可爆破协议</el-dropdown-item>
-                            <el-dropdown-item @click="moreOperate.CopySelectLinks()"
-                                :icon="CopyDocument">复制选中目标</el-dropdown-item>
-                            <el-dropdown-item :icon="exportIcon"
-                                @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)" divided>
-                                导出Excel</el-dropdown-item>
-                            <el-dropdown-item @click="moreOperate.Linkage('webscan')" :icon="Promotion"
-                                divided>发送至网站扫描</el-dropdown-item>
-                            <el-dropdown-item @click="moreOperate.Linkage('crack')"
-                                :icon="Promotion">发送至暴破与未授权检测</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
+                <el-tooltip content="导出Excel">
+                    <el-button :icon="exportIcon"
+                    @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)" />
+                </el-tooltip>
             </el-space>
-        </div>
-    </div>
+        </template>
+    </CustomTabs>
 </template>
 
 

@@ -121,18 +121,6 @@ export namespace main {
 	
 	    }
 	}
-	export class HunterSearch {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new HunterSearch(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
 	export class PathInfo {
 	
 	
@@ -452,40 +440,6 @@ export namespace structs {
 	
 	    static createFrom(source: any = {}) {
 	        return new SubdomainOption(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
-
-}
-
-export namespace url {
-	
-	export class URL {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new URL(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
-	    }
-	}
-
-}
-
-export namespace webscan {
-	
-	export class NucleiOption {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new NucleiOption(source);
 	    }
 	
 	    constructor(source: any = {}) {

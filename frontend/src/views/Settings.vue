@@ -14,20 +14,11 @@
     <el-main>
       <el-form :model="global.webscan" label-width="auto" v-show="currentDisplay == '0'">
         <h3>{{ $t(settingOption[0].name) }}</h3>
-        <el-form-item :label="$t('setting.engine')">
-          <el-input v-model="global.webscan.nucleiEngine" :placeholder="$t('setting.nuclei_placeholder')" clearable>
-            <template #suffix>
-              <el-button type="primary" link @click="TestNuclei()">{{ $t('setting.engine_enable')
-                }}</el-button>
-            </template>
-          </el-input>
-        </el-form-item>
         <el-form-item :label="$t('setting.network_list')">
           <el-select v-model="global.temp.defaultNetwork">
             <el-option v-for="value in global.temp.NetworkCardList" :label="value" :value="value" />
           </el-select>
         </el-form-item>
-        <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
       </el-form>
       <el-form :inline="true" :model="global.proxy" label-width="auto" class="demo-form-inline"
         v-show="currentDisplay == '1'">
@@ -145,7 +136,7 @@
 <script lang="ts" setup>
 import global from "@/global"
 import { ElMessage, ElNotification, MenuItemRegistered } from 'element-plus';
-import { TestProxy, TestNuclei } from "@/util";
+import { TestProxy } from "@/util";
 import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, SaveDataToFile, WriteFile } from "wailsjs/go/main/File";

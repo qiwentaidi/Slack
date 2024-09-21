@@ -15,16 +15,10 @@ onMounted(async () => {
     if (stat) {
         let hosts = await SearchAgentPool()
         if (Array.isArray(hosts)) {
-            for (const host of hosts) {
-                form.pool.push({ Host: host })
-            }
+            form.pool.push(...hosts)
         }
     }
 });
-
-interface HostCotent {
-    Host: string
-}
 
 const form = reactive({
     socksLogger: '',
@@ -33,7 +27,7 @@ const form = reactive({
     socksThreshold: 50,
     percentage: 0,
     activeNames: "1",
-    pool: [] as HostCotent[],
+    pool: [] as string[],
     currentTableName: "0",
 })
 
@@ -49,8 +43,8 @@ async function NewSock5Crawl(step: number) {
         let tempHosts = [] as string[]
         if (form.pool.length > 0) {
             form.socksLogger += "正在验证数据库代理存活数量...\n"
-            await async.eachLimit(form.pool, 50, async (temp: HostCotent, callback: (err?: Error) => void) => {
-                let t = temp.Host.split(":")
+            await async.eachLimit(form.pool, 50, async (temp: string, callback: (err?: Error) => void) => {
+                let t = temp.split(":")
                 if (await Sock5Connect(t[0], Number(t[1]), 3, "", "")) {
                     form.socksLogger += `[+] ${t[0]}:${t[1]} is alive!\n`
                     tempHosts.push(t[0] + ":" + t[1])
@@ -101,13 +95,13 @@ async function NewSock5Crawl(step: number) {
         }
         let insertStmt = "INSERT INTO agent_pool(hosts) VALUES(?)"
         for (const host of tempHosts) {
-            form.pool.push({ Host: host })
+            form.pool.push(host)
             await ExecSqlStatement(insertStmt, [host])
         }
     } else if (step == 2) {
         let hosts = [] as string[]
         for (const host of form.pool) {
-            hosts.push(host.Host)
+            hosts.push(host)
         }
         ExportTXT("socks_unauth_asset", hosts)
     }
@@ -166,7 +160,7 @@ async function Delelte(host: string) {
     let deleteStmt = `DELETE FROM agent_pool WHERE hosts = ?;`
     let result = await ExecSqlStatement(deleteStmt, [host])
     if (result) {
-        form.pool = form.pool.filter(item => item.Host !== host)
+        form.pool = form.pool.filter(item => item !== host)
     } else {
         ElMessage({
             message: 'failed',
@@ -198,20 +192,24 @@ async function Delelte(host: string) {
                     </el-popover>
                     代理池爬取
                 </template>
-                <el-input v-model="form.socksLogger" type="textarea" resize="none" style="height: 82vh;" />
-                <el-progress :percentage="form.percentage" :text-inside="true" :stroke-width="20"
+                <el-input v-model="form.socksLogger" type="textarea" resize="none" style="height: 80vh;" />
+                <el-progress :percentage="form.percentage" :text-inside="true" :stroke-width="18"
                     style="margin-top: 5px" color="#5DC4F7" />
             </el-tab-pane>
             <el-tab-pane label="历史记录" name="1">
-                <el-table :data="form.pool" border style="height: 85vh;">
+                <el-table :data="form.pool" border style="height: 83vh;">
                     <el-table-column type="index" width="50" label="#" align="center" />
-                    <el-table-column prop="Host" label="主机地址" />
+                    <el-table-column label="主机地址">
+                        <template #default="scope">
+                            {{ scope.row }}
+                        </template>
+                    </el-table-column>
                     <el-table-column fixed="right" label="操作" width="120" align="center">
                         <template #default="scope">
                             <el-button link type="primary" size="small"
-                                @click.prevent="TestConnection(scope.row.Host)">测试连接</el-button>
+                                @click.prevent="TestConnection(scope.row)">测试连接</el-button>
                             <el-button link type="primary" size="small"
-                                @click.prevent="Delelte(scope.row.Host)">删除</el-button>
+                                @click.prevent="Delelte(scope.row)">删除</el-button>
                         </template>
                     </el-table-column>
                 </el-table>

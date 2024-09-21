@@ -1,25 +1,12 @@
-import { Callgologger, PortBrute, NewWebScanner, NucleiEnabled, LoadDirsearchDict, DirScan, HunterSearch, Subdomain } from 'wailsjs/go/main/App'
+import { Callgologger, PortBrute, NewWebScanner, LoadDirsearchDict, DirScan, HunterSearch, Subdomain } from 'wailsjs/go/main/App'
 import global from '@/global'
 import async from 'async';
-import { DirScanOptions, NulceiOptions, SubdomainOption } from '@/interface';
+import { DirScanOptions, SubdomainOption } from '@/interface';
 import { ElMessage, ElNotification } from 'element-plus';
 
 
 export async function LinkWebscan(ips: string[]) {
-    if (!(await NucleiEnabled(global.webscan.nucleiEngine))) {
-        ElMessage.warning(`Nuclei引擎无效，无法进行漏洞扫描，已结束！`)
-        return
-    }
-    let option: NulceiOptions = {
-        Mode: 0,
-        CustomTags: [],
-        Engine: global.webscan.nucleiEngine,
-        Risk: "",
-        Interactsh: false,
-        Proxy: global.proxy
-    }
-
-    await NewWebScanner(ips, global.proxy, 50 ,true, true, true, option)
+    await NewWebScanner(ips, global.proxy, 50 ,true, true, true, "")
 }
 
 export function LinkCrack(ips: string[]) {

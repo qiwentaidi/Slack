@@ -263,12 +263,3 @@ export interface PocDetail {
     Name: string
     AssociatedFingerprint: string[]
 }
-
-export interface NulceiOptions {
-    Mode: number
-    Engine: string
-    Interactsh: boolean
-    CustomTags: string[] // 全漏洞扫描时，使用自定义标签
-    Risk: string
-    Proxy: clients.Proxy
-}

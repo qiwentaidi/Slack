@@ -240,6 +240,18 @@ func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) 
 	return
 }
 
+func CheckLogin() bool {
+	u := "https://capi.tianyancha.com/cloud-monitor-provider/v4/monitor/checkMonitorTip.json"
+	_, body, err := clients.NewRequest("GET", u, gethead, nil, 10, true, clients.DefaultClient())
+	if err != nil {
+		return false
+	}
+	if strings.Contains(string(body), "mustlogin") {
+		return false
+	}
+	return true
+}
+
 var me sync.RWMutex
 
 func CheckKeyMap(ctx context.Context, query string) structs.TycCompanyInfo {

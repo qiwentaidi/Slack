@@ -401,9 +401,7 @@ func (f *File) RemoveOldClient() {
 		}
 	} else if rt.GOOS == "darwin" {
 		cmd := exec.Command("hdiutil", "detach", "/Volumes/Slack")
-		if err := cmd.Run(); err != nil {
-			gologger.Debug(f.ctx, err)
-		}
+		cmd.Run()
 	}
 }
 

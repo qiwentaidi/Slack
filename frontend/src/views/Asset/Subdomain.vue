@@ -3,7 +3,7 @@ import global from "@/global";
 import { Copy, ReadLine, transformArrayFields, validateDomain } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { reactive, ref, onMounted } from "vue";
-import { Subdomain } from "wailsjs/go/main/App";
+import { StopSubdomain, Subdomain } from "wailsjs/go/main/App";
 import { CheckFileStat, FileDialog } from "wailsjs/go/main/File";
 import { ElMessage, ElNotification } from 'element-plus'
 import { Menu, CopyDocument } from '@element-plus/icons-vue';
@@ -11,6 +11,11 @@ import exportIcon from '@/assets/icon/doucment-export.svg'
 import usePagination from "@/usePagination";
 import { SubdomainInfo, SubdomainOption } from "@/interface";
 import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
+import { debounce } from "lodash"
+
+const debounceUpdate = debounce(() => {
+  pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
+}, 500);
 
 onMounted(() => {
     EventsOn("subdomainLoading", (result: SubdomainInfo) => {
@@ -21,7 +26,8 @@ onMounted(() => {
             }
         }
         pagination.table.result.push(result)
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+        debounceUpdate()
+        // pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
     });
     EventsOn("subdomainProgressID", (id: number) => {
         config.id = id
@@ -111,11 +117,12 @@ async function NewTask() {
             await task.NewRunner()
         }
     } else {
-       config.runningStatus = false
-       ElNotification.error({
-           message: "用户已终止扫描任务",
-           position: 'bottom-right',
-       });
+        await StopSubdomain()
+        config.runningStatus = false
+        ElNotification.error({
+            message: "用户已终止扫描任务",
+            position: 'bottom-right',
+        });
     }
 }
 
@@ -236,7 +243,7 @@ const CopyDomains = () => {
         </el-form-item>
     </el-form>
     <el-table :data="pagination.table.pageContent" border :cell-style="{ textAlign: 'center' }" 
-    :header-cell-style="{ 'text-align': 'center' }" style="height: 76vh;">
+    :header-cell-style="{ 'text-align': 'center' }" style="height: 74.5dvh;">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="Domain" label="主域名" />
         <el-table-column prop="Subdomain" label="子域名" />

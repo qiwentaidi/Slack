@@ -4,10 +4,11 @@ import Timestamp from './transcode/Timestamp.vue';
 import OA from './transcode/OA.vue';
 import Transcode from './transcode/Transcode.vue';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
+import CustomTabs from '@/components/CustomTabs.vue';
 </script>
 
 <template>
-    <div style="position: relative;">
+    <CustomTabs>
         <el-tabs>
             <el-tab-pane label="编码转换" style="height: 100vh;">
                 <Transcode></Transcode>
@@ -19,7 +20,7 @@ import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
                 <OA></OA>
             </el-tab-pane>
         </el-tabs>
-        <div class="custom_eltabs_titlebar">
+        <template #ctrl>
             <el-button text bg type="primary" @click="BrowserOpenURL('http://127.0.0.1:8731/')">
                 <template #icon>
                     <el-tooltip placement="left">
@@ -33,6 +34,6 @@ import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
                 </template>
                 打开本地环境
             </el-button>
-        </div>
-    </div>
+        </template>
+    </CustomTabs>
 </template>

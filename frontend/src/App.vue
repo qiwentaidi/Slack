@@ -12,18 +12,13 @@ import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/main/File";
 import { InitConfigFile } from "./config";
 import { check } from "@/util";
 
-onMounted(async () => {
-  // 初始化目录
-  global.PATH.homedir = await UserHomeDir();
-  // 初始化配置文件
-  await InitConfigFile(500);
-  // 检测更新
-  check.client();
-  check.poc();
-  // 初始化网卡
-  let list = await NetworkCardInfo()
-  global.temp.NetworkCardList.push(...list)
-});
+const levelClassMap: { [key: string]: string } = {
+  "[INF]": "log-info",
+  "[WRN]": "log-warning",
+  "[ERR]": "log-error",
+  "[DEB]": "log-debug",
+  "[SUC]": "log-success"
+};
 
 // 初始化主题
 useDark({
@@ -37,14 +32,18 @@ const locale = computed(() => (global.Language.value === 'zh' ? zhCn : en))
 
 const logArray = [] as string[]
 
-onMounted(() => {
-  const levelClassMap: { [key: string]: string } = {
-    "[INF]": "log-info",
-    "[WRN]": "log-warning",
-    "[ERR]": "log-error",
-    "[DEB]": "log-debug",
-    "[SUC]": "log-success"
-  };
+onMounted(async () => {
+  // 初始化目录
+  global.PATH.homedir = await UserHomeDir();
+  // 初始化配置文件
+  await InitConfigFile(500);
+  // 检测更新
+  check.client();
+  check.poc();
+  // 初始化网卡
+  let list = await NetworkCardInfo()
+  global.temp.NetworkCardList.push(...list)
+  // 初始化日志
   EventsOn("gologger", (log: LogInfo) => {
     const logClass = levelClassMap[log.Level];
     const logEntry = `<span class="${logClass}">${log.Level}</span> ${log.Msg}`;
@@ -55,10 +54,7 @@ onMounted(() => {
     }
     global.Logger.value = logArray.join('\n');
   });
-  EventsOn("nuclei-pid", (pid: number) => {
-    global.temp.currentPid = pid;
-  });
-})
+});
 </script>
 
 <template>
@@ -67,7 +63,7 @@ onMounted(() => {
     <el-aside style="width: 64px;">
       <Sidebar />
     </el-aside>
-    <el-main>
+    <el-main :class="{ 'no-scroll': $route.path == '/Tools/Codec' || $route.path == '/Tools/Reverse' }" class="content-wrapper">
       <el-config-provider :locale="locale">
         <!-- 一定要使用插槽否则keey-alive不会生效 -->
         <router-view v-slot="{ Component }">
@@ -79,3 +75,14 @@ onMounted(() => {
     </el-main>
   </el-container>
 </template>
+
+<style>
+.content-wrapper {
+  max-height: calc(100vh - 35px);
+  overflow-y: auto;
+}
+
+.no-scroll {
+    overflow-y: hidden; /* 禁用滚动 */
+}
+</style>

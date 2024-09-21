@@ -49,6 +49,7 @@ export default {
         'isic': 'Internet Info Collection',
         'poc_manage': 'Poc Management',
         'script': 'Script',
+        'extract_database_info': 'Extract database info'
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

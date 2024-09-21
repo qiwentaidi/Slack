@@ -75,7 +75,7 @@ function CopyAndJump() {
 </script>
 
 <template>
-    <div style="margin-bottom: 10px; display: flex; justify-content: center;">
+    <div class="position-center">
         <el-input v-model="domain.input" style="width: 60%; height: 40px;">
             <template #prepend>
                 域名
@@ -138,13 +138,12 @@ function CopyAndJump() {
 }
 
 .grid-container {
+    margin-top: 10px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(2, 1fr);
     gap: 10px;
-    width: 100%;
-    /* 宽度可以根据需要调整 */
-    height: 98%;
+    height: 100%;
     /* 高度可以根据需要调整 */
 }
 

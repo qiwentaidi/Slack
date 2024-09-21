@@ -144,6 +144,11 @@ const MenuList = [
           path: "/AKSK",
           icon: "/app/wechat.png"
         },
+        {
+          name: "aside.extract_database_info",
+          path: "/ExtractDbInfo",
+          icon: "/app/database.png"
+        },
       ]
     },
   ]

@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path"
 	rt "runtime"
 	"slack-wails/core"
@@ -35,8 +34,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -314,35 +311,39 @@ func (a *App) WechatOfficial(query string) []info.WechatReulst {
 	return info.WeChatOfficialAccounts(a.ctx, query, companyId)
 }
 
-type HunterSearch struct {
-	Total string
-	Info  string
+func (a *App) TycCheckLogin() bool {
+	return info.CheckLogin()
 }
 
+// type HunterSearch struct {
+// 	Total string
+// 	Info  string
+// }
+
 // mode = 0 campanyName, mode = 1 domain or ip
-func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
-	if mode == 0 {
-		str := fmt.Sprintf("icp.name=\"%v\"", target)
-		t, i := space.SearchTotal(api, str)
-		return HunterSearch{
-			Total: fmt.Sprint(t),
-			Info:  i,
-		}
-	} else {
-		var str string
-		// 处理网站域名是IP的情况
-		if util.RegIP.MatchString(target) {
-			str = fmt.Sprintf("ip=\"%v\"", target)
-		} else {
-			str = fmt.Sprintf("domain.suffix=\"%v\"", target)
-		}
-		t, i := space.SearchTotal(api, str)
-		return HunterSearch{
-			Total: fmt.Sprint(t),
-			Info:  i,
-		}
-	}
-}
+// func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
+// 	if mode == 0 {
+// 		str := fmt.Sprintf("icp.name=\"%v\"", target)
+// 		t, i := space.SearchTotal(api, str)
+// 		return HunterSearch{
+// 			Total: fmt.Sprint(t),
+// 			Info:  i,
+// 		}
+// 	} else {
+// 		var str string
+// 		// 处理网站域名是IP的情况
+// 		if util.RegIP.MatchString(target) {
+// 			str = fmt.Sprintf("ip=\"%v\"", target)
+// 		} else {
+// 			str = fmt.Sprintf("domain.suffix=\"%v\"", target)
+// 		}
+// 		t, i := space.SearchTotal(api, str)
+// 		return HunterSearch{
+// 			Total: fmt.Sprint(t),
+// 			Info:  i,
+// 		}
+// 	}
+// }
 
 // dirsearch
 
@@ -451,6 +452,7 @@ func (a *App) FofaTips(query string) *space.TipsResult {
 	ff.PrivateKey = `MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC/TGN5+4FMXo7H3jRmostQUUEO1NwH10B8ONaDJnYDnkr5V0ZzUvkuola7JGSFgYVOUjgrmFGITG+Ne7AgR53Weiunlwp15MsnCa8/IWBoSHs7DX1O72xNHmEfFOGNPyJ4CsHaQ0B2nxeijs7wqKGYGa1snW6ZG/ZfEb6abYHI9kWVN1ZEVTfygI+QYqWuX9HM4kpFgy/XSzUxYE9jqhiRGI5f8SwBRVp7rMpGo1HZDgfMlXyA5gw++qRq7yHA3yLqvTPSOQMYJElJb12NaTcHKLdHahJ1nQihL73UwW0q9Zh2c0fZRuGWe7U/7Bt64gV2na7tlA62A9fSa1Dbrd7lAgMBAAECggEAPrsbB95MyTFc2vfn8RxDVcQ/dFCjEsMod1PgLEPJgWhAJ8HR7XFxGzTLAjVt7UXK5CMcHlelrO97yUadPAigHrwTYrKqEH0FjXikiiw0xB24o2XKCL+EoUlsCdg8GqhwcjL83Mke84c6Jel0vQBfdVQ+RZbetMCxqv1TpqpwW+iswlDY0+OKNxcDSnUyVkBko4M7bCqJ19DjzuHHLRmSuJhWLjX2PzdrVwIrRChxeJRR5AzrNE2BC/ssKasWjZfgkTOW6MS96q+wMLgwFGCQraU0f4AW5HA4Svg8iWT2uukcDg7VXXc/eEmkfmDGzmgsszUJZYb1hYsvjgbMP1ObwQKBgQDw1K0xfICYctiZ3aHS7mOk0Zt6B/3rP2z9GcJVs0eYiqH+lteLNy+Yx4tHtrQEuz16IKmM1/2Ghv8kIlOazpKaonk3JEwm1mCEXpgm4JI7UxPGQj/pFTCavKBBOIXxHJVSUSg0nKFkJVaoJiNy0CKwQNoFGdROk2fSYu8ReB/WlQKBgQDLWQR3RioaH/Phz8PT1ytAytH+W9M4P4tEx/2Uf5KRJxPQbN00hPnK6xxHAqycTpKkLkbJIkVWEKcIGxCqr6iGyte3xr30bt49MxIAYrdC0LtBLeWIOa88GTqYmIusqJEBmiy+A+DudM/xW4XRkgrOR1ZsagzI3FUVlei9DwFjEQKBgG8JH3EZfhDLoqIOVXXzA24SViTFWoUEETQAlGD+75udD2NaGLbPEtrV5ZmC2yzzRzzvojyVuQY1Z505VmKhq2YwUsLhsVqWrJlbI7uI/uLrQsq98Ml+Q5KUNS7c6KRqEU6KrIbVUHPj4zhTnTRqUhQBUoPXjNNNkyilBKSBReyhAoGAd3xGCIPdB17RIlW/3sFnM/o5bDmuojWMcw0ErvZLPCl3Fhhx3oNod9iw0/T5UhtFRV2/0D3n+gts6nFk2LbA0vtryBvq0C85PUK+CCX5QzR9Y25Bmksy8aBtcu7n27ttAUEDm1+SEuvmqA68Ugl7efwnBytFed0lzbo5eKXRjdECgYAk6pg3YIPi86zoId2dC/KfsgJzjWKVr8fj1+OyInvRFQPVoPydi6iw6ePBsbr55Z6TItnVFUTDd5EX5ow4QU1orrEqNcYyG5aPcD3FXD0Vq6/xrYoFTjZWZx23gdHJoE8JBCwigSt0KFmPyDsN3FaF66Iqg3iBt8rhbUA8Jy6FQA==`
 	b, err := ff.GetTips(query)
 	if err != nil {
+		gologger.Debug(a.ctx, err)
 		return &ts
 	}
 	json.Unmarshal(b, &ts)
@@ -509,12 +511,6 @@ func (a *App) InitRule() bool {
 
 // webscan
 
-// 在经过前端输入校验后，url.Parse肯定不会出现error
-func (a *App) URLParse(rawURL string) *url.URL {
-	u, _ := url.Parse(rawURL)
-	return u
-}
-
 func (a *App) FingerprintList() []string {
 	var fingers []string
 	for _, item := range webscan.FingerprintDB {
@@ -523,41 +519,32 @@ func (a *App) FingerprintList() []string {
 	return fingers
 }
 
-func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, deepScan, rootPath, callNuclei bool, o webscan.NucleiOption) {
+func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, deepScan, rootPath, callNuclei bool, severity string) {
+	webscan.ExitFunc = false
 	s := webscan.NewFingerScanner(a.ctx, target, proxy, thread, deepScan, rootPath)
 	s.NewFingerScan()
 	if deepScan {
 		s.NewActiveFingerScan(rootPath)
 	}
 	if callNuclei {
-		nc := webscan.NewNucleiCaller(o.Engine, o.Interactsh, o.Severity, o.Proxy)
-		nc.ReportDirStat()
 		gologger.Info(a.ctx, "正在进行漏洞扫描 ...")
-		// mode = 0  表示扫指纹漏洞， mode = 1 表示扫全漏洞
-		switch o.Mode {
-		case 1:
-			for target := range s.URLWithFingerprintMap() {
-				err := nc.CallerAP(a.ctx, target, o.CustomTags)
-				gologger.Error(a.ctx, err)
+		for target, tags := range s.URLWithFingerprintMap() {
+			if webscan.ExitFunc {
+				gologger.Warning(a.ctx, "用户已退出漏洞扫描")
+				return
 			}
-		default:
-			for target, tags := range s.URLWithFingerprintMap() {
-				err := nc.CallerFP(a.ctx, webscan.FingerPoc{
-					URL:  target,
-					Tags: util.RemoveDuplicates(tags),
-				})
-				gologger.Error(a.ctx, err)
-			}
+			webscan.NewNucleiEngine(a.ctx, proxy, webscan.NucleiOption{
+				URL:      target,
+				Tags:     util.RemoveDuplicates(tags),
+				Severity: severity,
+			})
 		}
-		gologger.Info(a.ctx, "漏洞扫描已结束 ...")
+		gologger.Info(a.ctx, "漏洞扫描已结束")
 	}
 }
 
-func (a *App) NucleiEnabled(nucleiPath string) bool {
-	nc := webscan.NewNucleiCaller(nucleiPath, false, "", clients.Proxy{
-		Enabled: false,
-	})
-	return nc.Enabled(a.ctx)
+func (a *App) StopWebscan() {
+	webscan.ExitFunc = true
 }
 
 func (a *App) GetFingerPocMap() map[string][]string {
@@ -706,27 +693,23 @@ func (a *App) GitDorks(target, dork, apikey string) *isic.GithubResult {
 	return isic.GithubApiQuery(a.ctx, fmt.Sprintf("%s %s", target, dork), apikey)
 }
 
-func (a *App) Kill(pid int) {
-	if pid == 0 {
-		return
-	}
-	var cmd *exec.Cmd
-	if rt.GOOS != "windows" {
-		cmd = exec.Command("kill", "-9", fmt.Sprintf("%d", pid))
+// func (a *App) Kill(pid int) {
+// 	if pid == 0 {
+// 		return
+// 	}
+// 	var cmd *exec.Cmd
+// 	if rt.GOOS != "windows" {
+// 		cmd = exec.Command("kill", "-9", fmt.Sprintf("%d", pid))
 
-	} else {
-		cmd = exec.Command("taskkill", "/PID", fmt.Sprintf("%d", pid), "/F")
-	}
-	if err := cmd.Run(); err != nil {
-		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-			Title:         "提示",
-			Message:       "终止Nuclei进程失败",
-			Type:          runtime.ErrorDialog,
-			DefaultButton: "Ok",
-		})
-	}
-}
-
-func (a *App) LoadNulceiResult(reportJson string) {
-	webscan.NewNucleiCaller("", true, "", clients.Proxy{}).ReadNucleiJson(a.ctx, reportJson)
-}
+// 	} else {
+// 		cmd = exec.Command("taskkill", "/PID", fmt.Sprintf("%d", pid), "/F")
+// 	}
+// 	if err := cmd.Run(); err != nil {
+// 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+// 			Title:         "提示",
+// 			Message:       "终止Nuclei进程失败",
+// 			Type:          runtime.ErrorDialog,
+// 			DefaultButton: "Ok",
+// 		})
+// 	}
+// }

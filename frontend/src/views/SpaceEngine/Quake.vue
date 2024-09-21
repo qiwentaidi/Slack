@@ -20,13 +20,13 @@
                                 <el-tab-pane v-for="item in options.keywordSearch" :name="item.title"
                                     :label="item.title">
                                     <el-table :data="item.data" class="keyword-search" @row-click="syntax.rowClick">
-                                        <el-table-column width="300" property="key">
+                                        <el-table-column width="300" property="key" label="例句">
                                             <template #default="scope">
                                                 {{ scope.row.key }}<el-tag type="success" effect="dark" color="#4CA87D"
                                                     v-if="scope.row.isVip" style="margin-left: 5px;">VIP</el-tag>
                                             </template>
                                         </el-table-column>
-                                        <el-table-column property="description" />
+                                        <el-table-column property="description" label="用途说明" />
                                     </el-table>
                                 </el-tab-pane>
                             </el-tabs>
@@ -188,7 +188,7 @@
         @tab-remove="tableCtrl.removeTab" class="quake-tabs">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 67vh;">
+            <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column prop="IP" fixed label="IP" width="150" />
                 <el-table-column prop="Host" fixed label="域名" width="200" :show-overflow-tooltip="true">
                     <template #default="scope">
@@ -757,10 +757,6 @@ async function exportData() {
 </script>
 
 <style scoped>
-.keyword-search :deep(.el-table__header-wrapper) {
-    height: 0;
-}
-
 .keyword-search :deep(.el-table__row:hover) {
     color: #4CA87D;
     cursor: pointer;
@@ -827,6 +823,7 @@ async function exportData() {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding-right: 26px !important; /* 给关闭按钮预留空间 */
 }
 
 .quake-tabs :deep(.el-tabs__item:hover) {

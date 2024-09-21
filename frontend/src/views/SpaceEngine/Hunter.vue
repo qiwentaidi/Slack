@@ -459,9 +459,9 @@ function searchCsegmentIpv4(ip: string) {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="options.Data" @row-click="entry.rowClick" class="hunter-keyword-search">
-                                <el-table-column width="300" property="syntax" />
-                                <el-table-column property="description" />
+                            <el-table :data="options.Data" @row-click="entry.rowClick" class="keyword-search">
+                                <el-table-column width="300" property="syntax" label="例句" />
+                                <el-table-column property="description" label="用途说明"/>
                             </el-table>
                         </el-popover>
                         <el-tooltip content="使用网页图标搜索" placement="bottom">
@@ -494,12 +494,12 @@ function searchCsegmentIpv4(ip: string) {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="form.syntaxData" @row-click="entry.rowClick2" class="hunter-keyword-search">
+                            <el-table :data="form.syntaxData" @row-click="entry.rowClick2" class="keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100">
                                     <template #default="scope">
-                                        <el-button link
+                                        <el-button link type="primary"
                                             @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
                                         </el-button>
                                     </template>
@@ -555,11 +555,11 @@ function searchCsegmentIpv4(ip: string) {
             </el-dropdown>
         </el-form-item>
     </el-form>
-    <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" style="margin-top: 10px;" closable
+    <el-tabs class="editor-tabs" v-model="table.acvtiveNames" v-loading="table.loading" type="card" style="margin-top: 10px;" closable
         @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 66vh;">
+            <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" fixed label="IP" width="150" :show-overflow-tooltip="true" />
@@ -613,7 +613,7 @@ function searchCsegmentIpv4(ip: string) {
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
                 <span style="color: cornflowerblue;">{{ form.tips }}</span>
-                <el-pagination background v-model:page-size="item.pageSize" :page-sizes="[10, 50, 100]"
+                <el-pagination size="small" background v-model:page-size="item.pageSize" :page-sizes="[10, 50, 100]"
                     layout="total, sizes, prev, pager, next, jumper" @size-change="tableCtrl.handleSizeChange"
                     @current-change="tableCtrl.handleCurrentChange" :total="item.total" />
             </div>
@@ -645,35 +645,6 @@ function searchCsegmentIpv4(ip: string) {
     </el-dialog>
 </template>
 
-<style>
-.el-tabs__item {
-    position: relative;
-    display: inline-block;
-    max-width: 300px;
-    margin-bottom: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+<style scoped>
 
-.el-tabs__item .el-icon {
-    position: absolute !important;
-    top: 13px !important;
-    right: 7px !important;
-}
-
-.el-tabs__nav {
-    line-height: 255%;
-}
-
-.hunter-keyword-search {
-    .el-table__header-wrapper {
-        height: 0;
-    }
-
-    .el-table__row:hover {
-        color: #4874ED;
-        cursor: pointer;
-    }
-}
 </style>

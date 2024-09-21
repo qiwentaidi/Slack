@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { reactive } from "vue";
+import { onMounted, reactive } from "vue";
 import { QuestionFilled, Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
-import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger } from "wailsjs/go/main/App";
+import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger, TycCheckLogin } from "wailsjs/go/main/App";
 import { ExportAssetToXlsx } from '@/export'
 import { CompanyInfo, WechatInfo } from "@/interface";
 import usePagination from "@/usePagination";
@@ -10,6 +10,16 @@ import { transformArrayFields } from "@/util";
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import global from "@/global";
 import { LinkSubdomain } from "@/linkage";
+import CustomTabs from "@/components/CustomTabs.vue";
+import wechatIcon from "@/assets/icon/wechat.svg"
+import { debounce } from "lodash"
+
+onMounted(() => {
+    const storedToken = localStorage.getItem('tyc-token');
+    if (storedToken) {
+        from.token = storedToken;
+    }
+})
 
 const from = reactive({
     newTask: false,
@@ -30,7 +40,7 @@ const from = reactive({
 let pc = usePagination(from.companyData, 20) // paginationCompany
 let pw = usePagination(from.wehcatData, 20) // paginationWehcat
 
-function Collect() {
+async function Collect() {
     if (from.company == "") {
         ElMessage.warning('查询目标不能为空')
         return
@@ -40,9 +50,16 @@ function Collect() {
         return
     } else {
         from.token = from.token.replace(/[\r\n\s]/g, '')
+        InitTycHeader(from.token)
+        let isLogin = await TycCheckLogin()
+        if (!isLogin) {
+            ElMessage.warning('天眼查Token已失效')
+            return
+        }
     }
     if (from.domain && from.machineStr == "") {
         ElMessage.warning('MachineStr为空，无法进行子域名查询，请先配置该内容')
+        return
     } else {
         from.machineStr = from.machineStr.replace(/[\r\n\s]/g, '')
     }
@@ -53,8 +70,7 @@ function Collect() {
     from.newTask = false
     from.runningStatus = true
     const lines = from.company.split(/[(\r\n)\r\n]+/);
-    let companys = lines.map(line => line.trim().replace(/\s+/g, ''));
-    InitTycHeader(from.token)
+    let companys = lines.map(line => line.trim().replace(/\s+/g, ''));    
     pc.ctrl.initTable()
     pw.ctrl.initTable()
     let allCompany = [] as string[]
@@ -105,6 +121,11 @@ function Collect() {
 function recheckLinkSubdomain() {
     if (!from.domain) { from.linkSubdomain = false}
 }
+
+const debouncedInput = debounce(() => {
+    // 2秒后将数据存储到localStorage
+    localStorage.setItem('tyc-token', from.token);
+}, 2000);
 </script>
 
 
@@ -147,7 +168,7 @@ function recheckLinkSubdomain() {
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-input v-model="from.token" type="textarea" :rows="4"></el-input>
+                <el-input v-model="from.token" type="textarea" :rows="4" @input="debouncedInput"></el-input>
             </el-form-item>
             <el-form-item>
                 <template #label>
@@ -167,10 +188,10 @@ function recheckLinkSubdomain() {
             </el-form-item>
         </el-form>
     </el-drawer>
-    <div style="position: relative;">
-        <el-tabs v-model="from.activeName">
+    <CustomTabs>
+        <el-tabs v-model="from.activeName" type="border-card">
             <el-tab-pane label="控股企业" name="subcompany">
-                <el-table :data="pc.table.pageContent" height="80vh" border>
+                <el-table :data="pc.table.pageContent" height="78vh">
                     <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" :show-overflow-tooltip="true" />
                     <el-table-column prop="Holding" width="100px" label="股权比例" />
@@ -198,16 +219,15 @@ function recheckLinkSubdomain() {
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
                     <div></div>
-                    <el-pagination background @size-change="pc.ctrl.handleSizeChange"
+                    <el-pagination size="small" background @size-change="pc.ctrl.handleSizeChange"
                         @current-change="pc.ctrl.handleCurrentChange" :pager-count="5"
                         :current-page="pc.table.currentPage" :page-sizes="[20, 50, 100]" :page-size="pc.table.pageSize"
                         layout="total, sizes, prev, pager, next" :total="pc.table.result.length">
                     </el-pagination>
                 </div>
-
             </el-tab-pane>
             <el-tab-pane label="公众号" name="wechat">
-                <el-table :data="pw.table.pageContent" height="80vh" border :cell-style="{ height: '23px' }">
+                <el-table :data="pw.table.pageContent" height="78vh" :cell-style="{ height: '23px' }">
                     <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" width="180px" />
                     <el-table-column prop="WechatName" label="公众号名称">
@@ -223,12 +243,7 @@ function recheckLinkSubdomain() {
                         <template #default="scope">
                             <el-popover :width="180" placement="left">
                                 <template #reference>
-                                    <svg t="1712903814884" viewBox="0 0 1024 1024" version="1.1"
-                                        xmlns="http://www.w3.org/2000/svg" p-id="2765" width="1.5em" height="1.5em">
-                                        <path
-                                            d="M468 128H160c-17.7 0-32 14.3-32 32v308c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V136c0-4.4-3.6-8-8-8z m-56 284H192V192h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m194 210H136c-4.4 0-8 3.6-8 8v308c0 17.7 14.3 32 32 32h308c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8z m-56 284H192V612h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m590-630H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h332c4.4 0 8-3.6 8-8V160c0-17.7-14.3-32-32-32z m-32 284H612V192h220v220z m-138-74h56c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8z m194 210h-48c-4.4 0-8 3.6-8 8v134h-78V556c0-4.4-3.6-8-8-8H556c-4.4 0-8 3.6-8 8v332c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V644h78v102c0 4.4 3.6 8 8 8h190c4.4 0 8-3.6 8-8V556c0-4.4-3.6-8-8-8zM746 832h-48c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z m142 0h-48c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8z"
-                                            fill="#1296DB" p-id="2766"></path>
-                                    </svg>
+                                    <wechatIcon />
                                 </template>
                                 <template #default>
                                     <img :src="scope.row.Qrcode" style="width: 150px; height: 150px">
@@ -243,23 +258,26 @@ function recheckLinkSubdomain() {
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
                     <div></div>
-                    <el-pagination background @size-change="pw.ctrl.handleSizeChange"
+                    <el-pagination size="small" background @size-change="pw.ctrl.handleSizeChange"
                         @current-change="pw.ctrl.handleCurrentChange" :pager-count="5"
                         :current-page="pw.table.currentPage" :page-sizes="[20, 50, 100]" :page-size="pw.table.pageSize"
                         layout="total, sizes, prev, pager, next" :total="pw.table.result.length">
                     </el-pagination>
                 </div>
-
             </el-tab-pane>
         </el-tabs>
-        <div class="custom_eltabs_titlebar">
-            <el-button type="primary" :icon="Plus" @click="from.newTask = true"
-                v-if="!from.runningStatus">新建任务</el-button>
-            <el-button type="primary" loading v-else>正在查询</el-button>
-            <el-button :icon="exportIcon" text bg style="margin-left: 5px;"
-                @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">导出Excel</el-button>
-        </div>
-    </div>
+        <template #ctrl>
+            <el-tooltip content="新建任务" v-if="!from.runningStatus">
+                <el-button :icon="Plus" round @click="from.newTask = true">新建任务</el-button>
+            </el-tooltip>
+            <el-button round loading v-else>正在查询</el-button>
+            <el-tooltip content="导出Excel">
+                <el-button :icon="exportIcon" style="margin-left: 5px;"
+                    @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">
+                </el-button>
+            </el-tooltip>
+        </template>
+    </CustomTabs>
 
 </template>
 

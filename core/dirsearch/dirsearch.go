@@ -145,3 +145,45 @@ func Scan(ctx context.Context, url string, header map[string]string, o Options, 
 	result.Location = resp.Header.Get("Location")
 	return result
 }
+
+// func termFrequency(text string) map[string]int {
+// 	freq := make(map[string]int)
+// 	words := strings.Fields(text)
+// 	for _, word := range words {
+// 		freq[word]++
+// 	}
+// 	return freq
+// }
+
+// // 计算两个向量的余弦相似度
+// func cosineSimilarity(vecA, vecB map[string]int) float64 {
+// 	// 计算点积
+// 	dotProduct := 0
+// 	for key, value := range vecA {
+// 		if valueB, exists := vecB[key]; exists {
+// 			dotProduct += value * valueB
+// 		}
+// 	}
+
+// 	// 计算 vecA 的模长
+// 	magnitudeA := 0.0
+// 	for _, value := range vecA {
+// 		magnitudeA += float64(value * value)
+// 	}
+// 	magnitudeA = math.Sqrt(magnitudeA)
+
+// 	// 计算 vecB 的模长
+// 	magnitudeB := 0.0
+// 	for _, value := range vecB {
+// 		magnitudeB += float64(value * value)
+// 	}
+// 	magnitudeB = math.Sqrt(magnitudeB)
+
+// 	// 防止分母为0
+// 	if magnitudeA == 0 || magnitudeB == 0 {
+// 		return 0.0
+// 	}
+
+// 	// 计算余弦相似度
+// 	return float64(dotProduct) / (magnitudeA * magnitudeB)
+// }

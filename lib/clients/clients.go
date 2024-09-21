@@ -77,14 +77,16 @@ func NewRequest(method, url string, headers map[string]string, body io.Reader, t
 	if closeRespBody {
 		defer resp.Body.Close()
 	}
-	if b, err := io.ReadAll(resp.Body); err == nil {
-		return resp, b, nil
-	} else {
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		// Handle "unexpected EOF" as a specific error case
 		if err.Error() == "unexpected EOF" {
-			return nil, b, err
+			return resp, bodyBytes, err
 		}
 		return nil, nil, err
 	}
+
+	return resp, bodyBytes, nil
 }
 
 func NewSimpleGetRequest(url string, client *http.Client) (*http.Response, []byte, error) {

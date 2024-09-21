@@ -1,11 +1,9 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
 import { ExtractIP, Fscan2Txt, IpLocation } from 'wailsjs/go/main/App'
-import { Search, QuestionFilled, Location } from '@element-plus/icons-vue';
+import { Search, QuestionFilled, Location, Cellphone, Postcard } from '@element-plus/icons-vue';
 import { ElNotification } from 'element-plus';
 import extractIcon from '@/assets/icon/extract.svg'
-import phoneIcon from '@/assets/icon/phone.svg'
-import idcardIcon from '@/assets/icon/idcard.svg'
 import { SplitTextArea, UploadContextMenu, UploadFileAndRead } from '@/util';
 import async from 'async';
 
@@ -126,7 +124,7 @@ const appControl = [
     {
         label: "手机号提取",
         type: "warning",
-        icon: phoneIcon,
+        icon: Cellphone,
         action: () => {
             form.result = getPhoneNumbers().join('\n')
         },
@@ -134,7 +132,7 @@ const appControl = [
     {
         label: "身份证提取",
         type: "warning",
-        icon: idcardIcon,
+        icon: Postcard,
         action: () => {
             form.result = getIdCards().join('\n')
         },

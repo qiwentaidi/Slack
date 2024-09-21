@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"strconv"
@@ -116,6 +117,7 @@ func FofaApiSearch(ctx context.Context, search, pageSize, pageNum, addr, email, 
 		"&page=" + pageNum + "&size=" + pageSize + "&fields=host,title,ip,domain,port,protocol,country_name,region,city,icp,link,product"
 	_, b, err := clients.NewSimpleGetRequest(address, http.DefaultClient)
 	if err != nil {
+		gologger.Debug(ctx, err)
 		fs.Error = true
 		fs.Message = "请求失败"
 		return &fs

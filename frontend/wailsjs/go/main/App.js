@@ -6,10 +6,6 @@ export function AlibabaNacos(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
   return window['go']['main']['App']['AlibabaNacos'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
-export function AssetHunter(arg1, arg2, arg3) {
-  return window['go']['main']['App']['AssetHunter'](arg1, arg2, arg3);
-}
-
 export function Callgologger(arg1, arg2) {
   return window['go']['main']['App']['Callgologger'](arg1, arg2);
 }
@@ -126,16 +122,8 @@ export function JSFind(arg1, arg2) {
   return window['go']['main']['App']['JSFind'](arg1, arg2);
 }
 
-export function Kill(arg1) {
-  return window['go']['main']['App']['Kill'](arg1);
-}
-
 export function LoadDirsearchDict(arg1, arg2) {
   return window['go']['main']['App']['LoadDirsearchDict'](arg1, arg2);
-}
-
-export function LoadNulceiResult(arg1) {
-  return window['go']['main']['App']['LoadNulceiResult'](arg1);
 }
 
 export function NewSynScanner(arg1, arg2, arg3) {
@@ -148,10 +136,6 @@ export function NewTcpScanner(arg1, arg2, arg3, arg4, arg5) {
 
 export function NewWebScanner(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
   return window['go']['main']['App']['NewWebScanner'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-}
-
-export function NucleiEnabled(arg1) {
-  return window['go']['main']['App']['NucleiEnabled'](arg1);
 }
 
 export function PortBrute(arg1, arg2, arg3) {
@@ -190,6 +174,10 @@ export function StopSubdomain() {
   return window['go']['main']['App']['StopSubdomain']();
 }
 
+export function StopWebscan() {
+  return window['go']['main']['App']['StopWebscan']();
+}
+
 export function Subdomain(arg1) {
   return window['go']['main']['App']['Subdomain'](arg1);
 }
@@ -206,8 +194,8 @@ export function ThinkDict(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
   return window['go']['main']['App']['ThinkDict'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
-export function URLParse(arg1) {
-  return window['go']['main']['App']['URLParse'](arg1);
+export function TycCheckLogin() {
+  return window['go']['main']['App']['TycCheckLogin']();
 }
 
 export function UncoverSearch(arg1, arg2, arg3, arg4) {

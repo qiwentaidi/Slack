@@ -525,7 +525,7 @@ function searchCsegmentIpv4(ip: string) {
                                 </div>
                             </template>
                             <el-table :data="form.syntaxData" @row-click="syntax.rowClick2"
-                                class="hunter-keyword-search">
+                                class="keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100">
@@ -572,11 +572,11 @@ function searchCsegmentIpv4(ip: string) {
             </el-dropdown>
         </el-form-item>
     </el-form>
-    <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" closable
+    <el-tabs class="editor-tabs" v-model="table.acvtiveNames" v-loading="table.loading" type="card" closable
         @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 67vh;">
+            <el-table :data="item.content" border style="width: 100%;height: 65vh;">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" width="300" :show-overflow-tooltip="true" />
                 <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
@@ -662,32 +662,5 @@ function searchCsegmentIpv4(ip: string) {
 </template>
 
 <style scoped>
-.keyword-search :deep(.el-table__row:hover) {
-    cursor: pointer;
-}
 
-.el-tabs__item {
-    position: relative;
-    display: inline-block;
-    max-width: 300px;
-    margin-bottom: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    .el-tooltip {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .el-icon-close {
-        position: absolute !important;
-        top: 13px !important;
-        right: 3px !important;
-    }
-}
-
-.el-tabs__nav {
-    line-height: 230%;
-}
 </style>

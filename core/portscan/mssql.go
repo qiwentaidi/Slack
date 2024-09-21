@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/microsoft/go-mssqldb"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 

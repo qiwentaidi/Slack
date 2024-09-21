@@ -79,7 +79,7 @@ html {
 
 .custom_eltabs_titlebar {
   position: absolute;
-  right: 0px;
+  right: 5px;
   top: 4px;
 }
 
@@ -158,6 +158,7 @@ html {
 
   /* 设置右键菜单图标和文字之间的间距 */
   img {
+    margin-left: 5px;
     width: 16px; 
     height: 16px; 
     margin-right: -5px;
@@ -200,4 +201,43 @@ html {
 
 .el-card__body {
   padding: 10px;
+}
+
+.position-center {
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+}
+
+:deep(.el-table__header) {
+  width: 100% !important;
+}
+
+:deep(.el-table__body) {
+  width: 100% !important;
+}
+
+.editor-tabs .el-tabs__item {
+  position: relative;
+  display: inline-block;
+  max-width: 300px;
+  margin-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 26px !important; /* 给关闭按钮预留空间 */
+}
+
+.editor-tabs .el-tabs__item .el-icon {
+  position: absolute !important;
+  top: 13px !important;
+  right: 7px !important;
+}
+
+.editor-tabs .el-tabs__nav {
+  line-height: 40px;
+}
+
+.keyword-search .el-table__row:hover {
+  cursor: pointer;
 }

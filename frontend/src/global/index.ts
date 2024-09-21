@@ -1,5 +1,4 @@
 import { reactive, ref } from 'vue'
-import { URLFingerMap } from '@/interface'
 
 var space = reactive({
     fofaapi: 'https://fofa.info/',
@@ -29,7 +28,6 @@ var webscan = reactive({
 
 // 临时全局变量但是不进行保存
 var temp = reactive({
-    urlFingerMap: [] as URLFingerMap[],
     dirsearchPathConut: 0,
     dirsearchConut: 0,
     dirsearchStartTime: 0,
@@ -39,7 +37,6 @@ var temp = reactive({
     nucleiEnabled: false,
     isMacOS: false,
     isGrid: true,
-    currentPid: 0,
 })
 
 const Logger = reactive({

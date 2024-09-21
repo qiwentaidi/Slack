@@ -49,6 +49,7 @@ export default {
         'isic': '互联网敏感信息采集',
         'poc_manage': 'Poc管理',
         'script': '脚本管理',
+        'extract_database_info': "数据库自动取样",
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

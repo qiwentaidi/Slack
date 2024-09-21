@@ -36,7 +36,7 @@
             </div>
         </el-form-item>
     </el-form>
-    <el-table :data="pagination.table.pageContent" stripe height="67vh">
+    <el-table :data="pagination.table.pageContent" stripe height="66vh">
         <el-table-column fixed type="index" label="#" width="60px" />
         <el-table-column prop="Query" label="关键词" width="180" />
         <el-table-column prop="Total" label="总数" width="100" />
@@ -58,7 +58,7 @@
     <div class="my-header" style="margin-top: 5px;">
         <el-progress :text-inside="true" :stroke-width="18" :percentage="parameter.percentage" color="#5DC4F7"
             style="width: 40%;" />
-        <el-pagination background @size-change="pagination.ctrl.handleSizeChange"
+        <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
             @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
             :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100]"
             :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
