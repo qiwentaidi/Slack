@@ -8,6 +8,8 @@
 </p>
 <p align="center">
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98">常见问题</a>
+<a href="https://github.com/qiwentaidi/Slack/wiki/%E7%BD%91%E7%AB%99%E6%89%AB%E6%8F%8F%E8%A7%84%E5%88%99%E4%BA%8C%E6%AC%A1%E6%8B%93%E5%B1%95">规则拓展</a>
+<a href="https://github.com/qiwentaidi/Slack/wiki/%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91">二次开发</a>
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97">更新日志</a>
 </p>
 
