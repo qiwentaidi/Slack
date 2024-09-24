@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import global from "@/global";
-import { Copy, ReadLine, transformArrayFields, validateDomain } from '@/util'
+import { Copy, ReadLine, transformArrayFields } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { reactive, ref, onMounted } from "vue";
 import { StopSubdomain, Subdomain } from "wailsjs/go/main/App";
@@ -12,6 +12,7 @@ import usePagination from "@/usePagination";
 import { SubdomainInfo, SubdomainOption } from "@/interface";
 import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
 import { debounce } from "lodash"
+import { validateSingleDomain } from "@/stores/validate";
 
 const debounceUpdate = debounce(() => {
   pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
@@ -132,7 +133,7 @@ class Runner {
             ElMessage.warning("请输入域名或者域名文件")
             return false
         }
-        if (validateDomain(input.value)) {
+        if (validateSingleDomain(input.value)) {
             return true
         }
         let stat = await CheckFileStat(input.value)
@@ -259,7 +260,7 @@ const CopyDomains = () => {
         </template>
     </el-table>
     <div class="my-header" style="margin-top: 5px;">
-        <el-progress :text-inside="true" :stroke-width="18" :percentage="config.percentage" color="#5DC4F7"
+        <el-progress :text-inside="true" :stroke-width="18" :percentage="config.percentage" 
             style="width: 40%;" />
         <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
             @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"

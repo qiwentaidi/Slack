@@ -14,8 +14,27 @@
     <el-main>
       <el-form :model="global.webscan" label-width="auto" v-show="currentDisplay == '0'">
         <h3>{{ $t(settingOption[0].name) }}</h3>
+        <el-form-item label="网站指纹线程">
+          <el-input-number controls-position="right" v-model="global.webscan.web_thread" :min="1" :max="200" />
+        </el-form-item>
+        <el-form-item label="端口扫描线程">
+          <el-input-number controls-position="right" v-model="global.webscan.port_thread" :min="1" :max="10000" />
+        </el-form-item>
+        <el-form-item label="端口指纹超时">
+          <el-input-number controls-position="right" v-model="global.webscan.port_timeout" :min="1" :max="20" />
+        </el-form-item>
+        <el-form-item label="存活验证模式">
+          <el-select v-model="global.webscan.default_alive_module">
+            <el-option v-for="item in aliveGroup" :key="item.value" :value="item.value">
+              <span style="float: left">{{ item.value }}</span>
+              <span style="float: right">
+                {{ item.description }}
+              </span>
+            </el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item :label="$t('setting.network_list')">
-          <el-select v-model="global.temp.defaultNetwork">
+          <el-select v-model="global.webscan.default_network">
             <el-option v-for="value in global.temp.NetworkCardList" :label="value" :value="value" />
           </el-select>
         </el-form-item>
@@ -39,7 +58,8 @@
             <el-input v-model="global.proxy.address" clearable></el-input>
           </el-form-item>
           <el-form-item :label="$t('setting.port')">
-            <el-input-number v-model.number="global.proxy.port" :min="1" :max="65535" style="width: 220px;"></el-input-number>
+            <el-input-number v-model.number="global.proxy.port" :min="1" :max="65535"
+              style="width: 220px;"></el-input-number>
           </el-form-item>
           <el-form-item :label="$t('setting.username')">
             <el-input v-model="global.proxy.username" clearable></el-input>
@@ -93,7 +113,7 @@
         </el-form-item>
         <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
       </el-form>
-      <el-form  :model="global.Theme" label-width="auto" v-show="currentDisplay == '3'">
+      <el-form :model="global.Theme" label-width="auto" v-show="currentDisplay == '3'">
         <h3>{{ $t(settingOption[3].name) }}</h3>
         <el-form-item :label="$t('aside.language')">
           <el-select v-model="global.Language.value" @change="changeLanguage" style="width: 150px;">
@@ -241,6 +261,21 @@ const currentDisplay = ref('0')
 function selectItem(item: MenuItemRegistered) {
   currentDisplay.value = item.index
 }
+
+const aliveGroup = [
+  {
+    value: "None",
+    description: "不进行主机存活探测直接扫描端口"
+  },
+  {
+    value: "ICMP",
+    description: "使用ICMP进行主机存活探测，需要开启ROOT权限"
+  },
+  {
+    value: "Ping",
+    description: "使用Ping进行主机存活探测，ICMP权限不足时会自动降级为Ping"
+  },
+]
 </script>
 
 <style scoped>

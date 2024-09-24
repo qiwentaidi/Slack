@@ -64,10 +64,7 @@ async function NewScanner() {
         }
     }
     if (url.length == 0) {
-        ElMessage({
-            message: "可用目标为空",
-            type: "warning"
-        })
+        ElMessage.warning("可用目标为空")
         return
     }
     let passDict = [] as string[]
@@ -118,10 +115,7 @@ function stopScan() {
     if (config.runningStatus) {
         StopPortBrute()
         config.runningStatus = false
-        ElMessage({
-            showClose: true,
-            message: "用户已终止任务",
-        });
+        ElMessage.error("用户已终止任务");
     }
 }
 

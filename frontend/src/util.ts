@@ -1,6 +1,7 @@
 import { ElMessage, ElNotification } from "element-plus";
 import global from "./global";
 import {
+  Callgologger,
   CheckTarget,
   GoFetch,
   Sock5Connect,
@@ -19,6 +20,7 @@ import platform from 'platform';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { h } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue';
+import async from "async";
 
 export var proxys: ProxyOptions; // wails2.9之后替换原来的null
 
@@ -80,31 +82,6 @@ export function SplitTextArea(textarea: string) {
   return lines;
 }
 
-export function validateIP(ip: string): boolean {
-  const regex =
-    /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-  return regex.test(ip);
-}
-
-export function validateDomain(domain: string): boolean {
-  const regex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/;
-  return regex.test(domain);
-}
-
-export function validateURL(url: string): boolean {
-  if (!url) {
-    ElMessage.warning("URL不能为空");
-    return false;
-  }
-  try {
-    new URL(url);
-    return true;
-  } catch (e) {
-    ElMessage.warning("请输入正确的URL");
-    return false;
-  }
-}
-
 export function splitInt(n: number, slice: number): number[] {
   let res: number[] = [];
   while (n > slice) {
@@ -115,31 +92,30 @@ export function splitInt(n: number, slice: number): number[] {
   return res;
 }
 
-export async function formatURL(host: string): Promise<string[]> {
+export async function FormatWebURL(host: string): Promise<string[]> {
   let urls: Array<string> = [];
-  for (var target of SplitTextArea(host)) {
-    if (!target.startsWith("http")) {
-      const result: any = await CheckTarget(host, global.proxy);
-      if (!result.Error) {
-        target = result.Msg;
+  const targets = SplitTextArea(host);
+  Callgologger("info", "正在解析目标 ...")
+  // Wrap the asynchronous processing of each target with async.eachLimit
+  await new Promise((resolve, reject) => {
+    async.eachLimit(targets, 50, async (target: string, callback: () => void) => {
+        if (!target.startsWith("http")) {
+          const result: any = await CheckTarget(target, global.proxy);
+          if (!result.Error) {
+            target = result.Msg;
+          }
+        }
+        urls.push(TrimRightSubString(target, "/"));
+      },
+      (err: any) => {
+        if (err) {
+          reject(err); // Reject the promise if any task encounters an error
+        } else {
+          resolve(urls); // Resolve the promise once all tasks are completed
+        }
       }
-    }
-    urls.push(AddRightSubString(target, "/"));
-  }
-  return urls;
-}
-
-export async function formatURL2(host: string): Promise<string[]> {
-  let urls: Array<string> = [];
-  for (var target of SplitTextArea(host)) {
-    if (!target.startsWith("http")) {
-      const result: any = await CheckTarget(host, global.proxy);
-      if (!result.Error) {
-        target = result.Msg;
-      }
-    }
-    urls.push(TrimRightSubString(target, "/"));
-  }
+    );
+  });
   return urls;
 }
 
@@ -349,14 +325,12 @@ export function renderedMarkdown(content: string) {
 }
 
 export function GOOS() {
-  if (platform.os.family.includes('OS X')) {
-    return "darwin"
-  } else if (platform.os.family.includes('Window')) {
+  if (platform.os.family.includes('Window')) {
     return "windows"
   } else if (platform.os.family.includes('Linux')) {
     return "linux"
   } else {
-    return "unknown"
+    return "darwin"
   }
 }
 
@@ -402,10 +376,10 @@ export function UploadContextMenu(e: MouseEvent, callback: Function) {
 
 export function getBasicURL(rawURL: string) {
   try {
-      const url = new URL(rawURL);
-      return `${url.protocol}//${url.host}`;
+    const url = new URL(rawURL);
+    return `${url.protocol}//${url.host}`;
   } catch (error) {
-      console.error("Invalid URL:", error);
-      return undefined;
+    console.error("Invalid URL:", error);
+    return undefined;
   }
 }

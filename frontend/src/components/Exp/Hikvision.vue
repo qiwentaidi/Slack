@@ -45,7 +45,7 @@ import { reactive } from 'vue';
 import { Picture } from '@element-plus/icons-vue';
 import { HikvsionCamera } from 'wailsjs/go/main/App';
 import global from '@/global';
-import { formatURL } from '@/util';
+import { FormatWebURL } from '@/util';
 import { titleStyle } from '@/stores/style';
 import { FileDialog, ReadFile } from 'wailsjs/go/main/File';
 import { File } from '@/interface';
@@ -81,7 +81,7 @@ const vulnerabilityGroup = [
 ]
 
 async function useVulnerability(mode: number) {
-    let urls = await formatURL(form.url)
+    let urls = await FormatWebURL(form.url)
     if (urls.length == 0) {
         ElMessage.warning("请输入URL地址")
         return

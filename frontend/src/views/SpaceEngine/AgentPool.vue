@@ -194,7 +194,7 @@ async function Delelte(host: string) {
                 </template>
                 <el-input v-model="form.socksLogger" type="textarea" resize="none" style="height: 80vh;" />
                 <el-progress :percentage="form.percentage" :text-inside="true" :stroke-width="18"
-                    style="margin-top: 5px" color="#5DC4F7" />
+                    style="margin-top: 5px"  />
             </el-tab-pane>
             <el-tab-pane label="历史记录" name="1">
                 <el-table :data="form.pool" border style="height: 83vh;">

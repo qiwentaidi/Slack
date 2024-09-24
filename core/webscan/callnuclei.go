@@ -28,24 +28,31 @@ type VulnerabilityInfo struct {
 }
 
 type NucleiOption struct {
-	URL      string
-	Tags     []string // 全漏洞扫描时，使用自定义标签
-	Severity string
+	URL          string
+	Tags         []string // 全漏洞扫描时，使用自定义标签
+	TemplateFile []string
 }
 
 var pocFile = util.HomeDir() + "/slack/config/pocs"
 
 func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 	options := []nuclei.NucleiSDKOptions{
-		nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
-			Templates: []string{pocFile},
-		}), // -t
-		nuclei.WithTemplateFilters(nuclei.TemplateFilters{
-			Tags:     o.Tags,
-			Severity: o.Severity,
-		}), // 过滤 poc
 		nuclei.EnableStatsWithOpts(nuclei.StatsOptions{MetricServerPort: 6064}), // optionally enable metrics server for better observability
 		nuclei.DisableUpdateCheck(), // -duc
+	}
+	// 判断是使用指定poc文件还是根据标签
+	if len(o.TemplateFile) == 0 {
+		options = append(options, nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
+			Templates: []string{pocFile},
+		}))
+		options = append(options, nuclei.WithTemplateFilters(nuclei.TemplateFilters{
+			Tags: o.Tags,
+		}))
+	} else {
+		// 指定poc文件的时候就要删除tags标签
+		options = append(options, nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
+			Templates: o.TemplateFile,
+		}))
 	}
 	var proxys string
 	if proxy.Enabled {
@@ -60,7 +67,7 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 	// load targets and optionally probe non http/https targets
 	ne.LoadTargets([]string{o.URL}, false)
 	err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
-		// fmt.Printf("[%s] [%s] %s\n", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched)
+		gologger.Success(ctx, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
 		// fmt.Printf("Request: \n%s\n", event.Request)
 		// fmt.Printf("Response: \n%s\n", event.Response)
 		var reference string

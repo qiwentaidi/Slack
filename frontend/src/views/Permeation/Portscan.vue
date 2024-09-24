@@ -3,8 +3,8 @@ import { reactive, onMounted, ref, h } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea } from '@/util'
 import { ExportToXlsx } from '@/export'
-import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
-import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger } from 'wailsjs/go/main/App'
+import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search } from '@element-plus/icons-vue';
+import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
 import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
@@ -15,6 +15,8 @@ import { defaultIconSize, titleStyle } from '@/stores/style';
 import { LinkCrack, LinkWebscan } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import CustomTabs from '@/components/CustomTabs.vue';
+import { isPrivateIP, validateIp, validatePortscan } from '@/stores/validate';
+import consoleIcon from '@/assets/icon/console.svg'
 
 // syn 扫描模式
 onMounted(() => {
@@ -59,12 +61,10 @@ const form = reactive({
     id: 0,
     count: 0,
     radio: "2",
-    currentAliveMoudle: "None",
     isSYN: false,
     isRoot: false,
     filter: '',
     defaultFilterGroup: "Fingerprint",
-    hideDashboard: false,
 })
 
 const table = reactive({
@@ -90,7 +90,6 @@ async function uploadFile() {
 
 const options = ({
     filterGroup: ["Host", "Port", "Fingerprint", "Link", "WebTitle"],
-    aliveGroup: ["None", "ICMP", "Ping"],
     filterField: function () {
         const filter = form.filter.trim();
         if (table.filterId == 0) {
@@ -123,38 +122,19 @@ const options = ({
 })
 
 const config = reactive({
-    thread: 1000,
-    timeout: 7,
     ping: false,
     webscan: false,
     crack: false,
 })
 
-function validateInput() {
-    const ipPatterns = [
-        /^(\d{1,3}\.){3}\d{1,3}$/, // 192.168.1.1
-        /^(\d{1,3}\.){3}\d{1,3}\/(\d{1,2})$/, // 192.168.1.1/8, 192.168.1.1/16, 192.168.1.1/24
-        /^(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3}|(\d{1,3}\.){2}\d{1,3}|\d{1,3}\)$/, // 192.168.1.1-192.168.255.255, 192.168.1.1-255
-        /^(\d{1,3}\.){3}\d{1,3}:\d{1,5}$/, // 192.168.0.1:6379
-        /^!((\d{1,3}\.){3}\d{1,3}(\/\d+)?|(\d{1,3}\.){2}\d{1,3}|\d{1,3})$/, // !192.168.1.6/28
-        /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/, // domain
-    ];
-    const lines = form.target.split('\n');
-    return lines.every(line =>
-        ipPatterns.some(pattern => pattern.test(line.trim()))
-    );
-}
 
 async function NewScanner() {
     let mode = form.isSYN ? "syn" : "fully connected"
     Callgologger("info", "Port scan task loaded, current mode: " + mode)
-    if (!validateInput()) {
-            ElMessage({
-                type: "warning",
-                message: "输入目标格式不正确",
-            })
-            return
-        }
+    if (!validatePortscan(form.target)) {
+        ElMessage.warning("输入目标格式不正确")
+        return
+    }
     const ps = new Scanner()
     await ps.PortScanner()
 }
@@ -169,13 +149,6 @@ class Scanner {
         table.temp = []
         var ips = [] as string[]
         var portsList = [] as number[]
-        if (!validateInput()) {
-            ElMessage({
-                type: "warning",
-                message: "输入目标格式不正确",
-            })
-            return
-        }
         const lines = SplitTextArea(form.target)
         let specialTarget = [] as string[]
         let conventionTarget = [] as string[]
@@ -192,26 +165,21 @@ class Scanner {
         ips = await IPParse(conventionTarget)
         // 判断扫描总数
         ips == null ? form.count = specialTarget.length : form.count = ips.length * portsList.length + specialTarget.length
-        // Callgologger("info", "targets cout: " + ips.length)
         if (form.count == 0) {
-            ElMessage({
-                showClose: true,
-                message: '可用目标或端口为空',
-                type: 'warning',
-            })
+            ElMessage.warning('可用目标或端口为空')
             return
         }
         ctrl.runningStatus = true
         // 判断是否进行存活探测
-        if (form.currentAliveMoudle != "None") {
-            form.currentAliveMoudle === 'ICMP' ? config.ping = false : config.ping = true
+        if (global.webscan.default_alive_module != "None") {
+            global.webscan.default_alive_module === 'ICMP' ? config.ping = false : config.ping = true
             ips = await HostAlive((ips as any), config.ping)
         }
         if (form.isSYN) {
-            await NewSynScanner(specialTarget,ips, portsList)
+            await NewSynScanner(specialTarget, ips, portsList)
             return
         }
-        await NewTcpScanner(specialTarget, ips, portsList, config.thread, config.timeout)
+        await NewTcpScanner(specialTarget, ips, portsList, global.webscan.port_thread, global.webscan.port_timeout)
         // 恢复配置
         ctrl.runningStatus = false
         ips = []
@@ -356,13 +324,60 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
         ]
     });
 }
+
+const shodanVisible = ref(false)
+const shodanIp = ref('')
+const shodanPercentage = ref(0)
+const shodanRunningstatus = ref(false)
+
+async function LinkShodan() {
+    if (!validateIp(shodanIp.value)) {
+        ElMessage.warning("目标输入格式不正确!")
+        return
+    }
+    const lines = SplitTextArea(shodanIp.value)
+    for (const line of lines) {
+        if (isPrivateIP(line)) {
+            ElMessage.warning(line + " 为内网地址不支持扫描!")
+            return
+        }
+    }
+    
+    let id = 0
+    form.target = ""
+    shodanRunningstatus.value = true
+    let ips = await IPParse(lines)
+    for (const ip of ips) {
+        if (!shodanRunningstatus.value) {
+            return
+        }
+        let ports = await SpaceGetPort(ip)
+        Callgologger("info", "[shodan] " + ip + " port: " + ports.join())
+        form.percentage = Number(((id / ips.length) * 100).toFixed(2));
+        if (ports.length > 0) {
+            for (const port of ports) {
+                form.target += ip + ":" + port.toString() + "\n"
+            }
+        }
+    }
+    shodanRunningstatus.value = false
+    shodanVisible.value = false
+}
+
+function stopShodan() {
+    shodanRunningstatus.value = false
+    ElNotification.error({
+        message: "用户已终止扫描任务",
+        position: 'bottom-right',
+    });
+}
 </script>
 
 <template>
-    <div v-show="!form.hideDashboard" style="margin-bottom: 5px;">
+    <div style="margin-bottom: 5px;">
         <el-card shadow="never">
-            <el-row :gutter="8">
-                <el-col :span="6" style="display: flex; align-items: center;">
+            <div class="my-header">
+                <div>
                     <el-checkbox v-model="form.isSYN" :disabled="!form.isRoot">
                         <el-tooltip placement="right">
                             <template #content>
@@ -371,36 +386,20 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
                             SYN
                         </el-tooltip>
                     </el-checkbox>
-                    <el-checkbox v-model="config.crack" label="口令猜测"></el-checkbox>
-                    <el-checkbox v-model="config.webscan" label="网站扫描"></el-checkbox>
-                </el-col>
-                <el-divider direction="vertical" style="height: 4vh;" />
-                <el-col :span="7" style="display: flex; align-items: center;">
-                    <el-button link>存活探测</el-button>
-                    <el-radio-group v-model="form.currentAliveMoudle" style="margin-left: 10px;">
-                        <el-radio v-for="item in options.aliveGroup" :value="item">{{ item }}</el-radio>
-                    </el-radio-group>
-                </el-col>
-                <el-divider direction="vertical" style="height: 4vh;" />
-                <el-col :span="4">
-                    <el-input v-model.number="config.timeout">
-                        <template #prepend>
-                            指纹超时
-                        </template>
-                    </el-input>
-                </el-col>
-                <el-col :span="4">
-                    <el-input v-model.number="config.thread">
-                        <template #prepend>
-                            线程数量
-                        </template>
-                    </el-input>
-                </el-col>
-                <el-col :span="2">
-                    <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
-                    <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
-                </el-col>
-            </el-row>
+                    <el-checkbox v-model="config.crack">口令猜测</el-checkbox>
+                    <el-checkbox v-model="config.webscan">网站扫描</el-checkbox>
+                </div>
+
+                <el-button text bg @click="shodanVisible = true">
+                    <template #icon>
+                        <img src="/navigation/shodan.png" style="width: 14px; height: 14px;">
+                    </template>
+                    联动shodan
+                </el-button>
+
+                <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
+                <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
+            </div>
         </el-card>
         <el-row :gutter="8" style="margin-top: 10px;">
             <el-col :span="10">
@@ -453,8 +452,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
     <CustomTabs>
         <el-tabs v-model="form.activeName" type="border-card">
             <el-tab-pane label="结果输出" name="1">
-                <el-table :data="pagination.table.pageContent"
-                    @selection-change="pagination.ctrl.handleSelectChange"
+                <el-table :data="pagination.table.pageContent" @selection-change="pagination.ctrl.handleSelectChange"
                     @row-contextmenu="handleContextMenu" style="height: 100vh;">
                     <el-table-column type="selection" width="55px" align="center" />
                     <el-table-column prop="IP" label="Host" />
@@ -474,7 +472,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
                     </template>
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
-                    <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage" color="#5DC4F7"
+                    <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage"
                         style="width: 40%;" />
                     <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
                         @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
@@ -499,11 +497,38 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
                 </el-input>
                 <el-tooltip content="导出Excel">
                     <el-button :icon="exportIcon"
-                    @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)" />
+                        @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)" />
                 </el-tooltip>
             </el-space>
         </template>
     </CustomTabs>
+    <el-dialog v-model="shodanVisible" width="500">
+        <template #header>
+            <span style="display: flex; align-items: center">
+                <img src="/navigation/shodan.png" style="margin-right: 5px;">
+                通过Shodan实现端口开放情况收集
+            </span>
+        </template>
+        <el-text>Tips: 在此处输入要搜索的IP地址，<strong>不支持域名</strong>，可以通过日志处<el-icon><consoleIcon /></el-icon>查看详</el-text>
+        <el-text style="margin-bottom: 5px;">细信息</el-text>
+        <el-input v-model="shodanIp" type="textarea" :rows="6" placeholder="支持如下输入格式
+1.1.1.1
+1.1.1.1/24
+1.1.1.1-1.1.255.255
+1.1.1.1-255"></el-input>
+        <template #footer>
+            <div class="my-header">
+                <el-progress :text-inside="true" :stroke-width="18" :percentage="shodanPercentage"
+                    style="width: 300px;" />
+                <div>
+                    <el-button size="small" type="danger" @click="stopShodan" v-if="shodanRunningstatus">终止探测</el-button>
+                    <el-button size="small" type="primary" @click="LinkShodan" v-else>
+                        开始收集
+                    </el-button>
+                </div>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 
 

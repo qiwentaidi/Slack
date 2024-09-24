@@ -31,11 +31,7 @@ function OACrypt(input: string, mode: string) {
             }
             return
         }
-        ElMessage({
-            showClose: true,
-            message: '无法解密.',
-            type: 'warning',
-        })
+        ElMessage.warning('无法解密.')
     }
 }
 </script>

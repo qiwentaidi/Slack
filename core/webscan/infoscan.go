@@ -112,8 +112,8 @@ func (s *FingerScanner) NewFingerScan() {
 		if ExitFunc {
 			return
 		}
-		resp, body, _ := clients.NewSimpleGetRequest(u.String(), s.client)
-		if resp == nil {
+		resp, body, err := clients.NewSimpleGetRequest(u.String(), s.client)
+		if err != nil || resp == nil {
 			retChan <- InfoResult{
 				URL:        u.String(),
 				StatusCode: 0,
@@ -191,6 +191,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 		return
 	}
 	gologger.Info(s.ctx, "正在进行主动指纹探测 ...")
+	var id = 0
 	var wg sync.WaitGroup
 	visited := make(map[string]bool) // 用于记录已访问的URL和路径组合
 
@@ -251,7 +252,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 		}
 	})
 	defer threadPool.Release()
-
+	s.ActiveCounts()
 	// 载入存活目标
 	for _, target := range s.aliveURLs {
 		for _, afdb := range ActiveFingerprintDB {
@@ -260,6 +261,8 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 					return
 				}
 				wg.Add(1)
+				id += 1
+				runtime.EventsEmit(s.ctx, "ActiveProgressID", id)
 				if rootPath {
 					target.Path = ""
 				}
@@ -274,7 +277,18 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 	wg.Wait()
 	close(retChan)
 	gologger.Info(s.ctx, "ActiveFingerScan Finished")
+	runtime.EventsEmit(s.ctx, "ActiveScanComplete", 100)
 	<-single
+}
+
+// 统计主动指纹总共要扫描的目标
+func (s *FingerScanner) ActiveCounts() {
+	var id = 0
+	for _, afdb := range ActiveFingerprintDB {
+		id += len(afdb.Path)
+	}
+	count := len(s.aliveURLs) * id
+	runtime.EventsEmit(s.ctx, "ActiveCounts", count)
 }
 
 func (s *FingerScanner) URLWithFingerprintMap() map[string][]string {

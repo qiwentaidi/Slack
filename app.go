@@ -378,6 +378,10 @@ func (a *App) HostAlive(targets []string, Ping bool) []string {
 	return portscan.CheckLive(a.ctx, targets, Ping)
 }
 
+func (a *App) SpaceGetPort(ip string) []float64 {
+	return space.GetShodanAllPort(a.ctx, ip)
+}
+
 func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, thread, timeout int) {
 	portscan.ExitFunc = false
 	addresses := make(chan portscan.Address)
@@ -412,7 +416,6 @@ func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint1
 		for _, ip := range ips {
 			for _, port := range ports {
 				addr := portscan.Address2{IP: net.IP(ip), Port: port}
-				fmt.Printf("addr: %v\n", addr)
 				addresses <- addr
 			}
 		}
@@ -519,24 +522,32 @@ func (a *App) FingerprintList() []string {
 	return fingers
 }
 
-func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, deepScan, rootPath, callNuclei bool, severity string) {
+func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, deepScan, rootPath, callNuclei bool, templateFiles []string) {
 	webscan.ExitFunc = false
 	s := webscan.NewFingerScanner(a.ctx, target, proxy, thread, deepScan, rootPath)
+	if s == nil {
+		return
+	}
 	s.NewFingerScan()
 	if deepScan {
 		s.NewActiveFingerScan(rootPath)
 	}
 	if callNuclei {
 		gologger.Info(a.ctx, "正在进行漏洞扫描 ...")
-		for target, tags := range s.URLWithFingerprintMap() {
+		var id = 0
+		fpm := s.URLWithFingerprintMap()
+		count := len(fpm)
+		for target, tags := range fpm {
 			if webscan.ExitFunc {
 				gologger.Warning(a.ctx, "用户已退出漏洞扫描")
 				return
 			}
+			id++
+			gologger.Info(a.ctx, fmt.Sprintf("正在扫描第%d/%d个目标", id, count))
 			webscan.NewNucleiEngine(a.ctx, proxy, webscan.NucleiOption{
-				URL:      target,
-				Tags:     util.RemoveDuplicates(tags),
-				Severity: severity,
+				URL:          target,
+				Tags:         util.RemoveDuplicates(tags),
+				TemplateFile: templateFiles,
 			})
 		}
 		gologger.Info(a.ctx, "漏洞扫描已结束")

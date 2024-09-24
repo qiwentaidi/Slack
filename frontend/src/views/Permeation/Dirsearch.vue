@@ -351,7 +351,7 @@ function copyHistory(length: number) {
     </el-table>
     <div class="my-header" style="margin-top: 5px;">
         <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
-            color="#5DC4F7" style="width: 40%;" />
+             style="width: 40%;" />
         <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
             @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
             :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"

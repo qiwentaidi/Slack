@@ -150,19 +150,12 @@ function deleteRow(index: number) {
 
 function onAddItem() {
     if (!reverse.name) {
-        ElMessage({
-            showClose: true,
-            message: "标题名称不能为空！",
-        });
+        ElMessage.warning("标题名称不能为空！");
         return
     }
     for (const item of data.memo) {
         if (reverse.name == item.label) {
-            ElMessage({
-                showClose: true,
-                message: "标题名称不能重复！",
-                type: 'warning'
-            });
+            ElMessage.warning("标题名称不能重复！");
             return
         }
     }

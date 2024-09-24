@@ -102,10 +102,7 @@ const localGroup = ({
             .then(({ value }) => {
                 let existingGroup = localGroup.options.value.find(item => item.Name == value)?.Name
                 if (existingGroup) {
-                    ElMessage({
-                        type: "warning",
-                        message: "A group name with the same name already exists, please rename it"
-                    })
+                    ElMessage.warning("A group name with the same name already exists, please rename it")
                     return
                 } else {
                     localGroup.options.value.push({
@@ -200,10 +197,7 @@ const localGroup = ({
     handleOpenFolder: async function (filepath: string) {
         let result = await OpenFolder(filepath)
         if (result != "") {
-            ElMessage({
-                type: "error",
-                message: result
-            })
+            ElMessage.error(result)
         }
     },
     selectFile: async function () {
@@ -335,8 +329,8 @@ const isShowTips = ref(true);
 
 
 <template>
-    <el-scrollbar height="92vh" @contextmenu.prevent="handDivContextMenu($event)">
-        <el-collapse style="width: 99%;">
+    <div style="height: 100%;" @contextmenu.prevent="handDivContextMenu($event)">
+        <el-collapse>
             <el-collapse-item name="1">
                 <template #title>
                     <el-icon>
@@ -344,17 +338,11 @@ const isShowTips = ref(true);
                     </el-icon>
                     <p class="custom-block-title">Tips</p>
                 </template>
-                <div class="tip custom-block" v-show="isShowTips">
-                    <ul>
-                        <li>
-                            jar应用在默认点击启动时，会使用以java -jar启动应用
-                        </li>
-                        <li>如果默认配置无法满足使用，可以通过填写目标自定义启动命令<strong>(类型必须为CMD)</strong>，%path%关键词可以自动替换为应用路径</li>
-                        <li>
-                            e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为:
-                            <code>java -javaagent:%path% -jar %path%</code>
-                        </li>
-                    </ul>
+                <div class="tip custom-block">
+                    jar应用在默认点击启动时，会使用以java -jar启动应用<br />
+                    如果默认配置无法满足使用，可以通过填写目标自定义启动命令<strong>(类型必须为CMD)</strong>，%path%关键词可以自动替换为应用路径<br />
+                    e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为:
+                    <code>java -javaagent:%path% -jar %path%</code>
                 </div>
             </el-collapse-item>
         </el-collapse>
@@ -386,7 +374,7 @@ const isShowTips = ref(true);
                 </div>
             </el-card>
         </div>
-    </el-scrollbar>
+    </div>
     <el-dialog v-model="config.addItemDialog" :title="$t('navigator.add_item')" width="500">
         <el-form label-width="auto">
             <el-form-item label="组名">
@@ -482,7 +470,6 @@ const isShowTips = ref(true);
 
 .drop-enable {
     --wails-drop-target: drop;
-    width: 99%;
 }
 
 .custom-block.tip {

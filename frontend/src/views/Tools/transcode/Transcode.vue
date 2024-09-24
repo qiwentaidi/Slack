@@ -50,8 +50,7 @@ function startDownload() {
     if (!config.downloadRunningStatus) {
         config.downloadRunningStatus = true
     }else {
-        ElMessage({
-            type: 'warning',
+        ElMessage.warning({
             message: '正在下载中，请等待下载完成',
             duration: 2000,
         })

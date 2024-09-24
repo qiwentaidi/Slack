@@ -130,11 +130,11 @@ func (f *File) Path(p string) PathInfo {
 }
 
 type FileListInfo struct {
-	Path     string
-	Name     string
-	BaseName string
-	ModTime  string
-	Size     int64
+	Path     string // 完整路径
+	Name     string // 带名称后缀
+	BaseName string // 基础名称
+	ModTime  string // 修改时间
+	Size     int64  // 大小
 }
 
 func (f *File) List(path string) []FileListInfo {

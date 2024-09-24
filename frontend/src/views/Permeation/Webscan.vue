@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload } from '@element-plus/icons-vue';
 import {
     InitRule,
     FofaSearch,
@@ -11,11 +11,11 @@ import {
     StopWebscan,
 } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
-import { formatURL2, TestProxy, Copy, CopyALL, transformArrayFields } from '@/util'
+import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { Vulnerability, FingerprintTable, FofaResult } from '@/interface';
+import { Vulnerability, FingerprintTable, FofaResult, File } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import { LinkDirsearch, LinkHunter } from '@/linkage';
@@ -25,6 +25,8 @@ import CustomTabs from '@/components/CustomTabs.vue';
 import bugIcon from '@/assets/icon/bug.svg'
 import fingerprintIcon from '@/assets/icon/fingerprint.svg'
 import deepscanIcon from '@/assets/icon/deepscan.svg'
+import bulleyeIcon from '@/assets/icon/bulleye.svg'
+import { FileDialog, List, ReadFile } from 'wailsjs/go/main/File';
 
 // 初始化时调用
 onMounted(async () => {
@@ -41,6 +43,15 @@ onMounted(async () => {
     })
     const pocMap = await GetFingerPocMap();
     dashboard.yamlPocsLength = Object.keys(pocMap).length
+    let files = await List(global.PATH.homedir + "/slack/config/pocs")
+    files.forEach((file: any) => {
+        if (file.Path.endsWith(".yaml")) {
+            allTemplate.value.push({
+                label: file.BaseName,
+                value: file.Path
+            })
+        }
+    })
 });
 
 
@@ -62,7 +73,7 @@ onMounted(() => {
         })
         vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
     });
-    EventsOn("webFingerScan", async (result: any) => {
+    EventsOn("webFingerScan", (result: any) => {
         if (result.StatusCode == 0) {
             dashboard.reqErrorURLs.push(result.URL)
         } else {
@@ -79,15 +90,28 @@ onMounted(() => {
             fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
         }
     });
+    EventsOn("ActiveCounts", (count: number) => {
+        form.count = count
+    });
+    EventsOn("ActiveProgressID", (id: number) => {
+        form.percentage = Number(((id / form.count) * 100).toFixed(2));
+    });
+    // 扫描结束时让进度条为100
+    EventsOn("ActiveScanComplete", () => {
+        form.percentage = 100
+    });
     return () => {
         EventsOff("nucleiResult");
         EventsOff("webFingerScan");
+        EventsOff("ActiveCounts");
+        EventsOff("ActiveProgressID");
+        EventsOff("ActiveScanComplete");
     };
 })
 
-const defaultScanOption = ref(0)
+const defaultWebscanOption = ref(0)
 
-const scanOption = [
+const WebscanOption = [
     {
         label: "指纹扫描",
         value: 0,
@@ -101,9 +125,18 @@ const scanOption = [
     {
         label: "指纹漏洞扫描",
         value: 2,
+        icon: bulleyeIcon,
+    },
+    {
+        label: "专项扫描",
+        value: 3,
         icon: bugIcon,
     },
 ]
+
+// webscan
+const customTemplate = ref<string[]>([])
+const allTemplate = ref<{ label: string, value: string }[]>([])
 
 const dashboard = reactive({
     reqErrorURLs: [] as string[],
@@ -123,13 +156,9 @@ const dashboard = reactive({
 const form = reactive({
     url: '',
     tags: [] as string[],
-    risk: [] as string[],
-    riskOptions: ["critical", "high", "medium", "low"],
     newscanner: false,
-    thread: 50,
     vulResult: [] as Vulnerability[],
     fingerResult: [] as FingerprintTable[],
-    currentLoadPath: [] as string[],
     fofaDialog: false,
     fofaNum: 1000,
     hunterDialog: false,
@@ -138,6 +167,8 @@ const form = reactive({
     query: '',
     runnningStatus: false,
     rootPathScan: true,
+    percentage: 0,
+    count: 0,
 })
 
 const detailDialog = ref(false)
@@ -199,6 +230,7 @@ class Scanner {
         dashboard.riskLevel.info = 0
         dashboard.reqErrorURLs = []
         dashboard.currentModule = ""
+        form.percentage = 0
         form.runnningStatus = true
     }
     public async RunScanner() {
@@ -206,13 +238,12 @@ class Scanner {
         if (!await TestProxy(1)) {
             return
         }
-        this.urls = await formatURL2(form.url) // 处理目标
+        this.urls = await FormatWebURL(form.url) // 处理目标
         dashboard.count = this.urls.length
         if (this.urls.length == 0) {
-            ElMessage({
+            ElMessage.warning({
                 showClose: true,
                 message: "可用目标为空",
-                type: "warning",
             });
             return
         }
@@ -221,10 +252,21 @@ class Scanner {
         Callgologger("info", 'Fingerscan is running ...')
         let deepScan = false
         let callNuclei = false
-        if (defaultScanOption.value != 0) deepScan = true
-        if (defaultScanOption.value == 2) callNuclei = true
-        
-        await NewWebScanner(this.urls, global.proxy, form.thread, deepScan, form.rootPathScan, callNuclei, form.risk.join(","))
+        switch (defaultWebscanOption.value) {
+            case 1:
+                deepScan = true
+                break;
+            case 2:
+                callNuclei = true
+                deepScan = true
+                customTemplate.value = []
+                break;
+            case 3:
+                callNuclei = true
+        }
+
+
+        await NewWebScanner(this.urls, global.proxy, global.webscan.web_thread, deepScan, form.rootPathScan, callNuclei, customTemplate.value)
         this.done()
         form.runnningStatus = false
     }
@@ -354,6 +396,19 @@ function BatchCopyURL() {
     let targets = selectRows.map((item: any) => item.url)
     CopyALL(targets)
 }
+
+async function uploadFile() {
+    let filepath = await FileDialog("*.txt")
+    if (!filepath) {
+        return
+    }
+    let file: File = await ReadFile(filepath)
+    if (file.Error) {
+        ElMessage.warning(file.Message)
+        return
+    }
+    form.url = file.Content!
+}
 </script>
 
 <template>
@@ -408,7 +463,38 @@ function BatchCopyURL() {
     </el-card>
     <CustomTabs>
         <el-tabs type="border-card">
-            <el-tab-pane label="指纹">
+            <!-- <el-tab-pane label="端口">
+                <el-table :data="pagination.table.pageContent" @selection-change="pagination.ctrl.handleSelectChange"
+                    @row-contextmenu="handleContextMenu" style="height: 100vh;">
+                    <el-table-column type="selection" width="55px" align="center" />
+                    <el-table-column prop="IP" label="Host" />
+                    <el-table-column prop="Port" label="Port" width="100px" />
+                    <el-table-column prop="Server" label="Fingerprint" />
+                    <el-table-column prop="Link" label="Link">
+                        <template #default="scope">
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.Link)"
+                                v-show="scope.row.Link != ''">
+                            </el-button>
+                            {{ scope.row.Link }}
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="HttpTitle" label="WebTitle" />
+                    <template #empty>
+                        <el-empty />
+                    </template>
+                </el-table>
+                <div class="my-header" style="margin-top: 5px;">
+                    <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage"
+                        style="width: 40%;" />
+                    <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
+                        @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+                        :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100, 200, 500]"
+                        :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+                        :total="pagination.table.result.length">
+                    </el-pagination>
+                </div>
+            </el-tab-pane> -->
+            <el-tab-pane label="网站">
                 <el-table :data="fp.table.pageContent" stripe height="100vh"
                     @selection-change="fp.ctrl.handleSelectChange" :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleContextMenu">
@@ -444,7 +530,11 @@ function BatchCopyURL() {
                     </template>
                 </el-table>
                 <div class="my-header" style="margin-top: 5px;">
-                    <div></div>
+                    <el-space>
+                        <el-tag>主动指纹进度</el-tag>
+                        <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage"
+                            style="width: 400px;" />
+                    </el-space>
                     <el-pagination size="small" background @size-change="fp.ctrl.handleSizeChange"
                         @current-change="fp.ctrl.handleCurrentChange" :pager-count="5"
                         :current-page="fp.table.currentPage" :page-sizes="[50, 100, 200]" :page-size="fp.table.pageSize"
@@ -540,7 +630,14 @@ function BatchCopyURL() {
                     </el-tooltip>
                 </template>
                 <el-input v-model="form.url" type="textarea" :rows="6" clearable></el-input>
+                <el-button link size="small" :icon="Upload" @click="uploadFile" style="margin-top: 5px;">导入目标文件</el-button>
             </el-form-item>
+            <!-- <el-form-item label="工作流:">
+                <el-radio-group>
+                    <el-radio :value="3">IPTOALL</el-radio>
+                    <el-radio :value="6">网站扫描</el-radio>
+                </el-radio-group>
+            </el-form-item> -->
             <el-form-item>
                 <template #label>模式:
                     <el-tooltip>
@@ -548,13 +645,14 @@ function BatchCopyURL() {
                             1、指纹扫描: 只进行简单的指纹探测，不会探测敏感目录<br />
                             2、全指纹扫描: 会在指纹扫描基础上增加主动敏感目录探测，例如Nacos、报错页面信息判断指纹等<br />
                             3、指纹漏洞扫描: 指纹+主动敏感目录探测，扫描完成后扫描指纹对应POC<br />
+                            4、专项扫描: 只扫描简单指纹和已选择的漏洞
                         </template>
                         <el-icon>
                             <QuestionFilled size="24" />
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-segmented v-model="defaultScanOption" :options="scanOption" block style="width: 100%;">
+                <el-segmented v-model="defaultWebscanOption" :options="WebscanOption" block style="width: 100%;">
                     <template #default="{ item }">
                         <div style="display: flex; align-items: center">
                             <el-icon size="16" style="margin-right: 3px;">
@@ -565,30 +663,19 @@ function BatchCopyURL() {
                     </template>
                 </el-segmented>
             </el-form-item>
-            <div v-if="defaultScanOption == 2">
-                <el-form-item label="风险等级:" class="bottom">
-                    <el-select v-model="form.risk" placeholder="未选择即默认不进行筛选" multiple clearable style="width: 100%;">
-                        <el-option v-for="item in form.riskOptions" :label="item.toLocaleUpperCase()" :value="item" />
-                    </el-select>
+            <div v-if="defaultWebscanOption == 3">
+                <el-form-item label="指定漏洞:">
+                    <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏洞" filterable
+                        multiple clearable :multiple-limit="10" />
                 </el-form-item>
             </div>
-            <el-form-item label="指纹线程:">
-                <el-input-number controls-position="right" v-model="form.thread" :min="1" :max="2000" />
-            </el-form-item>
-            <el-form-item>
-                <template #label>根路径扫描:
-                    <el-tooltip placement="left" content="启用后主动指纹只拼接根路径，否则会拼接输入的完整URL">
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-switch v-model="form.rootPathScan" />
+            <el-form-item label="根路径扫描:">
+                <el-switch v-model="form.rootPathScan" style="margin-right: 5px;" />
+                <el-tag>启用后主动指纹只拼接根路径，否则会拼接输入的完整URL</el-tag>
             </el-form-item>
         </el-form>
-        <div>
-            <el-button type="primary" @click="startScan"
-                style="left: 45%;bottom: 10px; position: absolute;">开始任务</el-button>
+        <div style="display: flex; justify-content: center;">
+            <el-button type="primary" @click="startScan" style="bottom: 10px; position: absolute;">开始任务</el-button>
         </div>
     </el-drawer>
     <el-drawer v-model="detailDialog" size="70%">

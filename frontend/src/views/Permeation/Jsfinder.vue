@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref, h } from 'vue';
-import { Copy, CopyALL, formatURL } from '@/util';
+import { Copy, CopyALL, FormatWebURL } from '@/util';
 import { JSFind } from 'wailsjs/go/main/App';
 import { QuestionFilled, Search, CopyDocument, ChromeFilled } from '@element-plus/icons-vue';
 import async from 'async';
@@ -81,7 +81,7 @@ interface LinkSource {
 
 async function JSFinder() {
   var urls = [] as string[]
-  urls = await formatURL(config.urls)
+  urls = await FormatWebURL(config.urls)
   if (urls.length == 0) {
     ElMessage.warning("可用目标为空");
     return

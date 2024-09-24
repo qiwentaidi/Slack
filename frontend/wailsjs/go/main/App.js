@@ -158,6 +158,10 @@ export function Sock5Connect(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['Sock5Connect'](arg1, arg2, arg3, arg4, arg5);
 }
 
+export function SpaceGetPort(arg1) {
+  return window['go']['main']['App']['SpaceGetPort'](arg1);
+}
+
 export function StopDirScan() {
   return window['go']['main']['App']['StopDirScan']();
 }

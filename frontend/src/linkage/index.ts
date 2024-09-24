@@ -6,7 +6,7 @@ import { ElMessage, ElNotification } from 'element-plus';
 
 
 export async function LinkWebscan(ips: string[]) {
-    await NewWebScanner(ips, global.proxy, 50 ,true, true, true, "")
+    await NewWebScanner(ips, global.proxy, 50 ,true, true, true, [])
 }
 
 export function LinkCrack(ips: string[]) {
@@ -69,10 +69,7 @@ export async function LinkHunter(query: string, count: string) {
         if (result.code == 40205) {
             ElMessage(result.message)
         } else {
-            ElMessage({
-                message: result.message,
-                type: "error",
-            });
+            ElMessage.error(result.message);
             return
         }
     }

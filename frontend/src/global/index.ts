@@ -23,7 +23,12 @@ var proxy = reactive({
 })
 
 var webscan = reactive({
-    nucleiEngine: "",
+    web_thread: 50,
+    port_thread: 1000,
+    port_timeout: 7,
+    ping_check_alive: false,
+    default_alive_module: "None",
+    default_network: "Auto",
 })
 
 // 临时全局变量但是不进行保存
@@ -32,7 +37,6 @@ var temp = reactive({
     dirsearchConut: 0,
     dirsearchStartTime: 0,
     thinkdict: [] as string[],
-    defaultNetwork: "Auto",
     NetworkCardList: ["Auto"],
     nucleiEnabled: false,
     isMacOS: false,

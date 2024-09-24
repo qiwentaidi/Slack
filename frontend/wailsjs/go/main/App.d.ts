@@ -74,7 +74,7 @@ export function NewSynScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<n
 
 export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>,arg4:number,arg5:number):Promise<void>;
 
-export function NewWebScanner(arg1:Array<string>,arg2:clients.Proxy,arg3:number,arg4:boolean,arg5:boolean,arg6:boolean,arg7:string):Promise<void>;
+export function NewWebScanner(arg1:Array<string>,arg2:clients.Proxy,arg3:number,arg4:boolean,arg5:boolean,arg6:boolean,arg7:Array<string>):Promise<void>;
 
 export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Promise<void>;
 
@@ -85,6 +85,8 @@ export function QuakeSearch(arg1:Array<string>,arg2:string,arg3:number,arg4:numb
 export function QuakeTips(arg1:string):Promise<space.QuakeTipsResult>;
 
 export function Sock5Connect(arg1:string,arg2:number,arg3:number,arg4:string,arg5:string):Promise<boolean>;
+
+export function SpaceGetPort(arg1:string):Promise<Array<number>>;
 
 export function StopDirScan():Promise<void>;
 
