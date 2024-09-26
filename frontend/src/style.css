@@ -241,3 +241,26 @@ html {
 .keyword-search .el-table__row:hover {
   cursor: pointer;
 }
+
+
+/* 网站扫描风险等级颜色 */
+
+.severity-critical {
+  color: #AF63F6;
+}
+
+.severity-high {
+  color: red;
+}
+
+.severity-medium {
+  color: orange;
+}
+
+.severity-low {
+  color: rgb(0, 145, 255);
+}
+
+.severity-info {
+  color: green;
+}

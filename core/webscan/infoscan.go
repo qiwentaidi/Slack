@@ -264,7 +264,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 				id += 1
 				runtime.EventsEmit(s.ctx, "ActiveProgressID", id)
 				if rootPath {
-					target.Path = ""
+					target, _ = url.Parse(util.GetBasicURL(target.String()))
 				}
 				threadPool.Invoke(TFP{
 					URL:  target,

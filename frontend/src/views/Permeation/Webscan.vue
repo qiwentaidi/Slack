@@ -11,7 +11,7 @@ import {
     StopWebscan,
 } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
-import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL } from '@/util'
+import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, TrimRightSubString } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
@@ -41,8 +41,11 @@ onMounted(async () => {
     FingerprintList().then(list => {
         dashboard.fingerLength = list.length
     })
-    const pocMap = await GetFingerPocMap();
+    // 获取指纹与POC的对应关系
+    let pocMap = await GetFingerPocMap();
+    // 获取POC数量
     dashboard.yamlPocsLength = Object.keys(pocMap).length
+    // 遍历模板
     let files = await List(global.PATH.homedir + "/slack/config/pocs")
     files.forEach((file: any) => {
         if (file.Path.endsWith(".yaml")) {
@@ -52,10 +55,7 @@ onMounted(async () => {
             })
         }
     })
-});
-
-
-onMounted(() => {
+    // 获得结果回调
     EventsOn("nucleiResult", (result: any) => {
         const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
         dashboard.riskLevel[riskLevelKey]++;
@@ -107,7 +107,8 @@ onMounted(() => {
         EventsOff("ActiveProgressID");
         EventsOff("ActiveScanComplete");
     };
-})
+
+});
 
 const defaultWebscanOption = ref(0)
 
@@ -325,7 +326,7 @@ function getClassBySeverity(severity: string) {
 }
 
 function transformedResult() {
-    return vp.table.result.map(({ vulID, vulName, protocoltype ,severity, vulURL, extInfo }) => ({
+    return vp.table.result.map(({ vulID, vulName, protocoltype, severity, vulURL, extInfo }) => ({
         vulID,
         vulName,
         protocoltype,
@@ -398,6 +399,7 @@ function BatchCopyURL() {
     CopyALL(targets)
 }
 
+// 选择目标文件读取
 async function uploadFile() {
     let filepath = await FileDialog("*.txt")
     if (!filepath) {
@@ -500,7 +502,7 @@ async function uploadFile() {
                     @selection-change="fp.ctrl.handleSelectChange" :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleContextMenu">
                     <el-table-column type="selection" width="55px" />
-                    <el-table-column fixed prop="url" label="URL" width="300px" :show-overflow-tooltip="true" />
+                    <el-table-column fixed prop="url" label="URL" width="300px" />
                     <el-table-column prop="status" width="100px" label="Code"
                         :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
                         :show-overflow-tooltip="true" />
@@ -520,8 +522,9 @@ async function uploadFile() {
                         <template #default="scope">
                             <div class="finger-container">
                                 <el-tag v-for="finger in scope.row.fingerprint" :key="finger"
-                                    :effect="scope.row.detect === 'Default' ? 'light' : 'dark'">{{ finger
-                                    }}</el-tag>
+                                    :effect="scope.row.detect === 'Default' ? 'light' : 'dark'"
+                                    :type="finger.endsWith('*') ? 'danger' : 'primary'"
+                                    >{{ TrimRightSubString(finger, "*") }}</el-tag>
                                 <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
                             </div>
                         </template>
@@ -631,7 +634,8 @@ async function uploadFile() {
                     </el-tooltip>
                 </template>
                 <el-input v-model="form.url" type="textarea" :rows="6" clearable></el-input>
-                <el-button link size="small" :icon="Upload" @click="uploadFile" style="margin-top: 5px;">导入目标文件</el-button>
+                <el-button link size="small" :icon="Upload" @click="uploadFile"
+                    style="margin-top: 5px;">导入目标文件</el-button>
             </el-form-item>
             <!-- <el-form-item label="工作流:">
                 <el-radio-group>
@@ -770,26 +774,6 @@ async function uploadFile() {
     text-align: center;
 }
 
-.severity-critical {
-    color: #AF63F6;
-}
-
-.severity-high {
-    color: red;
-}
-
-.severity-medium {
-    color: orange;
-}
-
-.severity-low {
-    color: rgb(0, 145, 255);
-}
-
-.severity-info {
-    color: green;
-}
-
 .scrollbar-demo-item {
     display: flex;
     align-items: center;
@@ -804,24 +788,10 @@ async function uploadFile() {
     text-overflow: ellipsis;
 }
 
-.align {
-    display: flex;
-    justify-content: left;
-    align-items: center;
-}
-
-.align .el-icon {
-    margin-right: 5px;
-}
-
 .finger-container {
     flex-wrap: wrap;
     display: flex;
     gap: 7px;
-}
-
-.description {
-    width: 100px;
 }
 
 .el-text {
