@@ -325,9 +325,10 @@ function getClassBySeverity(severity: string) {
 }
 
 function transformedResult() {
-    return vp.table.result.map(({ vulID, vulName, severity, vulURL, extInfo }) => ({
+    return vp.table.result.map(({ vulID, vulName, protocoltype ,severity, vulURL, extInfo }) => ({
         vulID,
         vulName,
+        protocoltype,
         severity,
         vulURL,
         extInfo,

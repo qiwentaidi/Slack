@@ -352,8 +352,12 @@ async function LinkShodan() {
             return
         }
         let ports = await SpaceGetPort(ip)
+        id++
+        if (ports == null) {
+            continue
+        }
         Callgologger("info", "[shodan] " + ip + " port: " + ports.join())
-        form.percentage = Number(((id / ips.length) * 100).toFixed(2));
+        shodanPercentage.value = Number(((id / ips.length) * 100).toFixed(2));
         if (ports.length > 0) {
             for (const port of ports) {
                 form.target += ip + ":" + port.toString() + "\n"
@@ -389,14 +393,14 @@ function stopShodan() {
                     <el-checkbox v-model="config.crack">口令猜测</el-checkbox>
                     <el-checkbox v-model="config.webscan">网站扫描</el-checkbox>
                 </div>
-
+                
                 <el-button text bg @click="shodanVisible = true">
                     <template #icon>
                         <img src="/navigation/shodan.png" style="width: 14px; height: 14px;">
                     </template>
                     联动shodan
                 </el-button>
-
+                
                 <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
                 <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
             </div>
