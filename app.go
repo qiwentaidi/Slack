@@ -271,10 +271,10 @@ func (a *App) InitTycHeader(token string) {
 	info.InitHEAD(token)
 }
 
-func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool) []info.CompanyInfo {
+func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool, machine string) []info.CompanyInfo {
 	tkm := info.CheckKeyMap(a.ctx, query)
 	time.Sleep(time.Second)
-	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false, searchDomain)
+	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false, searchDomain, machine)
 	var secondCompanyNames []string
 	if subLevel >= 2 {
 		for _, r := range result {
@@ -282,7 +282,7 @@ func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDo
 				continue
 			}
 			secondCompanyNames = append(secondCompanyNames, r.CompanyName)
-			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain)
+			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain, machine)
 			result = append(result, secondResult...)
 			time.Sleep(time.Second)
 		}
@@ -292,7 +292,7 @@ func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDo
 			if util.ArrayContains(r.CompanyName, secondCompanyNames) { // 已经查询过的二级IP跳过
 				continue
 			}
-			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain)
+			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain, machine)
 			result = append(result, secondResult...)
 			time.Sleep(time.Second)
 		}

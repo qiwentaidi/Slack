@@ -136,7 +136,7 @@ type CompanyInfo struct {
 }
 
 // 返回查询公司的名称和子公司的名称, isSecond 是否为二次查询
-func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int, isSecond bool, searchDomain bool) (Asset []CompanyInfo) {
+func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int, isSecond bool, searchDomain bool, machine string) (Asset []CompanyInfo) {
 	data := make(map[string]interface{})
 	data["gid"] = companyId
 	data["pageSize"] = 100
@@ -156,7 +156,7 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 	if !isSecond {
 		var domains []string
 		if searchDomain {
-			domains, err = Beianx(companyName)
+			domains, err = Beianx(companyName, machine)
 			if err != nil {
 				gologger.Debug(ctx, err)
 			}
@@ -169,7 +169,7 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 			gologger.Info(ctx, fmt.Sprintf("%v", result.Name))
 			var subsidiaryDomains []string
 			if (result.RegStatus == "存续" || result.RegStatus == "ok") && searchDomain { // 注销的公司不用查备案
-				subsidiaryDomains, err = Beianx(result.Name)
+				subsidiaryDomains, err = Beianx(result.Name, machine)
 				if err != nil {
 					gologger.Debug(ctx, err)
 				}

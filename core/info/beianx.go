@@ -18,9 +18,9 @@ import (
 var acwscv2 = ""
 
 // 返回域名组，延时防止请求过快
-func Beianx(company string) ([]string, error) {
+func Beianx(company string, machine string) ([]string, error) {
 	h := map[string]string{
-		"Cookie": fmt.Sprintf("acw_sc__v2=%s", acwscv2),
+		"Cookie": fmt.Sprintf("acw_sc__v2=%s;machine_str=%s", acwscv2, machine),
 	}
 	resp, body, err := clients.NewRequest("GET", "https://www.beianx.cn/search/"+company, h, nil, 10, true, http.DefaultClient)
 	if err != nil && resp.StatusCode == 401 {
@@ -30,7 +30,7 @@ func Beianx(company string) ([]string, error) {
 		arg1 := getArg1FromHTML(string(body))
 		acwscv2 = getAcwScV2(arg1)
 		time.Sleep(time.Second)
-		return Beianx(company)
+		return Beianx(company, machine)
 	}
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
 	if err != nil {

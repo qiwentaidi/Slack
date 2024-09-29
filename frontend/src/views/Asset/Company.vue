@@ -34,6 +34,7 @@ const from = reactive({
     runningStatus: false,
     companyData: [] as CompanyInfo[],
     wehcatData: [] as WechatInfo[],
+    machineStr: ''
 })
 
 let pc = usePagination(from.companyData, 20) // paginationCompany
@@ -56,6 +57,12 @@ async function Collect() {
             return
         }
     }
+    if (from.domain && from.machineStr == "") {
+        ElMessage.warning('MachineStr为空，无法进行子域名查询，请先配置该内容')
+        return
+    } else {
+        from.machineStr = from.machineStr.replace(/[\r\n\s]/g, '')
+    }
     if (from.linkSubdomain && global.space.bevigil == "" && global.space.chaos == "" && global.space.zoomeye == "" && global.space.securitytrails == "" && global.space.github == "") {
         ElMessage.warning('未配置任何域名收集模块API，请在设置中至少配置一个')
         return
@@ -71,7 +78,7 @@ async function Collect() {
     const promises = companys.map(async companyName => {
         Callgologger("info", `正在收集${companyName}的子公司信息`)
         if (typeof companyName === 'string') {
-            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain);
+            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain, from.machineStr);
             if (result.length > 0) {
                 pc.table.result.push(...result)
                 pc.table.pageContent = pc.ctrl.watchResultChange(pc.table)
@@ -162,6 +169,19 @@ const debouncedInput = debounce(() => {
                     </el-tooltip>
                 </template>
                 <el-input v-model="from.token" type="textarea" :rows="4" @input="debouncedInput"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <template #label>
+                    MachineStr:
+                    <el-tooltip placement="right">
+                        <template #content>由于https://www.beianx.cn/备案查域名新增校验机制<br />
+                            需要在此处填入Cookie头中machine_str字段的值</template>
+                        <el-icon>
+                            <QuestionFilled size="24" />
+                        </el-icon>
+                    </el-tooltip>
+                </template>
+                <el-input v-model="from.machineStr"></el-input>
             </el-form-item>
             <el-form-item class="align-right">
                 <el-button type="primary" @click="Collect">开始查询</el-button>
