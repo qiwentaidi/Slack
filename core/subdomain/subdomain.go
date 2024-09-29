@@ -204,8 +204,8 @@ func ApiPolymerization(ctx context.Context, o structs.SubdomainOption) {
 				}
 			}
 		}
-		if o.GethubApi != "" {
-			result := github.FetchHosts(ctx, domain, o.GethubApi)
+		if o.GithubApi != "" {
+			result := github.FetchHosts(ctx, domain, o.GithubApi)
 			subdomains = append(subdomains, result...)
 		}
 		if o.SecuritytrailsApi != "" {

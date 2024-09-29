@@ -80,6 +80,7 @@ onMounted(async () => {
 .content-wrapper {
   max-height: calc(100vh - 35px);
   overflow-y: auto;
+  scrollbar-width: none;
 }
 
 .no-scroll {

@@ -17,9 +17,6 @@
         <el-form-item label="网站指纹线程">
           <el-input-number controls-position="right" v-model="global.webscan.web_thread" :min="1" :max="200" />
         </el-form-item>
-        <el-form-item label="端口扫描线程">
-          <el-input-number controls-position="right" v-model="global.webscan.port_thread" :min="1" :max="10000" />
-        </el-form-item>
         <el-form-item label="端口指纹超时">
           <el-input-number controls-position="right" v-model="global.webscan.port_timeout" :min="1" :max="20" />
         </el-form-item>
@@ -66,6 +63,9 @@
           </el-form-item>
           <el-form-item :label="$t('setting.password')">
             <el-input v-model="global.proxy.password" type="password" show-password></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
           </el-form-item>
         </div>
       </el-form>

@@ -40,7 +40,6 @@ type Options struct {
 	BodyExclude            string
 	BodyLengthExcludeTimes int // 过滤响应包长度数据次数出现了多少次，就过滤相同的
 	StatusCodeExclude      []int
-	FailedCounts           int32
 	Redirect               bool
 	Interval               int
 	CustomHeader           string

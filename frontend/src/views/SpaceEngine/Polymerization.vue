@@ -105,6 +105,7 @@ import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import { CsegmentIpv4 } from '@/util';
 import { ExportToXlsx } from '@/export';
 import csegmentIcon from '@/assets/icon/csegment.svg'
+import { structs } from 'wailsjs/go/models';
 
 const group = ["IP", "域名", "标题", "Body", "备案名称", "备案号"]
 
@@ -136,13 +137,14 @@ const tableCtrl = ({
     addTab: async (query: string) => {
         const newTabName = `${++table.tabIndex}`
         table.loading = true
-        let result: any = await UncoverSearch(query, uncover.currentGroup, uncover.size, {
-            fofaapi: global.space.fofaapi,
-            fofaemail: global.space.fofaemail,
-            fofakey: global.space.fofakey,
-            hunterkey: global.space.hunterkey,
-            quakekey: global.space.quakekey,
-        })
+        let options: structs.SpaceOption = {
+            FofaApi: global.space.fofaapi,
+            FofaEmail: global.space.fofaemail,
+            FofaKey: global.space.fofakey,
+            HunterKey: global.space.hunterkey,
+            QuakeKey: global.space.quakekey,
+        }
+        let result: any = await UncoverSearch(query, uncover.currentGroup, uncover.size, options)
         table.editableTabs.push({
             title: query,
             name: newTabName,
@@ -175,7 +177,6 @@ const tableCtrl = ({
 
 function handleInput(val: string) {
     // Remove all non-numeric characters
-    console.log(val)
     const numericValue = val.replace(/\D/g, '');
     // Update the model value
     uncover.size = Number(numericValue)

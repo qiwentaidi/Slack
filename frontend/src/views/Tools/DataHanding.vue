@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
 import { ExtractIP, Fscan2Txt, IpLocation } from 'wailsjs/go/main/App'
-import { Search, QuestionFilled, Location, Cellphone, Postcard } from '@element-plus/icons-vue';
+import { Search, QuestionFilled, Location, Cellphone, Postcard, Upload } from '@element-plus/icons-vue';
 import { ElNotification } from 'element-plus';
 import extractIcon from '@/assets/icon/extract.svg'
-import { SplitTextArea, UploadContextMenu, UploadFileAndRead } from '@/util';
+import { SplitTextArea, UploadFileAndRead } from '@/util';
 import async from 'async';
 
 const form = reactive({
@@ -146,8 +146,9 @@ const appControl = [
         <el-main>
             <el-form label-width="50px">
                 <el-form-item label="内容">
-                    <el-input v-model="form.input" type="textarea" :rows="7" placeholder='请输入内容或者右键上传文件'
-                        @contextmenu.prevent="UploadContextMenu($event, uploadFile)" />
+                    <el-input v-model="form.input" type="textarea" :rows="7" placeholder='请输入内容' />
+                    <el-button link size="small" :icon="Upload" @click="uploadFile"
+                        style="margin-top: 5px;">导入文件内容</el-button>
                 </el-form-item>
                 <el-form-item label="结果">
                     <el-input v-model="form.result" type="textarea" :rows="15" />

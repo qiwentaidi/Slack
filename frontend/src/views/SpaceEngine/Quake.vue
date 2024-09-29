@@ -97,7 +97,7 @@
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="quake.syntaxData" @row-click="syntax.rowClick2">
+                            <el-table :data="quake.syntaxData" @row-click="syntax.rowClick2" class="keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100">
@@ -188,7 +188,7 @@
         @tab-remove="tableCtrl.removeTab" class="quake-tabs">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 65vh;">
+            <el-table :data="item.content" border style="width: 100%;height: calc(100vh - 280px);">
                 <el-table-column prop="IP" fixed label="IP" width="150" />
                 <el-table-column prop="Host" fixed label="域名" width="200" :show-overflow-tooltip="true">
                     <template #default="scope">
@@ -226,7 +226,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="IcpName" label="ICP名称" width="160" :show-overflow-tooltip="true" />
-                <el-table-column prop="IcpNumber" label="ICP编号" width="150" :show-overflow-tooltip="true" />
+                <el-table-column prop="IcpNumber" label="ICP编号" :show-overflow-tooltip="true" />
                 <el-table-column prop="ISP" label="运营商" width="100" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="200" :show-overflow-tooltip="true" />
                 <el-table-column fixed="right" label="操作" width="100" align="center">
@@ -257,10 +257,10 @@
         <!-- 一定要用:model v-model校验会失效 -->
         <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="syntax.rules" status-icon>
             <el-form-item label="语法名称" prop="name">
-                <el-input v-model="syntax.ruleForm.name" maxlength="30" show-word-limit></el-input>
+                <el-input v-model="syntax.ruleForm.Name" maxlength="30" show-word-limit></el-input>
             </el-form-item>
             <el-form-item label="语法内容" prop="desc">
-                <el-input v-model="syntax.ruleForm.desc" type="textarea" :rows="10" maxlength="1024"
+                <el-input v-model="syntax.ruleForm.Content" type="textarea" :rows="10" maxlength="1024"
                     show-word-limit></el-input>
             </el-form-item>
             <el-form-item class="align-right">
@@ -278,7 +278,7 @@ import { Search, ArrowDown, CopyDocument, Document, PictureRounded, Histogram, U
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4 } from '@/util';
 import { ExportToXlsx } from '@/export';
-import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData, RuleForm } from '@/interface';
+import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData } from '@/interface';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import { FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/main/App';
 import global from '@/global';
@@ -288,6 +288,7 @@ import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'w
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { validateSingleURL } from '@/stores/validate';
+import { main } from 'wailsjs/go/models';
 
 const options = ({
     keywordActive: "基本信息",
@@ -423,11 +424,11 @@ const syntax = ({
         quake.query += " AND " + row.Content
     },
     starDialog: ref(false),
-    rules: reactive<FormRules<RuleForm>>({
-        name: [
+    rules: reactive<FormRules<main.Syntax>>({
+        Name: [
             { required: true, message: '请输入语法名称', trigger: 'blur' },
         ],
-        desc: [
+        Content: [
             {
                 required: true,
                 message: '请输入语法内容',
@@ -435,20 +436,20 @@ const syntax = ({
             },
         ],
     }),
-    ruleForm: reactive<RuleForm>({
-        name: '',
-        desc: '',
+    ruleForm: reactive<main.Syntax>({
+        Name: '',
+        Content: '',
     }),
     createStarDialog: () => {
         syntax.starDialog.value = true
-        syntax.ruleForm.name = ""
-        syntax.ruleForm.desc = quake.query
+        syntax.ruleForm.Name = ""
+        syntax.ruleForm.Content = quake.query
     },
     submitStar: async (formEl: FormInstance | undefined) => {
         if (!formEl) return
         let result = await formEl.validate()
         if (!result) return
-        InsertFavGrammarFiled("quake", syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
+        InsertFavGrammarFiled("quake", syntax.ruleForm.Name!, syntax.ruleForm.Content!).then((r: Boolean) => {
             if (r) {
                 ElMessage.success('添加语法成功')
             } else {
@@ -479,7 +480,7 @@ const quake = reactive({
     iconFile: "",
     batchIps: "",
     batchFile: "",
-    syntaxData: [] as RuleForm[],
+    syntaxData: [] as main.Syntax[],
     certcommon: "",
 })
 

@@ -24,10 +24,6 @@ html {
   overflow: hidden;
 }
 
-.el-drawer__header {
-  margin-bottom: 0px;
-}
-
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -75,12 +71,6 @@ html {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-}
-
-.custom_eltabs_titlebar {
-  position: absolute;
-  right: 5px;
-  top: 4px;
 }
 
 .pretty-response {
@@ -263,4 +253,22 @@ html {
 
 .severity-info {
   color: green;
+}
+
+.el-drawer__header {
+  margin-bottom: 0px;
+}
+
+.drawer-title {
+  font-weight: bold;
+}
+
+.el-col {
+  text-align: center;
+}
+
+.el-text {
+  display: flex;
+  align-items: center;
+  text-align: center
 }

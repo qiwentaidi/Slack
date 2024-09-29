@@ -67,7 +67,7 @@ export default {
     setting: {
         'scan': '扫描配置',
         'mapping': '资产测绘',
-        'network_list': '网卡列表',
+        'network_list': '网卡选择',
         'username': '用户名',
         'password': '密码',
         'engine_enable': '检测引擎',

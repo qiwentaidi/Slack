@@ -1,3 +1,4 @@
+import { SplitTextArea } from "@/util";
 import { ElMessage } from "element-plus";
 
 export function validatePortscan(input: string) {
@@ -57,4 +58,17 @@ export function validateSingleURL(url: string): boolean {
 export function isPrivateIP(ip: string) {
     const regex = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3})|(172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})|(192\.168\.\d{1,3}\.\d{1,3})|(127\.\d{1,3}\.\d{1,3}\.\d{1,3})/;
     return regex.test(ip);
+}
+
+export function validateWebscan(input: string) {
+    const ipPatterns = /^[a-zA-Z0-9\-]+.[a-zA-Z0-9\-]+/ // 符合域名规范即可
+    var lines = SplitTextArea(input)
+    lines = lines.filter(line => line.trim() !== '');
+    for (const line of lines) {
+        if (!ipPatterns.test(line)) {
+            ElMessage.warning(line + " 输入格式错误")
+            return false
+        }
+    }
+    return true
 }

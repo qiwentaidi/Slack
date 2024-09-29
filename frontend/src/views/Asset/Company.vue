@@ -34,7 +34,6 @@ const from = reactive({
     runningStatus: false,
     companyData: [] as CompanyInfo[],
     wehcatData: [] as WechatInfo[],
-    machineStr: ''
 })
 
 let pc = usePagination(from.companyData, 20) // paginationCompany
@@ -57,12 +56,6 @@ async function Collect() {
             return
         }
     }
-    if (from.domain && from.machineStr == "") {
-        ElMessage.warning('MachineStr为空，无法进行子域名查询，请先配置该内容')
-        return
-    } else {
-        from.machineStr = from.machineStr.replace(/[\r\n\s]/g, '')
-    }
     if (from.linkSubdomain && global.space.bevigil == "" && global.space.chaos == "" && global.space.zoomeye == "" && global.space.securitytrails == "" && global.space.github == "") {
         ElMessage.warning('未配置任何域名收集模块API，请在设置中至少配置一个')
         return
@@ -78,7 +71,7 @@ async function Collect() {
     const promises = companys.map(async companyName => {
         Callgologger("info", `正在收集${companyName}的子公司信息`)
         if (typeof companyName === 'string') {
-            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain,from.machineStr);
+            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain);
             if (result.length > 0) {
                 pc.table.result.push(...result)
                 pc.table.pageContent = pc.ctrl.watchResultChange(pc.table)
@@ -132,7 +125,7 @@ const debouncedInput = debounce(() => {
 <template>
     <el-drawer v-model="from.newTask" direction="rtl" size="40%">
         <template #header>
-            <h4>新建任务</h4>
+            <span class="drawer-title">新建任务</span>
         </template>
         <el-form :model="from" label-width="auto">
             <el-form-item label="公司名称:">
@@ -170,19 +163,6 @@ const debouncedInput = debounce(() => {
                 </template>
                 <el-input v-model="from.token" type="textarea" :rows="4" @input="debouncedInput"></el-input>
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    MachineStr:
-                    <el-tooltip placement="right">
-                        <template #content>由于https://www.beianx.cn/备案查域名新增校验机制<br />
-                            需要在此处填入Cookie头中machine_str字段的值</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-input v-model="from.machineStr"></el-input>
-            </el-form-item>
             <el-form-item class="align-right">
                 <el-button type="primary" @click="Collect">开始查询</el-button>
             </el-form-item>
@@ -191,7 +171,7 @@ const debouncedInput = debounce(() => {
     <CustomTabs>
         <el-tabs v-model="from.activeName" type="border-card">
             <el-tab-pane label="控股企业" name="subcompany">
-                <el-table :data="pc.table.pageContent" height="78vh">
+                <el-table :data="pc.table.pageContent" style="height: calc(100vh - 175px);">
                     <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" :show-overflow-tooltip="true" />
                     <el-table-column prop="Holding" width="100px" label="股权比例" />
@@ -227,7 +207,7 @@ const debouncedInput = debounce(() => {
                 </div>
             </el-tab-pane>
             <el-tab-pane label="公众号" name="wechat">
-                <el-table :data="pw.table.pageContent" height="78vh" :cell-style="{ height: '23px' }">
+                <el-table :data="pw.table.pageContent" style="height: calc(100vh - 175px);" :cell-style="{ height: '23px' }">
                     <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" width="180px" />
                     <el-table-column prop="WechatName" label="公众号名称">

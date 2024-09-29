@@ -4,13 +4,14 @@ import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
 import { Search, ChatLineSquare, ChromeFilled, CopyDocument, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { splitInt, Copy, CsegmentIpv4 } from '@/util'
-import { TableTabs, HunterEntryTips, RuleForm } from "@/interface"
+import { TableTabs, HunterEntryTips } from "@/interface"
 import global from "@/global"
 import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/main/App'
 import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/main/Database'
 import { BrowserOpenURL } from 'wailsjs/runtime'
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
+import { main } from 'wailsjs/go/models';
 
 const options = ({
     Server: [
@@ -83,11 +84,11 @@ const ruleFormRef = ref<FormInstance>()
 const syntax = ({
     searchDialog: ref(false),
     starDialog: ref(false),
-    rules: reactive<FormRules<RuleForm>>({
-        name: [
+    rules: reactive<FormRules<main.Syntax>>({
+        Name: [
             { required: true, message: '请输入语法名称', trigger: 'blur' },
         ],
-        desc: [
+        Content: [
             {
                 required: true,
                 message: '请输入语法内容',
@@ -95,20 +96,20 @@ const syntax = ({
             },
         ],
     }),
-    ruleForm: reactive<RuleForm>({
-        name: '',
-        desc: '',
+    ruleForm: reactive<main.Syntax>({
+        Name: '',
+        Content: '',
     }),
     createStarDialog: () => {
         syntax.starDialog.value = true
-        syntax.ruleForm.name = ""
-        syntax.ruleForm.desc = form.query
+        syntax.ruleForm.Name = ""
+        syntax.ruleForm.Content = form.query
     },
     submitStar: async (formEl: FormInstance | undefined) => {
         if (!formEl) return
         let result = await formEl.validate()
         if (!result) return
-        InsertFavGrammarFiled("hunter", syntax.ruleForm.name!, syntax.ruleForm.desc!).then((r: Boolean) => {
+        InsertFavGrammarFiled("hunter", syntax.ruleForm.Name!, syntax.ruleForm.Content!).then((r: Boolean) => {
             if (r) {
                 ElMessage.success('添加语法成功')
             } else {
@@ -139,7 +140,7 @@ const form = reactive({
     tips: '',
     batchdialog: false,
     batchURL: '',
-    syntaxData: [] as RuleForm[],
+    syntaxData: [] as main.Syntax[],
 })
 
 const entry = ({
@@ -559,7 +560,7 @@ function searchCsegmentIpv4(ip: string) {
         @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 65vh;">
+            <el-table :data="item.content" border style="width: 100%;height: calc(100vh - 275px);">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" fixed label="IP" width="150" :show-overflow-tooltip="true" />
@@ -628,11 +629,11 @@ function searchCsegmentIpv4(ip: string) {
     <el-dialog v-model="syntax.starDialog.value" title="收藏语法" width="40%" center>
         <!-- 一定要用:model v-model校验会失效 -->
         <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="syntax.rules" status-icon>
-            <el-form-item label="语法名称" prop="name">
-                <el-input v-model="syntax.ruleForm.name" maxlength="30" show-word-limit></el-input>
+            <el-form-item label="语法名称" prop="Name">
+                <el-input v-model="syntax.ruleForm.Name" maxlength="30" show-word-limit></el-input>
             </el-form-item>
-            <el-form-item label="语法内容" prop="desc">
-                <el-input v-model="syntax.ruleForm.desc" type="textarea" :rows="10" maxlength="1024"
+            <el-form-item label="语法内容" prop="Content">
+                <el-input v-model="syntax.ruleForm.Content" type="textarea" :rows="10" maxlength="1024"
                     show-word-limit></el-input>
             </el-form-item>
             <el-form-item class="align-right">

@@ -9,10 +9,11 @@ import { ElMessage, ElNotification } from 'element-plus'
 import { Menu, CopyDocument } from '@element-plus/icons-vue';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import usePagination from "@/usePagination";
-import { SubdomainInfo, SubdomainOption } from "@/interface";
+import { SubdomainInfo } from "@/interface";
 import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
 import { debounce } from "lodash"
 import { validateSingleDomain } from "@/stores/validate";
+import { structs } from "wailsjs/go/models";
 
 const debounceUpdate = debounce(() => {
   pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
@@ -159,7 +160,7 @@ class Runner {
         if (currentRunner.value != 1 && config.subs.length == 0) {
             config.subs = (await ReadLine(global.PATH.homedir + "/slack/config/subdomain/dicc.txt"))!
         }
-        let option: SubdomainOption = {
+        let option: structs.SubdomainOption = {
             Mode: currentRunner.value,
             Domains: domains,
             Subs: config.subs,
@@ -244,7 +245,7 @@ const CopyDomains = () => {
         </el-form-item>
     </el-form>
     <el-table :data="pagination.table.pageContent" border :cell-style="{ textAlign: 'center' }" 
-    :header-cell-style="{ 'text-align': 'center' }" style="height: 74.5dvh;">
+    :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 205px);">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="Domain" label="主域名" />
         <el-table-column prop="Subdomain" label="子域名" />

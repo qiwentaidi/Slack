@@ -36,7 +36,7 @@
             </div>
         </el-form-item>
     </el-form>
-    <el-table :data="pagination.table.pageContent" stripe height="66vh">
+    <el-table :data="pagination.table.pageContent" stripe style="height: calc(100vh - 270px);">
         <el-table-column fixed type="index" label="#" width="60px" />
         <el-table-column prop="Query" label="关键词" width="180" />
         <el-table-column prop="Total" label="总数" width="100" />

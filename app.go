@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -34,6 +33,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -270,10 +271,10 @@ func (a *App) InitTycHeader(token string) {
 	info.InitHEAD(token)
 }
 
-func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool, machine string) []info.CompanyInfo {
+func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool) []info.CompanyInfo {
 	tkm := info.CheckKeyMap(a.ctx, query)
 	time.Sleep(time.Second)
-	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false, searchDomain, machine)
+	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false, searchDomain)
 	var secondCompanyNames []string
 	if subLevel >= 2 {
 		for _, r := range result {
@@ -281,7 +282,7 @@ func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDo
 				continue
 			}
 			secondCompanyNames = append(secondCompanyNames, r.CompanyName)
-			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain, machine)
+			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain)
 			result = append(result, secondResult...)
 			time.Sleep(time.Second)
 		}
@@ -291,7 +292,7 @@ func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDo
 			if util.ArrayContains(r.CompanyName, secondCompanyNames) { // 已经查询过的二级IP跳过
 				continue
 			}
-			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain, machine)
+			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain)
 			result = append(result, secondResult...)
 			time.Sleep(time.Second)
 		}
@@ -315,38 +316,7 @@ func (a *App) TycCheckLogin() bool {
 	return info.CheckLogin()
 }
 
-// type HunterSearch struct {
-// 	Total string
-// 	Info  string
-// }
-
-// mode = 0 campanyName, mode = 1 domain or ip
-// func (a *App) AssetHunter(mode int, target, api string) HunterSearch {
-// 	if mode == 0 {
-// 		str := fmt.Sprintf("icp.name=\"%v\"", target)
-// 		t, i := space.SearchTotal(api, str)
-// 		return HunterSearch{
-// 			Total: fmt.Sprint(t),
-// 			Info:  i,
-// 		}
-// 	} else {
-// 		var str string
-// 		// 处理网站域名是IP的情况
-// 		if util.RegIP.MatchString(target) {
-// 			str = fmt.Sprintf("ip=\"%v\"", target)
-// 		} else {
-// 			str = fmt.Sprintf("domain.suffix=\"%v\"", target)
-// 		}
-// 		t, i := space.SearchTotal(api, str)
-// 		return HunterSearch{
-// 			Total: fmt.Sprint(t),
-// 			Info:  i,
-// 		}
-// 	}
-// }
-
 // dirsearch
-
 func (a *App) LoadDirsearchDict(dictPath, newExts []string) []string {
 	var dicts []string
 	for _, dict := range dictPath {
@@ -408,28 +378,28 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 }
 func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint16) {
 	portscan.ExitFunc = false
-	addresses := make(chan portscan.Address2)
-	startIp := net.IP(ips[0])
-	go func() {
-		defer close(addresses)
-		// Generate addresses from ips and ports
-		for _, ip := range ips {
-			for _, port := range ports {
-				addr := portscan.Address2{IP: net.IP(ip), Port: port}
-				addresses <- addr
-			}
+	// Generate addresses from special targets
+	var id int32 = 0
+	for _, target := range specialTargets {
+		if portscan.ExitFunc {
+			return
 		}
-		// Generate addresses from special targets
-		for _, target := range specialTargets {
-			temp := strings.Split(target, ":")
-			port, err := strconv.Atoi(temp[1]) // Skip if port conversion fails
-			if err != nil {
-				continue
-			}
-			addresses <- portscan.Address2{IP: net.IP(temp[0]), Port: uint16(port)}
+		temp := strings.Split(target, ":")
+		port, err := strconv.Atoi(temp[1]) // Skip if port conversion fails
+		if err != nil {
+			continue
 		}
-	}()
-	portscan.SynScan(a.ctx, startIp, addresses)
+		portscan.SynScan(a.ctx, temp[0], []uint16{uint16(port)}, &id)
+	}
+	// Generate addresses from ips and ports
+	for _, ip := range ips {
+		if portscan.ExitFunc {
+			return
+		}
+		portscan.SynScan(a.ctx, ip, ports, &id)
+	}
+	runtime.EventsEmit(a.ctx, "scanComplete", id)
+
 }
 
 func (a *App) StopPortScan() {
@@ -537,6 +507,7 @@ func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, de
 		var id = 0
 		fpm := s.URLWithFingerprintMap()
 		count := len(fpm)
+		runtime.EventsEmit(a.ctx, "NucleiCounts", count)
 		for target, tags := range fpm {
 			if webscan.ExitFunc {
 				gologger.Warning(a.ctx, "用户已退出漏洞扫描")
@@ -549,6 +520,7 @@ func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, de
 				Tags:         util.RemoveFingerprintsRightStar(tags),
 				TemplateFile: templateFiles,
 			})
+			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)
 		}
 		gologger.Info(a.ctx, "漏洞扫描已结束")
 	}

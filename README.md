@@ -79,11 +79,11 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 可以联动网站扫描以及协议爆破
 
-![image-20240907203539971](assets/image-20240907203539971.png)
+![image-20240928220948717](assets/image-20240928220948717.png)
 
 ![image-20240907203539971](assets/image-20240510214011206.png)
 
-![image-20240907203539971](assets/image-20240510214144484.png)
+![image-20240929152018714](assets/image-20240929152018714.png)
 
 ## 公司信息查询
 

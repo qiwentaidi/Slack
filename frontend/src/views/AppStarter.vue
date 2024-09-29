@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, ref, h } from "vue";
-import { LocalOpitons, Child } from "@/interface";
 import { DeleteFilled, Edit, FolderOpened, Document, Menu, InfoFilled } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
@@ -17,6 +16,7 @@ import itermIcon from '@/assets/icon/iterm.svg'
 import buttonIcon from '@/assets/icon/button.svg'
 import gridIcon from '@/assets/icon/grid.svg'
 import global from "@/global";
+import { structs } from "wailsjs/go/models";
 
 onMounted(async () => {
     OnFileDrop((x, y, paths) => {
@@ -40,7 +40,7 @@ onMounted(async () => {
                 }
         })
     }, true)
-    GetLocalNaConfig().then((result: LocalOpitons[]) => {
+    GetLocalNaConfig().then((result: structs.Navigation[]) => {
         if (result) {
             localGroup.options.value.push(...result)
         } else {
@@ -63,13 +63,13 @@ const config = reactive({
     editPath: "",
     editType: "",
     editTarget: "",
-    editChild: {} as Child,
+    editChild: {} as structs.Children,
     editGroupName: "", // 正在被编辑的组名
     addItemDialog: false,
 })
 
 const localGroup = ({
-    options: ref([] as LocalOpitons[]),
+    options: ref([] as structs.Navigation[]),
     openGroup: ["CMD", "APP", "JAR"],
     getGroupNames: function () {
         return localGroup.options.value.map(item => item.Name)
@@ -107,11 +107,13 @@ const localGroup = ({
                 } else {
                     localGroup.options.value.push({
                         Name: value,
-                        Children: null
+                        Children: [],
+                        convertValues: () => { },
                     })
                     InsetGroupNavigation({
                         Name: value,
-                        Children: null
+                        Children: [],
+                        convertValues: () => { },
                     })
                 }
             })
@@ -152,7 +154,7 @@ const localGroup = ({
 
             })
     },
-    deleteItem: function (groupName: string, child: Child) {
+    deleteItem: function (groupName: string, child: structs.Children) {
         localGroup.options.value = localGroup.options.value.map(group => {
             if (group.Name === groupName) {
                 return {
@@ -164,7 +166,7 @@ const localGroup = ({
         });
         SaveNavigation(localGroup.options.value)
     },
-    editItem: function (groupName: string, child: Child) {
+    editItem: function (groupName: string, child: structs.Children) {
         config.editDialog = true
         config.editName = child.Name
         config.editType = child.Type

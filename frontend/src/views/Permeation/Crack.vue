@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { reactive, onMounted, ref } from 'vue';
-import { Document, Edit, Setting, UploadFilled } from '@element-plus/icons-vue';
+import { Document, Edit, Setting, UploadFilled, Upload } from '@element-plus/icons-vue';
 import resultIcon from '@/assets/icon/result.svg'
 import { ElMessage } from 'element-plus';
 import async from 'async';
 import global from '@/global';
-import { Copy, ReadLine, SplitTextArea, UploadContextMenu, UploadFileAndRead } from '@/util';
+import { Copy, ReadLine, SplitTextArea, UploadFileAndRead } from '@/util';
 import { PortBrute, Callgologger, StopPortBrute } from 'wailsjs/go/main/App';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { BruteResult } from '@/interface';
@@ -170,19 +170,20 @@ function checkinput() {
             <el-step title="结果输出" :icon="resultIcon" />
         </el-steps>
         <div style="margin-top: 20px;"></div>
-        <el-form label-width="auto" v-show="activeRef == 1">
+        <el-form label-width="auto" v-show="activeRef == 1" style="width: 60%;">
             <el-form-item label="目标:">
-                <el-input v-model="config.target" placeholder="请输入目标或者右键上传
-目标仅支持换行分割
+                <el-input v-model="config.target" placeholder="请输入目标，目标仅支持换行分割
 扫描默认端口 ssh://10.0.0.1
 指定端口 redis://10.0.0.1:6380
 
 Mongodb、Memcachedb仅支持未授权检测
-" type="textarea" resize="none" @contextmenu.prevent="UploadContextMenu($event, uploadFile)"
-                    style="height: 50vh; width: 60%;"></el-input>
+" type="textarea" resize="none"
+                    style="height: 50vh;" />
+                <el-button link size="small" :icon="Upload" @click="uploadFile"
+                    style="margin-top: 5px;">导入目标文件</el-button>
             </el-form-item>
             <el-form-item label="添加目标:">
-                <el-input v-model="config.input" placeholder="请输入主机地址或者文件路径添加目标前缀" style="width: 60%;">
+                <el-input v-model="config.input" placeholder="请输入主机地址或者文件路径添加目标前缀">
                     <template #prepend>
                         <el-select v-model="config.defaultOption" style="width: 15vh;">
                             <el-option v-for="value in global.dict.options" :label="value" :value="value" />
@@ -197,7 +198,9 @@ Mongodb、Memcachedb仅支持未授权检测
                 </el-input>
             </el-form-item>
             <el-form-item label="复制前缀:">
-                <el-button v-for="item in global.dict.options" @click="Copy(item + '://')">{{ item }}</el-button>
+                <el-space>
+                    <el-button v-for="item in global.dict.options" @click="Copy(item + '://')">{{ item }}</el-button>
+                </el-space>
             </el-form-item>
         </el-form>
         <el-form label-width="auto" v-show="activeRef == 2">
@@ -230,7 +233,7 @@ Mongodb、Memcachedb仅支持未授权检测
         </el-form>
         <div v-show="activeRef == 3">
             <el-table border :data="pagination.table.pageContent" :cell-style="{ textAlign: 'center' }"
-                :header-cell-style="{ 'text-align': 'center' }" style="height: 79vh">
+                :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 175px)">
                 <el-table-column prop="Host" label="Host" />
                 <el-table-column prop="Port" label="Port" />
                 <el-table-column prop="Protocol" label="Protocol" />

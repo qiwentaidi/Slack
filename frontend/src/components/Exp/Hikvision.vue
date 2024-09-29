@@ -45,7 +45,7 @@ import { reactive } from 'vue';
 import { Picture } from '@element-plus/icons-vue';
 import { HikvsionCamera } from 'wailsjs/go/main/App';
 import global from '@/global';
-import { FormatWebURL } from '@/util';
+import { FormatWebURL, getProxy } from '@/util';
 import { titleStyle } from '@/stores/style';
 import { FileDialog, ReadFile } from 'wailsjs/go/main/File';
 import { File } from '@/interface';
@@ -86,9 +86,10 @@ async function useVulnerability(mode: number) {
         ElMessage.warning("请输入URL地址")
         return
     }
+
     if (mode == 0) {
         form.snapshotDialog = true
-        let body = await HikvsionCamera(urls[0], 0, form.passwordList.split("\n"), form.cmd, global.proxy)
+        let body = await HikvsionCamera(urls[0], 0, form.passwordList.split("\n"), form.cmd, getProxy())
         const base64Image = `data:image/jpeg;base64,${body}`;
         form.image = base64Image
         return
@@ -96,7 +97,7 @@ async function useVulnerability(mode: number) {
     if (mode == 3) {
         let id = 0
         async.eachLimit(urls, 10, async (url: string, callback: () => void) => {
-            let result = await HikvsionCamera(url, 3, form.passwordList.split("\n"), form.cmd, global.proxy)
+            let result = await HikvsionCamera(url, 3, form.passwordList.split("\n"), form.cmd, getProxy())
             form.content += result + "\n"
             id++
             if (id == urls.length) {
@@ -107,7 +108,7 @@ async function useVulnerability(mode: number) {
         })
     }
     // "http://47.150.37.246:81/"
-    form.content = await HikvsionCamera(form.url, mode, form.passwordList.split("\n"), form.cmd,global.proxy)
+    form.content = await HikvsionCamera(form.url, mode, form.passwordList.split("\n"), form.cmd, getProxy())
 }
 
 async function uploadFile() {

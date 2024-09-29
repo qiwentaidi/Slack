@@ -186,8 +186,8 @@ export function Subdomain(arg1) {
   return window['go']['main']['App']['Subdomain'](arg1);
 }
 
-export function SubsidiariesAndDomains(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['main']['App']['SubsidiariesAndDomains'](arg1, arg2, arg3, arg4, arg5);
+export function SubsidiariesAndDomains(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['SubsidiariesAndDomains'](arg1, arg2, arg3, arg4);
 }
 
 export function System(arg1, arg2) {

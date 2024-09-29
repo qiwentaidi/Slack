@@ -116,7 +116,7 @@ type SubdomainOption struct {
 	ZoomeyeApi          string
 	SecuritytrailsApi   string
 	BevigilApi          string
-	GethubApi           string
+	GithubApi           string
 	Thread              int // 解析线程
 	Timeout             int // 仅枚举模式启用时生效
 	ResolveExcludeTimes int // 解析过滤IP次数

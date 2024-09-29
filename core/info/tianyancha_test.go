@@ -11,6 +11,6 @@ func TestXxx(t *testing.T) {
 	InitHEAD(token)
 	companyName := "浙江大学"
 	companyId, fuzzName := GetCompanyID(context.TODO(), companyName) // 获得到一个模糊匹配后，关联度最高的名称
-	ss := SearchSubsidiary(context.TODO(), fuzzName, companyId, 100, false, true, "")
+	ss := SearchSubsidiary(context.TODO(), fuzzName, companyId, 100, false, true)
 	fmt.Printf("ss: %v\n", ss)
 }

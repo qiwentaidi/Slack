@@ -8,10 +8,11 @@ import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-p
 import { onMounted } from 'vue';
 import global from '@/global';
 import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/main/File';
-import { Dir, DirScanOptions } from '@/interface';
+import { Dir } from '@/interface';
 import usePagination from '@/usePagination';
 import redirectIcon from '@/assets/icon/redirect.svg'
 import { GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/main/Database';
+import { dirsearch } from 'wailsjs/go/models';
 
 onMounted(() => {
     // 获取当前全部字典
@@ -191,7 +192,7 @@ class Dirsearch {
         }
 
         for (let i = 0; i <= config.recursion; i++) {
-            let option: DirScanOptions = {
+            let option: dirsearch.Options = {
                 Method: from.defaultOption,
                 URLs: this.urls,
                 Paths: from.paths,
@@ -314,7 +315,7 @@ function copyHistory(length: number) {
             </el-space>
         </el-form-item>
     </el-form>
-    <el-table :data="pagination.table.pageContent" border style="height: 74vh;">
+    <el-table :data="pagination.table.pageContent" border style="height: calc(100vh - 205px);">
         <el-table-column type="index" label="#" width="60px" />
         <el-table-column prop="Status" width="100px" label="状态码"
             :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />

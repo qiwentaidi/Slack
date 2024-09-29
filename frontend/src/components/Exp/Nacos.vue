@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus';
 import { AlibabaNacos } from 'wailsjs/go/main/App';
 import { reactive } from 'vue';
 import global from "@/global/index"
-import { AddRightSubString } from '@/util';
+import { AddRightSubString, getProxy } from '@/util';
 const form = reactive({
     url: "",
     username: "qioxzcio",
@@ -72,7 +72,7 @@ async function useVulnerability() {
         ElMessage.warning("请输入服务端地址!")
         return   
     }
-    form.content = await AlibabaNacos(form.url,form.header ,form.selectVulnerability, form.username, form.password, form.command, form.service, global.proxy)
+    form.content = await AlibabaNacos(form.url,form.header ,form.selectVulnerability, form.username, form.password, form.command, form.service, getProxy())
 }
 </script>
 

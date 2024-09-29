@@ -109,29 +109,6 @@ func (ic *InitConfig) InitActiveScanPath(activefingerFile string) error {
 	return nil
 }
 
-type FingerPoc struct {
-	URL  string
-	Tags []string
-}
-
-func ALLPoc() []string {
-	var files []string
-	root := util.HomeDir() + "/slack/config/pocs/"
-	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// 检查文件后缀名
-		if filepath.Ext(path) == ".yaml" {
-			fileName := strings.TrimSuffix(filepath.Base(path), ".yaml")
-			files = append(files, fileName)
-		}
-		return nil
-	})
-	return files
-}
-
 func FullPocName(pocs []string) []string {
 	var news []string
 	for _, poc := range pocs {

@@ -9,6 +9,7 @@ import global from "@/global"
 import { Check, SearchAgentPool, ExecSqlStatement } from 'wailsjs/go/main/Database';
 import { ElMessage } from 'element-plus';
 import { FofaResult } from '@/interface';
+import CustomTabs from '@/components/CustomTabs.vue';
 
 onMounted(async () => {
     let stat = await Check()
@@ -171,7 +172,7 @@ async function Delelte(host: string) {
 </script>
 
 <template>
-    <div style="position: relative;">
+    <CustomTabs>
         <el-tabs v-model="form.currentTableName" type="card">
             <el-tab-pane name="0">
                 <template #label>
@@ -194,7 +195,7 @@ async function Delelte(host: string) {
                 </template>
                 <el-input v-model="form.socksLogger" type="textarea" resize="none" style="height: 80vh;" />
                 <el-progress :percentage="form.percentage" :text-inside="true" :stroke-width="18"
-                    style="margin-top: 5px"  />
+                    style="margin-top: 5px" />
             </el-tab-pane>
             <el-tab-pane label="历史记录" name="1">
                 <el-table :data="form.pool" border style="height: 83vh;">
@@ -215,24 +216,24 @@ async function Delelte(host: string) {
                 </el-table>
             </el-tab-pane>
         </el-tabs>
-        <el-space class="custom_eltabs_titlebar" v-if="form.currentTableName == '0'">
-            <span>检测数量:</span><el-input-number v-model="form.socksNum" :min="1" :max="form.socksMax"
-                controls-position="right" style="width: 100px;"></el-input-number>
-            <span>存储阈值:</span><el-input-number v-model="form.socksThreshold" :min="1" controls-position="right"
-                style="width: 100px;"></el-input-number>
-            <el-button-group>
-                <el-tooltip content="查询数据量" placement="left">
-                    <el-button :icon="Search" type="primary" @click="NewSock5Crawl(0)"></el-button>
-                </el-tooltip>
-                <el-tooltip content="筛选存活" placement="left">
-                    <el-button :icon="Filter" type="primary" @click="NewSock5Crawl(1)"></el-button>
-                </el-tooltip>
-            </el-button-group>
-        </el-space>
-        <el-button type="primary" @click="NewSock5Crawl(2)" class="custom_eltabs_titlebar" v-else>导出存活目标</el-button>
-    </div>
+        <template #ctrl>
+            <el-space v-show="form.currentTableName == '0'">
+                <span>检测数量:</span><el-input-number v-model="form.socksNum" :min="1" :max="form.socksMax"
+                    controls-position="right" style="width: 100px;"></el-input-number>
+                <span>存储阈值:</span><el-input-number v-model="form.socksThreshold" :min="1" controls-position="right"
+                    style="width: 100px;"></el-input-number>
+                <el-button-group>
+                    <el-tooltip content="查询数据量" placement="left">
+                        <el-button :icon="Search" type="primary" @click="NewSock5Crawl(0)"></el-button>
+                    </el-tooltip>
+                    <el-tooltip content="筛选存活" placement="left">
+                        <el-button :icon="Filter" type="primary" @click="NewSock5Crawl(1)"></el-button>
+                    </el-tooltip>
+                </el-button-group>
+            </el-space>
+            <el-button type="primary" @click="NewSock5Crawl(2)" v-show="form.currentTableName == '1'">导出存活目标</el-button>
+        </template>
+    </CustomTabs>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

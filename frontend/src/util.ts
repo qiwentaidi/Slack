@@ -17,10 +17,8 @@ import { ProxyOptions, File } from "./interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
 import platform from 'platform';
-import ContextMenu from '@imengyu/vue3-context-menu'
-import { h } from 'vue'
-import { UploadFilled } from '@element-plus/icons-vue';
 import async from "async";
+import { clients } from "wailsjs/go/models";
 
 export var proxys: ProxyOptions; // wails2.9之后替换原来的null
 
@@ -99,14 +97,14 @@ export async function FormatWebURL(host: string): Promise<string[]> {
   // Wrap the asynchronous processing of each target with async.eachLimit
   await new Promise((resolve, reject) => {
     async.eachLimit(targets, 50, async (target: string, callback: () => void) => {
-        if (!target.startsWith("http")) {
-          const result: any = await CheckTarget(target, global.proxy);
-          if (!result.Error) {
-            target = result.Msg;
-          }
+      if (!target.startsWith("http")) {
+        const result: any = await CheckTarget(target, getProxy());
+        if (!result.Error) {
+          target = result.Msg;
         }
-        urls.push(TrimRightSubString(target, "/"));
-      },
+      }
+      urls.push(TrimRightSubString(target, "/"));
+    },
       (err: any) => {
         if (err) {
           reject(err); // Reject the promise if any task encounters an error
@@ -166,12 +164,7 @@ export async function ReadLine(filepath: string) {
 // mode 0 is button click
 export async function TestProxy(mode: number) {
   if (global.proxy.enabled) {
-    const proxyURL =
-      global.proxy.mode.toLowerCase() +
-      "://" +
-      global.proxy.address +
-      ":" +
-      global.proxy.port;
+    const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port;
     if (global.proxy.mode == "HTTP") {
       let resp: any = await GoFetch("GET", proxyURL, "", {}, 10, proxys);
       if (resp.Error) {
@@ -350,30 +343,6 @@ export async function UploadFileAndRead() {
   return file.Content!
 }
 
-export function UploadContextMenu(e: MouseEvent, callback: Function) {
-  //prevent the browser's default menu
-  e.preventDefault();
-  //show your menu
-  ContextMenu.showContextMenu({
-    x: e.x,
-    y: e.y,
-    items: [
-      {
-        label: "上传文件",
-        icon: h(UploadFilled, {
-          style: {
-            width: '16px',
-            height: '16px',
-          }
-        }),
-        onClick: () => {
-          callback();
-        }
-      },
-    ]
-  });
-}
-
 export function getBasicURL(rawURL: string) {
   try {
     const url = new URL(rawURL);
@@ -382,4 +351,16 @@ export function getBasicURL(rawURL: string) {
     console.error("Invalid URL:", error);
     return undefined;
   }
+}
+
+export function getProxy() {
+  let proxy: clients.Proxy = {
+    Enabled: global.proxy.enabled,
+    Mode: global.proxy.mode,
+    Address: global.proxy.address,
+    Port: global.proxy.port,
+    Username: global.proxy.username,
+    Password: global.proxy.password,
+  }
+  return proxy
 }

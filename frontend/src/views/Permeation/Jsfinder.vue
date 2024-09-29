@@ -217,7 +217,7 @@ function onContextMenu(e: MouseEvent, data: any) {
         </el-input>
         <el-button type="primary" :icon="Search" @click="JSFinder" v-if="!config.loading">开始检测</el-button>
         <el-button type="primary" loading v-else>正在检测</el-button>
-        <el-button color="rgb(194, 194, 196)" style="margin-left: 5px" @click="config.drawer = true">参数设置</el-button>
+        <el-button text bg style="margin-left: 5px" @click="config.drawer = true">参数设置</el-button>
       </div>
     </el-form-item>
   </el-form>

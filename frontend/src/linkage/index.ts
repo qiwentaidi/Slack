@@ -1,12 +1,13 @@
 import { Callgologger, PortBrute, NewWebScanner, LoadDirsearchDict, DirScan, HunterSearch, Subdomain } from 'wailsjs/go/main/App'
 import global from '@/global'
 import async from 'async';
-import { DirScanOptions, SubdomainOption } from '@/interface';
 import { ElMessage, ElNotification } from 'element-plus';
+import { dirsearch, structs } from 'wailsjs/go/models';
+import { getProxy } from '@/util';
 
 
 export async function LinkWebscan(ips: string[]) {
-    await NewWebScanner(ips, global.proxy, 50 ,true, true, true, [])
+    await NewWebScanner(ips, getProxy(), 50 ,true, true, true, [])
 }
 
 export function LinkCrack(ips: string[]) {
@@ -40,7 +41,7 @@ export async function LinkDirsearch(url: string) {
     let paths = await LoadDirsearchDict([dfp], "php,aspx,asp,jsp,html,js".split(','))
     global.temp.dirsearchPathConut = paths.length
     global.temp.dirsearchStartTime = Date.now()
-    let option: DirScanOptions = {
+    let option: dirsearch.Options = {
         Method: "GET",
         URLs: [url],
         Paths: paths,
@@ -85,7 +86,7 @@ export async function LinkSubdomain(domains: string[]) {
         rootDomains.push(getRootDomain(domain))
     }
     Callgologger("info", `正在对${rootDomains.length}个域名进行子域名查询，请稍后...`)
-    let option: SubdomainOption = {
+    let option: structs.SubdomainOption = {
         Mode: 1,
         Domains: rootDomains,
         Subs: [],

@@ -168,7 +168,7 @@ async function deletePoc(pocName: string, finerprints: string[]) {
                 <el-button :icon="CirclePlusFilled" @click="step = 1">POC</el-button>
             </div>
         </template>
-        <el-table :data="pagination.table.pageContent" style="height: 80vh;">
+        <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 170px);">
             <el-table-column prop="Name" label="名称" />
             <el-table-column label="关联指纹" width="400px">
                 <template #default="scope">

@@ -3,7 +3,7 @@ import { reactive, onMounted, ref, h } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea } from '@/util'
 import { ExportToXlsx } from '@/export'
-import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search } from '@element-plus/icons-vue';
+import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
 import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
@@ -11,7 +11,7 @@ import global from '@/global'
 import { PortScanData, File } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
-import { defaultIconSize, titleStyle } from '@/stores/style';
+import { defaultIconSize } from '@/stores/style';
 import { LinkCrack, LinkWebscan } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import CustomTabs from '@/components/CustomTabs.vue';
@@ -19,7 +19,9 @@ import { isPrivateIP, validateIp, validatePortscan } from '@/stores/validate';
 import consoleIcon from '@/assets/icon/console.svg'
 
 // syn 扫描模式
-onMounted(() => {
+onMounted(async () => {
+    form.isRoot = await IsRoot()
+    updatePorts(1); // 更新初始化显示
     // 扫描状态，把结果从后端传输到前端
     EventsOn("portScanLoading", (p: PortScanData) => {
         pagination.table.result.push({
@@ -47,10 +49,17 @@ onMounted(() => {
     };
 });
 
-onMounted(async () => {
-    form.isRoot = await IsRoot()
-    selectItem(1); // 更新初始化显示
-});
+const PortscanOption = [
+    {
+        label: "SYN",
+        value: 0,
+    },
+    {
+        label: "全连接",
+        value: 1,
+    },
+]
+
 
 
 const form = reactive({
@@ -61,10 +70,10 @@ const form = reactive({
     id: 0,
     count: 0,
     radio: "2",
-    isSYN: false,
     isRoot: false,
     filter: '',
     defaultFilterGroup: "Fingerprint",
+    newscanner: false,
 })
 
 const table = reactive({
@@ -122,6 +131,7 @@ const options = ({
 })
 
 const config = reactive({
+    defaultPortscanOption: 1,
     ping: false,
     webscan: false,
     crack: false,
@@ -129,8 +139,8 @@ const config = reactive({
 
 
 async function NewScanner() {
-    let mode = form.isSYN ? "syn" : "fully connected"
-    Callgologger("info", "Port scan task loaded, current mode: " + mode)
+    form.newscanner = false
+    Callgologger("info", "Port scanning start, current mode: " + config.defaultPortscanOption)
     if (!validatePortscan(form.target)) {
         ElMessage.warning("输入目标格式不正确")
         return
@@ -141,6 +151,10 @@ async function NewScanner() {
 
 class Scanner {
     public async PortScanner() {
+        if (config.defaultPortscanOption == 0 && !form.isRoot) {
+            ElMessage.warning("当前为非root用户，无法使用SYN扫描模式")
+            return
+        }
         // 初始化
         pagination.ctrl.initTable()
         form.id = 0
@@ -175,8 +189,9 @@ class Scanner {
             global.webscan.default_alive_module === 'ICMP' ? config.ping = false : config.ping = true
             ips = await HostAlive((ips as any), config.ping)
         }
-        if (form.isSYN) {
+        if (config.defaultPortscanOption == 0) {
             await NewSynScanner(specialTarget, ips, portsList)
+            Callgologger("info", "Portscan task is ending")
             return
         }
         await NewTcpScanner(specialTarget, ips, portsList, global.webscan.port_thread, global.webscan.port_timeout)
@@ -212,14 +227,9 @@ const ctrl = reactive({
 })
 
 
-const selectedIndex = ref<number | null>(null);
-const selectItem = (index: number): void => {
-    updatePorts(index)
-    selectedIndex.value = index;
-}
+const currentPorts = ref(global.portGroup[1].text)
 
-function updatePorts(radio: number) {
-    const index = Number(radio);
+function updatePorts(index: number) {
     if (index >= 0 && index < global.portGroup.length) {
         form.portlist = global.portGroup[index].value;
     }
@@ -342,7 +352,7 @@ async function LinkShodan() {
             return
         }
     }
-    
+
     let id = 0
     form.target = ""
     shodanRunningstatus.value = true
@@ -378,86 +388,11 @@ function stopShodan() {
 </script>
 
 <template>
-    <div style="margin-bottom: 5px;">
-        <el-card shadow="never">
-            <div class="my-header">
-                <div>
-                    <el-checkbox v-model="form.isSYN" :disabled="!form.isRoot">
-                        <el-tooltip placement="right">
-                            <template #content>
-                                需要ROOT权限
-                            </template>
-                            SYN
-                        </el-tooltip>
-                    </el-checkbox>
-                    <el-checkbox v-model="config.crack">口令猜测</el-checkbox>
-                    <el-checkbox v-model="config.webscan">网站扫描</el-checkbox>
-                </div>
-                
-                <el-button text bg @click="shodanVisible = true">
-                    <template #icon>
-                        <img src="/navigation/shodan.png" style="width: 14px; height: 14px;">
-                    </template>
-                    联动shodan
-                </el-button>
-                
-                <el-button type="primary" @click="NewScanner" v-if="!ctrl.runningStatus">开始扫描</el-button>
-                <el-button type="danger" @click="ctrl.stop" v-else>停止扫描</el-button>
-            </div>
-        </el-card>
-        <el-row :gutter="8" style="margin-top: 10px;">
-            <el-col :span="10">
-                <div class="my-header" :style="titleStyle">
-                    <span>IP:
-                        <el-tooltip placement="right-end">
-                            <template #content>
-                                目标支持换行分割,IP支持如下格式:<br />
-                                192.168.1.1<br />
-                                192.168.1.1/8<br />
-                                192.168.1.1/16<br />
-                                192.168.1.1/24<br />
-                                192.168.1.1-192.168.255.255<br />
-                                192.168.1.1-255<br /><br />
-                                如果IP输入模式为192.168.0.1:6379此类形式，则只扫描该端口<br />
-                                <br />
-                                排除IP可以在可支持输入的IP格式前加!:<br />
-                                !192.168.1.6/28<br />
-                                <br />
-                                域名格式: www.example.com (SYN不支持)
-                            </template>
-                            <el-icon style="width: 13px;">
-                                <QuestionFilled />
-                            </el-icon>
-                        </el-tooltip>
-                    </span>
-                    <el-button size="small" @click="uploadFile">IP导入</el-button>
-                </div>
-                <el-input class="input" type="textarea" :rows="3" v-model="form.target" resize="none" />
-            </el-col>
-            <el-col :span="4">
-                <span class="my-header" :style="titleStyle">
-                    预设端口:
-                </span>
-                <el-scrollbar class="list-container" max-height="130px" style="width: 100%">
-                    <div class="list-item" v-for="(item, index) in global.portGroup"
-                        :class="{ 'selected': selectedIndex === index }" @click="selectItem(index)">{{ item.text }}
-                    </div>
-                </el-scrollbar>
-            </el-col>
-            <el-col :span="10">
-                <div class="my-header" :style="titleStyle">
-                    端口列表:
-                    <el-button size="small" @click="form.portlist = ''">清空</el-button>
-                </div>
-                <el-input class="input" type="textarea" :rows="3" v-model="form.portlist" resize="none" />
-            </el-col>
-        </el-row>
-    </div>
     <CustomTabs>
         <el-tabs v-model="form.activeName" type="border-card">
             <el-tab-pane label="结果输出" name="1">
                 <el-table :data="pagination.table.pageContent" @selection-change="pagination.ctrl.handleSelectChange"
-                    @row-contextmenu="handleContextMenu" style="height: 100vh;">
+                    @row-contextmenu="handleContextMenu" style="height: calc(100vh - 175px)">
                     <el-table-column type="selection" width="55px" align="center" />
                     <el-table-column prop="IP" label="Host" />
                     <el-table-column prop="Port" label="Port" width="100px" />
@@ -487,18 +422,23 @@ function stopShodan() {
                 </div>
             </el-tab-pane>
         </el-tabs>
+        <template #filter>
+            <el-input v-model="form.filter" placeholder="Filter">
+                <template #prepend>
+                    <el-select v-model="form.defaultFilterGroup" style="width: 120px;">
+                        <el-option v-for="name in options.filterGroup" :value="name">{{ name }}</el-option>
+                    </el-select>
+                </template>
+                <template #suffix>
+                    <el-button :icon="Search" @click="options.filterField" link></el-button>
+                </template>
+            </el-input>
+        </template>
         <template #ctrl>
-            <el-space :size="2">
-                <el-input v-model="form.filter" placeholder="Filter">
-                    <template #prepend>
-                        <el-select v-model="form.defaultFilterGroup" style="width: 120px;">
-                            <el-option v-for="name in options.filterGroup" :value="name">{{ name }}</el-option>
-                        </el-select>
-                    </template>
-                    <template #suffix>
-                        <el-button :icon="Search" @click="options.filterField" link></el-button>
-                    </template>
-                </el-input>
+            <el-space :size="3">
+                <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
+                    v-if="!ctrl.runningStatus">新建任务</el-button>
+                <el-button type="danger" :icon="CircleClose" @click="ctrl.stop" v-else>停止扫描</el-button>
                 <el-tooltip content="导出Excel">
                     <el-button :icon="exportIcon"
                         @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)" />
@@ -506,15 +446,99 @@ function stopShodan() {
             </el-space>
         </template>
     </CustomTabs>
+    <el-drawer v-model="form.newscanner" size="40%">
+        <template #header>
+            <span class="drawer-title">新建扫描任务</span>
+            <el-button text bg @click="shodanVisible = true">
+                <template #icon>
+                    <img src="/navigation/shodan.png" style="width: 14px; height: 14px;">
+                </template>
+                从Shodan导入
+            </el-button>
+        </template>
+        <el-form label-width="auto">
+            <el-form-item label="扫描模式:">
+                <el-segmented v-model="config.defaultPortscanOption" :options="PortscanOption" style="width: 100%;" />
+                <el-tooltip>
+                    <template #content>
+                        Mac - sudo /Applications/Slack.app/Contents/MacOS/Slack<br />
+                        Linux - sudo ./Slack<br />
+                        Windows - 右键管理员运行
+                    </template>
+                    <el-button link size="small" style="margin-top: 5px;">SYN需要以管理员模式运行</el-button>
+                </el-tooltip>
+            </el-form-item>
+            <el-form-item>
+                <template #label><span>IP:
+                        <el-tooltip>
+                            <template #content>
+                                目标支持换行分割,IP支持如下格式:<br />
+                                192.168.1.1<br />
+                                192.168.1.1/8<br />
+                                192.168.1.1/16<br />
+                                192.168.1.1/24<br />
+                                192.168.1.1-192.168.255.255<br />
+                                192.168.1.1-255<br /><br />
+                                如果IP输入模式为192.168.0.1:6379此类形式，则只扫描该端口<br />
+                                <br />
+                                排除IP可以在可支持输入的IP格式前加!:<br />
+                                !192.168.1.6/28<br />
+                                <br />
+                                域名格式: www.example.com (SYN不支持)
+                            </template>
+                            <el-icon>
+                                <QuestionFilled />
+                            </el-icon>
+                        </el-tooltip>
+                    </span>
+                </template>
+                <el-input class="input" type="textarea" :rows="3" v-model="form.target" />
+                <el-button link size="small" :icon="Upload" @click="uploadFile"
+                    style="margin-top: 5px;">导入目标文件</el-button>
+            </el-form-item>
+            <el-form-item label="端口:">
+                <el-select v-model="currentPorts" @change="updatePorts">
+                    <el-option v-for="(item, index) in global.portGroup" :label="item.text" :value="index" />
+                </el-select>
+                <el-input v-model="form.portlist" type="textarea" :rows="4" resize="none"
+                    style="margin-top: 5px;"></el-input>
+            </el-form-item>
+            <el-form-item label="扫描线程:">
+                <el-input-number controls-position="right" v-model="global.webscan.port_thread" :min="1" :max="10000" />
+            </el-form-item>
+            <el-form-item label="联动:">
+                <el-checkbox v-model="config.crack">
+                    口令猜测
+                    <el-tooltip content="开启后会将ftp协议等应用支持暴破资产进行口令猜测">
+                        <el-icon>
+                            <QuestionFilled />
+                        </el-icon>
+                    </el-tooltip>
+                </el-checkbox>
+                <el-checkbox v-model="config.webscan">
+                    网站扫描
+                    <el-tooltip content="开启后会将http|https协议资产进行网站指纹漏洞扫描">
+                        <el-icon>
+                            <QuestionFilled />
+                        </el-icon>
+                    </el-tooltip>
+                </el-checkbox>
+            </el-form-item>
+        </el-form>
+        <div class="position-center">
+            <el-button type="primary" @click="NewScanner" style="bottom: 10px; position: absolute;">开始任务</el-button>
+        </div>
+    </el-drawer>
     <el-dialog v-model="shodanVisible" width="500">
         <template #header>
             <span style="display: flex; align-items: center">
                 <img src="/navigation/shodan.png" style="margin-right: 5px;">
-                通过Shodan实现端口开放情况收集
+                从Shodan拉取资产端口开放情况
             </span>
         </template>
-        <el-text>Tips: 在此处输入要搜索的IP地址，<strong>不支持域名</strong>，可以通过日志处<el-icon><consoleIcon /></el-icon>查看详</el-text>
-        <el-text style="margin-bottom: 5px;">细信息</el-text>
+        <el-text style="margin-bottom: 10px;"><strong>Tips: 不支持域名输入</strong>，可以通过日志处<el-icon>
+                <consoleIcon />
+            </el-icon>查看详细信息</el-text>
         <el-input v-model="shodanIp" type="textarea" :rows="6" placeholder="支持如下输入格式
 1.1.1.1
 1.1.1.1/24
@@ -525,7 +549,8 @@ function stopShodan() {
                 <el-progress :text-inside="true" :stroke-width="18" :percentage="shodanPercentage"
                     style="width: 300px;" />
                 <div>
-                    <el-button size="small" type="danger" @click="stopShodan" v-if="shodanRunningstatus">终止探测</el-button>
+                    <el-button size="small" type="danger" @click="stopShodan"
+                        v-if="shodanRunningstatus">终止探测</el-button>
                     <el-button size="small" type="primary" @click="LinkShodan" v-else>
                         开始收集
                     </el-button>

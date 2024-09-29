@@ -1,4 +1,3 @@
-import { clients } from "wailsjs/go/models";
 
 export interface TableTabs {
     title: string;
@@ -18,11 +17,6 @@ export interface QuakeTableTabs {
     currentPage: number;
     isBatch: boolean;
     ipList: string[];
-}
-
-export interface URLFingerMap {
-    url: string;
-    finger: string[];
 }
 
 export interface PortScanData {
@@ -66,21 +60,6 @@ export interface Dir {
     Recursion: number;
 }
 
-export interface DirScanOptions {
-    Method: string;
-    URLs: string[];
-    Paths: string[];
-    Workers: number;
-    Timeout: number;
-    BodyExclude: string;
-    BodyLengthExcludeTimes: number;
-    StatusCodeExclude: number[];
-    Redirect: boolean;
-    Interval: number;
-    CustomHeader: string;
-    Recursion: number;
-}
-
 export interface ProxyOptions {
     Enabled: boolean;
     Mode: string;
@@ -109,18 +88,6 @@ export interface Results {
     ICP: string;
 }
 
-export interface LocalOpitons {
-    Name: string;
-    Children: Child[] | null;
-}
-
-export interface Child {
-    Name: string;
-    Type: string;
-    Path: string;
-    Target: string;
-}
-
 export interface File {
     Error?: boolean;
     Message?: string;
@@ -131,11 +98,6 @@ export interface HunterEntryTips {
     value: string;
     assetNum: number;
     tags: string[];
-}
-
-export interface RuleForm {
-    name?: string;
-    desc?: string;
 }
 
 export interface CompanyInfo {
@@ -225,21 +187,6 @@ export interface BruteResult {
     Protocol: string
     Username: string
     Password: string
-}
-
-export interface SubdomainOption {
-    Mode: number
-    Domains: string[]
-    Subs: string[]
-    ChaosApi: string
-    ZoomeyeApi: string
-    SecuritytrailsApi: string
-    BevigilApi: string
-    GithubApi: string
-    Thread: number // 解析线程
-    Timeout: number // 仅枚举模式启用时生效
-    ResolveExcludeTimes: number // 解析过滤IP次数
-    DnsServers: string[]
 }
 
 export interface SubdomainInfo {
