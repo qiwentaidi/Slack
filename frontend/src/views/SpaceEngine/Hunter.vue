@@ -210,20 +210,9 @@ const tableCtrl = ({
         table.loading = true
         table.acvtiveNames = newTabName
         HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
-            if (result.code !== 200) {
-                switch (result.code) {
-                    case 0:
-                        ElNotification.error('请求超时');
-                        table.loading = false
-                        return
-                    case 40205:
-                        ElNotification.info(result.message);
-                        break
-                    default:
-                        ElNotification.error(result.message);
-                        table.loading = false
-                        return
-                }
+            if (isError(result.code, result.message)) {
+                table.loading = false
+                return
             }
             form.tips = result.message + "," + result.data.rest_quota
             const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
@@ -274,20 +263,9 @@ const tableCtrl = ({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
         HunterSearch(global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
-            if (result.code !== 200) {
-                if (result.code == 40205) {
-                    ElNotification.info({
-                        title: "提示",
-                        message: result.message,
-                    });
-                } else {
-                    ElNotification.error({
-                        title: "提示",
-                        message: result.message,
-                    });
-                    table.loading = false
-                    return
-                }
+            if (isError(result.code, result.message)) {
+                table.loading = false
+                return
             }
             form.tips = result.message + "," + result.data.rest_quota
             tab.content = [{}]
@@ -317,20 +295,9 @@ const tableCtrl = ({
         tab.currentPage = val
         table.loading = true
         HunterSearch(global.space.hunterkey, tab.title, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
-            if (result.code !== 200) {
-                if (result.code == 40205) {
-                    ElNotification.info({
-                        title: "提示",
-                        message: result.message,
-                    });
-                } else {
-                    ElNotification.error({
-                        title: "提示",
-                        message: result.message,
-                    });
-                    table.loading = false
-                    return
-                }
+            if (isError(result.code, result.message)) {
+                table.loading = false
+                return
             }
             form.tips = result.message + "," + result.data.rest_quota
             tab.content = [{}]
@@ -393,29 +360,53 @@ async function SaveData(mode: number) {
             for (const num of splitInt(tab.total, 100)) {
                 index += 1
                 ElMessage("正在导出第" + index.toString() + "页");
-                await HunterSearch(global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
-                    result.data.arr.forEach((item: any) => {
-                        temp.push({
-                            URL: item.url,
-                            IP: item.ip,
-                            Port: item.port,
-                            Protocol: item.protocol,
-                            Domain: item.domain,
-                            Component: item.component,
-                            Title: item.web_title,
-                            Status: item.status_code,
-                            ICP: item.company,
-                            ISP: item.isp,
-                            Position: item.country + "/" + item.province,
-                            UpdateTime: item.updated_at,
-                        })
-                    });
-                })
+                let result = await HunterSearch(global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication)
+                if (isError(result.code, result.message)) {
+                    return
+                }
+                result.data.arr.forEach((item: any) => {
+                    temp.push({
+                        URL: item.url,
+                        IP: item.ip,
+                        Port: item.port,
+                        Protocol: item.protocol,
+                        Domain: item.domain,
+                        Component: item.component,
+                        Title: item.web_title,
+                        Status: item.status_code,
+                        ICP: item.company,
+                        ISP: item.isp,
+                        Position: item.country + "/" + item.province,
+                        UpdateTime: item.updated_at,
+                    })
+                });
             }
             ExportToXlsx(["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"], "asset", "hunter_asset", temp)
             temp = []
         }
     }
+}
+
+function isError(code: number, message: string) {
+    if (code == 0) {
+        ElMessage.warning("请求失败，请检查网络")
+        return true
+    }
+    if (code == 40205) {
+        ElNotification.info({
+            title: "提示",
+            message: message,
+        });
+        return true
+    }
+    if (code != 200) {
+        ElNotification.info({
+            title: "提示",
+            message: message,
+        });
+        return false
+    }
+    return false
 }
 
 // 0 当前页 1 100条
@@ -465,7 +456,7 @@ function searchCsegmentIpv4(ip: string) {
                             </template>
                             <el-table :data="options.Data" @row-click="entry.rowClick" class="keyword-search">
                                 <el-table-column width="300" property="syntax" label="例句" />
-                                <el-table-column property="description" label="用途说明"/>
+                                <el-table-column property="description" label="用途说明" />
                             </el-table>
                         </el-popover>
                         <el-tooltip content="使用网页图标搜索" placement="bottom">
@@ -559,8 +550,8 @@ function searchCsegmentIpv4(ip: string) {
             </el-dropdown>
         </el-form-item>
     </el-form>
-    <el-tabs class="editor-tabs" v-model="table.acvtiveNames" v-loading="table.loading" type="card" style="margin-top: 10px;" closable
-        @tab-remove="tableCtrl.removeTab">
+    <el-tabs class="editor-tabs" v-model="table.acvtiveNames" v-loading="table.loading" type="card"
+        style="margin-top: 10px;" closable @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: calc(100vh - 275px);">
@@ -587,7 +578,8 @@ function searchCsegmentIpv4(ip: string) {
                                 </template>
                                 <template #default>
                                     <el-space direction="vertical">
-                                        <el-tag round v-for="component in scope.row.Component" style="width: 320px;">{{ component.name +
+                                        <el-tag round v-for="component in scope.row.Component" style="width: 320px;">{{
+                                            component.name +
                                             component.version }}</el-tag>
                                     </el-space>
                                 </template>
@@ -608,8 +600,7 @@ function searchCsegmentIpv4(ip: string) {
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">
-                            <el-button link :icon="csegmentIcon"
-                                @click.prevent="searchCsegmentIpv4(scope.row.IP)">
+                            <el-button link :icon="csegmentIcon" @click.prevent="searchCsegmentIpv4(scope.row.IP)">
                             </el-button>
                         </el-tooltip>
                     </template>
@@ -649,6 +640,4 @@ function searchCsegmentIpv4(ip: string) {
     </el-dialog>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
