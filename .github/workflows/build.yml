@@ -8,6 +8,7 @@ jobs:
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
         go-version: [1.22]
+        arch: [amd64, arm64] # 添加架构矩阵
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
@@ -41,7 +42,7 @@ jobs:
         if: matrix.platform == 'macos-latest'
         uses: actions/upload-artifact@v3
         with:
-          name: Slack-macos-amd64
+          name: Slack-macos-${{ matrix.arch }}
           path: build/bin/*
 
       - name: Upload Artifacts Windows
