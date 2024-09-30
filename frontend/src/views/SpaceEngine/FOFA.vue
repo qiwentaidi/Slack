@@ -2,9 +2,9 @@
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, CopyDocument, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
 import { SplitTextArea, splitInt, Copy, CsegmentIpv4 } from '@/util'
-import { FofaResult, DefaultKeyValue, TableTabs } from "@/interface"
+import { FofaResult, DefaultKeyValue, TableTabs, Results } from "@/interface"
 import { ExportToXlsx } from '@/export'
-import { FofaTips, FofaSearch, IconHash } from 'wailsjs/go/main/App'
+import { FofaTips, FofaSearch, IconHash, Callgologger } from 'wailsjs/go/main/App'
 import { BrowserOpenURL } from 'wailsjs/runtime'
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus';
 import global from "@/global"
@@ -356,19 +356,19 @@ async function SaveData(mode: number) {
         if (mode == 0) {
             ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", tab.content!)
         } else {
-            let temp = [{}]
-            temp.pop()
+            let temp = [] as Results[]
             ElMessage("正在进行全数据导出，API每页最大查询限度10000，请稍后...");
             let index = 0
             for (const num of splitInt(tab.total, 10000)) {
                 index += 1
                 ElMessage("正在导出第" + index.toString() + "页");
-                await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult) => {
-                    if (result.Error) {
-                        return
-                    }
-                    temp.push(...result.Results!)
-                })
+                let result:FofaResult = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+                if (result.Error) {
+                    Callgologger("error",`[fofa] ${tab.title} page ${index} search error: ` + result.Error);
+                    ElMessage.error("查询异常，已退出导出")
+                    continue
+                }
+                temp.push(...result.Results!)
             }
             ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "组件", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", temp)
             temp = []

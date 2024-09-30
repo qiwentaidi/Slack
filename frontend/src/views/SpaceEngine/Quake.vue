@@ -280,7 +280,7 @@ import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, C
 import { ExportToXlsx } from '@/export';
 import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData } from '@/interface';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
-import { FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/main/App';
+import { Callgologger, FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/main/App';
 import global from '@/global';
 import { ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus';
 import { FileDialog } from 'wailsjs/go/main/File';
@@ -734,6 +734,8 @@ async function exportData() {
             let result: QuakeResult = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
             if (result.Code != 0) {
                 quake.message = result.Message!
+                ElMessage.error(quake.message + " 已退出导出!")
+                Callgologger("error", `[quake] ${tab.title} export data error: ${quake.message}`)
                 table.loading = false
                 return
             }

@@ -35,17 +35,6 @@ export async function ExportAssetToXlsx(r1: {}[], r2: {}[]) {
   await ExportFile("base64", "asset.xlsx", b64);
 }
 
-// vulID: string;
-// vulName: string;
-// protocoltype: string;
-// severity: string;
-// vulURL: string;
-// request: string;
-// response: string;
-// extInfo: string;
-// reference: string;
-// description: string;
-
 export async function ExportWebScanToXlsx(r1: {}[], r2: {}[]) {
   // 创建一个新的工作簿
   let wb = XLSX.utils.book_new();

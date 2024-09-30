@@ -377,6 +377,9 @@ const tableCtrl = ({
 async function SaveData(mode: number) {
     if (table.editableTabs.length != 0) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        if (tab.content.length == 0) {
+            return
+        }
         if (mode == 0) {
             ExportToXlsx(["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"], "asset", "hunter_asset", tab.content!)
         } else {
