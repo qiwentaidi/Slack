@@ -8,12 +8,12 @@ jobs:
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
         go-version: [1.22]
-        arch: [amd64, arm64] # 只对 macOS 进行双架构
-        include:
+        arch: [amd64, arm64]
+        exclude:
           - platform: windows-latest
-            arch: amd64
+            arch: arm64
           - platform: ubuntu-latest
-            arch: amd64
+            arch: arm64
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
@@ -36,7 +36,7 @@ jobs:
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Build Wails app on Ubuntu
-        if: matrix.platform == 'ubuntu-latest'
+        if: matrix.platform == 'ubuntu-latest' && matrix.arch == 'amd64'
         run: wails build -tags webkit2_41 -platform linux/amd64
 
       - name: Build Wails app on macOS
@@ -44,7 +44,7 @@ jobs:
         run: wails build -platform darwin/${{ matrix.arch }}
 
       - name: Build Wails app on Windows
-        if: matrix.platform == 'windows-latest'
+        if: matrix.platform == 'windows-latest' && matrix.arch == 'amd64'
         run: wails build -platform windows/amd64
 
       - name: Upload Artifacts macOS
@@ -55,14 +55,14 @@ jobs:
           path: build/bin/*
 
       - name: Upload Artifacts Windows
-        if: matrix.platform == 'windows-latest'
+        if: matrix.platform == 'windows-latest' && matrix.arch == 'amd64'
         uses: actions/upload-artifact@v3
         with:
           name: Slack-windows-amd64
           path: build/bin/*
 
       - name: Upload Artifacts Linux
-        if: matrix.platform == 'ubuntu-latest'
+        if: matrix.platform == 'ubuntu-latest' && matrix.arch == 'amd64'
         uses: actions/upload-artifact@v3
         with:
           name: Slack-linux-amd64
