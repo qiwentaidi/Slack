@@ -81,6 +81,10 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240928220948717](assets/image-20240928220948717.png)
 
+## 网站扫描
+
+目前内置8600+指纹，2700+POC，易用可扩展
+
 ![image-20241006193512657](assets/image-20241006193512657.png)
 
 ![image-20240929152018714](assets/image-20240929152018714.png)
@@ -108,6 +112,14 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 ![image-20240907172750605](assets/image-20240907172750605.png)
 
 ![image-20240907173203880](assets/image-20240907173203880.png)
+
+## 数据库自动取样
+
+对敏感列名以及数据内容进行匹配，内容支持身份证、手机号、AKSK信息匹配。
+
+![image-20241006194025842](assets/image-20241006194025842.png)
+
+![image-20241006193952875](assets/image-20241006193952875.png)
 
 ## 加解密模块
 
