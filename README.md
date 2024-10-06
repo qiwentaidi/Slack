@@ -81,7 +81,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240928220948717](assets/image-20240928220948717.png)
 
-![image-20240907203539971](assets/image-20240510214011206.png)
+![image-20241006193512657](assets/image-20241006193512657.png)
 
 ![image-20240929152018714](assets/image-20240929152018714.png)
 
