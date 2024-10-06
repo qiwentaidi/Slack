@@ -92,6 +92,11 @@ func (a *App) IsRoot() bool {
 		return os.Getuid() == 0
 	}
 }
+
+func (a *App) GOOS() string {
+	return rt.GOOS
+}
+
 func (a *App) GoFetch(method, target string, body interface{}, headers map[string]string, timeout int, proxy clients.Proxy) *structs.Response {
 	if _, err := url.Parse(target); err != nil {
 		return &structs.Response{
@@ -492,17 +497,17 @@ func (a *App) FingerprintList() []string {
 	return fingers
 }
 
-func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, deepScan, rootPath, callNuclei bool, templateFiles []string) {
+func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy) {
 	webscan.ExitFunc = false
-	s := webscan.NewFingerScanner(a.ctx, target, proxy, thread, deepScan, rootPath)
+	s := webscan.NewFingerScanner(a.ctx, options.Target, proxy, options.Thread, options.DeepScan, options.RootPath, options.Screenshot)
 	if s == nil {
 		return
 	}
 	s.NewFingerScan()
-	if deepScan {
-		s.NewActiveFingerScan(rootPath)
+	if options.DeepScan {
+		s.NewActiveFingerScan(options.RootPath)
 	}
-	if callNuclei {
+	if options.CallNuclei {
 		gologger.Info(a.ctx, "正在进行漏洞扫描 ...")
 		var id = 0
 		fpm := s.URLWithFingerprintMap()
@@ -518,7 +523,7 @@ func (a *App) NewWebScanner(target []string, proxy clients.Proxy, thread int, de
 			webscan.NewNucleiEngine(a.ctx, proxy, webscan.NucleiOption{
 				URL:          target,
 				Tags:         util.RemoveFingerprintsRightStar(tags),
-				TemplateFile: templateFiles,
+				TemplateFile: options.TemplateFiles,
 			})
 			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)
 		}
@@ -676,23 +681,11 @@ func (a *App) GitDorks(target, dork, apikey string) *isic.GithubResult {
 	return isic.GithubApiQuery(a.ctx, fmt.Sprintf("%s %s", target, dork), apikey)
 }
 
-// func (a *App) Kill(pid int) {
-// 	if pid == 0 {
-// 		return
-// 	}
-// 	var cmd *exec.Cmd
-// 	if rt.GOOS != "windows" {
-// 		cmd = exec.Command("kill", "-9", fmt.Sprintf("%d", pid))
-
-// 	} else {
-// 		cmd = exec.Command("taskkill", "/PID", fmt.Sprintf("%d", pid), "/F")
-// 	}
-// 	if err := cmd.Run(); err != nil {
-// 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-// 			Title:         "提示",
-// 			Message:       "终止Nuclei进程失败",
-// 			Type:          runtime.ErrorDialog,
-// 			DefaultButton: "Ok",
-// 		})
-// 	}
-// }
+func (a *App) ViewPictrue(file string) string {
+	b, err := os.ReadFile(file)
+	if err != nil {
+		gologger.Debug(a.ctx, err)
+		return ""
+	}
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(b)
+}

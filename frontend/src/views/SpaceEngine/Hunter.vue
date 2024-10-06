@@ -2,7 +2,7 @@
 import { ExportToXlsx } from '@/export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Search, ChatLineSquare, ChromeFilled, CopyDocument, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
+import { Search, ChromeFilled, CopyDocument, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { splitInt, Copy, CsegmentIpv4 } from '@/util'
 import { TableTabs, HunterEntryTips } from "@/interface"
 import global from "@/global"
@@ -12,90 +12,13 @@ import { BrowserOpenURL } from 'wailsjs/runtime'
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { main } from 'wailsjs/go/models';
-
-const options = ({
-    Server: [
-        {
-            value: '3',
-            label: '全部资产',
-        },
-        {
-            value: '1',
-            label: 'WEB服务资产',
-        },
-        {
-            value: '2',
-            label: '非WEB服务资产',
-        },
-    ],
-    Time: [
-        {
-            value: '0',
-            label: '最近一个月',
-        },
-        {
-            value: '1',
-            label: '最近半年',
-        },
-        {
-            value: '2',
-            label: '最近一年',
-        },
-    ],
-    Data: [
-        {
-            "syntax": 'domain.suffix="qianxin.com"',
-            "description": '搜索主域为"qianxin.com"的网站'
-        },
-        {
-            "syntax": 'app.name="小米 Router"',
-            "description": '搜索标记为”小米 Router“的资产'
-        },
-        {
-            "syntax": 'protocol="http"',
-            "description": '搜索协议为”http“的资产'
-        },
-        {
-            "syntax": 'icp.name="奇安信"',
-            "description": '搜索ICP备案单位名中含有“奇安信”的资产'
-        },
-        {
-            "syntax": 'icp.number="京ICP备16020626号-8"',
-            "description": '搜索通过域名关联的ICP备案号为”京ICP备16020626号-8”的网站资产'
-        },
-        {
-            "syntax": 'web.title="北京"',
-            "description": '从网站标题中搜索“北京”'
-        },
-        {
-            "syntax": 'web.body="网络空间测绘"',
-            "description": '搜索网站正文包含”网络空间测绘“的资产'
-        },
-        {
-            "syntax": 'header="elastic"',
-            "description": '搜索HTTP请求头中含有”elastic“的资产'
-        },
-    ]
-})
+import { hunterOptions } from '@/stores/options';
 
 // ref得单独校验
 const ruleFormRef = ref<FormInstance>()
 
 const syntax = ({
-    searchDialog: ref(false),
     starDialog: ref(false),
-    rules: reactive<FormRules<main.Syntax>>({
-        Name: [
-            { required: true, message: '请输入语法名称', trigger: 'blur' },
-        ],
-        Content: [
-            {
-                required: true,
-                message: '请输入语法内容',
-                trigger: 'blur',
-            },
-        ],
-    }),
     ruleForm: reactive<main.Syntax>({
         Name: '',
         Content: '',
@@ -136,6 +59,7 @@ const form = reactive({
     query: '',
     defaultTime: '2',
     defaultSever: '3',
+    keywordActive: "IP",
     deduplication: false,
     tips: '',
     batchdialog: false,
@@ -171,10 +95,10 @@ const entry = ({
     },
     rowClick: function (row: any, column: any, event: Event) {
         if (!form.query) {
-            form.query = row.syntax
+            form.query = row.key
             return
         }
-        form.query += " && " + row.syntax
+        form.query += " && " + row.key
     },
     rowClick2: function (row: any, column: any, event: Event) {
         if (!form.query) {
@@ -446,7 +370,7 @@ function searchCsegmentIpv4(ip: string) {
                 </template>
                 <template #suffix>
                     <el-space :size="2">
-                        <el-popover placement="bottom-end" :width="550" trigger="click">
+                        <el-popover placement="bottom-end" :width="700" trigger="click">
                             <template #reference>
                                 <div>
                                     <el-tooltip content="常用关键词搜索" placement="bottom">
@@ -454,10 +378,23 @@ function searchCsegmentIpv4(ip: string) {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="options.Data" @row-click="entry.rowClick" class="keyword-search">
-                                <el-table-column width="300" property="syntax" label="例句" />
-                                <el-table-column property="description" label="用途说明" />
-                            </el-table>
+                            <el-tabs v-model="form.keywordActive">
+                                <el-tab-pane v-for="item in hunterOptions.Syntax" :name="item.title"
+                                    :label="item.title">
+                                    <el-table :data="item.data" class="keyword-search" @row-click="entry.rowClick" style="height: 50vh;">
+                                        <el-table-column width="300" property="key" label="例句">
+                                            <template #default="scope">
+                                                <el-space>
+                                                    <span>{{ scope.row.key }}</span>
+                                                    <el-tag type="danger" round v-show="scope.row.hot">hot</el-tag>
+                                                    <el-tag type="primary" round v-show="scope.row.characteristic">特色</el-tag>
+                                                </el-space>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column property="description" label="用途说明" />
+                                    </el-table>
+                                </el-tab-pane>
+                            </el-tabs>
                         </el-popover>
                         <el-tooltip content="使用网页图标搜索" placement="bottom">
                             <el-button :icon="PictureRounded" link @click="tableCtrl.IconSearch" />
@@ -501,10 +438,6 @@ function searchCsegmentIpv4(ip: string) {
                                 </el-table-column>
                             </el-table>
                         </el-popover>
-
-                        <el-tooltip content="查询语法" placement="left">
-                            <el-button :icon="ChatLineSquare" @click="syntax.searchDialog.value = true" />
-                        </el-tooltip>
                     </el-space>
                 </template>
                 <template #default="{ item }">
@@ -521,11 +454,11 @@ function searchCsegmentIpv4(ip: string) {
         <el-form-item>
             <el-space>
                 <el-select v-model="form.defaultTime" style="width: 120px;">
-                    <el-option v-for="item in options.Time" :key="item.value" :label="item.label" :value="item.value"
+                    <el-option v-for="item in hunterOptions.Time" :key="item.value" :label="item.label" :value="item.value"
                         style="text-align: center;" />
                 </el-select>
                 <el-select v-model="form.defaultSever" style="width: 160px;">
-                    <el-option v-for="item in options.Server" :key="item.value" :label="item.label" :value="item.value"
+                    <el-option v-for="item in hunterOptions.Server" :key="item.value" :label="item.label" :value="item.value"
                         style="text-align: center;" />
                 </el-select>
                 <el-tooltip content="需要权益积分">
@@ -615,14 +548,9 @@ function searchCsegmentIpv4(ip: string) {
         </el-tab-pane>
         <el-empty v-else></el-empty>
     </el-tabs>
-    <el-dialog v-model="syntax.searchDialog.value" title="查询语法" width="80%" center>
-        <el-scrollbar height="400px">
-            <el-image src="/hunter_syntax.png"></el-image>
-        </el-scrollbar>
-    </el-dialog>
     <el-dialog v-model="syntax.starDialog.value" title="收藏语法" width="40%" center>
         <!-- 一定要用:model v-model校验会失效 -->
-        <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="syntax.rules" status-icon>
+        <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="global.syntaxRules" status-icon>
             <el-form-item label="语法名称" prop="Name">
                 <el-input v-model="syntax.ruleForm.Name" maxlength="30" show-word-limit></el-input>
             </el-form-item>

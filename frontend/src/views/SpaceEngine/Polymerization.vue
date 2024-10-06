@@ -22,7 +22,7 @@
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="datas" stripe>
+                            <el-table :data="uncoverSyntaxOptions" stripe>
                                 <el-table-column label="字段" prop="filed" />
                                 <el-table-column label="FOFA" prop="fofa" />
                                 <el-table-column label="Hunter" prop="hunter" />
@@ -106,6 +106,7 @@ import { CsegmentIpv4 } from '@/util';
 import { ExportToXlsx } from '@/export';
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { structs } from 'wailsjs/go/models';
+import { uncoverSyntaxOptions } from '@/stores/options';
 
 const group = ["IP", "域名", "标题", "Body", "备案名称", "备案号"]
 
@@ -115,16 +116,6 @@ const uncover = reactive({
     size: 100,
 })
 
-const datas = [
-    { filed: "IP", fofa: "✓", hunter: "✓", quake: "✓" },
-    { filed: "域名", fofa: "✓", hunter: "✓", quake: "✓" },
-    { filed: "标题", fofa: "✓", hunter: "✓", quake: "✓" },
-    { filed: "Body", fofa: "✓", hunter: "✓", quake: "✓" },
-    { filed: "备案名称", fofa: "✓", hunter: "✓", quake: "VIP" },
-    { filed: "备案号", fofa: "✓", hunter: "✓", quake: "VIP" },
-    { filed: "条件拼接数量", fofa: "100", hunter: "5", quake: "1000" },
-    { filed: "单页API查询数", fofa: "10000", hunter: "100", quake: "500" }
-]
 
 const table = reactive({
     acvtiveNames: "1",

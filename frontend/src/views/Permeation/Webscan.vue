@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref, h } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload } from '@element-plus/icons-vue';
+import { reactive, onMounted, ref, h, nextTick } from 'vue'
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Remove } from '@element-plus/icons-vue';
 import {
     InitRule,
     FofaSearch,
@@ -9,26 +9,24 @@ import {
     GetFingerPocMap,
     Callgologger,
     StopWebscan,
+    ViewPictrue,
 } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
-import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, TrimRightSubString, getProxy } from '@/util'
+import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, TrimRightSubString, getProxy, UploadFileAndRead } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { Vulnerability, FingerprintTable, FofaResult, File } from '@/interface';
+import { Vulnerability, FingerprintTable, FofaResult } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import { LinkDirsearch, LinkHunter } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
-import bugIcon from '@/assets/icon/bug.svg'
-import fingerprintIcon from '@/assets/icon/fingerprint.svg'
-import deepscanIcon from '@/assets/icon/deepscan.svg'
-import bulleyeIcon from '@/assets/icon/bulleye.svg'
 import { FileDialog, List, ReadFile } from 'wailsjs/go/main/File';
 import { validateWebscan } from '@/stores/validate';
-import { clients } from 'wailsjs/go/models';
+import { structs } from 'wailsjs/go/models';
+import { webscanOptions } from '@/stores/options'
 
 // 初始化时调用
 onMounted(async () => {
@@ -88,6 +86,7 @@ onMounted(async () => {
                 existsWaf: result.IsWAF,
                 waf: "WAF: " + result.WAF,
                 fingerprint: result.Fingerprints,
+                screenshot: result.Screenshot
             })
             fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
         }
@@ -116,33 +115,9 @@ onMounted(async () => {
         EventsOff("NucleiCounts");
         EventsOff("NucleiProgressID");
     };
-
 });
 
 const defaultWebscanOption = ref(0)
-
-const WebscanOption = [
-    {
-        label: "指纹扫描",
-        value: 0,
-        icon: fingerprintIcon,
-    },
-    {
-        label: "全指纹扫描",
-        value: 1,
-        icon: deepscanIcon,
-    },
-    {
-        label: "指纹漏洞扫描",
-        value: 2,
-        icon: bulleyeIcon,
-    },
-    {
-        label: "专项扫描",
-        value: 3,
-        icon: bugIcon,
-    },
-]
 
 // webscan
 const customTemplate = ref<string[]>([])
@@ -181,6 +156,7 @@ const form = reactive({
     nucleiPercentage: 0,
     count: 0,
     nucleiCounts: 0,
+    screenhost: false,
 })
 
 const detailDialog = ref(false)
@@ -205,10 +181,7 @@ function stopScan() {
     if (form.runnningStatus) {
         form.runnningStatus = false
         StopWebscan()
-        ElMessage.warning({
-            showClose: true,
-            message: "任务已停止",
-        });
+        ElMessage.warning("任务已停止");
     }
 }
 
@@ -259,7 +232,16 @@ class Scanner {
             case 3:
                 callNuclei = true
         }
-        await NewWebScanner(this.urls, getProxy(), global.webscan.web_thread, deepScan, form.rootPathScan, callNuclei, customTemplate.value)
+        let options: structs.WebscanOptions = {
+            Target: this.urls,
+            Thread: global.webscan.web_thread,
+            Screenshot: form.screenhost,
+            DeepScan: deepScan,
+            RootPath: form.rootPathScan,
+            CallNuclei: callNuclei,
+            TemplateFiles: customTemplate.value,
+        }
+        await NewWebScanner(options, getProxy())
         this.done()
         form.runnningStatus = false
     }
@@ -393,18 +375,18 @@ function BatchCopyURL() {
 
 // 选择目标文件读取
 async function uploadFile() {
-    let filepath = await FileDialog("*.txt")
-    if (!filepath) {
-        return
-    }
-    let file: File = await ReadFile(filepath)
-    if (file.Error) {
-        ElMessage.warning(file.Message)
-        return
-    }
-    form.url = file.Content!
+    form.url = await UploadFileAndRead()
 }
 
+const screenDialog = ref(false)
+
+async function ShowWebPictrue(filepath: string) {
+   let bs64 = await ViewPictrue(filepath)
+   if (bs64 == '') return
+   screenDialog.value = true
+   await nextTick()
+   document.getElementById('webscan-img')!.setAttribute('src', bs64)
+}
 </script>
 
 <template>
@@ -416,8 +398,7 @@ async function uploadFile() {
                     <el-tag>主动指纹</el-tag>
                     <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage"
                         style="width: 300px;" />
-                </el-space>
-                <el-space>
+                    <el-divider direction="vertical" />
                     <el-tag>漏洞扫描</el-tag>
                     <el-progress :text-inside="true" :stroke-width="18" :percentage="form.nucleiPercentage"
                         style="width: 300px;" />
@@ -484,12 +465,14 @@ async function uploadFile() {
                     <el-table-column prop="title" label="Title" />
                     <el-table-column prop="fingerprint" width="350px">
                         <template #header>
-                            <el-tooltip placement="left" content="填充色: 主动探测指纹, 红色: 敏感系统指纹，可通过指纹系统名称后缀加*实现">
-                                <el-icon>
-                                    <QuestionFilled size="24" />
-                                </el-icon>
-                            </el-tooltip>
-                            Fingerprint
+                            <span style="align-items: center;">
+                                <el-tooltip placement="left" content="填充色: 主动探测指纹, 红色: 敏感系统指纹，可通过指纹系统名称后缀加*实现">
+                                    <el-icon>
+                                        <QuestionFilled size="24" />
+                                    </el-icon>
+                                </el-tooltip>
+                                Fingerprint
+                            </span>
                         </template>
                         <template #default="scope">
                             <div class="finger-container">
@@ -499,6 +482,12 @@ async function uploadFile() {
                                         "*") }}</el-tag>
                                 <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
                             </div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="Screen" width="80">
+                        <template #default="scope">
+                            <el-button :icon="View" link @click="ShowWebPictrue(scope.row.screenshot)" v-if="scope.row.screenshot != ''"/>
+                            <span v-else>-</span>
                         </template>
                     </el-table-column>
                     <template #empty>
@@ -557,9 +546,9 @@ async function uploadFile() {
         </el-tabs>
         <template #ctrl>
             <el-space :size="2">
-                <!-- <el-tooltip content="漏洞扫描任务历史">
-                    <el-button :icon="Clock" @click="history = true" />
-                </el-tooltip> -->
+                <el-tooltip content="导入报告">
+                    <el-button :icon="Upload" @click="" />
+                </el-tooltip>
                 <el-tooltip content="导出Excel">
                     <el-button :icon="exportIcon"
                         @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformedResult())" />
@@ -585,64 +574,70 @@ async function uploadFile() {
                 Hunter
             </el-button>
         </template>
-        <el-form label-width="auto">
-            <el-form-item>
-                <template #label>目标:
-                    <el-tooltip placement="left">
-                        <template #content>
-                            支持如下输入方式:<br />
-                            192.168.0.1<br />
-                            192.168.0.1:443<br />
-                            https://192.168.0.1<br />
-                            www.baidu.com
-                        </template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-input v-model="form.url" type="textarea" :rows="6" clearable></el-input>
-                <el-button link size="small" :icon="Upload" @click="uploadFile"
-                    style="margin-top: 5px;">导入目标文件</el-button>
-            </el-form-item>
-            <el-form-item>
-                <template #label>模式:
-                    <el-tooltip>
-                        <template #content>
-                            1、指纹扫描: 只进行简单的指纹探测，不会探测敏感目录<br />
-                            2、全指纹扫描: 会在指纹扫描基础上增加主动敏感目录探测，例如Nacos、报错页面信息判断指纹等<br />
-                            3、指纹漏洞扫描: 指纹+主动敏感目录探测，扫描完成后扫描指纹对应POC<br />
-                            4、专项扫描: 只扫描简单指纹和已选择的漏洞
-                        </template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-segmented v-model="defaultWebscanOption" :options="WebscanOption" block style="width: 100%;">
-                    <template #default="{ item }">
-                        <div style="display: flex; align-items: center">
-                            <el-icon size="16" style="margin-right: 3px;">
-                                <component :is="item.icon" />
+        <div class="form-container">
+            <el-form label-width="auto">
+                <el-form-item>
+                    <template #label>目标:
+                        <el-tooltip placement="left">
+                            <template #content>
+                                支持如下输入方式:<br />
+                                192.168.0.1<br />
+                                192.168.0.1:443<br />
+                                https://192.168.0.1<br />
+                                www.baidu.com
+                            </template>
+                            <el-icon>
+                                <QuestionFilled size="24" />
                             </el-icon>
-                            <span>{{ item.label }}</span>
-                        </div>
+                        </el-tooltip>
                     </template>
-                </el-segmented>
-            </el-form-item>
-            <div v-if="defaultWebscanOption == 3">
-                <el-form-item label="指定漏洞:">
-                    <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏洞" filterable
-                        multiple clearable :multiple-limit="10" />
+                    <el-input v-model="form.url" type="textarea" :rows="6" clearable></el-input>
+                    <el-button link size="small" :icon="Upload" @click="uploadFile"
+                        style="margin-top: 5px;">导入目标文件</el-button>
                 </el-form-item>
+                <el-form-item>
+                    <template #label>模式:
+                        <el-tooltip>
+                            <template #content>
+                                1、指纹扫描: 只进行简单的指纹探测，不会探测敏感目录<br />
+                                2、全指纹扫描: 会在指纹扫描基础上增加主动敏感目录探测，例如Nacos、报错页面信息判断指纹等<br />
+                                3、指纹漏洞扫描: 指纹+主动敏感目录探测，扫描完成后扫描指纹对应POC<br />
+                                4、专项扫描: 只扫描简单指纹和已选择的漏洞
+                            </template>
+                            <el-icon>
+                                <QuestionFilled size="24" />
+                            </el-icon>
+                        </el-tooltip>
+                    </template>
+                    <el-segmented v-model="defaultWebscanOption" :options="webscanOptions" block style="width: 100%;">
+                        <template #default="{ item }">
+                            <div style="display: flex; align-items: center">
+                                <el-icon size="16" style="margin-right: 3px;">
+                                    <component :is="item.icon" />
+                                </el-icon>
+                                <span>{{ item.label }}</span>
+                            </div>
+                        </template>
+                    </el-segmented>
+                </el-form-item>
+                <div v-if="defaultWebscanOption == 3">
+                    <el-form-item label="指定漏洞:">
+                        <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏洞"
+                            filterable multiple clearable :multiple-limit="10" />
+                    </el-form-item>
+                </div>
+                <el-form-item label="根路径扫描:">
+                    <el-switch v-model="form.rootPathScan" style="margin-right: 10px;" />
+                    <el-tag>启用后主动指纹只拼接根路径，否则会拼接输入的完整URL</el-tag>
+                </el-form-item>
+                <el-form-item label="网站截图:">
+                    <el-switch v-model="form.screenhost" style="margin-right: 10px;" />
+                    <el-tag>会增加请求时间，截图按钮仅在开启后可查看</el-tag>
+                </el-form-item>
+            </el-form>
+            <div class="position-center">
+                <el-button type="primary" @click="startScan" style="bottom: 10px; position: absolute;">开始任务</el-button>
             </div>
-            <el-form-item label="根路径扫描:">
-                <el-switch v-model="form.rootPathScan" style="margin-right: 5px;" />
-                <el-tag>启用后主动指纹只拼接根路径，否则会拼接输入的完整URL</el-tag>
-            </el-form-item>
-        </el-form>
-        <div class="position-center">
-            <el-button type="primary" @click="startScan" style="bottom: 10px; position: absolute;">开始任务</el-button>
         </div>
     </el-drawer>
     <el-drawer v-model="detailDialog" size="70%">
@@ -704,31 +699,9 @@ async function uploadFile() {
             </el-button>
         </template>
     </el-dialog>
-    <!-- <el-drawer v-model="history" size="50%">
-        <template #header>
-            <el-text><el-icon>
-                    <Clock />
-                </el-icon>漏洞扫描任务历史<el-tag>仅在初始化时加载</el-tag></el-text>
-        </template>
-        <el-table :data="historyData">
-            <el-table-column prop="fileName" label="文件名称"></el-table-column>
-            <el-table-column prop="taskTime" label="任务时间"></el-table-column>
-            <el-table-column prop="fileSize" label="文件大小" width="100px"></el-table-column>
-            <el-table-column label="操作" width="180px" align="center">
-                <template #default="scope">
-                    <el-button-group>
-                        <el-button :icon="View" link
-                            @click.prevent="loadNucleiHistoryTask(scope.row.filePath)"></el-button>
-                        <el-button :icon="DeleteFilled" link
-                            @click.prevent="removeNucleiHistroy(scope.row.filePath, scope.row.fileSize, scope.$index)"></el-button>
-                    </el-button-group>
-                </template>
-            </el-table-column>
-            <template #empty>
-                <el-empty></el-empty>
-            </template>
-        </el-table>
-    </el-drawer> -->
+    <el-dialog v-model="screenDialog" width="50%" title="网站截图">
+        <img id="webscan-img" src="" style="width: 100%; height: 400px;">
+    </el-dialog>
 </template>
 
 <style scoped>
@@ -746,14 +719,15 @@ async function uploadFile() {
     text-overflow: ellipsis;
 }
 
-.finger-container {
-    flex-wrap: wrap;
-    display: flex;
-    gap: 7px;
-}
-
 .title {
     font-size: 16px;
     font-weight: bold;
+}
+
+.form-container {
+    height: calc(100% - 40px);
+    overflow-y: auto;
+    padding-right: 20px;
+    scrollbar-width: thin;
 }
 </style>

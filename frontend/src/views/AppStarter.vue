@@ -325,8 +325,6 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
         ]
     });
 }
-
-const isShowTips = ref(true);
 </script>
 
 

@@ -6,6 +6,7 @@ import { ElMessage } from "element-plus";
 import { generateRandomString, proxys } from "@/util";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import CustomTabs from "@/components/CustomTabs.vue";
+import { wechatResponseDescription } from "@/stores/options";
 
 const warning = "First, need to obtain the accesstoken"
 
@@ -25,77 +26,12 @@ const dingding = reactive({
 })
 
 const wechatOption = ({
-  responseDescription: [
-    {
-      code: "-1",
-      describe: "system error",
-      solution: "系统繁忙，此时请开发者稍候再试",
-    },
-    {
-      code: "40001",
-      describe: "invalid credential  access_token isinvalid or not latest",
-      solution:
-        "获取 access_token 时 AppSecret 错误，或者 access_token 无效。请开发者认真比对 AppSecret 的正确性，或查看是否正在为恰当的公众号调用接口",
-    },
-    {
-      code: "40013",
-      describe: "invalid appid",
-      solution:
-        "不合法的 AppID ，请开发者检查 AppID 的正确性，避免异常字符，注意大小写",
-    },
-    {
-      code: "40002",
-      describe: "invalid grant_type",
-      solution: "不合法的凭证类型",
-    },
-    {
-      code: "40125",
-      describe: "不合法的 secret",
-      solution: "请检查 secret 的正确性，避免异常字符，注意大小写",
-    },
-    {
-      code: "40164",
-      describe: "调用接口的IP地址不在白名单中",
-      solution: "请在接口IP白名单中进行设置",
-    },
-    {
-      code: "41004",
-      describe: "appsecret missing",
-      solution: "缺少 secret 参数",
-    },
-    {
-      code: "50004",
-      describe: "禁止使用 token 接口",
-      solution: "",
-    },
-    {
-      code: "50007",
-      describe: "账号已冻结",
-      solution: "",
-    },
-    {
-      code: "61024",
-      describe: "第三方平台 API 需要使用第三方平台专用 token",
-      solution: "",
-    },
-    {
-      code: "40243",
-      describe: "AppSecret已被冻结，请登录小程序平台解冻后再次调用。",
-      solution: "",
-    },
-  ],
   api: [
     {
       name: "查询域名配置",
       method: "POST",
       url: "https://api.weixin.qq.com/wxa/getwxadevinfo?access_token=",
     },
-    // {
-    //   name: '查询实时日志',
-    //   method: 'GET',
-    //   url: 'https://api.weixin.qq.com/wxaapi/userlog/userlog_search?access_token=',
-    //   parameter: 'date=&begintime=&endtime=',
-    // },
     {
       name: "获取长期订阅用户",
       method: "POST",
@@ -280,7 +216,7 @@ const result = ref("");
           <template #reference>
             <el-button :icon="QuestionFilled" text>微信错误码详情</el-button>
           </template>
-          <el-table :data="wechatOption.responseDescription" style="height: 50vh">
+          <el-table :data="wechatResponseDescription" style="height: 50vh">
             <el-table-column width="100" property="code" label="错误码" />
             <el-table-column width="200" property="describe" label="错误描述" />
             <el-table-column width="300" property="solution" label="解决方案" />

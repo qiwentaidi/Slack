@@ -4,21 +4,31 @@ import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
 import { dirsearch, structs } from 'wailsjs/go/models';
 import { getProxy } from '@/util';
+import { crackDict } from '@/stores/options';
 
 
 export async function LinkWebscan(ips: string[]) {
-    await NewWebScanner(ips, getProxy(), 50 ,true, true, true, [])
+    let options: structs.WebscanOptions = {
+        Target: ips,
+        Thread: 50,
+        Screenshot: false,
+	    DeepScan: true,
+	    RootPath: true,
+	    CallNuclei: true,
+        TemplateFiles: [],
+    }
+    await NewWebScanner(options, getProxy())
 }
 
 export function LinkCrack(ips: string[]) {
     let id = 0
     async.eachLimit(ips, 20, async (target: string, callback: () => void) => {
         let protocol = target.split("://")[0]
-        let userDict = global.dict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
-        if (global.dict.options.includes(protocol)) {
+        let userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
+        if (crackDict.options.includes(protocol)) {
             Callgologger("info", target + " is start brute")
         }
-        await PortBrute(target, userDict, global.dict.passwords)
+        await PortBrute(target, userDict, crackDict.passwords)
         id++
         if (id == ips.length) {
             callback()

@@ -13,6 +13,7 @@ import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { validateSingleDomain, validateSingleIP } from '@/stores/validate';
 import { main } from 'wailsjs/go/models';
+import { fofaOptions } from '@/stores/options';
 
 const form = reactive({
     query: '',
@@ -27,114 +28,6 @@ const ruleFormRef = ref<FormInstance>()
 
 const syntax = ({
     keywordActive: "基础类",
-    advSearch: [
-        {
-            key: '=',
-            description: '匹配，=""时，可查询不存在字段或者值为空的情况。',
-        },
-        {
-            key: '==',
-            description: '完全匹配，==""时，可查询存在且值为空的情况。',
-        },
-        {
-            key: '&&',
-            description: '与',
-        },
-        {
-            key: '||',
-            description: '或',
-        },
-        {
-            key: '!=',
-            description: '不匹配，!=""时，可查询值不为空的情况。',
-        },
-        {
-            key: '*=',
-            description: '模糊匹配，使用*或者?进行搜索，比如banner*="mys??"。',
-            level: "个人版"
-        },
-        {
-            key: '()',
-            description: '确认查询优先级，括号内容优先级最高。',
-        }
-    ],
-    keywordSearch: [
-        {
-            title: "基础类",
-            data: [
-                { key: 'ip="1.1.1.1"', description: '通过单一IPv4地址进行查询', filed1: "✓", filed2: "✓", filed3: "-" },
-                { key: 'port="6379"', description: '通过端口号进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'domain="qq.com"', description: '通过根域名进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'host=".fofa.info"', description: '通过主机名进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'os="centos"', description: '通过操作系统进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'server="Microsoft-IIS/10"', description: '通过服务器进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'asn="19551"', description: '通过自治系统号进行搜索', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'org="LLC Baxet"', description: '通过所属组织进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'is_domain=(true/false)', description: '筛选(拥有/没有)域名的资产', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'is_ipv6=(true/false)', description: '筛选是(ipv6/ipv4)的资产', filed1: "✓", filed2: "-", filed3: "-" },
-            ]
-        },
-        {
-            title: "标记类",
-            data: [
-                { key: 'app="Microsoft-Exchange"', description: '通过FOFA整理的规则进行查询', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'fid="sSXXGNUO2FefBTcCLIT/2Q=="', description: '通过FOFA聚合的站点指纹进行查询', filed1: "✓", filed2: "✓", filed3: "-" },
-                { key: 'product="NGINX"', description: '通过FOFA标记的产品名进行查询', filed1: "✓", filed2: "✓", filed3: "-" },
-                { key: 'category="服务"', description: '通过FOFA标记的分类进行查询', filed1: "✓", filed2: "✓", filed3: "-" },
-                { key: 'type="subdomain"', description: '筛选服务（网站类）资产', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'cloud_name="Aliyundun"', description: '通过云服务商进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'is_cloud=(true/false)', description: '筛选(是/不是)云服务的资产', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'is_fraud=(true/false)', description: '筛选(是/不是)仿冒垃圾站群的资产', filed1: "✓", filed2: "-", filed3: "-", level: "专业版" },
-                { key: 'is_honeypot=(true/false)', description: '筛选(是/不是)蜜罐的资产', filed1: "✓", filed2: "-", filed3: "-", level: "专业版" },
-            ]
-        },
-        {
-            title: "协议类",
-            data: [
-                { key: 'protocol="quic"', description: '通过协议名称进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'banner="users"', description: '通过协议返回信息进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'base_protocol="tcp"', description: '查询传输层为tcp协议的资产', filed1: "✓", filed2: "✓", filed3: "-" },
-            ]
-        },
-        {
-            title: "证书类",
-            data: [
-                { key: 'cert="baidu"', description: '通过证书进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'cert.subject="Oracle Corporation"', description: '通过证书的持有者进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'cert.issuer="DigiCert"', description: '通过证书的颁发者进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'cert.subject.org="Oracle Corporation"', description: '通过证书持有者的组织进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'cert.subject.cn="baidu.com"', description: '通过证书持有者的通用名称进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'cert.issuer.org="cPanel, Inc."', description: '通过证书颁发者的组织进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'cert.issuer.cn="Synology Inc. CA"', description: '通过证书颁发者的通用名称进行查询', filed1: "✓", filed2: "✓", filed3: "✓" },
-                { key: 'cert.is_valid=(true/false)"', description: '筛选证书(是/不是)有效证书的资产', filed1: "✓", filed2: "-", filed3: "-", level: "个人版" },
-                { key: 'cert.is_match=(true/false)', description: '筛选证书和域名(匹配/不匹配)的资产', filed1: "✓", filed2: "-", filed3: "-", level: "个人版" },
-                { key: 'cert.is_expired=(true/false)', description: '筛选证书(已过期/未过期)的资产', filed1: "✓", filed2: "-", filed3: "-", level: "个人版" },
-                { key: 'tls.version="TLS 1.3"', description: '通过tls的协议版本进行查询', filed1: "✓", filed2: "✓", filed3: "-" },
-            ]
-        },
-        {
-            title: "时间类",
-            data: [
-                { key: 'after="2023-01-01"', description: '筛选某一时间之后有更新的资产', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'before="2023-12-01"', description: '筛选某一时间之前有更新的资产', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'after="2023-01-01" && before="2023-12-01"', description: '筛选某一时间区间有更新的资产', filed1: "✓", filed2: "-", filed3: "-" }
-            ]
-        },
-        {
-            title: "独立IP语法（不可和上面其他语法共用）",
-            data: [
-                { key: 'port_size="6"', description: '筛选开放端口数量等于6个的独立IP', filed1: "✓", filed2: "✓", filed3: "-", level: "个人版" },
-                { key: 'port_size_gt="6"', description: '筛选开放端口数量大于6个的独立IP', filed1: "✓", filed2: "-", filed3: "-", level: "个人版" },
-                { key: 'port_size_lt="12"', description: '筛选开放端口数量小于12个的独立IP', filed1: "✓", filed2: "-", filed3: "-", level: "个人版" },
-                { key: 'ip_ports="80,161"', description: '筛选同时开放不同端口的独立IP', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'ip_country="CN"', description: '通过国家的简称代码进行查询独立IP', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'ip_region="Zhejiang"', description: '通过省份/地区英文名称进行查询独立IP', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'ip_city="Hangzhou"', description: '通过城市英文名称进行查询独立IP', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'ip_after="2021-03-18"', description: '筛选某一时间之后有更新的独立IP', filed1: "✓", filed2: "-", filed3: "-" },
-                { key: 'ip_before="2019-09-09"', description: '筛选某一时间之前有更新的独立IP', filed1: "✓", filed2: "-", filed3: "-" }
-            ]
-        }
-    ],
     rowClick: function (row: any, column: any, event: Event) {
         if (!form.query) {
             form.query = row.key
@@ -150,18 +43,6 @@ const syntax = ({
         form.query += " && " + row.Content
     },
     starDialog: ref(false),
-    rules: reactive<FormRules<main.Syntax>>({
-        Name: [
-            { required: true, message: '请输入语法名称', trigger: 'blur' },
-        ],
-        Content: [
-            {
-                required: true,
-                message: '请输入语法内容',
-                trigger: 'blur',
-            },
-        ],
-    }),
     ruleForm: reactive<main.Syntax>({
         Name: '',
         Content: '',
@@ -459,8 +340,8 @@ function searchCsegmentIpv4(ip: string) {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-tabs v-model="syntax.keywordActive" class="quake">
-                                <el-tab-pane v-for="item in syntax.keywordSearch" :name="item.title"
+                            <el-tabs v-model="syntax.keywordActive">
+                                <el-tab-pane v-for="item in fofaOptions.Syntax" :name="item.title"
                                     :label="item.title">
                                     <el-table :data="item.data" stripe class="keyword-search"
                                         @row-click="syntax.rowClick">
@@ -477,7 +358,7 @@ function searchCsegmentIpv4(ip: string) {
                                     </el-table>
                                 </el-tab-pane>
                                 <el-tab-pane label="连接符">
-                                    <el-table :data="syntax.advSearch" stripe class="keyword-search">
+                                    <el-table :data="fofaOptions.Advanced" stripe class="keyword-search">
                                         <el-table-column label="逻辑连接符" width="100px" property="key" />
                                         <el-table-column label="具体含义" property="description">
                                             <template #default="scope">
@@ -641,7 +522,7 @@ function searchCsegmentIpv4(ip: string) {
     </el-tabs>
     <el-dialog v-model="syntax.starDialog.value" title="收藏语法" width="40%" center>
         <!-- 一定要用:model v-model校验会失效 -->
-        <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="syntax.rules" status-icon>
+        <el-form ref="ruleFormRef" :model="syntax.ruleForm" :rules="global.syntaxRules" status-icon>
             <el-form-item label="语法名称" prop="Name">
                 <el-input v-model="syntax.ruleForm.Name" maxlength="30" show-word-limit></el-input>
             </el-form-item>

@@ -272,3 +272,9 @@ html {
   align-items: center;
   text-align: center
 }
+
+.finger-container {
+  flex-wrap: wrap;
+  display: flex;
+  gap: 7px;
+}

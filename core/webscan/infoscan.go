@@ -59,6 +59,7 @@ type InfoResult struct {
 	IsWAF        bool
 	WAF          string
 	Detect       string
+	Screenshot   string // 截图图片路径
 }
 
 type FingerScanner struct {
@@ -66,6 +67,7 @@ type FingerScanner struct {
 	urls                    []*url.URL
 	aliveURLs               []*url.URL // 默认指纹扫描结束后，存活的URL，以便后续主动指纹过滤目标
 	client                  *http.Client
+	screenshot              bool
 	thread                  int  // 指纹线程
 	deepScan                bool // 代表主动指纹探测
 	rootPath                bool // 主动指纹是否采取根路径扫描
@@ -73,7 +75,7 @@ type FingerScanner struct {
 	mutex                   sync.RWMutex
 }
 
-func NewFingerScanner(ctx context.Context, target []string, proxy clients.Proxy, thread int, deepScan, rootPath bool) *FingerScanner {
+func NewFingerScanner(ctx context.Context, target []string, proxy clients.Proxy, thread int, deepScan, rootPath, screenshot bool) *FingerScanner {
 	urls := make([]*url.URL, 0, len(target)) // 提前分配容量
 	for _, t := range target {
 		u, err := url.Parse(t)
@@ -90,6 +92,7 @@ func NewFingerScanner(ctx context.Context, target []string, proxy clients.Proxy,
 		ctx:                     ctx,
 		urls:                    urls,
 		client:                  clients.JudgeClient(proxy),
+		screenshot:              screenshot,
 		thread:                  thread,
 		deepScan:                deepScan,
 		rootPath:                rootPath,
@@ -149,6 +152,13 @@ func (s *FingerScanner) NewFingerScan() {
 		s.basicURLWithFingerprint[u.String()] = append(s.basicURLWithFingerprint[u.String()], fingerprints...)
 		s.mutex.Unlock()
 
+		screenshotPath := ""
+
+		if s.screenshot {
+			if screenshotPath, err = GetScreenshot(u.String()); err != nil {
+				gologger.Debug(s.ctx, err)
+			}
+		}
 		retChan <- InfoResult{
 			URL:          u.String(),
 			StatusCode:   web.StatusCode,
@@ -158,6 +168,7 @@ func (s *FingerScanner) NewFingerScan() {
 			IsWAF:        wafInfo.Exsits,
 			WAF:          wafInfo.Name,
 			Detect:       "Default",
+			Screenshot:   screenshotPath,
 		}
 	}
 	threadPool, _ := ants.NewPoolWithFunc(50, func(target interface{}) {

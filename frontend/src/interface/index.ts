@@ -49,6 +49,7 @@ export interface FingerprintTable {
     existsWaf: boolean;
     waf: string;
     fingerprint: string[];
+    screenshot: string;
 }
 
 export interface Dir {

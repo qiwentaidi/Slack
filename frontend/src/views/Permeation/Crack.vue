@@ -11,6 +11,7 @@ import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { BruteResult } from '@/interface';
 import usePagination from '@/usePagination';
 import { CheckFileStat, FileDialog } from 'wailsjs/go/main/File';
+import { crackDict } from '@/stores/options';
 
 onMounted(() => {
     EventsOn("bruteResult", (result: BruteResult) => {
@@ -71,7 +72,7 @@ async function NewScanner() {
     let userDict = [] as string[]
     pagination.ctrl.initTable()
     if (config.builtInUsername) {
-        for (var item of global.dict.usernames) {
+        for (var item of crackDict.usernames) {
             item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
         }
     }
@@ -81,7 +82,7 @@ async function NewScanner() {
     }
     if (config.username != "") {
         let users = SplitTextArea(config.username)
-        for (var item of global.dict.usernames) {
+        for (var item of crackDict.usernames) {
             item.dic.push(...users)
         }
     }
@@ -98,7 +99,7 @@ async function NewScanner() {
             callback()
         }
         let protocol = target.split("://")[0]
-        userDict = global.dict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
+        userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
         Callgologger("info", target + " is start brute")
         await PortBrute(target, userDict, passDict)
         id++
@@ -186,7 +187,7 @@ Mongodb、Memcachedb仅支持未授权检测
                 <el-input v-model="config.input" placeholder="请输入主机地址或者文件路径添加目标前缀">
                     <template #prepend>
                         <el-select v-model="config.defaultOption" style="width: 15vh;">
-                            <el-option v-for="value in global.dict.options" :label="value" :value="value" />
+                            <el-option v-for="value in crackDict.options" :label="value" :value="value" />
                         </el-select>
                     </template>
                     <template #suffix>
@@ -199,7 +200,7 @@ Mongodb、Memcachedb仅支持未授权检测
             </el-form-item>
             <el-form-item label="复制前缀:">
                 <el-space>
-                    <el-button v-for="item in global.dict.options" @click="Copy(item + '://')">{{ item }}</el-button>
+                    <el-button v-for="item in crackDict.options" @click="Copy(item + '://')">{{ item }}</el-button>
                 </el-space>
             </el-form-item>
         </el-form>

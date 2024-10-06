@@ -1,14 +1,13 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
-import { Copy, SplitTextArea } from '@/util'
+import { Copy, SplitTextArea, UploadFileAndRead } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
-import { ReadFile, FileDialog } from 'wailsjs/go/main/File'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
-import { PortScanData, File } from '@/interface';
+import { PortScanData } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import { defaultIconSize } from '@/stores/style';
@@ -17,6 +16,7 @@ import ContextMenu from '@imengyu/vue3-context-menu'
 import CustomTabs from '@/components/CustomTabs.vue';
 import { isPrivateIP, validateIp, validatePortscan } from '@/stores/validate';
 import consoleIcon from '@/assets/icon/console.svg'
+import { crackDict, portGroupOptions, portscanOptions } from '@/stores/options';
 
 // syn 扫描模式
 onMounted(async () => {
@@ -49,19 +49,6 @@ onMounted(async () => {
     };
 });
 
-const PortscanOption = [
-    {
-        label: "SYN",
-        value: 0,
-    },
-    {
-        label: "全连接",
-        value: 1,
-    },
-]
-
-
-
 const form = reactive({
     activeName: '1',
     target: '',
@@ -85,16 +72,7 @@ const table = reactive({
 let pagination = usePagination(table.result, 20)
 
 async function uploadFile() {
-    let path = await FileDialog("*.txt")
-    if (!path) {
-        return
-    }
-    let file: File = await ReadFile(path)
-    if (file.Error) {
-        ElMessage.warning(file.Message)
-        return
-    }
-    form.target = file.Content!
+    form.target = await UploadFileAndRead()
 }
 
 const options = ({
@@ -227,11 +205,11 @@ const ctrl = reactive({
 })
 
 
-const currentPorts = ref(global.portGroup[1].text)
+const currentPorts = ref(portGroupOptions[1].text)
 
 function updatePorts(index: number) {
-    if (index >= 0 && index < global.portGroup.length) {
-        form.portlist = global.portGroup[index].value;
+    if (index >= 0 && index < portGroupOptions.length) {
+        form.portlist = portGroupOptions[index].value;
     }
 }
 
@@ -245,7 +223,7 @@ const moreOperate = ({
 
     getBruteLinks: function (result: PortScanData[]): string[] {
         return result
-            .filter(line => global.dict.options.some(brute => line.Link.startsWith(brute)))
+            .filter(line => crackDict.options.some(brute => line.Link.startsWith(brute)))
             .map(line => line.Link);
     },
     // 复制端口扫描中的所有HTTP链接
@@ -458,7 +436,7 @@ function stopShodan() {
         </template>
         <el-form label-width="auto">
             <el-form-item label="扫描模式:">
-                <el-segmented v-model="config.defaultPortscanOption" :options="PortscanOption" style="width: 100%;" />
+                <el-segmented v-model="config.defaultPortscanOption" :options="portscanOptions" style="width: 100%;" />
                 <el-tooltip>
                     <template #content>
                         Mac - sudo /Applications/Slack.app/Contents/MacOS/Slack<br />
@@ -492,13 +470,13 @@ function stopShodan() {
                         </el-tooltip>
                     </span>
                 </template>
-                <el-input class="input" type="textarea" :rows="3" v-model="form.target" />
+                <el-input type="textarea" :rows="5" v-model="form.target" />
                 <el-button link size="small" :icon="Upload" @click="uploadFile"
                     style="margin-top: 5px;">导入目标文件</el-button>
             </el-form-item>
             <el-form-item label="端口:">
                 <el-select v-model="currentPorts" @change="updatePorts">
-                    <el-option v-for="(item, index) in global.portGroup" :label="item.text" :value="index" />
+                    <el-option v-for="(item, index) in portGroupOptions" :label="item.text" :value="index" />
                 </el-select>
                 <el-input v-model="form.portlist" type="textarea" :rows="4" resize="none"
                     style="margin-top: 5px;"></el-input>
@@ -561,8 +539,6 @@ function stopShodan() {
 </template>
 
 
-<style>
-.input {
-    height: 120px;
-}
+<style scoped>
+
 </style>

@@ -122,3 +122,28 @@ type SubdomainOption struct {
 	ResolveExcludeTimes int // 解析过滤IP次数
 	DnsServers          []string
 }
+
+type DatabaseConnection struct {
+	Nanoid   string
+	Scheme   string
+	Host     string
+	Port     int
+	Username string
+	Password string
+	Notes    string
+}
+
+type RowData struct {
+	Columns []string
+	Rows    [][]interface{}
+}
+
+type WebscanOptions struct {
+	Target        []string
+	Thread        int
+	Screenshot    bool
+	DeepScan      bool
+	RootPath      bool
+	CallNuclei    bool
+	TemplateFiles []string
+}

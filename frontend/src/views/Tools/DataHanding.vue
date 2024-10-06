@@ -6,6 +6,7 @@ import { ElNotification } from 'element-plus';
 import extractIcon from '@/assets/icon/extract.svg'
 import { SplitTextArea, UploadFileAndRead } from '@/util';
 import async from 'async';
+import { regexpIdCard, regexpPhone } from '@/stores/validate';
 
 const form = reactive({
     result: '',
@@ -65,14 +66,12 @@ function getURLs(): string[] {
 }
 
 function getPhoneNumbers(): string[] {
-    const PhoneRegex = /(?<![A-Za-z0-9])((?:(?:\+|00)86)?1(?:(?:3\d)|(?:4[5-79])|(?:5[0-35-9])|(?:6[5-7])|(?:7[0-8])|(?:8\d)|(?:9[189]))\d{8})(?![A-Za-z0-9])/g;
-    const phoneNumbers = form.input.match(PhoneRegex) || [];
+    const phoneNumbers = form.input.match(regexpPhone) || [];
     return Array.from(new Set(phoneNumbers))
 }
 
 function getIdCards(): string[] {
-    const IDCardRegex = /[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]/g;
-    const idcards = form.input.match(IDCardRegex) || [];
+    const idcards = form.input.match(regexpIdCard) || [];
     return Array.from(new Set(idcards))
 }
 

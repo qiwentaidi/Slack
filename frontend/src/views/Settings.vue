@@ -2,7 +2,7 @@
   <el-container style="height: 100vh;">
     <el-aside width="200px">
       <el-menu default-active="0">
-        <el-menu-item v-for="(item, index) in settingOption" :index="index.toString()" @click="selectItem">
+        <el-menu-item v-for="(item, index) in setupOptions" :index="index.toString()" @click="selectItem">
           <el-icon>
             <component :is="item.icon" />
           </el-icon>
@@ -13,7 +13,7 @@
 
     <el-main>
       <el-form :model="global.webscan" label-width="auto" v-show="currentDisplay == '0'">
-        <h3>{{ $t(settingOption[0].name) }}</h3>
+        <h3>{{ $t(setupOptions[0].name) }}</h3>
         <el-form-item label="网站指纹线程">
           <el-input-number controls-position="right" v-model="global.webscan.web_thread" :min="1" :max="200" />
         </el-form-item>
@@ -22,7 +22,7 @@
         </el-form-item>
         <el-form-item label="存活验证模式">
           <el-select v-model="global.webscan.default_alive_module">
-            <el-option v-for="item in aliveGroup" :key="item.value" :value="item.value">
+            <el-option v-for="item in aliveGroupOptions" :key="item.value" :value="item.value">
               <span style="float: left">{{ item.value }}</span>
               <span style="float: right">
                 {{ item.description }}
@@ -38,7 +38,7 @@
       </el-form>
       <el-form :inline="true" :model="global.proxy" label-width="auto" class="demo-form-inline"
         v-show="currentDisplay == '1'">
-        <h3>{{ $t(settingOption[1].name) }}</h3>
+        <h3>{{ $t(setupOptions[1].name) }}</h3>
         <el-form-item :label="$t('setting.enable')">
           <el-switch v-model="global.proxy.enabled" />
           <el-button type="primary" size="small" @click="TestProxy(0)" style="margin-left: 20px;"
@@ -65,12 +65,12 @@
             <el-input v-model="global.proxy.password" type="password" show-password></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
+            <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
           </el-form-item>
         </div>
       </el-form>
       <el-form :model="global.space" label-width="auto" v-show="currentDisplay == '2'">
-        <h3>{{ $t(settingOption[2].name) }}<el-divider direction="vertical" />Ⓓ标识符API主要用于收集子域名信息</h3>
+        <h3>{{ $t(setupOptions[2].name) }}<el-divider direction="vertical" />Ⓓ标识符API主要用于收集子域名信息</h3>
         <el-form-item label="FOFA">
           <el-input v-model="global.space.fofaapi" placeholder="API address" clearable />
           <el-input v-model="global.space.fofaemail" placeholder="Email" clearable style="margin-top: 5px;" />
@@ -111,10 +111,10 @@
           <el-input v-model="global.space.github"
             placeholder="Settings -> Developer settings -> Presonal access tokens" />
         </el-form-item>
-        <el-button type="primary" @click="saveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
+        <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
       </el-form>
       <el-form :model="global.Theme" label-width="auto" v-show="currentDisplay == '3'">
-        <h3>{{ $t(settingOption[3].name) }}</h3>
+        <h3>{{ $t(setupOptions[3].name) }}</h3>
         <el-form-item :label="$t('aside.language')">
           <el-select v-model="global.Language.value" @change="changeLanguage" style="width: 150px;">
             <el-option label="中文" value="zh"></el-option>
@@ -127,8 +127,8 @@
         </el-form-item>
       </el-form>
       <div v-show="currentDisplay == '4'">
-        <h3>{{ $t(settingOption[4].name) }}<el-divider direction="vertical" />密码所有协议通用</h3>
-        <el-table :data="global.dict.usernames" stripe style="width: 100%">
+        <h3>{{ $t(setupOptions[4].name) }}<el-divider direction="vertical" />密码所有协议通用</h3>
+        <el-table :data="crackDict.usernames" stripe style="width: 100%">
           <el-table-column prop="name" label="服务名称" />
           <el-table-column label="操作" width="250" align="center">
             <template #default="scope">
@@ -155,22 +155,17 @@
 
 <script lang="ts" setup>
 import global from "@/global"
-import { ElMessage, ElNotification, MenuItemRegistered } from 'element-plus';
+import { ElMessage, MenuItemRegistered } from 'element-plus';
 import { TestProxy } from "@/util";
 import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
-import { ReadFile, SaveDataToFile, WriteFile } from "wailsjs/go/main/File";
+import { ReadFile, WriteFile } from "wailsjs/go/main/File";
 import { File } from '@/interface';
 import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
-import scanIcon from "@/assets/icon/scan.svg"
-import themeIcon from "@/assets/icon/theme.svg"
-import proxyIcon from "@/assets/icon/proxy.svg"
-import dictmanagerIcon from "@/assets/icon/dict.svg"
-import layersIcon from "@/assets/icon/layers.svg"
-import aboutIcon from "@/assets/icon/about.svg"
-import scriptIcon from "@/assets/icon/script.svg"
+import { SaveConfig } from "@/config";
+import { aliveGroupOptions, crackDict, setupOptions } from "@/stores/options";
 
 const bevigilURL = "https://bevigil.com/osint-api"
 const chaosURL = "https://cloud.projectdiscovery.io/"
@@ -192,21 +187,7 @@ const changeLanguage = (lang: string) => {
   locale.value = lang;
 }
 
-const saveConfig = () => {
-  // 获取space的所有value值
-  let list = Object.entries(global.space).map(([key, value]) => value);
-  // 去除不可见字符
-  list = list.map(item => item.replace(/[\r\n\s]/g, ''));
-  var data = { proxy: global.proxy, space: global.space, jsfind: global.jsfind, webscan: global.webscan };
-  SaveDataToFile(data).then(result => {
-    if (result) {
-      ElNotification.success({
-        message: 'Save successful',
-        position: 'bottom-right'
-      })
-    }
-  })
-};
+
 
 const ctrl = reactive({
   innerDrawer: false,
@@ -225,57 +206,13 @@ async function SaveFile(path: string) {
   })
 }
 
-const settingOption = [
-  {
-    name: 'setting.scan',
-    icon: scanIcon,
-  },
-  {
-    name: 'setting.proxy',
-    icon: proxyIcon,
-  },
-  {
-    name: 'setting.mapping',
-    icon: layersIcon,
-  },
-  {
-    name: 'aside.display',
-    icon: themeIcon,
-  },
-  {
-    name: 'aside.dict',
-    icon: dictmanagerIcon,
-  },
-  // {
-  //   name: 'aside.script',
-  //   icon: scriptIcon,
-  // },
-  {
-    name: 'aside.about',
-    icon: aboutIcon,
-  },
-]
-
 const currentDisplay = ref('0')
 
 function selectItem(item: MenuItemRegistered) {
   currentDisplay.value = item.index
 }
 
-const aliveGroup = [
-  {
-    value: "None",
-    description: "不进行主机存活探测直接扫描端口"
-  },
-  {
-    value: "ICMP",
-    description: "使用ICMP进行主机存活探测，需要开启ROOT权限"
-  },
-  {
-    value: "Ping",
-    description: "使用Ping进行主机存活探测，ICMP权限不足时会自动降级为Ping"
-  },
-]
+
 </script>
 
 <style scoped>

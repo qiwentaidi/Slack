@@ -280,6 +280,23 @@ export namespace main {
 
 }
 
+export namespace mongo {
+	
+	export class Client {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Client(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+
+}
+
 export namespace space {
 	
 	export class Data {
@@ -568,6 +585,30 @@ export namespace structs {
 	        this.Target = source["Target"];
 	    }
 	}
+	export class DatabaseConnection {
+	    Nanoid: string;
+	    Scheme: string;
+	    Host: string;
+	    Port: number;
+	    Username: string;
+	    Password: string;
+	    Notes: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DatabaseConnection(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Nanoid = source["Nanoid"];
+	        this.Scheme = source["Scheme"];
+	        this.Host = source["Host"];
+	        this.Port = source["Port"];
+	        this.Username = source["Username"];
+	        this.Password = source["Password"];
+	        this.Notes = source["Notes"];
+	    }
+	}
 	export class HunterResult {
 	    code: number;
 	    // Go type: struct { AccountType string "json:\"account_type\""; Arr []struct { AsOrg string "json:\"as_org\""; Banner string "json:\"banner\""; BaseProtocol string "json:\"base_protocol\""; City string "json:\"city\""; Company string "json:\"company\""; Component []struct { Name string "json:\"name\""; Version string "json:\"version\"" } "json:\"component\""; Country string "json:\"country\""; Domain string "json:\"domain\""; IP string "json:\"ip\""; IsRisk string "json:\"is_risk\""; IsRiskProtocol string "json:\"is_risk_protocol\""; IsWeb string "json:\"is_web\""; Isp string "json:\"isp\""; Number string "json:\"number\""; Os string "json:\"os\""; Port int64 "json:\"port\""; Protocol string "json:\"protocol\""; Province string "json:\"province\""; StatusCode int64 "json:\"status_code\""; UpdatedAt string "json:\"updated_at\""; URL string "json:\"url\""; WebTitle string "json:\"web_title\"" } "json:\"arr\""; ConsumeQuota string "json:\"consume_quota\""; RestQuota string "json:\"rest_quota\""; SyntaxPrompt string "json:\"syntax_prompt\""; Time int64 "json:\"time\""; Total int64 "json:\"total\"" }
@@ -688,6 +729,20 @@ export namespace structs {
 	        this.Body = source["Body"];
 	    }
 	}
+	export class RowData {
+	    Columns: string[];
+	    Rows: any[][];
+	
+	    static createFrom(source: any = {}) {
+	        return new RowData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Columns = source["Columns"];
+	        this.Rows = source["Rows"];
+	    }
+	}
 	export class SpaceOption {
 	    FofaApi: string;
 	    FofaEmail: string;
@@ -754,6 +809,30 @@ export namespace structs {
 	        this.Timeout = source["Timeout"];
 	        this.ResolveExcludeTimes = source["ResolveExcludeTimes"];
 	        this.DnsServers = source["DnsServers"];
+	    }
+	}
+	export class WebscanOptions {
+	    Target: string[];
+	    Thread: number;
+	    Screenshot: boolean;
+	    DeepScan: boolean;
+	    RootPath: boolean;
+	    CallNuclei: boolean;
+	    TemplateFiles: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new WebscanOptions(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Target = source["Target"];
+	        this.Thread = source["Thread"];
+	        this.Screenshot = source["Screenshot"];
+	        this.DeepScan = source["DeepScan"];
+	        this.RootPath = source["RootPath"];
+	        this.CallNuclei = source["CallNuclei"];
+	        this.TemplateFiles = source["TemplateFiles"];
 	    }
 	}
 

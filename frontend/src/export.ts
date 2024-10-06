@@ -40,7 +40,7 @@ export async function ExportWebScanToXlsx(r1: {}[], r2: {}[]) {
   let wb = XLSX.utils.book_new();
   // 自定义表头
   let fingerheaders = ["URL", "Code", "Length", "Title", "Detection", "isWAF", "WAF Name", "Fingerprint"];
-  let vulheaders = ["Template", "Name", "Type" ,"Severity", "URL", "ExtInfo", "Reference", "Description"];
+  let vulheaders = ["Template", "Name", "Type" ,"Severity", "URL", "ExtInfo"];
   let ws1 = XLSX.utils.json_to_sheet(r1);
   let ws2 = XLSX.utils.json_to_sheet(r2);
   XLSX.utils.sheet_add_aoa(ws1, [fingerheaders], { origin: "A1" });

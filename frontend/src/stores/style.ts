@@ -1,6 +1,5 @@
 import { computed } from 'vue'
 import global from '@/global';
-import { GOOS } from '@/util';
 
 export const titleStyle = computed(() => {
     return global.Theme.value ? {
@@ -29,7 +28,7 @@ export const leftStyle = computed(() => {
 })
 
 export const macStyle = computed(() => {
-    return global.temp.isMacOS ? { marginLeft: '5.5%' } : {};
+    return global.temp.isMacOS ? { marginLeft: '80px' } : {};
 })
 
 export const defaultIconSize = {
@@ -51,7 +50,7 @@ export const appStartStyle = computed(() => {
 
 export const eldividerStyle = computed(() => {
     if (global.Theme.value) {
-        switch (GOOS()) {
+        switch (global.temp.goos) {
             case "windows":
                 return {
                     backgroundColor: '#121212',
@@ -66,5 +65,4 @@ export const eldividerStyle = computed(() => {
                 }
         }
     }
-    return {}
-})
+});

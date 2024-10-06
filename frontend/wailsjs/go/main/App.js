@@ -54,6 +54,10 @@ export function Fscan2Txt(arg1) {
   return window['go']['main']['App']['Fscan2Txt'](arg1);
 }
 
+export function GOOS() {
+  return window['go']['main']['App']['GOOS']();
+}
+
 export function GetFingerPocMap() {
   return window['go']['main']['App']['GetFingerPocMap']();
 }
@@ -134,8 +138,8 @@ export function NewTcpScanner(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['NewTcpScanner'](arg1, arg2, arg3, arg4, arg5);
 }
 
-export function NewWebScanner(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
-  return window['go']['main']['App']['NewWebScanner'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+export function NewWebScanner(arg1, arg2) {
+  return window['go']['main']['App']['NewWebScanner'](arg1, arg2);
 }
 
 export function PortBrute(arg1, arg2, arg3) {
@@ -204,6 +208,10 @@ export function TycCheckLogin() {
 
 export function UncoverSearch(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['UncoverSearch'](arg1, arg2, arg3, arg4);
+}
+
+export function ViewPictrue(arg1) {
+  return window['go']['main']['App']['ViewPictrue'](arg1);
 }
 
 export function WechatOfficial(arg1) {

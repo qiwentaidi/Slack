@@ -89,6 +89,6 @@ func PortBrute(ctx context.Context, host string, usernames, passwords []string) 
 	case "memcached":
 		MemcachedScan(ctx, u.Host)
 	case "mongodb":
-		MongodbScan(ctx, u.Host)
+		MongodbScan(ctx, u.Host, usernames, passwords)
 	}
 }

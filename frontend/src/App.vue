@@ -11,6 +11,7 @@ import { useDark } from '@vueuse/core'
 import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/main/File";
 import { InitConfigFile } from "./config";
 import { check } from "@/util";
+import { GOOS } from "wailsjs/go/main/App";
 
 const levelClassMap: { [key: string]: string } = {
   "[INF]": "log-info",
@@ -35,6 +36,8 @@ const logArray = [] as string[]
 onMounted(async () => {
   // 初始化目录
   global.PATH.homedir = await UserHomeDir();
+  // 获取系统类型
+  global.temp.goos = await GOOS();
   // 初始化配置文件
   await InitConfigFile(500);
   // 检测更新

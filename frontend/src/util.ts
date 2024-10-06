@@ -16,7 +16,6 @@ import Loading from "./components/Loading.vue";
 import { ProxyOptions, File } from "./interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
-import platform from 'platform';
 import async from "async";
 import { clients } from "wailsjs/go/models";
 
@@ -315,16 +314,6 @@ export function CsegmentIpv4(ip: string): string {
 
 export function renderedMarkdown(content: string) {
   return marked.parse(content);
-}
-
-export function GOOS() {
-  if (platform.os.family.includes('Window')) {
-    return "windows"
-  } else if (platform.os.family.includes('Linux')) {
-    return "linux"
-  } else {
-    return "darwin"
-  }
 }
 
 export async function UploadFileAndRead() {

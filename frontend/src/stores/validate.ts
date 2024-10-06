@@ -72,3 +72,7 @@ export function validateWebscan(input: string) {
     }
     return true
 }
+
+export const regexpPhone = /(?<![A-Za-z0-9])((?:(?:\+|00)86)?1(?:(?:3\d)|(?:4[5-79])|(?:5[0-35-9])|(?:6[5-7])|(?:7[0-8])|(?:8\d)|(?:9[189]))\d{8})(?![A-Za-z0-9])/g
+export const regexpIdCard = /[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]/g;
+export const regexpAKSK = /access/g;

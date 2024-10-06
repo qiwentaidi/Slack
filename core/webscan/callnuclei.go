@@ -93,10 +93,3 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 	}
 	defer ne.Close()
 }
-
-// func Rename(filename string) string {
-// 	filename = strings.ReplaceAll(filename, ":", "_")
-// 	filename = strings.ReplaceAll(filename, "/", "_")
-// 	filename = strings.ReplaceAll(filename, "___", "_")
-// 	return filename
-// }

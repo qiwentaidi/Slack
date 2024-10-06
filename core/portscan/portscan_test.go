@@ -1,7 +1,7 @@
 package portscan
 
 import (
-	"context"
+	"fmt"
 	"testing"
 )
 
@@ -26,6 +26,14 @@ func TestWrapperTcpWithTimeout(t *testing.T) {
 
 	// // Close the connection
 	// conn.Close()
-	var id int32
-	SynScan(context.Background(), "1.1.1.1", []uint16{53, 80, 443, 8080}, &id)
+
+	// synscan --------------------
+	// var id int32
+	// SynScan(context.Background(), "1.1.1.1", []uint16{53, 80, 443, 8080}, &id)
+
+	// mongodb connect
+
+	flag, err := MongodbConn("192.168.0.107:27017", "", "")
+	fmt.Printf("flag1: %v\n", flag)
+	fmt.Printf("err: %v\n", err)
 }

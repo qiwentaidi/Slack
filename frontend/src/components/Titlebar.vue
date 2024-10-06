@@ -4,7 +4,7 @@ import { Quit, WindowMinimise, WindowReload, WindowToggleMaximise } from "wailsj
 import { IsMacOS } from "wailsjs/go/main/File";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import global from "@/global";
-import { onlineOptions }  from '@/stores/online';
+import { onlineOptions }  from '@/stores/options';
 import { useRoute } from "vue-router";
 import { ref, computed } from "vue";
 import updateUI from "./Update.vue";

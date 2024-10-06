@@ -41,6 +41,7 @@ func main() {
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
 			file.startup(ctx)
+			db.startup(ctx)
 		},
 		DragAndDrop: func() *options.DragAndDrop {
 			if rt.GOOS == "windows" {

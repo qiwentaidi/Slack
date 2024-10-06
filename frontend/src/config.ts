@@ -56,7 +56,7 @@ export async function InitConfigFile(timeout: number) {
 async function LoadConfig() {
   let stat = await CheckFileStat(global.PATH.homedir + "/slack/config.json")
   if (!stat) {
-    var data = { proxy: global.proxy, space: global.space, jsfind: global.jsfind, webscan: global.webscan };
+    var data = { proxy: global.proxy, space: global.space, jsfind: global.jsfind, webscan: global.webscan, database: global.database };
     await SaveDataToFile(data);
   } else {
     let result = await ReadLocalStore()
@@ -64,5 +64,25 @@ async function LoadConfig() {
     Object.assign(global.space, result["space"])
     Object.assign(global.jsfind, result["jsfind"])
     Object.assign(global.webscan, result["webscan"])
+    Object.assign(global.database, result["database"])
+  }
+  if (global.database.columnsNameKeywords == "") {
+    SaveConfig()
   }
 }
+
+export function SaveConfig() {
+  // 获取space的所有value值
+  let list = Object.entries(global.space).map(([key, value]) => value);
+  // 去除不可见字符
+  list = list.map(item => item.replace(/[\r\n\s]/g, ''));
+  var data = { proxy: global.proxy, space: global.space, jsfind: global.jsfind, webscan: global.webscan, database: global.database };
+  SaveDataToFile(data).then(result => {
+    if (result) {
+      ElNotification.success({
+        message: 'Save successful',
+        position: 'bottom-right'
+      })
+    }
+  })
+};

@@ -1,19 +1,34 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
+	"slack-wails/core/portscan"
+	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/wailsapp/wails/v2/pkg/logger"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Database struct {
-	DB   *sql.DB
-	lock sync.RWMutex
+	ctx           context.Context
+	DB            *sql.DB
+	lock          sync.RWMutex
+	OtherDatabase *sql.DB       // 数据库信息采集时的连接池
+	MongoClient   *mongo.Client // mongodb连接池
+}
+
+func (d *Database) startup(ctx context.Context) {
+	d.ctx = ctx
 }
 
 func NewDatabase() *Database {
@@ -57,7 +72,9 @@ func (d *Database) CreateTable() bool {
 	CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );
 	CREATE TABLE IF NOT EXISTS fofa_syntax ( name TEXT, content TEXT );
 	CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );
-	CREATE TABLE IF NOT EXISTS dirsearch ( path TEXT, times INTEGER )`)
+	CREATE TABLE IF NOT EXISTS dirsearch ( path TEXT, times INTEGER );
+	CREATE TABLE IF NOT EXISTS dbManager ( nanoid TEXT, scheme TEXT, host TEXT, port INTEGER, username TEXT, password TEXT, notes TEXT );
+	`)
 	return err == nil
 }
 
@@ -76,7 +93,7 @@ func (d *Database) ExecSqlStatement(query string, args ...interface{}) bool {
 	_, err = stmt.Exec(args...)
 	if err != nil {
 		tx.Rollback()
-		logger.NewDefaultLogger().Debug(err.Error())
+		gologger.Debug(d.ctx, fmt.Sprintf("ExecSqlStatement: %s", err))
 	}
 	err = tx.Commit()
 	return err == nil
@@ -200,4 +217,262 @@ func (d *Database) GetAllPathsAndTimes() []pathTimes {
 	}
 
 	return results
+}
+
+func (d *Database) GetAllDatabaseConnections() (dcs []structs.DatabaseConnection) {
+	rows, err := d.DB.Query(`SELECT * FROM dbManager;`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var nanoid, scheme, host, username, password, notes string
+		var port int
+		err = rows.Scan(&nanoid, &scheme, &host, &port, &username, &password, &notes)
+		if err != nil {
+			return
+		}
+		dcs = append(dcs, structs.DatabaseConnection{
+			Nanoid:   nanoid,
+			Scheme:   scheme,
+			Host:     host,
+			Port:     port,
+			Username: username,
+			Password: password,
+			Notes:    notes,
+		})
+	}
+	return dcs
+}
+
+func (d *Database) AddConnection(info structs.DatabaseConnection) bool {
+	return d.ExecSqlStatement("INSERT INTO dbManager (nanoid, scheme, host, port, username, password, notes) VALUES (?, ?, ?, ?, ?, ?, ?)", info.Nanoid, info.Scheme, info.Host, info.Port, info.Username, info.Password, info.Notes)
+}
+
+func (d *Database) RemoveConnection(nanoid string) bool {
+	return d.ExecSqlStatement("DELETE FROM dbManager WHERE nanoid = ?", nanoid)
+}
+
+func (d *Database) UpdateConnection(info structs.DatabaseConnection) bool {
+	return d.ExecSqlStatement("UPDATE dbManager SET scheme = ?, host = ?, port = ? , username = ?, password = ?, notes = ? WHERE nanoid = ?", info.Scheme, info.Host, info.Port, info.Username, info.Password, info.Notes, info.Nanoid)
+}
+
+func (d *Database) ConnectDatabase(info structs.DatabaseConnection) bool {
+	var (
+		flag           bool
+		err            error
+		dataSourceName string
+	)
+	host := fmt.Sprintf("%s:%d", info.Host, info.Port)
+
+	// Determine connection based on the scheme
+	switch info.Scheme {
+	case "mysql":
+		flag, err = portscan.MysqlConn(host, info.Username, info.Password)
+		dataSourceName = fmt.Sprintf("%v:%v@tcp(%v)/mysql?charset=utf8&timeout=%v", info.Username, info.Password, host, 10*time.Second)
+	case "mssql":
+		flag, err = portscan.MssqlConn(host, info.Username, info.Password)
+		dataSourceName = fmt.Sprintf("server=%s;user id=%s;password=%s;port=%v;encrypt=disable;timeout=%v", info.Host, info.Username, info.Password, info.Port, 10*time.Second)
+	case "oracle":
+		flag, err = portscan.OracleConn(host, info.Username, info.Password)
+		dataSourceName = fmt.Sprintf("oracle://%s:%s@%s/orcl", info.Username, info.Password, host)
+	case "postgres":
+		flag, err = portscan.PostgresConn(host, info.Username, info.Password)
+		dataSourceName = fmt.Sprintf("postgres://%v:%v@%v/postgres?sslmode=disable", info.Username, info.Password, host)
+	case "mongodb":
+		flag, err = portscan.MongodbConn(host, info.Username, info.Password)
+		if err == nil && flag {
+			d.MongoClient, err = d.ConnectMongodb(host, info.Username, info.Password)
+			if err != nil {
+				d.showErrorMessage(err.Error())
+				return false
+			}
+			return true
+		}
+	default:
+		return false
+	}
+
+	// Handle connection failure
+	if err != nil || !flag {
+		d.showErrorMessage(err.Error())
+		return false
+	}
+
+	// Connect to other databases
+	d.OtherDatabase, err = sql.Open(info.Scheme, dataSourceName)
+	if err != nil {
+		d.showErrorMessage("认证正确，但无法连接数据库")
+		return false
+	}
+	return true
+}
+
+// Helper function to show error messages
+func (d *Database) showErrorMessage(message string) {
+	runtime.MessageDialog(d.ctx, runtime.MessageDialogOptions{
+		Title:         "提示",
+		Message:       message,
+		Type:          runtime.ErrorDialog,
+		DefaultButton: "Ok",
+	})
+}
+
+func (d *Database) ConnectMongodb(host, user, pass string) (*mongo.Client, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Create MongoDB URI
+	mongoURI := fmt.Sprintf("mongodb://%s", host)
+
+	// Define client options with or without credentials
+	clientOpts := options.Client().ApplyURI(mongoURI)
+	if user != "" && pass != "" {
+		credentials := options.Credential{
+			Username: user,
+			Password: pass,
+		}
+		clientOpts.SetAuth(credentials)
+	}
+
+	// Connect to MongoDB
+	return mongo.Connect(ctx, clientOpts)
+}
+
+func (d *Database) FetchDatabaseinfoFromMongodb() map[string][]string {
+	var databasesInfo = make(map[string][]string)
+	// Get the total number of databases
+	if d.MongoClient == nil {
+		return databasesInfo
+	}
+	databaseNames, err := d.MongoClient.ListDatabaseNames(context.TODO(), bson.D{})
+	if err != nil {
+		gologger.Debug(d.ctx, err)
+		return databasesInfo
+	}
+	// Loop through each database and count the collections
+	for _, dbName := range databaseNames {
+		db := d.MongoClient.Database(dbName)
+		collections, err := db.ListCollectionNames(context.TODO(), bson.D{})
+		if err != nil {
+			gologger.Debug(d.ctx, err)
+			continue
+		}
+		databasesInfo[dbName] = collections
+	}
+	return databasesInfo
+}
+
+func (d *Database) DisconnectDatabase(scheme string) bool {
+	if scheme == "mongodb" {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return d.MongoClient.Disconnect(ctx) == nil
+	}
+	return d.OtherDatabase.Close() == nil
+}
+
+var mysql_system_db = []string{"performance_schema", "information_schema", "mysql", "sys"}
+
+func (d *Database) FetchDatabaseinfoFromMysql() map[string][]string {
+	// Retrieve all databases
+	databases, err := d.OtherDatabase.Query("SHOW DATABASES")
+	if err != nil {
+		gologger.Warning(d.ctx, fmt.Sprintf("[mysql] 查询数据库失败: %v", err))
+		return nil
+	}
+	defer databases.Close()
+
+	// Iterate over each database
+	var databasesInfo = make(map[string][]string)
+	for databases.Next() {
+		var dbName string
+		if err := databases.Scan(&dbName); err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[mysql] 扫描数据库名称失败: %v", err))
+			continue
+		}
+		if util.ArrayContains(dbName, mysql_system_db) {
+			continue
+		}
+
+		// Retrieve tables for the current database
+		tables, err := d.OtherDatabase.Query("SHOW TABLES FROM " + dbName)
+		if err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[mysql] 查询表失败: %v", err))
+			continue
+		}
+		defer tables.Close()
+
+		// Iterate over tables in the current database
+		for tables.Next() {
+			var tableName string
+			if err := tables.Scan(&tableName); err != nil {
+				gologger.Warning(d.ctx, fmt.Sprintf("[mysql] 扫描表名称失败: %v", err))
+				continue
+			}
+			databasesInfo[dbName] = append(databasesInfo[dbName], tableName)
+		}
+
+		// Check for any error encountered during iteration
+		if err := tables.Err(); err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[mysql] 遍历表时出错: %v", err))
+		}
+	}
+
+	// Check for any error encountered during iteration
+	if err := databases.Err(); err != nil {
+		gologger.Warning(d.ctx, fmt.Sprintf("[mysql] 遍历数据库时出错: %v", err))
+	}
+
+	return databasesInfo
+}
+
+func (d *Database) FetchTableInfoFromMysql(dbName, tableName string) structs.RowData {
+	// Construct SQL query to fetch the first three rows of the specified table
+	sqlQuery := fmt.Sprintf("SELECT * FROM `%s`.`%s` LIMIT 3", dbName, tableName)
+	_, err := d.OtherDatabase.Exec("set global show_compatibility_56 = ON")
+	if err != nil {
+		gologger.Debug(d.ctx, err)
+	}
+	// Execute the query
+	rows, err := d.OtherDatabase.Query(sqlQuery)
+	if err != nil {
+		gologger.Debug(d.ctx, err)
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[mysql] 获取列名失败: %v", err))
+	}
+
+	// 创建一个二维切片来存储数据
+	var data [][]interface{}
+
+	// 遍历每一行
+	for rows.Next() {
+		// 创建一个切片来存储每一行的值
+		values := make([]interface{}, len(columns))
+		for i := range values {
+			values[i] = new(interface{})
+		}
+
+		// 扫描行数据
+		if err := rows.Scan(values...); err != nil {
+			gologger.Debug(d.ctx, fmt.Sprintf("[mysql] 扫描行数据失败: %v", err))
+
+		}
+
+		// 将每一行的数据附加到切片中
+		row := make([]interface{}, len(columns))
+		for i, v := range values {
+			row[i] = *(v.(*interface{}))
+		}
+		data = append(data, row)
+	}
+
+	return structs.RowData{
+		Columns: columns,
+		Rows:    data,
+	}
 }

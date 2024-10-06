@@ -4,7 +4,6 @@ import { eldividerStyle } from "@/stores/style";
 </script>
 
 <template>
-  <el-scrollbar height="92vh">
     <div v-for="groups in MenuList">
       <div v-if="groups.children">
         <el-divider>
@@ -15,7 +14,7 @@ import { eldividerStyle } from "@/stores/style";
             <span>{{ $t(groups.name) }}</span>
           </div>
         </el-divider>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 10px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 5px;">
           <el-card shadow="hover" class="card" v-for="item in groups.children"
             @click="$router.push(groups.path + item.path)">
             <div style="display: flex;">
@@ -33,7 +32,6 @@ import { eldividerStyle } from "@/stores/style";
         </div>
       </div>
     </div>
-  </el-scrollbar>
 </template>
 
 <style scoped>
@@ -81,6 +79,7 @@ import { eldividerStyle } from "@/stores/style";
     /* 图片虚化 */
   }
 }
+
 
 /* 跳转图标 */
 .location-icon {

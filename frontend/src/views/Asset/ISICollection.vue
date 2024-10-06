@@ -13,7 +13,7 @@
                 <div style="display: flex;">
                     <span style="font-weight: bold; width: 50%;">关键词列表</span>
                     <el-select v-model="dictionary" size="small" style="height: 17px;">
-                        <el-option v-for="item in List" :key="item.label" :value="item.label">
+                        <el-option v-for="item in dorksOptions" :key="item.label" :value="item.label">
                             <span style="float: left">{{ item.label }}</span>
                             <span style="float: right">
                                 {{ item.value.split("\n").length }}
@@ -107,7 +107,7 @@ const dictionary = ref('small_dorks')
 const dialogTableVisible = ref(false);
 const gridData = ref([] as string[])
 
-const List = [
+const dorksOptions = [
     {
         label: "all_dorks",
         value: dorks.alldorksv3
@@ -137,7 +137,7 @@ watch(dictionary, () => {
 
 // 更新 parameter.keyword 的函数
 function updateKeyword() {
-    const selected = List.find(item => item.label === dictionary.value);
+    const selected = dorksOptions.find(item => item.label === dictionary.value);
     if (selected) {
         parameter.keyword = selected.value;
     }

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { QuestionFilled } from '@element-plus/icons-vue'
-import Timestamp from './transcode/Timestamp.vue';
-import OA from './transcode/OA.vue';
-import Transcode from './transcode/Transcode.vue';
+import Timestamp from './Timestamp.vue';
+import OA from './OA.vue';
+import Transcode from './Transcode.vue';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import CustomTabs from '@/components/CustomTabs.vue';
 </script>

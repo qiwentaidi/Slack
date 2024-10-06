@@ -14,6 +14,7 @@ import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
 import { debounce } from "lodash"
 import { validateSingleDomain } from "@/stores/validate";
 import { structs } from "wailsjs/go/models";
+import { dnsServerOptions, subdomainRunnerOptions } from "@/stores/options";
 
 const debounceUpdate = debounce(() => {
   pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
@@ -49,53 +50,10 @@ onMounted(() => {
     };
 });
 
-const runnerOptions = [
-    {
-        label: "枚举模式",
-        value: 0,
-    },
-    {
-        label: "查询模式",
-        value: 1,
-        tips: "通过API查询"
-    },
-    {
-        label: "混合模式",
-        value: 2,
-        tips: "先查询后枚举"
-    },
-]
-
 const currentRunner = ref(1);
 const result = ref([] as SubdomainInfo[]);
 const pagination = usePagination(result.value, 50)
 const input = ref("");
-const dnsServerList = [
-    {
-        label: "谷歌",
-        value: "8.8.8.8:53"
-    },
-    {
-        label: "谷歌",
-        value: "8.8.4.4:53"
-    },
-    {
-        label: "‌电信",
-        value: "114.114.114.114:53"
-    },
-    {
-        label: "百度",
-        value: "180.76.76.76:53"
-    },
-    {
-        label: "腾讯",
-        value: "119.29.29.29:53"
-    },
-    {
-        label: "阿里",
-        value: "223.6.6.6:53"
-    }
-]
 
 const selectDnsServer = ref(["223.6.6.6:53", "8.8.8.8:53"])
 
@@ -201,7 +159,7 @@ const CopyDomains = () => {
                 <el-input v-model="input" placeholder="请输入域名或域名文件列表" style="margin-right: 10px;">
                     <template #prepend>
                         <el-select v-model="currentRunner" style="width: 150px">
-                            <el-option v-for="item in runnerOptions" :key="item.value" :label="item.label"
+                            <el-option v-for="item in subdomainRunnerOptions" :key="item.value" :label="item.label"
                                 :value="item.value" style="width: 260px;">
                                 <span style="float: left">{{ item.label }}</span>
                                 <span class="tips">
@@ -301,7 +259,7 @@ const CopyDomains = () => {
             <el-form-item label="DNS Servers">
                 <el-select v-model="selectDnsServer" multiple clearable collapse-tags collapse-tags-tooltip
                     :max-collapse-tags="3">
-                    <el-option v-for="item in dnsServerList" :key="item.value"
+                    <el-option v-for="item in dnsServerOptions" :key="item.value"
                         :label="item.value"
                         :value="item.value">
                         <span style="float: left">{{ item.value }}</span>
