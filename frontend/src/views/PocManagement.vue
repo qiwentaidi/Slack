@@ -212,7 +212,7 @@ async function deletePoc(pocName: string, finerprints: string[]) {
             </template>
         </el-page-header>
         <el-divider />
-        <el-form :mode="poc" label-width="auto">
+        <el-form :model="poc" label-width="auto">
             <el-form-item label="POC名称">
                 <el-input v-model="poc.Name" placeholder="优先填写CVE、CNVD等编号，导入会自动读取id值" />
             </el-form-item>

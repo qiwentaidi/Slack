@@ -1,10 +1,11 @@
 import { CheckFileStat, InitConfig, ReadFile, RemoveOldConfig, SaveDataToFile, ReadLocalStore } from 'wailsjs/go/main/File';
 import { ElLoading, ElNotification } from 'element-plus';
 import global from "./global";
-import { compareVersion, sleep } from './util';
+import { compareVersion, ReadLine, sleep } from './util';
 import router from "./router";
 import { File } from "./interface";
 import { CreateTable } from 'wailsjs/go/main/Database';
+import { crackDict } from './stores/options';
 
 function catchError(result: boolean, loading: any) {
   if (result) {
@@ -33,8 +34,8 @@ export async function InitConfigFile(timeout: number) {
     let result = await InitConfig();
     catchError(result, loading)
   } else {
-      let result:File = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile)
-      global.UPDATE.LocalPocVersion = result.Content!
+    let result: File = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile)
+    global.UPDATE.LocalPocVersion = result.Content!
     if (!global.UPDATE.LocalPocVersion || compareVersion(global.UPDATE.LocalPocVersion, "0.0.4") != 1) {
       await RemoveOldConfig();
       loading.setText("正在下载新配置文件...");
@@ -69,6 +70,7 @@ async function LoadConfig() {
   if (global.database.columnsNameKeywords == "") {
     SaveConfig()
   }
+  await ReadCrackDict()
 }
 
 export function SaveConfig() {
@@ -86,3 +88,11 @@ export function SaveConfig() {
     }
   })
 };
+
+async function ReadCrackDict() {
+  for (var item of crackDict.usernames) {
+    item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
+  }
+  crackDict.passwords = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/password/password.txt"))!
+  crackDict.passwords.push("")
+}

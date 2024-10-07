@@ -2,11 +2,11 @@
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, CopyDocument, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
 import { SplitTextArea, splitInt, Copy, CsegmentIpv4 } from '@/util'
-import { FofaResult, DefaultKeyValue, TableTabs, Results } from "@/interface"
+import { TableTabs, Results } from "@/interface"
 import { ExportToXlsx } from '@/export'
 import { FofaTips, FofaSearch, IconHash, Callgologger } from 'wailsjs/go/main/App'
 import { BrowserOpenURL } from 'wailsjs/runtime'
-import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus';
+import { ElMessage, ElMessageBox, FormInstance } from 'element-plus';
 import global from "@/global"
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
@@ -91,7 +91,7 @@ const entry = ({
         cb(tips);
     },
     getTips: async function (queryString: string) {
-        let tips = [] as DefaultKeyValue[]
+        let tips = <{text: string, value: string}[]>[]
         let result: any = await FofaTips(queryString)
         if (result.code == 0) {
             for (const item of result.data) {
@@ -120,7 +120,7 @@ const tableCtrl = ({
     addTab: async (query: string) => {
         const newTabName = `${++table.tabIndex}`
         table.loading = true
-        let result: FofaResult = await FofaSearch(query, "100", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(query, "100", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
         if (result.Error) {
             ElMessage.warning(result.Message);
             table.loading = false
@@ -161,7 +161,7 @@ const tableCtrl = ({
     handleSizeChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
-        let result: FofaResult = await FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
         form.tips = result.Message!
         table.loading = false
         if (result.Error) {
@@ -174,7 +174,7 @@ const tableCtrl = ({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        let result: FofaResult = await FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
         form.tips = result.Message!
         table.loading = false
         if (result.Error) {
@@ -243,7 +243,7 @@ async function SaveData(mode: number) {
             for (const num of splitInt(tab.total, 10000)) {
                 index += 1
                 ElMessage("正在导出第" + index.toString() + "页");
-                let result:FofaResult = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+                let result = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
                 if (result.Error) {
                     Callgologger("error",`[fofa] ${tab.title} page ${index} search error: ` + result.Error);
                     ElMessage.error("查询异常，已退出导出")
@@ -288,28 +288,27 @@ async function CopyURL() {
 }
 
 async function CopyDeduplicationURL() {
-    await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert).then((result: FofaResult) => {
-        if (result.Error) {
-            ElMessage("查询失败")
-            return
-        }
-        var temp = [];
-        let content = result.Results
-        let seen = new Set(); // 用于存储已处理过的 IP:Port 组合
-        if (Array.isArray(content)) {
-            for (const line of content) {
-                let ip = (line as any)["IP"];
-                let port = (line as any)["Port"];
-                let ipPort = `${ip}:${port}`;
-                if (!seen.has(ipPort)) {
-                    seen.add(ipPort); // 将新的 IP:Port 组合加入到 set 中
-                    temp.push(line["URL"]); // 添加 URL 到 temp 数组中
-                }
+    let result = await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+    if (result.Error) {
+        ElMessage.warning("查询失败")
+        return
+    }
+    var temp = [];
+    let content = result.Results
+    let seen = new Set(); // 用于存储已处理过的 IP:Port 组合
+    if (Array.isArray(content)) {
+        for (const line of content) {
+            let ip = (line as any)["IP"];
+            let port = (line as any)["Port"];
+            let ipPort = `${ip}:${port}`;
+            if (!seen.has(ipPort)) {
+                seen.add(ipPort); // 将新的 IP:Port 组合加入到 set 中
+                temp.push(line["URL"]); // 添加 URL 到 temp 数组中
             }
         }
-        Copy(temp.join("\n"))
-        temp = []
-    })
+    }
+    Copy(temp.join("\n"))
+    temp = []
 }
 
 function formatProduct(raw: string): string[] {

@@ -195,7 +195,7 @@ function onContextMenu(e: MouseEvent, data: any) {
 
 </script>
 <template>
-  <el-form label-width="auto">
+  <el-form :model="config" label-width="auto">
     <el-form-item>
       <div class="head">
         <el-input v-model="config.urls" style="margin-right: 5px;">
@@ -250,7 +250,7 @@ function onContextMenu(e: MouseEvent, data: any) {
     <template #header>
       <h3>设置高级参数</h3>
     </template>
-    <el-form label-width="auto">
+    <el-form :model="config" label-width="auto">
       <el-form-item>
         <template #label>
           <span>JS路径拼接前缀:</span>

@@ -22,7 +22,12 @@ type Result struct {
 func Uncover(ctx context.Context, query, types string, size int, o structs.SpaceOption) []Result {
 	var results []Result
 	if o.FofaApi != "" && o.FofaEmail != "" && o.FofaKey != "" {
-		fs := FofaApiSearch(ctx, FormatQuery("fofa", types, query), "10", "1", o.FofaApi, o.FofaEmail, o.FofaKey, false, false)
+		config := NewFofaConfig(&FofaAuth{
+			Address: o.FofaApi,
+			Email:   o.FofaEmail,
+			Key:     o.FofaKey,
+		})
+		fs := config.FofaApiSearch(ctx, FormatQuery("fofa", types, query), "10", "1", false, false)
 		for _, r := range fs.Results {
 			results = append(results, Result{
 				URL:        r.URL,

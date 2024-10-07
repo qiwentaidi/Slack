@@ -1,4 +1,4 @@
-import { Callgologger, PortBrute, NewWebScanner, LoadDirsearchDict, DirScan, HunterSearch, Subdomain } from 'wailsjs/go/main/App'
+import { Callgologger, PortBrute, NewWebScanner, LoadDirsearchDict, DirScan, HunterSearch, Subdomain, FofaSearch } from 'wailsjs/go/main/App'
 import global from '@/global'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
@@ -12,9 +12,9 @@ export async function LinkWebscan(ips: string[]) {
         Target: ips,
         Thread: 50,
         Screenshot: false,
-	    DeepScan: true,
-	    RootPath: true,
-	    CallNuclei: true,
+        DeepScan: true,
+        RootPath: true,
+        CallNuclei: true,
         TemplateFiles: [],
     }
     await NewWebScanner(options, getProxy())
@@ -73,9 +73,9 @@ export async function LinkHunter(query: string, count: string) {
         ElNotification.warning("请在设置处填写Hunter Key")
         return
     }
-    ElMessage.info("正在导入鹰图数据，请稍后...")
+    ElMessage.info("正在查询鹰图数据，请稍后...")
     let urls = <string[]>[]
-    let result:any = await HunterSearch(global.space.hunterkey, query, count, "1", "0", "3", false)
+    let result = await HunterSearch(global.space.hunterkey, query, count, "1", "0", "3", false)
     if (result.code !== 200) {
         if (result.code == 40205) {
             ElMessage(result.message)
@@ -87,6 +87,24 @@ export async function LinkHunter(query: string, count: string) {
     result.data.arr.forEach((item: any) => {
         urls.push(item.url)
     });
+    return urls
+}
+
+export async function LinkFOFA(query: string, count: number) {
+    if (global.space.fofakey == "" && global.space.fofaemail) {
+        ElNotification.warning("请在设置处填写FOFA Key && FOFA Email")
+        return
+    }
+    ElMessage.info("正在查询FOFA数据，请稍后...")
+    let result = await FofaSearch(query, count.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true)
+    if (result.Error) {
+        ElMessage.warning(result.Message)
+        return
+    }
+    let urls = <string[]>[]
+    for (const item of result.Results!) {
+        urls.push(item.URL)
+    }
     return urls
 }
 

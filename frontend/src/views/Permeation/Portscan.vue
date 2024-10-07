@@ -434,7 +434,7 @@ function stopShodan() {
                 从Shodan导入
             </el-button>
         </template>
-        <el-form label-width="auto">
+        <el-form :model="config" label-width="auto">
             <el-form-item label="扫描模式:">
                 <el-segmented v-model="config.defaultPortscanOption" :options="portscanOptions" style="width: 100%;" />
                 <el-tooltip>

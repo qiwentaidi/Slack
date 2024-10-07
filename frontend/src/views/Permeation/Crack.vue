@@ -171,15 +171,14 @@ function checkinput() {
             <el-step title="结果输出" :icon="resultIcon" />
         </el-steps>
         <div style="margin-top: 20px;"></div>
-        <el-form label-width="auto" v-show="activeRef == 1" style="width: 60%;">
+        <el-form :model="config" label-width="auto" v-show="activeRef == 1" style="width: 60%;">
             <el-form-item label="目标:">
                 <el-input v-model="config.target" placeholder="请输入目标，目标仅支持换行分割
 扫描默认端口 ssh://10.0.0.1
 指定端口 redis://10.0.0.1:6380
 
 Mongodb、Memcachedb仅支持未授权检测
-" type="textarea" resize="none"
-                    style="height: 50vh;" />
+" type="textarea" resize="none" style="height: 50vh;" />
                 <el-button link size="small" :icon="Upload" @click="uploadFile"
                     style="margin-top: 5px;">导入目标文件</el-button>
             </el-form-item>
@@ -199,11 +198,17 @@ Mongodb、Memcachedb仅支持未授权检测
                 </el-input>
             </el-form-item>
             <el-form-item label="复制前缀:">
-                <el-space>
-                    <el-button v-for="item in crackDict.options" @click="Copy(item + '://')">{{ item }}</el-button>
-                </el-space>
+                <el-row :gutter="10">
+                    <el-col :span="4" v-for="item in crackDict.options" :key="item">
+                        <el-button size="small" @click="Copy(item + '://')"
+                            style="margin-bottom: 10px; width: 100%;">
+                            {{ item }}
+                        </el-button>
+                    </el-col>
+                </el-row>
             </el-form-item>
         </el-form>
+
         <el-form label-width="auto" v-show="activeRef == 2">
             <el-form-item label="目标并发:">
                 <el-input-number v-model="config.thread"></el-input-number>

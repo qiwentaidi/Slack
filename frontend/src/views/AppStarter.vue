@@ -356,13 +356,15 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 </div>
                 <div v-if="groups.Children" :style="appStartStyle">
                     <div v-for="(item, index) in groups.Children" :key="index">
-                        <div class="card-content" v-show="global.temp.isGrid" @contextmenu.stop
-                            @click="RunApp(item.Type, item.Path, item.Target)"
-                            @contextmenu.prevent="handleButtonContextMenu($event, groups, item)">
-                            <component :is="localGroup.chooseSvg(item.Type)" style="width: 40px; height: 40px;">
-                            </component>
-                            <span class="fixed-length-span">{{ item.Name }}</span>
-                        </div>
+                        <el-tooltip :content="item.Name" :show-after="500">
+                            <div class="card-content" v-show="global.temp.isGrid" @contextmenu.stop
+                                @click="RunApp(item.Type, item.Path, item.Target)"
+                                @contextmenu.prevent="handleButtonContextMenu($event, groups, item)">
+                                <component :is="localGroup.chooseSvg(item.Type)" style="width: 40px; height: 40px;">
+                                </component>
+                                <span class="fixed-length-span">{{ item.Name }}</span>
+                            </div>
+                        </el-tooltip>
                         <div v-show="!global.temp.isGrid">
                             <el-button bg text :icon="localGroup.chooseSvg(item.Type)" @contextmenu.stop
                                 @click="RunApp(item.Type, item.Path, item.Target)"
@@ -376,7 +378,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
         </div>
     </div>
     <el-dialog v-model="config.addItemDialog" :title="$t('navigator.add_item')" width="500">
-        <el-form label-width="auto">
+        <el-form :model="config" label-width="auto">
             <el-form-item label="组名">
                 <el-select v-model="config.defualtGroupName">
                     <el-option v-for="name in localGroup.getGroupNames()" :value="name">{{ name }}</el-option>
@@ -391,8 +393,8 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         }}</el-radio>
                 </el-radio-group>
             </el-form-item>
-            <el-form-item label="目标">
-                <el-input v-model="config.target" placeholder="自定义启动命令，正常为空" />
+            <el-form-item label="命令">
+                <el-input v-model="config.target" placeholder="如类型为CMD可自定义启动命令" />
             </el-form-item>
             <el-form-item label="路径">
                 <el-input v-model="config.path">
@@ -409,7 +411,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
         </template>
     </el-dialog>
     <el-dialog v-model="config.editDialog" :title="$t('navigator.edit_item')" width="500">
-        <el-form label-width="auto">
+        <el-form :model="config" label-width="auto">
             <el-form-item label="名称">
                 <el-input v-model="config.editName" />
             </el-form-item>
@@ -419,7 +421,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         }}</el-radio>
                 </el-radio-group>
             </el-form-item>
-            <el-form-item label="目标">
+            <el-form-item label="命令" placeholder="如类型为CMD可自定义启动命令">
                 <el-input v-model="config.editTarget"></el-input>
             </el-form-item>
             <el-form-item label="路径">
@@ -463,7 +465,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
     text-overflow: ellipsis;
     display: inline-block;
     text-align: center;
-    max-width: 60px;
+    max-width: 80px;
     font-size: 12px;
     margin-top: 10px;
 }

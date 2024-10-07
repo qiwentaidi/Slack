@@ -1,27 +1,18 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Remove } from '@element-plus/icons-vue';
-import {
-    InitRule,
-    FofaSearch,
-    FingerprintList,
-    NewWebScanner,
-    GetFingerPocMap,
-    Callgologger,
-    StopWebscan,
-    ViewPictrue,
-} from 'wailsjs/go/main/App'
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View } from '@element-plus/icons-vue';
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, Callgologger, StopWebscan, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, TrimRightSubString, getProxy, UploadFileAndRead } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { Vulnerability, FingerprintTable, FofaResult } from '@/interface';
+import { Vulnerability, FingerprintTable } from '@/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
-import { LinkDirsearch, LinkHunter } from '@/linkage';
+import { LinkDirsearch, LinkFOFA, LinkHunter } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
-import { defaultIconSize } from '@/stores/style';
+import { defaultIconSize, getClassBySeverity } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
 import { FileDialog, List, ReadFile } from 'wailsjs/go/main/File';
 import { validateWebscan } from '@/stores/validate';
@@ -76,20 +67,20 @@ onMounted(async () => {
     EventsOn("webFingerScan", (result: any) => {
         if (result.StatusCode == 0) {
             dashboard.reqErrorURLs.push(result.URL)
-        } else {
-            fp.table.result.push({
-                url: result.URL,
-                status: result.StatusCode,
-                length: result.Length,
-                title: result.Title,
-                detect: result.Detect,
-                existsWaf: result.IsWAF,
-                waf: "WAF: " + result.WAF,
-                fingerprint: result.Fingerprints,
-                screenshot: result.Screenshot
-            })
-            fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
+            return
         }
+        fp.table.result.push({
+            url: result.URL,
+            status: result.StatusCode,
+            length: result.Length,
+            title: result.Title,
+            detect: result.Detect,
+            existsWaf: result.IsWAF,
+            waf: "WAF: " + result.WAF,
+            fingerprint: result.Fingerprints,
+            screenshot: result.Screenshot
+        })
+        fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
     });
     EventsOn("ActiveCounts", (count: number) => {
         form.count = count
@@ -161,8 +152,6 @@ const form = reactive({
 
 const detailDialog = ref(false)
 const selectedRow = ref();
-
-
 
 let fp = usePagination(form.fingerResult, 50)
 let vp = usePagination(form.vulResult, 50)
@@ -257,18 +246,12 @@ class Scanner {
 // 联动空间引擎
 
 const uncover = {
-    fofa: function () {
+    fofa: async function () {
         form.fofaDialog = false
-        ElMessage("正在导入FOFA数据，请稍后...")
-        FofaSearch(form.query, form.fofaNum.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true).then((result: FofaResult) => {
-            if (result.Error) {
-                return
-            }
-            form.url = ""
-            for (const item of result.Results!) {
-                form.url += item.URL + "\n"
-            }
-        })
+        let urls = await LinkFOFA(form.query, form.fofaNum)
+        if (urls != undefined) {
+            form.url = urls.join("\n")
+        }
     },
     hunter: async function () {
         form.hunterDialog = false
@@ -282,21 +265,6 @@ const uncover = {
 
 function filterHandlerSeverity(value: string, row: any): boolean {
     return row.severity === value;
-}
-// 设置css样式
-function getClassBySeverity(severity: string) {
-    switch (severity) {
-        case 'CRITICAL':
-            return 'severity-critical';
-        case 'HIGH':
-            return 'severity-high';
-        case 'MEDIUM':
-            return 'severity-medium';
-        case 'LOW':
-            return 'severity-low';
-        default:
-            return 'severity-info';
-    }
 }
 
 function transformedResult() {

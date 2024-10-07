@@ -17,8 +17,7 @@
                                 </div>
                             </template>
                             <el-tabs v-model="options.keywordActive" class="quake">
-                                <el-tab-pane v-for="item in quakeSyntaxOptions" :name="item.title"
-                                    :label="item.title">
+                                <el-tab-pane v-for="item in quakeSyntaxOptions" :name="item.title" :label="item.title">
                                     <el-table :data="item.data" class="keyword-search" @row-click="syntax.rowClick">
                                         <el-table-column width="300" property="key" label="例句">
                                             <template #default="scope">
@@ -216,7 +215,8 @@
                                         </el-icon>
                                     </template>
                                     <el-space direction="vertical">
-                                        <el-tag round type="success" v-for="component in scope.row.Component" style="width: 320px;">
+                                        <el-tag round type="success" v-for="component in scope.row.Component"
+                                            style="width: 320px;">
                                             {{ component }}</el-tag>
                                     </el-space>
                                 </el-popover>
@@ -306,7 +306,7 @@ const options = ({
         } else {
             host = row.IP
         }
-        if (row.Protocol == "http") { 
+        if (row.Protocol == "http") {
             BrowserOpenURL("http://" + host + ":" + row.Port)
         } else if (row.Protocol == "http/ssl") {
             BrowserOpenURL("https://" + host + ":" + row.Port)
@@ -580,18 +580,18 @@ const tableCtrl = ({
         )
     },
     searchFavicon: function () {
-    if (!quake.iconURL && !quake.iconFile) {
-        ElMessage.warning("请输入URL或者上传图标");
-        return;
-    }
-    let target = quake.iconFile || validateSingleURL(quake.iconURL) ? quake.iconURL : quake.batchFile
-    if (!target) {
-        return;
-    }
-    FaviconMd5(target).then((result: string) => {
-        tableCtrl.addTab(`favicon:${result}`, false);
-    });
-},
+        if (!quake.iconURL && !quake.iconFile) {
+            ElMessage.warning("请输入URL或者上传图标");
+            return;
+        }
+        let target = quake.iconFile || validateSingleURL(quake.iconURL) ? quake.iconURL : quake.batchFile
+        if (!target) {
+            return;
+        }
+        FaviconMd5(target).then((result: string) => {
+            tableCtrl.addTab(`favicon:${result}`, false);
+        });
+    },
     // type 0 choose txt , type 1 choose img
     handleFileupload: async function (type: number) {
         if (type == 0) {
@@ -749,7 +749,8 @@ async function exportData() {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-right: 26px !important; /* 给关闭按钮预留空间 */
+    padding-right: 26px !important;
+    /* 给关闭按钮预留空间 */
 }
 
 .quake-tabs :deep(.el-tabs__item:hover) {

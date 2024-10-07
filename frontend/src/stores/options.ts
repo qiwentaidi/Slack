@@ -591,47 +591,59 @@ export const fofaOptions = ({
 })
 
 export var crackDict = ({
-    options: ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "rdp", "postgresql", "vnc", "redis", "memcached", "mongodb"],
+    options: ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "rdp", "postgresql", "vnc", "redis", "memcached", "mongodb", "ldap", "mqtt", "socks5"],
     usernames: [
         {
             name: "FTP",
-            dic: ["ftp", "admin", "www", "web", "root", "db", "wwwroot", "data"],
+            dic: [] as string[]
         },
         {
             name: "SSH",
-            dic: ["root", "admin"]
+            dic: [] as string[]
         },
         {
             name: "Telnet",
-            dic: ["root", "admin"]
+            dic: [] as string[]
+        },
+        {
+            name: "LDAP",
+            dic: [] as string[]
         },
         {
             name: "SMB",
-            dic: ["administrator", "admin", "guest"]
+            dic: [] as string[]
+        },
+        {
+            name: "SOCKS5",
+            dic: [] as string[]
+        },
+        {
+            name: "MQTT",
+            dic: [] as string[]
         },
         {
             name: "Mssql",
-            dic: ["sa", "sql"]
+            dic: [] as string[]
         },
         {
             name: "Oracle",
-            dic: ["sys", "system", "admin", "test", "web", "orcl"]
+            dic: [] as string[]
         },
         {
             name: "Mysql",
-            dic: ["root", "mysql"]
+            dic: [] as string[]
         },
         {
             name: "RDP",
-            dic: ["administrator", "admin", "guest"]
+            dic: [] as string[]
         },
         {
             name: "Postgresql",
-            dic: ["postgres", "admin"]
+            dic: [] as string[]
         },
         {
             name: "VNC",
-            dic: ["admin", "administrator", "root"]
+            dic: [] as string[]
         },
     ],
     passwords: [] as string[],

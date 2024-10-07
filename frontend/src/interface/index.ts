@@ -70,13 +70,6 @@ export interface ProxyOptions {
     Password: string;
 }
 
-export interface FofaResult {
-    Error?: boolean;
-    Message?: string;
-    Size?: number;
-    Results?: Results[];
-}
-
 export interface Results {
     URL: string;
     Host: string;
@@ -150,12 +143,6 @@ export interface QuakeTipsData {
     Vul_count: number;
     Vendor_name: string;
     Ip_count: number;
-}
-
-
-export interface DefaultKeyValue {
-    text: string
-    value: string
 }
 
 export interface Uncover {

@@ -36,9 +36,12 @@ var DefaultPorts = map[string]string{
 	"ftp":        "21",
 	"ssh":        "22",
 	"telnet":     "23",
+	"ldap":       "389",
 	"smb":        "445", // SMB 通常使用445端口
+	"socks5":     "1080",
 	"oracle":     "1521",
 	"mssql":      "1433",
+	"mqtt":       "1883",
 	"mysql":      "3306",
 	"rdp":        "3389",
 	"postgresql": "5432",
@@ -90,5 +93,11 @@ func PortBrute(ctx context.Context, host string, usernames, passwords []string) 
 		MemcachedScan(ctx, u.Host)
 	case "mongodb":
 		MongodbScan(ctx, u.Host, usernames, passwords)
+	case "ldap":
+		LdapScan(ctx, u.Host, usernames, passwords)
+	case "mqtt":
+		MqttScan(ctx, u.Host, usernames, passwords)
+	case "socks5":
+		Socks5Scan(ctx, u.Host, usernames, passwords)
 	}
 }

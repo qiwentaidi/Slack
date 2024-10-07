@@ -66,3 +66,18 @@ export const eldividerStyle = computed(() => {
         }
     }
 });
+
+export function getClassBySeverity(severity: string) {
+    switch (severity) {
+        case 'CRITICAL':
+            return 'severity-critical';
+        case 'HIGH':
+            return 'severity-high';
+        case 'MEDIUM':
+            return 'severity-medium';
+        case 'LOW':
+            return 'severity-low';
+        default:
+            return 'severity-info';
+    }
+}
