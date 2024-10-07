@@ -62,8 +62,8 @@
                     :name="connection.host + ':' + connection.port" v-if="connection.connected">
                     <el-tabs type="card" closable class="editor-tabs" @tab-remove="removeTableTab(connection, $event)"
                         v-if="connection.tablePanes.length != 0">
-                        <el-tab-pane v-for="tableContent in connection.tablePanes"
-                            :label="tableContent.title" :name="tableContent.name">
+                        <el-tab-pane v-for="tableContent in connection.tablePanes" :label="tableContent.title"
+                            :name="tableContent.name">
                             <div v-html="tableContent.content"></div>
                         </el-tab-pane>
                     </el-tabs>
@@ -142,7 +142,7 @@
 <script lang="ts" setup>
 import { ref, reactive, onMounted } from 'vue'
 import { Connection, Setting, Plus, Delete, Coin, View, Postcard } from '@element-plus/icons-vue'
-import { AddConnection, ConnectDatabase, DisconnectDatabase, FetchDatabaseinfoFromMongodb, FetchDatabaseinfoFromMysql, FetchTableInfoFromMysql, GetAllDatabaseConnections, RemoveConnection, UpdateConnection } from 'wailsjs/go/main/Database'
+import { AddConnection, ConnectDatabase, DisconnectDatabase, FetchDatabaseinfoFromMongodb, FetchDatabaseinfoFromMysql, FetchDatabaseInfoFromOracle, FetchDatabaseInfoFromPostgres, FetchDatabaseinfoFromSqlServer, FetchTableInfoFromMysql, FetchTableInfoFromOracle, FetchTableInfoFromPostgres, FetchTableInfoFromSqlServer, GetAllDatabaseConnections, RemoveConnection, UpdateConnection } from 'wailsjs/go/main/Database'
 import { structs } from 'wailsjs/go/models'
 import { ElMessage } from 'element-plus'
 import mysqlIcon from '@/assets/icon/mysql.svg'
@@ -420,10 +420,13 @@ async function openConnection(connection: DatabaseConnection) {
             dbinfo = await FetchDatabaseinfoFromMysql()
             break
         case 'mssql':
+            dbinfo = await FetchDatabaseinfoFromSqlServer()
             break
         case 'oracle':
+            dbinfo = await FetchDatabaseInfoFromOracle()
             break
         case 'postgresql':
+            dbinfo = await FetchDatabaseInfoFromPostgres()
             break
         default:
             dbinfo = await FetchDatabaseinfoFromMongodb()
@@ -468,11 +471,29 @@ async function collectInfo(connection: DatabaseConnection) {
     // 切换到该连接的选项卡
     activeTab.value = `${connection.host}:${connection.port}`;
     connection.tablePanes = [];
-
+    let fetchTable: (arg1: string, arg2: string) => Promise<structs.RowData>
+    switch (connection.type) {
+        case 'mysql':
+            fetchTable = FetchTableInfoFromMysql
+            break
+        case 'mssql':
+            fetchTable = FetchTableInfoFromSqlServer
+            break
+        case 'oracle':
+            fetchTable = FetchTableInfoFromOracle
+            break
+        case 'postgresql':
+            fetchTable = FetchTableInfoFromPostgres
+            break
+        default:
+            ElMessage.warning("不支持该数据库类型进行信息收集")
+            return
+    }
     // 遍历数据库表
+ 
     for (const [dbname, tables] of Object.entries(dbinfo)) {
         for (const table of tables) {
-            let render = await FetchTableInfoFromMysql(dbname, table);
+            let render = await fetchTable(dbname, table);
             if (render.Rows && render.Rows.length > 0 && (matchColumn(render.Columns) || matchRows(render.Rows))) {
                 // 匹配到列名或行数据后，渲染表格
                 const tableDataHtml = renderToHtmlTable(render);

@@ -18,11 +18,23 @@ export function DisconnectDatabase(arg1:string):Promise<boolean>;
 
 export function ExecSqlStatement(arg1:string,arg2:Array<any>):Promise<boolean>;
 
+export function FetchDatabaseInfoFromOracle():Promise<{[key: string]: Array<string>}>;
+
+export function FetchDatabaseInfoFromPostgres():Promise<{[key: string]: Array<string>}>;
+
 export function FetchDatabaseinfoFromMongodb():Promise<{[key: string]: Array<string>}>;
 
 export function FetchDatabaseinfoFromMysql():Promise<{[key: string]: Array<string>}>;
 
+export function FetchDatabaseinfoFromSqlServer():Promise<{[key: string]: Array<string>}>;
+
 export function FetchTableInfoFromMysql(arg1:string,arg2:string):Promise<structs.RowData>;
+
+export function FetchTableInfoFromOracle(arg1:string,arg2:string):Promise<structs.RowData>;
+
+export function FetchTableInfoFromPostgres(arg1:string,arg2:string):Promise<structs.RowData>;
+
+export function FetchTableInfoFromSqlServer(arg1:string,arg2:string):Promise<structs.RowData>;
 
 export function GetAllDatabaseConnections():Promise<Array<structs.DatabaseConnection>>;
 

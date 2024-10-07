@@ -476,3 +476,305 @@ func (d *Database) FetchTableInfoFromMysql(dbName, tableName string) structs.Row
 		Rows:    data,
 	}
 }
+
+var sqlserver_system_db = []string{"master", "tempdb", "model", "msdb"}
+
+func (d *Database) FetchDatabaseinfoFromSqlServer() map[string][]string {
+	// Retrieve all databases
+	databases, err := d.OtherDatabase.Query("SELECT name FROM sys.databases")
+	if err != nil {
+		gologger.Warning(d.ctx, fmt.Sprintf("[sqlserver] 查询数据库失败: %v", err))
+		return nil
+	}
+	defer databases.Close()
+
+	// Iterate over each database
+	var databasesInfo = make(map[string][]string)
+	for databases.Next() {
+		var dbName string
+		if err := databases.Scan(&dbName); err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[sqlserver] 扫描数据库名称失败: %v", err))
+			continue
+		}
+		if util.ArrayContains(dbName, sqlserver_system_db) {
+			continue
+		}
+
+		// Retrieve tables for the current database
+		tables, err := d.OtherDatabase.Query(fmt.Sprintf("SELECT TABLE_NAME FROM [%s].INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", dbName))
+		if err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[sqlserver] 查询表失败: %v", err))
+			continue
+		}
+		defer tables.Close()
+
+		// Iterate over tables in the current database
+		for tables.Next() {
+			var tableName string
+			if err := tables.Scan(&tableName); err != nil {
+				gologger.Warning(d.ctx, fmt.Sprintf("[sqlserver] 扫描表名称失败: %v", err))
+				continue
+			}
+			databasesInfo[dbName] = append(databasesInfo[dbName], tableName)
+		}
+
+		// Check for any error encountered during iteration
+		if err := tables.Err(); err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[sqlserver] 遍历表时出错: %v", err))
+		}
+	}
+
+	// Check for any error encountered during iteration
+	if err := databases.Err(); err != nil {
+		gologger.Warning(d.ctx, fmt.Sprintf("[sqlserver] 遍历数据库时出错: %v", err))
+	}
+
+	return databasesInfo
+}
+
+func (d *Database) FetchTableInfoFromSqlServer(dbName, tableName string) structs.RowData {
+	// Construct SQL query to fetch the first three rows of the specified table
+	sqlQuery := fmt.Sprintf("SELECT TOP 3 * FROM [%s].dbo.[%s]", dbName, tableName)
+
+	// Execute the query
+	rows, err := d.OtherDatabase.Query(sqlQuery)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[sqlserver] 查询数据失败: %v", err))
+		return structs.RowData{}
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[sqlserver] 获取列名失败: %v", err))
+	}
+
+	// Create a two-dimensional slice to store data
+	var data [][]interface{}
+
+	// Iterate over each row
+	for rows.Next() {
+		// Create a slice to store each row's values
+		values := make([]interface{}, len(columns))
+		for i := range values {
+			values[i] = new(interface{})
+		}
+
+		// Scan the row data
+		if err := rows.Scan(values...); err != nil {
+			gologger.Debug(d.ctx, fmt.Sprintf("[sqlserver] 扫描行数据失败: %v", err))
+		}
+
+		// Append each row's data to the slice
+		row := make([]interface{}, len(columns))
+		for i, v := range values {
+			row[i] = *(v.(*interface{}))
+		}
+		data = append(data, row)
+	}
+
+	return structs.RowData{
+		Columns: columns,
+		Rows:    data,
+	}
+}
+
+var oracleSystemSchemas = []string{"SYS", "SYSTEM", "OUTLN", "XDB", "DBSNMP", "APPQOSSYS", "CTXSYS", "ORDDATA"}
+
+func (d *Database) FetchDatabaseInfoFromOracle() map[string][]string {
+	// Query to retrieve all schemas (users) from the Oracle database
+	schemas, err := d.OtherDatabase.Query("SELECT USERNAME FROM ALL_USERS")
+	if err != nil {
+		gologger.Warning(d.ctx, fmt.Sprintf("[oracle] 查询模式失败: %v", err))
+		return nil
+	}
+	defer schemas.Close()
+
+	var databaseInfo = make(map[string][]string)
+
+	for schemas.Next() {
+		var schemaName string
+		if err := schemas.Scan(&schemaName); err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[oracle] 扫描模式名称失败: %v", err))
+			continue
+		}
+
+		// Skip system schemas
+		if util.ArrayContains(schemaName, oracleSystemSchemas) {
+			continue
+		}
+
+		// Query to retrieve tables for the current schema
+		tables, err := d.OtherDatabase.Query(fmt.Sprintf("SELECT TABLE_NAME FROM ALL_TABLES WHERE OWNER = '%s'", schemaName))
+		if err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[oracle] 查询表失败: %v", err))
+			continue
+		}
+		defer tables.Close()
+
+		for tables.Next() {
+			var tableName string
+			if err := tables.Scan(&tableName); err != nil {
+				gologger.Warning(d.ctx, fmt.Sprintf("[oracle] 扫描表名称失败: %v", err))
+				continue
+			}
+			databaseInfo[schemaName] = append(databaseInfo[schemaName], tableName)
+		}
+
+		if err := tables.Err(); err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[oracle] 遍历表时出错: %v", err))
+		}
+	}
+
+	if err := schemas.Err(); err != nil {
+		gologger.Warning(d.ctx, fmt.Sprintf("[oracle] 遍历模式时出错: %v", err))
+	}
+
+	return databaseInfo
+}
+
+func (d *Database) FetchTableInfoFromOracle(schemaName, tableName string) structs.RowData {
+	// Construct SQL query to fetch the first three rows of the specified table
+	sqlQuery := fmt.Sprintf("SELECT * FROM %s.%s FETCH FIRST 3 ROWS ONLY", schemaName, tableName)
+
+	// Execute the query
+	rows, err := d.OtherDatabase.Query(sqlQuery)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[oracle] 查询表数据失败: %v", err))
+		return structs.RowData{}
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[oracle] 获取列名失败: %v", err))
+		return structs.RowData{}
+	}
+
+	// Create a 2D slice to store the data
+	var data [][]interface{}
+
+	// Iterate through each row
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		for i := range values {
+			values[i] = new(interface{})
+		}
+
+		if err := rows.Scan(values...); err != nil {
+			gologger.Debug(d.ctx, fmt.Sprintf("[oracle] 扫描行数据失败: %v", err))
+			continue
+		}
+
+		row := make([]interface{}, len(columns))
+		for i, v := range values {
+			row[i] = *(v.(*interface{}))
+		}
+		data = append(data, row)
+	}
+
+	return structs.RowData{
+		Columns: columns,
+		Rows:    data,
+	}
+}
+
+var postgresSystemSchemas = []string{"pg_catalog", "information_schema", "pg_toast"}
+
+func (d *Database) FetchDatabaseInfoFromPostgres() map[string][]string {
+	// Query to retrieve all schemas in PostgreSQL
+	schemas, err := d.OtherDatabase.Query("SELECT schema_name FROM information_schema.schemata")
+	if err != nil {
+		gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 查询模式失败: %v", err))
+		return nil
+	}
+	defer schemas.Close()
+
+	var databaseInfo = make(map[string][]string)
+
+	for schemas.Next() {
+		var schemaName string
+		if err := schemas.Scan(&schemaName); err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 扫描模式名称失败: %v", err))
+			continue
+		}
+
+		// Skip system schemas
+		if util.ArrayContains(schemaName, postgresSystemSchemas) {
+			continue
+		}
+
+		// Query to retrieve tables for the current schema
+		tables, err := d.OtherDatabase.Query(fmt.Sprintf("SELECT table_name FROM information_schema.tables WHERE table_schema = '%s'", schemaName))
+		if err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 查询表失败: %v", err))
+			continue
+		}
+		defer tables.Close()
+
+		for tables.Next() {
+			var tableName string
+			if err := tables.Scan(&tableName); err != nil {
+				gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 扫描表名称失败: %v", err))
+				continue
+			}
+			databaseInfo[schemaName] = append(databaseInfo[schemaName], tableName)
+		}
+
+		if err := tables.Err(); err != nil {
+			gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 遍历表时出错: %v", err))
+		}
+	}
+
+	if err := schemas.Err(); err != nil {
+		gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 遍历模式时出错: %v", err))
+	}
+
+	return databaseInfo
+}
+
+func (d *Database) FetchTableInfoFromPostgres(schemaName, tableName string) structs.RowData {
+	// Construct SQL query to fetch the first three rows of the specified table
+	sqlQuery := fmt.Sprintf("SELECT * FROM %s.%s LIMIT 3", schemaName, tableName)
+
+	// Execute the query
+	rows, err := d.OtherDatabase.Query(sqlQuery)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[postgres] 查询表数据失败: %v", err))
+		return structs.RowData{}
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[postgres] 获取列名失败: %v", err))
+		return structs.RowData{}
+	}
+
+	// Create a 2D slice to store the data
+	var data [][]interface{}
+
+	// Iterate through each row
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		for i := range values {
+			values[i] = new(interface{})
+		}
+
+		if err := rows.Scan(values...); err != nil {
+			gologger.Debug(d.ctx, fmt.Sprintf("[postgres] 扫描行数据失败: %v", err))
+			continue
+		}
+
+		row := make([]interface{}, len(columns))
+		for i, v := range values {
+			row[i] = *(v.(*interface{}))
+		}
+		data = append(data, row)
+	}
+
+	return structs.RowData{
+		Columns: columns,
+		Rows:    data,
+	}
+}

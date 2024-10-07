@@ -30,6 +30,14 @@ export function ExecSqlStatement(arg1, arg2) {
   return window['go']['main']['Database']['ExecSqlStatement'](arg1, arg2);
 }
 
+export function FetchDatabaseInfoFromOracle() {
+  return window['go']['main']['Database']['FetchDatabaseInfoFromOracle']();
+}
+
+export function FetchDatabaseInfoFromPostgres() {
+  return window['go']['main']['Database']['FetchDatabaseInfoFromPostgres']();
+}
+
 export function FetchDatabaseinfoFromMongodb() {
   return window['go']['main']['Database']['FetchDatabaseinfoFromMongodb']();
 }
@@ -38,8 +46,24 @@ export function FetchDatabaseinfoFromMysql() {
   return window['go']['main']['Database']['FetchDatabaseinfoFromMysql']();
 }
 
+export function FetchDatabaseinfoFromSqlServer() {
+  return window['go']['main']['Database']['FetchDatabaseinfoFromSqlServer']();
+}
+
 export function FetchTableInfoFromMysql(arg1, arg2) {
   return window['go']['main']['Database']['FetchTableInfoFromMysql'](arg1, arg2);
+}
+
+export function FetchTableInfoFromOracle(arg1, arg2) {
+  return window['go']['main']['Database']['FetchTableInfoFromOracle'](arg1, arg2);
+}
+
+export function FetchTableInfoFromPostgres(arg1, arg2) {
+  return window['go']['main']['Database']['FetchTableInfoFromPostgres'](arg1, arg2);
+}
+
+export function FetchTableInfoFromSqlServer(arg1, arg2) {
+  return window['go']['main']['Database']['FetchTableInfoFromSqlServer'](arg1, arg2);
 }
 
 export function GetAllDatabaseConnections() {

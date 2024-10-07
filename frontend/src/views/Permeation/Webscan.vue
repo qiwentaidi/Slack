@@ -514,9 +514,9 @@ async function ShowWebPictrue(filepath: string) {
         </el-tabs>
         <template #ctrl>
             <el-space :size="2">
-                <el-tooltip content="导入报告">
+                <!-- <el-tooltip content="导入报告">
                     <el-button :icon="Upload" @click="" />
-                </el-tooltip>
+                </el-tooltip> -->
                 <el-tooltip content="导出Excel">
                     <el-button :icon="exportIcon"
                         @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformedResult())" />
