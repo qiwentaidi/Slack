@@ -128,6 +128,7 @@
         </template>
     </el-dialog>
     <el-dialog v-model="settingDialog" title="设置" width="50%">
+        <el-alert :closable="false" style="margin-bottom: 10px;">{{tips}}</el-alert>
         <el-form :model="currentConnection">
             <el-form-item label="列名关键字">
                 <el-input v-model="global.database.columnsNameKeywords" type="textarea" :rows="3"></el-input>
@@ -135,7 +136,6 @@
                 <el-button type="primary" @click="SaveConfig" size="small" style="margin-inline: 10px;">保存</el-button>
             </el-form-item>
         </el-form>
-        <div v-html="renderedMarkdown(tips)"></div>
     </el-dialog>
 </template>
 
@@ -246,7 +246,6 @@ const currentConnection = reactive<DatabaseConnection>({
 })
 
 function chooseDefaultPort() {
-    alert(currentConnection.type)
     switch (currentConnection.type) {
         case 'mysql':
             currentConnection.port = 3306
@@ -425,7 +424,7 @@ async function openConnection(connection: DatabaseConnection) {
         case 'oracle':
             dbinfo = await FetchDatabaseInfoFromOracle()
             break
-        case 'postgresql':
+        case 'postgres':
             dbinfo = await FetchDatabaseInfoFromPostgres()
             break
         default:
@@ -455,8 +454,12 @@ const matchRows = (rows: any[][]): boolean => {
     return rows.some(row =>
         row.some(cell => {
             if (typeof cell === 'string') {
-                const decodedValue = atob(cell); // Base64 解码
-                return regexPatterns.some(pattern => pattern.test(decodedValue));
+                try {
+                    const decodedValue = atob(cell); // Base64 解码
+                    return regexPatterns.some(pattern => pattern.test(decodedValue));
+                } catch (error) {
+                    return regexPatterns.some(pattern => pattern.test(cell));
+                }
             }
             return false;
         })
@@ -466,6 +469,10 @@ const matchRows = (rows: any[][]): boolean => {
 async function collectInfo(connection: DatabaseConnection) {
     if (!connection.connected) {
         ElMessage.warning("请先连接数据库");
+        return;
+    }
+    if (connection.databaseCount == 0 || connection.databaseCount == undefined) {
+        ElMessage.warning("未发现系统数据库外的数据库，已跳过数据采集");
         return;
     }
     // 切换到该连接的选项卡
@@ -482,7 +489,7 @@ async function collectInfo(connection: DatabaseConnection) {
         case 'oracle':
             fetchTable = FetchTableInfoFromOracle
             break
-        case 'postgresql':
+        case 'postgres':
             fetchTable = FetchTableInfoFromPostgres
             break
         default:
@@ -525,8 +532,12 @@ function renderToHtmlTable(data: structs.RowData) {
         html += '<tr>';
         row.forEach(cell => {
             if (typeof cell === 'string') {
-                const decodedValue = atob(cell); // Base64 解码
-                html += `<td><div class="cell-content">${decodedValue}</div></td>`;
+                try {
+                    const decodedValue = atob(cell); // Base64 解码
+                    html += `<td><div class="cell-content">${decodedValue}</div></td>`;
+                } catch (error) {
+                    html += `<td><div class="cell-content">${cell}</div></td>`;
+                }
             } else {
                 html += `<td><div class="cell-content">${cell !== null ? cell : ''}</div></td>`;
             }
@@ -544,11 +555,7 @@ function removeTableTab(connection: DatabaseConnection, targetName: string) {
 
 const settingDialog = ref(false)
 
-const tips = `Tips: 在连接**MySQL**时，程序会自动忽略下面4个系统数据库，所以面板数据库数量会减少4个
-- performance_schema
-- information_schema
-- mysql
-- sys`
+const tips = `Tips: 在连接除Mongodb之外的数据库时，程序会自动忽略系统数据库，所以有时面板显示数据库数量为0`
 </script>
 
 <style scoped>
