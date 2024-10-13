@@ -602,19 +602,4 @@ const tips = `Tips: 在连接除Mongodb之外的数据库时，程序会自动�
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-.demo-tabs>.el-tabs__content {
-    padding: 32px;
-    font-size: 32px;
-    font-weight: 600;
-}
-
-.demo-tabs .custom-tabs-label .el-icon {
-    vertical-align: middle;
-}
-
-.demo-tabs .custom-tabs-label span {
-    vertical-align: middle;
-    margin-left: 4px;
-}
 </style>

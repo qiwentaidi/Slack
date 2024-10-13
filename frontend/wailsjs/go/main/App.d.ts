@@ -32,7 +32,9 @@ export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:
 
 export function FofaTips(arg1:string):Promise<space.TipsResult>;
 
-export function Fscan2Txt(arg1:string):Promise<string>;
+export function Fscan2Txt(arg1:string):Promise<{[key: string]: Array<string>}>;
+
+export function FscanCommand(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<string>;
 
 export function GOOS():Promise<string>;
 

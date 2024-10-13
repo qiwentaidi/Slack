@@ -54,6 +54,10 @@ export function Fscan2Txt(arg1) {
   return window['go']['main']['App']['Fscan2Txt'](arg1);
 }
 
+export function FscanCommand(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['FscanCommand'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function GOOS() {
   return window['go']['main']['App']['GOOS']();
 }

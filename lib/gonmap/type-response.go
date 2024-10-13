@@ -1,14 +1,14 @@
 package gonmap
 
+type Status int
+
 const (
 	Closed     Status = 0x000a1
-	Open              = 0x000b2
-	Matched           = 0x000c3
-	NotMatched        = 0x000d4
-	Unknown           = 0x000e5
+	Open       Status = 0x000b2
+	Matched    Status = 0x000c3
+	NotMatched Status = 0x000d4
+	Unknown    Status = 0x000e5
 )
-
-type Status int
 
 func (s Status) String() string {
 	switch s {

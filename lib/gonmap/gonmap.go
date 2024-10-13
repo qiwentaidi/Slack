@@ -30,7 +30,7 @@ func initWithFilter(filter int) {
 		filter:  filter,
 		timeout: time.Second,
 
-		probeUsed:          emptyProbeList,
+		probeUsed:          []string{},
 		bypassAllProbePort: []int{161, 137, 139, 135, 389, 443, 548, 1433, 6379, 1883, 5432, 1521, 3389, 3388, 3389, 33890, 33900},
 		sslSecondProbeMap:  []string{"TCP_TerminalServerCookie", "TCP_TerminalServer"},
 		allProbeMap:        []string{"TCP_GetRequest", "TCP_NULL", "TCP_JDWP", "TCP_redis-server", "TCP_ms-sql-s"},

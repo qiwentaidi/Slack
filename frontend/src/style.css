@@ -278,3 +278,18 @@ html {
   display: flex;
   gap: 7px;
 }
+
+.demo-tabs>.el-tabs__content {
+  padding: 32px;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.demo-tabs .custom-tabs-label .el-icon {
+  vertical-align: middle;
+}
+
+.demo-tabs .custom-tabs-label span {
+  vertical-align: middle;
+  margin-left: 4px;
+}

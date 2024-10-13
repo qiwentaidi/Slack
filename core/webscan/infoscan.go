@@ -123,6 +123,13 @@ func (s *FingerScanner) NewFingerScan() {
 			}
 			return
 		}
+
+		// 跟随JS重定向，并替换成重定向后的数据
+		redirectBody := s.GetJSRedirectResponse(u, string(body))
+		if redirectBody != nil {
+			body = redirectBody
+		}
+
 		title, server, content_type := s.GetHeaderInfo(body, resp)
 		headers, _, _ := DumpResponseHeadersAndRaw(resp)
 		hashValue, md5Value := FaviconHash(u, s.client)
@@ -508,4 +515,33 @@ func (s *FingerScanner) GetHeaderInfo(body []byte, resp *http.Response) (title, 
 		}
 	}
 	return
+}
+
+func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte {
+	var nextCheckUrl string
+	newPath := checkJSRedirect(respRaw)
+	if newPath == "" {
+		return nil
+	}
+	newPath = strings.Trim(newPath, " ")
+	newPath = strings.Trim(newPath, "'")
+	newPath = strings.Trim(newPath, "\"")
+	if strings.HasPrefix(newPath, "https://") || strings.HasPrefix(newPath, "http://") {
+		if strings.Contains(newPath, u.Host) {
+			nextCheckUrl = newPath
+		}
+	} else {
+		if len(newPath) > 0 {
+			if newPath[0] == '/' {
+				newPath = newPath[1:]
+			}
+		}
+		nextCheckUrl = getRealPath(u.Scheme+"://"+u.Host) + "/" + newPath
+
+	}
+	_, body, err := clients.NewSimpleGetRequest(nextCheckUrl, s.client)
+	if err != nil {
+		return nil
+	}
+	return body
 }

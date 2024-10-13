@@ -1,5 +1,5 @@
 <template>
-  <el-container style="height: 100vh;">
+  <el-container style="height: 100%;">
     <el-aside width="200px">
       <el-menu default-active="0">
         <el-menu-item v-for="(item, index) in setupOptions" :index="index.toString()" @click="selectItem">

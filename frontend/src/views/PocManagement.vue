@@ -141,7 +141,7 @@ async function savePoc() {
     result ? ElMessage.success("Poc saved successfully") : ElMessage.error("Poc save failed")
 }
 
-async function deletePoc(pocName: string, finerprints: string[]) {
+async function deletePoc(pocName: string) {
     let filepath = global.PATH.homedir + "/slack/config/pocs/" + pocName + ".yaml"
     if (await RemoveFile(filepath)) {
         ElMessage.success("Poc deleted successfully")
@@ -181,7 +181,7 @@ async function deletePoc(pocName: string, finerprints: string[]) {
                 <template #default="scope">
                     <el-button type="primary" link @click="readPoc(scope.row.Name)">查看</el-button>
                     <el-popconfirm title="Are you sure to delete poc?"
-                        @confirm="deletePoc(scope.row.Name, scope.row.AssociatedFingerprint)">
+                        @confirm="deletePoc(scope.row.Name)">
                         <template #reference>
                             <el-button type="primary" link>移除</el-button>
                         </template>

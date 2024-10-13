@@ -17,6 +17,7 @@ import (
 	"slack-wails/core/dirsearch"
 	"slack-wails/core/exp/hikvision"
 	"slack-wails/core/exp/nacos"
+	"slack-wails/core/fscan"
 	"slack-wails/core/info"
 	"slack-wails/core/isic"
 	"slack-wails/core/jsfind"
@@ -137,8 +138,12 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 }
 
 // fscan
-func (a *App) Fscan2Txt(content string) string {
-	return core.ExtractFscanResult(content)
+func (a *App) Fscan2Txt(content string) map[string][]string {
+	return fscan.ExtractResult(content)
+}
+
+func (a *App) FscanCommand(protocol, ip, port, username, password string) string {
+	return fscan.ConnectAndExecute(protocol, ip, port, username, password)
 }
 
 // thinkdict

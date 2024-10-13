@@ -2,6 +2,7 @@ package gonmap
 
 import (
 	"fmt"
+	"slack-wails/lib/util"
 	"strings"
 	"time"
 
@@ -33,36 +34,6 @@ type Nmap struct {
 
 //扫描类
 
-// func (n *Nmap) ScanTimeout(ip string, port int, timeout time.Duration) (status Status, response *Response) {
-// 	n.timeout = timeout
-// 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-// 	var resChan = make(chan bool)
-
-// 	defer func() {
-// 		close(resChan)
-// 		cancel()
-// 	}()
-
-// 	go func() {
-// 		defer func() {
-// 			if r := recover(); r != nil {
-// 				if fmt.Sprint(r) != "send on closed channel" {
-// 					panic(r)
-// 				}
-// 			}
-// 		}()
-// 		status, response = n.Scan(ip, port)
-// 		resChan <- true
-// 	}()
-
-// 	select {
-// 	case <-ctx.Done():
-// 		return Closed, nil
-// 	case <-resChan:
-// 		return status, response
-// 	}
-// }
-
 func (n *Nmap) Scan(ip string, port int, timeout time.Duration) (status Status, response *Response) {
 	n.timeout = timeout
 	var probeNames ProbeList
@@ -73,7 +44,7 @@ func (n *Nmap) Scan(ip string, port int, timeout time.Duration) (status Status, 
 	}
 	probeNames = append(probeNames, n.sslProbeMap...)
 	//探针去重
-	probeNames = probeNames.removeDuplicate()
+	probeNames = util.RemoveDuplicates(probeNames)
 
 	firstProbe := probeNames[0]
 	status, response = n.getRealResponse(ip, port, n.timeout, firstProbe)
