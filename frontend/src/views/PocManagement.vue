@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
-import { Search, CirclePlusFilled } from "@element-plus/icons-vue";
+import { Search, CirclePlusFilled, Delete, Plus } from "@element-plus/icons-vue";
 import { FileDialog, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/main/File';
 import global from '@/global';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/main/App';
@@ -8,6 +8,9 @@ import { Copy } from '@/util';
 import { PocDetail } from '@/interface';
 import usePagination from '@/usePagination';
 import { ElMessage } from 'element-plus';
+import CustomTabs from '@/components/CustomTabs.vue';
+import saveIcon from '@/assets/icon/save.svg'
+import { SaveConfig } from '@/config';
 
 onMounted(async () => {
     const pocMap = await GetFingerPocMap();
@@ -29,6 +32,9 @@ onMounted(async () => {
             uniqueValues.add(item);
         }
     });
+    highlightFingerOptions.value = fingerOptions.value.filter(
+        option => !global.webscan.highlight_fingerprints.includes(option.value)
+    );
 });
 
 const pocs = ref<PocDetail[]>([])
@@ -110,8 +116,10 @@ async function checkDuplicate() {
 }
 
 const selectFinger = ref<string[]>([])
+const selectHighlightFinger = ref<string[]>([])
 
 const fingerOptions = ref<{ label: string, value: string }[]>([])
+var highlightFingerOptions = ref<{ label: string, value: string }[]>([])
 
 async function importFile() {
     let path = await FileDialog("*.yaml")
@@ -149,82 +157,130 @@ async function deletePoc(pocName: string) {
         ElMessage.warning("Poc delete failed")
     }
 }
+
+const activeTabs = ref("poc")
+
+function addFingerprint(fingerprints: string[]) {
+    ElMessage.success("添加成功")
+    global.webscan.highlight_fingerprints.push(...fingerprints)
+}
+function deleteFingerprint(fingerprint: string) {
+    ElMessage.success("删除成功")
+    global.webscan.highlight_fingerprints.splice(global.webscan.highlight_fingerprints.indexOf(fingerprint), 1)
+}
 </script>
 
 <template>
-    <el-card v-show="step == 0">
-        <template #header>
-            <div class="my-header">
-                <el-input :suffix-icon="Search" v-model="filter" @input="filterPocList()" placeholder="根据规则过滤POC"
-                    style="width: 50%;">
-                    <template #prepend>
-                        <el-select v-model="defaultFilter" style="width: 150px;">
-                            <el-option v-for="item in filterOptions" :key="item.value" :label="item.label"
-                                :value="item.value">
-                            </el-option>
-                        </el-select>
+    <CustomTabs>
+        <el-tabs v-model="activeTabs" type="card">
+            <el-tab-pane label="POC管理" name="poc">
+                <el-card v-show="step == 0">
+                    <template #header>
+                        <div class="my-header">
+                            <el-input :suffix-icon="Search" v-model="filter" @input="filterPocList()"
+                                placeholder="根据规则过滤POC" style="width: 50%;">
+                                <template #prepend>
+                                    <el-select v-model="defaultFilter" style="width: 150px;">
+                                        <el-option v-for="item in filterOptions" :key="item.value" :label="item.label"
+                                            :value="item.value">
+                                        </el-option>
+                                    </el-select>
+                                </template>
+                            </el-input>
+                            <el-button :icon="CirclePlusFilled" @click="step = 1">POC</el-button>
+                        </div>
                     </template>
-                </el-input>
-                <el-button :icon="CirclePlusFilled" @click="step = 1">POC</el-button>
-            </div>
-        </template>
-        <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 170px);">
-            <el-table-column prop="Name" label="名称" />
-            <el-table-column label="关联指纹" width="400px">
-                <template #default="scope">
-                    <div class="finger-container">
-                        <el-tag v-for="item in scope.row.AssociatedFingerprint">{{ item }}</el-tag>
+                    <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 230px);">
+                        <el-table-column prop="Name" label="名称" />
+                        <el-table-column label="关联指纹" width="400px">
+                            <template #default="scope">
+                                <div class="finger-container">
+                                    <el-tag v-for="item in scope.row.AssociatedFingerprint">{{ item }}</el-tag>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="操作" width="200px" align="center">
+                            <template #default="scope">
+                                <el-button type="primary" link @click="readPoc(scope.row.Name)">查看</el-button>
+                                <el-popconfirm title="Are you sure to delete poc?" @confirm="deletePoc(scope.row.Name)">
+                                    <template #reference>
+                                        <el-button type="primary" link>移除</el-button>
+                                    </template>
+                                </el-popconfirm>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <div class="my-header" style="margin-top: 5px;">
+                        <div></div>
+                        <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
+                            @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+                            :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100]"
+                            :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next, jumper"
+                            :total="pagination.table.result.length">
+                        </el-pagination>
                     </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="操作" width="200px" align="center">
-                <template #default="scope">
-                    <el-button type="primary" link @click="readPoc(scope.row.Name)">查看</el-button>
-                    <el-popconfirm title="Are you sure to delete poc?"
-                        @confirm="deletePoc(scope.row.Name)">
-                        <template #reference>
-                            <el-button type="primary" link>移除</el-button>
+                </el-card>
+                <div v-show="step == 1">
+                    <el-page-header @back="step = 0">
+                        <template #content>
+                            <span>添加POC</span>
                         </template>
-                    </el-popconfirm>
-                </template>
-            </el-table-column>
-        </el-table>
-        <div class="my-header" style="margin-top: 5px;">
-            <div></div>
-            <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
-                @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
-                :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100]"
-                :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next, jumper"
-                :total="pagination.table.result.length">
-            </el-pagination>
-        </div>
-    </el-card>
-    <div v-show="step == 1">
-        <el-page-header @back="step = 0">
-            <template #content>
-                <span>添加POC</span>
-            </template>
-            <template #extra>
-                <div style="display: flex;">
-                    <el-button @click="importFile">导入</el-button>
-                    <el-button @click="savePoc">保存</el-button>
+                        <template #extra>
+                            <div style="display: flex;">
+                                <el-button @click="importFile">导入</el-button>
+                                <el-button @click="savePoc">保存</el-button>
+                            </div>
+                        </template>
+                    </el-page-header>
+                    <el-divider />
+                    <el-form :model="poc" label-width="auto">
+                        <el-form-item label="POC名称">
+                            <el-input v-model="poc.Name" placeholder="优先填写CVE、CNVD等编号，导入会自动读取id值" />
+                        </el-form-item>
+                        <el-form-item label="指纹查询">
+                            <el-select-v2 v-model="selectFinger" placeholder="POC必须要填写tags信息，相关指纹可通过此处查找" filterable
+                                :options="fingerOptions" multiple clearable />
+                        </el-form-item>
+                        <el-form-item label="POC内容">
+                            <el-input v-model="poc.Content" type="textarea" resize="none" placeholder="Nulcei Yaml POC"
+                                style="height: 65vh;"></el-input>
+                        </el-form-item>
+                    </el-form>
                 </div>
-            </template>
-        </el-page-header>
-        <el-divider />
-        <el-form :model="poc" label-width="auto">
-            <el-form-item label="POC名称">
-                <el-input v-model="poc.Name" placeholder="优先填写CVE、CNVD等编号，导入会自动读取id值" />
-            </el-form-item>
-            <el-form-item label="指纹查询">
-                <el-select-v2 v-model="selectFinger" placeholder="POC必须要填写tags信息，相关指纹可通过此处查找" filterable :options="fingerOptions" multiple />
-            </el-form-item>
-            <el-form-item label="POC内容">
-                <el-input v-model="poc.Content" type="textarea" resize="none" placeholder="Nulcei Yaml POC"
-                    style="height: 65vh;"></el-input>
-            </el-form-item>
-        </el-form>
-    </div>
+            </el-tab-pane>
+            <el-tab-pane label="指纹管理" name="finger">
+                <el-card>
+                    <template #header>
+                        <div class="my-header">
+                            <el-select-v2 v-model="selectHighlightFinger" placeholder="请选择需要高亮的指纹" filterable
+                                :options="highlightFingerOptions" multiple clearable />
+                            <el-space style="margin-left: 10px">
+                                <el-button :icon="CirclePlusFilled" type="primary" @click="addFingerprint(selectHighlightFinger)">添加</el-button>
+                                <el-button :icon="saveIcon" type="primary" @click="SaveConfig">保存</el-button>
+                            </el-space>
+                        </div>
+                    </template>
+                    <el-table :data="global.webscan.highlight_fingerprints" style="height: calc(100vh - 200px);">
+                        <el-table-column type="index" width="50" />
+                        <el-table-column label="Fingerprint">
+                            <template #default="scope">
+                                {{ scope.row }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="Operation" width="150" align="center">
+                            <template #default="scope">
+                                <el-button type="danger" :icon="Delete" @click="deleteFingerprint(scope.row)" />
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-card>
+            </el-tab-pane>
+        </el-tabs>
+        <template #ctrl>
+            <el-tag :hit="true" v-show="activeTabs == 'finger'">指纹添加或删除成功后记得保存</el-tag>
+        </template>
+    </CustomTabs>
+
     <el-drawer v-model="detailDialog" size="70%">
         <template #header>
             <el-button text bg>
@@ -248,6 +304,7 @@ async function deletePoc(pocName: string) {
     position: absolute;
     top: 90px;
     right: 30px;
-    z-index: 1000; /* Ensure it's above the code */
+    z-index: 1000;
+    /* Ensure it's above the code */
 }
 </style>

@@ -47,7 +47,7 @@ export default {
         'theme': '主题',
         'workflow': '工作流',
         'isic': '互联网敏感信息采集',
-        'poc_manage': 'Poc管理',
+        'poc_manage': 'POC和指纹管理',
         'script': '脚本管理',
         'extract_database_info': "数据库自动取样",
     },

@@ -136,14 +136,3 @@ func MergePosition(position structs.Position) string {
 	}
 	return strings.Join(fields, position.Connector)
 }
-
-func RemoveFingerprintsRightStar(fingerprints []string) []string {
-	var news []string
-	if len(fingerprints) == 0 {
-		return news
-	}
-	for _, finger := range fingerprints {
-		news = append(news, strings.TrimRight(finger, "*"))
-	}
-	return news
-}

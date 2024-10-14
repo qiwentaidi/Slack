@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Setting } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, Callgologger, StopWebscan, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, TrimRightSubString, getProxy, UploadFileAndRead } from '@/util'
@@ -446,7 +446,7 @@ async function ShowWebPictrue(filepath: string) {
                             <div class="finger-container">
                                 <el-tag v-for="finger in scope.row.fingerprint" :key="finger"
                                     :effect="scope.row.detect === 'Default' ? 'light' : 'dark'"
-                                    :type="finger.endsWith('*') ? 'danger' : 'primary'">{{ TrimRightSubString(finger,
+                                    :type="global.webscan.highlight_fingerprints.includes(finger) ? 'danger' : 'primary'">{{ TrimRightSubString(finger,
                                         "*") }}</el-tag>
                                 <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
                             </div>
@@ -514,9 +514,6 @@ async function ShowWebPictrue(filepath: string) {
         </el-tabs>
         <template #ctrl>
             <el-space :size="2">
-                <!-- <el-tooltip content="导入报告">
-                    <el-button :icon="Upload" @click="" />
-                </el-tooltip> -->
                 <el-tooltip content="导出Excel">
                     <el-button :icon="exportIcon"
                         @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformedResult())" />

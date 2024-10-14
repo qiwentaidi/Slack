@@ -66,9 +66,9 @@ async function LoadConfig() {
     Object.assign(global.jsfind, result["jsfind"])
     Object.assign(global.webscan, result["webscan"])
     Object.assign(global.database, result["database"])
-  }
-  if (global.database.columnsNameKeywords == "") {
-    SaveConfig()
+    if (!result["webscan"]["highlight_fingerprints"] || global.database.columnsNameKeywords == "") {
+      SaveConfig()
+    }
   }
   await ReadCrackDict()
 }

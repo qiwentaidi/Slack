@@ -16,6 +16,7 @@
     "@types/node": "^20.9.1",
     "async": "^3.2.5",
     "crypto-js": "^4.2.0",
+    "el-virtual-transfer": "^1.4.0",
     "element-plus": "^2.8.0",
     "highlight.js": "^11.10.0",
     "jsencrypt": "^3.3.2",

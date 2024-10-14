@@ -65,6 +65,7 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 		return
 	}
 	// load targets and optionally probe non http/https targets
+	gologger.Info(ctx, fmt.Sprintf("[nuclei] check vuln: %s", o.URL))
 	ne.LoadTargets([]string{o.URL}, false)
 	err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
 		gologger.Success(ctx, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))

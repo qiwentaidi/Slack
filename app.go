@@ -518,7 +518,7 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 			gologger.Info(a.ctx, fmt.Sprintf("正在扫描第%d/%d个目标", id, count))
 			webscan.NewNucleiEngine(a.ctx, proxy, webscan.NucleiOption{
 				URL:          target,
-				Tags:         util.RemoveFingerprintsRightStar(tags),
+				Tags:         util.RemoveDuplicates(tags),
 				TemplateFile: options.TemplateFiles,
 			})
 			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)

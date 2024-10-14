@@ -474,7 +474,7 @@ const filter = ({
 
         </el-tab-pane>
         <el-tab-pane label="其他信息提取" name="other">
-            <el-form label-width="50px">
+            <el-form :model="form" label-width="50px">
                 <el-form-item label="内容">
                     <el-input v-model="form.input" type="textarea" :rows="7" placeholder="请输入内容" />
                     <el-button link size="small" :icon="Upload" @click="uploadFile"
