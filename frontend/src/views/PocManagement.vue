@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
-import { Search, CirclePlusFilled, Delete, Plus } from "@element-plus/icons-vue";
+import { Search, CirclePlusFilled, Delete, Upload } from "@element-plus/icons-vue";
 import { FileDialog, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/main/File';
 import global from '@/global';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/main/App';
@@ -10,6 +10,8 @@ import usePagination from '@/usePagination';
 import { ElMessage } from 'element-plus';
 import CustomTabs from '@/components/CustomTabs.vue';
 import saveIcon from '@/assets/icon/save.svg'
+import bugIcon from '@/assets/icon/bug.svg'
+import fingerpirntIcon from '@/assets/icon/fingerprint.svg'
 import { SaveConfig } from '@/config';
 
 onMounted(async () => {
@@ -172,8 +174,16 @@ function deleteFingerprint(fingerprint: string) {
 
 <template>
     <CustomTabs>
-        <el-tabs v-model="activeTabs" type="card">
-            <el-tab-pane label="POC管理" name="poc">
+        <el-tabs v-model="activeTabs" type="card" class="demo-tabs">
+            <el-tab-pane name="poc">
+                <template #label>
+                    <span class="custom-tabs-label">
+                        <el-icon>
+                            <bugIcon />
+                        </el-icon>
+                        <span>POC管理</span>
+                    </span>
+                </template>
                 <el-card v-show="step == 0">
                     <template #header>
                         <div class="my-header">
@@ -226,10 +236,10 @@ function deleteFingerprint(fingerprint: string) {
                             <span>添加POC</span>
                         </template>
                         <template #extra>
-                            <div style="display: flex;">
-                                <el-button @click="importFile">导入</el-button>
-                                <el-button @click="savePoc">保存</el-button>
-                            </div>
+                            <el-button-group>
+                                <el-button type="primary" :icon="Upload" @click="importFile">导入</el-button>
+                                <el-button type="primary" :icon="saveIcon" @click="savePoc">保存</el-button>
+                            </el-button-group>
                         </template>
                     </el-page-header>
                     <el-divider />
@@ -248,7 +258,15 @@ function deleteFingerprint(fingerprint: string) {
                     </el-form>
                 </div>
             </el-tab-pane>
-            <el-tab-pane label="指纹管理" name="finger">
+            <el-tab-pane name="finger">
+                <template #label>
+                    <span class="custom-tabs-label">
+                        <el-icon>
+                            <fingerpirntIcon />
+                        </el-icon>
+                        <span>指纹管理</span>
+                    </span>
+                </template>
                 <el-card>
                     <template #header>
                         <div class="my-header">
