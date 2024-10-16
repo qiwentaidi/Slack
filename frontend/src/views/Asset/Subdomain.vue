@@ -3,7 +3,7 @@ import global from "@/global";
 import { Copy, ReadLine, transformArrayFields } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { reactive, ref, onMounted } from "vue";
-import { StopSubdomain, Subdomain } from "wailsjs/go/main/App";
+import { ExitScanner, Subdomain } from "wailsjs/go/main/App";
 import { CheckFileStat, FileDialog } from "wailsjs/go/main/File";
 import { ElMessage, ElNotification } from 'element-plus'
 import { Menu, CopyDocument } from '@element-plus/icons-vue';
@@ -77,7 +77,7 @@ async function NewTask() {
             await task.NewRunner()
         }
     } else {
-        await StopSubdomain()
+        ExitScanner("[subdomain]")
         config.runningStatus = false
         ElNotification.error({
             message: "用户已终止扫描任务",

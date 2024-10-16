@@ -6,7 +6,7 @@ import { ElMessage } from 'element-plus';
 import async from 'async';
 import global from '@/global';
 import { Copy, ReadLine, SplitTextArea, UploadFileAndRead } from '@/util';
-import { PortBrute, Callgologger, StopPortBrute } from 'wailsjs/go/main/App';
+import { PortBrute, Callgologger, ExitScanner } from 'wailsjs/go/main/App';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { BruteResult } from '@/interface';
 import usePagination from '@/usePagination';
@@ -114,7 +114,7 @@ async function NewScanner() {
 
 function stopScan() {
     if (config.runningStatus) {
-        StopPortBrute()
+        ExitScanner("[portbrute]")
         config.runningStatus = false
         ElMessage.error("用户已终止任务");
     }

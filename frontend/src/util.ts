@@ -1,17 +1,7 @@
 import { ElMessage, ElNotification } from "element-plus";
 import global from "./global";
-import {
-  Callgologger,
-  CheckTarget,
-  GoFetch,
-  Sock5Connect,
-} from "wailsjs/go/main/App";
-import {
-  CheckFileStat,
-  FileDialog,
-  ReadFile,
-  RemoveOldClient,
-} from "wailsjs/go/main/File";
+import { Callgologger, CheckTarget, GoFetch, Sock5Connect } from "wailsjs/go/main/App";
+import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
 import { ProxyOptions, File } from "./interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
@@ -75,8 +65,7 @@ export function CopyALL(filed: string[]) {
 export function SplitTextArea(textarea: string) {
   let lines = textarea.split(/[(\r\n)\r\n]+/); // 根据换行或者回车进行识别
   lines = lines.filter((item) => item.trim() !== ""); // 删除空项并去除左右空格
-  lines = Array.from(new Set(lines)); // 去重
-  return lines;
+  return Array.from(new Set(lines));;
 }
 
 export function splitInt(n: number, slice: number): number[] {

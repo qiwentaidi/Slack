@@ -56,7 +56,7 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 	}
 	var proxys string
 	if proxy.Enabled {
-		proxys = fmt.Sprintf("%s://%s:%d", proxy.Mode, proxy.Address, proxy.Port)
+		proxys = fmt.Sprintf("%s://%s:%s@%s:%d", proxy.Mode, proxy.Username, proxy.Password, proxy.Address, proxy.Port)
 		options = append(options, nuclei.WithProxy([]string{proxys}, false)) // -proxy
 	}
 	ne, err := nuclei.NewNucleiEngineCtx(context.Background(), options...)

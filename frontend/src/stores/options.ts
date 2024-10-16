@@ -645,6 +645,10 @@ export var crackDict = ({
             name: "VNC",
             dic: [] as string[]
         },
+        {
+            name: "Mongodb",
+            dic: [] as string[]
+        }
     ],
     passwords: [] as string[],
 })

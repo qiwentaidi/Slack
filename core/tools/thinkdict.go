@@ -11,7 +11,7 @@ import (
 
 var weakPasswordList = []string{"123456", "000000", "aa123456", "Aa123456", "Abc123!", "Abc123!@#", "abc123!", "abc1234!", "@bcd1234", "abc123!@#", "Abc123!@#", "666666", "888888", "88888888", "#EDC4rfv", "abcABC123", "1qaz!@#$", "admin@123", "Admin@123", "admin@1234", "Admin@1234", "QAZwsx123", "Pa$$w0rd", "P@ssw0rd", "P@$$word", "P@$$word123", "Abcd1234", "!QAZ2wsx", "!QAZ3edc", "2wsx#EDC", "1!qaz2@wsx", "1q2w3e4r", "1234abcd", "1234qwer", "1qaz!QAZ", "1qaz2wsx", "1qaz@WSX", "1qaz@WSX#EDC", "!q2w3e4r", "1234qwer", "1234QWER", "QWER!@#$", "Passwd@123", "Passwd12", "Passwd@123456", "P@ssw0rd", "1qaz@WSX#EDC", "p@ssw0rd", "qazasd123", "qazwsxedc123", "qweasdzxcqaz123", "asdf1234", "123456Aa", "Aa123456", "123456!Aa", "111111Aa", "111111"}
 
-func GenerateDict(userNameCN, userNameEN, companyName, companyDomain, birthday, jobNumber, connectWord string, weakList []string) (dicts []string) {
+func (t *Tools) GenerateDict(userNameCN, userNameEN, companyName, companyDomain, birthday, jobNumber, connectWord string, weakList []string) (dicts []string) {
 	names := []string{Chinese2PinyinQuanPin(userNameCN), Chinese2PinyinFirstLetter(userNameCN), Chinese2PinyinHalfQuanPin(userNameCN), userNameEN}
 	companyNames := []string{Chinese2PinyinQuanPin(companyName), Chinese2PinyinFirstLetter(companyName)}
 	year := time.Now().Year()

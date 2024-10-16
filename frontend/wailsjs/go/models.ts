@@ -567,6 +567,42 @@ export namespace space {
 
 export namespace structs {
 	
+	export class AntivirusResult {
+	    Process: string;
+	    Pid: string;
+	    Name: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AntivirusResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Process = source["Process"];
+	        this.Pid = source["Pid"];
+	        this.Name = source["Name"];
+	    }
+	}
+	export class AuthPatch {
+	    MS: string;
+	    Patch: string;
+	    Description: string;
+	    System: string;
+	    Reference: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AuthPatch(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.MS = source["MS"];
+	        this.Patch = source["Patch"];
+	        this.Description = source["Description"];
+	        this.System = source["System"];
+	        this.Reference = source["Reference"];
+	    }
+	}
 	export class Children {
 	    Name: string;
 	    Type: string;

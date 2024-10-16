@@ -4,7 +4,7 @@ import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, UploadFileAndRead } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
-import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, StopPortScan, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
+import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, ExitScanner, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
 import { PortScanData } from '@/interface';
@@ -194,7 +194,7 @@ const ctrl = reactive({
     stop: function () {
         if (ctrl.runningStatus) {
             ctrl.runningStatus = false
-            StopPortScan()
+            ExitScanner("[portscan]")
             ElMessage({
                 showClose: true,
                 message: '已停止任务',

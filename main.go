@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	core "slack-wails/core/tools"
 
 	rt "runtime"
 
@@ -61,6 +62,7 @@ func main() {
 			app,
 			file,
 			db,
+			&core.Tools{},
 		},
 		Mac: &mac.Options{
 			TitleBar:            mac.TitleBarHiddenInset(),

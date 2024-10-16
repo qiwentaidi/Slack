@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { LoadDirsearchDict, DirScan, StopDirScan } from "wailsjs/go/main/App";
+import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/main/App";
 import { SplitTextArea, Copy, ReadLine } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
@@ -127,7 +127,7 @@ async function dirscan() {
             ds.scanner()
         }
     } else {
-        await StopDirScan()
+        ExitScanner("[dirsearch]")
         config.runningStatus = false
         ElNotification.error({
             message: "用户已终止扫描任务",

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Setting } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, Callgologger, StopWebscan, ViewPictrue } from 'wailsjs/go/main/App'
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View } from '@element-plus/icons-vue';
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, Callgologger, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, TrimRightSubString, getProxy, UploadFileAndRead } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
@@ -169,7 +169,7 @@ async function startScan() {
 function stopScan() {
     if (form.runnningStatus) {
         form.runnningStatus = false
-        StopWebscan()
+        ExitScanner("[webscan]")
         ElMessage.warning("任务已停止");
     }
 }
@@ -474,7 +474,7 @@ async function ShowWebPictrue(filepath: string) {
             <el-tab-pane label="漏洞">
                 <el-table :data="vp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }">
-                    <el-table-column prop="vulID" label="Template" width="250px" :show-overflow-tooltip="true" />
+                    <el-table-column prop="vulID" label="Template" width="250px" />
                     <el-table-column prop="severity" width="150px" label="Severity"
                         :filter-method="filterHandlerSeverity" :filters="[
                             { text: 'INFO', value: 'INFO' },

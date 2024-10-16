@@ -147,3 +147,17 @@ type WebscanOptions struct {
 	CallNuclei    bool
 	TemplateFiles []string
 }
+
+type AntivirusResult struct {
+	Process string
+	Pid     string
+	Name    string
+}
+
+type AuthPatch struct {
+	MS          string
+	Patch       string
+	Description string
+	System      string
+	Reference   string
+}

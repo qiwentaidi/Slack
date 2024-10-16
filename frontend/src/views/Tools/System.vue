@@ -1,53 +1,37 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { System } from 'wailsjs/go/main/App'
+import { AntivirusIdentify, PatchIdentify } from 'wailsjs/go/core/Tools'
 import { onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
+import { structs } from 'wailsjs/go/models';
 // 初始化时调用
 onMounted(() => {
     avlist.value = [];
     patch.value = [];
 });
-function checksystem(mode: number) {
-    System(textarea.value, mode).then(
-        result => {
-            if (result == null) {
-                if (mode == 0) {
-                    ElMessage('未识别到杀软')
-                } else {
-                    ElMessage('未查询到提权补丁')
-                }
-            } else {
-                if (mode == 0) {
-                    const mappedResult = result.map(item => {
-                        return {
-                            p_name: item[0],
-                            pid: item[1],
-                            a_name: item[2]
-                        }
-                    })
-                    avlist.value = mappedResult
-                } else {
-                    const mappedResult = result.map(item => {
-                        return {
-                            msid: item[0],
-                            kbid: item[1],
-                            des: item[2],
-                            windows: item[3],
-                            link: item[4]
-                        }
-                    })
-                    patch.value = mappedResult
-                }
-            }
+async function checksystem(mode: number) {
+    if (mode == 0) {
+        let result = await AntivirusIdentify(textarea.value)
+        if (result.length == 0) {
+            ElMessage('未识别到杀软')
+            return
         }
-    )
+        avlist.value = result
+        return
+    }
+    
+    let result = await PatchIdentify(textarea.value)
+    if (result.length == 0) {
+        ElMessage('未查询到提权补丁')
+        return
+    }
+    patch.value = result
 }
 
 const activeName = ref('1')
 const textarea = ref('')
-const avlist = ref([{}])
-const patch = ref([{}])
+const avlist = ref(<structs.AntivirusResult[]>[])
+const patch = ref(<structs.AuthPatch[]>[])
 
 </script>
 

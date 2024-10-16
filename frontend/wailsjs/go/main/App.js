@@ -30,6 +30,10 @@ export function DownloadCyberChef(arg1) {
   return window['go']['main']['App']['DownloadCyberChef'](arg1);
 }
 
+export function ExitScanner(arg1) {
+  return window['go']['main']['App']['ExitScanner'](arg1);
+}
+
 export function ExtractIP(arg1) {
   return window['go']['main']['App']['ExtractIP'](arg1);
 }
@@ -48,14 +52,6 @@ export function FofaSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
 
 export function FofaTips(arg1) {
   return window['go']['main']['App']['FofaTips'](arg1);
-}
-
-export function Fscan2Txt(arg1) {
-  return window['go']['main']['App']['Fscan2Txt'](arg1);
-}
-
-export function FscanCommand(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['main']['App']['FscanCommand'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function GOOS() {
@@ -170,40 +166,12 @@ export function SpaceGetPort(arg1) {
   return window['go']['main']['App']['SpaceGetPort'](arg1);
 }
 
-export function StopDirScan() {
-  return window['go']['main']['App']['StopDirScan']();
-}
-
-export function StopPortBrute() {
-  return window['go']['main']['App']['StopPortBrute']();
-}
-
-export function StopPortScan() {
-  return window['go']['main']['App']['StopPortScan']();
-}
-
-export function StopSubdomain() {
-  return window['go']['main']['App']['StopSubdomain']();
-}
-
-export function StopWebscan() {
-  return window['go']['main']['App']['StopWebscan']();
-}
-
 export function Subdomain(arg1) {
   return window['go']['main']['App']['Subdomain'](arg1);
 }
 
 export function SubsidiariesAndDomains(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['SubsidiariesAndDomains'](arg1, arg2, arg3, arg4, arg5);
-}
-
-export function System(arg1, arg2) {
-  return window['go']['main']['App']['System'](arg1, arg2);
-}
-
-export function ThinkDict(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-  return window['go']['main']['App']['ThinkDict'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
 export function TycCheckLogin() {

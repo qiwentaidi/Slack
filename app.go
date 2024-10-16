@@ -13,11 +13,9 @@ import (
 	"os"
 	"path"
 	rt "runtime"
-	"slack-wails/core"
 	"slack-wails/core/dirsearch"
 	"slack-wails/core/exp/hikvision"
 	"slack-wails/core/exp/nacos"
-	"slack-wails/core/fscan"
 	"slack-wails/core/info"
 	"slack-wails/core/isic"
 	"slack-wails/core/jsfind"
@@ -137,29 +135,6 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 	}
 }
 
-// fscan
-func (a *App) Fscan2Txt(content string) map[string][]string {
-	return fscan.ExtractResult(content)
-}
-
-func (a *App) FscanCommand(protocol, ip, port, username, password string) string {
-	return fscan.ConnectAndExecute(protocol, ip, port, username, password)
-}
-
-// thinkdict
-func (a *App) ThinkDict(userNameCN, userNameEN, companyName, companyDomain, birthday, jobNumber, connectWord string, weakList []string) []string {
-	return core.GenerateDict(userNameCN, userNameEN, companyName, companyDomain, birthday, jobNumber, connectWord, weakList)
-}
-
-func (a *App) System(content string, mode int) [][]string {
-	if mode == 0 { // tasklist
-		datas, _ := core.AntivirusIdentify(content, a.avFile)
-		return datas
-	} else { // systeminfo
-		return core.Patch(content)
-	}
-}
-
 var CyberChefLoader sync.Once
 
 func (a *App) CyberChefLocalServer() {
@@ -274,8 +249,19 @@ func (a *App) Subdomain(o structs.SubdomainOption) {
 	}
 }
 
-func (a *App) StopSubdomain() {
-	subdomain.ExitFunc = true
+func (a *App) ExitScanner(scanType string) {
+	switch scanType {
+	case "[subdomain]":
+		subdomain.ExitFunc = true
+	case "[dirseach]":
+		dirsearch.ExitFunc = true
+	case "[portscan]":
+		portscan.ExitFunc = true
+	case "[portbrute]":
+		portscan.ExitBruteFunc = true
+	case "[webscan]":
+		webscan.ExitFunc = true
+	}
 }
 func (a *App) InitTycHeader(token string) {
 	info.InitHEAD(token)
@@ -338,10 +324,6 @@ func (a *App) LoadDirsearchDict(dictPath, newExts []string) []string {
 func (a *App) DirScan(options dirsearch.Options) {
 	dirsearch.ExitFunc = false
 	dirsearch.NewScanner(a.ctx, options)
-}
-
-func (a *App) StopDirScan() {
-	dirsearch.ExitFunc = true
 }
 
 // portscan
@@ -412,18 +394,10 @@ func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint1
 
 }
 
-func (a *App) StopPortScan() {
-	portscan.ExitFunc = true
-}
-
 // 端口暴破
 func (a *App) PortBrute(host string, usernames, passwords []string) {
 	portscan.ExitBruteFunc = false
 	portscan.PortBrute(a.ctx, host, usernames, passwords)
-}
-
-func (a *App) StopPortBrute() {
-	portscan.ExitBruteFunc = true
 }
 
 // fofa
@@ -525,10 +499,6 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 		}
 		gologger.Info(a.ctx, "漏洞扫描已结束")
 	}
-}
-
-func (a *App) StopWebscan() {
-	webscan.ExitFunc = true
 }
 
 func (a *App) GetFingerPocMap() map[string][]string {

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import { ExtractIP, Fscan2Txt, FscanCommand, IpLocation } from "wailsjs/go/main/App";
-import { Search, QuestionFilled, Location, Cellphone, Postcard, Upload, Document, Coin, ChromeFilled, DocumentCopy, Filter, Camera, Management, Refresh, RefreshLeft } from "@element-plus/icons-vue";
+import { ExtractIP, IpLocation } from "wailsjs/go/main/App";
+import { Search, QuestionFilled, Location, Cellphone, Postcard, Upload, Document, ChromeFilled, DocumentCopy, Filter, Camera, Management, RefreshLeft } from "@element-plus/icons-vue";
 import { ElMessage, ElNotification } from "element-plus";
 import extractIcon from "@/assets/icon/extract.svg";
 import { Copy, SplitTextArea, UploadFileAndRead } from "@/util";
@@ -13,6 +13,7 @@ import bugIcon from "@/assets/icon/bug.svg";
 import fingerprintIcon from "@/assets/icon/fingerprint.svg";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import usePagination from "@/usePagination";
+import { FormatOutput, ConnectAndExecute } from "wailsjs/go/core/Tools";
 
 const form = reactive({
     activeTab: 'fscan',
@@ -152,7 +153,7 @@ async function selectFilePath() {
 const weekProtocol = ["ftp", "ssh", "telnet", "mysql", "oracle", "mssql", "postgres", "rdp", "mongodb", "redis"]
 async function fscanParse() {
     let file = await ReadFile(fscan.input);
-    let result = await Fscan2Txt(file.Content)
+    let result = await FormatOutput(file.Content)
     if (!result) return
     fscan.weakpass = []
     fscan.virus = []
@@ -253,7 +254,7 @@ function generateRowKey(row: any) {
 
 async function specialHW(row: any) {
     ElMessage.info("正在连接请稍等...")
-    const result = await FscanCommand(row.type, row.ip, row.port, row.username, row.password);
+    const result = await ConnectAndExecute(row.type, row.ip, row.port, row.username, row.password);
 
     // Find the matching entry in fscan.weakpass by IP and port
     const matchedEntry = fscan.weakpass.find(entry => entry.ip === row.ip && entry.port === row.port);

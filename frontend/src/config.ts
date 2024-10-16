@@ -21,7 +21,6 @@ function catchError(result: boolean, loading: any) {
 export async function InitConfigFile(timeout: number) {
   LoadConfig();
   CreateTable()
-
   let backgroundColor = global.Theme.value ? "rgba(0, 0, 0)" : "rgba(255, 255, 255)"
   const loading = ElLoading.service({
     lock: true,
@@ -91,7 +90,7 @@ export function SaveConfig() {
 
 async function ReadCrackDict() {
   for (var item of crackDict.usernames) {
-    item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
+    item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name.toLowerCase() + ".txt"))!
   }
   crackDict.passwords = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/password/password.txt"))!
   crackDict.passwords.push("")

@@ -22,6 +22,8 @@ export function DirScan(arg1:dirsearch.Options):Promise<void>;
 
 export function DownloadCyberChef(arg1:string):Promise<void>;
 
+export function ExitScanner(arg1:string):Promise<void>;
+
 export function ExtractIP(arg1:string):Promise<string>;
 
 export function FaviconMd5(arg1:string):Promise<string>;
@@ -31,10 +33,6 @@ export function FingerprintList():Promise<Array<string>>;
 export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean):Promise<space.FofaSearchResult>;
 
 export function FofaTips(arg1:string):Promise<space.TipsResult>;
-
-export function Fscan2Txt(arg1:string):Promise<{[key: string]: Array<string>}>;
-
-export function FscanCommand(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<string>;
 
 export function GOOS():Promise<string>;
 
@@ -92,23 +90,9 @@ export function Sock5Connect(arg1:string,arg2:number,arg3:number,arg4:string,arg
 
 export function SpaceGetPort(arg1:string):Promise<Array<number>>;
 
-export function StopDirScan():Promise<void>;
-
-export function StopPortBrute():Promise<void>;
-
-export function StopPortScan():Promise<void>;
-
-export function StopSubdomain():Promise<void>;
-
-export function StopWebscan():Promise<void>;
-
 export function Subdomain(arg1:structs.SubdomainOption):Promise<void>;
 
 export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number,arg4:boolean,arg5:string):Promise<Array<info.CompanyInfo>>;
-
-export function System(arg1:string,arg2:number):Promise<Array<any>>;
-
-export function ThinkDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string,arg8:Array<string>):Promise<Array<string>>;
 
 export function TycCheckLogin():Promise<boolean>;
 
