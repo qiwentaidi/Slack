@@ -1,14 +1,6 @@
 import { computed } from 'vue'
 import global from '@/global';
 
-export const titleStyle = computed(() => {
-    return global.Theme.value ? {
-        backgroundColor: '#333333',
-    } : {
-        backgroundColor: '#eee',
-    };
-})
-
 export const titlebarStyle = computed(() => {
     return global.Theme.value ? {
         backgroundColor: '#333333',

@@ -177,7 +177,7 @@ function checkinput() {
 扫描默认端口 ssh://10.0.0.1
 指定端口 redis://10.0.0.1:6380
 
-Mongodb、Memcachedb仅支持未授权检测
+Memcachedb仅支持未授权检测
 " type="textarea" resize="none" style="height: 50vh;" />
                 <el-button link size="small" :icon="Upload" @click="uploadFile"
                     style="margin-top: 5px;">导入目标文件</el-button>

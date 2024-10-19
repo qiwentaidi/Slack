@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"regexp"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"strings"
 	"time"
 
@@ -111,14 +112,23 @@ func CVE_2021_36260(url, cmd string, client *http.Client) string {
 }
 
 // 弱口令检测
-func CheckLogin(url string, password []string) string {
-	var result string
-	ctx, cancel := chromedp.NewContext(context.Background())
+func CameraHandlessLogin(appCtx context.Context, url string, password []string) string {
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Flag("headless", true),
+		chromedp.Flag("disable-background-timer-throttling", false),
+	)
+
+	allocatorCtx, chromedpCancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer chromedpCancel()
+
+	ctx, cancel := chromedp.NewContext(allocatorCtx)
 	defer cancel()
+
 	for _, pass := range password {
 		// 设置上下文超时
 		ctx, cancel = context.WithTimeout(ctx, time.Second*10)
 		defer cancel()
+
 		var res string
 		err := chromedp.Run(ctx,
 			chromedp.Navigate(url),
@@ -128,15 +138,13 @@ func CheckLogin(url string, password []string) string {
 			chromedp.Location(&res),
 		)
 		if err != nil {
-			result = fmt.Sprintf("[-] %s  %v", url, err)
-			break
+			return fmt.Sprintf("[-] %s  %v\n", url, err)
 		}
 		if strings.Contains(res, "doc/page/login.asp") {
-			result = fmt.Sprintf("[-] %s admin:%s login failed", url, pass)
+			gologger.Info(appCtx, fmt.Sprintf("[hivision] %s admin:%s login failed", url, pass))
 		} else {
-			result = fmt.Sprintf("[+] %s admin:%s login success!!", url, pass)
-			break
+			return fmt.Sprintf("[+] %s admin:%s login success!!\n", url, pass)
 		}
 	}
-	return result
+	return fmt.Sprintf("[-] %s all password was login failed\n", url)
 }

@@ -1,40 +1,50 @@
 <template>
-    <div style="margin-bottom: 10px; display: flex;">
-        <el-button text bg>漏洞名称:</el-button>
-        <el-select v-model="form.selectVulnerability" style="width: 40%;">
-            <el-option v-for="vulnerability in vulnerabilityGroup" :value="vulnerability.value"
-                :label="vulnerability.name">
-                {{ vulnerability.name }} <el-tag v-show="vulnerability.isBatch">可批量</el-tag>
-            </el-option>
-        </el-select>
-        <el-button text bg>CMD:</el-button>
-        <el-input v-model="form.cmd"></el-input>
+    <div class="head">
+        <el-input v-model="form.cmd" placeholder="whoami">
+            <template #prepend>
+                <el-select v-model="form.selectVulnerability" style="width: 200px;">
+                    <el-option v-for="vulnerability in vulnerabilityGroup" :value="vulnerability.value"
+                        :label="vulnerability.name">
+                        {{ vulnerability.name }} <el-tag v-show="vulnerability.isBatch">可批量</el-tag>
+                    </el-option>
+                </el-select>
+            </template>
+            <template #prefix>
+                <span>$ </span>
+            </template>
+        </el-input>
         <el-button type="primary" @click="useVulnerability(form.selectVulnerability)"
             style="margin-left: 5px;">执行</el-button>
         <el-button :icon="Picture" @click="useVulnerability(0)" :disabled="form.selectVulnerability != 1"
             style="margin-left: 5px;">查看快照</el-button>
     </div>
-    <el-row :gutter="8" style="margin-top: 10px;">
-        <el-col :span="14">
-            <div class="my-header" :style="titleStyle">
-                <span>目标地址:
-
-                </span>
-                <el-button size="small" @click="uploadFile">目标导入</el-button>
-            </div>
-            <el-input v-model="form.url" type="textarea" :rows="5" resize="none" placeholder="请输入URL根路径"></el-input>
-        </el-col>
-        <el-col :span="10">
-            <div class="my-header" :style="titleStyle">
-                密码口令:
-                <el-button size="small" @click="form.passwordList = ''">清空</el-button>
-            </div>
-            <el-input v-model="form.passwordList" type="textarea" :rows="5" resize="none"></el-input>
-        </el-col>
-    </el-row>
-
-
-    <pre class="pretty-response" style="height: 58vh;"><code>{{ form.content }}</code></pre>
+    <el-form label-position="top" style="margin-top: 10px;">
+        <el-row :gutter="10">
+            <el-col :span="14">
+                <el-form-item label="目标:">
+                    <div class="textarea-container">
+                        <el-input v-model="form.url" type="textarea" placeholder="请输入URL根路径" :rows="5" resize="none"
+                            class="custom-textarea"></el-input>
+                        <div class="action-area">
+                            <el-button :icon="Upload" size="small" @click="uploadFile">Upload</el-button>
+                        </div>
+                    </div>
+                </el-form-item>
+            </el-col>
+            <el-col :span="10">
+                <el-form-item label="密码:">
+                    <div class="textarea-container">
+                        <el-input v-model="form.passwordList" type="textarea" :rows="5" resize="none"
+                            placeholder="请输入密码列表" class="custom-textarea"></el-input>
+                        <div class="action-area">
+                            <el-button :icon="Close" circle size="small" @click="form.passwordList = ''"></el-button>
+                        </div>
+                    </div>
+                </el-form-item>
+            </el-col>
+        </el-row>
+    </el-form>
+    <pre class="pretty-response" style="height: calc(100vh - 390px);"><code>{{ form.content }}</code></pre>
     <el-dialog v-model="form.snapshotDialog" title="快照" width="530">
         <el-image style="width: 500px; height: 500px" :src="form.image" loading="eager" fit="fill" />
     </el-dialog>
@@ -42,11 +52,9 @@
 
 <script lang="ts" setup>
 import { reactive } from 'vue';
-import { Picture } from '@element-plus/icons-vue';
+import { Close, Picture, Upload } from '@element-plus/icons-vue';
 import { HikvsionCamera } from 'wailsjs/go/main/App';
-import global from '@/global';
 import { FormatWebURL, getProxy } from '@/util';
-import { titleStyle } from '@/stores/style';
 import { FileDialog, ReadFile } from 'wailsjs/go/main/File';
 import { File } from '@/interface';
 import { ElMessage } from 'element-plus';
@@ -87,29 +95,32 @@ async function useVulnerability(mode: number) {
         return
     }
 
-    if (mode == 0) {
-        form.snapshotDialog = true
-        let body = await HikvsionCamera(urls[0], 0, form.passwordList.split("\n"), form.cmd, getProxy())
-        const base64Image = `data:image/jpeg;base64,${body}`;
-        form.image = base64Image
-        return
+    switch (mode) {
+        case 0:
+            form.snapshotDialog = true
+            let body = await HikvsionCamera(urls[0], 0, form.passwordList.split("\n"), form.cmd, getProxy())
+            const base64Image = `data:image/jpeg;base64,${body}`;
+            form.image = base64Image
+            break
+        case 3:
+            let id = 0
+            form.content = ""
+            async.eachLimit(urls, 1, async (url: string, callback: () => void) => {
+                let result = await HikvsionCamera(url, 3, form.passwordList.split("\n"), form.cmd, getProxy())
+                form.content += result
+                id++
+                if (id == urls.length) {
+                    callback()
+                }
+            }, () => {
+                form.content += "弱口令检测结束！"
+            })
+            break
+        default:
+            form.content = await HikvsionCamera(form.url, mode, form.passwordList.split("\n"), form.cmd, getProxy())
     }
-    if (mode == 3) {
-        let id = 0
-        async.eachLimit(urls, 10, async (url: string, callback: () => void) => {
-            let result = await HikvsionCamera(url, 3, form.passwordList.split("\n"), form.cmd, getProxy())
-            form.content += result + "\n"
-            id++
-            if (id == urls.length) {
-                callback()
-            }
-        }, () => {
-            form.content += "弱口令检测结束！"
-        })
-    }
-    // "http://47.150.37.246:81/"
-    form.content = await HikvsionCamera(form.url, mode, form.passwordList.split("\n"), form.cmd, getProxy())
 }
+// "http://47.150.37.246:81/"
 
 async function uploadFile() {
     let path = await FileDialog("*.txt")
@@ -124,3 +135,24 @@ async function uploadFile() {
     form.url = file.Content!
 }
 </script>
+
+<style scoped>
+.textarea-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-textarea {
+    width: 100%;
+    padding-right: 50px;
+    /* Space for the action area */
+}
+
+.action-area {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+}
+</style>

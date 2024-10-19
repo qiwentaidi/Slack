@@ -28,14 +28,19 @@ type VulnerabilityInfo struct {
 }
 
 type NucleiOption struct {
-	URL          string
-	Tags         []string // 全漏洞扫描时，使用自定义标签
-	TemplateFile []string
+	SkipNucleiWithoutTags bool // 如果没有扫描到指纹，是否需要扫描全漏洞还是直接跳过
+	URL                   string
+	Tags                  []string // 全漏洞扫描时，使用自定义标签
+	TemplateFile          []string
 }
 
 var pocFile = util.HomeDir() + "/slack/config/pocs"
 
 func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
+	if o.SkipNucleiWithoutTags && len(o.Tags) == 0 {
+		gologger.Info(ctx, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", o.URL))
+		return
+	}
 	options := []nuclei.NucleiSDKOptions{
 		nuclei.EnableStatsWithOpts(nuclei.StatsOptions{MetricServerPort: 6064}), // optionally enable metrics server for better observability
 		nuclei.DisableUpdateCheck(), // -duc

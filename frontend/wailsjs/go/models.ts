@@ -855,6 +855,7 @@ export namespace structs {
 	    RootPath: boolean;
 	    CallNuclei: boolean;
 	    TemplateFiles: string[];
+	    SkipNucleiWithoutTags: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new WebscanOptions(source);
@@ -869,6 +870,7 @@ export namespace structs {
 	        this.RootPath = source["RootPath"];
 	        this.CallNuclei = source["CallNuclei"];
 	        this.TemplateFiles = source["TemplateFiles"];
+	        this.SkipNucleiWithoutTags = source["SkipNucleiWithoutTags"];
 	    }
 	}
 

@@ -130,6 +130,10 @@ export function LoadDirsearchDict(arg1, arg2) {
   return window['go']['main']['App']['LoadDirsearchDict'](arg1, arg2);
 }
 
+export function NetDial(arg1) {
+  return window['go']['main']['App']['NetDial'](arg1);
+}
+
 export function NewSynScanner(arg1, arg2, arg3) {
   return window['go']['main']['App']['NewSynScanner'](arg1, arg2, arg3);
 }
@@ -158,8 +162,8 @@ export function QuakeTips(arg1) {
   return window['go']['main']['App']['QuakeTips'](arg1);
 }
 
-export function Sock5Connect(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['main']['App']['Sock5Connect'](arg1, arg2, arg3, arg4, arg5);
+export function Socks5Conn(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['Socks5Conn'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function SpaceGetPort(arg1) {

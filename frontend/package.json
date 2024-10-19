@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@headlessui/vue": "^1.7.23",
     "@highlightjs/vue-plugin": "^2.1.0",
     "@imengyu/vue3-context-menu": "^1.4.2",
     "@types/crypto-js": "^4.2.2",

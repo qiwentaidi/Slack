@@ -4,7 +4,7 @@ import { Search, Filter, QuestionFilled } from '@element-plus/icons-vue';
 import { splitInt } from '@/util'
 import { ExportTXT } from '@/export'
 import { reactive, onMounted } from 'vue';
-import { Sock5Connect, FofaSearch } from 'wailsjs/go/main/App'
+import { Socks5Conn, FofaSearch } from 'wailsjs/go/main/App'
 import global from "@/global"
 import { Check, SearchAgentPool, ExecSqlStatement } from 'wailsjs/go/main/Database';
 import { ElMessage } from 'element-plus';
@@ -45,7 +45,7 @@ async function NewSock5Crawl(step: number) {
             form.socksLogger += "正在验证数据库代理存活数量...\n"
             await async.eachLimit(form.pool, 50, async (temp: string, callback: (err?: Error) => void) => {
                 let t = temp.split(":")
-                if (await Sock5Connect(t[0], Number(t[1]), 3, "", "")) {
+                if (await Socks5Conn(t[0], Number(t[1]), 3, "", "")) {
                     form.socksLogger += `[+] ${t[0]}:${t[1]} is alive!\n`
                     tempHosts.push(t[0] + ":" + t[1])
                 }
@@ -82,7 +82,7 @@ async function NewSock5Crawl(step: number) {
                 if (tempHosts.length >= form.socksThreshold) {
                     return
                 }
-                if (await Sock5Connect(temp.IP, Number(temp.Port), 3, "", "")) {
+                if (await Socks5Conn(temp.IP, Number(temp.Port), 3, "", "")) {
                     let host = temp.IP + ":" + temp.Port
                     form.socksLogger += `[+] ${host} is unauthorized!\n`
                     tempHosts.push(host)
@@ -142,7 +142,7 @@ class Socks5Crawling {
 
 async function TestConnection(host: string) {
     let t = host.split(":")
-    let result = await Sock5Connect(t[0], Number(t[1]), 5, "", "")
+    let result = await Socks5Conn(t[0], Number(t[1]), 5, "", "")
     if (result) {
         ElMessage({
             message: 'This proxy is reachable',

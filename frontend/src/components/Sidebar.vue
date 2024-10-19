@@ -3,7 +3,6 @@ import { Refresh, Setting } from "@element-plus/icons-vue";
 import updateUI from "./Update.vue";
 import global from "@/global/index";
 import menus from "@/router/menu";
-import router from "@/router";
 import pocIcon from '@/assets/icon/pocmanagement.svg'
 
 const bottomControl = [
@@ -17,16 +16,12 @@ const bottomControl = [
   {
     label: "aside.poc_manage",
     icon: pocIcon,
-    action: () => {
-      router.push('/PocManagement')
-    }
+    path: "/PocManagement",
   },
   {
     label: "aside.setting",
     icon: Setting,
-    action: () => {
-      router.push('/Settings')
-    }
+    path: "/Settings"
   },
 ]
 </script>
@@ -47,14 +42,15 @@ const bottomControl = [
           </el-icon>
           <span>{{ $t(menu.name) }}</span>
         </template>
-        <el-menu-item v-for="item in menu.children" :key="item.path" :index="menu.path + item.path"><span>{{ $t(item.name)
-          }}</span></el-menu-item>
+        <el-menu-item class="react-menu-item" v-for="item in menu.children" :key="item.path" :index="menu.path + item.path"><span>{{
+          $t(item.name)
+            }}</span></el-menu-item>
       </el-sub-menu>
     </template>
 
     <div style="flex-grow: 1;"></div>
 
-    <el-menu-item v-for="(item, index) in bottomControl" @click="item.action">
+    <el-menu-item v-for="(item, index) in bottomControl" :index="item.path!" @click="item.action">
       <el-icon size="24">
         <component :is="item.icon" />
       </el-icon>
@@ -83,34 +79,21 @@ const bottomControl = [
   background-color: var(--sidebar-bg-color);
 }
 
-.el-menu-item {
+.react-menu-item {
   font-size: 16px;
+  width: 94%;
+  align-items: center;
+  display: flex;
+  margin-left: 3%;
 }
 
 .el-menu-item:hover {
   background-color: var(--sidebar-bg-color);
-  color: #3875f6;
+  border-radius: 10px;
 }
 
 .el-menu-item.is-active {
-  color: var(--sidebar-text-color);
+  background-color: var(--sidebar-bg-color);
+  border-radius: 10px;
 }
-
-.el-menu-item.is-active::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 5px;
-  /*  色块的宽度 */
-  height: 100%;
-  background-color: #3875f6;
-  /*  色块的颜色 */
-  border-radius: 0 3px 3px 0;
-  /* 轨道的形状 */
-}
-
-.el-sub-menu__title {
-  font-size: 16px;
-} 
 </style>

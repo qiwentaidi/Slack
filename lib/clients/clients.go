@@ -13,11 +13,10 @@ import (
 	"time"
 )
 
-// type HTTP_OPTIONS struct {
-// 	HTTPS    bool
-// 	Redirect bool
-// 	Proxys   Proxy
-// }
+var TlsConfig = &tls.Config{
+	InsecureSkipVerify: true,             // 防止HTTPS报错
+	MinVersion:         tls.VersionTLS10, // 最低支持TLS 1.0
+}
 
 func TestErrorClient() *http.Client {
 	client, _ := SelectProxy(&Proxy{
@@ -32,10 +31,7 @@ func TestErrorClient() *http.Client {
 func DefaultClient() *http.Client {
 	return &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,             // 防止HTTPS报错
-				MinVersion:         tls.VersionTLS10, // 最低支持TLS 1.0
-			},
+			TLSClientConfig: TlsConfig,
 		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 10 {
@@ -50,10 +46,7 @@ func DefaultClient() *http.Client {
 func NotFollowClient() *http.Client {
 	return &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-				MinVersion:         tls.VersionTLS10,
-			},
+			TLSClientConfig: TlsConfig,
 		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse

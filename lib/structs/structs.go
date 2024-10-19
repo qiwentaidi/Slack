@@ -139,13 +139,14 @@ type RowData struct {
 }
 
 type WebscanOptions struct {
-	Target        []string
-	Thread        int
-	Screenshot    bool
-	DeepScan      bool
-	RootPath      bool
-	CallNuclei    bool
-	TemplateFiles []string
+	Target                []string
+	Thread                int
+	Screenshot            bool
+	DeepScan              bool
+	RootPath              bool
+	CallNuclei            bool
+	TemplateFiles         []string
+	SkipNucleiWithoutTags bool
 }
 
 type AntivirusResult struct {

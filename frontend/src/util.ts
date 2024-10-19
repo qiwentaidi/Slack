@@ -1,9 +1,9 @@
 import { ElMessage, ElNotification } from "element-plus";
 import global from "./global";
-import { Callgologger, CheckTarget, GoFetch, Sock5Connect } from "wailsjs/go/main/App";
+import { Callgologger, CheckTarget, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/main/App";
 import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
-import { ProxyOptions, File } from "./interface";
+import { ProxyOptions } from "./interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
 import async from "async";
@@ -140,7 +140,7 @@ export function compareVersion(version1: string, version2: string) {
 }
 
 export async function ReadLine(filepath: string) {
-  let file: File = await ReadFile(filepath);
+  let file = await ReadFile(filepath);
   if (file.Error) {
     ElNotification.warning(file.Message);
     return;
@@ -152,10 +152,10 @@ export async function ReadLine(filepath: string) {
 // mode 0 is button click
 export async function TestProxy(mode: number) {
   if (global.proxy.enabled) {
-    const proxyURL = global.proxy.mode.toLowerCase() + "://" + global.proxy.address + ":" + global.proxy.port;
+    const host = global.proxy.address + ":" + global.proxy.port;
     if (global.proxy.mode == "HTTP") {
-      let resp: any = await GoFetch("GET", proxyURL, "", {}, 10, proxys);
-      if (resp.Error) {
+      let error = await NetDial(host)
+      if (!error) {
         ElNotification.warning("The proxy is unreachable");
         return false;
       }
@@ -168,14 +168,8 @@ export async function TestProxy(mode: number) {
         message: "Connecting to http://www.baidu.com",
         icon: Loading,
       });
-      let resp = await Sock5Connect(
-        global.proxy.address,
-        global.proxy.port,
-        10,
-        global.proxy.username,
-        global.proxy.password
-      );
-      if (!resp) {
+      let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password);
+      if (!error) {
         ElNotification.closeAll();
         ElNotification.error("The sock5 proxy is unreachable");
         return false;
@@ -212,22 +206,17 @@ export const check = {
       global.UPDATE.PocStatus = false;
       return;
     } else {
-      let file: File = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile);
+      let file = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile);
       global.UPDATE.LocalPocVersion = file.Content!;
     }
-    let resp: any = await GoFetch("GET", download.RemotePocVersion, "", {}, 10, proxys);
+    let resp = await GoFetch("GET", download.RemotePocVersion, "", {}, 10, proxys);
     if (resp.Error == true) {
       global.UPDATE.PocContent = "检测更新失败";
       global.UPDATE.PocStatus = false;
     } else {
       global.UPDATE.RemotePocVersion = resp.Body!;
-      if (
-        compareVersion(
-          global.UPDATE.LocalPocVersion,
-          global.UPDATE.RemotePocVersion
-        ) == -1
-      ) {
-        let result: any = await GoFetch("GET", download.PocUpdateCentent, "", {}, 10, proxys);
+      if (compareVersion(global.UPDATE.LocalPocVersion, global.UPDATE.RemotePocVersion) == -1) {
+        let result = await GoFetch("GET", download.PocUpdateCentent, "", {}, 10, proxys);
         global.UPDATE.PocContent = result.Body;
         global.UPDATE.PocStatus = true;
       } else {
@@ -238,7 +227,7 @@ export const check = {
   },
   // client
   client: async function () {
-    let resp: any = await GoFetch("GET", download.RemoteClientVersion, "", {}, 10, proxys);
+    let resp = await GoFetch("GET", download.RemoteClientVersion, "", {}, 10, proxys);
     if (resp.Error) {
       global.UPDATE.RemoteClientVersion = "检测更新失败";
       global.UPDATE.ClientStatus = false;
@@ -310,7 +299,7 @@ export async function UploadFileAndRead() {
   if (!filepath) {
     return ""
   }
-  let file: File = await ReadFile(filepath)
+  let file = await ReadFile(filepath)
   if (file.Error) {
     ElMessage({
       type: "warning",

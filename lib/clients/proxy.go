@@ -2,7 +2,6 @@ package clients
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
@@ -29,8 +28,8 @@ func SelectProxy(pr *Proxy, client *http.Client) (*http.Client, error) {
 		urlproxy, _ := url.Parse(fmt.Sprintf("%v://%v:%v", pr.Mode, pr.Address, pr.Port)) //"https://127.0.0.1:9743"
 		client.Transport = &http.Transport{
 			Proxy:               http.ProxyURL(urlproxy),
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true}, // 防止HTTPS报错
-			TLSHandshakeTimeout: time.Second * 3,
+			TLSClientConfig:     TlsConfig, // 防止HTTPS报错
+			TLSHandshakeTimeout: time.Second * 10,
 		}
 	} else {
 		auth := &proxy.Auth{User: pr.Username, Password: pr.Password}
@@ -38,20 +37,20 @@ func SelectProxy(pr *Proxy, client *http.Client) (*http.Client, error) {
 		if err != nil {
 			return nil, errors.New("socks address not available")
 		}
-		httpTransport := &http.Transport{
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true}, // 防止HTTPS报错
+		client.Transport = &http.Transport{
+			TLSClientConfig:     TlsConfig, // 防止HTTPS报错
 			Dial:                dialer.Dial,
 			TLSHandshakeTimeout: time.Second * 3,
+			// 设置sock5
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				conn, err := dialer.Dial(network, addr)
+				if err != nil {
+					return nil, err
+				}
+				return conn, nil
+			},
 		}
-		client.Transport = httpTransport
-		// 设置sock5
-		httpTransport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			conn, err := dialer.Dial(network, addr)
-			if err != nil {
-				return nil, err
-			}
-			return conn, nil
-		}
+
 	}
 	return client, nil
 }

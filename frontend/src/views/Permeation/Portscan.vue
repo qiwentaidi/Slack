@@ -17,6 +17,7 @@ import CustomTabs from '@/components/CustomTabs.vue';
 import { isPrivateIP, validateIp, validatePortscan } from '@/stores/validate';
 import consoleIcon from '@/assets/icon/console.svg'
 import { crackDict, portGroupOptions, portscanOptions } from '@/stores/options';
+import async from 'async'
 
 // syn 扫描模式
 onMounted(async () => {
@@ -316,6 +317,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
 const shodanVisible = ref(false)
 const shodanIp = ref('')
 const shodanPercentage = ref(0)
+const shodanThread = ref(2)
 const shodanRunningstatus = ref(false)
 
 async function LinkShodan() {
@@ -335,14 +337,14 @@ async function LinkShodan() {
     form.target = ""
     shodanRunningstatus.value = true
     let ips = await IPParse(lines)
-    for (const ip of ips) {
+    async.eachLimit(ips, shodanThread.value, async (ip: string, callback: () => void) => {
         if (!shodanRunningstatus.value) {
             return
         }
         let ports = await SpaceGetPort(ip)
         id++
         if (ports == null) {
-            continue
+            return
         }
         Callgologger("info", "[shodan] " + ip + " port: " + ports.join())
         shodanPercentage.value = Number(((id / ips.length) * 100).toFixed(2));
@@ -351,9 +353,10 @@ async function LinkShodan() {
                 form.target += ip + ":" + port.toString() + "\n"
             }
         }
-    }
-    shodanRunningstatus.value = false
-    shodanVisible.value = false
+    }, (err: any) => {
+        shodanRunningstatus.value = false
+        shodanVisible.value = false
+    })
 }
 
 function stopShodan() {
@@ -514,9 +517,18 @@ function stopShodan() {
                 从Shodan拉取资产端口开放情况
             </span>
         </template>
-        <el-text style="margin-bottom: 10px;"><strong>Tips: 不支持域名输入</strong>，可以通过日志处<el-icon>
-                <consoleIcon />
-            </el-icon>查看详细信息</el-text>
+        <el-form :model="form" label-position="top" :inline="true">
+            <el-form-item label="扫描线程:">
+                <el-input-number v-model="shodanThread" :min="1" :max="3" />
+            </el-form-item>
+            <el-form-item label="Tips:">
+                <el-text>可以通过日志处<el-icon>
+                        <consoleIcon />
+                    </el-icon>查看详细信息
+                </el-text>
+            </el-form-item>
+        </el-form>
+
         <el-input v-model="shodanIp" type="textarea" :rows="6" placeholder="支持如下输入格式
 1.1.1.1
 1.1.1.1/24
@@ -539,6 +551,4 @@ function stopShodan() {
 </template>
 
 
-<style scoped>
-
-</style>
+<style scoped></style>

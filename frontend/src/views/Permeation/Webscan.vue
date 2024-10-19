@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
 import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, Callgologger, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
-import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, TrimRightSubString, getProxy, UploadFileAndRead } from '@/util'
+import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, getProxy, UploadFileAndRead } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
@@ -108,8 +108,6 @@ onMounted(async () => {
     };
 });
 
-const defaultWebscanOption = ref(0)
-
 // webscan
 const customTemplate = ref<string[]>([])
 const allTemplate = ref<{ label: string, value: string }[]>([])
@@ -142,12 +140,17 @@ const form = reactive({
     defaultNum: "100",
     query: '',
     runnningStatus: false,
-    rootPathScan: true,
     percentage: 0,
     nucleiPercentage: 0,
     count: 0,
     nucleiCounts: 0,
+})
+
+const config = reactive({
     screenhost: false,
+    rootPathScan: true,
+    webscanOption: 0,
+    skipNucleiWithoutTags: false,
 })
 
 const detailDialog = ref(false)
@@ -205,11 +208,9 @@ class Scanner {
             return
         }
         // 指纹扫描      
-        Callgologger("info", `Load web scanner, targets number: ${this.urls.length}`)
-        Callgologger("info", 'Fingerscan is running ...')
         let deepScan = false
         let callNuclei = false
-        switch (defaultWebscanOption.value) {
+        switch (config.webscanOption) {
             case 1:
                 deepScan = true
                 break;
@@ -224,11 +225,12 @@ class Scanner {
         let options: structs.WebscanOptions = {
             Target: this.urls,
             Thread: global.webscan.web_thread,
-            Screenshot: form.screenhost,
+            Screenshot: config.screenhost,
             DeepScan: deepScan,
-            RootPath: form.rootPathScan,
+            RootPath: config.rootPathScan,
             CallNuclei: callNuclei,
             TemplateFiles: customTemplate.value,
+            SkipNucleiWithoutTags: config.skipNucleiWithoutTags
         }
         await NewWebScanner(options, getProxy())
         this.done()
@@ -298,7 +300,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
                 divided: true,
                 icon: h(CopyDocument, defaultIconSize),
                 onClick: () => {
-                    BatchCopyURL()
+                    CopyALL(fp.table.selectRows.map(item => item.url))
                 }
             },
             {
@@ -328,17 +330,10 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
 }
 
 function BatchBrowserOpenURL() {
-    const selectRows = JSON.parse(JSON.stringify(fp.table.selectRows));
-    let targets = selectRows.map((item: any) => item.url)
+    let targets = fp.table.selectRows.map(item => item.url)
     for (const item of targets) {
         BrowserOpenURL(item)
     }
-}
-
-function BatchCopyURL() {
-    const selectRows = JSON.parse(JSON.stringify(fp.table.selectRows));
-    let targets = selectRows.map((item: any) => item.url)
-    CopyALL(targets)
 }
 
 // 选择目标文件读取
@@ -349,11 +344,11 @@ async function uploadFile() {
 const screenDialog = ref(false)
 
 async function ShowWebPictrue(filepath: string) {
-   let bs64 = await ViewPictrue(filepath)
-   if (bs64 == '') return
-   screenDialog.value = true
-   await nextTick()
-   document.getElementById('webscan-img')!.setAttribute('src', bs64)
+    let bs64 = await ViewPictrue(filepath)
+    if (bs64 == '') return
+    screenDialog.value = true
+    await nextTick()
+    document.getElementById('webscan-img')!.setAttribute('src', bs64)
 }
 </script>
 
@@ -431,30 +426,21 @@ async function ShowWebPictrue(filepath: string) {
                         :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
                         :show-overflow-tooltip="true" />
                     <el-table-column prop="title" label="Title" />
-                    <el-table-column prop="fingerprint" width="350px">
-                        <template #header>
-                            <span style="align-items: center;">
-                                <el-tooltip placement="left" content="填充色: 主动探测指纹, 红色: 敏感系统指纹，可通过指纹系统名称后缀加*实现">
-                                    <el-icon>
-                                        <QuestionFilled size="24" />
-                                    </el-icon>
-                                </el-tooltip>
-                                Fingerprint
-                            </span>
-                        </template>
+                    <el-table-column prop="fingerprint" label="Fingerprint" width="350px">
                         <template #default="scope">
                             <div class="finger-container">
                                 <el-tag v-for="finger in scope.row.fingerprint" :key="finger"
                                     :effect="scope.row.detect === 'Default' ? 'light' : 'dark'"
-                                    :type="global.webscan.highlight_fingerprints.includes(finger) ? 'danger' : 'primary'">{{ TrimRightSubString(finger,
-                                        "*") }}</el-tag>
+                                    :type="global.webscan.highlight_fingerprints.includes(finger) ? 'danger' : 'primary'">{{
+                                    finger }}</el-tag>
                                 <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
                             </div>
                         </template>
                     </el-table-column>
                     <el-table-column label="Screen" width="80">
                         <template #default="scope">
-                            <el-button :icon="View" link @click="ShowWebPictrue(scope.row.screenshot)" v-if="scope.row.screenshot != ''"/>
+                            <el-button :icon="View" link @click="ShowWebPictrue(scope.row.screenshot)"
+                                v-if="scope.row.screenshot != ''" />
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
@@ -574,7 +560,7 @@ async function ShowWebPictrue(filepath: string) {
                             </el-icon>
                         </el-tooltip>
                     </template>
-                    <el-segmented v-model="defaultWebscanOption" :options="webscanOptions" block style="width: 100%;">
+                    <el-segmented v-model="config.webscanOption" :options="webscanOptions" block style="width: 100%;">
                         <template #default="{ item }">
                             <div style="display: flex; align-items: center">
                                 <el-icon size="16" style="margin-right: 3px;">
@@ -585,19 +571,20 @@ async function ShowWebPictrue(filepath: string) {
                         </template>
                     </el-segmented>
                 </el-form-item>
-                <div v-if="defaultWebscanOption == 3">
+                <div v-if="config.webscanOption == 3">
                     <el-form-item label="指定漏洞:">
                         <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏洞"
                             filterable multiple clearable :multiple-limit="10" />
                     </el-form-item>
                 </div>
-                <el-form-item label="根路径扫描:">
-                    <el-switch v-model="form.rootPathScan" style="margin-right: 10px;" />
-                    <el-tag>启用后主动指纹只拼接根路径，否则会拼接输入的完整URL</el-tag>
-                </el-form-item>
-                <el-form-item label="网站截图:">
-                    <el-switch v-model="form.screenhost" style="margin-right: 10px;" />
-                    <el-tag>会增加请求时间，截图按钮仅在开启后可查看</el-tag>
+                <el-form-item label="其他配置:">
+                    <el-tooltip content="启用后主动指纹只拼接根路径，否则会拼接输入的完整URL">
+                        <el-checkbox label="根路径扫描" v-model="config.rootPathScan" />
+                    </el-tooltip>
+                    <el-tooltip content="关闭状态无指纹目标会扫全漏洞">
+                        <el-checkbox label="跳过无指纹目标漏扫" v-model="config.skipNucleiWithoutTags" />
+                    </el-tooltip>
+                    <el-checkbox label="网站截图" v-model="config.screenhost" />
                 </el-form-item>
             </el-form>
             <div class="position-center">
@@ -614,12 +601,9 @@ async function ShowWebPictrue(filepath: string) {
         </template>
         <div v-if="selectedRow">
             <el-descriptions :column="1" border style="margin-bottom: 10px;">
-                <el-descriptions-item label="Name:">{{ selectedRow.vulName
-                    }}</el-descriptions-item>
-                <el-descriptions-item label="Extracted:">{{ selectedRow.extInfo
-                    }}</el-descriptions-item>
-                <el-descriptions-item label="Description:">{{ selectedRow.description
-                    }}</el-descriptions-item>
+                <el-descriptions-item label="Name:">{{ selectedRow.vulName }}</el-descriptions-item>
+                <el-descriptions-item label="Extracted:">{{ selectedRow.extInfo }}</el-descriptions-item>
+                <el-descriptions-item label="Description:">{{ selectedRow.description }}</el-descriptions-item>
                 <el-descriptions-item label="Reference:" label-class-name="description">
                     <div v-for="item in selectedRow.reference.split(',')">
                         {{ item }}
@@ -642,9 +626,7 @@ async function ShowWebPictrue(filepath: string) {
             </el-form-item>
         </el-form>
         <template #footer>
-            <el-button type="primary" @click="uncover.fofa">
-                导入
-            </el-button>
+            <el-button type="primary" @click="uncover.fofa">导入</el-button>
         </template>
     </el-dialog>
     <el-dialog v-model="form.hunterDialog" title="导入鹰图目标(MAX100)，由于API查询大小限制，大数据推荐使用官网进行数据导出" width="50%" center>
@@ -659,9 +641,7 @@ async function ShowWebPictrue(filepath: string) {
             </el-form-item>
         </el-form>
         <template #footer>
-            <el-button type="primary" @click="uncover.hunter">
-                导入
-            </el-button>
+            <el-button type="primary" @click="uncover.hunter">导入</el-button>
         </template>
     </el-dialog>
     <el-dialog v-model="screenDialog" width="50%" title="网站截图">

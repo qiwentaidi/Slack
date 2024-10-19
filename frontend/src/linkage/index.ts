@@ -16,6 +16,7 @@ export async function LinkWebscan(ips: string[]) {
         RootPath: true,
         CallNuclei: true,
         TemplateFiles: [],
+        SkipNucleiWithoutTags: true
     }
     await NewWebScanner(options, getProxy())
 }

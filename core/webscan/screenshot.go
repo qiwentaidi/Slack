@@ -17,9 +17,15 @@ var dir = filepath.Join(util.HomeDir(), "slack", "screenshot")
 // GetScreenshot 获取指定URL的屏幕截图，并保存到本地文件。
 // 返回文件路径和错误，如果错误不为nil，则文件路径为空。
 func GetScreenshot(url string) (string, error) {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Flag("headless", true),
+		chromedp.Flag("disable-background-timer-throttling", false),
+	)
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer cancel()
-
+	// 创建一个浏览器实例
+	ctx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
 	// 运行任务
 	var buf []byte
 	if err := chromedp.Run(ctx,

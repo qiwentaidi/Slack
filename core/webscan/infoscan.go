@@ -15,13 +15,11 @@ import (
 	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/gonmap"
 	"slack-wails/lib/netutil"
 	"slack-wails/lib/util"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/panjf2000/ants/v2"
@@ -46,8 +44,8 @@ type WebInfo struct {
 	ContentType   string
 	Server        string
 	ContentLength int
-	Banner        string // tcp指纹
-	Cert          string // TLS证书
+	// Banner        string // tcp指纹
+	Cert string // TLS证书
 }
 
 type InfoResult struct {
@@ -65,13 +63,13 @@ type InfoResult struct {
 type FingerScanner struct {
 	ctx                     context.Context
 	urls                    []*url.URL
-	aliveURLs               []*url.URL // 默认指纹扫描结束后，存活的URL，以便后续主动指纹过滤目标
+	aliveURLs               []*url.URL          // 默认指纹扫描结束后，存活的URL，以便后续主动指纹过滤目标
+	screenshot              bool                // 是否截屏
+	thread                  int                 // 指纹线程
+	deepScan                bool                // 代表主动指纹探测
+	rootPath                bool                // 主动指纹是否采取根路径扫描
+	basicURLWithFingerprint map[string][]string // 后续nuclei需要扫描的目标列表
 	client                  *http.Client
-	screenshot              bool
-	thread                  int  // 指纹线程
-	deepScan                bool // 代表主动指纹探测
-	rootPath                bool // 主动指纹是否采取根路径扫描
-	basicURLWithFingerprint map[string][]string
 	mutex                   sync.RWMutex
 }
 
@@ -146,10 +144,9 @@ func (s *FingerScanner) NewFingerScan() {
 			IconHash:      hashValue,
 			IconMd5:       md5Value,
 			StatusCode:    resp.StatusCode,
-			Banner:        s.GetBanner(u),
 		}
 
-		wafInfo := *waf.IsWAF(u.Hostname(), subdomain.DefaultDnsServers)
+		wafInfo := *waf.ResolveAndWafIdentify(u.Hostname(), subdomain.DefaultDnsServers)
 
 		s.aliveURLs = append(s.aliveURLs, u)
 
@@ -412,8 +409,8 @@ func (s *FingerScanner) FingerScan(ctx context.Context, web *WebInfo, targetDB [
 						}
 					case "content_type":
 						result = dataCheckString(rule.Op, web.ContentType, rule.Value)
-					case "banner":
-						result = dataCheckString(rule.Op, web.Banner, rule.Value)
+						// case "banner":
+						// 	result = dataCheckString(rule.Op, web.Banner, rule.Value)
 					}
 
 					if result {
@@ -490,17 +487,17 @@ func FaviconHash(u *url.URL, client *http.Client) (string, string) {
 	return "", ""
 }
 
-func (s *FingerScanner) GetBanner(u *url.URL) string {
-	if strings.HasPrefix(u.Scheme, "http") {
-		return ""
-	}
-	scanner := gonmap.New()
-	_, response := scanner.Scan(u.Host, netutil.GetPort(u), time.Second*time.Duration(10))
-	if response != nil {
-		return response.Raw
-	}
-	return ""
-}
+// func (s *FingerScanner) GetBanner(u *url.URL) string {
+// 	if strings.HasPrefix(u.Scheme, "http") {
+// 		return ""
+// 	}
+// 	scanner := gonmap.New()
+// 	_, response := scanner.Scan(u.Host, netutil.GetPort(u), time.Second*time.Duration(10))
+// 	if response != nil {
+// 		return response.Raw
+// 	}
+// 	return ""
+// }
 
 func (s *FingerScanner) GetHeaderInfo(body []byte, resp *http.Response) (title, server, content_type string) {
 	if match := util.RegTitle.FindSubmatch(body); len(match) > 1 {

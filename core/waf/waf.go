@@ -37,13 +37,28 @@ type WAF struct {
 	Name   string
 }
 
-func IsWAF(host string, dnsServers []string) *WAF {
+// waf 识别
+func ResolveAndWafIdentify(host string, dnsServers []string) *WAF {
 	// 如果是IP则直接返回
 	if util.RegIP.MatchString(host) {
 		return &WAF{}
 	}
 	cnames, err := netutil.LookupCNAME(host, dnsServers, 3)
 	if err != nil || len(cnames) == 0 {
+		return &WAF{}
+	}
+	for name, domains := range WAFs {
+		for _, domain := range domains {
+			if strings.Contains(cnames[0], domain) {
+				return &WAF{Exsits: true, Name: name}
+			}
+		}
+	}
+	return &WAF{}
+}
+
+func CheckWAF(cnames []string) *WAF {
+	if len(cnames) == 0 {
 		return &WAF{}
 	}
 	for name, domains := range WAFs {

@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -423,7 +424,7 @@ func (a *App) FofaSearch(query, pageSzie, pageNum, address, email, key string, f
 	return config.FofaApiSearch(a.ctx, query, pageSzie, pageNum, fraud, cert)
 }
 
-func (a *App) Sock5Connect(ip string, port, timeout int, username, password string) bool {
+func (a *App) Socks5Conn(ip string, port, timeout int, username, password string) bool {
 	return portscan.Socks5Conn(ip, port, timeout, username, password)
 }
 
@@ -469,35 +470,38 @@ func (a *App) FingerprintList() []string {
 
 func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy) {
 	webscan.ExitFunc = false
-	s := webscan.NewFingerScanner(a.ctx, options.Target, proxy, options.Thread, options.DeepScan, options.RootPath, options.Screenshot)
-	if s == nil {
+	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
+	gologger.Info(a.ctx, "Fingerscan is running ...")
+	engine := webscan.NewFingerScanner(a.ctx, options.Target, proxy, options.Thread, options.DeepScan, options.RootPath, options.Screenshot)
+	if engine == nil {
 		return
 	}
-	s.NewFingerScan()
+	engine.NewFingerScan()
 	if options.DeepScan {
-		s.NewActiveFingerScan(options.RootPath)
+		engine.NewActiveFingerScan(options.RootPath)
 	}
 	if options.CallNuclei {
-		gologger.Info(a.ctx, "正在进行漏洞扫描 ...")
+		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
 		var id = 0
-		fpm := s.URLWithFingerprintMap()
+		fpm := engine.URLWithFingerprintMap()
 		count := len(fpm)
 		runtime.EventsEmit(a.ctx, "NucleiCounts", count)
 		for target, tags := range fpm {
 			if webscan.ExitFunc {
-				gologger.Warning(a.ctx, "用户已退出漏洞扫描")
+				gologger.Warning(a.ctx, "User exits vulnerability scanning")
 				return
 			}
 			id++
-			gologger.Info(a.ctx, fmt.Sprintf("正在扫描第%d/%d个目标", id, count))
+			gologger.Info(a.ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
 			webscan.NewNucleiEngine(a.ctx, proxy, webscan.NucleiOption{
-				URL:          target,
-				Tags:         util.RemoveDuplicates(tags),
-				TemplateFile: options.TemplateFiles,
+				URL:                   target,
+				Tags:                  util.RemoveDuplicates(tags),
+				TemplateFile:          options.TemplateFiles,
+				SkipNucleiWithoutTags: options.SkipNucleiWithoutTags,
 			})
 			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)
 		}
-		gologger.Info(a.ctx, "漏洞扫描已结束")
+		gologger.Info(a.ctx, "Vulnerability scan has ended")
 	}
 }
 
@@ -634,7 +638,7 @@ func (a *App) HikvsionCamera(target string, attackType int, passwordList []strin
 	case 2:
 		return hikvision.CVE_2021_36260(target, cmd, clients.JudgeClient(proxy))
 	case 3:
-		return hikvision.CheckLogin(target, passwordList)
+		return hikvision.CameraHandlessLogin(a.ctx, target, passwordList)
 	}
 	return ""
 }
@@ -654,4 +658,9 @@ func (a *App) ViewPictrue(file string) string {
 		return ""
 	}
 	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(b)
+}
+
+func (a *App) NetDial(host string) bool {
+	_, err := net.Dial("tcp", host)
+	return err == nil
 }
