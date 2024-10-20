@@ -16,6 +16,7 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/netutil"
+	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"strconv"
 	"strings"
@@ -69,13 +70,14 @@ type FingerScanner struct {
 	deepScan                bool                // 代表主动指纹探测
 	rootPath                bool                // 主动指纹是否采取根路径扫描
 	basicURLWithFingerprint map[string][]string // 后续nuclei需要扫描的目标列表
+	generateLog4j2          bool                // 是否添加Log4j2指纹，后续nuclei可以添加扫描
 	client                  *http.Client
 	mutex                   sync.RWMutex
 }
 
-func NewFingerScanner(ctx context.Context, target []string, proxy clients.Proxy, thread int, deepScan, rootPath, screenshot bool) *FingerScanner {
-	urls := make([]*url.URL, 0, len(target)) // 提前分配容量
-	for _, t := range target {
+func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
+	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
+	for _, t := range options.Target {
 		u, err := url.Parse(t)
 		if err != nil {
 			continue
@@ -90,11 +92,12 @@ func NewFingerScanner(ctx context.Context, target []string, proxy clients.Proxy,
 		ctx:                     ctx,
 		urls:                    urls,
 		client:                  clients.JudgeClient(proxy),
-		screenshot:              screenshot,
-		thread:                  thread,
-		deepScan:                deepScan,
-		rootPath:                rootPath,
+		screenshot:              options.Screenshot,
+		thread:                  options.Thread,
+		deepScan:                options.DeepScan,
+		rootPath:                options.RootPath,
 		basicURLWithFingerprint: make(map[string][]string),
+		generateLog4j2:          options.GenerateLog4j2,
 	}
 }
 
@@ -131,6 +134,11 @@ func (s *FingerScanner) NewFingerScan() {
 		title, server, content_type := s.GetHeaderInfo(body, resp)
 		headers, _, _ := DumpResponseHeadersAndRaw(resp)
 		hashValue, md5Value := FaviconHash(u, s.client)
+
+		// 发送shiro探测
+		shiroHeader := s.ShiroScan(u)
+		headers = append(headers, []byte(fmt.Sprintf("Set-Cookie: %s", shiroHeader))...)
+
 		web := &WebInfo{
 			HeadeString:   string(headers),
 			ContentType:   content_type,
@@ -151,6 +159,11 @@ func (s *FingerScanner) NewFingerScan() {
 		s.aliveURLs = append(s.aliveURLs, u)
 
 		fingerprints := s.FingerScan(s.ctx, web, FingerprintDB)
+
+		// 发送Fastjson探测
+		if s.FastjsonScan(u) {
+			fingerprints = append(fingerprints, "Fastjson")
+		}
 
 		s.mutex.Lock()
 		s.basicURLWithFingerprint[u.String()] = append(s.basicURLWithFingerprint[u.String()], fingerprints...)
@@ -541,4 +554,28 @@ func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte
 		return nil
 	}
 	return body
+}
+
+// 探测shiro并返回响应头中的Set-Cookie值
+func (s *FingerScanner) ShiroScan(u *url.URL) string {
+	shiroHeader := map[string]string{
+		"Cookie": fmt.Sprintf("JSESSIONID=%s;rememberMe=123", util.RandomStr(16)),
+	}
+	resp, _, err := clients.NewRequest("GET", u.String(), shiroHeader, nil, 10, false, s.client)
+	if err != nil || resp == nil {
+		return ""
+	}
+	return resp.Header.Get("Set-Cookie")
+}
+
+// 探测Fastjson
+func (s *FingerScanner) FastjsonScan(u *url.URL) bool {
+	jsonHeader := map[string]string{
+		"Content-Type": "application/json",
+	}
+	_, body, err := clients.NewRequest("POST", u.String(), jsonHeader, strings.NewReader(`{"@type":"java.lang.AutoCloseable"`), 10, false, s.client)
+	if err != nil || body == nil {
+		return false
+	}
+	return bytes.Contains(body, []byte("fastjson-version"))
 }

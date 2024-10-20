@@ -472,7 +472,7 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 	webscan.ExitFunc = false
 	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
 	gologger.Info(a.ctx, "Fingerscan is running ...")
-	engine := webscan.NewFingerScanner(a.ctx, options.Target, proxy, options.Thread, options.DeepScan, options.RootPath, options.Screenshot)
+	engine := webscan.NewFingerScanner(a.ctx, proxy, options)
 	if engine == nil {
 		return
 	}

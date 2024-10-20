@@ -151,6 +151,7 @@ const config = reactive({
     rootPathScan: true,
     webscanOption: 0,
     skipNucleiWithoutTags: false,
+    generateLog4j2: false,
 })
 
 const detailDialog = ref(false)
@@ -221,7 +222,10 @@ class Scanner {
                 break;
             case 3:
                 callNuclei = true
+                break;
         }
+        if (config.webscanOption != 2) config.generateLog4j2 = false
+
         let options: structs.WebscanOptions = {
             Target: this.urls,
             Thread: global.webscan.web_thread,
@@ -230,7 +234,8 @@ class Scanner {
             RootPath: config.rootPathScan,
             CallNuclei: callNuclei,
             TemplateFiles: customTemplate.value,
-            SkipNucleiWithoutTags: config.skipNucleiWithoutTags
+            SkipNucleiWithoutTags: config.skipNucleiWithoutTags,
+            GenerateLog4j2: config.generateLog4j2,
         }
         await NewWebScanner(options, getProxy())
         this.done()
@@ -575,6 +580,12 @@ async function ShowWebPictrue(filepath: string) {
                     <el-form-item label="指定漏洞:">
                         <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏洞"
                             filterable multiple clearable :multiple-limit="10" />
+                    </el-form-item>
+                </div>
+                <div v-if="config.webscanOption == 2">
+                    <el-form-item label="Log4j2:">
+                        <el-switch v-model="config.generateLog4j2" style="margin-right: 5px;" />
+                        <el-tag>开启后会将所有目标添加Generate-Log4j2指纹</el-tag>
                     </el-form-item>
                 </div>
                 <el-form-item label="其他配置:">
