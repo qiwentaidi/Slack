@@ -188,26 +188,25 @@
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: calc(100vh - 280px);">
-                <el-table-column prop="IP" fixed label="IP" width="150" />
-                <el-table-column prop="Host" fixed label="域名" width="200" :show-overflow-tooltip="true">
+                <el-table-column prop="URL" fixed label="URL" width="240" :show-overflow-tooltip="true" />
+                <el-table-column prop="IP" fixed label="IP" width="130" />
+                <el-table-column prop="Port" label="端口/协议" width="130">
+                    <template #default="scope">
+                        {{ scope.row.Port }}<el-tag type=info>{{ scope.row.Protocol }}</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="Host" label="域名" width="150" :show-overflow-tooltip="true">
                     <template #default="scope">
                         <span v-if="scope.row.Host != scope.row.IP">{{ scope.row.Host }}</span>
                         <span v-else>--</span>
                     </template>
                 </el-table-column>
                 <el-table-column prop="Title" label="标题" width="200" :show-overflow-tooltip="true" />
-                <el-table-column prop="Port" label="端口 | 协议" width="170" :show-overflow-tooltip="true">
-                    <template #default="scope">
-                        {{ scope.row.Port }}
-                        <el-divider direction="vertical" />
-                        {{ scope.row.Protocol }}
-                    </template>
-                </el-table-column>
                 <el-table-column prop="Component" label="产品应用/版本" width="260">
                     <template #default="scope">
                         <el-button type="success" plain
-                            v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">
-                            <template #icon v-if="scope.row.Component.length > 1">
+                            v-if="Array.isArray(scope.row.Components) && scope.row.Components.length > 0">
+                            <template #icon v-if="scope.row.Components.length > 1">
                                 <el-popover placement="bottom" :width="350" trigger="hover">
                                     <template #reference>
                                         <el-icon>
@@ -215,24 +214,24 @@
                                         </el-icon>
                                     </template>
                                     <el-space direction="vertical">
-                                        <el-tag round type="success" v-for="component in scope.row.Component"
+                                        <el-tag round type="success" v-for="component in scope.row.Components"
                                             style="width: 320px;">
                                             {{ component }}</el-tag>
                                     </el-space>
                                 </el-popover>
                             </template>
-                            {{ scope.row.Component[0] }}
+                            {{ scope.row.Components[0] }}
                         </el-button>
                     </template>
                 </el-table-column>
-                <el-table-column prop="IcpName" label="ICP名称" width="160" :show-overflow-tooltip="true" />
-                <el-table-column prop="IcpNumber" label="ICP编号" :show-overflow-tooltip="true" />
-                <el-table-column prop="ISP" label="运营商" width="100" :show-overflow-tooltip="true" />
+                <el-table-column prop="IcpName" label="备案名称" width="160" :show-overflow-tooltip="true" />
+                <el-table-column prop="IcpNumber" label="备案号" :show-overflow-tooltip="true" />
+                <el-table-column prop="Isp" label="运营商" width="100" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="200" :show-overflow-tooltip="true" />
                 <el-table-column fixed="right" label="操作" width="100" align="center">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="top">
-                            <el-button link :icon="ChromeFilled" @click.prevent="options.openHttpLink(scope.row)" />
+                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">
@@ -278,17 +277,17 @@ import { Search, ArrowDown, CopyDocument, Document, PictureRounded, Histogram, U
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4 } from '@/util';
 import { ExportToXlsx } from '@/export';
-import { QuakeData, QuakeResult, QuakeTableTabs, QuakeTipsData } from '@/interface';
+import { QuakeTableTabs, QuakeTipsData } from '@/interface';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import { Callgologger, FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/main/App';
 import global from '@/global';
-import { ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus';
+import { ElMessage, ElNotification, FormInstance } from 'element-plus';
 import { FileDialog } from 'wailsjs/go/main/File';
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { validateSingleURL } from '@/stores/validate';
-import { main } from 'wailsjs/go/models';
+import { main, space } from 'wailsjs/go/models';
 import { quakeSyntaxOptions } from '@/stores/options';
 
 const options = ({
@@ -299,19 +298,6 @@ const options = ({
         honeypot: false,
         cdn: false,
     }),
-    openHttpLink: function (row: any) {
-        let host = ""
-        if (row.Host == "") {
-            host = row.Host
-        } else {
-            host = row.IP
-        }
-        if (row.Protocol == "http") {
-            BrowserOpenURL("http://" + host + ":" + row.Port)
-        } else if (row.Protocol == "http/ssl") {
-            BrowserOpenURL("https://" + host + ":" + row.Port)
-        }
-    }
 })
 
 const ruleFormRef = ref<FormInstance>()
@@ -427,7 +413,7 @@ const tableCtrl = ({
         table.editableTabs.push({
             title: query,
             name: newTabName,
-            content: [] as QuakeData[],
+            content: [] as space.QuakeData[],
             total: 0,
             pageSize: 10,
             currentPage: 1,
@@ -436,33 +422,17 @@ const tableCtrl = ({
         });
         table.loading = true
         table.acvtiveNames = newTabName
-        QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
-            (result: QuakeResult) => {
-                if (result.Code != 0) {
-                    quake.message = result.Message!
-                    table.loading = false
-                    return
-                }
-                quake.message = "查询成功,目前剩余积分:" + result.Credit
-                const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
-                result.Data?.forEach((item: QuakeData) => {
-                    tab.content.push({
-                        Host: item.Host,
-                        IP: item.IP,
-                        Port: item.Port,
-                        Protocol: item.Protocol,
-                        IcpName: item.IcpName,
-                        Component: item.Components,
-                        Title: item.Title,
-                        IcpNumber: item.IcpNumber,
-                        ISP: item.Isp,
-                        Position: item.Position,
-                    })
-                });
-                tab.total = result.Total!
-                table.loading = false
-            }
-        )
+        let result = await QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
+        if (result.Code != 0) {
+            quake.message = result.Message!
+            table.loading = false
+            return
+        }
+        quake.message = "查询成功,目前剩余积分:" + result.Credit
+        const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
+        tab.content = result.Data
+        tab.total = result.Total!
+        table.loading = false
     },
     removeTab: (targetName: string) => {
         const tabs = table.editableTabs
@@ -481,103 +451,52 @@ const tableCtrl = ({
         table.acvtiveNames = activeName
         table.editableTabs = tabs.filter((tab) => tab.name !== targetName)
     },
-    handleSizeChange: (val: any) => {
+    handleSizeChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.pageSize = val
         tab.currentPage = 1
         table.loading = true
-        QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
-            (result: QuakeResult) => {
-                if (result.Code != 0) {
-                    quake.message = result.Message!
-                    table.loading = false
-                    return
-                }
-                quake.message = "查询成功,目前剩余积分:" + result.Credit
-                tab.content = []
-                result.Data?.forEach((item: QuakeData) => {
-                    tab.content.push({
-                        Host: item.Host,
-                        IP: item.IP,
-                        Port: item.Port,
-                        Protocol: item.Protocol,
-                        IcpName: item.IcpName,
-                        Component: item.Components,
-                        Title: item.Title,
-                        IcpNumber: item.IcpNumber,
-                        ISP: item.Isp,
-                        Position: item.Position,
-                    })
-                });
-                tab.total = result.Total!
-                table.loading = false
-            }
-        )
+        let result = await QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
+        if (result.Code != 0) {
+            quake.message = result.Message!
+            table.loading = false
+            return
+        }
+        quake.message = "查询成功,目前剩余积分:" + result.Credit
+        tab.content = result.Data
+        tab.total = result.Total!
+        table.loading = false
     },
     handleCurrentChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        QuakeSearch(tab.ipList, tab.title, tab.currentPage, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
-            (result: QuakeResult) => {
-                if (result.Code != 0) {
-                    quake.message = result.Message!
-                    table.loading = false
-                    return
-                }
-                quake.message = "查询成功,目前剩余积分:" + result.Credit
-                tab.content = []
-                result.Data?.forEach((item: QuakeData) => {
-                    tab.content.push({
-                        Host: item.Host,
-                        IP: item.IP,
-                        Port: item.Port,
-                        Protocol: item.Protocol,
-                        IcpName: item.IcpName,
-                        Component: item.Components,
-                        Title: item.Title,
-                        IcpNumber: item.IcpNumber,
-                        ISP: item.Isp,
-                        Position: item.Position,
-                    })
-                });
-                tab.total = result.Total!
-                table.loading = false
-            }
-        )
+        let result = await QuakeSearch(tab.ipList, tab.title, tab.currentPage, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
+        if (result.Code != 0) {
+            quake.message = result.Message!
+            table.loading = false
+            return
+        }
+        quake.message = "查询成功,目前剩余积分:" + result.Credit
+        tab.content = result.Data
+        tab.total = result.Total!
+        table.loading = false
     },
-    handleOptionChange: function () {
+    handleOptionChange: async () => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.pageSize = 10
         tab.currentPage = 1
         table.loading = true
-        QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon).then(
-            (result: QuakeResult) => {
-                if (result.Code != 0) {
-                    quake.message = result.Message!
-                    table.loading = false
-                    return
-                }
-                quake.message = "查询成功,目前剩余积分:" + result.Credit
-                tab.content = []
-                result.Data?.forEach((item: QuakeData) => {
-                    tab.content.push({
-                        Host: item.Host,
-                        IP: item.IP,
-                        Port: item.Port,
-                        Protocol: item.Protocol,
-                        IcpName: item.IcpName,
-                        Component: item.Components,
-                        Title: item.Title,
-                        IcpNumber: item.IcpNumber,
-                        ISP: item.Isp,
-                        Position: item.Position,
-                    })
-                });
-                tab.total = result.Total!
-                table.loading = false
-            }
-        )
+        let result = await QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
+        if (result.Code != 0) {
+            quake.message = result.Message!
+            table.loading = false
+            return
+        }
+        quake.message = "查询成功,目前剩余积分:" + result.Credit
+        tab.content = result.Data
+        tab.total = result.Total!
+        table.loading = false
     },
     searchFavicon: function () {
         if (!quake.iconURL && !quake.iconFile) {
@@ -614,23 +533,10 @@ const tableCtrl = ({
 async function CopyURL() {
     if (table.editableTabs.length != 0) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        var temp = [];
-        for (const line of tab.content!) {
-            let host = ""
-            if ((line as any)["Host"] == "") {
-                host = (line as any)["Host"]
-            } else {
-                host = (line as any)["IP"]
-            }
-            if ((line as any)["Protocol"] == "http") {
-                temp.push("http://" + host + ":" + (line as any)["Port"])
-            } else if ((line as any)["Protocol"] == "http/ssl") {
-                temp.push("https://" + host + ":" + (line as any)["Port"])
-            }
-            temp.push()
-        }
+        const temp = tab.content.map(item => {
+            if (item.URL != "") return item.URL
+        })
         Copy(temp.join("\n"))
-        temp = []
     }
 }
 
@@ -644,16 +550,18 @@ async function exportData() {
             });
         }
         let ipList = [] as string[]
-        let temp = [{}]
-        temp.pop()
+        let temp = [] as space.QuakeData[]
         if (tab.isBatch) {
             ipList = await tableCtrl.getIpList()
         }
         let index = 0
-        for (const num of splitInt(tab.total, 500)) {
+        let numbs = splitInt(tab.total, 500)
+        for (const num of numbs) {
             index += 1
-            ElMessage("正在导出第" + index.toString() + "页");
-            let result: QuakeResult = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
+            if (numbs.length != 1) {
+                ElMessage("正在导出第" + index.toString() + "页");
+            }
+            let result = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
             if (result.Code != 0) {
                 quake.message = result.Message!
                 ElMessage.error(quake.message + " 已退出导出!")
@@ -661,22 +569,9 @@ async function exportData() {
                 table.loading = false
                 return
             }
-            result.Data?.forEach((item: QuakeData) => {
-                temp.push({
-                    Host: item.Host,
-                    IP: item.IP,
-                    Port: item.Port,
-                    Protocol: item.Protocol,
-                    IcpName: item.IcpName,
-                    Component: item.Components,
-                    Title: item.Title,
-                    IcpNumber: item.IcpNumber,
-                    ISP: item.Isp,
-                    Position: item.Position,
-                })
-            });
+            temp.push(...result.Data)
         }
-        ExportToXlsx(["IP", "域名", "标题", "端口", "协议", "应用/组件", "证书申请单位", "证书域名", "运营商", "地理位置"], "asset", "quake_asset", transformArrayFields(temp))
+        ExportToXlsx(["URL", "应用/组件", "端口", "协议", "域名", "标题", "单位名称", "备案号", "IP", "运营商", "地理位置"], "asset", "quake_asset", transformArrayFields(temp))
         temp = []
     }
 }

@@ -382,6 +382,7 @@ export namespace space {
 		}
 	}
 	export class QuakeData {
+	    URL: string;
 	    Components: string[];
 	    Port: number;
 	    Protocol: string;
@@ -399,6 +400,7 @@ export namespace space {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.URL = source["URL"];
 	        this.Components = source["Components"];
 	        this.Port = source["Port"];
 	        this.Protocol = source["Protocol"];

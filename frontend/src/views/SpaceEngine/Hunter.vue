@@ -522,7 +522,7 @@ function searchCsegmentIpv4(ip: string) {
                 </el-table-column>
                 <el-table-column prop="Title" label="标题" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Status" label="状态码" :show-overflow-tooltip="true" />
-                <el-table-column prop="ICP" label="备案号" width="150" :show-overflow-tooltip="true" />
+                <el-table-column prop="ICP" label="备案名称" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="ISP" label="运营商" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="120" :show-overflow-tooltip="true" />
                 <el-table-column prop="UpdateTime" label="更新时间" width="150" :show-overflow-tooltip="true" />

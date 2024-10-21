@@ -183,6 +183,7 @@ class Scanner {
     public init() {
         fp.table.result = []
         vp.table.result = []
+        vp.ctrl.watchResultChange(vp.table)
         dashboard.riskLevel.critical = 0
         dashboard.riskLevel.high = 0
         dashboard.riskLevel.medium = 0

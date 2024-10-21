@@ -104,6 +104,7 @@ type QuakeResult struct {
 }
 
 type QuakeData struct {
+	URL        string
 	Components []string
 	Port       int
 	Protocol   string // 协议类型
@@ -222,6 +223,7 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 	}
 	for _, item := range qrk.Data {
 		var components []string
+		var protocol string
 		for _, v := range item.Components {
 			if v.ProductNameEn == "" {
 				components = append(components, util.MergeNonEmpty([]string{v.ProductNameCn, v.Version}, "/"))
@@ -229,10 +231,16 @@ func QuakeApiSearch(o *QuakeRequestOptions) *QuakeResult {
 				components = append(components, util.MergeNonEmpty([]string{v.ProductNameEn, v.Version}, "/"))
 			}
 		}
+		if item.Service.Name == "http/ssl" {
+			protocol = "https"
+		} else {
+			protocol = item.Service.Name
+		}
 		qk.Data = append(qk.Data, QuakeData{
+			URL:        mergeURL(protocol, item.Service.HTTP.Host, item.IP, item.Port),
 			Components: components,
 			Port:       item.Port,
-			Protocol:   item.Service.Name,
+			Protocol:   protocol,
 			Host:       item.Service.HTTP.Host,
 			Title:      item.Service.HTTP.Title,
 			IcpName:    item.Service.HTTP.Icp.Main_licence.Unit,
@@ -335,4 +343,15 @@ func getShortcuts(o *QuakeRequestOptions) []string {
 		shortcuts = append(shortcuts, invalid)
 	}
 	return shortcuts
+}
+
+func mergeURL(protocol, domain, ip string, port int) string {
+	host := domain
+	if host == "" {
+		host = ip
+	}
+	if port == 80 || port == 443 {
+		return fmt.Sprintf("%s://%s", protocol, host)
+	}
+	return fmt.Sprintf("%s://%s:%d", protocol, host, port)
 }

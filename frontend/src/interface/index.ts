@@ -1,3 +1,4 @@
+import { space } from "wailsjs/go/models";
 
 export interface TableTabs {
     title: string;
@@ -11,7 +12,7 @@ export interface TableTabs {
 export interface QuakeTableTabs {
     title: string;
     name: string;
-    content: any[];
+    content: space.QuakeData[];
     total: number;
     pageSize: number;
     currentPage: number;
@@ -109,27 +110,6 @@ export interface WechatInfo {
     Logo?: string;
     Qrcode?: string;
     Introduction?: string;
-}
-
-export interface QuakeResult {
-    Code?: number; // 响应状态信息，正常是0
-    Message?: string; // 提示信息
-    Data?: QuakeData[];
-    Total?: number;
-    Credit?: number; // 剩余积分
-}
-
-export interface QuakeData {
-    Components: string[];
-    Port: number;
-    Protocol: string; // 协议类型
-    Host: string;
-    Title: string;
-    IcpName: string;
-    IcpNumber: string;
-    IP: string;
-    Isp: string;
-    Position: string;
 }
 
 export interface QuakeTipsResult {
