@@ -9,7 +9,7 @@ import { ElMessage, ElNotification } from 'element-plus'
 import { Menu, CopyDocument } from '@element-plus/icons-vue';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import usePagination from "@/usePagination";
-import { SubdomainInfo } from "@/interface";
+import { SubdomainInfo } from "@/stores/interface";
 import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
 import { debounce } from "lodash"
 import { validateSingleDomain } from "@/stores/validate";

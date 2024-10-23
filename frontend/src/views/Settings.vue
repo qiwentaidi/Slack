@@ -160,7 +160,7 @@ import { TestProxy } from "@/util";
 import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, WriteFile } from "wailsjs/go/main/File";
-import { File } from '@/interface';
+import { File } from '@/stores/interface';
 import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";

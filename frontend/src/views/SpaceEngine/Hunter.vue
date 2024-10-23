@@ -4,7 +4,7 @@ import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
 import { Search, ChromeFilled, CopyDocument, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { splitInt, Copy, CsegmentIpv4 } from '@/util'
-import { TableTabs, HunterEntryTips } from "@/interface"
+import { TableTabs, HunterEntryTips } from "@/stores/interface"
 import global from "@/global"
 import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/main/App'
 import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/main/Database'

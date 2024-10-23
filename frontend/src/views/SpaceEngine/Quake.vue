@@ -277,7 +277,7 @@ import { Search, ArrowDown, CopyDocument, Document, PictureRounded, Histogram, U
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4 } from '@/util';
 import { ExportToXlsx } from '@/export';
-import { QuakeTableTabs, QuakeTipsData } from '@/interface';
+import { QuakeTableTabs, QuakeTipsData } from '@/stores/interface';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import { Callgologger, FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/main/App';
 import global from '@/global';

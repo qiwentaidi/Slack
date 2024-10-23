@@ -8,7 +8,7 @@ import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-p
 import { onMounted } from 'vue';
 import global from '@/global';
 import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/main/File';
-import { Dir } from '@/interface';
+import { Dir } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import redirectIcon from '@/assets/icon/redirect.svg'
 import { GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/main/Database';

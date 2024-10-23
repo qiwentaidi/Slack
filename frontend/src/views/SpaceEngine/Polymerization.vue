@@ -98,7 +98,7 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { Search, Management, ChromeFilled, Grid } from '@element-plus/icons-vue';
-import { Uncover } from '@/interface';
+import { Uncover } from '@/stores/interface';
 import { UncoverSearch } from 'wailsjs/go/main/App';
 import global from '@/global';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';

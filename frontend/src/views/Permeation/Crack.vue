@@ -8,7 +8,7 @@ import global from '@/global';
 import { Copy, ReadLine, SplitTextArea, UploadFileAndRead } from '@/util';
 import { PortBrute, Callgologger, ExitScanner } from 'wailsjs/go/main/App';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { BruteResult } from '@/interface';
+import { BruteResult } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import { CheckFileStat, FileDialog } from 'wailsjs/go/main/File';
 import { crackDict } from '@/stores/options';

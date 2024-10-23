@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, CopyDocument, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
 import { SplitTextArea, splitInt, Copy, CsegmentIpv4 } from '@/util'
-import { TableTabs, Results } from "@/interface"
+import { TableTabs, Results } from "@/stores/interface"
 import { ExportToXlsx } from '@/export'
 import { FofaTips, FofaSearch, IconHash, Callgologger } from 'wailsjs/go/main/App'
 import { BrowserOpenURL } from 'wailsjs/runtime'
