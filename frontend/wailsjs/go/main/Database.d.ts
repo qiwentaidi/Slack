@@ -3,6 +3,7 @@
 import {structs} from '../models';
 import {mongo} from '../models';
 import {main} from '../models';
+import {webscan} from '../models';
 
 export function AddConnection(arg1:structs.DatabaseConnection):Promise<boolean>;
 
@@ -42,6 +43,10 @@ export function GetAllPathsAndTimes():Promise<Array<main.pathTimes>>;
 
 export function InsertFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
+export function InsertFingerscanResult(arg1:string,arg2:webscan.InfoResult):Promise<boolean>;
+
+export function InsertScanTask(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<boolean>;
+
 export function RemoveConnection(arg1:string):Promise<boolean>;
 
 export function RemoveFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
@@ -53,3 +58,5 @@ export function SelectAllSyntax(arg1:string):Promise<Array<main.Syntax>>;
 export function UpdateConnection(arg1:structs.DatabaseConnection):Promise<boolean>;
 
 export function UpdateOrInsertPath(arg1:string):Promise<boolean>;
+
+export function UpdateScanTask(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<boolean>;

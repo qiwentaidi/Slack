@@ -6,17 +6,14 @@ import { ExportTXT } from '@/export'
 import { reactive, onMounted } from 'vue';
 import { Socks5Conn, FofaSearch } from 'wailsjs/go/main/App'
 import global from "@/global"
-import { Check, SearchAgentPool, ExecSqlStatement } from 'wailsjs/go/main/Database';
+import { SearchAgentPool, ExecSqlStatement } from 'wailsjs/go/main/Database';
 import { ElMessage } from 'element-plus';
 import CustomTabs from '@/components/CustomTabs.vue';
 
 onMounted(async () => {
-    let stat = await Check()
-    if (stat) {
-        let hosts = await SearchAgentPool()
-        if (Array.isArray(hosts)) {
-            form.pool.push(...hosts)
-        }
+    let hosts = await SearchAgentPool()
+    if (Array.isArray(hosts)) {
+        form.pool.push(...hosts)
     }
 });
 

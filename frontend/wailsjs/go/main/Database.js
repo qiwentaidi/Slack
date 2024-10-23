@@ -78,6 +78,14 @@ export function InsertFavGrammarFiled(arg1, arg2, arg3) {
   return window['go']['main']['Database']['InsertFavGrammarFiled'](arg1, arg2, arg3);
 }
 
+export function InsertFingerscanResult(arg1, arg2) {
+  return window['go']['main']['Database']['InsertFingerscanResult'](arg1, arg2);
+}
+
+export function InsertScanTask(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['Database']['InsertScanTask'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function RemoveConnection(arg1) {
   return window['go']['main']['Database']['RemoveConnection'](arg1);
 }
@@ -100,4 +108,8 @@ export function UpdateConnection(arg1) {
 
 export function UpdateOrInsertPath(arg1) {
   return window['go']['main']['Database']['UpdateOrInsertPath'](arg1);
+}
+
+export function UpdateScanTask(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['Database']['UpdateScanTask'](arg1, arg2, arg3, arg4, arg5);
 }

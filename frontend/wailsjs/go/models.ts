@@ -880,3 +880,36 @@ export namespace structs {
 
 }
 
+export namespace webscan {
+	
+	export class InfoResult {
+	    URL: string;
+	    StatusCode: number;
+	    Length: number;
+	    Title: string;
+	    Fingerprints: string[];
+	    IsWAF: boolean;
+	    WAF: string;
+	    Detect: string;
+	    Screenshot: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new InfoResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.URL = source["URL"];
+	        this.StatusCode = source["StatusCode"];
+	        this.Length = source["Length"];
+	        this.Title = source["Title"];
+	        this.Fingerprints = source["Fingerprints"];
+	        this.IsWAF = source["IsWAF"];
+	        this.WAF = source["WAF"];
+	        this.Detect = source["Detect"];
+	        this.Screenshot = source["Screenshot"];
+	    }
+	}
+
+}
+

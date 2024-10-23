@@ -1,0 +1,36 @@
+name: "Slack debug for macOS amd64"
+on:
+  workflow_dispatch:
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        platform: [macos-latest]
+        go-version: [1.22]
+        arch: [amd64]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Get Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Build Wails app on macOS
+        run: wails build -debug -devtools -platform darwin/${{ matrix.arch }}
+
+      - name: Upload Artifacts macOS
+        uses: actions/upload-artifact@v3
+        with:
+          name: Slack-macos-${{ matrix.arch }}
+          path: build/bin/*

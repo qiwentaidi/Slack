@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, getProxy, UploadFileAndRead } from '@/util'
@@ -14,10 +14,12 @@ import { LinkDirsearch, LinkFOFA, LinkHunter } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize, getClassBySeverity } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
-import { FileDialog, List, ReadFile } from 'wailsjs/go/main/File';
+import { List } from 'wailsjs/go/main/File';
 import { validateWebscan } from '@/stores/validate';
 import { structs } from 'wailsjs/go/models';
 import { webscanOptions } from '@/stores/options'
+import { nanoid as nano } from 'nanoid'
+import { InsertFingerscanResult, InsertScanTask } from 'wailsjs/go/main/Database';
 
 // 初始化时调用
 onMounted(async () => {
@@ -81,6 +83,18 @@ onMounted(async () => {
             screenshot: result.Screenshot
         })
         fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
+        if (!config.writeDB) return
+        InsertFingerscanResult(form.taskId, {
+            URL: result.URL,
+            StatusCode: result.StatusCode,
+            Length: result.Length,
+            Title: result.Title,
+            Detect: result.Detect,
+            IsWAF: result.IsWAF,
+            WAF: result.WAF,
+            Fingerprints: result.Fingerprints.join(","),
+            Screenshot: result.Screenshot,
+        })
     });
     EventsOn("ActiveCounts", (count: number) => {
         form.count = count
@@ -144,6 +158,8 @@ const form = reactive({
     nucleiPercentage: 0,
     count: 0,
     nucleiCounts: 0,
+    taskName: '',
+    taskId: '',
 })
 
 const config = reactive({
@@ -152,6 +168,7 @@ const config = reactive({
     webscanOption: 0,
     skipNucleiWithoutTags: false,
     generateLog4j2: false,
+    writeDB: false,
 })
 
 const detailDialog = ref(false)
@@ -162,10 +179,23 @@ let vp = usePagination(form.vulResult, 50)
 
 async function startScan() {
     let ws = new Scanner
-    form.newscanner = false // 隐藏界面
+    if (config.writeDB && form.taskName == '') {
+        ElMessage.warning({
+            showClose: true,
+            message: "任务名称不能为空",
+        });
+        return
+    }
     if (!validateWebscan(form.url)) {
         return
     }
+    form.taskId = nano()
+    let isSuccess = await InsertScanTask(form.taskId, form.taskName, form.url, 0, 0)
+    if (!isSuccess) {
+        ElMessage.error("添加任务失败")
+        return
+    }
+    form.newscanner = false // 隐藏界面
     ws.init()
     await ws.RunScanner()
 }
@@ -356,6 +386,8 @@ async function ShowWebPictrue(filepath: string) {
     await nextTick()
     document.getElementById('webscan-img')!.setAttribute('src', bs64)
 }
+
+const historyDialog = ref(false)
 </script>
 
 <template>
@@ -506,6 +538,9 @@ async function ShowWebPictrue(filepath: string) {
         </el-tabs>
         <template #ctrl>
             <el-space :size="2">
+                <el-tooltip content="历史记录">
+                    <el-button :icon="Clock" @click="historyDialog = true" />
+                </el-tooltip>
                 <el-tooltip content="导出Excel">
                     <el-button :icon="exportIcon"
                         @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformedResult())" />
@@ -589,6 +624,12 @@ async function ShowWebPictrue(filepath: string) {
                         <el-tag>开启后会将所有目标添加Generate-Log4j2指纹</el-tag>
                     </el-form-item>
                 </div>
+                <el-form-item label="结果入库:">
+                    <el-switch v-model="config.writeDB" />
+                </el-form-item>
+                <el-form-item label="任务名称:" v-if="config.writeDB">
+                    <el-input v-model="form.taskName" placeholder="必须输入不重复的任务名称" />
+                </el-form-item>
                 <el-form-item label="其他配置:">
                     <el-tooltip content="启用后主动指纹只拼接根路径，否则会拼接输入的完整URL">
                         <el-checkbox label="根路径扫描" v-model="config.rootPathScan" />
@@ -659,6 +700,27 @@ async function ShowWebPictrue(filepath: string) {
     <el-dialog v-model="screenDialog" width="50%" title="网站截图">
         <img id="webscan-img" src="" style="width: 100%; height: 400px;">
     </el-dialog>
+    <el-drawer v-model="historyDialog" size="50%">
+        <template #header>
+            <el-text style="font-weight: bold; font-size: 16px;"><el-icon :size="18" style="margin-right: 5px;">
+                    <Clock />
+                </el-icon><span>扫描任务历史</span></el-text>
+        </template>
+        <el-table :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
+            <el-table-column prop="taskname" label="任务名称"></el-table-column>
+            <el-table-column prop="targets" label="目标数量"></el-table-column>
+            <el-table-column prop="failed" label="失败数量"></el-table-column>
+            <el-table-column prop="vulnerability" label="漏洞数量"></el-table-column>
+            <el-table-column label="操作" width="180px" align="center">
+                <template #default="scope">
+                   
+                </template>
+            </el-table-column>
+            <template #empty>
+                <el-empty></el-empty>
+            </template>
+        </el-table>
+    </el-drawer>
 </template>
 
 <style scoped>

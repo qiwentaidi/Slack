@@ -165,6 +165,10 @@ func (s *FingerScanner) NewFingerScan() {
 			fingerprints = append(fingerprints, "Fastjson")
 		}
 
+		if s.generateLog4j2 {
+			fingerprints = append(fingerprints, "Generate-Log4j2")
+		}
+
 		s.mutex.Lock()
 		s.basicURLWithFingerprint[u.String()] = append(s.basicURLWithFingerprint[u.String()], fingerprints...)
 		s.mutex.Unlock()

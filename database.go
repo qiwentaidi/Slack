@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"slack-wails/core/portscan"
+	"slack-wails/core/webscan"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
@@ -21,7 +22,7 @@ import (
 
 type Database struct {
 	ctx           context.Context
-	DB            *sql.DB
+	DB            *sql.DB // 系统数据库
 	lock          sync.RWMutex
 	OtherDatabase *sql.DB       // 数据库信息采集时的连接池
 	MongoClient   *mongo.Client // mongodb连接池
@@ -50,11 +51,6 @@ func NewDatabase() *Database {
 		DB: db,
 	}
 }
-
-func (d *Database) Check() bool {
-	return d.DB == nil
-}
-
 func (d *Database) SearchAgentPool() (hosts []string) {
 	var host string
 	rows, err := d.DB.Query("SELECT hosts FROM agent_pool")
@@ -74,6 +70,9 @@ func (d *Database) CreateTable() bool {
 	CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );
 	CREATE TABLE IF NOT EXISTS dirsearch ( path TEXT, times INTEGER );
 	CREATE TABLE IF NOT EXISTS dbManager ( nanoid TEXT, scheme TEXT, host TEXT, port INTEGER, username TEXT, password TEXT, notes TEXT );
+	CREATE TABLE IF NOT EXISTS scanTask ( task_id TEXT PRIMARY KEY, task_name TEXT, targets TEXT, failed INTEGER, vulnerability INTEGER );
+	CREATE TABLE IF NOT EXISTS FingerprintInfo ( task_id TEXT, url TEXT, status INTEGER, length INTEGER, title TEXT, detect TEXT, is_waf INTEGER, waf TEXT, fingerprints TEXT, screenshot TEXT );
+	CREATE TABLE IF NOT EXISTS VulnerabilityInfo ( task_id TEXT, template_id TEXT, vuln_name TEXT, protocol TEXT, severity TEXT, vuln_url TEXT, extinfo TEXT, request TEXT, response TEXT, description TEXT, reference TEXT );
 	`)
 	return err == nil
 }
@@ -83,11 +82,13 @@ func (d *Database) ExecSqlStatement(query string, args ...interface{}) bool {
 	defer d.lock.Unlock() // 函数退出时解锁
 	stmt, err := d.DB.Prepare(query)
 	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("ExecSqlStatement: %s", err))
 		return false
 	}
 	defer stmt.Close()
 	tx, err := d.DB.Begin()
 	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("ExecSqlStatement: %s", err))
 		return false
 	}
 	_, err = stmt.Exec(args...)
@@ -777,4 +778,18 @@ func (d *Database) FetchTableInfoFromPostgres(schemaName, tableName string) stru
 		Columns: columns,
 		Rows:    data,
 	}
+}
+
+func (d *Database) InsertScanTask(taskid, taskname, targets string, failed, vulnerability int) bool {
+	insertStmt := "INSERT INTO scanTask (task_id, task_name, targets, failed, vulnerability) VALUES (?, ?, ?, ?, ?)"
+	return d.ExecSqlStatement(insertStmt, taskid, taskname, targets, failed, vulnerability)
+}
+
+func (d *Database) UpdateScanTask(taskid, taskname, targets string, failed, vulnerability int) bool {
+	updateStmt := "UPDATE scanTask SET task_name = ?, targets = ?, failed = ?, vulnerability = ? WHERE task_id = ?"
+	return d.ExecSqlStatement(updateStmt, taskname, targets, failed, vulnerability, taskid)
+}
+func (d *Database) InsertFingerscanResult(taskid string, result webscan.InfoResult) bool {
+	insertStmt := "INSERT INTO FingerprintInfo (task_id, url, status, length, title, detect, is_waf, waf, fingerprints, screenshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	return d.ExecSqlStatement(insertStmt, taskid, result.URL, result.StatusCode, result.Length, result.Title, result.Detect, result.IsWAF, result.WAF, result.Fingerprints, result.Screenshot)
 }

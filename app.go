@@ -254,7 +254,7 @@ func (a *App) ExitScanner(scanType string) {
 	switch scanType {
 	case "[subdomain]":
 		subdomain.ExitFunc = true
-	case "[dirseach]":
+	case "[dirsearch]":
 		dirsearch.ExitFunc = true
 	case "[portscan]":
 		portscan.ExitFunc = true
