@@ -178,3 +178,25 @@ export interface PocDetail {
     Name: string
     AssociatedFingerprint: string[]
 }
+
+
+export interface TablePane {
+    title: string
+    name: string
+    content: string
+}
+
+export interface DatabaseConnection {
+    nanoid: string
+    type: string
+    host: string
+    port: number
+    username: string
+    password: string
+    notes: string
+    connected: boolean
+    loading: boolean
+    databaseCount?: number
+    tableCount?: number
+    tablePanes: TablePane[]
+}

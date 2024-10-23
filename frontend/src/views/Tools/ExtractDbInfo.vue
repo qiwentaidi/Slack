@@ -153,10 +153,39 @@ import mongodbIcon from '@/assets/icon/mongodb.svg'
 import disconnectedIcon from '@/assets/icon/disconnect.svg'
 import CustomTabs from '@/components/CustomTabs.vue'
 import { nanoid as nano } from 'nanoid'
-import { renderedMarkdown } from '@/util'
 import { regexpAKSK, regexpIdCard, regexpPhone } from '@/stores/validate'
 import global from '@/global'
 import { SaveConfig } from '@/config'
+import { databaseOptions } from '@/stores/options'
+import { DatabaseConnection } from '@/stores/interface'
+
+const activeTab = ref('dashborad')
+
+const connections = ref<DatabaseConnection[]>([])
+
+const dialogVisible = ref(false)
+const isEditing = ref(false)
+const editingIndex = ref(-1)
+const currentConnection = reactive<DatabaseConnection>({
+    nanoid: '',
+    type: 'mysql',
+    host: '',
+    port: 0,
+    username: '',
+    password: '',
+    notes: '',
+    connected: false,
+    loading: false,
+    tablePanes: [],
+})
+
+var dbinfo: {
+    [key: string]: string[];
+}
+
+const settingDialog = ref(false)
+
+const tips = `Tips: 在连接除Mongodb之外的数据库时，程序会自动忽略系统数据库，所以有时面板显示数据库数量为0`
 
 onMounted(async () => {
     chooseDefaultPort()
@@ -179,70 +208,6 @@ onMounted(async () => {
             })
         })
     }
-})
-
-const databaseOptions = [
-    {
-        label: "MySQL",
-        value: "mysql"
-    },
-    {
-        label: "SQL Server",
-        value: "mssql"
-    },
-    {
-        label: "Oracle",
-        value: "oracle"
-    },
-    {
-        label: "PostgreSQL",
-        value: "postgres"
-    },
-    {
-        label: "Mongodb",
-        value: "mongodb"
-    }
-]
-
-const activeTab = ref('dashborad')
-
-interface TablePane {
-    title: string
-    name: string
-    content: string
-}
-
-interface DatabaseConnection {
-    nanoid: string
-    type: string
-    host: string
-    port: number
-    username: string
-    password: string
-    notes: string
-    connected: boolean
-    loading: boolean
-    databaseCount?: number
-    tableCount?: number
-    tablePanes: TablePane[]
-}
-
-const connections = ref<DatabaseConnection[]>([])
-
-const dialogVisible = ref(false)
-const isEditing = ref(false)
-const editingIndex = ref(-1)
-const currentConnection = reactive<DatabaseConnection>({
-    nanoid: '',
-    type: 'mysql',
-    host: '',
-    port: 0,
-    username: '',
-    password: '',
-    notes: '',
-    connected: false,
-    loading: false,
-    tablePanes: [],
 })
 
 function chooseDefaultPort() {
@@ -371,10 +336,6 @@ function getDbIcon(connection: DatabaseConnection) {
         default:
             return mongodbIcon
     }
-}
-
-let dbinfo: {
-    [key: string]: string[];
 }
 
 async function openConnection(connection: DatabaseConnection) {
@@ -552,10 +513,6 @@ function renderToHtmlTable(data: structs.RowData) {
 function removeTableTab(connection: DatabaseConnection, targetName: string) {
     connection.tablePanes = connection.tablePanes.filter(tab => tab.name !== targetName);
 }
-
-const settingDialog = ref(false)
-
-const tips = `Tips: 在连接除Mongodb之外的数据库时，程序会自动忽略系统数据库，所以有时面板显示数据库数量为0`
 </script>
 
 <style scoped>

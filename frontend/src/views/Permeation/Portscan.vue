@@ -7,7 +7,7 @@ import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Up
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, ExitScanner, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
-import { PortScanData } from '@/interface';
+import { PortScanData } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import { defaultIconSize } from '@/stores/style';

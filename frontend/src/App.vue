@@ -6,7 +6,7 @@ import Titlebar from "./components/Titlebar.vue";
 import { EventsOn } from "wailsjs/runtime/runtime";
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
-import { LogInfo } from "./interface";
+import { LogInfo } from "./stores/interface";
 import { useDark } from '@vueuse/core'
 import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/main/File";
 import { InitConfigFile } from "./config";

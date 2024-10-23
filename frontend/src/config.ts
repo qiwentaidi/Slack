@@ -3,7 +3,7 @@ import { ElLoading, ElNotification } from 'element-plus';
 import global from "./global";
 import { compareVersion, ReadLine, sleep } from './util';
 import router from "./router";
-import { File } from "./interface";
+import { File } from "./stores/interface";
 import { CreateTable } from 'wailsjs/go/main/Database';
 import { crackDict } from './stores/options';
 

@@ -840,3 +840,26 @@ export const uncoverSyntaxOptions = [
     { filed: "条件拼接数量", fofa: "100", hunter: "5", quake: "1000" },
     { filed: "单页API查询数", fofa: "10000", hunter: "100", quake: "500" }
 ]
+
+export const databaseOptions = [
+    {
+        label: "MySQL",
+        value: "mysql"
+    },
+    {
+        label: "SQL Server",
+        value: "mssql"
+    },
+    {
+        label: "Oracle",
+        value: "oracle"
+    },
+    {
+        label: "PostgreSQL",
+        value: "postgres"
+    },
+    {
+        label: "Mongodb",
+        value: "mongodb"
+    }
+]

@@ -4,7 +4,7 @@ import { QuestionFilled, Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger, TycCheckLogin } from "wailsjs/go/main/App";
 import { ExportAssetToXlsx } from '@/export'
-import { CompanyInfo, WechatInfo } from "@/interface";
+import { CompanyInfo, WechatInfo } from "@/stores/interface";
 import usePagination from "@/usePagination";
 import { transformArrayFields } from "@/util";
 import exportIcon from '@/assets/icon/doucment-export.svg'

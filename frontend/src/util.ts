@@ -3,7 +3,7 @@ import global from "./global";
 import { Callgologger, CheckTarget, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/main/App";
 import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/main/File";
 import Loading from "./components/Loading.vue";
-import { ProxyOptions } from "./interface";
+import { ProxyOptions } from "./stores/interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
 import async from "async";

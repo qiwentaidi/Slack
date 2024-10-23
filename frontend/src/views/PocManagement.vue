@@ -5,7 +5,7 @@ import { FileDialog, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/main/Fil
 import global from '@/global';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/main/App';
 import { Copy } from '@/util';
-import { PocDetail } from '@/interface';
+import { PocDetail } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import { ElMessage } from 'element-plus';
 import CustomTabs from '@/components/CustomTabs.vue';

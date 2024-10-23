@@ -7,7 +7,7 @@ import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, getProxy,
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { Vulnerability, FingerprintTable } from '@/interface';
+import { Vulnerability, FingerprintTable } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import { LinkDirsearch, LinkFOFA, LinkHunter } from '@/linkage';
@@ -20,6 +20,65 @@ import { structs } from 'wailsjs/go/models';
 import { webscanOptions } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
 import { InsertFingerscanResult, InsertScanTask } from 'wailsjs/go/main/Database';
+
+// webscan
+const customTemplate = ref<string[]>([])
+const allTemplate = ref<{ label: string, value: string }[]>([])
+
+const dashboard = reactive({
+    reqErrorURLs: [] as string[],
+    riskLevel: {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        info: 0,
+    },
+    currentModule: "",
+    count: 0,
+    fingerLength: 0,
+    yamlPocsLength: 0,
+})
+
+const form = reactive({
+    url: '',
+    tags: [] as string[],
+    newscanner: false,
+    vulResult: [] as Vulnerability[],
+    fingerResult: [] as FingerprintTable[],
+    fofaDialog: false,
+    fofaNum: 1000,
+    hunterDialog: false,
+    hunterNum: ["10", "20", "50", "100"],
+    defaultNum: "100",
+    query: '',
+    runnningStatus: false,
+    percentage: 0,
+    nucleiPercentage: 0,
+    count: 0,
+    nucleiCounts: 0,
+    taskName: '',
+    taskId: '',
+})
+
+const config = reactive({
+    screenhost: false,
+    rootPathScan: true,
+    webscanOption: 0,
+    skipNucleiWithoutTags: false,
+    generateLog4j2: false,
+    writeDB: false,
+})
+
+const detailDialog = ref(false)
+const screenDialog = ref(false)
+const historyDialog = ref(false)
+
+const selectedRow = ref();
+
+let fp = usePagination(form.fingerResult, 50)
+let vp = usePagination(form.vulResult, 50)
+
 
 // 初始化时调用
 onMounted(() => {
@@ -122,61 +181,6 @@ onMounted(() => {
         EventsOff("NucleiProgressID");
     };
 });
-
-// webscan
-const customTemplate = ref<string[]>([])
-const allTemplate = ref<{ label: string, value: string }[]>([])
-
-const dashboard = reactive({
-    reqErrorURLs: [] as string[],
-    riskLevel: {
-        critical: 0,
-        high: 0,
-        medium: 0,
-        low: 0,
-        info: 0,
-    },
-    currentModule: "",
-    count: 0,
-    fingerLength: 0,
-    yamlPocsLength: 0,
-})
-
-const form = reactive({
-    url: '',
-    tags: [] as string[],
-    newscanner: false,
-    vulResult: [] as Vulnerability[],
-    fingerResult: [] as FingerprintTable[],
-    fofaDialog: false,
-    fofaNum: 1000,
-    hunterDialog: false,
-    hunterNum: ["10", "20", "50", "100"],
-    defaultNum: "100",
-    query: '',
-    runnningStatus: false,
-    percentage: 0,
-    nucleiPercentage: 0,
-    count: 0,
-    nucleiCounts: 0,
-    taskName: '',
-    taskId: '',
-})
-
-const config = reactive({
-    screenhost: false,
-    rootPathScan: true,
-    webscanOption: 0,
-    skipNucleiWithoutTags: false,
-    generateLog4j2: false,
-    writeDB: false,
-})
-
-const detailDialog = ref(false)
-const selectedRow = ref();
-
-let fp = usePagination(form.fingerResult, 50)
-let vp = usePagination(form.vulResult, 50)
 
 async function startScan() {
     let ws = new Scanner
@@ -378,8 +382,6 @@ async function uploadFile() {
     form.url = await UploadFileAndRead()
 }
 
-const screenDialog = ref(false)
-
 async function ShowWebPictrue(filepath: string) {
     let bs64 = await ViewPictrue(filepath)
     if (bs64 == '') return
@@ -388,7 +390,7 @@ async function ShowWebPictrue(filepath: string) {
     document.getElementById('webscan-img')!.setAttribute('src', bs64)
 }
 
-const historyDialog = ref(false)
+
 </script>
 
 <template>
