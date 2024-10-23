@@ -7,8 +7,6 @@ import {webscan} from '../models';
 
 export function AddConnection(arg1:structs.DatabaseConnection):Promise<boolean>;
 
-export function Check():Promise<boolean>;
-
 export function ConnectDatabase(arg1:structs.DatabaseConnection):Promise<boolean>;
 
 export function ConnectMongodb(arg1:string,arg2:string,arg3:string):Promise<mongo.Client>;

@@ -22,31 +22,32 @@ import { nanoid as nano } from 'nanoid'
 import { InsertFingerscanResult, InsertScanTask } from 'wailsjs/go/main/Database';
 
 // 初始化时调用
-onMounted(async () => {
-    let err = await InitRule()
-    if (!err) {
-        ElMessage.error({
-            showClose: true,
-            message: "初始化指纹规则失败，请检查配置文件",
-        })
-        return
-    }
+onMounted(() => {
+    InitRule().then(err => {
+        if (!err) {
+            ElMessage.error({
+                showClose: true,
+                message: "初始化指纹规则失败，请检查配置文件",
+            })
+        }
+    })
     FingerprintList().then(list => {
         dashboard.fingerLength = list.length
     })
-    // 获取指纹与POC的对应关系
-    let pocMap = await GetFingerPocMap();
     // 获取POC数量
-    dashboard.yamlPocsLength = Object.keys(pocMap).length
+    GetFingerPocMap().then(pocMap => {
+        dashboard.yamlPocsLength = Object.keys(pocMap).length
+    })
     // 遍历模板
-    let files = await List(global.PATH.homedir + "/slack/config/pocs")
-    files.forEach((file: any) => {
-        if (file.Path.endsWith(".yaml")) {
-            allTemplate.value.push({
-                label: file.BaseName,
-                value: file.Path
-            })
-        }
+    List(global.PATH.homedir + "/slack/config/pocs").then(files => {
+        files.forEach(file => {
+            if (file.Path.endsWith(".yaml")) {
+                allTemplate.value.push({
+                    label: file.BaseName,
+                    value: file.Path
+                })
+            }
+        })
     })
     // 获得结果回调
     EventsOn("nucleiResult", (result: any) => {
@@ -470,7 +471,7 @@ const historyDialog = ref(false)
                                 <el-tag v-for="finger in scope.row.fingerprint" :key="finger"
                                     :effect="scope.row.detect === 'Default' ? 'light' : 'dark'"
                                     :type="global.webscan.highlight_fingerprints.includes(finger) ? 'danger' : 'primary'">{{
-                                    finger }}</el-tag>
+                                        finger }}</el-tag>
                                 <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
                             </div>
                         </template>
@@ -713,7 +714,7 @@ const historyDialog = ref(false)
             <el-table-column prop="vulnerability" label="漏洞数量"></el-table-column>
             <el-table-column label="操作" width="180px" align="center">
                 <template #default="scope">
-                   
+
                 </template>
             </el-table-column>
             <template #empty>

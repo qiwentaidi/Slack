@@ -6,10 +6,6 @@ export function AddConnection(arg1) {
   return window['go']['main']['Database']['AddConnection'](arg1);
 }
 
-export function Check() {
-  return window['go']['main']['Database']['Check']();
-}
-
 export function ConnectDatabase(arg1) {
   return window['go']['main']['Database']['ConnectDatabase'](arg1);
 }
