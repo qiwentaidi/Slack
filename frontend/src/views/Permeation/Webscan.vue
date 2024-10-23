@@ -24,6 +24,7 @@ import { InsertFingerscanResult, InsertScanTask } from 'wailsjs/go/main/Database
 // webscan
 const customTemplate = ref<string[]>([])
 const allTemplate = ref<{ label: string, value: string }[]>([])
+const templateLoading = ref(false)
 
 const dashboard = reactive({
     reqErrorURLs: [] as string[],
@@ -81,15 +82,15 @@ let vp = usePagination(form.vulResult, 50)
 
 
 // 初始化时调用
-onMounted(() => {
-    InitRule().then(err => {
-        if (!err) {
-            ElMessage.error({
-                showClose: true,
-                message: "初始化指纹规则失败，请检查配置文件",
-            })
-        }
-    })
+onMounted(async () => {
+    let isSuccess = await InitRule()
+    if (!isSuccess) {
+        ElMessage.error({
+            showClose: true,
+            message: "初始化指纹规则失败，请检查配置文件",
+        })
+        return
+    }
     FingerprintList().then(list => {
         dashboard.fingerLength = list.length
     })
@@ -98,16 +99,16 @@ onMounted(() => {
         dashboard.yamlPocsLength = Object.keys(pocMap).length
     })
     // 遍历模板
-    List(global.PATH.homedir + "/slack/config/pocs").then(files => {
-        files.forEach(file => {
-            if (file.Path.endsWith(".yaml")) {
-                allTemplate.value.push({
-                    label: file.BaseName,
-                    value: file.Path
-                })
-            }
-        })
+    let files = await List(global.PATH.homedir + "/slack/config/pocs")
+    files.forEach(file => {
+        if (file.Path.endsWith(".yaml")) {
+            allTemplate.value.push({
+                label: file.BaseName,
+                value: file.Path
+            })
+        }
     })
+    templateLoading.value = false // 加载完毕
     // 获得结果回调
     EventsOn("nucleiResult", (result: any) => {
         const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
@@ -218,7 +219,7 @@ class Scanner {
     public init() {
         fp.table.result = []
         vp.table.result = []
-        vp.ctrl.watchResultChange(vp.table)
+        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
         dashboard.riskLevel.critical = 0
         dashboard.riskLevel.high = 0
         dashboard.riskLevel.medium = 0
@@ -618,7 +619,8 @@ async function ShowWebPictrue(filepath: string) {
                 <div v-if="config.webscanOption == 3">
                     <el-form-item label="指定漏洞:">
                         <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏洞"
-                            filterable multiple clearable :multiple-limit="10" />
+                            filterable multiple clearable :multiple-limit="10" v-if="!templateLoading" />
+                        <span v-else>Loading templates...</span>
                     </el-form-item>
                 </div>
                 <div v-if="config.webscanOption == 2">

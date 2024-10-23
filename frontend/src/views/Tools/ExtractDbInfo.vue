@@ -10,7 +10,7 @@
                         <span>连接池</span>
                     </span>
                 </template>
-                <el-row :gutter="12">
+                <el-row :gutter="12" v-if="connections && connections.length > 0">
                     <el-col :span="12" v-for="(connection, index) in connections" :key="index">
                         <el-card class="connection-card" :class="{ 'connected': connection.connected }"
                             v-loading="connection.loading">
