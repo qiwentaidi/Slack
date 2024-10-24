@@ -90,28 +90,31 @@ async function initialize() {
         })
         return
     }
-    FingerprintList().then(list => {
+    let list = await FingerprintList()
+    if (list && Array.isArray(list)) {
         dashboard.fingerLength = list.length
-    })
+    }
     // 获取POC数量
-    GetFingerPocMap().then(pocMap => {
+    let pocMap = await GetFingerPocMap()
+    if (pocMap) {
         dashboard.yamlPocsLength = Object.keys(pocMap).length
-    })
+    }
     // 遍历模板
     let files = await List(global.PATH.homedir + "/slack/config/pocs")
-    await nextTick()
-    files.forEach(file => {
-        if (file.Path.endsWith(".yaml")) {
-            allTemplate.value.push({
-                label: file.BaseName,
-                value: file.Path
-            })
-        }
-    })
+    if (files && Array.isArray(files)) {
+        files.forEach(file => {
+            if (file.Path.endsWith(".yaml")) {
+                allTemplate.value.push({
+                    label: file.BaseName,
+                    value: file.Path
+                })
+            }
+        })
+    }
     templateLoading.value = false // 加载完毕
 
     let result = await GetAllScanTask()
-    if (result != null) {
+    if (result && Array.isArray(result)) {
         rp.table.result = result
         rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
     }
@@ -765,7 +768,8 @@ const taskManager = {
             <el-table-column prop="TaskName" label="任务名称" :show-overflow-tooltip="true"></el-table-column>
             <el-table-column prop="Targets" label="目标" :show-overflow-tooltip="true">
                 <template #default="scope">
-                    <el-link @click="taskManager.viewTask(scope.row)">{{ scope.row.Targets.includes('\n') ? scope.row.Targets.split('\n')[0] : scope.row.Targets
+                    <el-link @click="taskManager.viewTask(scope.row)">{{ scope.row.Targets.includes('\n') ?
+                        scope.row.Targets.split('\n')[0] : scope.row.Targets
                         }}</el-link>
                 </template>
             </el-table-column>

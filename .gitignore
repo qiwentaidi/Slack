@@ -4,3 +4,4 @@ frontend/dist
 release
 .vscode
 assets/Thumbs.db
+.DS_Store

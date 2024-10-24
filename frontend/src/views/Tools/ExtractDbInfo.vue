@@ -179,9 +179,8 @@ const currentConnection = reactive<DatabaseConnection>({
     tablePanes: [],
 })
 
-var dbinfo: {
-    [key: string]: string[];
-}
+// 初始化为空对象, 低版本mac不初始化会提示 ReferenceError: Cannot access uninitialized variable
+var dbinfo: { [key: string]: string[] } = {}; 
 
 const settingDialog = ref(false)
 
@@ -210,7 +209,7 @@ onMounted(async () => {
     chooseDefaultPort()
     await nextTick()
     let result = await GetAllDatabaseConnections()
-    if (result.length > 0) {
+    if (result && result.length > 0) {
         result.forEach(item => {
             connections.value.push({
                 nanoid: item.Nanoid,
