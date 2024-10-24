@@ -129,7 +129,3 @@ export function UpdateOrInsertPath(arg1) {
 export function UpdateScanWithResult(arg1, arg2, arg3) {
   return window['go']['main']['Database']['UpdateScanWithResult'](arg1, arg2, arg3);
 }
-
-export function UpdateScanWithTarget(arg1, arg2, arg3) {
-  return window['go']['main']['Database']['UpdateScanWithTarget'](arg1, arg2, arg3);
-}

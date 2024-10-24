@@ -168,6 +168,10 @@ function addFingerprint(fingerprints: string[]) {
 }
 function deleteFingerprint(fingerprint: string) {
     ElMessage.success("删除成功")
+    highlightFingerOptions.value.push({
+        label: fingerprint,
+        value: fingerprint
+    })
     global.webscan.highlight_fingerprints.splice(global.webscan.highlight_fingerprints.indexOf(fingerprint), 1)
 }
 </script>

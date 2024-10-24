@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Edit, Delete, Share } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, getProxy, UploadFileAndRead } from '@/util'
@@ -17,7 +17,7 @@ import { validateWebscan } from '@/stores/validate';
 import { structs, webscan } from 'wailsjs/go/models';
 import { webscanOptions } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
-import { DeleteScanTask, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult, UpdateScanWithTarget } from 'wailsjs/go/main/Database';
+import { DeleteScanTask, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/main/Database';
 
 // webscan
 const customTemplate = ref<string[]>([])
@@ -99,6 +99,7 @@ async function initialize() {
     })
     // 遍历模板
     let files = await List(global.PATH.homedir + "/slack/config/pocs")
+    await nextTick()
     files.forEach(file => {
         if (file.Path.endsWith(".yaml")) {
             allTemplate.value.push({
@@ -185,6 +186,14 @@ async function startScan() {
             ElMessage.error("添加任务失败")
             return
         }
+        rp.table.result.push({
+            TaskId: form.taskId,
+            TaskName: form.taskName,
+            Targets: form.url,
+            Failed: 0,
+            Vulnerability: 0,
+        })
+        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
     }
     form.newscanner = false // 隐藏界面
     ws.init()
@@ -365,10 +374,11 @@ async function ShowWebPictrue(filepath: string) {
 
 // 任务管理
 const taskManager = {
-    editTask: async function (row: any) {
+    viewTask: async function (row: any) {
         historyDialog.value = false;
         form.url = row.Targets;
         form.taskName = row.TaskName;
+        config.writeDB = true
         if (row.Targets != undefined) {
             row.Targets!.includes('\n') ? dashboard.count = row.Targets.split('\n').length : dashboard.count = 1
         }
@@ -755,7 +765,7 @@ const taskManager = {
             <el-table-column prop="TaskName" label="任务名称" :show-overflow-tooltip="true"></el-table-column>
             <el-table-column prop="Targets" label="目标" :show-overflow-tooltip="true">
                 <template #default="scope">
-                    <el-link>{{ scope.row.Targets.includes('\n') ? scope.row.Targets.split('\n')[0] : scope.row.Targets
+                    <el-link @click="taskManager.viewTask(scope.row)">{{ scope.row.Targets.includes('\n') ? scope.row.Targets.split('\n')[0] : scope.row.Targets
                         }}</el-link>
                 </template>
             </el-table-column>
@@ -768,13 +778,13 @@ const taskManager = {
             <el-table-column label="操作" width="180px" align="center">
                 <template #default="scope">
                     <el-button-group>
-                        <el-tooltip content="编辑">
-                            <el-button :icon="Edit" link @click="taskManager.editTask(scope.row)" />
+                        <el-tooltip content="查看">
+                            <el-button :icon="View" link @click="taskManager.viewTask(scope.row)" />
                         </el-tooltip>
                         <el-tooltip content="删除">
                             <el-button :icon="Delete" link @click="taskManager.deleteTask(scope.row.TaskId)" />
                         </el-tooltip>
-                        <el-tooltip content="导出">
+                        <el-tooltip content="结果导出">
                             <el-button :icon="Share" link @click="taskManager.exportTask(scope.row.TaskId)" />
                         </el-tooltip>
                     </el-button-group>

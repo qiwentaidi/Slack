@@ -140,7 +140,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { Connection, Setting, Plus, Delete, Coin, View, Postcard } from '@element-plus/icons-vue'
 import { AddConnection, ConnectDatabase, DisconnectDatabase, FetchDatabaseinfoFromMongodb, FetchDatabaseinfoFromMysql, FetchDatabaseInfoFromOracle, FetchDatabaseInfoFromPostgres, FetchDatabaseinfoFromSqlServer, FetchTableInfoFromMysql, FetchTableInfoFromOracle, FetchTableInfoFromPostgres, FetchTableInfoFromSqlServer, GetAllDatabaseConnections, RemoveConnection, UpdateConnection } from 'wailsjs/go/main/Database'
 import { structs } from 'wailsjs/go/models'
@@ -208,6 +208,7 @@ function chooseDefaultPort() {
 
 onMounted(async () => {
     chooseDefaultPort()
+    await nextTick()
     let result = await GetAllDatabaseConnections()
     if (result.length > 0) {
         result.forEach(item => {

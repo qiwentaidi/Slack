@@ -25,13 +25,7 @@ onMounted(async () => {
     updatePorts(1); // 更新初始化显示
     // 扫描状态，把结果从后端传输到前端
     EventsOn("portScanLoading", (p: PortScanData) => {
-        pagination.table.result.push({
-            IP: p.IP,
-            Port: p.Port,
-            Server: p.Server,
-            Link: p.Link,
-            HttpTitle: p.HttpTitle,
-        })
+        pagination.table.result.push(p)
         pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
     });
     // 进度条

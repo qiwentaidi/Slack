@@ -68,5 +68,3 @@ export function UpdateConnection(arg1:structs.DatabaseConnection):Promise<boolea
 export function UpdateOrInsertPath(arg1:string):Promise<boolean>;
 
 export function UpdateScanWithResult(arg1:string,arg2:number,arg3:number):Promise<boolean>;
-
-export function UpdateScanWithTarget(arg1:string,arg2:string,arg3:string):Promise<boolean>;

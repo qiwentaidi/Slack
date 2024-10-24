@@ -810,11 +810,6 @@ func (d *Database) UpdateScanWithResult(taskid string, failed, vulnerability int
 	return d.ExecSqlStatement(updateStmt, failed, vulnerability, taskid)
 }
 
-func (d *Database) UpdateScanWithTarget(taskid, taskname, targets string) bool {
-	updateStmt := "UPDATE scanTask SET task_name = ?, targets = ? WHERE task_id = ?"
-	return d.ExecSqlStatement(updateStmt, taskname, targets, taskid)
-}
-
 func (d *Database) DeleteScanTask(taskid string) bool {
 	deleteStmt := "DELETE FROM scanTask WHERE task_id = ?"
 	isSuccess := d.ExecSqlStatement(deleteStmt, taskid)
