@@ -27,7 +27,7 @@ jobs:
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Build Wails app on macOS
-        run: wails build -platform darwin/${{ matrix.arch }}
+        run: wails build -debug -devtools -platform darwin/${{ matrix.arch }}
 
       - name: Upload Artifacts macOS
         uses: actions/upload-artifact@v3

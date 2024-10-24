@@ -2,7 +2,7 @@
 
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/qiwentaidi/Slack?filename=go.mod">
-<img src="https://img.shields.io/badge/wails-v2.9.1-blue">
+<img src="https://img.shields.io/badge/wails-v2.9.2-blue">
 <a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/v/release/qiwentaidi/Slack"></a>
 <a href="https://github.com/qiwentaidi/Slack/releases/"><img src="https://img.shields.io/github/downloads/qiwentaidi/Slack/total"></a>
 </p>
@@ -12,6 +12,7 @@
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91">二次开发</a>
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97">更新日志</a>
 </p>
+
 
 
 # 支持的平台
@@ -26,8 +27,8 @@
 ## 安装依赖
 
 - Go 1.20+
-- Node.js 16+
-- Wails 2.9+  `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- Node.js 18+
+- Wails 2.92+  `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
 
 ### Linux
 
@@ -71,7 +72,9 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 # 首页
 
-![image-20240907162449101](assets/image-20240907162449101.png)
+![image-20241024200154496](assets/image-20241024200154496.png)
+
+![image-20241024200326487](assets/image-20241024200326487.png)
 
 # 特色功能介绍
 
