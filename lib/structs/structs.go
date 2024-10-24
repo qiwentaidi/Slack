@@ -163,3 +163,11 @@ type AuthPatch struct {
 	System      string
 	Reference   string
 }
+
+type TaskResult struct {
+	TaskId        string
+	TaskName      string
+	Targets       string
+	Failed        int
+	Vulnerability int
+}

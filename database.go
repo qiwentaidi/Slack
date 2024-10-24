@@ -10,6 +10,7 @@ import (
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
+	"strings"
 	"sync"
 	"time"
 
@@ -72,7 +73,7 @@ func (d *Database) CreateTable() bool {
 	CREATE TABLE IF NOT EXISTS dbManager ( nanoid TEXT, scheme TEXT, host TEXT, port INTEGER, username TEXT, password TEXT, notes TEXT );
 	CREATE TABLE IF NOT EXISTS scanTask ( task_id TEXT PRIMARY KEY, task_name TEXT, targets TEXT, failed INTEGER, vulnerability INTEGER );
 	CREATE TABLE IF NOT EXISTS FingerprintInfo ( task_id TEXT, url TEXT, status INTEGER, length INTEGER, title TEXT, detect TEXT, is_waf INTEGER, waf TEXT, fingerprints TEXT, screenshot TEXT );
-	CREATE TABLE IF NOT EXISTS VulnerabilityInfo ( task_id TEXT, template_id TEXT, vuln_name TEXT, protocol TEXT, severity TEXT, vuln_url TEXT, extinfo TEXT, request TEXT, response TEXT, description TEXT, reference TEXT );
+	CREATE TABLE IF NOT EXISTS VulnerabilityInfo ( task_id TEXT, template_id TEXT, vuln_name TEXT, protocol TEXT, severity TEXT, vuln_url TEXT, extract TEXT, request TEXT, response TEXT, description TEXT, reference TEXT );
 	`)
 	return err == nil
 }
@@ -82,19 +83,19 @@ func (d *Database) ExecSqlStatement(query string, args ...interface{}) bool {
 	defer d.lock.Unlock() // 函数退出时解锁
 	stmt, err := d.DB.Prepare(query)
 	if err != nil {
-		gologger.Debug(d.ctx, fmt.Sprintf("ExecSqlStatement: %s", err))
+		gologger.Debug(d.ctx, fmt.Sprintf("[sqlite] exec sql statement step 1: %s", err))
 		return false
 	}
 	defer stmt.Close()
 	tx, err := d.DB.Begin()
 	if err != nil {
-		gologger.Debug(d.ctx, fmt.Sprintf("ExecSqlStatement: %s", err))
+		gologger.Debug(d.ctx, fmt.Sprintf("[sqlite] exec sql statement step 2: %s", err))
 		return false
 	}
 	_, err = stmt.Exec(args...)
 	if err != nil {
 		tx.Rollback()
-		gologger.Debug(d.ctx, fmt.Sprintf("ExecSqlStatement: %s", err))
+		gologger.Debug(d.ctx, fmt.Sprintf("[sqlite] exec sql statement step 3: %s", err))
 	}
 	err = tx.Commit()
 	return err == nil
@@ -780,16 +781,98 @@ func (d *Database) FetchTableInfoFromPostgres(schemaName, tableName string) stru
 	}
 }
 
+func (d *Database) GetAllScanTask() []structs.TaskResult {
+	rows, err := d.DB.Query(`SELECT * FROM scanTask;`)
+	if err != nil {
+		return []structs.TaskResult{}
+	}
+	defer rows.Close()
+	var tasks []structs.TaskResult
+	for rows.Next() {
+		var task structs.TaskResult
+		err = rows.Scan(&task.TaskId, &task.TaskName, &task.Targets, &task.Failed, &task.Vulnerability)
+		if err != nil {
+			continue
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks
+}
+
 func (d *Database) InsertScanTask(taskid, taskname, targets string, failed, vulnerability int) bool {
 	insertStmt := "INSERT INTO scanTask (task_id, task_name, targets, failed, vulnerability) VALUES (?, ?, ?, ?, ?)"
 	return d.ExecSqlStatement(insertStmt, taskid, taskname, targets, failed, vulnerability)
 }
 
-func (d *Database) UpdateScanTask(taskid, taskname, targets string, failed, vulnerability int) bool {
-	updateStmt := "UPDATE scanTask SET task_name = ?, targets = ?, failed = ?, vulnerability = ? WHERE task_id = ?"
-	return d.ExecSqlStatement(updateStmt, taskname, targets, failed, vulnerability, taskid)
+// 改变扫描结果，漏洞数量
+func (d *Database) UpdateScanWithResult(taskid string, failed, vulnerability int) bool {
+	updateStmt := "UPDATE scanTask SET failed = ?, vulnerability = ? WHERE task_id = ?"
+	return d.ExecSqlStatement(updateStmt, failed, vulnerability, taskid)
 }
+
+func (d *Database) UpdateScanWithTarget(taskid, taskname, targets string) bool {
+	updateStmt := "UPDATE scanTask SET task_name = ?, targets = ? WHERE task_id = ?"
+	return d.ExecSqlStatement(updateStmt, taskname, targets, taskid)
+}
+
+func (d *Database) DeleteScanTask(taskid string) bool {
+	deleteStmt := "DELETE FROM scanTask WHERE task_id = ?"
+	isSuccess := d.ExecSqlStatement(deleteStmt, taskid)
+	if isSuccess {
+		d.ExecSqlStatement("DELETE FROM FingerprintInfo WHERE task_id = ?", taskid)
+		d.ExecSqlStatement("DELETE FROM VulnerabilityInfo WHERE task_id = ?", taskid)
+	}
+	return isSuccess
+}
+
+func (d *Database) SelectFingerscanResult(taskid string) []webscan.InfoResult {
+	rows, err := d.DB.Query("SELECT * FROM FingerprintInfo WHERE task_id = ?;", taskid)
+	if err != nil {
+		gologger.Debug(d.ctx, err)
+		return []webscan.InfoResult{}
+	}
+	defer rows.Close()
+	var results []webscan.InfoResult
+	for rows.Next() {
+		var result webscan.InfoResult
+		var fingerprintsStr string
+		var task_id string
+		err = rows.Scan(&task_id, &result.URL, &result.StatusCode, &result.Length, &result.Title, &result.Detect, &result.IsWAF, &result.WAF, &fingerprintsStr, &result.Screenshot)
+		if err != nil {
+			gologger.Debug(d.ctx, err)
+			continue
+		}
+		result.Fingerprints = strings.Split(fingerprintsStr, ",")
+		results = append(results, result)
+	}
+	return results
+}
+
+func (d *Database) SelectPocscanResult(taskid string) []webscan.VulnerabilityInfo {
+	rows, err := d.DB.Query("SELECT * FROM VulnerabilityInfo WHERE task_id = ?", taskid)
+	if err != nil {
+		return []webscan.VulnerabilityInfo{}
+	}
+	defer rows.Close()
+	var results []webscan.VulnerabilityInfo
+	for rows.Next() {
+		var result webscan.VulnerabilityInfo
+		var task_id string
+		err = rows.Scan(&task_id, &result.ID, &result.Name, &result.Type, &result.Risk, &result.URL, &result.Extract, &result.Request, &result.Response, &result.Description, &result.Reference)
+		if err != nil {
+			continue
+		}
+		results = append(results, result)
+	}
+	return results
+}
+
 func (d *Database) InsertFingerscanResult(taskid string, result webscan.InfoResult) bool {
 	insertStmt := "INSERT INTO FingerprintInfo (task_id, url, status, length, title, detect, is_waf, waf, fingerprints, screenshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	return d.ExecSqlStatement(insertStmt, taskid, result.URL, result.StatusCode, result.Length, result.Title, result.Detect, result.IsWAF, result.WAF, result.Fingerprints, result.Screenshot)
+	return d.ExecSqlStatement(insertStmt, taskid, result.URL, result.StatusCode, result.Length, result.Title, result.Detect, result.IsWAF, result.WAF, strings.Join(result.Fingerprints, ","), result.Screenshot)
+}
+
+func (d *Database) InsertPocscanResult(taskid string, result webscan.VulnerabilityInfo) bool {
+	insertStmt := "INSERT INTO VulnerabilityInfo (task_id, template_id, vuln_name, protocol, severity, vuln_url, extract, request, response, description, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	return d.ExecSqlStatement(insertStmt, taskid, result.ID, result.Name, result.Type, result.Risk, result.URL, result.Extract, result.Request, result.Response, result.Description, result.Reference)
 }

@@ -13,6 +13,8 @@ export function ConnectMongodb(arg1:string,arg2:string,arg3:string):Promise<mong
 
 export function CreateTable():Promise<boolean>;
 
+export function DeleteScanTask(arg1:string):Promise<boolean>;
+
 export function DisconnectDatabase(arg1:string):Promise<boolean>;
 
 export function ExecSqlStatement(arg1:string,arg2:Array<any>):Promise<boolean>;
@@ -39,9 +41,13 @@ export function GetAllDatabaseConnections():Promise<Array<structs.DatabaseConnec
 
 export function GetAllPathsAndTimes():Promise<Array<main.pathTimes>>;
 
+export function GetAllScanTask():Promise<Array<structs.TaskResult>>;
+
 export function InsertFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
 export function InsertFingerscanResult(arg1:string,arg2:webscan.InfoResult):Promise<boolean>;
+
+export function InsertPocscanResult(arg1:string,arg2:webscan.VulnerabilityInfo):Promise<boolean>;
 
 export function InsertScanTask(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<boolean>;
 
@@ -53,8 +59,14 @@ export function SearchAgentPool():Promise<Array<string>>;
 
 export function SelectAllSyntax(arg1:string):Promise<Array<main.Syntax>>;
 
+export function SelectFingerscanResult(arg1:string):Promise<Array<webscan.InfoResult>>;
+
+export function SelectPocscanResult(arg1:string):Promise<Array<webscan.VulnerabilityInfo>>;
+
 export function UpdateConnection(arg1:structs.DatabaseConnection):Promise<boolean>;
 
 export function UpdateOrInsertPath(arg1:string):Promise<boolean>;
 
-export function UpdateScanTask(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<boolean>;
+export function UpdateScanWithResult(arg1:string,arg2:number,arg3:number):Promise<boolean>;
+
+export function UpdateScanWithTarget(arg1:string,arg2:string,arg3:string):Promise<boolean>;

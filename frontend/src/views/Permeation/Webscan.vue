@@ -1,25 +1,23 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Edit, Delete, Share } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
-import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, getProxy, UploadFileAndRead } from '@/util'
+import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, getProxy, UploadFileAndRead, sleep } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import { Vulnerability, FingerprintTable } from '@/stores/interface';
 import usePagination from '@/usePagination';
-import exportIcon from '@/assets/icon/doucment-export.svg'
 import { LinkDirsearch, LinkFOFA, LinkHunter } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize, getClassBySeverity } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
 import { List } from 'wailsjs/go/main/File';
 import { validateWebscan } from '@/stores/validate';
-import { structs } from 'wailsjs/go/models';
+import { structs, webscan } from 'wailsjs/go/models';
 import { webscanOptions } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
-import { InsertFingerscanResult, InsertScanTask } from 'wailsjs/go/main/Database';
+import { DeleteScanTask, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult, UpdateScanWithTarget } from 'wailsjs/go/main/Database';
 
 // webscan
 const customTemplate = ref<string[]>([])
@@ -29,11 +27,11 @@ const templateLoading = ref(false)
 const dashboard = reactive({
     reqErrorURLs: [] as string[],
     riskLevel: {
-        critical: 0,
-        high: 0,
-        medium: 0,
-        low: 0,
-        info: 0,
+        CRITICAL: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+        INFO: 0,
     },
     currentModule: "",
     count: 0,
@@ -45,8 +43,9 @@ const form = reactive({
     url: '',
     tags: [] as string[],
     newscanner: false,
-    vulResult: [] as Vulnerability[],
-    fingerResult: [] as FingerprintTable[],
+    vulResult: [] as webscan.VulnerabilityInfo[],
+    fingerResult: [] as webscan.InfoResult[],
+    taskResult: [] as structs.TaskResult[],
     fofaDialog: false,
     fofaNum: 1000,
     hunterDialog: false,
@@ -79,10 +78,10 @@ const selectedRow = ref();
 
 let fp = usePagination(form.fingerResult, 50)
 let vp = usePagination(form.vulResult, 50)
-
+let rp = usePagination(form.taskResult, 10)
 
 // 初始化时调用
-onMounted(async () => {
+async function initialize() {
     let isSuccess = await InitRule()
     if (!isSuccess) {
         ElMessage.error({
@@ -109,53 +108,37 @@ onMounted(async () => {
         }
     })
     templateLoading.value = false // 加载完毕
+
+    let result = await GetAllScanTask()
+    if (result != null) {
+        rp.table.result = result
+        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+    }
+}
+
+// 初始化时调用
+onMounted(() => {
+    initialize()
     // 获得结果回调
     EventsOn("nucleiResult", (result: any) => {
         const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
         dashboard.riskLevel[riskLevelKey]++;
-        vp.table.result.push({
-            vulID: result.ID,
-            vulName: result.Name,
-            protocoltype: result.Type.toLocaleUpperCase(),
-            severity: result.Risk.toLocaleUpperCase(),
-            vulURL: result.URL,
-            request: result.Request,
-            response: result.Response,
-            extInfo: result.Extract,
-            description: result.Description,
-            reference: result.Reference,
-        })
+        vp.table.result.push(result)
         vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
+        if (!config.writeDB) return
+        InsertPocscanResult(form.taskId, result)
+        taskManager.updateTaskTable(form.taskId)
     });
     EventsOn("webFingerScan", (result: any) => {
         if (result.StatusCode == 0) {
             dashboard.reqErrorURLs.push(result.URL)
             return
         }
-        fp.table.result.push({
-            url: result.URL,
-            status: result.StatusCode,
-            length: result.Length,
-            title: result.Title,
-            detect: result.Detect,
-            existsWaf: result.IsWAF,
-            waf: "WAF: " + result.WAF,
-            fingerprint: result.Fingerprints,
-            screenshot: result.Screenshot
-        })
+        fp.table.result.push(result)
         fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
         if (!config.writeDB) return
-        InsertFingerscanResult(form.taskId, {
-            URL: result.URL,
-            StatusCode: result.StatusCode,
-            Length: result.Length,
-            Title: result.Title,
-            Detect: result.Detect,
-            IsWAF: result.IsWAF,
-            WAF: result.WAF,
-            Fingerprints: result.Fingerprints.join(","),
-            Screenshot: result.Screenshot,
-        })
+        InsertFingerscanResult(form.taskId, result)
+        taskManager.updateTaskTable(form.taskId)
     });
     EventsOn("ActiveCounts", (count: number) => {
         form.count = count
@@ -195,11 +178,13 @@ async function startScan() {
     if (!validateWebscan(form.url)) {
         return
     }
-    form.taskId = nano()
-    let isSuccess = await InsertScanTask(form.taskId, form.taskName, form.url, 0, 0)
-    if (!isSuccess) {
-        ElMessage.error("添加任务失败")
-        return
+    if (config.writeDB) {
+        form.taskId = nano()
+        let isSuccess = await InsertScanTask(form.taskId, form.taskName, form.url, 0, 0)
+        if (!isSuccess) {
+            ElMessage.error("添加任务失败")
+            return
+        }
     }
     form.newscanner = false // 隐藏界面
     ws.init()
@@ -220,11 +205,9 @@ class Scanner {
         fp.table.result = []
         vp.table.result = []
         vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
-        dashboard.riskLevel.critical = 0
-        dashboard.riskLevel.high = 0
-        dashboard.riskLevel.medium = 0
-        dashboard.riskLevel.low = 0
-        dashboard.riskLevel.info = 0
+        Object.keys(dashboard.riskLevel).forEach(key => {
+            dashboard.riskLevel[key] = 0;
+        });
         dashboard.reqErrorURLs = []
         dashboard.currentModule = ""
         form.percentage = 0
@@ -311,17 +294,6 @@ function filterHandlerSeverity(value: string, row: any): boolean {
     return row.severity === value;
 }
 
-function transformedResult() {
-    return vp.table.result.map(({ vulID, vulName, protocoltype, severity, vulURL, extInfo }) => ({
-        vulID,
-        vulName,
-        protocoltype,
-        severity,
-        vulURL,
-        extInfo,
-    }))
-}
-
 function handleContextMenu(row: any, column: any, e: MouseEvent) {
     //prevent the browser's default menu
     e.preventDefault();
@@ -342,7 +314,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
                 divided: true,
                 icon: h(CopyDocument, defaultIconSize),
                 onClick: () => {
-                    CopyALL(fp.table.selectRows.map(item => item.url))
+                    CopyALL(fp.table.selectRows.map(item => item.URL))
                 }
             },
             {
@@ -372,7 +344,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
 }
 
 function BatchBrowserOpenURL() {
-    let targets = fp.table.selectRows.map(item => item.url)
+    let targets = fp.table.selectRows.map(item => item.URL)
     for (const item of targets) {
         BrowserOpenURL(item)
     }
@@ -391,6 +363,79 @@ async function ShowWebPictrue(filepath: string) {
     document.getElementById('webscan-img')!.setAttribute('src', bs64)
 }
 
+// 任务管理
+const taskManager = {
+    editTask: async function (row: any) {
+        historyDialog.value = false;
+        form.url = row.Targets;
+        form.taskName = row.TaskName;
+        if (row.Targets != undefined) {
+            row.Targets!.includes('\n') ? dashboard.count = row.Targets.split('\n').length : dashboard.count = 1
+        }
+        const [fingerResult, nucleiResult] = await Promise.all([
+            SelectFingerscanResult(row.TaskId),
+            SelectPocscanResult(row.TaskId)
+        ]);
+
+        if (fingerResult) {
+            fp.table.result = fingerResult;
+            fp.table.pageContent = fp.ctrl.watchResultChange(fp.table);
+        }
+
+        if (nucleiResult) {
+            vp.table.result = nucleiResult;
+            vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
+
+            // 初始化风险等级计数
+            Object.keys(dashboard.riskLevel).forEach(key => {
+                dashboard.riskLevel[key] = 0;
+            });
+
+            // 遍历结果，统计每个风险等级的数量
+            vp.table.result.forEach(item => {
+                const riskLevelKey = item.Risk as keyof typeof dashboard.riskLevel;
+                if (dashboard.riskLevel[riskLevelKey] !== undefined) {
+                    dashboard.riskLevel[riskLevelKey]++;
+                }
+            });
+        }
+    },
+    deleteTask: async function (taskId: string) {
+        let isSuccess = await DeleteScanTask(taskId)
+        if (isSuccess) {
+            ElMessage.success("删除成功")
+            rp.table.result = rp.table.result.filter(item => item.TaskId != taskId)
+            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+            return
+        }
+        ElMessage.error("删除失败")
+    },
+    exportTask: async function (taskId: string) {
+        const [fingerResult, nucleiResult] = await Promise.all([
+            SelectFingerscanResult(taskId),
+            SelectPocscanResult(taskId)
+        ]);
+
+        ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Risk, URL, Extract }) => ({
+            ID,
+            Name,
+            Type,
+            Risk,
+            URL,
+            Extract,
+        })))
+    },
+    updateTaskTable: function (taskId: string) {
+        let vulcount = dashboard.riskLevel.CRITICAL + dashboard.riskLevel.HIGH + dashboard.riskLevel.MEDIUM + dashboard.riskLevel.LOW + dashboard.riskLevel.INFO
+        UpdateScanWithResult(taskId, dashboard.reqErrorURLs.length, vulcount)
+        // 更新对应taskId的表格列中的漏洞数量
+        const taskIndex = rp.table.result.findIndex(task => task.TaskId === taskId);
+        if (taskIndex !== -1) {
+            rp.table.result[taskIndex].Vulnerability = vulcount;
+            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
+        }
+    }
+}
 
 </script>
 
@@ -460,29 +505,29 @@ async function ShowWebPictrue(filepath: string) {
                     @selection-change="fp.ctrl.handleSelectChange" :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleContextMenu">
                     <el-table-column type="selection" width="55px" />
-                    <el-table-column fixed prop="url" label="URL" width="300px" />
-                    <el-table-column prop="status" width="100px" label="Code"
+                    <el-table-column fixed prop="URL" label="URL" width="300px" />
+                    <el-table-column prop="StatusCode" width="100px" label="Code"
                         :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
                         :show-overflow-tooltip="true" />
-                    <el-table-column prop="length" width="100px" label="Length"
+                    <el-table-column prop="Length" width="100px" label="Length"
                         :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
                         :show-overflow-tooltip="true" />
-                    <el-table-column prop="title" label="Title" />
-                    <el-table-column prop="fingerprint" label="Fingerprint" width="350px">
+                    <el-table-column prop="Title" label="Title" />
+                    <el-table-column prop="Fingerprints" label="Fingerprint" width="350px">
                         <template #default="scope">
                             <div class="finger-container">
-                                <el-tag v-for="finger in scope.row.fingerprint" :key="finger"
-                                    :effect="scope.row.detect === 'Default' ? 'light' : 'dark'"
+                                <el-tag v-for="finger in scope.row.Fingerprints" :key="finger"
+                                    :effect="scope.row.Detect === 'Default' ? 'light' : 'dark'"
                                     :type="global.webscan.highlight_fingerprints.includes(finger) ? 'danger' : 'primary'">{{
                                         finger }}</el-tag>
-                                <el-tag type="danger" v-if="scope.row.existsWaf">{{ scope.row.waf }}</el-tag>
+                                <el-tag type="danger" v-if="scope.row.IsWAF">{{ scope.row.Waf }}</el-tag>
                             </div>
                         </template>
                     </el-table-column>
                     <el-table-column label="Screen" width="80">
                         <template #default="scope">
-                            <el-button :icon="View" link @click="ShowWebPictrue(scope.row.screenshot)"
-                                v-if="scope.row.screenshot != ''" />
+                            <el-button :icon="View" link @click="ShowWebPictrue(scope.row.Screenshot)"
+                                v-if="scope.row.Screenshot != ''" />
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
@@ -502,9 +547,9 @@ async function ShowWebPictrue(filepath: string) {
             <el-tab-pane label="漏洞">
                 <el-table :data="vp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }">
-                    <el-table-column prop="vulID" label="Template" width="250px" />
-                    <el-table-column prop="severity" width="150px" label="Severity"
-                        :filter-method="filterHandlerSeverity" :filters="[
+                    <el-table-column prop="ID" label="Template" width="250px" />
+                    <el-table-column prop="Risk" width="150px" label="Severity" :filter-method="filterHandlerSeverity"
+                        :filters="[
                             { text: 'INFO', value: 'INFO' },
                             { text: 'LOW', value: 'LOW' },
                             { text: 'MEDIUM', value: 'MEDIUM' },
@@ -515,10 +560,10 @@ async function ShowWebPictrue(filepath: string) {
                             <Filter />
                         </template>
                         <template #default="scope">
-                            <span :class="getClassBySeverity(scope.row.severity)">{{ scope.row.severity }}</span>
+                            <span :class="getClassBySeverity(scope.row.Risk)">{{ scope.row.Risk }}</span>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="vulURL" label="URL" />
+                    <el-table-column prop="URL" label="URL" />
                     <el-table-column label="操作" width="120px">
                         <template #default="scope">
                             <el-button type="primary" link @click="detailDialog = true; selectedRow = scope.row">
@@ -541,15 +586,9 @@ async function ShowWebPictrue(filepath: string) {
             </el-tab-pane>
         </el-tabs>
         <template #ctrl>
-            <el-space :size="2">
-                <el-tooltip content="历史记录">
-                    <el-button :icon="Clock" @click="historyDialog = true" />
-                </el-tooltip>
-                <el-tooltip content="导出Excel">
-                    <el-button :icon="exportIcon"
-                        @click="ExportWebScanToXlsx(transformArrayFields(fp.table.result), transformedResult())" />
-                </el-tooltip>
-            </el-space>
+            <el-tooltip content="扫描任务历史">
+                <el-button :icon="Clock" @click="historyDialog = true" />
+            </el-tooltip>
         </template>
     </CustomTabs>
 
@@ -659,18 +698,18 @@ async function ShowWebPictrue(filepath: string) {
         </template>
         <div v-if="selectedRow">
             <el-descriptions :column="1" border style="margin-bottom: 10px;">
-                <el-descriptions-item label="Name:">{{ selectedRow.vulName }}</el-descriptions-item>
-                <el-descriptions-item label="Extracted:">{{ selectedRow.extInfo }}</el-descriptions-item>
-                <el-descriptions-item label="Description:">{{ selectedRow.description }}</el-descriptions-item>
+                <el-descriptions-item label="Name:">{{ selectedRow.Name }}</el-descriptions-item>
+                <el-descriptions-item label="Extracted:">{{ selectedRow.Extract }}</el-descriptions-item>
+                <el-descriptions-item label="Description:">{{ selectedRow.Description }}</el-descriptions-item>
                 <el-descriptions-item label="Reference:" label-class-name="description">
-                    <div v-for="item in selectedRow.reference.split(',')">
+                    <div v-for="item in selectedRow.Reference.split(',')">
                         {{ item }}
                     </div>
                 </el-descriptions-item>
             </el-descriptions>
             <div style="display: flex">
-                <div class="pretty-response" style="font-size: small;">{{ selectedRow.request }}</div>
-                <div class="pretty-response" style="font-size: small;">{{ selectedRow.response }}</div>
+                <div class="pretty-response" style="font-size: small;">{{ selectedRow.Request }}</div>
+                <div class="pretty-response" style="font-size: small;">{{ selectedRow.Response }}</div>
             </div>
         </div>
     </el-drawer>
@@ -705,26 +744,54 @@ async function ShowWebPictrue(filepath: string) {
     <el-dialog v-model="screenDialog" width="50%" title="网站截图">
         <img id="webscan-img" src="" style="width: 100%; height: 400px;">
     </el-dialog>
-    <el-drawer v-model="historyDialog" size="50%">
+    <el-drawer v-model="historyDialog" size="70%">
         <template #header>
             <el-text style="font-weight: bold; font-size: 16px;"><el-icon :size="18" style="margin-right: 5px;">
                     <Clock />
                 </el-icon><span>扫描任务历史</span></el-text>
         </template>
-        <el-table :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }">
-            <el-table-column prop="taskname" label="任务名称"></el-table-column>
-            <el-table-column prop="targets" label="目标数量"></el-table-column>
-            <el-table-column prop="failed" label="失败数量"></el-table-column>
-            <el-table-column prop="vulnerability" label="漏洞数量"></el-table-column>
+        <el-table :data="rp.table.pageContent" stripe :cell-style="{ textAlign: 'center' }"
+            :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 120px)">
+            <el-table-column prop="TaskName" label="任务名称" :show-overflow-tooltip="true"></el-table-column>
+            <el-table-column prop="Targets" label="目标" :show-overflow-tooltip="true">
+                <template #default="scope">
+                    <el-link>{{ scope.row.Targets.includes('\n') ? scope.row.Targets.split('\n')[0] : scope.row.Targets
+                        }}</el-link>
+                </template>
+            </el-table-column>
+            <el-table-column label="资产" width="100px">
+                <template #default="scope">
+                    <span>{{ scope.row.Targets.includes('\n') ? scope.row.Targets.split('\n').length : 1 }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column prop="Vulnerability" label="漏洞" width="100px" />
             <el-table-column label="操作" width="180px" align="center">
                 <template #default="scope">
-
+                    <el-button-group>
+                        <el-tooltip content="编辑">
+                            <el-button :icon="Edit" link @click="taskManager.editTask(scope.row)" />
+                        </el-tooltip>
+                        <el-tooltip content="删除">
+                            <el-button :icon="Delete" link @click="taskManager.deleteTask(scope.row.TaskId)" />
+                        </el-tooltip>
+                        <el-tooltip content="导出">
+                            <el-button :icon="Share" link @click="taskManager.exportTask(scope.row.TaskId)" />
+                        </el-tooltip>
+                    </el-button-group>
                 </template>
             </el-table-column>
             <template #empty>
                 <el-empty></el-empty>
             </template>
         </el-table>
+        <div class="my-header" style="margin-top: 5px;">
+            <div></div>
+            <el-pagination size="small" background @size-change="rp.ctrl.handleSizeChange"
+                @current-change="rp.ctrl.handleCurrentChange" :pager-count="5" :current-page="rp.table.currentPage"
+                :page-sizes="[10, 20]" :page-size="rp.table.pageSize" layout="total, sizes, prev, pager, next"
+                :total="rp.table.result.length">
+            </el-pagination>
+        </div>
     </el-drawer>
 </template>
 

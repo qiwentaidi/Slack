@@ -18,6 +18,10 @@ export function CreateTable() {
   return window['go']['main']['Database']['CreateTable']();
 }
 
+export function DeleteScanTask(arg1) {
+  return window['go']['main']['Database']['DeleteScanTask'](arg1);
+}
+
 export function DisconnectDatabase(arg1) {
   return window['go']['main']['Database']['DisconnectDatabase'](arg1);
 }
@@ -70,12 +74,20 @@ export function GetAllPathsAndTimes() {
   return window['go']['main']['Database']['GetAllPathsAndTimes']();
 }
 
+export function GetAllScanTask() {
+  return window['go']['main']['Database']['GetAllScanTask']();
+}
+
 export function InsertFavGrammarFiled(arg1, arg2, arg3) {
   return window['go']['main']['Database']['InsertFavGrammarFiled'](arg1, arg2, arg3);
 }
 
 export function InsertFingerscanResult(arg1, arg2) {
   return window['go']['main']['Database']['InsertFingerscanResult'](arg1, arg2);
+}
+
+export function InsertPocscanResult(arg1, arg2) {
+  return window['go']['main']['Database']['InsertPocscanResult'](arg1, arg2);
 }
 
 export function InsertScanTask(arg1, arg2, arg3, arg4, arg5) {
@@ -98,6 +110,14 @@ export function SelectAllSyntax(arg1) {
   return window['go']['main']['Database']['SelectAllSyntax'](arg1);
 }
 
+export function SelectFingerscanResult(arg1) {
+  return window['go']['main']['Database']['SelectFingerscanResult'](arg1);
+}
+
+export function SelectPocscanResult(arg1) {
+  return window['go']['main']['Database']['SelectPocscanResult'](arg1);
+}
+
 export function UpdateConnection(arg1) {
   return window['go']['main']['Database']['UpdateConnection'](arg1);
 }
@@ -106,6 +126,10 @@ export function UpdateOrInsertPath(arg1) {
   return window['go']['main']['Database']['UpdateOrInsertPath'](arg1);
 }
 
-export function UpdateScanTask(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['main']['Database']['UpdateScanTask'](arg1, arg2, arg3, arg4, arg5);
+export function UpdateScanWithResult(arg1, arg2, arg3) {
+  return window['go']['main']['Database']['UpdateScanWithResult'](arg1, arg2, arg3);
+}
+
+export function UpdateScanWithTarget(arg1, arg2, arg3) {
+  return window['go']['main']['Database']['UpdateScanWithTarget'](arg1, arg2, arg3);
 }

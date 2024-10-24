@@ -89,8 +89,8 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 			Request:     event.Request,
 			Response:    event.Response,
 			Extract:     strings.Join(event.ExtractedResults, " | "),
-			Type:        event.Type,
-			Risk:        event.Info.SeverityHolder.Severity.String(),
+			Type:        strings.ToUpper(event.Type),
+			Risk:        strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
 		})
 	})
 	if err != nil {

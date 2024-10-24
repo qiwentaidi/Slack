@@ -28,31 +28,6 @@ export interface PortScanData {
     HttpTitle: string;
 }
 
-export interface Vulnerability {
-    vulID: string;
-    vulName: string;
-    protocoltype: string;
-    severity: string;
-    vulURL: string;
-    request: string;
-    response: string;
-    extInfo: string;
-    reference: string;
-    description: string;
-}
-
-export interface FingerprintTable {
-    url: string;
-    status: string;
-    length: string;
-    title: string;
-    detect: string;
-    existsWaf: boolean;
-    waf: string;
-    fingerprint: string[];
-    screenshot: string;
-}
-
 export interface Dir {
     Status: number;
     URL: string;

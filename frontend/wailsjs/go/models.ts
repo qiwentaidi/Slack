@@ -849,6 +849,26 @@ export namespace structs {
 	        this.DnsServers = source["DnsServers"];
 	    }
 	}
+	export class TaskResult {
+	    TaskId: string;
+	    TaskName: string;
+	    Targets: string;
+	    Failed: number;
+	    Vulnerability: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new TaskResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.TaskId = source["TaskId"];
+	        this.TaskName = source["TaskName"];
+	        this.Targets = source["Targets"];
+	        this.Failed = source["Failed"];
+	        this.Vulnerability = source["Vulnerability"];
+	    }
+	}
 	export class WebscanOptions {
 	    Target: string[];
 	    Thread: number;
@@ -908,6 +928,36 @@ export namespace webscan {
 	        this.WAF = source["WAF"];
 	        this.Detect = source["Detect"];
 	        this.Screenshot = source["Screenshot"];
+	    }
+	}
+	export class VulnerabilityInfo {
+	    ID: string;
+	    Name: string;
+	    Description: string;
+	    Reference: string;
+	    Type: string;
+	    Risk: string;
+	    URL: string;
+	    Request: string;
+	    Response: string;
+	    Extract: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new VulnerabilityInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.Name = source["Name"];
+	        this.Description = source["Description"];
+	        this.Reference = source["Reference"];
+	        this.Type = source["Type"];
+	        this.Risk = source["Risk"];
+	        this.URL = source["URL"];
+	        this.Request = source["Request"];
+	        this.Response = source["Response"];
+	        this.Extract = source["Extract"];
 	    }
 	}
 
