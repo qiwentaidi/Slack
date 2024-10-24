@@ -10,7 +10,7 @@
                         <span>连接池</span>
                     </span>
                 </template>
-                <!-- <el-row :gutter="12" v-if="connections && connections.length > 0">
+                <el-row :gutter="12" v-if="connections && connections.length > 0">
                     <el-col :span="12" v-for="(connection, index) in connections" :key="index">
                         <el-card class="connection-card" :class="{ 'connected': connection.connected }"
                             v-loading="connection.loading">
@@ -55,7 +55,7 @@
                             </div>
                         </el-card>
                     </el-col>
-                </el-row> -->
+                </el-row>
             </el-tab-pane>
             <template v-for="(connection, index) in connections">
                 <el-tab-pane :key="index" :label="connection.type + '://' + connection.host + ':' + connection.port"
@@ -187,6 +187,25 @@ const settingDialog = ref(false)
 
 const tips = `Tips: 在连接除Mongodb之外的数据库时，程序会自动忽略系统数据库，所以有时面板显示数据库数量为0`
 
+function chooseDefaultPort() {
+    switch (currentConnection.type) {
+        case 'mysql':
+            currentConnection.port = 3306
+            break
+        case 'mssql':
+            currentConnection.port = 1433
+            break
+        case 'oracle':
+            currentConnection.port = 1521
+            break
+        case 'postgres':
+            currentConnection.port = 5432
+            break
+        default:
+            currentConnection.port = 27017
+    }
+}
+
 onMounted(async () => {
     chooseDefaultPort()
     let result = await GetAllDatabaseConnections()
@@ -210,39 +229,7 @@ onMounted(async () => {
     }
 })
 
-function chooseDefaultPort() {
-    switch (currentConnection.type) {
-        case 'mysql':
-            currentConnection.port = 3306
-            break
-        case 'mssql':
-            currentConnection.port = 1433
-            break
-        case 'oracle':
-            currentConnection.port = 1521
-            break
-        case 'postgres':
-            currentConnection.port = 5432
-            break
-        default:
-            currentConnection.port = 27017
-    }
-}
-
-const showAddConnectionDialog = () => {
-    isEditing.value = false
-    resetCurrentConnection()
-    dialogVisible.value = true
-}
-
-const showEditConnectionDialog = (connection: DatabaseConnection) => {
-    isEditing.value = true
-    Object.assign(currentConnection, connection)
-    editingIndex.value = connections.value.findIndex(c => `${c.host}:${c.port}` === `${connection.host}:${connection.port}`)
-    dialogVisible.value = true
-}
-
-const resetCurrentConnection = () => {
+function resetCurrentConnection() {
     Object.assign(currentConnection, {
         name: '',
         type: 'mysql',
@@ -255,6 +242,20 @@ const resetCurrentConnection = () => {
         activeTableTab: '',
     })
 }
+
+function showAddConnectionDialog() {
+    isEditing.value = false
+    resetCurrentConnection()
+    dialogVisible.value = true
+}
+
+function showEditConnectionDialog(connection: DatabaseConnection) {
+    isEditing.value = true
+    Object.assign(currentConnection, connection)
+    editingIndex.value = connections.value.findIndex(c => `${c.host}:${c.port}` === `${connection.host}:${connection.port}`)
+    dialogVisible.value = true
+}
+
 
 async function addConnection() {
     if (currentConnection.host == '') {
@@ -402,7 +403,7 @@ async function openConnection(connection: DatabaseConnection) {
 const regexPatterns = [regexpPhone, regexpIdCard, regexpAKSK];
 
 // 提取列名匹配函数
-const matchColumn = (columns: string[]): boolean => {
+function matchColumn(columns: string[]): boolean {
     let keywordColumns = global.database.columnsNameKeywords.split(",")
     if (keywordColumns.length == 0) keywordColumns = ['phone', 'telephone', 'idcard', 'card', 'password', 'username', 'mobile', 'sfz', 'secret']
     return columns.some(column =>
@@ -411,7 +412,7 @@ const matchColumn = (columns: string[]): boolean => {
 };
 
 // 提取行数据匹配函数
-const matchRows = (rows: any[][]): boolean => {
+function matchRows(rows: any[][]): boolean {
     return rows.some(row =>
         row.some(cell => {
             if (typeof cell === 'string') {
