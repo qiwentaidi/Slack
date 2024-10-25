@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref, h, nextTick } from 'vue'
+import { reactive, onMounted, ref, h } from 'vue'
 import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
-import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, getProxy, UploadFileAndRead } from '@/util'
+import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
@@ -71,7 +71,7 @@ const config = reactive({
 })
 
 const detailDialog = ref(false)
-const screenDialog = ref(false)
+// const screenDialog = ref(false)
 const historyDialog = ref(false)
 
 const selectedRow = ref();
@@ -165,6 +165,7 @@ onMounted(() => {
         EventsOff("webFingerScan");
         EventsOff("ActiveCounts");
         EventsOff("ActiveProgressID");
+        EventsOff("ActiveScanComplete");
         EventsOff("NucleiCounts");
         EventsOff("NucleiProgressID");
     };
@@ -269,7 +270,14 @@ class Scanner {
             SkipNucleiWithoutTags: config.skipNucleiWithoutTags,
             GenerateLog4j2: config.generateLog4j2,
         }
-        await NewWebScanner(options, getProxy())
+        await NewWebScanner(options, {
+            Enabled: global.proxy.enabled,
+            Mode: global.proxy.mode,
+            Address: global.proxy.address,
+            Port: global.proxy.port,
+            Username: global.proxy.username,
+            Password: global.proxy.password,
+        })
         this.done()
         form.runnningStatus = false
     }
@@ -285,19 +293,21 @@ class Scanner {
 // 联动空间引擎
 
 const uncover = {
-    fofa: async function () {
+    fofa: function () {
         form.fofaDialog = false
-        let urls = await LinkFOFA(form.query, form.fofaNum)
-        if (urls != undefined) {
-            form.url = urls.join("\n")
-        }
+        LinkFOFA(form.query, form.fofaNum).then(urls => {
+            if (urls) {
+                form.url = urls.join("\n")
+            }
+        })
     },
-    hunter: async function () {
+    hunter: function () {
         form.hunterDialog = false
-        let urls = await LinkHunter(form.query, form.defaultNum)
-        if (urls != undefined) {
-            form.url = urls.join("\n")
-        }
+        LinkHunter(form.query, form.defaultNum).then(urls => {
+            if (urls) {
+                form.url = urls.join("\n")
+            }
+        })
     },
 
 }
@@ -367,13 +377,13 @@ async function uploadFile() {
     form.url = await UploadFileAndRead()
 }
 
-async function ShowWebPictrue(filepath: string) {
-    let bs64 = await ViewPictrue(filepath)
-    if (bs64 == '') return
-    screenDialog.value = true
-    await nextTick()
-    document.getElementById('webscan-img')!.setAttribute('src', bs64)
-}
+// async function ShowWebPictrue(filepath: string) {
+//     let bs64 = await ViewPictrue(filepath)
+//     if (bs64 == '') return
+//     screenDialog.value = true
+//     await nextTick()
+//     document.getElementById('webscan-img')!.setAttribute('src', bs64)
+// }
 
 // 任务管理
 const taskManager = {
@@ -537,6 +547,7 @@ const taskManager = {
                             </div>
                         </template>
                     </el-table-column>
+                    <!-- 网站截图
                     <el-table-column label="Screen" width="80">
                         <template #default="scope">
                             <el-button :icon="View" link @click="ShowWebPictrue(scope.row.Screenshot)"
@@ -544,6 +555,7 @@ const taskManager = {
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
+                     -->
                     <template #empty>
                         <el-empty />
                     </template>
@@ -754,9 +766,11 @@ const taskManager = {
             <el-button type="primary" @click="uncover.hunter">导入</el-button>
         </template>
     </el-dialog>
+    <!--
     <el-dialog v-model="screenDialog" width="50%" title="网站截图">
         <img id="webscan-img" src="" style="width: 100%; height: 400px;">
     </el-dialog>
+    -->
     <el-drawer v-model="historyDialog" size="70%">
         <template #header>
             <el-text style="font-weight: bold; font-size: 16px;"><el-icon :size="18" style="margin-right: 5px;">

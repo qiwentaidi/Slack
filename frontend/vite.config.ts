@@ -31,4 +31,7 @@ export default defineConfig({
             'wailsjs': rootPath + 'wailsjs',
         },
     },
+    build: {
+        sourcemap: true // 启用 Source Maps
+    }
 })
