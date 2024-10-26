@@ -518,7 +518,7 @@ func FaviconHash(u *url.URL, client *http.Client) (string, string) {
 
 func (s *FingerScanner) GetHeaderInfo(body []byte, resp *http.Response) (title, server, content_type string) {
 	if match := util.RegTitle.FindSubmatch(body); len(match) > 1 {
-		title = util.Str2UTF8(string(match[1]))
+		title = strings.TrimSpace(util.Str2UTF8(string(match[1])))
 	}
 	for k, v := range resp.Header {
 		if k == "Server" {

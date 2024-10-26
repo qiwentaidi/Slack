@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref, h } from 'vue'
+import { reactive, onMounted, ref, h, nextTick } from 'vue'
 import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner } from 'wailsjs/go/main/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
@@ -71,7 +71,7 @@ const config = reactive({
 })
 
 const detailDialog = ref(false)
-// const screenDialog = ref(false)
+const screenDialog = ref(false)
 const historyDialog = ref(false)
 
 const selectedRow = ref();
@@ -328,7 +328,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
                 label: "复制链接",
                 icon: h(CopyDocument, defaultIconSize),
                 onClick: () => {
-                    Copy(row.url)
+                    Copy(row.URL)
                 }
             },
             {
@@ -343,7 +343,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
                 label: "打开链接",
                 icon: h(ChromeFilled, defaultIconSize),
                 onClick: () => {
-                    BrowserOpenURL(row.url)
+                    BrowserOpenURL(row.URL)
                 }
             },
             {
@@ -358,7 +358,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
                 label: "联动目录扫描",
                 icon: h(Promotion, defaultIconSize),
                 onClick: () => {
-                    LinkDirsearch(row.url)
+                    LinkDirsearch(row.URL)
                 }
             },
         ]
@@ -377,13 +377,13 @@ async function uploadFile() {
     form.url = await UploadFileAndRead()
 }
 
-// async function ShowWebPictrue(filepath: string) {
-//     let bs64 = await ViewPictrue(filepath)
-//     if (bs64 == '') return
-//     screenDialog.value = true
-//     await nextTick()
-//     document.getElementById('webscan-img')!.setAttribute('src', bs64)
-// }
+async function ShowWebPictrue(filepath: string) {
+    let bs64 = await ViewPictrue(filepath)
+    if (bs64 == '') return
+    screenDialog.value = true
+    await nextTick()
+    document.getElementById('webscan-img')!.setAttribute('src', bs64)
+}
 
 // 任务管理
 const taskManager = {
@@ -547,7 +547,7 @@ const taskManager = {
                             </div>
                         </template>
                     </el-table-column>
-                    <!-- 网站截图
+
                     <el-table-column label="Screen" width="80">
                         <template #default="scope">
                             <el-button :icon="View" link @click="ShowWebPictrue(scope.row.Screenshot)"
@@ -555,7 +555,7 @@ const taskManager = {
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
-                     -->
+                    
                     <template #empty>
                         <el-empty />
                     </template>
@@ -706,7 +706,7 @@ const taskManager = {
                     <el-tooltip content="关闭状态无指纹目标会扫全漏洞">
                         <el-checkbox label="跳过无指纹目标漏扫" v-model="config.skipNucleiWithoutTags" />
                     </el-tooltip>
-                    <el-checkbox label="网站截图" v-model="config.screenhost" />
+                    <el-checkbox label="网站截图" v-model="config.screenhost" :disabled="true" />
                 </el-form-item>
             </el-form>
             <div class="position-center">
@@ -766,11 +766,11 @@ const taskManager = {
             <el-button type="primary" @click="uncover.hunter">导入</el-button>
         </template>
     </el-dialog>
-    <!--
+    
     <el-dialog v-model="screenDialog" width="50%" title="网站截图">
         <img id="webscan-img" src="" style="width: 100%; height: 400px;">
     </el-dialog>
-    -->
+   
     <el-drawer v-model="historyDialog" size="70%">
         <template #header>
             <el-text style="font-weight: bold; font-size: 16px;"><el-icon :size="18" style="margin-right: 5px;">
