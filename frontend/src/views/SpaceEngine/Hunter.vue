@@ -122,6 +122,10 @@ const tableCtrl = ({
             ElNotification.warning("请在设置处填写Hunter Key")
             return
         }
+        if (query == "") {
+            ElNotification.warning("请输入查询内容")
+            return
+        }
         const newTabName = `${++table.tabIndex}`
         table.editableTabs.push({
             title: query,
@@ -142,7 +146,7 @@ const tableCtrl = ({
             const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
             tab.content!.pop()
             if (result.data.arr == null) {
-                ElNotification.warning("暂未查询到相关数据");
+                ElMessage.warning("暂未查询到相关数据");
                 table.loading = false
                 return
             }

@@ -113,7 +113,7 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 	} else {
 		content = []byte(body.(string))
 	}
-	resp, b, err := clients.NewRequest(method, target, headers, bytes.NewReader(content), 10, true, clients.JudgeClient(proxy))
+	resp, b, err := clients.NewRequest(method, target, headers, bytes.NewReader(content), 10, true, clients.DefaultWithProxyClient(proxy))
 	if err != nil {
 		return &structs.Response{
 			Error:  true,
@@ -439,7 +439,7 @@ func (a *App) IconHash(target string) string {
 // infoscan
 
 func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
-	protocolURL, err := clients.IsWeb(host, clients.JudgeClient(proxy))
+	protocolURL, err := clients.IsWeb(host, clients.DefaultWithProxyClient(proxy))
 	if err != nil {
 		return &structs.Status{
 			Error: true,
@@ -613,17 +613,17 @@ func (a *App) FaviconMd5(target string) string {
 func (a *App) AlibabaNacos(target, headers string, attackType int, username, password, command, service string, proxy clients.Proxy) string {
 	switch attackType {
 	case 0:
-		if nacos.CVE_2021_29441_Step1(target, username, password, clients.JudgeClient(proxy)) {
+		if nacos.CVE_2021_29441_Step1(target, username, password, clients.DefaultWithProxyClient(proxy)) {
 			return "添加用户成功: \n username: " + username + "， password: " + password
 		}
 	case 1:
-		if nacos.CVE_2021_29441_Step2(target, username, clients.JudgeClient(proxy)) {
+		if nacos.CVE_2021_29441_Step2(target, username, clients.DefaultWithProxyClient(proxy)) {
 			return "删除用户成功!"
 		}
 	case 2:
-		return nacos.CVE_2021_29442(target, clients.JudgeClient(proxy))
+		return nacos.CVE_2021_29442(target, clients.DefaultWithProxyClient(proxy))
 	case 3:
-		return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.JudgeClient(proxy))
+		return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.DefaultWithProxyClient(proxy))
 	}
 	return target + "不存在该漏洞"
 }
@@ -631,12 +631,12 @@ func (a *App) AlibabaNacos(target, headers string, attackType int, username, pas
 func (a *App) HikvsionCamera(target string, attackType int, passwordList []string, cmd string, proxy clients.Proxy) string {
 	switch attackType {
 	case 0:
-		body := hikvision.CVE_2017_7921_Snapshot(target, clients.JudgeClient(proxy))
+		body := hikvision.CVE_2017_7921_Snapshot(target, clients.DefaultWithProxyClient(proxy))
 		return base64.RawStdEncoding.EncodeToString(body)
 	case 1:
-		return hikvision.CVE_2017_7921_Config(target, clients.JudgeClient(proxy))
+		return hikvision.CVE_2017_7921_Config(target, clients.DefaultWithProxyClient(proxy))
 	case 2:
-		return hikvision.CVE_2021_36260(target, cmd, clients.JudgeClient(proxy))
+		return hikvision.CVE_2021_36260(target, cmd, clients.DefaultWithProxyClient(proxy))
 	case 3:
 		return hikvision.CameraHandlessLogin(a.ctx, target, passwordList)
 	}

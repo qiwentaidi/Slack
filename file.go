@@ -9,7 +9,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	rt "runtime"
 	"slack-wails/lib/gologger"
@@ -511,11 +510,12 @@ func (f *File) OpenTerminal(filepath string) string {
 	return ""
 }
 
-func (f *File) RunApp(types, filepath, target string) bool {
-	var cmd *exec.Cmd
+func (f *File) RunApp(types, file, target string) bool {
+	cmd := &exec.Cmd{}
+	name := filepath.Base(file)
 	switch types {
 	case "JAR":
-		cmd = exec.Command("java", "-jar", filepath)
+		cmd = exec.Command("java", "-jar", name)
 	case "APP":
 		if rt.GOOS != "windows" {
 			runtime.MessageDialog(f.ctx, runtime.MessageDialogOptions{
@@ -526,29 +526,30 @@ func (f *File) RunApp(types, filepath, target string) bool {
 			})
 			return false
 		}
-		switch path.Ext(filepath) {
+		switch filepath.Ext(file) {
 		case ".exe":
-			cmd = exec.Command(filepath)
+			cmd = exec.Command(name)
 		case ".url":
-			runtime.BrowserOpenURL(f.ctx, filepath)
+			runtime.BrowserOpenURL(f.ctx, name)
 			return true
 		default:
-			cmd = exec.Command("cmd", "/c", "start", filepath)
+			cmd = exec.Command("cmd", "/c", "start", name)
 		}
 	default:
 		if target == "" {
-			f.OpenTerminal(filepath)
+			f.OpenTerminal(file)
 			return true
 		}
-		target = strings.ReplaceAll(target, "%path%", filepath)
+		target = strings.ReplaceAll(target, "%path%", name)
 		args := strings.Split(target, " ")
 		cmd = exec.Command(args[0], args[1:]...)
 	}
+	cmd.Dir = filepath.Dir(file)
+
 	go func() {
 		if err := cmd.Run(); err != nil {
-			return
-		} else {
 			gologger.Debug(f.ctx, err)
+			return
 		}
 	}()
 	return true

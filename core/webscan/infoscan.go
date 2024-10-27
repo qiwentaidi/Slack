@@ -72,6 +72,7 @@ type FingerScanner struct {
 	basicURLWithFingerprint map[string][]string // 后续nuclei需要扫描的目标列表
 	generateLog4j2          bool                // 是否添加Log4j2指纹，后续nuclei可以添加扫描
 	client                  *http.Client
+	notFollowClient         *http.Client
 	mutex                   sync.RWMutex
 }
 
@@ -91,7 +92,8 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 	return &FingerScanner{
 		ctx:                     ctx,
 		urls:                    urls,
-		client:                  clients.JudgeClient(proxy),
+		client:                  clients.DefaultWithProxyClient(proxy),
+		notFollowClient:         clients.NotFollowWithProxyClient(proxy),
 		screenshot:              options.Screenshot,
 		thread:                  options.Thread,
 		deepScan:                options.DeepScan,
@@ -116,31 +118,63 @@ func (s *FingerScanner) NewFingerScan() {
 		if ExitFunc {
 			return
 		}
+		var rawHeaders []byte
 		resp, body, err := clients.NewSimpleGetRequest(u.String(), s.client)
+
 		if err != nil || resp == nil {
-			retChan <- InfoResult{
-				URL:        u.String(),
-				StatusCode: 0,
+			// headers != nil 需要获取headers为新的响应头
+			// 如果是正常的无法响应则直接返回
+			// 举例: 天融信堡垒机访问首页必定重定向到内网，但是需要从响应头中获取指纹，默认的客户端无法获取，所以需要让notFollowClient再请求一次
+			if resp, rawHeaders = getRedirectHeader(err, u.String(), s.notFollowClient); rawHeaders == nil {
+				retChan <- InfoResult{
+					URL:        u.String(),
+					StatusCode: 0,
+				}
+				return
 			}
-			return
 		}
 
-		// 跟随JS重定向，并替换成重定向后的数据
-		redirectBody := s.GetJSRedirectResponse(u, string(body))
-		if redirectBody != nil {
-			body = redirectBody
+		var faviconHash, faviconMd5, screenshotPath string
+		var fingerprints []string
+		// 网站正常响应
+		server := resp.Header.Get("Server")
+		content_type := resp.Header.Get("Content-Type")
+		title := clients.GetTitle(body)
+		if rawHeaders == nil {
+			// 跟随JS重定向，并替换成重定向后的数据
+			redirectBody := s.GetJSRedirectResponse(u, string(body))
+			if redirectBody != nil {
+				body = redirectBody
+			}
+
+			rawHeaders, _, _ = DumpResponseHeadersAndRaw(resp)
+
+			// 请求Logo
+			faviconHash, faviconMd5 = FaviconHash(u, s.client)
+
+			// 发送shiro探测
+			shiroHeader := s.ShiroScan(u)
+			rawHeaders = append(rawHeaders, []byte(fmt.Sprintf("Set-Cookie: %s", shiroHeader))...)
+
+			// 发送Fastjson探测
+			if s.FastjsonScan(u) {
+				fingerprints = append(fingerprints, "Fastjson")
+			}
+
+			if s.generateLog4j2 {
+				fingerprints = append(fingerprints, "Generate-Log4j2")
+			}
+
+			// 截屏
+			if s.screenshot {
+				if screenshotPath, err = GetScreenshot(u.String()); err != nil {
+					gologger.Debug(s.ctx, err)
+				}
+			}
 		}
-
-		title, server, content_type := s.GetHeaderInfo(body, resp)
-		headers, _, _ := DumpResponseHeadersAndRaw(resp)
-		hashValue, md5Value := FaviconHash(u, s.client)
-
-		// 发送shiro探测
-		shiroHeader := s.ShiroScan(u)
-		headers = append(headers, []byte(fmt.Sprintf("Set-Cookie: %s", shiroHeader))...)
 
 		web := &WebInfo{
-			HeadeString:   string(headers),
+			HeadeString:   string(rawHeaders),
 			ContentType:   content_type,
 			Cert:          GetTLSString(u.Scheme, u.Host),
 			BodyString:    string(body),
@@ -149,8 +183,8 @@ func (s *FingerScanner) NewFingerScan() {
 			Server:        server,
 			ContentLength: len(body),
 			Port:          netutil.GetPort(u),
-			IconHash:      hashValue,
-			IconMd5:       md5Value,
+			IconHash:      faviconHash,
+			IconMd5:       faviconMd5,
 			StatusCode:    resp.StatusCode,
 		}
 
@@ -158,28 +192,16 @@ func (s *FingerScanner) NewFingerScan() {
 
 		s.aliveURLs = append(s.aliveURLs, u)
 
-		fingerprints := s.FingerScan(s.ctx, web, FingerprintDB)
+		fingerprints = append(fingerprints, s.FingerScan(s.ctx, web, FingerprintDB)...)
 
-		// 发送Fastjson探测
-		if s.FastjsonScan(u) {
-			fingerprints = append(fingerprints, "Fastjson")
-		}
-
-		if s.generateLog4j2 {
-			fingerprints = append(fingerprints, "Generate-Log4j2")
+		if len(fingerprints) >= 20 {
+			fingerprints = []string{"疑似蜜罐"}
 		}
 
 		s.mutex.Lock()
 		s.basicURLWithFingerprint[u.String()] = append(s.basicURLWithFingerprint[u.String()], fingerprints...)
 		s.mutex.Unlock()
 
-		screenshotPath := ""
-
-		if s.screenshot {
-			if screenshotPath, err = GetScreenshot(u.String()); err != nil {
-				gologger.Debug(s.ctx, err)
-			}
-		}
 		retChan <- InfoResult{
 			URL:          u.String(),
 			StatusCode:   web.StatusCode,
@@ -254,7 +276,11 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 		if resp == nil {
 			return
 		}
-		title, server, content_type := s.GetHeaderInfo(body, resp)
+
+		server := resp.Header.Get("Server")
+		content_type := resp.Header.Get("Content-Type")
+		title := clients.GetTitle(body)
+
 		headers, _, _ := DumpResponseHeadersAndRaw(resp)
 		ti := &WebInfo{
 			HeadeString:   string(headers),
@@ -515,21 +541,6 @@ func FaviconHash(u *url.URL, client *http.Client) (string, string) {
 // 	}
 // 	return ""
 // }
-
-func (s *FingerScanner) GetHeaderInfo(body []byte, resp *http.Response) (title, server, content_type string) {
-	if match := util.RegTitle.FindSubmatch(body); len(match) > 1 {
-		title = strings.TrimSpace(util.Str2UTF8(string(match[1])))
-	}
-	for k, v := range resp.Header {
-		if k == "Server" {
-			server = strings.Join(v, ";")
-		}
-		if k == "Content-Type" {
-			content_type = strings.Join(v, ";")
-		}
-	}
-	return
-}
 
 func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte {
 	var nextCheckUrl string

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
-import { Search, CirclePlusFilled, Delete, Upload } from "@element-plus/icons-vue";
+import { Search, CirclePlusFilled, Delete, Upload, CopyDocument, CloseBold } from "@element-plus/icons-vue";
 import { FileDialog, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/main/File';
 import global from '@/global';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/main/App';
@@ -303,17 +303,17 @@ function deleteFingerprint(fingerprint: string) {
         </template>
     </CustomTabs>
 
-    <el-drawer v-model="detailDialog" size="70%">
-        <template #header>
-            <el-button text bg>
-                <template #icon>
-                    <Notebook />
-                </template>漏洞详情</el-button>
-        </template>
-        <div class="controls">
-            <el-button type="primary" link @click="Copy(content)">复制</el-button>
-        </div>
-        <highlightjs language="yaml" :code="content"></highlightjs>
+    <el-drawer v-model="detailDialog" :with-header="false" size="70%">
+        <el-card>
+            <div class="my-header">
+                <span style="font-weight: bold;">漏洞详情</span>
+                <el-button-group>
+                    <el-button :icon="CopyDocument" link @click="Copy(content)" />
+                    <el-button :icon="CloseBold" link @click="detailDialog = false" />
+                </el-button-group>
+            </div>
+            <highlightjs language="yaml" :code="content"></highlightjs>
+        </el-card>
     </el-drawer>
 </template>
 

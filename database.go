@@ -855,6 +855,7 @@ func (d *Database) SelectPocscanResult(taskid string) []webscan.VulnerabilityInf
 		var task_id string
 		err = rows.Scan(&task_id, &result.ID, &result.Name, &result.Type, &result.Risk, &result.URL, &result.Extract, &result.Request, &result.Response, &result.Description, &result.Reference)
 		if err != nil {
+			gologger.Debug(d.ctx, err)
 			continue
 		}
 		results = append(results, result)

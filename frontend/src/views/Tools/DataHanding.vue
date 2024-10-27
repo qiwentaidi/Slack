@@ -336,7 +336,7 @@ const filter = ({
                         style="height: calc(100vh - 250px);">
                         <el-table-column type="expand">
                             <template #default="props">
-                                <highlightjs language="bash" :code="props.row.extend" style="padding-inline: 20px;">
+                                <highlightjs language="bash" :code="props.row.extend" style="padding-inline: 20px; border: 1px solid #ccc;">
                                 </highlightjs>
                             </template>
                         </el-table-column>

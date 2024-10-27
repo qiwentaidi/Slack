@@ -1,6 +1,6 @@
 import { createApp, App } from "vue";
 import AppComponent from "./App.vue";
-import "./style.css";
+import "./style/style.css";
 import router from "./router";
 import i18n from './i18n/index' //引入配置的语言
 import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
@@ -19,11 +19,13 @@ import hljsVuePlugin from "@highlightjs/vue-plugin";
 //按需引入语言
 import bash from "highlight.js/lib/languages/bash";
 import yaml from "highlight.js/lib/languages/yaml";
+import http from "highlight.js/lib/languages/http";
 import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 import ContextMenu from '@imengyu/vue3-context-menu'
 
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("yaml", yaml);
+hljs.registerLanguage("http", http);
 
 let theme = localStorage.getItem('theme') || "light"
 

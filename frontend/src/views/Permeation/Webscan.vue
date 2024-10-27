@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead } from '@/util'
@@ -59,6 +59,8 @@ const form = reactive({
     nucleiCounts: 0,
     taskName: '',
     taskId: '',
+    hideRequest: false,
+    hideResponse: false,
 })
 
 const config = reactive({
@@ -392,6 +394,7 @@ const taskManager = {
         form.url = row.Targets;
         form.taskName = row.TaskName;
         config.writeDB = true
+        dashboard.reqErrorURLs = []
         if (row.Targets != undefined) {
             row.Targets!.includes('\n') ? dashboard.count = row.Targets.split('\n').length : dashboard.count = 1
         }
@@ -460,6 +463,13 @@ const taskManager = {
     }
 }
 
+function toggleRequest() {
+    form.hideResponse = !form.hideResponse
+}
+
+function toggleResponse() {
+    form.hideRequest = !form.hideRequest
+}
 </script>
 
 <template>
@@ -697,7 +707,7 @@ const taskManager = {
                     <el-switch v-model="config.writeDB" />
                 </el-form-item>
                 <el-form-item label="任务名称:" v-if="config.writeDB">
-                    <el-input v-model="form.taskName" placeholder="必须输入不重复的任务名称" />
+                    <el-input v-model="form.taskName" />
                 </el-form-item>
                 <el-form-item label="其他配置:">
                     <el-tooltip content="启用后主动指纹只拼接根路径，否则会拼接输入的完整URL">
@@ -706,7 +716,7 @@ const taskManager = {
                     <el-tooltip content="关闭状态无指纹目标会扫全漏洞">
                         <el-checkbox label="跳过无指纹目标漏扫" v-model="config.skipNucleiWithoutTags" />
                     </el-tooltip>
-                    <el-checkbox label="网站截图" v-model="config.screenhost" :disabled="true" />
+                    <el-checkbox label="网站截图" v-model="config.screenhost" />
                 </el-form-item>
             </el-form>
             <div class="position-center">
@@ -714,7 +724,7 @@ const taskManager = {
             </div>
         </div>
     </el-drawer>
-    <el-drawer v-model="detailDialog" size="70%">
+    <el-drawer v-model="detailDialog" size="80%">
         <template #header>
             <el-button text bg>
                 <template #icon>
@@ -726,15 +736,33 @@ const taskManager = {
                 <el-descriptions-item label="Name:">{{ selectedRow.Name }}</el-descriptions-item>
                 <el-descriptions-item label="Extracted:">{{ selectedRow.Extract }}</el-descriptions-item>
                 <el-descriptions-item label="Description:">{{ selectedRow.Description }}</el-descriptions-item>
-                <el-descriptions-item label="Reference:" label-class-name="description">
+                <el-descriptions-item label="Reference:" style="word-break: break-all;">
                     <div v-for="item in selectedRow.Reference.split(',')">
                         {{ item }}
                     </div>
                 </el-descriptions-item>
             </el-descriptions>
             <div style="display: flex">
-                <div class="pretty-response" style="font-size: small;">{{ selectedRow.Request }}</div>
-                <div class="pretty-response" style="font-size: small;">{{ selectedRow.Response }}</div>
+                <el-card v-show="!form.hideRequest" style="flex: 1; margin-right: 5px;">
+                    <div class="my-header">
+                        <span style="font-weight: bold;">Request</span>
+                        <el-button-group>
+                            <el-button :icon="form.hideResponse ? DArrowLeft : DArrowRight" link @click="toggleRequest" />
+                            <el-button :icon="CopyDocument" link @click="Copy(selectedRow.Request)" />
+                        </el-button-group>
+                    </div>
+                    <highlightjs language="http" :code="selectedRow.Request" style="font-size: small;"></highlightjs>
+                </el-card>
+                <el-card v-show="!form.hideResponse" style="flex: 1;">
+                    <div class="my-header">
+                        <span style="font-weight: bold;">Response</span>
+                        <el-button-group>
+                            <el-button :icon="form.hideRequest ? DArrowRight : DArrowLeft" link @click="toggleResponse" />
+                            <el-button :icon="CopyDocument" link @click="Copy(selectedRow.Response)" />
+                        </el-button-group>
+                    </div>
+                    <highlightjs language="http" :code="selectedRow.Response" style="font-size: small;"></highlightjs>
+                </el-card>
             </div>
         </div>
     </el-drawer>

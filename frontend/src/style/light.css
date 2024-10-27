@@ -28,7 +28,7 @@ html.light {
         word-wrap: break-word;
         word-break: break-all;
         border-radius: 5px;
-        border: 1px solid #ccc;
+        /* border: 1px solid #ccc; */
         max-height: 100vh;
     }
 

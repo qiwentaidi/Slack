@@ -54,6 +54,22 @@ func NotFollowClient() *http.Client {
 	}
 }
 
+func DefaultWithProxyClient(proxy Proxy) *http.Client {
+	client := DefaultClient()
+	if proxy.Enabled {
+		client, _ = SelectProxy(&proxy, client)
+	}
+	return client
+}
+
+func NotFollowWithProxyClient(proxy Proxy) *http.Client {
+	client := NotFollowClient()
+	if proxy.Enabled {
+		client, _ = SelectProxy(&proxy, client)
+	}
+	return client
+}
+
 func NewRequest(method, url string, headers map[string]string, body io.Reader, timeout int, closeRespBody bool, client *http.Client) (*http.Response, []byte, error) {
 	requestTimeout := time.Duration(timeout) * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
@@ -140,4 +156,11 @@ func IsWeb(host string, client *http.Client) (string, error) {
 
 	}
 	return "", fmt.Errorf("host %q is empty", host)
+}
+
+func GetTitle(body []byte) string {
+	if match := util.RegTitle.FindSubmatch(body); len(match) > 1 {
+		return strings.TrimSpace(util.Str2UTF8(string(match[1])))
+	}
+	return ""
 }

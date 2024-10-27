@@ -1,16 +1,18 @@
 <template>
     <div class="flex-box">
         <div style="width: 50vh">
-            <el-button-group style="margin-bottom: 10px; width: 100%;">
-                <el-button type="primary" style="width: 50%;" @click="dialog = true">添加</el-button>
-                <el-button type="primary" style="width: 50%;" @click="
-                    save()
-                ElNotification.success({
-                    message: 'Save successfully',
-                    position: 'bottom-right',
-                });
-                ">保存</el-button>
-            </el-button-group>
+            <el-space style="margin-bottom: 10px; float: right;">
+                <el-button type="primary" :icon="Plus" @click="dialog = true">添加</el-button>
+                <el-tooltip content="不点击保存按钮的话数据不会存储">
+                    <el-button type="primary" :icon="saveIcon" @click="
+                        save()
+                    ElNotification.success({
+                        message: 'Save successfully',
+                        position: 'bottom-right',
+                    });
+                    ">保存</el-button>
+                </el-tooltip>
+            </el-space>
             <el-table :data="data.memo" border highlight-current-row :show-header="false" @current-change="handleChange"
                 style="height: 85vh;">
                 <el-table-column prop="label" />
@@ -23,11 +25,13 @@
                 </el-table-column>
             </el-table>
         </div>
-        <div style="width: 70%; margin-left: 10px;">
-            <highlightjs language="bash" :code="reverse.show"></highlightjs>            
-            <el-button type="primary" style="float: right; margin-top: 10px;"
-                @click="Copy(reverse.show)">复制</el-button>
-        </div>
+        <el-card style="width: 70%; margin-left: 10px;">
+            <div class="my-header">
+                <el-tag effect="dark" type="info">{{ reverse.name }}</el-tag>
+                <el-button :icon="CopyDocument" link @click="Copy(reverse.show)" />
+            </div>
+            <highlightjs language="bash" :code="reverse.show" style="border: 1px solid;"></highlightjs>
+        </el-card>
     </div>
     <el-dialog title="添加" v-model="dialog" width="500">
         <el-form>
@@ -53,6 +57,8 @@
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { CheckFileStat, InitMemo, ReadMemo } from 'wailsjs/go/main/File';
+import { CopyDocument, Plus } from '@element-plus/icons-vue';
+import saveIcon from '@/assets/icon/save.svg'
 import { Copy } from '@/util';
 import global from '@/global';
 onMounted(async () => {
@@ -142,6 +148,7 @@ REG ADD HKLM\SYSTEM\CurrentControlSet\Control\Terminal" "Server /v fDenyTSConnec
 
 function handleChange(row: any) {
     reverse.show = row.value;
+    reverse.name = row.label;
 }
 
 function deleteRow(index: number) {
