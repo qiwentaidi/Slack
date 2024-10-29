@@ -29,7 +29,13 @@ hljs.registerLanguage("http", http);
 
 let theme = localStorage.getItem('theme') || "light"
 
-global.Theme.value  = theme == "dark" ? true : false
+if (theme === 'auto') {
+  // 检查系统主题
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  theme = prefersDark ? 'dark' : 'light'; // 根据系统主题设置
+}
+
+global.Theme.value = theme == "dark" ? true : false
 
 export default (app: App<Element>) => {
   // 全局配置

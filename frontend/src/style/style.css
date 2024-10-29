@@ -2,8 +2,8 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
+  /* fix: 在部分系统上，背景颜色一直为暗色，无法从暗色切换到亮色。 */
+  /* color-scheme: light dark; */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
