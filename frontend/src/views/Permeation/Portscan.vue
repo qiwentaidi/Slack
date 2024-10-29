@@ -17,7 +17,12 @@ import CustomTabs from '@/components/CustomTabs.vue';
 import { isPrivateIP, validateIp, validatePortscan } from '@/stores/validate';
 import consoleIcon from '@/assets/icon/console.svg'
 import { crackDict, portGroupOptions, portscanOptions } from '@/stores/options';
+import { debounce } from "lodash"
 import async from 'async'
+
+const debounceUpdate = debounce(() => {
+  pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
+}, 500);
 
 // syn 扫描模式
 onMounted(async () => {
@@ -26,7 +31,7 @@ onMounted(async () => {
     // 扫描状态，把结果从后端传输到前端
     EventsOn("portScanLoading", (p: PortScanData) => {
         pagination.table.result.push(p)
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+        debounceUpdate()
     });
     // 进度条
     EventsOn("progressID", (id: number) => {
@@ -170,15 +175,18 @@ class Scanner {
         await NewTcpScanner(specialTarget, ips, portsList, global.webscan.port_thread, global.webscan.port_timeout)
         // 恢复配置
         ctrl.runningStatus = false
-        ips = []
         portsList = []
         Callgologger("info", "Portscan task is ending")
         if (config.webscan) {
-            ips = moreOperate.getHTTPLinks(pagination.table.result)
+            let ips = pagination.table.result.filter(line => {
+                if (line.Link.startsWith("http")) return true
+            }).map(line => line.Link)
             LinkWebscan(ips)
         }
         if (config.crack) {
-            ips = pagination.ctrl.getColumnData("Link")
+            let ips = pagination.table.result.filter(item => {
+                if (crackDict.options.includes(item.Server)) return true
+            }).map(item => item.Link)
             LinkCrack(ips)
         }
     }
@@ -210,17 +218,6 @@ function updatePorts(index: number) {
 
 
 const moreOperate = ({
-    getHTTPLinks: function (result: PortScanData[]): string[] {
-        return result
-            .filter(line => line.Link.startsWith("http"))
-            .map(line => line.Link);
-    },
-
-    getBruteLinks: function (result: PortScanData[]): string[] {
-        return result
-            .filter(line => crackDict.options.some(brute => line.Link.startsWith(brute)))
-            .map(line => line.Link);
-    },
     // 复制端口扫描中的所有HTTP链接
     CopyURLs: function (type: string, result: PortScanData[]) {
         if (result.length <= 1) {
@@ -416,7 +413,7 @@ function stopShodan() {
                 <el-button type="danger" :icon="CircleClose" @click="ctrl.stop" v-else>停止扫描</el-button>
                 <el-tooltip content="导出Excel">
                     <el-button :icon="exportIcon"
-                        @click="ExportToXlsx(['主机', '端口', '指纹', '目标', '网站标题'], '端口扫描', 'portscan', pagination.table.result)" />
+                        @click="ExportToXlsx(['IP', 'Port', 'Protocol', 'Link', 'Title'], '端口扫描', 'portscan', pagination.table.result)" />
                 </el-tooltip>
             </el-space>
         </template>

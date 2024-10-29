@@ -837,7 +837,15 @@ func (d *Database) SelectFingerscanResult(taskid string) []webscan.InfoResult {
 			gologger.Debug(d.ctx, err)
 			continue
 		}
-		result.Fingerprints = strings.Split(fingerprintsStr, ",")
+		if fingerprintsStr != "" {
+			if strings.Contains(fingerprintsStr, ",") {
+				result.Fingerprints = strings.Split(fingerprintsStr, ",")
+			} else {
+				result.Fingerprints = []string{fingerprintsStr}
+			}
+		} else {
+			result.Fingerprints = []string{}
+		}
 		results = append(results, result)
 	}
 	return results

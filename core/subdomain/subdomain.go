@@ -206,7 +206,12 @@ func ApiPolymerization(ctx context.Context, o structs.SubdomainOption) {
 		}
 		if o.GithubApi != "" {
 			result := github.FetchHosts(ctx, domain, o.GithubApi)
-			subdomains = append(subdomains, result...)
+			// github 会返回一些不正确的域名信息，需要判断根域名是否包含
+			for _, sub := range result {
+				if strings.Contains(sub, "."+domain) {
+					subdomains = append(subdomains, sub)
+				}
+			}
 		}
 		if o.SecuritytrailsApi != "" {
 			sh := securitytrails.FetchHosts(ctx, domain, o.SecuritytrailsApi)

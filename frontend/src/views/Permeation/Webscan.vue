@@ -437,11 +437,13 @@ const taskManager = {
         ElMessage.error("删除失败")
     },
     exportTask: async function (taskId: string) {
-        const [fingerResult, nucleiResult] = await Promise.all([
+        var [fingerResult, nucleiResult] = await Promise.all([
             SelectFingerscanResult(taskId),
             SelectPocscanResult(taskId)
         ]);
-
+        if (!nucleiResult) {
+            nucleiResult = []
+        }
         ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Risk, URL, Extract }) => ({
             ID,
             Name,
@@ -553,7 +555,7 @@ function toggleResponse() {
                                     :effect="scope.row.Detect === 'Default' ? 'light' : 'dark'"
                                     :type="global.webscan.highlight_fingerprints.includes(finger) ? 'danger' : 'primary'">{{
                                         finger }}</el-tag>
-                                <el-tag type="danger" v-if="scope.row.IsWAF">{{ scope.row.Waf }}</el-tag>
+                                <el-tag type="danger" v-if="scope.row.IsWAF">{{ scope.row.WAF }}</el-tag>
                             </div>
                         </template>
                     </el-table-column>

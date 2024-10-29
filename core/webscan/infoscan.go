@@ -272,7 +272,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 		visited[fullURL] = true
 		s.mutex.Unlock()
 
-		resp, body, _ := clients.NewSimpleGetRequest(fullURL, s.client)
+		resp, body, _ := clients.NewRequest("GET", fullURL, nil, nil, 5, false, s.client)
 		if resp == nil {
 			return
 		}
