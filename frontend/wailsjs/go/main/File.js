@@ -6,6 +6,10 @@ export function CheckFileStat(arg1) {
   return window['go']['main']['File']['CheckFileStat'](arg1);
 }
 
+export function DirectoryDialog() {
+  return window['go']['main']['File']['DirectoryDialog']();
+}
+
 export function DownloadLastestClient() {
   return window['go']['main']['File']['DownloadLastestClient']();
 }

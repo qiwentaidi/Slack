@@ -879,6 +879,7 @@ export namespace structs {
 	    TemplateFiles: string[];
 	    SkipNucleiWithoutTags: boolean;
 	    GenerateLog4j2: boolean;
+	    AppendTemplateFolder: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new WebscanOptions(source);
@@ -895,6 +896,7 @@ export namespace structs {
 	        this.TemplateFiles = source["TemplateFiles"];
 	        this.SkipNucleiWithoutTags = source["SkipNucleiWithoutTags"];
 	        this.GenerateLog4j2 = source["GenerateLog4j2"];
+	        this.AppendTemplateFolder = source["AppendTemplateFolder"];
 	    }
 	}
 

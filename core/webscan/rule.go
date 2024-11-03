@@ -59,8 +59,12 @@ func (ic *InitConfig) InitFingprintDB(ctx context.Context, fingerprintFile strin
 	if err == nil {
 		for productName, rulesInterface := range fps {
 			for _, ruleInterface := range rulesInterface.([]interface{}) {
-				ruleL := ruleInterface.(string)
-				_, ok := m[productName]
+				ruleL, ok := ruleInterface.(string)
+				if !ok {
+					fmt.Printf("指纹规则格式错误，产品名称为[%s]，规则为[%v]", productName, ruleInterface)
+					continue
+				}
+				_, ok = m[productName]
 				if ok {
 					f := m[productName]
 					if util.GetItemInArray(f, ruleL) == -1 {
@@ -373,7 +377,7 @@ func dataCheckInt(op int16, dataSource int, dataRule int) bool {
 
 var WorkFlowDB map[string][]string
 
-func (ic *InitConfig) InitAll(ctx context.Context, webfinger, activefinger, template string) bool {
+func (ic *InitConfig) InitAll(ctx context.Context, webfinger, activefinger string, templateFolders []string) bool {
 	FingerprintDB = nil
 	if err := ic.InitFingprintDB(ctx, webfinger); err != nil {
 		gologger.Error(ctx, err)
@@ -383,7 +387,7 @@ func (ic *InitConfig) InitAll(ctx context.Context, webfinger, activefinger, temp
 		gologger.Error(ctx, err)
 		return false
 	}
-	if err := GetTagsList(template); err != nil {
+	if err := GetTagsList(templateFolders); err != nil {
 		gologger.Error(ctx, err)
 		return false
 	}
@@ -400,36 +404,38 @@ type Template struct {
 
 var mutx sync.RWMutex
 
-func GetTagsList(templateDir string) error {
+func GetTagsList(templateFolders []string) error {
 	WorkFlowDB = make(map[string][]string)
-	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
-		return err
-	}
-	// 遍历所有模板文件
-	filepath.WalkDir(templateDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
+	for _, folder := range templateFolders {
+		if _, err := os.Stat(folder); os.IsNotExist(err) {
+			continue
 		}
-		if !d.IsDir() && strings.HasSuffix(d.Name(), ".yaml") {
-			file, err := os.ReadFile(path)
+		// 遍历所有模板文件
+		filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
-				return nil
+				return err
 			}
-			var template Template
-			err = yaml.Unmarshal(file, &template)
-			if err != nil {
-				return nil
-			}
+			if !d.IsDir() && strings.HasSuffix(d.Name(), ".yaml") {
+				file, err := os.ReadFile(path)
+				if err != nil {
+					return nil
+				}
+				var template Template
+				err = yaml.Unmarshal(file, &template)
+				if err != nil {
+					return nil
+				}
 
-			if template.Info.Tags != "" {
-				tags := strings.Split(template.Info.Tags, ",")
-				poc := strings.TrimSuffix(d.Name(), ".yaml")
-				mutx.Lock()
-				WorkFlowDB[poc] = tags
-				mutx.Unlock()
+				if template.Info.Tags != "" {
+					tags := strings.Split(template.Info.Tags, ",")
+					poc := strings.TrimSuffix(d.Name(), ".yaml")
+					mutx.Lock()
+					WorkFlowDB[poc] = tags
+					mutx.Unlock()
+				}
 			}
-		}
-		return nil
-	})
+			return nil
+		})
+	}
 	return nil
 }

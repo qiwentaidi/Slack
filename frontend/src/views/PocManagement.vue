@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
 import { Search, CirclePlusFilled, Delete, Upload, CopyDocument, CloseBold } from "@element-plus/icons-vue";
-import { FileDialog, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/main/File';
+import { CheckFileStat, FileDialog, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/main/File';
 import global from '@/global';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/main/App';
 import { Copy } from '@/util';
@@ -95,8 +95,12 @@ const content = ref('')
 async function readPoc(filename: string) {
     detailDialog.value = true
     let filepath = global.PATH.homedir + "/slack/config/pocs/" + filename + ".yaml"
-    let file: any = await ReadFile(filepath)
-    content.value = file.Content!
+    let isStat = await CheckFileStat(filepath)
+    if (!isStat) {
+        filepath = global.webscan.append_pocfile + "/" + filename + ".yaml"
+    }
+    let file = await ReadFile(filepath)
+    content.value = file.Content
 }
 
 // step 1 add poc, hide poclist

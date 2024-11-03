@@ -162,7 +162,7 @@ const CopyDomains = () => {
                             <el-option v-for="item in subdomainRunnerOptions" :key="item.value" :label="item.label"
                                 :value="item.value" style="width: 260px;">
                                 <span style="float: left">{{ item.label }}</span>
-                                <span class="tips">
+                                <span class="select-tips">
                                     {{ item.tips }}
                                 </span>
                             </el-option>
@@ -263,7 +263,7 @@ const CopyDomains = () => {
                         :label="item.value"
                         :value="item.value">
                         <span style="float: left">{{ item.value }}</span>
-                        <span class="tips">
+                        <span class="select-tips">
                             {{ item.label }}
                         </span>
                     </el-option>
@@ -283,12 +283,3 @@ const CopyDomains = () => {
         </el-form>
     </el-drawer>
 </template>
-
-
-<style>
-.tips {
-    float: right;
-    color: var(--el-text-color-secondary);
-    font-size: 13px;
-}
-</style>

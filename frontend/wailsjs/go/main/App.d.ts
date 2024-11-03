@@ -56,7 +56,7 @@ export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 
 export function IconHash(arg1:string):Promise<string>;
 
-export function InitRule():Promise<boolean>;
+export function InitRule(arg1:string):Promise<boolean>;
 
 export function InitTycHeader(arg1:string):Promise<void>;
 

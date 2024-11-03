@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/util"
 	"strings"
 
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
@@ -32,9 +31,8 @@ type NucleiOption struct {
 	URL                   string
 	Tags                  []string // 全漏洞扫描时，使用自定义标签
 	TemplateFile          []string
+	TemplateFolders       []string
 }
-
-var pocFile = util.HomeDir() + "/slack/config/pocs"
 
 func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 	if o.SkipNucleiWithoutTags && len(o.Tags) == 0 {
@@ -48,7 +46,7 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 	// 判断是使用指定poc文件还是根据标签
 	if len(o.TemplateFile) == 0 {
 		options = append(options, nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
-			Templates: []string{pocFile},
+			Templates: o.TemplateFolders,
 		}))
 		options = append(options, nuclei.WithTemplateFilters(nuclei.TemplateFilters{
 			Tags: o.Tags,
@@ -74,8 +72,6 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 	ne.LoadTargets([]string{o.URL}, false)
 	err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
 		gologger.Success(ctx, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
-		// fmt.Printf("Request: \n%s\n", event.Request)
-		// fmt.Printf("Response: \n%s\n", event.Response)
 		var reference string
 		if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
 			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
@@ -85,9 +81,9 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 			Name:        event.Info.Name,
 			Description: event.Info.Description,
 			Reference:   reference,
-			URL:         event.Matched,
-			Request:     event.Request,
-			Response:    event.Response,
+			URL:         showMatched(event),
+			Request:     showRequest(event),
+			Response:    showResponse(event),
 			Extract:     strings.Join(event.ExtractedResults, " | "),
 			Type:        strings.ToUpper(event.Type),
 			Risk:        strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
@@ -98,4 +94,31 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 		return
 	}
 	defer ne.Close()
+}
+
+func showMatched(event *output.ResultEvent) string {
+	if event.Matched != "" {
+		return event.Matched
+	}
+	return event.URL
+}
+
+func showRequest(event *output.ResultEvent) string {
+	if event.Request != "" {
+		return event.Request
+	}
+	if event.Interaction != nil {
+		return event.Interaction.RawRequest
+	}
+	return ""
+}
+
+func showResponse(event *output.ResultEvent) string {
+	if event.Response != "" {
+		return event.Response
+	}
+	if event.Interaction != nil {
+		return event.Interaction.RawResponse
+	}
+	return ""
 }

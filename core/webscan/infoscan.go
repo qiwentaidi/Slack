@@ -118,61 +118,59 @@ func (s *FingerScanner) NewFingerScan() {
 		if ExitFunc {
 			return
 		}
-		var rawHeaders []byte
+		var (
+			rawHeaders   []byte
+			faviconHash  string
+			faviconMd5   string
+			server       string
+			content_type string
+			statusCode   int
+		)
+
+		// 先进行一次不会重定向的扫描，可以获得重定向前页面的响应头中获取指纹
+		resp, _, _ := clients.NewSimpleGetRequest(u.String(), s.notFollowClient)
+		if resp != nil && resp.StatusCode == 302 {
+			rawHeaders = DumpResponseHeadersOnly(resp)
+		}
+
+		// 正常请求指纹
 		resp, body, err := clients.NewSimpleGetRequest(u.String(), s.client)
-
 		if err != nil || resp == nil {
-			// headers != nil 需要获取headers为新的响应头
+			if len(rawHeaders) > 0 {
+				gologger.Debug(s.ctx, fmt.Sprintf("%s hash error to 302, response headers: %s", u.String(), string(rawHeaders)))
+				statusCode = 302
+				goto ContinueExecution
+			}
 			// 如果是正常的无法响应则直接返回
-			// 举例: 天融信堡垒机访问首页必定重定向到内网，但是需要从响应头中获取指纹，默认的客户端无法获取，所以需要让notFollowClient再请求一次
-			if resp, rawHeaders = getRedirectHeader(err, u.String(), s.notFollowClient); rawHeaders == nil {
-				retChan <- InfoResult{
-					URL:        u.String(),
-					StatusCode: 0,
-				}
-				return
+			retChan <- InfoResult{
+				URL:        u.String(),
+				StatusCode: 0,
 			}
+			return
 		}
 
-		var faviconHash, faviconMd5, screenshotPath string
-		var fingerprints []string
+		// 合并请求头数据
+		rawHeaders = append(rawHeaders, DumpResponseHeadersOnly(resp)...)
+
+		// 请求Logo
+		faviconHash, faviconMd5 = FaviconHash(u, s.client)
+
+		// 发送shiro探测
+		rawHeaders = append(rawHeaders, []byte(fmt.Sprintf("Set-Cookie: %s", s.ShiroScan(u)))...)
+
+	ContinueExecution:
+		// 跟随JS重定向，并替换成重定向后的数据
+		redirectBody := s.GetJSRedirectResponse(u, string(body))
+		if redirectBody != nil {
+			body = redirectBody
+		}
 		// 网站正常响应
-		server := resp.Header.Get("Server")
-		content_type := resp.Header.Get("Content-Type")
 		title := clients.GetTitle(body)
-		if rawHeaders == nil {
-			// 跟随JS重定向，并替换成重定向后的数据
-			redirectBody := s.GetJSRedirectResponse(u, string(body))
-			if redirectBody != nil {
-				body = redirectBody
-			}
-
-			rawHeaders, _, _ = DumpResponseHeadersAndRaw(resp)
-
-			// 请求Logo
-			faviconHash, faviconMd5 = FaviconHash(u, s.client)
-
-			// 发送shiro探测
-			shiroHeader := s.ShiroScan(u)
-			rawHeaders = append(rawHeaders, []byte(fmt.Sprintf("Set-Cookie: %s", shiroHeader))...)
-
-			// 发送Fastjson探测
-			if s.FastjsonScan(u) {
-				fingerprints = append(fingerprints, "Fastjson")
-			}
-
-			if s.generateLog4j2 {
-				fingerprints = append(fingerprints, "Generate-Log4j2")
-			}
-
-			// 截屏
-			if s.screenshot {
-				if screenshotPath, err = GetScreenshot(u.String()); err != nil {
-					gologger.Debug(s.ctx, err)
-				}
-			}
+		if resp != nil {
+			server = resp.Header.Get("Server")
+			content_type = resp.Header.Get("Content-Type")
+			statusCode = resp.StatusCode
 		}
-
 		web := &WebInfo{
 			HeadeString:   string(rawHeaders),
 			ContentType:   content_type,
@@ -185,17 +183,33 @@ func (s *FingerScanner) NewFingerScan() {
 			Port:          netutil.GetPort(u),
 			IconHash:      faviconHash,
 			IconMd5:       faviconMd5,
-			StatusCode:    resp.StatusCode,
+			StatusCode:    statusCode,
 		}
 
 		wafInfo := *waf.ResolveAndWafIdentify(u.Hostname(), subdomain.DefaultDnsServers)
 
 		s.aliveURLs = append(s.aliveURLs, u)
 
-		fingerprints = append(fingerprints, s.FingerScan(s.ctx, web, FingerprintDB)...)
+		fingerprints := s.FingerScan(s.ctx, web, FingerprintDB)
+
+		if s.generateLog4j2 {
+			fingerprints = append(fingerprints, "Generate-Log4j2")
+		}
+
+		if s.FastjsonScan(u) {
+			fingerprints = append(fingerprints, "Fastjson")
+		}
 
 		if len(fingerprints) >= 20 {
 			fingerprints = []string{"疑似蜜罐"}
+		}
+
+		// 截屏
+		var screenshotPath string
+		if s.screenshot {
+			if screenshotPath, err = GetScreenshot(u.String()); err != nil {
+				gologger.Debug(s.ctx, err)
+			}
 		}
 
 		s.mutex.Lock()
@@ -351,6 +365,12 @@ func (s *FingerScanner) ActiveCounts() {
 
 func (s *FingerScanner) URLWithFingerprintMap() map[string][]string {
 	return s.basicURLWithFingerprint
+}
+
+// DumpResponseHeadersOnly 只返回响应头
+func DumpResponseHeadersOnly(resp *http.Response) []byte {
+	headers, _ := httputil.DumpResponse(resp, false)
+	return headers
 }
 
 // DumpResponseHeadersAndRaw returns http headers and response as strings

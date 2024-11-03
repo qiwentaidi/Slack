@@ -205,6 +205,9 @@ const localGroup = ({
     selectFile: async function () {
         config.path = await FileDialog("")
     },
+    selectEditFile: async function () {
+        config.editPath = await FileDialog("")
+    },
 })
 
 function handDivContextMenu(e: MouseEvent) {
@@ -425,7 +428,11 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 <el-input v-model="config.editTarget"></el-input>
             </el-form-item>
             <el-form-item label="路径">
-                <el-input v-model="config.editPath"></el-input>
+                <el-input v-model="config.editPath">
+                    <template #suffix>
+                        <el-button :icon="Document" link @click="localGroup.selectEditFile()" />
+                    </template>
+                </el-input>
             </el-form-item>
         </el-form>
         <template #footer>

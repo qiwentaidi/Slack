@@ -98,8 +98,8 @@ export function IconHash(arg1) {
   return window['go']['main']['App']['IconHash'](arg1);
 }
 
-export function InitRule() {
-  return window['go']['main']['App']['InitRule']();
+export function InitRule(arg1) {
+  return window['go']['main']['App']['InitRule'](arg1);
 }
 
 export function InitTycHeader(arg1) {

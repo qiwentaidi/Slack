@@ -104,7 +104,7 @@ let pathTimes = usePagination(pathHistory.value, 50)
 async function getDictList() {
     from.selectDict = []
     from.configPath = global.PATH.homedir + "/slack/config/dirsearch"
-    let files = await List(from.configPath)
+    let files = await List([from.configPath])
     from.dictList = files.map((item: any) => item.Path)
 }
 

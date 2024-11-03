@@ -159,6 +159,9 @@ func IsWeb(host string, client *http.Client) (string, error) {
 }
 
 func GetTitle(body []byte) string {
+	if len(body) == 0 {
+		return ""
+	}
 	if match := util.RegTitle.FindSubmatch(body); len(match) > 1 {
 		return strings.TrimSpace(util.Str2UTF8(string(match[1])))
 	}

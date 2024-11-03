@@ -2,10 +2,8 @@ package portscan
 
 import (
 	"context"
-	"net"
 	"net/url"
 	"strings"
-	"time"
 )
 
 type Burte struct {
@@ -17,20 +15,6 @@ type Burte struct {
 }
 
 var ExitBruteFunc = false
-
-func WrapperTcpWithTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
-	d := &net.Dialer{Timeout: timeout}
-	return WrapperTCP(network, address, d)
-}
-
-func WrapperTCP(network, address string, forward *net.Dialer) (net.Conn, error) {
-	//get conn
-	conn, err := forward.Dial(network, address)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
 
 var DefaultPorts = map[string]string{
 	"ftp":        "21",

@@ -5,6 +5,8 @@ import {main} from '../models';
 
 export function CheckFileStat(arg1:string):Promise<boolean>;
 
+export function DirectoryDialog():Promise<string>;
+
 export function DownloadLastestClient():Promise<structs.Status>;
 
 export function FileDialog(arg1:string):Promise<string>;
@@ -21,7 +23,7 @@ export function InsetItemNavigation(arg1:string,arg2:structs.Children):Promise<b
 
 export function IsMacOS():Promise<boolean>;
 
-export function List(arg1:string):Promise<Array<main.FileListInfo>>;
+export function List(arg1:Array<string>):Promise<Array<main.FileListInfo>>;
 
 export function NetworkCardInfo():Promise<Array<string>>;
 

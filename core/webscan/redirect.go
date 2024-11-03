@@ -1,9 +1,7 @@
 package webscan
 
 import (
-	"net/http"
 	"regexp"
-	"slack-wails/lib/clients"
 	"strings"
 )
 
@@ -47,17 +45,4 @@ func getRealPath(url string) string {
 	}
 	t := strings.Split(url, "/")
 	return strings.Join(t[:len(t)-1], "/")
-}
-
-// 如果网站请求的报错内容不包含传入的url，则认为请求被重定向到其他不可访问的网页导致，则使用不跟随跳转的client进行请求获取响应头信息
-func getRedirectHeader(err error, url string, notFollowClient *http.Client) (*http.Response, []byte) {
-	if !strings.Contains(err.Error(), url) {
-		resp, _, err := clients.NewSimpleGetRequest(url, notFollowClient)
-		if err != nil || resp == nil {
-			return nil, nil
-		}
-		headers, _, _ := DumpResponseHeadersAndRaw(resp)
-		return resp, headers
-	}
-	return nil, nil
 }

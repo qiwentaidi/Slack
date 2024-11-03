@@ -148,6 +148,7 @@ type WebscanOptions struct {
 	TemplateFiles         []string
 	SkipNucleiWithoutTags bool
 	GenerateLog4j2        bool // 开启后会将所有目标添加 Generate-Log4j2 的指纹
+	AppendTemplateFolder  string
 }
 
 type AntivirusResult struct {

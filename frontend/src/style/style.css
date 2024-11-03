@@ -287,3 +287,27 @@ html {
   vertical-align: middle;
   margin-left: 4px;
 }
+
+.select-tips {
+  float: right;
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+}
+
+.form-item-tips {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+}
+
+/* 文字超出换行且包括识别回车符号 */
+
+.all-break {
+  word-break: break-word; 
+  overflow-wrap: break-word; 
+  white-space: pre-wrap;
+}
+
+.text-overflow-break {
+  word-break: break-word; 
+  overflow-wrap: break-word;
+}

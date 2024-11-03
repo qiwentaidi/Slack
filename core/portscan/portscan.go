@@ -3,6 +3,7 @@ package portscan
 import (
 	"context"
 	"fmt"
+	"net"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/util"
@@ -111,4 +112,18 @@ func Connect(ip string, port, timeout int) PortResult {
 		}
 	}
 	return pr
+}
+
+func WrapperTcpWithTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
+	d := &net.Dialer{Timeout: timeout}
+	return WrapperTCP(network, address, d)
+}
+
+func WrapperTCP(network, address string, forward *net.Dialer) (net.Conn, error) {
+	//get conn
+	conn, err := forward.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }

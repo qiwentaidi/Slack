@@ -90,6 +90,16 @@ func (f *File) FileDialog(ext string) string {
 	return selection
 }
 
+func (f *File) DirectoryDialog() string {
+	selection, err := runtime.OpenDirectoryDialog(f.ctx, runtime.OpenDialogOptions{
+		Title: "选择文件夹",
+	})
+	if err != nil {
+		return fmt.Sprintf("err %s!", err)
+	}
+	return selection
+}
+
 // selection会返回保存的文件路径+文件名 例如/Users/xxx/Downloads/test.xlsx
 func (f *File) SaveFile(filename string) string {
 	selection, err := runtime.SaveFileDialog(f.ctx, runtime.SaveDialogOptions{
@@ -141,27 +151,33 @@ type FileListInfo struct {
 	Size     int64  // 大小
 }
 
-func (f *File) List(path string) []FileListInfo {
+func (f *File) List(folders []string) []FileListInfo {
 	var files []FileListInfo
-	filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	for _, folder := range folders {
+		if _, err := os.Stat(folder); os.IsNotExist(err) {
+			gologger.Error(f.ctx, fmt.Sprintf("path %s not exist", folder))
+			continue
 		}
-		if !info.IsDir() {
-			// 提取文件名
-			filename := filepath.Base(p)
-			// 去除文件后缀
-			baseName := strings.TrimSuffix(filename, filepath.Ext(filename))
-			files = append(files, FileListInfo{
-				Path:     p,
-				Name:     filename,
-				BaseName: baseName, // 存储去除后缀的文件名
-				ModTime:  info.ModTime().Format("2006-01-02 15:04:05"),
-				Size:     info.Size(),
-			})
-		}
-		return nil
-	})
+		filepath.Walk(folder, func(p string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() {
+				// 提取文件名
+				filename := filepath.Base(p)
+				// 去除文件后缀
+				baseName := strings.TrimSuffix(filename, filepath.Ext(filename))
+				files = append(files, FileListInfo{
+					Path:     p,
+					Name:     filename,
+					BaseName: baseName, // 存储去除后缀的文件名
+					ModTime:  info.ModTime().Format("2006-01-02 15:04:05"),
+					Size:     info.Size(),
+				})
+			}
+			return nil
+		})
+	}
 	return files
 }
 

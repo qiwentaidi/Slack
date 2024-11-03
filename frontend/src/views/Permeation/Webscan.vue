@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead } from '@/util'
@@ -12,12 +12,15 @@ import { LinkDirsearch, LinkFOFA, LinkHunter } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize, getClassBySeverity } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
-import { List } from 'wailsjs/go/main/File';
+import { CheckFileStat, DirectoryDialog, List, ReadFile } from 'wailsjs/go/main/File';
 import { validateWebscan } from '@/stores/validate';
 import { structs, webscan } from 'wailsjs/go/models';
 import { webscanOptions } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
 import { DeleteScanTask, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/main/Database';
+import saveIcon from '@/assets/icon/save.svg'
+import githubIcon from '@/assets/icon/github.svg'
+import { SaveConfig } from '@/config';
 
 // webscan
 const customTemplate = ref<string[]>([])
@@ -61,6 +64,8 @@ const form = reactive({
     taskId: '',
     hideRequest: false,
     hideResponse: false,
+    showYamlPoc: false,
+    pocContent: '',
 })
 
 const config = reactive({
@@ -84,7 +89,7 @@ let rp = usePagination(form.taskResult, 10)
 
 // 初始化时调用
 async function initialize() {
-    let isSuccess = await InitRule()
+    let isSuccess = await InitRule(global.webscan.append_pocfile)
     if (!isSuccess) {
         ElMessage.error({
             showClose: true,
@@ -102,7 +107,7 @@ async function initialize() {
         dashboard.yamlPocsLength = Object.keys(pocMap).length
     }
     // 遍历模板
-    let files = await List(global.PATH.homedir + "/slack/config/pocs")
+    let files = await List([global.PATH.homedir + "/slack/config/pocs", global.webscan.append_pocfile])
     if (files && Array.isArray(files)) {
         files.forEach(file => {
             if (file.Path.endsWith(".yaml")) {
@@ -174,15 +179,18 @@ onMounted(() => {
 });
 
 async function startScan() {
-    let ws = new Scanner
+    if (!validateWebscan(form.url)) {
+        return
+    }
+    // 检查先行条件
+    if (!await TestProxy(1)) {
+        return
+    }
     if (config.writeDB && form.taskName == '') {
         ElMessage.warning({
             showClose: true,
             message: "任务名称不能为空",
         });
-        return
-    }
-    if (!validateWebscan(form.url)) {
         return
     }
     if (config.writeDB) {
@@ -202,6 +210,7 @@ async function startScan() {
         rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
     }
     form.newscanner = false // 隐藏界面
+    let ws = new Scanner
     ws.init()
     await ws.RunScanner()
 }
@@ -230,10 +239,6 @@ class Scanner {
         form.runnningStatus = true
     }
     public async RunScanner() {
-        // 检查先行条件
-        if (!await TestProxy(1)) {
-            return
-        }
         this.urls = await FormatWebURL(form.url) // 处理目标
         dashboard.count = this.urls.length
         if (this.urls.length == 0) {
@@ -271,6 +276,7 @@ class Scanner {
             TemplateFiles: customTemplate.value,
             SkipNucleiWithoutTags: config.skipNucleiWithoutTags,
             GenerateLog4j2: config.generateLog4j2,
+            AppendTemplateFolder: global.webscan.append_pocfile,
         }
         await NewWebScanner(options, {
             Enabled: global.proxy.enabled,
@@ -374,9 +380,12 @@ function BatchBrowserOpenURL() {
     }
 }
 
-// 选择目标文件读取
-async function uploadFile() {
+async function selectFile() {
     form.url = await UploadFileAndRead()
+}
+
+async function selectFolder() {
+    global.webscan.append_pocfile = await DirectoryDialog()
 }
 
 async function ShowWebPictrue(filepath: string) {
@@ -471,6 +480,20 @@ function toggleRequest() {
 
 function toggleResponse() {
     form.hideRequest = !form.hideRequest
+}
+
+async function showPocDetail(filename: string) {
+    form.showYamlPoc = !form.showYamlPoc
+    if (!form.showYamlPoc) {
+        return
+    }
+    let filepath = global.PATH.homedir + "/slack/config/pocs/" + filename + ".yaml"
+    let isStat = await CheckFileStat(filepath)
+    if (!isStat) {
+        filepath = global.webscan.append_pocfile + "/" + filename + ".yaml"
+    }
+    let file = await ReadFile(filepath)
+    form.pocContent = file.Content
 }
 </script>
 
@@ -567,7 +590,7 @@ function toggleResponse() {
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
-                    
+
                     <template #empty>
                         <el-empty />
                     </template>
@@ -585,6 +608,7 @@ function toggleResponse() {
                 <el-table :data="vp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }">
                     <el-table-column prop="ID" label="Template" width="250px" />
+                    <el-table-column prop="Type" label="Type" width="150px" />
                     <el-table-column prop="Risk" width="150px" label="Severity" :filter-method="filterHandlerSeverity"
                         :filters="[
                             { text: 'INFO', value: 'INFO' },
@@ -603,9 +627,13 @@ function toggleResponse() {
                     <el-table-column prop="URL" label="URL" />
                     <el-table-column label="操作" width="120px">
                         <template #default="scope">
-                            <el-button type="primary" link @click="detailDialog = true; selectedRow = scope.row">
-                                查看详情
-                            </el-button>
+                            <el-tooltip content="查看详情">
+                                <el-button :icon="Reading" type="primary" link
+                                    @click="detailDialog = true; selectedRow = scope.row" />
+                            </el-tooltip>
+                            <el-tooltip content="打开漏洞链接">
+                                <el-button :icon="ChromeFilled" link @click="BrowserOpenURL(scope.row.URL)" />
+                            </el-tooltip>
                         </template>
                     </el-table-column>
                     <template #empty>
@@ -664,8 +692,22 @@ function toggleResponse() {
                         </el-tooltip>
                     </template>
                     <el-input v-model="form.url" type="textarea" :rows="6" clearable></el-input>
-                    <el-button link size="small" :icon="Upload" @click="uploadFile"
+                    <el-button link size="small" :icon="Upload" @click="selectFile()"
                         style="margin-top: 5px;">导入目标文件</el-button>
+                </el-form-item>
+                <el-form-item label="追加POC:">
+                    <el-input v-model="global.webscan.append_pocfile">
+                        <template #suffix>
+                            <el-tooltip content="选择POC文件夹">
+                                <el-button :icon="FolderOpened" link @click="selectFolder()" />
+                            </el-tooltip>
+                            <el-divider direction="vertical" />
+                            <el-tooltip content="保存">
+                                <el-button :icon="saveIcon" link @click="SaveConfig" />
+                            </el-tooltip>
+                        </template>
+                    </el-input>
+                    <span class="form-item-tips">额外追加一个文件夹下的所有YAML POC文件，便于管理自添加POC</span>
                 </el-form-item>
                 <el-form-item>
                     <template #label>模式:
@@ -728,28 +770,31 @@ function toggleResponse() {
     </el-drawer>
     <el-drawer v-model="detailDialog" size="80%">
         <template #header>
-            <el-button text bg>
-                <template #icon>
-                    <Notebook />
-                </template>漏洞详情</el-button>
+            <el-button :icon="Reading" link>漏洞详情</el-button>
+            <el-button :icon="githubIcon" link
+                @click="BrowserOpenURL('https://github.com/qiwentaidi/Slack/issues/new?title=' + selectedRow.ID)">误报提交</el-button>
+            <el-divider direction="vertical" />
         </template>
         <div v-if="selectedRow">
-            <el-descriptions :column="1" border style="margin-bottom: 10px;">
+            <el-descriptions :column="1" border style="margin-bottom: 10px; width: 100%;">
                 <el-descriptions-item label="Name:">{{ selectedRow.Name }}</el-descriptions-item>
-                <el-descriptions-item label="Extracted:">{{ selectedRow.Extract }}</el-descriptions-item>
-                <el-descriptions-item label="Description:">{{ selectedRow.Description }}</el-descriptions-item>
-                <el-descriptions-item label="Reference:" style="word-break: break-all;">
-                    <div v-for="item in selectedRow.Reference.split(',')">
-                        {{ item }}
-                    </div>
+                <el-descriptions-item label="Description:">
+                    <span class="all-break">{{ selectedRow.Description }}</span>
                 </el-descriptions-item>
+                <el-descriptions-item label="Reference:">
+                    <span v-for="item in selectedRow.Reference.split(',')" class="text-overflow-break">
+                        {{ item }}
+                    </span>
+                </el-descriptions-item>
+                <el-descriptions-item label="Extracted:">{{ selectedRow.Extract }}</el-descriptions-item>
             </el-descriptions>
             <div style="display: flex">
                 <el-card v-show="!form.hideRequest" style="flex: 1; margin-right: 5px;">
                     <div class="my-header">
                         <span style="font-weight: bold;">Request</span>
                         <el-button-group>
-                            <el-button :icon="form.hideResponse ? DArrowLeft : DArrowRight" link @click="toggleRequest" />
+                            <el-button :icon="form.hideResponse ? DArrowLeft : DArrowRight" link
+                                @click="toggleRequest" />
                             <el-button :icon="CopyDocument" link @click="Copy(selectedRow.Request)" />
                         </el-button-group>
                     </div>
@@ -759,13 +804,25 @@ function toggleResponse() {
                     <div class="my-header">
                         <span style="font-weight: bold;">Response</span>
                         <el-button-group>
-                            <el-button :icon="form.hideRequest ? DArrowRight : DArrowLeft" link @click="toggleResponse" />
+                            <el-tooltip content="查看/关闭POC内容">
+                                <el-button :icon="Tickets" link @click="showPocDetail(selectedRow.ID)" />
+                            </el-tooltip>
+                            <el-button :icon="form.hideRequest ? DArrowRight : DArrowLeft" link
+                                @click="toggleResponse" />
                             <el-button :icon="CopyDocument" link @click="Copy(selectedRow.Response)" />
                         </el-button-group>
                     </div>
                     <highlightjs language="http" :code="selectedRow.Response" style="font-size: small;"></highlightjs>
                 </el-card>
             </div>
+            <el-card v-if="form.showYamlPoc" style="margin-top: 10px;">
+                <div class="my-header">
+                    <span style="font-weight: bold;">Yaml Poc Content</span>
+                    <el-button :icon="CloseBold" link
+                        @click="form.showYamlPoc = false" />
+                </div>
+                <highlightjs language="yaml" :code="form.pocContent" style="font-size: small;"></highlightjs>
+            </el-card>
         </div>
     </el-drawer>
     <el-dialog v-model="form.fofaDialog" title="导入FOFA目标(MAX 10000)" width="50%" center>
@@ -796,11 +853,11 @@ function toggleResponse() {
             <el-button type="primary" @click="uncover.hunter">导入</el-button>
         </template>
     </el-dialog>
-    
+
     <el-dialog v-model="screenDialog" width="50%" title="网站截图">
         <img id="webscan-img" src="" style="width: 100%; height: 400px;">
     </el-dialog>
-   
+
     <el-drawer v-model="historyDialog" size="70%">
         <template #header>
             <el-text style="font-weight: bold; font-size: 16px;"><el-icon :size="18" style="margin-right: 5px;">

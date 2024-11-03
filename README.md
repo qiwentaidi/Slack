@@ -1,4 +1,4 @@
-<h4 align="center">一款安服集成化工具平台，希望能让你少开几个应用测试</h4>
+<h4 align="center">安全服务集成化工具平台，希望能帮助你少开几个应用测试</h4>
 
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/qiwentaidi/Slack?filename=go.mod">
@@ -26,7 +26,7 @@
 
 ## 安装依赖
 
-- Go 1.20+
+- Go 1.21+
 - Node.js 18+
 - Wails 2.92+  `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
 
@@ -86,7 +86,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ## 网站扫描
 
-目前内置8600+指纹，2700+POC，易用可扩展
+目前内置8700+指纹，3000+POC，易用可扩展
 
 ![image-20241006193512657](assets/image-20241006193512657.png)
 
@@ -134,7 +134,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 针对日常工作中一些常见的数据进行处理，例如提取Fscan结果、提取IP、数据去重等
 
-![image-20240907203934509](assets/image-20240907203934509.png)
+![image-20241102165307715](assets/image-20241102165307715.png)
 
 ## 应用启动器
 
@@ -146,7 +146,15 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240907181024885](assets/image-20240907181024885.png)
 
-# 联系方式
+## 其他
+
+### 配套Chrome指纹提取插件
+
+[Luckycat](https://github.com/qiwentaidi/LuckyCat/)
+
+![image-20241017134431099](assets/image-20241017134431099.png)
+
+### 联系方式
 
 如果有问题或者好的提议可以Issue提问或者加我联系方式（请备注来意 进群或者问题交流）
 

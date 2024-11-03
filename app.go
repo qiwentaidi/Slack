@@ -453,9 +453,10 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
 }
 
 // 仅在执行时调用一次
-func (a *App) InitRule() bool {
+func (a *App) InitRule(appendTemplateFolder string) bool {
 	ic := webscan.NewConfig()
-	return ic.InitAll(a.ctx, a.webfingerFile, a.activefingerFile, a.templateDir)
+	templateFolders := []string{a.templateDir, appendTemplateFolder}
+	return ic.InitAll(a.ctx, a.webfingerFile, a.activefingerFile, templateFolders)
 }
 
 // webscan
@@ -483,9 +484,14 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 	if options.CallNuclei {
 		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
 		var id = 0
+		var allTemplateFolders = []string{a.templateDir}
+		if options.AppendTemplateFolder != "" {
+			allTemplateFolders = append(allTemplateFolders, options.AppendTemplateFolder)
+		}
 		fpm := engine.URLWithFingerprintMap()
 		count := len(fpm)
 		runtime.EventsEmit(a.ctx, "NucleiCounts", count)
+
 		for target, tags := range fpm {
 			if webscan.ExitFunc {
 				gologger.Warning(a.ctx, "User exits vulnerability scanning")
@@ -498,6 +504,7 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 				Tags:                  util.RemoveDuplicates(tags),
 				TemplateFile:          options.TemplateFiles,
 				SkipNucleiWithoutTags: options.SkipNucleiWithoutTags,
+				TemplateFolders:       allTemplateFolders,
 			})
 			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)
 		}
