@@ -459,7 +459,6 @@ async function collectInfo(connection: DatabaseConnection) {
             return
     }
     // 遍历数据库表
- 
     for (const [dbname, tables] of Object.entries(dbinfo)) {
         for (const table of tables) {
             let render = await fetchTable(dbname, table);
@@ -495,7 +494,7 @@ function renderToHtmlTable(data: structs.RowData) {
         row.forEach(cell => {
             if (typeof cell === 'string') {
                 try {
-                    const decodedValue = atob(cell); // Base64 解码
+                    const decodedValue = decodeBase64ToUtf8(cell) // Base64 解码
                     html += `<td><div class="cell-content">${decodedValue}</div></td>`;
                 } catch (error) {
                     html += `<td><div class="cell-content">${cell}</div></td>`;
@@ -509,6 +508,16 @@ function renderToHtmlTable(data: structs.RowData) {
 
     html += '</tbody></table></div>';
     return html;
+}
+
+function decodeBase64ToUtf8(base64String: string): string {
+    const binaryString = atob(base64String);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    const decoder = new TextDecoder('utf-8', { fatal: true }); // 确保编码错误时抛出异常
+    return decoder.decode(bytes);
 }
 
 function removeTableTab(connection: DatabaseConnection, targetName: string) {
