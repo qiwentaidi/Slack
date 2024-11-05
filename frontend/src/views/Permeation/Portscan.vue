@@ -1,19 +1,15 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref, h } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, UploadFileAndRead } from '@/util'
 import { ExportToXlsx } from '@/export'
-import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
+import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Upload, CircleClose, Share } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, ExitScanner, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
 import { PortScanData } from '@/stores/interface';
 import usePagination from '@/usePagination';
-import exportIcon from '@/assets/icon/doucment-export.svg'
-import { defaultIconSize } from '@/stores/style';
 import { LinkCrack, LinkWebscan } from '@/linkage';
-import ContextMenu from '@imengyu/vue3-context-menu'
-import CustomTabs from '@/components/CustomTabs.vue';
 import { isPrivateIP, validateIp, validatePortscan } from '@/stores/validate';
 import consoleIcon from '@/assets/icon/console.svg'
 import { crackDict, portGroupOptions, portscanOptions } from '@/stores/options';
@@ -21,7 +17,7 @@ import { debounce } from "lodash"
 import async from 'async'
 
 const debounceUpdate = debounce(() => {
-  pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
+    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
 }, 500);
 
 // syn 扫描模式
@@ -29,8 +25,14 @@ onMounted(async () => {
     form.isRoot = await IsRoot()
     updatePorts(1); // 更新初始化显示
     // 扫描状态，把结果从后端传输到前端
-    EventsOn("portScanLoading", (p: PortScanData) => {
-        pagination.table.result.push(p)
+    EventsOn("portScanLoading", (result: any) => {
+        pagination.table.result.push({
+            IP: result.IP,
+            Port: result.Port,
+            HttpTitle: result.HttpTitle,
+            Link: result.Link,
+            Server: result.Server
+        })
         debounceUpdate()
     });
     // 进度条
@@ -50,7 +52,6 @@ onMounted(async () => {
 });
 
 const form = reactive({
-    activeName: '1',
     target: '',
     portlist: '',
     percentage: 0,
@@ -228,9 +229,19 @@ const moreOperate = ({
             return;
         }
         if (type == "url") {
-            Copy(this.getHTTPLinks(result).join("\n"))
+           let urls = pagination.table.result.map(item => {
+                if (item.Server == "http" || item.Server == "https") {
+                    return item.Link
+                }
+            })
+            Copy(urls.join("\n"))
         } else {
-            Copy(this.getBruteLinks(result).join("\n"))
+            let brutes = pagination.table.result.map(item => {
+                if (crackDict.options.includes(item.Server)) {
+                    return item.Link
+                }
+            })
+            Copy(brutes.join("\n"))
         }
     },
     CopySelectLinks: function () {
@@ -256,54 +267,6 @@ const moreOperate = ({
         }
     },
 })
-
-function handleContextMenu(row: any, column: any, e: MouseEvent) {
-    //prevent the browser's default menu
-    e.preventDefault();
-    //show our menu
-    ContextMenu.showContextMenu({
-        x: e.x,
-        y: e.y,
-        items: [
-            {
-                label: "复制全部URL",
-                icon: h(CopyDocument, defaultIconSize),
-                onClick: () => {
-                    moreOperate.CopyURLs('url', pagination.table.result)
-                }
-            },
-            {
-                label: "复制全部可爆破协议",
-                icon: h(CopyDocument, defaultIconSize),
-                onClick: () => {
-                    moreOperate.CopyURLs('brute', pagination.table.result)
-                }
-            },
-            {
-                label: "复制选中目标",
-                divided: true,
-                icon: h(CopyDocument, defaultIconSize),
-                onClick: () => {
-                    moreOperate.CopySelectLinks()
-                }
-            },
-            {
-                label: "联动网站扫描",
-                icon: h(Promotion, defaultIconSize),
-                onClick: () => {
-                    moreOperate.Linkage('webscan')
-                }
-            },
-            {
-                label: "联动暴破与未授权检测",
-                icon: h(Promotion, defaultIconSize),
-                onClick: () => {
-                    moreOperate.Linkage('crack')
-                }
-            },
-        ]
-    });
-}
 
 const shodanVisible = ref(false)
 const shodanIp = ref('')
@@ -360,64 +323,74 @@ function stopShodan() {
 </script>
 
 <template>
-    <CustomTabs>
-        <el-tabs v-model="form.activeName" type="border-card">
-            <el-tab-pane label="结果输出" name="1">
-                <el-table :data="pagination.table.pageContent" @selection-change="pagination.ctrl.handleSelectChange"
-                    @row-contextmenu="handleContextMenu" style="height: calc(100vh - 175px)">
-                    <el-table-column type="selection" width="55px" align="center" />
-                    <el-table-column prop="IP" label="Host" />
-                    <el-table-column prop="Port" label="Port" width="100px" />
-                    <el-table-column prop="Server" label="Fingerprint" />
-                    <el-table-column prop="Link" label="Link">
-                        <template #default="scope">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.Link)"
-                                v-show="scope.row.Link != ''">
-                            </el-button>
-                            {{ scope.row.Link }}
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="HttpTitle" label="WebTitle" />
-                    <template #empty>
-                        <el-empty />
+    <el-card>
+        <div class="my-header" style="margin-bottom: 10px;">
+            <el-space>
+                <el-input v-model="form.filter" placeholder="Filter" style="width: 400px;">
+                    <template #prepend>
+                        <el-select v-model="form.defaultFilterGroup" style="width: 120px;">
+                            <el-option v-for="name in options.filterGroup" :value="name">{{ name }}</el-option>
+                        </el-select>
                     </template>
-                </el-table>
-                <div class="my-header" style="margin-top: 5px;">
-                    <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage"
-                        style="width: 40%;" />
-                    <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
-                        @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
-                        :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100, 200, 500]"
-                        :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
-                        :total="pagination.table.result.length">
-                    </el-pagination>
-                </div>
-            </el-tab-pane>
-        </el-tabs>
-        <template #filter>
-            <el-input v-model="form.filter" placeholder="Filter">
-                <template #prepend>
-                    <el-select v-model="form.defaultFilterGroup" style="width: 120px;">
-                        <el-option v-for="name in options.filterGroup" :value="name">{{ name }}</el-option>
-                    </el-select>
+                    <template #suffix>
+                        <el-button :icon="Search" @click="options.filterField" link></el-button>
+                    </template>
+                </el-input>
+                <el-dropdown>
+                <el-button text bg>
+                    更多功能<el-icon class="el-icon--right">
+                        <ArrowDown />
+                    </el-icon>
+                </el-button>
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item :icon="CopyDocument" @click="moreOperate.CopyURLs('url', pagination.table.result)">复制全部URL</el-dropdown-item>
+                        <el-dropdown-item :icon="CopyDocument" @click="moreOperate.CopyURLs('brute', pagination.table.result)">复制全部可爆破协议</el-dropdown-item>
+                        <el-dropdown-item :icon="Promotion" @click="moreOperate.Linkage('webscan')" divided>发送至网站扫描</el-dropdown-item>
+                        <el-dropdown-item :icon="Promotion" @click="moreOperate.Linkage('crack')">发送至暴破与未授权检测</el-dropdown-item>
+                        <el-dropdown-item :icon="Share" 
+                        @click="ExportToXlsx(['IP', 'Port', 'Title', 'Link', 'Protocol'], '端口扫描', 'portscan', pagination.table.result)"
+                        divided>结果导出</el-dropdown-item>
+                    </el-dropdown-menu>
                 </template>
-                <template #suffix>
-                    <el-button :icon="Search" @click="options.filterField" link></el-button>
-                </template>
-            </el-input>
-        </template>
-        <template #ctrl>
-            <el-space :size="3">
-                <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
-                    v-if="!ctrl.runningStatus">新建任务</el-button>
-                <el-button type="danger" :icon="CircleClose" @click="ctrl.stop" v-else>停止扫描</el-button>
-                <el-tooltip content="导出Excel">
-                    <el-button :icon="exportIcon"
-                        @click="ExportToXlsx(['IP', 'Port', 'Protocol', 'Link', 'Title'], '端口扫描', 'portscan', pagination.table.result)" />
-                </el-tooltip>
+            </el-dropdown>
             </el-space>
-        </template>
-    </CustomTabs>
+            <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
+                v-if="!ctrl.runningStatus">新建任务</el-button>
+            <el-button type="danger" :icon="CircleClose" @click="ctrl.stop" v-else>停止扫描</el-button>
+        </div>
+        <el-table :data="pagination.table.pageContent" @selection-change="pagination.ctrl.handleSelectChange"
+            style="height: calc(100vh - 170px)">
+            <el-table-column type="selection" width="55px" align="center" />
+            <el-table-column prop="IP" label="Host" />
+            <el-table-column prop="Port" label="Port" width="100px" />
+            <el-table-column prop="Server" label="Fingerprint" />
+            <el-table-column prop="Link" label="Link" :show-overflow-tooltip="true" />
+            <el-table-column prop="HttpTitle" label="WebTitle" :show-overflow-tooltip="true" />
+            <el-table-column label="Operate" width="100px" align="center">
+                <template #default="scope">
+                    <el-tooltip content="打开链接">
+                        <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.Link)" />
+                    </el-tooltip>
+                    <el-tooltip content="复制链接">
+                        <el-button link :icon="CopyDocument" @click.prevent="Copy(scope.row.Link)" />
+                    </el-tooltip>
+                </template>
+            </el-table-column>
+            <template #empty>
+                <el-empty />
+            </template>
+        </el-table>
+        <div class="my-header" style="margin-top: 5px;">
+            <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage" style="width: 40%;" />
+            <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
+                @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+                :current-page="pagination.table.currentPage" :page-sizes="[5, 20, 50, 100, 200, 500]"
+                :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+                :total="pagination.table.result.length">
+            </el-pagination>
+        </div>
+    </el-card>
     <el-drawer v-model="form.newscanner" size="40%">
         <template #header>
             <span class="drawer-title">新建扫描任务</span>

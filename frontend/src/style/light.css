@@ -7,10 +7,6 @@ html.light {
     --list-item-hover-color: #EDEDED;
     --list-item-selected-color: #E6E6E6;
 
-    .grid-item {
-        background-color: #F5F5F5;
-    }
-
     .list-container {
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
@@ -29,7 +25,7 @@ html.light {
         word-break: break-all;
         border-radius: 5px;
         /* border: 1px solid #ccc; */
-        max-height: 100vh;
+        max-height: 80vh;
     }
 
     code.hljs {

@@ -88,7 +88,7 @@ function CopyAndJump() {
     <div class="grid-container">
         <el-card shadow="never" class="grid-item">
             <el-text><el-icon><img src="/chinaz.ico"></el-icon><span class="title">备案信息:</span></el-text>
-            <el-input v-model="domain.icp" type="textarea" :rows="12" resize="none" style="margin-top: 10px;"></el-input>
+            <el-input v-model="domain.icp" type="textarea" :rows="13" resize="none" style="margin-top: 10px;"></el-input>
         </el-card>
         <el-card shadow="never" class="grid-item">
             <div class="my-header">
@@ -114,17 +114,17 @@ function CopyAndJump() {
                     </el-tooltip>
                 </div>
             </div>
-            <el-input v-model="domain.cdn" type="textarea" :rows="12" resize="none" style="margin-top: 10px;"></el-input>
+            <el-input v-model="domain.cdn" type="textarea" :rows="13" resize="none" style="margin-top: 10px;"></el-input>
 
         </el-card>
         <el-card shadow="never" class="grid-item">
             <el-text><el-icon><img src="/ip138.ico"></el-icon><span class="title">子域名:</span></el-text>
-            <el-input v-model="domain.subdomain" type="textarea" :rows="12" resize="none"
+            <el-input v-model="domain.subdomain" type="textarea" :rows="13" resize="none"
                 style="margin-top: 10px;"></el-input>
         </el-card>
         <el-card shadow="never" class="grid-item">
             <el-text><el-icon><img src="/ip138.ico"></el-icon><span class="title">历史解析:</span></el-text>
-            <el-input v-model="domain.history" type="textarea" :rows="12" resize="none"
+            <el-input v-model="domain.history" type="textarea" :rows="13" resize="none"
                 style="margin-top: 10px;"></el-input>
         </el-card>
     </div>

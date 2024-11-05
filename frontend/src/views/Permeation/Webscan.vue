@@ -179,53 +179,56 @@ onMounted(() => {
 });
 
 async function startScan() {
-    if (!validateWebscan(form.url)) {
-        return
-    }
-    // 检查先行条件
-    if (!await TestProxy(1)) {
-        return
-    }
-    if (config.writeDB && form.taskName == '') {
-        ElMessage.warning({
-            showClose: true,
-            message: "任务名称不能为空",
+    // 判断
+    if (form.runnningStatus) {
+        ExitScanner("[webscan]")
+        form.runnningStatus = false
+        ElNotification.error({
+            message: "用户已终止扫描任务",
+            position: 'bottom-right',
         });
-        return
     }
-    if (config.writeDB) {
-        form.taskId = nano()
-        let isSuccess = await InsertScanTask(form.taskId, form.taskName, form.url, 0, 0)
-        if (!isSuccess) {
-            ElMessage.error("添加任务失败")
-            return
-        }
-        rp.table.result.push({
-            TaskId: form.taskId,
-            TaskName: form.taskName,
-            Targets: form.url,
-            Failed: 0,
-            Vulnerability: 0,
-        })
-        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+    let engine = new WebscanEngine
+    if (!await engine.checkOptions()) {
+        return
     }
     form.newscanner = false // 隐藏界面
-    let ws = new Scanner
-    ws.init()
-    await ws.RunScanner()
+    await engine.Runner()
 }
 
-function stopScan() {
-    if (form.runnningStatus) {
-        form.runnningStatus = false
-        ExitScanner("[webscan]")
-        ElMessage.warning("任务已停止");
-    }
-}
-
-class Scanner {
+class WebscanEngine {
     urls = [] as string[]
-    public init() {
+    public async checkOptions() {
+        if (!validateWebscan(form.url)) {
+            return false
+        }
+        // 检查先行条件
+        if (!await TestProxy(1)) {
+            return false
+        }
+        if (config.writeDB && form.taskName == '') {
+            ElMessage.warning({
+                showClose: true,
+                message: "任务名称不能为空",
+            });
+            return false
+        }
+        if (config.writeDB) {
+            form.taskId = nano()
+            let isSuccess = await InsertScanTask(form.taskId, form.taskName, form.url, 0, 0)
+            if (!isSuccess) {
+                ElMessage.error("添加任务失败")
+                return false
+            }
+            rp.table.result.push({
+                TaskId: form.taskId,
+                TaskName: form.taskName,
+                Targets: form.url,
+                Failed: 0,
+                Vulnerability: 0,
+            })
+            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+        }
         fp.table.result = []
         vp.table.result = []
         vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
@@ -237,8 +240,9 @@ class Scanner {
         form.percentage = 0
         form.nucleiPercentage = 0
         form.runnningStatus = true
+        return true
     }
-    public async RunScanner() {
+    public async Runner() {
         this.urls = await FormatWebURL(form.url) // 处理目标
         dashboard.count = this.urls.length
         if (this.urls.length == 0) {
@@ -511,11 +515,11 @@ async function showPocDetail(filename: string) {
                     <el-progress :text-inside="true" :stroke-width="18" :percentage="form.nucleiPercentage"
                         style="width: 300px;" />
                 </el-space>
-                <div>
-                    <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
-                        v-if="!form.runnningStatus">新建任务</el-button>
-                    <el-button type="danger" :icon="VideoPause" @click="stopScan" v-else>停止任务</el-button>
-                </div>
+                <el-button :type="form.runnningStatus ? 'danger' : 'primary'"
+                    :icon="form.runnningStatus ? VideoPause : Plus"
+                    @click="form.runnningStatus ? startScan() : form.newscanner = true">
+                    {{ form.runnningStatus ? "停止任务" : "新建任务" }}
+                </el-button>
             </div>
         </template>
         <el-row>
@@ -625,7 +629,7 @@ async function showPocDetail(filename: string) {
                         </template>
                     </el-table-column>
                     <el-table-column prop="URL" label="URL" />
-                    <el-table-column label="操作" width="120px">
+                    <el-table-column label="Operate" width="120px">
                         <template #default="scope">
                             <el-tooltip content="查看详情">
                                 <el-button :icon="Reading" type="primary" link
@@ -768,7 +772,7 @@ async function showPocDetail(filename: string) {
             </div>
         </div>
     </el-drawer>
-    <el-drawer v-model="detailDialog" size="80%">
+    <el-drawer v-model="detailDialog" size="80%" @close="form.showYamlPoc = false">
         <template #header>
             <el-button :icon="Reading" link>漏洞详情</el-button>
             <el-button :icon="githubIcon" link
@@ -818,8 +822,7 @@ async function showPocDetail(filename: string) {
             <el-card v-if="form.showYamlPoc" style="margin-top: 10px;">
                 <div class="my-header">
                     <span style="font-weight: bold;">Yaml Poc Content</span>
-                    <el-button :icon="CloseBold" link
-                        @click="form.showYamlPoc = false" />
+                    <el-button :icon="CloseBold" link @click="form.showYamlPoc = false" />
                 </div>
                 <highlightjs language="yaml" :code="form.pocContent" style="font-size: small;"></highlightjs>
             </el-card>

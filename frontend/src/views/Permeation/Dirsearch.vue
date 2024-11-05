@@ -4,7 +4,7 @@ import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/main/App";
 import { SplitTextArea, Copy, ReadLine } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
-import { QuestionFilled, RefreshRight, Document, FolderOpened } from '@element-plus/icons-vue';
+import { QuestionFilled, RefreshRight, Document, FolderOpened, CopyDocument, ChromeFilled, Reading, Setting } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '@/global';
 import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/main/File';
@@ -13,11 +13,17 @@ import usePagination from '@/usePagination';
 import redirectIcon from '@/assets/icon/redirect.svg'
 import { GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/main/Database';
 import { dirsearch } from 'wailsjs/go/models';
+import throttle from 'lodash/throttle';
+
+// 因为目录扫描的进度条更新比较快，使用节流函数每隔1s更新一次
+const updatePercentageThrottled = throttle((id: number) => {
+    from.percentage = Number(((id / global.temp.dirsearchConut) * 100).toFixed(2));
+}, 1000);
 
 onMounted(() => {
     // 获取当前全部字典
     getDictList()
-    GetAllPathsAndTimes().then((result:any) => {
+    GetAllPathsAndTimes().then((result: any) => {
         if (Array.isArray(result)) {
             for (const item of result) {
                 pathTimes.table.result.push({
@@ -44,22 +50,13 @@ onMounted(() => {
                         console.log(error)
                     }
                 }
-                pagination.table.result.push({
-                    Status: result.Status,
-                    Length: result.Length,
-                    URL: result.URL,
-                    Location: result.Location,
-                    Body: result.Body,
-                    Recursion: result.Recursion,
-                })
+                pagination.table.result.push(result)
                 pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
                 break
         }
     });
     EventsOn("dirsearchProgressID", (id: number) => {
-        from.id = id
-        from.currentRate = Math.round(from.id / ((Date.now() - global.temp.dirsearchStartTime) / 1000));
-        from.percentage = Number(((from.id / global.temp.dirsearchConut) * 100).toFixed(2));
+        updatePercentageThrottled(id);
     });
     EventsOn("dirsearchCounts", (count: number) => {
         global.temp.dirsearchConut = count
@@ -85,8 +82,6 @@ const from = reactive({
     statusFilter: '404',
     paths: [] as string[],
     percentage: 0,
-    id: 0,
-    currentRate: 0,
     errorCounts: 0,
     respDialog: false,
     content: "",
@@ -97,7 +92,7 @@ const from = reactive({
     result: [] as Dir[],
 })
 
-const pathHistory = ref<{path: string, times: number}[]>([])
+const pathHistory = ref<{ path: string, times: number }[]>([])
 
 let pagination = usePagination(from.result, 50)
 let pathTimes = usePagination(pathHistory.value, 50)
@@ -171,7 +166,6 @@ class Dirsearch {
             });
         }
         global.temp.dirsearchPathConut = from.paths.length
-        from.id = 0
         from.errorCounts = 0
         pagination.ctrl.initTable()
         global.temp.dirsearchStartTime = Date.now();
@@ -210,7 +204,7 @@ class Dirsearch {
                 option.URLs = pagination.table.result.filter(item => (item.Status == 200 && item.Recursion == i - 1))
                     .map(line => { return line.URL })
             }
-            if (option.URLs.length == 0) {
+            if (option.URLs.length == 0 || !config.runningStatus) {
                 return
             }
             await DirScan(option)
@@ -220,9 +214,6 @@ class Dirsearch {
 }
 
 const control = ({
-    format: function () {
-        return `${from.id}/${global.temp.dirsearchConut} (${from.currentRate}/s)`
-    },
     // Processing status codes
     psc: function (): number[] {
         let temp: number[] = []
@@ -279,33 +270,27 @@ function copyHistory(length: number) {
 </script>
 
 <template>
-    <el-form :model="from">
-        <el-form-item>
-            <div class="head">
-                <el-input v-model="from.input" placeholder="请输入URL地址或者选择目标文件">
-                    <template #prepend>
-                        <el-select v-model=from.defaultOption value=options style="width: 15vh;">
-                            <el-option v-for="item in from.options" :value="item" :label="item" />
-                        </el-select>
-                    </template>
-                    <template #suffix>
-                        <el-button link :icon="Document" @click="GetFilepath" />
-                    </template>
-                </el-input>
-                <el-space style="margin-left: 5px;">
-                    <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="dirscan">
-                        {{ config.runningStatus ? '停止扫描' : '开始扫描' }}
-                    </el-button>
-                    <el-button text bg @click="config.drawer = true">参数设置</el-button>
-                </el-space>
-            </div>
-        </el-form-item>
-        <el-form-item>
+    <div class="head" style="margin-bottom: 10px;">
+        <el-input v-model="from.input" placeholder="请输入URL地址或者选择目标文件">
+            <template #prepend>
+                <el-select v-model=from.defaultOption value=options style="width: 15vh;">
+                    <el-option v-for="item in from.options" :value="item" :label="item" />
+                </el-select>
+            </template>
+            <template #suffix>
+                <el-button link :icon="Document" @click="GetFilepath" />
+            </template>
+        </el-input>
+        <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="dirscan"
+            style="margin-left: 5px;">
+            {{ config.runningStatus ? '停止扫描' : '开始扫描' }}
+        </el-button>
+    </div>
+    <el-card>
+        <div class="my-header" style="margin-bottom: 10px;">
             <el-space>
-                <div>
-                    <span>重定向跟随：</span>
-                    <el-switch v-model="config.redirectClient" />
-                </div>
+                <el-checkbox v-model="config.redirectClient" label="重定向跟随" />
+                <el-divider direction="vertical" />
                 <el-tag>递归层级:{{ config.recursion }}</el-tag>
                 <el-tag>字典大小:{{ global.temp.dirsearchPathConut }}</el-tag>
                 <el-tag>线程:{{ config.thread }}</el-tag>
@@ -313,59 +298,64 @@ function copyHistory(length: number) {
                     <el-tag type="danger">ERROR:{{ from.errorCounts }}</el-tag>
                 </el-tooltip>
             </el-space>
-        </el-form-item>
-    </el-form>
-    <el-table :data="pagination.table.pageContent" border style="height: calc(100vh - 205px);">
-        <el-table-column type="index" label="#" width="60px" />
-        <el-table-column prop="Status" width="100px" label="状态码"
-            :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
-        <el-table-column prop="Length" width="100px" label="长度"
-            :sort-method="(a: any, b: any) => { return a.Length - b.Length }" sortable />
-        <el-table-column prop="URL" label="目录路径" :show-overflow-tooltip="true">
-            <template #default="scope">
-                <el-tooltip placement="top">
-                    <template #content>Redirect to {{ scope.row.Location }}</template>
-                    <el-button link @click.prevent="BrowserOpenURL(scope.row.URL)" v-show="scope.row.Location != ''">
-                        <template #icon>
-                            <el-icon>
-                                <redirectIcon />
-                            </el-icon>
-                        </template>
-                    </el-button>
-                </el-tooltip>
-                {{ scope.row.URL }}
+            <el-button :icon="Setting" @click="config.drawer = true">参数设置</el-button>
+        </div>
+        <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 210px);">
+            <el-table-column type="index" label="#" width="60px" />
+            <el-table-column prop="Status" width="100px" label="状态码"
+                :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
+            <el-table-column prop="Length" width="100px" label="长度"
+                :sort-method="(a: any, b: any) => { return a.Length - b.Length }" sortable />
+            <el-table-column prop="URL" label="目录路径" :show-overflow-tooltip="true">
+                <template #default="scope">
+                    <el-tooltip placement="top">
+                        <template #content>Redirect to {{ scope.row.Location }}</template>
+                        <el-button link @click.prevent="BrowserOpenURL(scope.row.URL)"
+                            v-show="scope.row.Location != ''">
+                            <template #icon>
+                                <el-icon>
+                                    <redirectIcon />
+                                </el-icon>
+                            </template>
+                        </el-button>
+                    </el-tooltip>
+                    {{ scope.row.URL }}
+                </template>
+            </el-table-column>
+            <el-table-column prop="Recursion" width="100px" label="递归层级" />
+            <el-table-column label="操作" width="120px" align="center">
+                <template #default="scope">
+                    <el-tooltip content="复制链接">
+                        <el-button :icon="CopyDocument" link @click.prevent="Copy(scope.row.URL)"></el-button>
+                    </el-tooltip>
+                    <el-tooltip content="打开链接">
+                        <el-button :icon="ChromeFilled" link @click.prevent="BrowserOpenURL(scope.row.URL)"></el-button>
+                    </el-tooltip>
+                    <el-tooltip content="查看响应包">
+                        <el-button :icon="Reading" link @click.prevent="DispalyResponse(scope.row.Body)"></el-button>
+                    </el-tooltip>
+                </template>
+            </el-table-column>
+            <template #empty>
+                <el-empty />
             </template>
-        </el-table-column>
-        <el-table-column prop="Recursion" width="100px" label="递归层级" />
-        <el-table-column label="操作" width="180px" align="center">
-            <template #default="scope">
-                <el-button type="primary" link @click.prevent="Copy(scope.row.URL)">复制</el-button>
-                <el-divider direction="vertical" />
-                <el-button type="primary" link @click.prevent="BrowserOpenURL(scope.row.URL)">打开</el-button>
-                <el-divider direction="vertical" />
-                <el-button type="primary" link @click.prevent="DispalyResponse(scope.row.Body)">查看</el-button>
-            </template>
-        </el-table-column>
-        <template #empty>
-            <el-empty />
-        </template>
-    </el-table>
-    <div class="my-header" style="margin-top: 5px;">
-        <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" :format="control.format"
-             style="width: 40%;" />
-        <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
-            @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
-            :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
-            :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
-            :total="pagination.table.result.length">
-        </el-pagination>
-    </div>
+        </el-table>
+        <div class="my-header" style="margin-top: 5px;">
+            <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" style="width: 40%;" />
+            <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
+                @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+                :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
+                :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+                :total="pagination.table.result.length">
+            </el-pagination>
+        </div>
+    </el-card>
     <el-dialog v-model="from.respDialog" title="Response" width="800">
         <pre class="pretty-response"><code>{{ from.content }}</code></pre>
     </el-dialog>
     <el-drawer v-model="config.drawer" size="60%">
         <template #header>
-            <h3>设置高级参数</h3>
+            <span class="drawer-title">设置高级参数</span>
         </template>
         <el-form label-width="auto">
             <el-form-item label="线程(MAX 500):">
@@ -465,7 +455,7 @@ function copyHistory(length: number) {
                     <span>字典扫描记录:</span>
                     <el-tooltip placement="left">
                         <template #content>每次应用启动时，会加载历史响应码为200，500路径扫描记录次数<br />
-                        数据不会实时更新，复制功能会将Topxx个记录复制到字典列表中
+                            数据不会实时更新，复制功能会将Topxx个记录复制到字典列表中
                         </template>
                         <el-icon>
                             <QuestionFilled size="24" />
@@ -483,8 +473,8 @@ function copyHistory(length: number) {
                             </el-text>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="times" label="出现次数" width="200" 
-                    :sort-method="(a: any, b: any) => { return a.times - b.times }" sortable >
+                    <el-table-column prop="times" label="出现次数" width="200"
+                        :sort-method="(a: any, b: any) => { return a.times - b.times }" sortable>
                     </el-table-column>
                     <template #empty>
                         <el-empty />

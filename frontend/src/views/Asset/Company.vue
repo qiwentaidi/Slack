@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, reactive } from "vue";
-import { QuestionFilled, Plus } from '@element-plus/icons-vue';
+import { QuestionFilled, Plus, ChromeFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger, TycCheckLogin } from "wailsjs/go/main/App";
 import { ExportAssetToXlsx } from '@/export'
@@ -13,6 +13,7 @@ import { LinkSubdomain } from "@/linkage";
 import CustomTabs from "@/components/CustomTabs.vue";
 import wechatIcon from "@/assets/icon/wechat.svg"
 import { debounce } from "lodash"
+import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 
 onMounted(() => {
     const storedToken = localStorage.getItem('tyc-token');
@@ -138,15 +139,7 @@ const debouncedInput = debounce(() => {
             <el-form-item label="公司名称:">
                 <el-input v-model="from.company" type="textarea" :rows="5"></el-input>
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    股权比例:
-                    <el-tooltip placement="right" content="会自动反查域名">
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
+            <el-form-item label="股权比例:">
                 <el-input-number v-model="from.defaultHold" :min="1" :max="100"></el-input-number>
             </el-form-item>
             <el-form-item label="子公司层级:">
@@ -160,9 +153,9 @@ const debouncedInput = debounce(() => {
             <el-form-item>
                 <template #label>
                     Token:
-                    <el-tooltip placement="right">
-                        <template #content>由于天眼查登录校验机制，为了确保爬取数据准确<br />
-                            需要在此处填入网页登录后Cookie头中auth_token字段</template>
+                    <el-tooltip>
+                        <template #content>由于天眼查登录校验机制，为了确保爬取数据准确需要在此处填入网页<br />
+                            登录后Cookie头中auth_token字段，等待2s会自动保存Token</template>
                         <el-icon>
                             <QuestionFilled size="24" />
                         </el-icon>
@@ -173,15 +166,19 @@ const debouncedInput = debounce(() => {
             <el-form-item>
                 <template #label>
                     MachineStr:
-                    <el-tooltip placement="right">
-                        <template #content>由于https://www.beianx.cn/备案查域名新增校验机制<br />
-                            需要在此处填入Cookie头中machine_str字段的值</template>
+                    <el-tooltip>
+                        <template #content>由于https://www.beianx.cn/查域名存在校验机制，需要在此处填入Cookie头中<br />
+                            machine_str字段的值，如果没有的话先进行一次查询，可通过右侧按钮打开网站</template>
                         <el-icon>
                             <QuestionFilled size="24" />
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-input v-model="from.machineStr"></el-input>
+                <el-input v-model="from.machineStr">
+                    <template #suffix>
+                        <el-button :icon="ChromeFilled" link @click="BrowserOpenURL('https://www.beianx.cn/')" />
+                    </template>
+                </el-input>
             </el-form-item>
             <el-form-item class="align-right">
                 <el-button type="primary" @click="Collect">开始查询</el-button>
@@ -267,15 +264,12 @@ const debouncedInput = debounce(() => {
             </el-tab-pane>
         </el-tabs>
         <template #ctrl>
-            <el-tooltip content="新建任务" v-if="!from.runningStatus">
-                <el-button :icon="Plus" round @click="from.newTask = true">新建任务</el-button>
-            </el-tooltip>
-            <el-button round loading v-else>正在查询</el-button>
-            <el-tooltip content="导出Excel">
-                <el-button :icon="exportIcon" style="margin-left: 5px;"
-                    @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">
-                </el-button>
-            </el-tooltip>
+            <el-button type="primary" :icon="Plus" @click="from.newTask = true" v-if="!from.runningStatus">新建任务</el-button>
+            <el-button loading v-else>正在查询</el-button>
+            <el-button :icon="exportIcon" style="margin-left: 5px;"
+                @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">
+                结果导出
+            </el-button>
         </template>
     </CustomTabs>
 
