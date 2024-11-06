@@ -30,11 +30,9 @@ onMounted(() => {
         }
         pagination.table.result.push(result)
         debounceUpdate()
-        // pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
     });
     EventsOn("subdomainProgressID", (id: number) => {
-        config.id = id
-        config.percentage = Number(((config.id / config.count) * 100).toFixed(2));
+        config.percentage = Number(((id / config.count) * 100).toFixed(2));
     });
     EventsOn("subdomainCounts", (count: number) => {
         config.count = count
@@ -51,8 +49,7 @@ onMounted(() => {
 });
 
 const currentRunner = ref(1);
-const result = ref([] as SubdomainInfo[]);
-const pagination = usePagination(result.value, 50)
+const pagination = usePagination<SubdomainInfo>(50)
 const input = ref("");
 
 const selectDnsServer = ref(["223.6.6.6:53", "8.8.8.8:53"])
@@ -64,7 +61,6 @@ const config = reactive({
     subs: [] as string[],
     subFilepath: "",
     percentage: 0,
-    id: 0,
     count: 0,
     runningStatus: false,
     drawer: false,
@@ -114,7 +110,6 @@ class Runner {
             return
         }
         config.runningStatus = true
-        config.id = 0;
         if (currentRunner.value != 1 && config.subs.length == 0) {
             config.subs = (await ReadLine(global.PATH.homedir + "/slack/config/subdomain/dicc.txt"))!
         }

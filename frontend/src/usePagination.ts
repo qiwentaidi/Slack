@@ -18,12 +18,12 @@ interface PaginationController<T> {
     initTable: () => void; // 初始化表格数据
 }
 
-function usePagination<T>(data: T[], initialPageSize: number): { table: PaginationState<T>, ctrl: PaginationController<T> } {
+function usePagination<T>(initialPageSize: number): { table: PaginationState<T>, ctrl: PaginationController<T> } {
     const table = shallowReactive<PaginationState<T>>({
         currentPage: 1,
         pageSize: initialPageSize,
-        result: data,
-        pageContent: data.slice(0, initialPageSize),
+        result: [] as T[],
+        pageContent: [] as T[],
         selectRows: [],
         temp: [],
     });

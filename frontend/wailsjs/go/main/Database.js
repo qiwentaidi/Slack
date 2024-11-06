@@ -18,6 +18,10 @@ export function CreateTable() {
   return window['go']['main']['Database']['CreateTable']();
 }
 
+export function DeletePocscanResult(arg1, arg2, arg3) {
+  return window['go']['main']['Database']['DeletePocscanResult'](arg1, arg2, arg3);
+}
+
 export function DeleteScanTask(arg1) {
   return window['go']['main']['Database']['DeleteScanTask'](arg1);
 }

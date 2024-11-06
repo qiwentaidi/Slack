@@ -38,8 +38,8 @@ const from = reactive({
     machineStr: ''
 })
 
-let pc = usePagination(from.companyData, 20) // paginationCompany
-let pw = usePagination(from.wehcatData, 20) // paginationWehcat
+let pc = usePagination<CompanyInfo>(20) // paginationCompany
+let pw = usePagination<WechatInfo>(20) // paginationWehcat
 
 async function Collect() {
     if (from.company == "") {

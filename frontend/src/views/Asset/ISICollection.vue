@@ -122,9 +122,7 @@ const dorksOptions = [
     }
 ]
 
-const result = ref([] as ISICResult[])
-
-const pagination = usePagination(result.value, 20)
+const pagination = usePagination<ISICResult>(20)
 
 onMounted(() => {
     updateKeyword() // 在组件挂载时调用 updateKeyword

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
 import { ElMessage, ElNotification } from 'element-plus';
-import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead } from '@/util'
+import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead, generateRandomString } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
@@ -17,10 +17,16 @@ import { validateWebscan } from '@/stores/validate';
 import { structs, webscan } from 'wailsjs/go/models';
 import { webscanOptions } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
-import { DeleteScanTask, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/main/Database';
+import { DeletePocscanResult, DeleteScanTask, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/main/Database';
 import saveIcon from '@/assets/icon/save.svg'
 import githubIcon from '@/assets/icon/github.svg'
 import { SaveConfig } from '@/config';
+import throttle from 'lodash/throttle';
+
+
+const throttleUpdate = throttle(() => {
+    fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
+}, 1000);
 
 // webscan
 const customTemplate = ref<string[]>([])
@@ -46,9 +52,6 @@ const form = reactive({
     url: '',
     tags: [] as string[],
     newscanner: false,
-    vulResult: [] as webscan.VulnerabilityInfo[],
-    fingerResult: [] as webscan.InfoResult[],
-    taskResult: [] as structs.TaskResult[],
     fofaDialog: false,
     fofaNum: 1000,
     hunterDialog: false,
@@ -83,47 +86,40 @@ const historyDialog = ref(false)
 
 const selectedRow = ref();
 
-let fp = usePagination(form.fingerResult, 50)
-let vp = usePagination(form.vulResult, 50)
-let rp = usePagination(form.taskResult, 10)
+let fp = usePagination<webscan.InfoResult>(50)
+let vp = usePagination<webscan.VulnerabilityInfo>(50)
+let rp = usePagination<structs.TaskResult>(10)
 
 // 初始化时调用
 async function initialize() {
-    let isSuccess = await InitRule(global.webscan.append_pocfile)
+    let isSuccess = await InitRule(global.webscan.append_pocfile);
     if (!isSuccess) {
         ElMessage.error({
             showClose: true,
             message: "初始化指纹规则失败，请检查配置文件",
-        })
-        return
+        });
+        return;
     }
-    let list = await FingerprintList()
-    if (list && Array.isArray(list)) {
-        dashboard.fingerLength = list.length
-    }
-    // 获取POC数量
-    let pocMap = await GetFingerPocMap()
-    if (pocMap) {
-        dashboard.yamlPocsLength = Object.keys(pocMap).length
-    }
-    // 遍历模板
-    let files = await List([global.PATH.homedir + "/slack/config/pocs", global.webscan.append_pocfile])
-    if (files && Array.isArray(files)) {
-        files.forEach(file => {
-            if (file.Path.endsWith(".yaml")) {
-                allTemplate.value.push({
-                    label: file.BaseName,
-                    value: file.Path
-                })
-            }
-        })
-    }
-    templateLoading.value = false // 加载完毕
+    let list = await FingerprintList();
+    dashboard.fingerLength = list?.length || 0; // 使用可选链
 
-    let result = await GetAllScanTask()
-    if (result && Array.isArray(result)) {
-        rp.table.result = result
-        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+    // 获取POC数量
+    let pocMap = await GetFingerPocMap();
+    dashboard.yamlPocsLength = pocMap ? Object.keys(pocMap).length : 0; // 使用可选链
+
+    // 遍历模板
+    let files = await List([global.PATH.homedir + "/slack/config/pocs", global.webscan.append_pocfile]);
+    if (Array.isArray(files)) {
+        allTemplate.value = files
+            .filter(file => file.Path.endsWith(".yaml"))
+            .map(file => ({ label: file.BaseName, value: file.Path }));
+    }
+    templateLoading.value = false; // 加载完毕
+
+    let result = await GetAllScanTask();
+    if (Array.isArray(result)) {
+        rp.table.result = result;
+        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
     }
 }
 
@@ -146,7 +142,7 @@ onMounted(() => {
             return
         }
         fp.table.result.push(result)
-        fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
+        throttleUpdate()
         if (!config.writeDB) return
         InsertFingerscanResult(form.taskId, result)
         taskManager.updateTaskTable(form.taskId)
@@ -179,21 +175,17 @@ onMounted(() => {
 });
 
 async function startScan() {
-    // 判断
-    if (form.runnningStatus) {
-        ExitScanner("[webscan]")
-        form.runnningStatus = false
-        ElNotification.error({
-            message: "用户已终止扫描任务",
-            position: 'bottom-right',
-        });
-    }
     let engine = new WebscanEngine
-    if (!await engine.checkOptions()) {
-        return
-    }
+    if (!await engine.checkOptions()) return
     form.newscanner = false // 隐藏界面
     await engine.Runner()
+}
+
+function stopScan() {
+    if (!form.runnningStatus) return
+    form.runnningStatus = false
+    ExitScanner("[webscan]")
+    ElMessage.warning("任务已停止")
 }
 
 class WebscanEngine {
@@ -406,6 +398,7 @@ const taskManager = {
         historyDialog.value = false;
         form.url = row.Targets;
         form.taskName = row.TaskName;
+        form.taskId = row.TaskId
         config.writeDB = true
         dashboard.reqErrorURLs = []
         if (row.Targets != undefined) {
@@ -420,16 +413,13 @@ const taskManager = {
             fp.table.result = fingerResult;
             fp.table.pageContent = fp.ctrl.watchResultChange(fp.table);
         }
-
+        // 初始化风险等级计数
+        Object.keys(dashboard.riskLevel).forEach(key => {
+            dashboard.riskLevel[key] = 0;
+        });
         if (nucleiResult) {
             vp.table.result = nucleiResult;
             vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
-
-            // 初始化风险等级计数
-            Object.keys(dashboard.riskLevel).forEach(key => {
-                dashboard.riskLevel[key] = 0;
-            });
-
             // 遍历结果，统计每个风险等级的数量
             vp.table.result.forEach(item => {
                 const riskLevelKey = item.Risk as keyof typeof dashboard.riskLevel;
@@ -437,6 +427,9 @@ const taskManager = {
                     dashboard.riskLevel[riskLevelKey]++;
                 }
             });
+        } else {
+            vp.table.result = []
+            vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
         }
     },
     deleteTask: async function (taskId: string) {
@@ -475,7 +468,61 @@ const taskManager = {
             rp.table.result[taskIndex].Vulnerability = vulcount;
             rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
         }
+    },
+    appendTaskToDatabase: async function() {
+        if (vp.table.result.length == 0 && fp.table.result.length == 0) {
+            ElMessage.warning('请先添加扫描任务')
+            return
+        }
+        form.taskId = nano()
+        form.taskName = generateRandomString(10)
+        let isSuccess = await InsertScanTask(form.taskId, form.taskName, form.url, 0, 0)
+        if (!isSuccess) {
+            ElMessage.error('添加任务失败')
+            return
+        }
+        rp.table.result.push({
+            TaskId: form.taskId,
+            TaskName: form.taskName,
+            Targets: form.url,
+            Failed: 0,
+            Vulnerability: 0,
+        })
+        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+        for (const item of fp.table.result) {
+            let isSuccess = await InsertFingerscanResult(form.taskId, item)
+            if (!isSuccess) {
+                ElMessage.error('添加指纹识别结果失败')
+                return
+            }
+        }
+        for (const item of vp.table.result) {
+            let isSuccess = await InsertPocscanResult(form.taskId, item)
+            if (!isSuccess) {
+                ElMessage.error('添加漏洞扫描结果失败')
+                return
+            }
+        }
+        taskManager.updateTaskTable(form.taskId)
+        ElNotification.success("添加成功")
     }
+}
+
+async function deleteVuln(row: any) {
+    let isSuccess = await DeletePocscanResult(form.taskId, row.ID, row.URL)
+    if (isSuccess) {
+        ElMessage.success("删除成功")
+        const riskLevelKey = row.Risk as keyof typeof dashboard.riskLevel;
+        if (dashboard.riskLevel[riskLevelKey] !== undefined) {
+            dashboard.riskLevel[riskLevelKey]--;
+        }
+        vp.table.result = vp.table.result.filter(item => !(item.URL == row.URL && item.Risk == row.Risk && item.Name == row.Name));
+        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
+        taskManager.updateTaskTable(form.taskId)
+
+        return
+    }
+    ElMessage.error("删除失败")
 }
 
 function toggleRequest() {
@@ -515,11 +562,11 @@ async function showPocDetail(filename: string) {
                     <el-progress :text-inside="true" :stroke-width="18" :percentage="form.nucleiPercentage"
                         style="width: 300px;" />
                 </el-space>
-                <el-button :type="form.runnningStatus ? 'danger' : 'primary'"
-                    :icon="form.runnningStatus ? VideoPause : Plus"
-                    @click="form.runnningStatus ? startScan() : form.newscanner = true">
-                    {{ form.runnningStatus ? "停止任务" : "新建任务" }}
-                </el-button>
+                <div>
+                    <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
+                        v-if="!form.runnningStatus">新建任务</el-button>
+                    <el-button type="danger" :icon="VideoPause" @click="stopScan" v-else>停止任务</el-button>
+                </div>
             </div>
         </template>
         <el-row>
@@ -603,8 +650,9 @@ async function showPocDetail(filename: string) {
                     <div></div>
                     <el-pagination size="small" background @size-change="fp.ctrl.handleSizeChange"
                         @current-change="fp.ctrl.handleCurrentChange" :pager-count="5"
-                        :current-page="fp.table.currentPage" :page-sizes="[50, 100, 200]" :page-size="fp.table.pageSize"
-                        layout="total, sizes, prev, pager, next" :total="fp.table.result.length">
+                        :current-page="fp.table.currentPage" :page-sizes="[10, 20, 50, 100, 200]"
+                        :page-size="fp.table.pageSize" layout="total, sizes, prev, pager, next"
+                        :total="fp.table.result.length">
                     </el-pagination>
                 </div>
             </el-tab-pane>
@@ -638,6 +686,9 @@ async function showPocDetail(filename: string) {
                             <el-tooltip content="打开漏洞链接">
                                 <el-button :icon="ChromeFilled" link @click="BrowserOpenURL(scope.row.URL)" />
                             </el-tooltip>
+                            <el-tooltip content="删除">
+                                <el-button :icon="Delete" link @click="deleteVuln(scope.row)" />
+                            </el-tooltip>
                         </template>
                     </el-table-column>
                     <template #empty>
@@ -648,8 +699,9 @@ async function showPocDetail(filename: string) {
                     <div></div>
                     <el-pagination size="small" background @size-change="vp.ctrl.handleSizeChange"
                         @current-change="vp.ctrl.handleCurrentChange" :pager-count="5"
-                        :current-page="vp.table.currentPage" :page-sizes="[50, 100, 200]" :page-size="vp.table.pageSize"
-                        layout="total, sizes, prev, pager, next" :total="vp.table.result.length">
+                        :current-page="vp.table.currentPage" :page-sizes="[10, 20, 50, 100, 200]"
+                        :page-size="vp.table.pageSize" layout="total, sizes, prev, pager, next"
+                        :total="vp.table.result.length">
                     </el-pagination>
                 </div>
             </el-tab-pane>
@@ -740,7 +792,7 @@ async function showPocDetail(filename: string) {
                 </el-form-item>
                 <div v-if="config.webscanOption == 3">
                     <el-form-item label="指定漏洞:">
-                        <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏洞"
+                        <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏，不选择全扫"
                             filterable multiple clearable :multiple-limit="10" v-if="!templateLoading" />
                         <span v-else>Loading templates...</span>
                     </el-form-item>
@@ -903,7 +955,7 @@ async function showPocDetail(filename: string) {
             </template>
         </el-table>
         <div class="my-header" style="margin-top: 5px;">
-            <div></div>
+            <el-button :icon="UploadFilled" @click="taskManager.appendTaskToDatabase">将本次记录入库</el-button>
             <el-pagination size="small" background @size-change="rp.ctrl.handleSizeChange"
                 @current-change="rp.ctrl.handleCurrentChange" :pager-count="5" :current-page="rp.table.currentPage"
                 :page-sizes="[10, 20]" :page-size="rp.table.pageSize" layout="total, sizes, prev, pager, next"

@@ -39,9 +39,7 @@ onMounted(async () => {
     );
 });
 
-const pocs = ref<PocDetail[]>([])
-
-const pagination = usePagination(pocs.value, 20)
+const pagination = usePagination<PocDetail>(20)
 
 const defaultFilter = ref('Name')
 

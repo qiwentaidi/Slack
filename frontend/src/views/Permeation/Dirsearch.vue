@@ -89,13 +89,10 @@ const from = reactive({
     selectDict: [] as string[],
     checkAll: false,
     indeterminate: false,
-    result: [] as Dir[],
 })
 
-const pathHistory = ref<{ path: string, times: number }[]>([])
-
-let pagination = usePagination(from.result, 50)
-let pathTimes = usePagination(pathHistory.value, 50)
+let pagination = usePagination<Dir>(50)
+let pathTimes = usePagination<{ path: string, times: number }>(50)
 async function getDictList() {
     from.selectDict = []
     from.configPath = global.PATH.homedir + "/slack/config/dirsearch"

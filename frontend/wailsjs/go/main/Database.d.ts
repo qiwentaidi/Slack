@@ -13,6 +13,8 @@ export function ConnectMongodb(arg1:string,arg2:string,arg3:string):Promise<mong
 
 export function CreateTable():Promise<boolean>;
 
+export function DeletePocscanResult(arg1:string,arg2:string,arg3:string):Promise<boolean>;
+
 export function DeleteScanTask(arg1:string):Promise<boolean>;
 
 export function DisconnectDatabase(arg1:string):Promise<boolean>;

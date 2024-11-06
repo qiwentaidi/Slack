@@ -11,6 +11,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	rt "runtime"
+	"slack-wails/core/portscan"
 	"slack-wails/core/subdomain"
 	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
@@ -550,17 +551,19 @@ func FaviconHash(u *url.URL, client *http.Client) (string, string) {
 	return "", ""
 }
 
-// func (s *FingerScanner) GetBanner(u *url.URL) string {
-// 	if strings.HasPrefix(u.Scheme, "http") {
-// 		return ""
-// 	}
-// 	scanner := gonmap.New()
-// 	_, response := scanner.Scan(u.Host, netutil.GetPort(u), time.Second*time.Duration(10))
-// 	if response != nil {
-// 		return response.Raw
-// 	}
-// 	return ""
-// }
+func (s *FingerScanner) GetBanner(host string) string {
+	conn, err := portscan.NewSocket("tcp", host, 3)
+	if err != nil {
+		return ""
+	}
+	defer conn.Close()
+	senddataStr := fmt.Sprintf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host)
+	content, err := conn.Request([]byte(senddataStr), 1024)
+	if err != nil {
+		return ""
+	}
+	return string(content)
+}
 
 func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte {
 	var nextCheckUrl string

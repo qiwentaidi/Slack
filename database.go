@@ -880,3 +880,8 @@ func (d *Database) InsertPocscanResult(taskid string, result webscan.Vulnerabili
 	insertStmt := "INSERT INTO VulnerabilityInfo (task_id, template_id, vuln_name, protocol, severity, vuln_url, extract, request, response, description, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	return d.ExecSqlStatement(insertStmt, taskid, result.ID, result.Name, result.Type, result.Risk, result.URL, result.Extract, result.Request, result.Response, result.Description, result.Reference)
 }
+
+func (d *Database) DeletePocscanResult(taskid, template_id, vuln_url string) bool {
+	deleteStmt := "DELETE FROM VulnerabilityInfo WHERE task_id = ? AND template_id = ? AND vuln_url = ?"
+	return d.ExecSqlStatement(deleteStmt, taskid, template_id, vuln_url)
+}

@@ -13,12 +13,12 @@ import { LinkCrack, LinkWebscan } from '@/linkage';
 import { isPrivateIP, validateIp, validatePortscan } from '@/stores/validate';
 import consoleIcon from '@/assets/icon/console.svg'
 import { crackDict, portGroupOptions, portscanOptions } from '@/stores/options';
-import { debounce } from "lodash"
+import throttle from 'lodash/throttle';
 import async from 'async'
 
-const debounceUpdate = debounce(() => {
+const throttleUpdate = throttle(() => {
     pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
-}, 500);
+}, 1000);
 
 // syn 扫描模式
 onMounted(async () => {
@@ -33,7 +33,7 @@ onMounted(async () => {
             Link: result.Link,
             Server: result.Server
         })
-        debounceUpdate()
+        throttleUpdate()
     });
     // 进度条
     EventsOn("progressID", (id: number) => {
@@ -65,12 +65,11 @@ const form = reactive({
 })
 
 const table = reactive({
-    result: [] as PortScanData[],
     temp: [] as PortScanData[], // 用于存储过滤之前的数据，后续需要还原给result
     filterId: 0
 })
 
-let pagination = usePagination(table.result, 20)
+let pagination = usePagination<PortScanData>(20)
 
 async function uploadFile() {
     form.target = await UploadFileAndRead()

@@ -149,9 +149,7 @@ async function getFilepath() {
     config.input = path
 }
 
-const result = ref<BruteResult[]>([])
-
-const pagination = usePagination(result.value, 20)
+const pagination = usePagination<BruteResult>(20)
 
 function checkinput() {
     if (config.username.length == 0) {

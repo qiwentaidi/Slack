@@ -26,12 +26,11 @@ const fscan = reactive({
     input: "",
     result: "",
     weakpass: [] as { type: string, ip: string, port: string, username: string, password: string, extend: string }[],
-    webinfo: [] as { url: string, code: string, title: string, length: string, redirect: string }[],
     virus: [] as { url: string, pocinfo: string, extend: string }[],
     fingerprint: [] as { url: string, fingerprint: string }[],
 });
 
-const wip = usePagination(fscan.webinfo, 20)
+const wip = usePagination<{ url: string, code: string, title: string, length: string, redirect: string }>(20)
 
 async function uploadFile() {
     form.input = await UploadFileAndRead();
