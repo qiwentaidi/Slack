@@ -243,7 +243,7 @@
                 </el-table-column>
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
-                <span style="color: #4CA87D; font-size: 14px;">{{ quake.message }}</span>
+                <span style="color: #4CA87D; font-size: 14px;">{{ item.message }}</span>
                 <el-pagination size="small" class="quake-pagin" background v-model:page-size="item.pageSize"
                     :page-sizes="[10, 20, 50, 100, 200, 500]" layout="total, sizes, prev, pager, next, jumper"
                     @size-change="tableCtrl.handleSizeChange" @current-change="tableCtrl.handleCurrentChange"
@@ -287,7 +287,7 @@ import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'w
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { validateSingleURL } from '@/stores/validate';
-import { main, space } from 'wailsjs/go/models';
+import { main, structs } from 'wailsjs/go/models';
 import { quakeSyntaxOptions } from '@/stores/options';
 
 const options = ({
@@ -382,7 +382,6 @@ const syntax = ({
 
 const quake = reactive({
     query: '',
-    message: "",
     tips: [] as QuakeTipsData[],
     iconURL: "",
     iconFile: "",
@@ -410,25 +409,25 @@ const tableCtrl = ({
         if (isBatch) {
             ipList = await tableCtrl.getIpList()
         }
+        table.loading = true
+        let result = await QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
+        if (result.Code != 0) {
+            ElMessage.warning(result.Message)
+            table.loading = false
+            return
+        }
         table.editableTabs.push({
             title: query,
             name: newTabName,
-            content: [] as space.QuakeData[],
+            content: [] as structs.QuakeData[],
             total: 0,
             pageSize: 10,
             currentPage: 1,
             isBatch: isBatch,
             ipList: ipList,
+            message: "查询成功,目前剩余积分:" + result.Credit
         });
-        table.loading = true
         table.acvtiveNames = newTabName
-        let result = await QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
-        if (result.Code != 0) {
-            quake.message = result.Message!
-            table.loading = false
-            return
-        }
-        quake.message = "查询成功,目前剩余积分:" + result.Credit
         const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
         tab.content = result.Data
         tab.total = result.Total!
@@ -458,11 +457,11 @@ const tableCtrl = ({
         table.loading = true
         let result = await QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
         if (result.Code != 0) {
-            quake.message = result.Message!
+            tab.message = result.Message
             table.loading = false
             return
         }
-        quake.message = "查询成功,目前剩余积分:" + result.Credit
+        tab.message = "查询成功,目前剩余积分:" + result.Credit
         tab.content = result.Data
         tab.total = result.Total!
         table.loading = false
@@ -473,11 +472,11 @@ const tableCtrl = ({
         table.loading = true
         let result = await QuakeSearch(tab.ipList, tab.title, tab.currentPage, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
         if (result.Code != 0) {
-            quake.message = result.Message!
+            tab.message = result.Message
             table.loading = false
             return
         }
-        quake.message = "查询成功,目前剩余积分:" + result.Credit
+        tab.message = "查询成功,目前剩余积分:" + result.Credit
         tab.content = result.Data
         tab.total = result.Total!
         table.loading = false
@@ -489,11 +488,11 @@ const tableCtrl = ({
         table.loading = true
         let result = await QuakeSearch(tab.ipList, tab.title, 1, tab.pageSize, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
         if (result.Code != 0) {
-            quake.message = result.Message!
+            tab.message = result.Message
             table.loading = false
             return
         }
-        quake.message = "查询成功,目前剩余积分:" + result.Credit
+        tab.message = "查询成功,目前剩余积分:" + result.Credit
         tab.content = result.Data
         tab.total = result.Total!
         table.loading = false
@@ -550,7 +549,7 @@ async function exportData() {
             });
         }
         let ipList = [] as string[]
-        let temp = [] as space.QuakeData[]
+        let temp = [] as structs.QuakeData[]
         if (tab.isBatch) {
             ipList = await tableCtrl.getIpList()
         }
@@ -563,9 +562,8 @@ async function exportData() {
             }
             let result = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
             if (result.Code != 0) {
-                quake.message = result.Message!
-                ElMessage.error(quake.message + " 已退出导出!")
-                Callgologger("error", `[quake] ${tab.title} export data error: ${quake.message}`)
+                ElMessage.error(result.Message + " 已退出导出!")
+                Callgologger("error", `[quake] ${tab.title} export data error: ${result.Message}`)
                 table.loading = false
                 return
             }

@@ -3,10 +3,10 @@
 import {clients} from '../models';
 import {structs} from '../models';
 import {dirsearch} from '../models';
-import {space} from '../models';
 import {isic} from '../models';
 import {jsfind} from '../models';
 import {info} from '../models';
+import {space} from '../models';
 
 export function AlibabaNacos(arg1:string,arg2:string,arg3:number,arg4:string,arg5:string,arg6:string,arg7:string,arg8:clients.Proxy):Promise<string>;
 
@@ -30,9 +30,9 @@ export function FaviconMd5(arg1:string):Promise<string>;
 
 export function FingerprintList():Promise<Array<string>>;
 
-export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean):Promise<space.FofaSearchResult>;
+export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean):Promise<structs.FofaSearchResult>;
 
-export function FofaTips(arg1:string):Promise<space.TipsResult>;
+export function FofaTips(arg1:string):Promise<structs.TipsResult>;
 
 export function GOOS():Promise<string>;
 
@@ -84,9 +84,9 @@ export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Pro
 
 export function PortParse(arg1:string):Promise<Array<number>>;
 
-export function QuakeSearch(arg1:Array<string>,arg2:string,arg3:number,arg4:number,arg5:boolean,arg6:boolean,arg7:boolean,arg8:boolean,arg9:string,arg10:string):Promise<space.QuakeResult>;
+export function QuakeSearch(arg1:Array<string>,arg2:string,arg3:number,arg4:number,arg5:boolean,arg6:boolean,arg7:boolean,arg8:boolean,arg9:string,arg10:string):Promise<structs.QuakeResult>;
 
-export function QuakeTips(arg1:string):Promise<space.QuakeTipsResult>;
+export function QuakeTips(arg1:string):Promise<structs.QuakeTipsResult>;
 
 export function Socks5Conn(arg1:string,arg2:number,arg3:number,arg4:string,arg5:string):Promise<boolean>;
 
@@ -98,7 +98,7 @@ export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number,arg4:
 
 export function TycCheckLogin():Promise<boolean>;
 
-export function UncoverSearch(arg1:string,arg2:string,arg3:number,arg4:structs.SpaceOption):Promise<Array<space.Result>>;
+export function UncoverSearch(arg1:string,arg2:string,arg3:structs.SpaceOption):Promise<Array<space.Result>>;
 
 export function ViewPictrue(arg1:string):Promise<string>;
 

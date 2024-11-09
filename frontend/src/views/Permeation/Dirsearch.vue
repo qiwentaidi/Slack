@@ -284,7 +284,7 @@ function copyHistory(length: number) {
         </el-button>
     </div>
     <el-card>
-        <div class="my-header" style="margin-bottom: 10px;">
+        <div class="my-header" style="margin-bottom: 5px;">
             <el-space>
                 <el-checkbox v-model="config.redirectClient" label="重定向跟随" />
                 <el-divider direction="vertical" />
@@ -297,7 +297,7 @@ function copyHistory(length: number) {
             </el-space>
             <el-button :icon="Setting" @click="config.drawer = true">参数设置</el-button>
         </div>
-        <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 210px);">
+        <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 205px);">
             <el-table-column type="index" label="#" width="60px" />
             <el-table-column prop="Status" width="100px" label="状态码"
                 :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />

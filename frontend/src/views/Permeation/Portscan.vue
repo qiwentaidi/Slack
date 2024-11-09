@@ -3,7 +3,7 @@ import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, UploadFileAndRead } from '@/util'
 import { ExportToXlsx } from '@/export'
-import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Upload, CircleClose, Share } from '@element-plus/icons-vue';
+import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, ExitScanner, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
@@ -12,6 +12,7 @@ import usePagination from '@/usePagination';
 import { LinkCrack, LinkWebscan } from '@/linkage';
 import { isPrivateIP, validateIp, validatePortscan } from '@/stores/validate';
 import consoleIcon from '@/assets/icon/console.svg'
+import exportIcon from '@/assets/icon/doucment-export.svg'
 import { crackDict, portGroupOptions, portscanOptions } from '@/stores/options';
 import throttle from 'lodash/throttle';
 import async from 'async'
@@ -347,7 +348,7 @@ function stopShodan() {
                         <el-dropdown-item :icon="CopyDocument" @click="moreOperate.CopyURLs('brute', pagination.table.result)">复制全部可爆破协议</el-dropdown-item>
                         <el-dropdown-item :icon="Promotion" @click="moreOperate.Linkage('webscan')" divided>发送至网站扫描</el-dropdown-item>
                         <el-dropdown-item :icon="Promotion" @click="moreOperate.Linkage('crack')">发送至暴破与未授权检测</el-dropdown-item>
-                        <el-dropdown-item :icon="Share" 
+                        <el-dropdown-item :icon="exportIcon" 
                         @click="ExportToXlsx(['IP', 'Port', 'Title', 'Link', 'Protocol'], '端口扫描', 'portscan', pagination.table.result)"
                         divided>结果导出</el-dropdown-item>
                     </el-dropdown-menu>

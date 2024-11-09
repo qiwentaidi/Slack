@@ -3,9 +3,11 @@ package space
 import (
 	"context"
 	"fmt"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"strings"
+	"time"
 )
 
 type Result struct {
@@ -19,15 +21,16 @@ type Result struct {
 	Source     string
 }
 
-func Uncover(ctx context.Context, query, types string, size int, o structs.SpaceOption) []Result {
+func Uncover(ctx context.Context, query, types string, o structs.SpaceOption) []Result {
 	var results []Result
 	if o.FofaApi != "" && o.FofaEmail != "" && o.FofaKey != "" {
-		config := NewFofaConfig(&FofaAuth{
+		config := NewFofaConfig(&structs.FofaAuth{
 			Address: o.FofaApi,
 			Email:   o.FofaEmail,
 			Key:     o.FofaKey,
 		})
-		fs := config.FofaApiSearch(ctx, FormatQuery("fofa", types, query), "10", "1", false, false)
+		fs := config.FofaApiSearch(ctx, FormatQuery("fofa", types, query), "1000", "1", false, false)
+		gologger.Info(ctx, fmt.Sprintf("[uncover] fofa %d results", fs.Size))
 		for _, r := range fs.Results {
 			results = append(results, Result{
 				URL:        r.URL,
@@ -43,7 +46,9 @@ func Uncover(ctx context.Context, query, types string, size int, o structs.Space
 	}
 
 	if o.HunterKey != "" {
-		hs := HunterApiSearch(o.HunterKey, FormatQuery("hunter", types, query), fmt.Sprintf("%v", size), "1", "2", "", false)
+		hunterStartTime := time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
+		hs := HunterApiSearch(o.HunterKey, FormatQuery("hunter", types, query), "100", "1", hunterStartTime, "3", false)
+		gologger.Info(ctx, fmt.Sprintf("[uncover] hunter %d results", len(hs.Data.Arr)))
 		for _, r := range hs.Data.Arr {
 			var component []string
 			for _, c := range r.Component {
@@ -63,12 +68,18 @@ func Uncover(ctx context.Context, query, types string, size int, o structs.Space
 	}
 
 	if o.QuakeKey != "" {
-		for _, r := range QuakeApiSearch(&QuakeRequestOptions{
+		options := &structs.QuakeRequestOptions{
 			Query:    FormatQuery("quake", types, query),
 			PageNum:  1,
-			PageSize: size,
+			PageSize: 500,
 			Token:    o.QuakeKey,
-		}).Data {
+		}
+		result := QuakeApiSearch(options)
+		if result.Code != 0 {
+			gologger.Error(ctx, fmt.Sprintf("[uncover] err: %s", result.Message))
+		}
+		gologger.Info(ctx, fmt.Sprintf("[uncover] quake %d results", len(result.Data)))
+		for _, r := range result.Data {
 			results = append(results, Result{
 				IP:         r.IP,
 				Domain:     r.Host,
@@ -119,6 +130,8 @@ func FormatQuery(space, types, query string) string {
 			return "不支持"
 		case "域名":
 			prefix = "domain="
+		case "IP":
+			prefix = "ip="
 		default:
 			prefix = query
 		}
@@ -130,6 +143,8 @@ func FormatQuery(space, types, query string) string {
 			prefix = "icp.number="
 		case "备案名称":
 			prefix = "icp.name="
+		case "IP":
+			prefix = "ip="
 		default:
 			prefix = query
 		}
@@ -144,6 +159,8 @@ func FormatQuery(space, types, query string) string {
 			prefix = "icp_keywords:"
 		case "域名":
 			prefix = "domain:"
+		case "IP":
+			prefix = "ip:"
 		default:
 			prefix = query
 		}

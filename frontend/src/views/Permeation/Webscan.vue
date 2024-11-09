@@ -549,7 +549,7 @@ async function showPocDetail(filename: string) {
 </script>
 
 <template>
-    <el-card style="margin-bottom: 10px;">
+    <el-card style="margin-bottom: 10px; height: 140px">
         <template #header>
             <div class="card-header">
                 <span class="title">仪表盘</span>

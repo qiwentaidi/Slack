@@ -1,4 +1,4 @@
-import { space } from "wailsjs/go/models";
+import { structs } from "wailsjs/go/models";
 
 export interface TableTabs {
     title: string;
@@ -7,17 +7,19 @@ export interface TableTabs {
     total: number;
     pageSize: number;
     currentPage: number;
+    message: string; // 查询完的提示信息
 }
 
 export interface QuakeTableTabs {
     title: string;
     name: string;
-    content: space.QuakeData[];
+    content: structs.QuakeData[];
     total: number;
     pageSize: number;
     currentPage: number;
     isBatch: boolean;
     ipList: string[];
+    message: string;
 }
 
 export interface PortScanData {

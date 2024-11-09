@@ -19,7 +19,6 @@ const form = reactive({
     query: '',
     fraud: false,
     cert: false,
-    tips: '',
     syntaxData: [] as main.Syntax[],
 })
 
@@ -133,9 +132,9 @@ const tableCtrl = ({
             total: 0,
             pageSize: 100,
             currentPage: 1,
+            message: result.Message
         });
         table.acvtiveNames = newTabName
-        form.tips = result.Message!
         const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
         tab.content = result.Results!;
         tab.total = result.Size!
@@ -162,7 +161,21 @@ const tableCtrl = ({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
         let result = await FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
-        form.tips = result.Message!
+        tab.message = result.Message
+        if (result.Error) {
+            table.loading = false
+            return
+        }
+        tab.content = result.Results!;
+        tab.total = result.Size!
+        table.loading = false
+    },
+    handleCurrentChange: async (val: any) => {
+        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+        tab.currentPage = val
+        table.loading = true
+        let result = await FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        tab.message = result.Message
         table.loading = false
         if (result.Error) {
             return
@@ -170,24 +183,17 @@ const tableCtrl = ({
         tab.content = result.Results!;
         tab.total = result.Size!
     },
-    handleCurrentChange: async (val: any) => {
-        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        tab.currentPage = val
-        table.loading = true
-        let result = await FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
-        form.tips = result.Message!
-        table.loading = false
-        if (result.Error) {
-            return
-        }
-        tab.content = result.Results!;
-        tab.total = result.Size!
+    filterProtocol: (value: string, row: any) => {
+        return row.Protocol === value;
+    },
+    filterTitle: (value: string, row: any) => {
+        return row.Title === value;
     }
 })
 
 
-function IconHashSearch() {
-    ElMessageBox.prompt('输入目标Favicon地址会自动计算并搜索相关资产', 'ICON搜索', {
+function iconHashSearch() {
+    ElMessageBox.prompt('输入目标Favicon地址会自动计算并搜索相关资产', '图标搜索', {
         confirmButtonText: '检索',
         inputPattern: /^(https?:\/\/)?((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|localhost|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/[^\s]*)?$/,
         inputErrorMessage: 'Invalid URL',
@@ -203,7 +209,7 @@ function IconHashSearch() {
         })
 }
 
-function BatchSearch() {
+function batchSearch() {
     ElMessageBox.prompt('请输入IP/网段/域名(MAX 100)', '批量查询', {
         confirmButtonText: '检索',
         inputType: 'textarea',
@@ -267,15 +273,7 @@ function getColumnData(prop: string): any[] {
     return newArray
 }
 
-function filterHandlerProtocol(value: string, row: any): boolean {
-    return row.Protocol === value;
-}
-
-function filterHandlerTitle(value: string, row: any): boolean {
-    return row.Title === value;
-}
-
-async function CopyURL() {
+async function copyURL() {
     if (table.editableTabs.length != 0) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         var temp = [];
@@ -287,7 +285,7 @@ async function CopyURL() {
     }
 }
 
-async function CopyDeduplicationURL() {
+async function copyDeduplicationURL() {
     let result = await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
     if (result.Error) {
         ElMessage.warning("查询失败")
@@ -370,10 +368,10 @@ function searchCsegmentIpv4(ip: string) {
                             </el-tabs>
                         </el-popover>
                         <el-tooltip content="使用网页图标搜索" placement="bottom">
-                            <el-button :icon="PictureRounded" link @click="IconHashSearch()" />
+                            <el-button :icon="PictureRounded" link @click="iconHashSearch()" />
                         </el-tooltip>
                         <el-tooltip content="IP/域名批量搜索" placement="bottom">
-                            <el-button :icon="Document" link @click="BatchSearch()" />
+                            <el-button :icon="Document" link @click="batchSearch()" />
                         </el-tooltip>
                     </el-space>
                     <el-divider direction="vertical" />
@@ -442,9 +440,9 @@ function searchCsegmentIpv4(ip: string) {
                     <el-dropdown-menu>
                         <el-dropdown-item :icon="exportIcon" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
                         <el-dropdown-item :icon="exportIcon" @click="SaveData(1)">导出全部数据</el-dropdown-item>
-                        <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="CopyDocument" @click="copyURL" divided>复制当前页URL</el-dropdown-item>
                         <el-dropdown-item :icon="CopyDocument"
-                            @click="CopyDeduplicationURL">去重复制前1w条URL</el-dropdown-item>
+                            @click="copyDeduplicationURL">去重复制前1w条URL</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -458,7 +456,7 @@ function searchCsegmentIpv4(ip: string) {
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" width="300" :show-overflow-tooltip="true" />
                 <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
-                    :filter-method="filterHandlerTitle" width="200" :show-overflow-tooltip="true">
+                    :filter-method="tableCtrl.filterTitle" width="200" :show-overflow-tooltip="true">
                     <template #filter-icon>
                         <Filter />
                     </template>
@@ -469,7 +467,7 @@ function searchCsegmentIpv4(ip: string) {
                     :show-overflow-tooltip="true" />
                 <el-table-column prop="Domain" label="域名" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Protocol" label="协议" :filters='getColumnData("Protocol")'
-                    :filter-method="filterHandlerProtocol" width="100" :show-overflow-tooltip="true">
+                    :filter-method="tableCtrl.filterProtocol" width="100" :show-overflow-tooltip="true">
                     <template #filter-icon>
                         <Filter />
                     </template>
@@ -511,7 +509,7 @@ function searchCsegmentIpv4(ip: string) {
                 </el-table-column>
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
-                <span style="color: cornflowerblue;">{{ form.tips }}</span>
+                <span style="color: cornflowerblue;">{{ item.message }}</span>
                 <el-pagination size="small" background v-model:page-size="item.pageSize" :page-sizes="[100, 500, 1000]"
                     layout="total, sizes, prev, pager, next, jumper" @size-change="tableCtrl.handleSizeChange"
                     @current-change="tableCtrl.handleCurrentChange" :total="item.total" />

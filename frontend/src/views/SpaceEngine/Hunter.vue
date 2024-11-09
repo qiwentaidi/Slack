@@ -61,7 +61,6 @@ const form = reactive({
     defaultSever: '3',
     keywordActive: "IP",
     deduplication: false,
-    tips: '',
     batchdialog: false,
     batchURL: '',
     syntaxData: [] as main.Syntax[],
@@ -117,7 +116,7 @@ const table = reactive({
 })
 
 const tableCtrl = ({
-    addTab: (query: string) => {
+    addTab: async (query: string) => {
         if (!global.space.hunterkey) {
             ElNotification.warning("请在设置处填写Hunter Key")
             return
@@ -127,6 +126,12 @@ const tableCtrl = ({
             return
         }
         const newTabName = `${++table.tabIndex}`
+        table.loading = true
+        let result = await HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication)
+        if (isError(result.code, result.message)) {
+            table.loading = false
+            return
+        }
         table.editableTabs.push({
             title: query,
             name: newTabName,
@@ -134,41 +139,34 @@ const tableCtrl = ({
             total: 0,
             pageSize: 10,
             currentPage: 1,
+            message: result.message + "," + result.data.rest_quota
         });
-        table.loading = true
         table.acvtiveNames = newTabName
-        HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
-            if (isError(result.code, result.message)) {
-                table.loading = false
-                return
-            }
-            form.tips = result.message + "," + result.data.rest_quota
-            const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
-            tab.content!.pop()
-            if (result.data.arr == null) {
-                ElMessage.warning("暂未查询到相关数据");
-                table.loading = false
-                return
-            }
-            result.data.arr.forEach((item: any) => {
-                tab.content?.push({
-                    URL: item.url,
-                    IP: item.ip,
-                    Port: item.port,
-                    Protocol: item.protocol,
-                    Domain: item.domain,
-                    Component: item.component,
-                    Title: item.web_title,
-                    Status: item.status_code,
-                    ICP: item.company,
-                    ISP: item.isp,
-                    Position: item.country + "/" + item.province,
-                    UpdateTime: item.updated_at,
-                })
-            });
-            tab.total = result.data.total
+        const tab = table.editableTabs.find(tab => tab.name === newTabName)!;
+        tab.content!.pop()
+        if (result.data.arr == null) {
+            ElMessage.warning("暂未查询到相关数据");
             table.loading = false
-        })
+            return
+        }
+        result.data.arr.forEach((item: any) => {
+            tab.content?.push({
+                URL: item.url,
+                IP: item.ip,
+                Port: item.port,
+                Protocol: item.protocol,
+                Domain: item.domain,
+                Component: item.component,
+                Title: item.web_title,
+                Status: item.status_code,
+                ICP: item.company,
+                ISP: item.isp,
+                Position: item.country + "/" + item.province,
+                UpdateTime: item.updated_at,
+            })
+        });
+        tab.total = result.data.total
+        table.loading = false
     },
     removeTab: (targetName: string) => {
         const tabs = table.editableTabs
@@ -187,68 +185,68 @@ const tableCtrl = ({
         table.acvtiveNames = activeName
         table.editableTabs = tabs.filter((tab) => tab.name !== targetName)
     },
-    handleSizeChange: (val: any) => {
+    handleSizeChange: async(val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
-        HunterSearch(global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
-            if (isError(result.code, result.message)) {
-                table.loading = false
-                return
-            }
-            form.tips = result.message + "," + result.data.rest_quota
-            tab.content = [{}]
-            tab.content.pop()
-            result.data.arr.forEach((item: any) => {
-                tab.content?.push({
-                    URL: item.url,
-                    IP: item.ip,
-                    Port: item.port,
-                    Protocol: item.protocol,
-                    Domain: item.domain,
-                    Component: item.component,
-                    Title: item.web_title,
-                    Status: item.status_code,
-                    ICP: item.company,
-                    ISP: item.isp,
-                    Position: item.country + "/" + item.province,
-                    UpdateTime: item.updated_at,
-                })
-            });
-            tab.total = result.data.total
+        let result = await HunterSearch(global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication)
+        if (isError(result.code, result.message)) {
             table.loading = false
-        })
+            tab.message = result.message
+            return
+        }
+        tab.message = result.message + "," + result.data.rest_quota
+        tab.content = [{}]
+        tab.content.pop()
+        result.data.arr.forEach((item: any) => {
+            tab.content?.push({
+                URL: item.url,
+                IP: item.ip,
+                Port: item.port,
+                Protocol: item.protocol,
+                Domain: item.domain,
+                Component: item.component,
+                Title: item.web_title,
+                Status: item.status_code,
+                ICP: item.company,
+                ISP: item.isp,
+                Position: item.country + "/" + item.province,
+                UpdateTime: item.updated_at,
+            })
+        });
+        tab.total = result.data.total
+        table.loading = false
     },
-    handleCurrentChange: (val: any) => {
+    handleCurrentChange: async(val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        HunterSearch(global.space.hunterkey, tab.title, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication).then(result => {
-            if (isError(result.code, result.message)) {
-                table.loading = false
-                return
-            }
-            form.tips = result.message + "," + result.data.rest_quota
-            tab.content = [{}]
-            tab.content.pop()
-            result.data.arr.forEach((item: any) => {
-                tab.content?.push({
-                    URL: item.url,
-                    IP: item.ip,
-                    Port: item.port,
-                    Protocol: item.protocol,
-                    Domain: item.domain,
-                    Component: item.component,
-                    Title: item.web_title,
-                    Status: item.status_code,
-                    ICP: item.company,
-                    ISP: item.isp,
-                    Position: item.country + "/" + item.province,
-                    UpdateTime: item.updated_at,
-                })
-            });
-            tab.total = result.data.total
+        let result = await HunterSearch(global.space.hunterkey, tab.title, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication)
+        if (isError(result.code, result.message)) {
             table.loading = false
-        })
+            tab.message = result.message
+            return
+        }
+        tab.message = result.message + "," + result.data.rest_quota
+        tab.content = [{}]
+        tab.content.pop()
+        result.data.arr.forEach((item: any) => {
+            tab.content?.push({
+                URL: item.url,
+                IP: item.ip,
+                Port: item.port,
+                Protocol: item.protocol,
+                Domain: item.domain,
+                Component: item.component,
+                Title: item.web_title,
+                Status: item.status_code,
+                ICP: item.company,
+                ISP: item.isp,
+                Position: item.country + "/" + item.province,
+                UpdateTime: item.updated_at,
+            })
+        });
+        tab.total = result.data.total
+        table.loading = false
     },
     IconSearch: async function () {
         ElMessageBox.prompt('输入目标Favicon地址会自动计算并搜索相关资产', '图标搜索', {
@@ -385,13 +383,15 @@ function searchCsegmentIpv4(ip: string) {
                             <el-tabs v-model="form.keywordActive">
                                 <el-tab-pane v-for="item in hunterOptions.Syntax" :name="item.title"
                                     :label="item.title">
-                                    <el-table :data="item.data" class="keyword-search" @row-click="entry.rowClick" style="height: 50vh;">
+                                    <el-table :data="item.data" class="keyword-search" @row-click="entry.rowClick"
+                                        style="height: 50vh;">
                                         <el-table-column width="300" property="key" label="例句">
                                             <template #default="scope">
                                                 <el-space>
                                                     <span>{{ scope.row.key }}</span>
                                                     <el-tag type="danger" round v-show="scope.row.hot">hot</el-tag>
-                                                    <el-tag type="primary" round v-show="scope.row.characteristic">特色</el-tag>
+                                                    <el-tag type="primary" round
+                                                        v-show="scope.row.characteristic">特色</el-tag>
                                                 </el-space>
                                             </template>
                                         </el-table-column>
@@ -458,12 +458,12 @@ function searchCsegmentIpv4(ip: string) {
         <el-form-item>
             <el-space>
                 <el-select v-model="form.defaultTime" style="width: 120px;">
-                    <el-option v-for="item in hunterOptions.Time" :key="item.value" :label="item.label" :value="item.value"
-                        style="text-align: center;" />
+                    <el-option v-for="item in hunterOptions.Time" :key="item.value" :label="item.label"
+                        :value="item.value" style="text-align: center;" />
                 </el-select>
                 <el-select v-model="form.defaultSever" style="width: 160px;">
-                    <el-option v-for="item in hunterOptions.Server" :key="item.value" :label="item.label" :value="item.value"
-                        style="text-align: center;" />
+                    <el-option v-for="item in hunterOptions.Server" :key="item.value" :label="item.label"
+                        :value="item.value" style="text-align: center;" />
                 </el-select>
                 <el-tooltip content="需要权益积分">
                     <el-checkbox v-model="form.deduplication">数据去重</el-checkbox>
@@ -505,7 +505,7 @@ function searchCsegmentIpv4(ip: string) {
                 <el-table-column prop="Component" label="应用/组件" width="210xp">
                     <template #default="scope">
                         <el-space>
-                            <el-tag v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">{{
+                            <el-tag round v-if="Array.isArray(scope.row.Component) && scope.row.Component.length > 0">{{
                                 scope.row.Component[0].name + scope.row.Component[0].version }}</el-tag>
                             <el-popover placement="bottom" :width="350" trigger="hover">
                                 <template #reference>
@@ -544,7 +544,7 @@ function searchCsegmentIpv4(ip: string) {
                 </el-table-column>
             </el-table>
             <div class="my-header" style="margin-top: 10px;">
-                <span style="color: cornflowerblue;">{{ form.tips }}</span>
+                <span style="color: cornflowerblue;">{{ item.message }}</span>
                 <el-pagination size="small" background v-model:page-size="item.pageSize" :page-sizes="[10, 50, 100]"
                     layout="total, sizes, prev, pager, next, jumper" @size-change="tableCtrl.handleSizeChange"
                     @current-change="tableCtrl.handleCurrentChange" :total="item.total" />

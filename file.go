@@ -154,6 +154,9 @@ type FileListInfo struct {
 func (f *File) List(folders []string) []FileListInfo {
 	var files []FileListInfo
 	for _, folder := range folders {
+		if folder == "" {
+			continue
+		}
 		if _, err := os.Stat(folder); os.IsNotExist(err) {
 			gologger.Error(f.ctx, fmt.Sprintf("path %s not exist", folder))
 			continue

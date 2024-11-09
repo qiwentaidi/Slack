@@ -403,20 +403,20 @@ func (a *App) PortBrute(host string, usernames, passwords []string) {
 
 // fofa
 
-func (a *App) FofaTips(query string) *space.TipsResult {
+func (a *App) FofaTips(query string) *structs.TipsResult {
 	config := space.NewFofaConfig(nil)
 	b, err := config.GetTips(query)
 	if err != nil {
 		gologger.Debug(a.ctx, err)
 		return nil
 	}
-	var ts space.TipsResult
+	var ts structs.TipsResult
 	json.Unmarshal(b, &ts)
 	return &ts
 }
 
-func (a *App) FofaSearch(query, pageSzie, pageNum, address, email, key string, fraud, cert bool) *space.FofaSearchResult {
-	config := space.NewFofaConfig(&space.FofaAuth{
+func (a *App) FofaSearch(query, pageSzie, pageNum, address, email, key string, fraud, cert bool) *structs.FofaSearchResult {
+	config := space.NewFofaConfig(&structs.FofaAuth{
 		Address: address,
 		Email:   email,
 		Key:     key,
@@ -530,12 +530,12 @@ func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, d
 
 // quake
 
-func (a *App) QuakeTips(query string) *space.QuakeTipsResult {
+func (a *App) QuakeTips(query string) *structs.QuakeTipsResult {
 	return space.SearchQuakeTips(query)
 }
 
-func (a *App) QuakeSearch(ipList []string, query string, pageNum, pageSize int, latest, invalid, honeypot, cdn bool, token, certcommon string) *space.QuakeResult {
-	option := &space.QuakeRequestOptions{
+func (a *App) QuakeSearch(ipList []string, query string, pageNum, pageSize int, latest, invalid, honeypot, cdn bool, token, certcommon string) *structs.QuakeResult {
+	option := structs.QuakeRequestOptions{
 		IpList:     ipList,
 		Query:      query,
 		PageNum:    pageNum,
@@ -547,7 +547,7 @@ func (a *App) QuakeSearch(ipList []string, query string, pageNum, pageSize int, 
 		Token:      token,
 		CertCommon: certcommon,
 	}
-	qk := space.QuakeApiSearch(option)
+	qk := space.QuakeApiSearch(&option)
 	time.Sleep(time.Second * 1)
 	return qk
 }
@@ -650,8 +650,8 @@ func (a *App) HikvsionCamera(target string, attackType int, passwordList []strin
 	return ""
 }
 
-func (a *App) UncoverSearch(query, types string, size int, option structs.SpaceOption) []space.Result {
-	return space.Uncover(a.ctx, query, types, size, option)
+func (a *App) UncoverSearch(query, types string, option structs.SpaceOption) []space.Result {
+	return space.Uncover(a.ctx, query, types, option)
 }
 
 func (a *App) GitDorks(target, dork, apikey string) *isic.GithubResult {

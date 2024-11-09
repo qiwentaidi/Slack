@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
 import { ExtractIP, IpLocation } from "wailsjs/go/main/App";
-import { Search, QuestionFilled, Location, Cellphone, Postcard, Upload, Document, ChromeFilled, DocumentCopy, Filter, Camera, Management, RefreshLeft } from "@element-plus/icons-vue";
+import { Search, QuestionFilled, Location, Cellphone, Postcard, Upload, Document, ChromeFilled, DocumentCopy, Filter, Camera, Box, RefreshLeft } from "@element-plus/icons-vue";
 import { ElMessage, ElNotification } from "element-plus";
 import extractIcon from "@/assets/icon/extract.svg";
 import { Copy, SplitTextArea, UploadFileAndRead } from "@/util";
@@ -440,7 +440,7 @@ const filter = ({
                                             <el-dropdown-menu>
                                                 <el-dropdown-item :icon="Camera"
                                                     @click="filter.hikvisionFilter">海康摄像头</el-dropdown-item>
-                                                <el-dropdown-item :icon="Management" @click="filter.vmFilter">Vcenter &
+                                                <el-dropdown-item :icon="Box" @click="filter.vmFilter">Vcenter &
                                                     Exsi</el-dropdown-item>
                                                 <el-dropdown-item :icon="RefreshLeft" divided
                                                     @click="filter.reset">重置</el-dropdown-item>
@@ -454,7 +454,7 @@ const filter = ({
                         <el-table-column prop="code" label="Code" width="100" />
                         <el-table-column prop="length" label="Length" width="120" />
                         <el-table-column prop="redirect" label="Redirect" width="400" />
-                        <el-table-column label="Operations" fixed="right" width="100" align="center">
+                        <el-table-column label="Operate" fixed="right" width="100" align="center">
                             <template #default="scope">
                                 <el-button link :icon="ChromeFilled" @click="BrowserOpenURL(scope.row.url)"></el-button>
                                 <el-button link :icon="DocumentCopy" @click="Copy(scope.row.url)"></el-button>

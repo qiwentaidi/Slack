@@ -26,7 +26,7 @@ var proxy = reactive({
 
 var webscan = reactive({
     web_thread: 50,
-    port_thread: 1000,
+    port_thread: 300,
     port_timeout: 7,
     ping_check_alive: false,
     default_alive_module: "None",
@@ -57,7 +57,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "1.7.0"
+const LOCAL_VERSION = "1.7.1"
 
 const Language = ref("zh")
 const Theme = ref(false)

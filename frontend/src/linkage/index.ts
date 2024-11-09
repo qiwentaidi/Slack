@@ -130,6 +130,12 @@ export async function LinkSubdomain(domains: string[]) {
         SecuritytrailsApi: global.space.securitytrails,
         ZoomeyeApi: global.space.zoomeye,
         GithubApi: global.space.github,
+        AppendEngines: ["FOFA", "Quake", "Hunter"],
+        FofaAddress: global.space.fofaapi,
+        FofaEmail: global.space.fofaemail,
+        FofaApi: global.space.fofakey,
+        HunterApi: global.space.hunterkey,
+        QuakeApi: global.space.quakekey
     }
     await Subdomain(option)
 }

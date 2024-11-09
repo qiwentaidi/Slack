@@ -182,8 +182,8 @@ export function TycCheckLogin() {
   return window['go']['main']['App']['TycCheckLogin']();
 }
 
-export function UncoverSearch(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['UncoverSearch'](arg1, arg2, arg3, arg4);
+export function UncoverSearch(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UncoverSearch'](arg1, arg2, arg3);
 }
 
 export function ViewPictrue(arg1) {

@@ -299,6 +299,91 @@ export namespace mongo {
 
 export namespace space {
 	
+	export class Result {
+	    URL: string;
+	    IP: string;
+	    Domain: string;
+	    Port: string;
+	    Protocol: string;
+	    Title: string;
+	    Components: string;
+	    Source: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Result(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.URL = source["URL"];
+	        this.IP = source["IP"];
+	        this.Domain = source["Domain"];
+	        this.Port = source["Port"];
+	        this.Protocol = source["Protocol"];
+	        this.Title = source["Title"];
+	        this.Components = source["Components"];
+	        this.Source = source["Source"];
+	    }
+	}
+
+}
+
+export namespace structs {
+	
+	export class AntivirusResult {
+	    Process: string;
+	    Pid: string;
+	    Name: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AntivirusResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Process = source["Process"];
+	        this.Pid = source["Pid"];
+	        this.Name = source["Name"];
+	    }
+	}
+	export class AuthPatch {
+	    MS: string;
+	    Patch: string;
+	    Description: string;
+	    System: string;
+	    Reference: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AuthPatch(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.MS = source["MS"];
+	        this.Patch = source["Patch"];
+	        this.Description = source["Description"];
+	        this.System = source["System"];
+	        this.Reference = source["Reference"];
+	    }
+	}
+	export class Children {
+	    Name: string;
+	    Type: string;
+	    Path: string;
+	    Target: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Children(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Name = source["Name"];
+	        this.Type = source["Type"];
+	        this.Path = source["Path"];
+	        this.Target = source["Target"];
+	    }
+	}
 	export class Data {
 	    name: string;
 	    company: string;
@@ -313,6 +398,30 @@ export namespace space {
 	        this.name = source["name"];
 	        this.company = source["company"];
 	        this.r_code = source["r_code"];
+	    }
+	}
+	export class DatabaseConnection {
+	    Nanoid: string;
+	    Scheme: string;
+	    Host: string;
+	    Port: number;
+	    Username: string;
+	    Password: string;
+	    Notes: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DatabaseConnection(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Nanoid = source["Nanoid"];
+	        this.Scheme = source["Scheme"];
+	        this.Host = source["Host"];
+	        this.Port = source["Port"];
+	        this.Username = source["Username"];
+	        this.Password = source["Password"];
+	        this.Notes = source["Notes"];
 	    }
 	}
 	export class Results {
@@ -361,6 +470,108 @@ export namespace space {
 	        this.Message = source["Message"];
 	        this.Size = source["Size"];
 	        this.Results = this.convertValues(source["Results"], Results);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class HunterResult {
+	    code: number;
+	    // Go type: struct { AccountType string "json:\"account_type\""; Arr []struct { AsOrg string "json:\"as_org\""; Banner string "json:\"banner\""; BaseProtocol string "json:\"base_protocol\""; City string "json:\"city\""; Company string "json:\"company\""; Component []struct { Name string "json:\"name\""; Version string "json:\"version\"" } "json:\"component\""; Country string "json:\"country\""; Domain string "json:\"domain\""; IP string "json:\"ip\""; IsRisk string "json:\"is_risk\""; IsRiskProtocol string "json:\"is_risk_protocol\""; IsWeb string "json:\"is_web\""; Isp string "json:\"isp\""; Number string "json:\"number\""; Os string "json:\"os\""; Port int64 "json:\"port\""; Protocol string "json:\"protocol\""; Province string "json:\"province\""; StatusCode int64 "json:\"status_code\""; UpdatedAt string "json:\"updated_at\""; URL string "json:\"url\""; WebTitle string "json:\"web_title\"" } "json:\"arr\""; ConsumeQuota string "json:\"consume_quota\""; RestQuota string "json:\"rest_quota\""; SyntaxPrompt string "json:\"syntax_prompt\""; Time int64 "json:\"time\""; Total int64 "json:\"total\"" }
+	    data: any;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new HunterResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.code = source["code"];
+	        this.data = this.convertValues(source["data"], Object);
+	        this.message = source["message"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class HunterTips {
+	    code: number;
+	    // Go type: struct { App []struct { Name string "json:\"name\""; AssetNum int "json:\"asset_num\""; Tags []string "json:\"tags\"" } "json:\"app\""; Collect []interface {} "json:\"collect\"" }
+	    data: any;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new HunterTips(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.code = source["code"];
+	        this.data = this.convertValues(source["data"], Object);
+	        this.message = source["message"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class Navigation {
+	    Name: string;
+	    Children: Children[];
+	
+	    static createFrom(source: any = {}) {
+	        return new Navigation(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Name = source["Name"];
+	        this.Children = this.convertValues(source["Children"], Children);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -503,252 +714,6 @@ export namespace space {
 		    return a;
 		}
 	}
-	export class Result {
-	    URL: string;
-	    IP: string;
-	    Domain: string;
-	    Port: string;
-	    Protocol: string;
-	    Title: string;
-	    Components: string;
-	    Source: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new Result(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.URL = source["URL"];
-	        this.IP = source["IP"];
-	        this.Domain = source["Domain"];
-	        this.Port = source["Port"];
-	        this.Protocol = source["Protocol"];
-	        this.Title = source["Title"];
-	        this.Components = source["Components"];
-	        this.Source = source["Source"];
-	    }
-	}
-	
-	export class TipsResult {
-	    code: number;
-	    message: string;
-	    data: Data[];
-	
-	    static createFrom(source: any = {}) {
-	        return new TipsResult(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.code = source["code"];
-	        this.message = source["message"];
-	        this.data = this.convertValues(source["data"], Data);
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-
-}
-
-export namespace structs {
-	
-	export class AntivirusResult {
-	    Process: string;
-	    Pid: string;
-	    Name: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new AntivirusResult(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Process = source["Process"];
-	        this.Pid = source["Pid"];
-	        this.Name = source["Name"];
-	    }
-	}
-	export class AuthPatch {
-	    MS: string;
-	    Patch: string;
-	    Description: string;
-	    System: string;
-	    Reference: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new AuthPatch(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.MS = source["MS"];
-	        this.Patch = source["Patch"];
-	        this.Description = source["Description"];
-	        this.System = source["System"];
-	        this.Reference = source["Reference"];
-	    }
-	}
-	export class Children {
-	    Name: string;
-	    Type: string;
-	    Path: string;
-	    Target: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new Children(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Name = source["Name"];
-	        this.Type = source["Type"];
-	        this.Path = source["Path"];
-	        this.Target = source["Target"];
-	    }
-	}
-	export class DatabaseConnection {
-	    Nanoid: string;
-	    Scheme: string;
-	    Host: string;
-	    Port: number;
-	    Username: string;
-	    Password: string;
-	    Notes: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new DatabaseConnection(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Nanoid = source["Nanoid"];
-	        this.Scheme = source["Scheme"];
-	        this.Host = source["Host"];
-	        this.Port = source["Port"];
-	        this.Username = source["Username"];
-	        this.Password = source["Password"];
-	        this.Notes = source["Notes"];
-	    }
-	}
-	export class HunterResult {
-	    code: number;
-	    // Go type: struct { AccountType string "json:\"account_type\""; Arr []struct { AsOrg string "json:\"as_org\""; Banner string "json:\"banner\""; BaseProtocol string "json:\"base_protocol\""; City string "json:\"city\""; Company string "json:\"company\""; Component []struct { Name string "json:\"name\""; Version string "json:\"version\"" } "json:\"component\""; Country string "json:\"country\""; Domain string "json:\"domain\""; IP string "json:\"ip\""; IsRisk string "json:\"is_risk\""; IsRiskProtocol string "json:\"is_risk_protocol\""; IsWeb string "json:\"is_web\""; Isp string "json:\"isp\""; Number string "json:\"number\""; Os string "json:\"os\""; Port int64 "json:\"port\""; Protocol string "json:\"protocol\""; Province string "json:\"province\""; StatusCode int64 "json:\"status_code\""; UpdatedAt string "json:\"updated_at\""; URL string "json:\"url\""; WebTitle string "json:\"web_title\"" } "json:\"arr\""; ConsumeQuota string "json:\"consume_quota\""; RestQuota string "json:\"rest_quota\""; SyntaxPrompt string "json:\"syntax_prompt\""; Time int64 "json:\"time\""; Total int64 "json:\"total\"" }
-	    data: any;
-	    message: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new HunterResult(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.code = source["code"];
-	        this.data = this.convertValues(source["data"], Object);
-	        this.message = source["message"];
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-	export class HunterTips {
-	    code: number;
-	    // Go type: struct { App []struct { Name string "json:\"name\""; AssetNum int "json:\"asset_num\""; Tags []string "json:\"tags\"" } "json:\"app\""; Collect []interface {} "json:\"collect\"" }
-	    data: any;
-	    message: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new HunterTips(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.code = source["code"];
-	        this.data = this.convertValues(source["data"], Object);
-	        this.message = source["message"];
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-	export class Navigation {
-	    Name: string;
-	    Children: Children[];
-	
-	    static createFrom(source: any = {}) {
-	        return new Navigation(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Name = source["Name"];
-	        this.Children = this.convertValues(source["Children"], Children);
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
 	export class Response {
 	    Error: boolean;
 	    Proto: string;
@@ -767,6 +732,7 @@ export namespace structs {
 	        this.Body = source["Body"];
 	    }
 	}
+	
 	export class RowData {
 	    Columns: string[];
 	    Rows: any[][];
@@ -819,6 +785,12 @@ export namespace structs {
 	    Mode: number;
 	    Domains: string[];
 	    Subs: string[];
+	    AppendEngines: string[];
+	    FofaAddress: string;
+	    FofaEmail: string;
+	    FofaApi: string;
+	    HunterApi: string;
+	    QuakeApi: string;
 	    ChaosApi: string;
 	    ZoomeyeApi: string;
 	    SecuritytrailsApi: string;
@@ -838,6 +810,12 @@ export namespace structs {
 	        this.Mode = source["Mode"];
 	        this.Domains = source["Domains"];
 	        this.Subs = source["Subs"];
+	        this.AppendEngines = source["AppendEngines"];
+	        this.FofaAddress = source["FofaAddress"];
+	        this.FofaEmail = source["FofaEmail"];
+	        this.FofaApi = source["FofaApi"];
+	        this.HunterApi = source["HunterApi"];
+	        this.QuakeApi = source["QuakeApi"];
 	        this.ChaosApi = source["ChaosApi"];
 	        this.ZoomeyeApi = source["ZoomeyeApi"];
 	        this.SecuritytrailsApi = source["SecuritytrailsApi"];
@@ -868,6 +846,40 @@ export namespace structs {
 	        this.Failed = source["Failed"];
 	        this.Vulnerability = source["Vulnerability"];
 	    }
+	}
+	export class TipsResult {
+	    code: number;
+	    message: string;
+	    data: Data[];
+	
+	    static createFrom(source: any = {}) {
+	        return new TipsResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.code = source["code"];
+	        this.message = source["message"];
+	        this.data = this.convertValues(source["data"], Data);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class WebscanOptions {
 	    Target: string[];

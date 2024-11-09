@@ -165,6 +165,9 @@ async function deletePoc(pocName: string) {
 const activeTabs = ref("poc")
 
 function addFingerprint(fingerprints: string[]) {
+    if (fingerprints.length == 0) {
+        return
+    }
     ElMessage.success("添加成功")
     global.webscan.highlight_fingerprints.push(...fingerprints)
 }

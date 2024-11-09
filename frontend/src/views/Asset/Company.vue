@@ -10,10 +10,16 @@ import { transformArrayFields } from "@/util";
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import global from "@/global";
 import { LinkSubdomain } from "@/linkage";
+import throttle from 'lodash/throttle';
 import CustomTabs from "@/components/CustomTabs.vue";
 import wechatIcon from "@/assets/icon/wechat.svg"
 import { debounce } from "lodash"
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
+
+const throttleUpdate = throttle(() => {
+    pc.table.pageContent = pc.ctrl.watchResultChange(pc.table);
+}, 1000);
+
 
 onMounted(() => {
     const storedToken = localStorage.getItem('tyc-token');
@@ -82,7 +88,7 @@ async function Collect() {
             const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain, from.machineStr);
             if (result.length > 0) {
                 pc.table.result.push(...result)
-                pc.table.pageContent = pc.ctrl.watchResultChange(pc.table)
+                throttleUpdate()
                 for (const item of result) {
                     allCompany.push(item.CompanyName!)
                     if (from.linkSubdomain && item.Domains!.length > 0) {

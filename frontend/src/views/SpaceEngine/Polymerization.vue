@@ -9,18 +9,9 @@
                         </el-select>
                     </template>
                     <template #suffix>
-                        <el-divider direction="vertical" />
-                        <el-button link type="primary" :icon="Search"
-                            @click="tableCtrl.addTab(uncover.query)">查询</el-button>
-                    </template>
-                    <template #prefix>
                         <el-popover placement="bottom-end" :width="500" trigger="click">
                             <template #reference>
-                                <div>
-                                    <el-tooltip content="使用须知" placement="bottom">
-                                        <el-button link :icon="Management"></el-button>
-                                    </el-tooltip>
-                                </div>
+                                <el-button type="warning" link :icon="WarningFilled">使用须知</el-button>
                             </template>
                             <el-table :data="uncoverSyntaxOptions" stripe>
                                 <el-table-column label="字段" prop="filed" />
@@ -29,11 +20,9 @@
                                 <el-table-column label="Quake" prop="quake" />
                             </el-table>
                         </el-popover>
-                    </template>
-                </el-input>
-                <el-input v-model.number="uncover.size" @change="handleInput" style="width: 240px; height: 40px; margin-left: 5px;">
-                    <template #prepend>
-                        查询数量
+                        <el-divider direction="vertical" />
+                        <el-button link type="primary" :icon="Search"
+                            @click="tableCtrl.addTab(uncover.query)">查询</el-button>
                     </template>
                 </el-input>
             </div>
@@ -43,7 +32,7 @@
         @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: 72vh;">
+            <el-table :data="item.content" border style="width: 100%; height: calc(100vh - 245px);">
                 <el-table-column prop="URL" label="URL" width="200px" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" label="IP" width="170px" />
                 <el-table-column prop="Domain" label="域名" width="200" :show-overflow-tooltip="true" />
@@ -79,7 +68,8 @@
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询">
-                            <el-button :icon="csegmentIcon" link @click.prevent="tableCtrl.addTab(CsegmentIpv4(scope.row.IP))">
+                            <el-button :icon="csegmentIcon" link
+                                @click.prevent="tableCtrl.addTab(CsegmentIpv4(scope.row.IP))">
                             </el-button>
                         </el-tooltip>
                     </template>
@@ -97,7 +87,7 @@
 
 <script lang="ts" setup>
 import { reactive } from 'vue';
-import { Search, Management, ChromeFilled, Grid } from '@element-plus/icons-vue';
+import { Search, WarningFilled, ChromeFilled, Grid } from '@element-plus/icons-vue';
 import { Uncover } from '@/stores/interface';
 import { UncoverSearch } from 'wailsjs/go/main/App';
 import global from '@/global';
@@ -113,7 +103,6 @@ const group = ["IP", "域名", "标题", "Body", "备案名称", "备案号"]
 const uncover = reactive({
     query: '',
     currentGroup: "IP",
-    size: 100,
 })
 
 
@@ -135,7 +124,7 @@ const tableCtrl = ({
             HunterKey: global.space.hunterkey,
             QuakeKey: global.space.quakekey,
         }
-        let result: any = await UncoverSearch(query, uncover.currentGroup, uncover.size, options)
+        let result: any = await UncoverSearch(query, uncover.currentGroup, options)
         table.editableTabs.push({
             title: query,
             name: newTabName,
@@ -165,13 +154,6 @@ const tableCtrl = ({
         table.editableTabs = tabs.filter((tab) => tab.name !== targetName)
     },
 })
-
-function handleInput(val: string) {
-    // Remove all non-numeric characters
-    const numericValue = val.replace(/\D/g, '');
-    // Update the model value
-    uncover.size = Number(numericValue)
-}
 
 function handleComponents(info: string) {
     if (info.includes(",")) {

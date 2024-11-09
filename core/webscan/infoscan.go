@@ -80,8 +80,9 @@ type FingerScanner struct {
 func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
 	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
 	for _, t := range options.Target {
-		u, err := url.Parse(t)
+		u, err := url.Parse(strings.TrimSpace(t))
 		if err != nil {
+			gologger.Error(ctx, err)
 			continue
 		}
 		urls = append(urls, u)
@@ -328,8 +329,8 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 	s.ActiveCounts()
 	// 载入存活目标
 	for _, target := range s.aliveURLs {
-		for _, afdb := range ActiveFingerprintDB {
-			for _, path := range afdb.Path {
+		for _, item := range ActiveFingerprintDB {
+			for _, path := range item.Path {
 				if ExitFunc { // 控制程序退出
 					return
 				}
@@ -341,7 +342,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 				}
 				threadPool.Invoke(TFP{
 					URL:  target,
-					Fpe:  afdb.Fpe,
+					Fpe:  item.Fpe,
 					Path: path,
 				})
 			}

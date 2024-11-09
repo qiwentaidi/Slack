@@ -47,7 +47,8 @@ func SynScan(ctx context.Context, ip string, ports []uint16, id *int32) {
 	// scanner
 	ss, err := syn.NewSynScanner(startIp, retChan, syn.DefaultSynOption)
 	if err != nil {
-		gologger.Error(ctx, "Permission denied, please run with sudo")
+		gologger.Error(ctx, fmt.Sprintf("[syn] %s", err))
+		// gologger.Error(ctx, "[syn] Permission denied, please run with sudo")
 	}
 
 	// port scan func

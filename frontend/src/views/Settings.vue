@@ -70,7 +70,8 @@
         </div>
       </el-form>
       <el-form :model="global.space" label-width="auto" v-show="currentDisplay == '2'">
-        <h3>{{ $t(setupOptions[2].name) }}<el-divider direction="vertical" />Ⓓ标识符API主要用于收集子域名信息</h3>
+        <h3>{{ $t(setupOptions[2].name) }}<el-divider direction="vertical" />Ⓓ标识符API主要用于收集子域名信息
+          <el-divider direction="vertical" />🎉标识符建议优先注册</h3>
         <el-form-item label="FOFA">
           <el-input v-model="global.space.fofaapi" placeholder="API address" clearable />
           <el-input v-model="global.space.fofaemail" placeholder="Email" clearable style="margin-top: 5px;" />
@@ -82,8 +83,8 @@
         <el-form-item label="Quake">
           <el-input v-model="global.space.quakekey" placeholder="API key" clearable />
         </el-form-item>
-        <el-form-item label="ChaosⒹ">
-          <el-input v-model="global.space.chaos" placeholder="Priority recommendation configuration API key">
+        <el-form-item label="🎉ChaosⒹ">
+          <el-input v-model="global.space.chaos">
             <template #suffix>
               <el-button link type="primary" :icon="UserFilled" @click="BrowserOpenURL(chaosURL)">注册</el-button>
             </template>

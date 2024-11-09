@@ -7,7 +7,10 @@ import (
 	"os"
 	"slack-wails/core/subdomain/bevigil"
 	"slack-wails/core/subdomain/chaos"
+	"slack-wails/core/subdomain/fofa"
 	"slack-wails/core/subdomain/github"
+	"slack-wails/core/subdomain/hunter"
+	"slack-wails/core/subdomain/quake"
 	"slack-wails/core/subdomain/securitytrails"
 	"slack-wails/core/subdomain/zoomeye"
 	"slack-wails/core/waf"
@@ -154,6 +157,9 @@ func MultiThreadResolution(ctx context.Context, domain string, subdomains []stri
 
 func CheckCdn(cnames []string) (bool, string) {
 	for _, cname := range cnames {
+		if strings.Contains(cname, "cdn") {
+			return true, "Name contains cdn"
+		}
 		for name, cdns := range Cdndata {
 			for _, cdn := range cdns {
 				if strings.Contains(cname, cdn) {
@@ -189,6 +195,20 @@ func ApiPolymerization(ctx context.Context, o structs.SubdomainOption) {
 					subdomains = append(subdomains, sub+"."+domain)
 				}
 			}
+		}
+		if util.ArrayContains("FOFA", o.AppendEngines) && o.FofaApi != "" {
+			fh := fofa.FetchHosts(ctx, domain, nil)
+			subdomains = append(subdomains, fh...)
+		}
+
+		if util.ArrayContains("Hunter", o.AppendEngines) && o.HunterApi != "" {
+			hh := hunter.FetchHosts(ctx, domain, o.HunterApi)
+			subdomains = append(subdomains, hh...)
+		}
+
+		if util.ArrayContains("Quake", o.AppendEngines) && o.QuakeApi != "" {
+			qh := quake.FetchHosts(ctx, domain, o.QuakeApi)
+			subdomains = append(subdomains, qh...)
 		}
 		if o.BevigilApi != "" {
 			bh := bevigil.FetchHosts(ctx, domain, o.BevigilApi)
