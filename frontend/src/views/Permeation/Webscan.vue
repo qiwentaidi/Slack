@@ -792,7 +792,7 @@ async function showPocDetail(filename: string) {
                 </el-form-item>
                 <div v-if="config.webscanOption == 3">
                     <el-form-item label="指定漏洞:">
-                        <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏，不选择全扫"
+                        <el-select-v2 v-model="customTemplate" :options="allTemplate" placeholder="可选择1-10个漏洞"
                             filterable multiple clearable :multiple-limit="10" v-if="!templateLoading" />
                         <span v-else>Loading templates...</span>
                     </el-form-item>
