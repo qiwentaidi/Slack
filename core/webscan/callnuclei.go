@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
@@ -13,28 +14,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-type VulnerabilityInfo struct {
-	ID          string
-	Name        string
-	Description string
-	Reference   string
-	Type        string
-	Risk        string
-	URL         string
-	Request     string
-	Response    string
-	Extract     string
-}
-
-type NucleiOption struct {
-	SkipNucleiWithoutTags bool // 如果没有扫描到指纹，是否需要扫描全漏洞还是直接跳过
-	URL                   string
-	Tags                  []string // 全漏洞扫描时，使用自定义标签
-	TemplateFile          []string
-	TemplateFolders       []string
-}
-
-func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
+func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o structs.NucleiOption) {
 	if o.SkipNucleiWithoutTags && len(o.Tags) == 0 {
 		gologger.Info(ctx, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", o.URL))
 		return
@@ -76,7 +56,7 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o NucleiOption) {
 		if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
 			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
 		}
-		runtime.EventsEmit(ctx, "nucleiResult", VulnerabilityInfo{
+		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
 			ID:          event.TemplateID,
 			Name:        event.Info.Name,
 			Description: event.Info.Description,
@@ -115,6 +95,10 @@ func showRequest(event *output.ResultEvent) string {
 
 func showResponse(event *output.ResultEvent) string {
 	if event.Response != "" {
+		byteResponse := []byte(event.Response)
+		if len(byteResponse) > 1024*512 {
+			return string(byteResponse[:1024*512]) + " ..."
+		}
 		return event.Response
 	}
 	if event.Interaction != nil {

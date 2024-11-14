@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/fileutil"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
 
@@ -141,7 +142,7 @@ func InitConfig(ctx context.Context) bool {
 		gologger.Error(ctx, err)
 		return false
 	}
-	uz := util.NewUnzip()
+	uz := fileutil.NewUnzip()
 	if _, err := uz.Extract(defaultFile+fileName, defaultFile); err != nil {
 		gologger.Error(ctx, err)
 		return false

@@ -72,28 +72,6 @@ export interface HunterEntryTips {
     tags: string[];
 }
 
-export interface CompanyInfo {
-    CompanyName?: string;
-    Holding?: string;
-    Investment?: string;
-    RegStatus?: string;
-    Domains?: string[];
-}
-
-export interface WechatInfo {
-    CompanyName?: string;
-    WechatName?: string;
-    WechatNums?: string;
-    Logo?: string;
-    Qrcode?: string;
-    Introduction?: string;
-}
-
-export interface QuakeTipsResult {
-    Code?: number;
-    Message?: string;
-    Data?: QuakeTipsData[];
-}
 
 export interface QuakeTipsData {
     Product_name: string;

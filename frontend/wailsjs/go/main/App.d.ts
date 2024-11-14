@@ -5,7 +5,6 @@ import {structs} from '../models';
 import {dirsearch} from '../models';
 import {isic} from '../models';
 import {jsfind} from '../models';
-import {info} from '../models';
 import {space} from '../models';
 
 export function AlibabaNacos(arg1:string,arg2:string,arg3:number,arg4:string,arg5:string,arg6:string,arg7:string,arg8:clients.Proxy):Promise<string>;
@@ -94,7 +93,7 @@ export function SpaceGetPort(arg1:string):Promise<Array<number>>;
 
 export function Subdomain(arg1:structs.SubdomainOption):Promise<void>;
 
-export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number,arg4:boolean,arg5:string):Promise<Array<info.CompanyInfo>>;
+export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number,arg4:boolean,arg5:string):Promise<Array<structs.CompanyInfo>>;
 
 export function TycCheckLogin():Promise<boolean>;
 
@@ -102,4 +101,4 @@ export function UncoverSearch(arg1:string,arg2:string,arg3:structs.SpaceOption):
 
 export function ViewPictrue(arg1:string):Promise<string>;
 
-export function WechatOfficial(arg1:string):Promise<Array<info.WechatReulst>>;
+export function WechatOfficial(arg1:string):Promise<Array<structs.WechatReulst>>;

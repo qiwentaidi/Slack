@@ -51,9 +51,7 @@ export function RunApp(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
 export function SaveDataToFile(arg1:any):Promise<boolean>;
 
-export function SaveFile(arg1:string):Promise<string>;
-
-export function SaveJsonFile(arg1:any):Promise<boolean>;
+export function SaveFileDialog(arg1:string):Promise<string>;
 
 export function SaveNavigation(arg1:Array<structs.Navigation>):Promise<boolean>;
 

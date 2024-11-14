@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { ElNotification } from "element-plus";
-import { WriteFile, SaveFile } from "wailsjs/go/main/File";
+import { WriteFile, SaveFileDialog } from "wailsjs/go/main/File";
 // 单sheet导出
 export async function ExportToXlsx(
   headers: string[],
@@ -66,7 +66,7 @@ export async function ExportFile(
   filename: string,
   content: string
 ) {
-  const path = await SaveFile(filename);
+  const path = await SaveFileDialog(filename);
   if (!path) {
     return;
   }

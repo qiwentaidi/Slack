@@ -382,7 +382,6 @@ const filter = ({
                         <el-table-column prop="pocinfo" label="PocInfo" :filters="[
                             { text: 'MS17-010', value: 'MS17-010' },
                             { text: 'poc-yaml-alibaba-nacos', value: 'poc-yaml-alibaba-nacos' },
-                            { text: 'poc-yaml-druid-monitor-unauth', value: 'poc-yaml-druid-monitor-unauth' },
                         ]" :filter-method="filter.pocinfo">
                         <template #filter-icon>
                             <Filter />
@@ -435,7 +434,7 @@ const filter = ({
                                 <el-text><span>URL</span>
                                     <el-divider direction="vertical" />
                                     <el-dropdown>
-                                        <el-button :icon="Filter" bg text>筛选</el-button>
+                                        <el-button :icon="Filter" size="small" bg text>筛选</el-button>
                                         <template #dropdown>
                                             <el-dropdown-menu>
                                                 <el-dropdown-item :icon="Camera"

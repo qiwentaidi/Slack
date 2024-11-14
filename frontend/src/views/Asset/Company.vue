@@ -4,9 +4,8 @@ import { QuestionFilled, Plus, ChromeFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger, TycCheckLogin } from "wailsjs/go/main/App";
 import { ExportAssetToXlsx } from '@/export'
-import { CompanyInfo, WechatInfo } from "@/stores/interface";
 import usePagination from "@/usePagination";
-import { transformArrayFields } from "@/util";
+import { Copy, transformArrayFields } from "@/util";
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import global from "@/global";
 import { LinkSubdomain } from "@/linkage";
@@ -15,6 +14,7 @@ import CustomTabs from "@/components/CustomTabs.vue";
 import wechatIcon from "@/assets/icon/wechat.svg"
 import { debounce } from "lodash"
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
+import { structs } from "wailsjs/go/models";
 
 const throttleUpdate = throttle(() => {
     pc.table.pageContent = pc.ctrl.watchResultChange(pc.table);
@@ -39,13 +39,11 @@ const from = reactive({
     token: '',
     activeName: 'subcompany',
     runningStatus: false,
-    companyData: [] as CompanyInfo[],
-    wehcatData: [] as WechatInfo[],
     machineStr: ''
 })
 
-let pc = usePagination<CompanyInfo>(20) // paginationCompany
-let pw = usePagination<WechatInfo>(20) // paginationWehcat
+let pc = usePagination<structs.CompanyInfo>(20) // paginationCompany
+let pw = usePagination<structs.WechatReulst>(20) // paginationWehcat
 
 async function Collect() {
     if (from.company == "") {
@@ -85,7 +83,7 @@ async function Collect() {
     const promises = companys.map(async companyName => {
         Callgologger("info", `正在收集${companyName}的子公司信息`)
         if (typeof companyName === 'string') {
-            const result: CompanyInfo[] = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain, from.machineStr);
+            const result = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain, from.machineStr);
             if (result.length > 0) {
                 pc.table.result.push(...result)
                 throttleUpdate()
@@ -107,7 +105,7 @@ async function Collect() {
             const promises2 = allCompany.map(async companyName => {
                 Callgologger("info", `正在收集${companyName}的微信公众号资产`)
                 if (typeof companyName === 'string') {
-                    const result: WechatInfo[] = await WechatOfficial(companyName);
+                    const result = await WechatOfficial(companyName);
                     if (Array.isArray(result) && result.length > 0) {
                         pw.table.result.push(...result);
                         pw.table.pageContent = pw.ctrl.watchResultChange(pw.table)
@@ -133,6 +131,16 @@ const debouncedInput = debounce(() => {
     // 2秒后将数据存储到localStorage
     localStorage.setItem('tyc-token', from.token);
 }, 2000);
+
+function copyAllDomains() {
+    let allDomains = [];
+    pc.table.result.forEach(item => {
+        if (item.Domains.length > 0) {
+            allDomains.push(...item.Domains);
+        }
+    });
+    Copy(allDomains.join('\n'))
+}
 </script>
 
 
@@ -208,7 +216,13 @@ const debouncedInput = debounce(() => {
                                 }}</el-tag>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="Domains" label="域名">
+                    <el-table-column prop="Domains">
+                        <template #header>
+                            <el-text><span>域名</span>
+                                <el-divider direction="vertical" />
+                                <el-button size="small" text bg @click="copyAllDomains()">复制全部域名</el-button>
+                            </el-text>
+                        </template>
                         <template #default="scope">
                             <div class="finger-container" v-if="scope.row.Domains.length > 0">
                                 <el-tag v-for="domain in scope.row.Domains" :key="domain">{{ domain

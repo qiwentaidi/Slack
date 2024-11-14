@@ -139,10 +139,10 @@ const localGroup = ({
     deleteGroup: function (name: string) {
         ElMessageBox.confirm(
             '确定删除该分组?',
-            'Warning',
+            '警告',
             {
-                confirmButtonText: 'OK',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
                 type: 'warning',
             }
         )

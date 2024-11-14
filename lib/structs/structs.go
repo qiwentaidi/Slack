@@ -49,57 +49,67 @@ type SpaceOption struct {
 }
 
 type HunterTips struct {
-	Code int `json:"code"`
-	Data struct {
-		App []struct {
-			Name     string   `json:"name"`
-			AssetNum int      `json:"asset_num"`
-			Tags     []string `json:"tags"`
-		} `json:"app"`
-		Collect []interface{} `json:"collect"`
-	} `json:"data"`
-	Message string `json:"message"`
+	Code    int            `json:"code"`
+	Data    HunterTipsData `json:"data"`
+	Message string         `json:"message"`
+}
+
+type HunterTipsData struct {
+	App     []HunterTipsApp `json:"app"`
+	Collect []interface{}   `json:"collect"`
+}
+
+type HunterTipsApp struct {
+	Name     string   `json:"name"`
+	AssetNum int      `json:"asset_num"`
+	Tags     []string `json:"tags"`
 }
 
 // Hunter数据的结构体
 type HunterResult struct {
-	Code int64 `json:"code"`
-	Data struct {
-		AccountType string `json:"account_type"`
-		Arr         []struct {
-			AsOrg        string `json:"as_org"`
-			Banner       string `json:"banner"`
-			BaseProtocol string `json:"base_protocol"`
-			City         string `json:"city"`
-			Company      string `json:"company"`
-			Component    []struct {
-				Name    string `json:"name"`
-				Version string `json:"version"`
-			} `json:"component"`
-			Country        string `json:"country"`
-			Domain         string `json:"domain"`
-			IP             string `json:"ip"`
-			IsRisk         string `json:"is_risk"`
-			IsRiskProtocol string `json:"is_risk_protocol"`
-			IsWeb          string `json:"is_web"`
-			Isp            string `json:"isp"`
-			Number         string `json:"number"`
-			Os             string `json:"os"`
-			Port           int64  `json:"port"`
-			Protocol       string `json:"protocol"`
-			Province       string `json:"province"`
-			StatusCode     int64  `json:"status_code"`
-			UpdatedAt      string `json:"updated_at"`
-			URL            string `json:"url"`
-			WebTitle       string `json:"web_title"`
-		} `json:"arr"`
-		ConsumeQuota string `json:"consume_quota"`
-		RestQuota    string `json:"rest_quota"`
-		SyntaxPrompt string `json:"syntax_prompt"`
-		Time         int64  `json:"time"`
-		Total        int64  `json:"total"`
-	} `json:"data"`
-	Message string `json:"message"`
+	Code    int64      `json:"code"`
+	Data    HunterData `json:"data"`
+	Message string     `json:"message"`
+}
+
+type HunterData struct {
+	AccountType  string          `json:"account_type"`
+	Arr          []HunterDataArr `json:"arr"`
+	ConsumeQuota string          `json:"consume_quota"`
+	RestQuota    string          `json:"rest_quota"`
+	SyntaxPrompt string          `json:"syntax_prompt"`
+	Time         int64           `json:"time"`
+	Total        int64           `json:"total"`
+}
+
+type HunterDataArr struct {
+	AsOrg          string            `json:"as_org"`
+	Banner         string            `json:"banner"`
+	BaseProtocol   string            `json:"base_protocol"`
+	City           string            `json:"city"`
+	Company        string            `json:"company"`
+	Component      []HunterComponent `json:"component"`
+	Country        string            `json:"country"`
+	Domain         string            `json:"domain"`
+	IP             string            `json:"ip"`
+	IsRisk         string            `json:"is_risk"`
+	IsRiskProtocol string            `json:"is_risk_protocol"`
+	IsWeb          string            `json:"is_web"`
+	Isp            string            `json:"isp"`
+	Number         string            `json:"number"`
+	Os             string            `json:"os"`
+	Port           int64             `json:"port"`
+	Protocol       string            `json:"protocol"`
+	Province       string            `json:"province"`
+	StatusCode     int64             `json:"status_code"`
+	UpdatedAt      string            `json:"updated_at"`
+	URL            string            `json:"url"`
+	WebTitle       string            `json:"web_title"`
+}
+
+type HunterComponent struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
 }
 
 const (
@@ -392,4 +402,61 @@ type Results struct {
 	Region   string
 	ICP      string
 	Product  string
+}
+
+type VulnerabilityInfo struct {
+	ID          string
+	Name        string
+	Description string
+	Reference   string
+	Type        string
+	Risk        string
+	URL         string
+	Request     string
+	Response    string
+	Extract     string
+}
+
+type NucleiOption struct {
+	SkipNucleiWithoutTags bool // 如果没有扫描到指纹，是否需要扫描全漏洞还是直接跳过
+	URL                   string
+	Tags                  []string // 全漏洞扫描时，使用自定义标签
+	TemplateFile          []string
+	TemplateFolders       []string
+}
+
+type InfoResult struct {
+	URL          string
+	StatusCode   int
+	Length       int
+	Title        string
+	Fingerprints []string
+	IsWAF        bool
+	WAF          string
+	Detect       string
+	Screenshot   string // 截图图片路径
+}
+
+type WebReport struct {
+	Targets      string
+	Fingerprints []InfoResult
+	POCs         []VulnerabilityInfo
+}
+
+type CompanyInfo struct {
+	CompanyName string
+	Holding     string
+	Investment  string // 投资比例
+	RegStatus   string
+	Domains     []string
+	CompanyId   string
+}
+
+type WechatReulst struct {
+	CompanyName  string
+	WechatName   string
+	WechatNums   string
+	Logo         string
+	Qrcode       string
+	Introduction string
 }

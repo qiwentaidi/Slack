@@ -268,7 +268,7 @@ func (a *App) InitTycHeader(token string) {
 	info.InitHEAD(token)
 }
 
-func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool, machine string) []info.CompanyInfo {
+func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool, machine string) []structs.CompanyInfo {
 	tkm := info.CheckKeyMap(a.ctx, query)
 	time.Sleep(time.Second)
 	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false, searchDomain, machine)
@@ -297,7 +297,7 @@ func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDo
 	return result
 }
 
-func (a *App) WechatOfficial(query string) []info.WechatReulst {
+func (a *App) WechatOfficial(query string) []structs.WechatReulst {
 	var companyId string
 	for _, tkm := range info.TycKeyMap {
 		if tkm.CompanyName == query {
@@ -499,7 +499,7 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 			}
 			id++
 			gologger.Info(a.ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
-			webscan.NewNucleiEngine(a.ctx, proxy, webscan.NucleiOption{
+			webscan.NewNucleiEngine(a.ctx, proxy, structs.NucleiOption{
 				URL:                   target,
 				Tags:                  util.RemoveDuplicates(tags),
 				TemplateFile:          options.TemplateFiles,

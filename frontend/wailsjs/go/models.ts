@@ -64,55 +64,6 @@ export namespace dirsearch {
 
 }
 
-export namespace info {
-	
-	export class CompanyInfo {
-	    CompanyName: string;
-	    Holding: string;
-	    Investment: string;
-	    RegStatus: string;
-	    Domains: string[];
-	    CompanyId: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new CompanyInfo(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.CompanyName = source["CompanyName"];
-	        this.Holding = source["Holding"];
-	        this.Investment = source["Investment"];
-	        this.RegStatus = source["RegStatus"];
-	        this.Domains = source["Domains"];
-	        this.CompanyId = source["CompanyId"];
-	    }
-	}
-	export class WechatReulst {
-	    CompanyName: string;
-	    WechatName: string;
-	    WechatNums: string;
-	    Logo: string;
-	    Qrcode: string;
-	    Introduction: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new WechatReulst(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.CompanyName = source["CompanyName"];
-	        this.WechatName = source["WechatName"];
-	        this.WechatNums = source["WechatNums"];
-	        this.Logo = source["Logo"];
-	        this.Qrcode = source["Qrcode"];
-	        this.Introduction = source["Introduction"];
-	    }
-	}
-
-}
-
 export namespace isic {
 	
 	export class GithubResult {
@@ -384,6 +335,28 @@ export namespace structs {
 	        this.Target = source["Target"];
 	    }
 	}
+	export class CompanyInfo {
+	    CompanyName: string;
+	    Holding: string;
+	    Investment: string;
+	    RegStatus: string;
+	    Domains: string[];
+	    CompanyId: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CompanyInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.CompanyName = source["CompanyName"];
+	        this.Holding = source["Holding"];
+	        this.Investment = source["Investment"];
+	        this.RegStatus = source["RegStatus"];
+	        this.Domains = source["Domains"];
+	        this.CompanyId = source["CompanyId"];
+	    }
+	}
 	export class Data {
 	    name: string;
 	    company: string;
@@ -490,10 +463,138 @@ export namespace structs {
 		    return a;
 		}
 	}
+	export class HunterComponent {
+	    name: string;
+	    version: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new HunterComponent(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.version = source["version"];
+	    }
+	}
+	export class HunterDataArr {
+	    as_org: string;
+	    banner: string;
+	    base_protocol: string;
+	    city: string;
+	    company: string;
+	    component: HunterComponent[];
+	    country: string;
+	    domain: string;
+	    ip: string;
+	    is_risk: string;
+	    is_risk_protocol: string;
+	    is_web: string;
+	    isp: string;
+	    number: string;
+	    os: string;
+	    port: number;
+	    protocol: string;
+	    province: string;
+	    status_code: number;
+	    updated_at: string;
+	    url: string;
+	    web_title: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new HunterDataArr(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.as_org = source["as_org"];
+	        this.banner = source["banner"];
+	        this.base_protocol = source["base_protocol"];
+	        this.city = source["city"];
+	        this.company = source["company"];
+	        this.component = this.convertValues(source["component"], HunterComponent);
+	        this.country = source["country"];
+	        this.domain = source["domain"];
+	        this.ip = source["ip"];
+	        this.is_risk = source["is_risk"];
+	        this.is_risk_protocol = source["is_risk_protocol"];
+	        this.is_web = source["is_web"];
+	        this.isp = source["isp"];
+	        this.number = source["number"];
+	        this.os = source["os"];
+	        this.port = source["port"];
+	        this.protocol = source["protocol"];
+	        this.province = source["province"];
+	        this.status_code = source["status_code"];
+	        this.updated_at = source["updated_at"];
+	        this.url = source["url"];
+	        this.web_title = source["web_title"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class HunterData {
+	    account_type: string;
+	    arr: HunterDataArr[];
+	    consume_quota: string;
+	    rest_quota: string;
+	    syntax_prompt: string;
+	    time: number;
+	    total: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new HunterData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.account_type = source["account_type"];
+	        this.arr = this.convertValues(source["arr"], HunterDataArr);
+	        this.consume_quota = source["consume_quota"];
+	        this.rest_quota = source["rest_quota"];
+	        this.syntax_prompt = source["syntax_prompt"];
+	        this.time = source["time"];
+	        this.total = source["total"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class HunterResult {
 	    code: number;
-	    // Go type: struct { AccountType string "json:\"account_type\""; Arr []struct { AsOrg string "json:\"as_org\""; Banner string "json:\"banner\""; BaseProtocol string "json:\"base_protocol\""; City string "json:\"city\""; Company string "json:\"company\""; Component []struct { Name string "json:\"name\""; Version string "json:\"version\"" } "json:\"component\""; Country string "json:\"country\""; Domain string "json:\"domain\""; IP string "json:\"ip\""; IsRisk string "json:\"is_risk\""; IsRiskProtocol string "json:\"is_risk_protocol\""; IsWeb string "json:\"is_web\""; Isp string "json:\"isp\""; Number string "json:\"number\""; Os string "json:\"os\""; Port int64 "json:\"port\""; Protocol string "json:\"protocol\""; Province string "json:\"province\""; StatusCode int64 "json:\"status_code\""; UpdatedAt string "json:\"updated_at\""; URL string "json:\"url\""; WebTitle string "json:\"web_title\"" } "json:\"arr\""; ConsumeQuota string "json:\"consume_quota\""; RestQuota string "json:\"rest_quota\""; SyntaxPrompt string "json:\"syntax_prompt\""; Time int64 "json:\"time\""; Total int64 "json:\"total\"" }
-	    data: any;
+	    data: HunterData;
 	    message: string;
 	
 	    static createFrom(source: any = {}) {
@@ -503,8 +604,56 @@ export namespace structs {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.code = source["code"];
-	        this.data = this.convertValues(source["data"], Object);
+	        this.data = this.convertValues(source["data"], HunterData);
 	        this.message = source["message"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class HunterTipsApp {
+	    name: string;
+	    asset_num: number;
+	    tags: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new HunterTipsApp(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.asset_num = source["asset_num"];
+	        this.tags = source["tags"];
+	    }
+	}
+	export class HunterTipsData {
+	    app: HunterTipsApp[];
+	    collect: any[];
+	
+	    static createFrom(source: any = {}) {
+	        return new HunterTipsData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.app = this.convertValues(source["app"], HunterTipsApp);
+	        this.collect = source["collect"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -527,8 +676,7 @@ export namespace structs {
 	}
 	export class HunterTips {
 	    code: number;
-	    // Go type: struct { App []struct { Name string "json:\"name\""; AssetNum int "json:\"asset_num\""; Tags []string "json:\"tags\"" } "json:\"app\""; Collect []interface {} "json:\"collect\"" }
-	    data: any;
+	    data: HunterTipsData;
 	    message: string;
 	
 	    static createFrom(source: any = {}) {
@@ -538,7 +686,7 @@ export namespace structs {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.code = source["code"];
-	        this.data = this.convertValues(source["data"], Object);
+	        this.data = this.convertValues(source["data"], HunterTipsData);
 	        this.message = source["message"];
 	    }
 	
@@ -559,6 +707,36 @@ export namespace structs {
 		    }
 		    return a;
 		}
+	}
+	
+	
+	export class InfoResult {
+	    URL: string;
+	    StatusCode: number;
+	    Length: number;
+	    Title: string;
+	    Fingerprints: string[];
+	    IsWAF: boolean;
+	    WAF: string;
+	    Detect: string;
+	    Screenshot: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new InfoResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.URL = source["URL"];
+	        this.StatusCode = source["StatusCode"];
+	        this.Length = source["Length"];
+	        this.Title = source["Title"];
+	        this.Fingerprints = source["Fingerprints"];
+	        this.IsWAF = source["IsWAF"];
+	        this.WAF = source["WAF"];
+	        this.Detect = source["Detect"];
+	        this.Screenshot = source["Screenshot"];
+	    }
 	}
 	export class Navigation {
 	    Name: string;
@@ -881,6 +1059,70 @@ export namespace structs {
 		    return a;
 		}
 	}
+	export class VulnerabilityInfo {
+	    ID: string;
+	    Name: string;
+	    Description: string;
+	    Reference: string;
+	    Type: string;
+	    Risk: string;
+	    URL: string;
+	    Request: string;
+	    Response: string;
+	    Extract: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new VulnerabilityInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.Name = source["Name"];
+	        this.Description = source["Description"];
+	        this.Reference = source["Reference"];
+	        this.Type = source["Type"];
+	        this.Risk = source["Risk"];
+	        this.URL = source["URL"];
+	        this.Request = source["Request"];
+	        this.Response = source["Response"];
+	        this.Extract = source["Extract"];
+	    }
+	}
+	export class WebReport {
+	    Targets: string;
+	    Fingerprints: InfoResult[];
+	    POCs: VulnerabilityInfo[];
+	
+	    static createFrom(source: any = {}) {
+	        return new WebReport(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Targets = source["Targets"];
+	        this.Fingerprints = this.convertValues(source["Fingerprints"], InfoResult);
+	        this.POCs = this.convertValues(source["POCs"], VulnerabilityInfo);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class WebscanOptions {
 	    Target: string[];
 	    Thread: number;
@@ -911,67 +1153,26 @@ export namespace structs {
 	        this.AppendTemplateFolder = source["AppendTemplateFolder"];
 	    }
 	}
-
-}
-
-export namespace webscan {
-	
-	export class InfoResult {
-	    URL: string;
-	    StatusCode: number;
-	    Length: number;
-	    Title: string;
-	    Fingerprints: string[];
-	    IsWAF: boolean;
-	    WAF: string;
-	    Detect: string;
-	    Screenshot: string;
+	export class WechatReulst {
+	    CompanyName: string;
+	    WechatName: string;
+	    WechatNums: string;
+	    Logo: string;
+	    Qrcode: string;
+	    Introduction: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new InfoResult(source);
+	        return new WechatReulst(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.URL = source["URL"];
-	        this.StatusCode = source["StatusCode"];
-	        this.Length = source["Length"];
-	        this.Title = source["Title"];
-	        this.Fingerprints = source["Fingerprints"];
-	        this.IsWAF = source["IsWAF"];
-	        this.WAF = source["WAF"];
-	        this.Detect = source["Detect"];
-	        this.Screenshot = source["Screenshot"];
-	    }
-	}
-	export class VulnerabilityInfo {
-	    ID: string;
-	    Name: string;
-	    Description: string;
-	    Reference: string;
-	    Type: string;
-	    Risk: string;
-	    URL: string;
-	    Request: string;
-	    Response: string;
-	    Extract: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new VulnerabilityInfo(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.ID = source["ID"];
-	        this.Name = source["Name"];
-	        this.Description = source["Description"];
-	        this.Reference = source["Reference"];
-	        this.Type = source["Type"];
-	        this.Risk = source["Risk"];
-	        this.URL = source["URL"];
-	        this.Request = source["Request"];
-	        this.Response = source["Response"];
-	        this.Extract = source["Extract"];
+	        this.CompanyName = source["CompanyName"];
+	        this.WechatName = source["WechatName"];
+	        this.WechatNums = source["WechatNums"];
+	        this.Logo = source["Logo"];
+	        this.Qrcode = source["Qrcode"];
+	        this.Introduction = source["Introduction"];
 	    }
 	}
 

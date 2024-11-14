@@ -33,6 +33,8 @@ export const webscanOptions = [
     },
 ]
 
+export const webReportOptions = ["HTML", "JSON", "EXCEL"]
+
 export const portscanOptions = [
     {
         label: "SYN",

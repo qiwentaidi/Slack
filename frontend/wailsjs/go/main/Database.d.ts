@@ -3,7 +3,6 @@
 import {structs} from '../models';
 import {mongo} from '../models';
 import {main} from '../models';
-import {webscan} from '../models';
 
 export function AddConnection(arg1:structs.DatabaseConnection):Promise<boolean>;
 
@@ -20,6 +19,10 @@ export function DeleteScanTask(arg1:string):Promise<boolean>;
 export function DisconnectDatabase(arg1:string):Promise<boolean>;
 
 export function ExecSqlStatement(arg1:string,arg2:Array<any>):Promise<boolean>;
+
+export function ExportWebReportWithHtml(arg1:string,arg2:string):Promise<boolean>;
+
+export function ExportWebReportWithJson(arg1:string,arg2:structs.TaskResult):Promise<boolean>;
 
 export function FetchDatabaseInfoFromOracle():Promise<{[key: string]: Array<string>}>;
 
@@ -47,23 +50,27 @@ export function GetAllScanTask():Promise<Array<structs.TaskResult>>;
 
 export function InsertFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
-export function InsertFingerscanResult(arg1:string,arg2:webscan.InfoResult):Promise<boolean>;
+export function InsertFingerscanResult(arg1:string,arg2:structs.InfoResult):Promise<boolean>;
 
-export function InsertPocscanResult(arg1:string,arg2:webscan.VulnerabilityInfo):Promise<boolean>;
+export function InsertPocscanResult(arg1:string,arg2:structs.VulnerabilityInfo):Promise<boolean>;
 
 export function InsertScanTask(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<boolean>;
+
+export function ReadWebReportWithJson(arg1:string):Promise<structs.WebReport>;
 
 export function RemoveConnection(arg1:string):Promise<boolean>;
 
 export function RemoveFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
+export function RenameScanTask(arg1:string,arg2:string):Promise<boolean>;
+
 export function SearchAgentPool():Promise<Array<string>>;
 
 export function SelectAllSyntax(arg1:string):Promise<Array<main.Syntax>>;
 
-export function SelectFingerscanResult(arg1:string):Promise<Array<webscan.InfoResult>>;
+export function SelectFingerscanResult(arg1:string):Promise<Array<structs.InfoResult>>;
 
-export function SelectPocscanResult(arg1:string):Promise<Array<webscan.VulnerabilityInfo>>;
+export function SelectPocscanResult(arg1:string):Promise<Array<structs.VulnerabilityInfo>>;
 
 export function UpdateConnection(arg1:structs.DatabaseConnection):Promise<boolean>;
 

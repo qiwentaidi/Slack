@@ -235,20 +235,20 @@ const handleCheckAllChange = (val: boolean) => {
             :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 205px);">
             <el-table-column type="index" label="#" width="60px" />
             <el-table-column prop="Domain" label="主域名" />
-            <el-table-column prop="Subdomain">
+            <el-table-column prop="Subdomain" label="子域名" align="center" style="vertical-align: middle;">
                 <template #header>
-                    <el-text><span>子域名</span>
-                        <el-divider direction="vertical" />
+                    <span class=position-center>
+                        子域名<el-divider direction="vertical" />
                         <el-button size="small" text bg @click="CopyDomains()">全部复制</el-button>
-                    </el-text>
+                    </span>
                 </template>
             </el-table-column>
             <el-table-column prop="Ips">
                 <template #header>
-                    <el-text><span>IPs</span>
-                        <el-divider direction="vertical" />
+                    <span class="position-center">
+                        IPs<el-divider direction="vertical" />
                         <el-button size="small" text bg @click="filterIpWithOne">复制IP数量为1的</el-button>
-                    </el-text>
+                    </span>
                 </template>
             </el-table-column>
             <el-table-column prop="CdnName" label="CDN/WAF" width="150px">

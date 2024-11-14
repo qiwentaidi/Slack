@@ -98,12 +98,8 @@ export function SaveDataToFile(arg1) {
   return window['go']['main']['File']['SaveDataToFile'](arg1);
 }
 
-export function SaveFile(arg1) {
-  return window['go']['main']['File']['SaveFile'](arg1);
-}
-
-export function SaveJsonFile(arg1) {
-  return window['go']['main']['File']['SaveJsonFile'](arg1);
+export function SaveFileDialog(arg1) {
+  return window['go']['main']['File']['SaveFileDialog'](arg1);
 }
 
 export function SaveNavigation(arg1) {

@@ -21,7 +21,7 @@ var (
 		"qianxin":        {".360safedns.com", ".360cloudwaf.com", ".360wzb.com", ".qaxcloudwaf.com"},
 		"baiduyunjiasu":  {".yunjiasu-cdn.net"},
 		"anquanbao":      {".anquanbao.net", ".anquanbao.com"},
-		"aliyun":         {"kunlun", "aliyunddos", "aliyunwaf", "aligaofang", "aliyundunwaf", ".yundunwaf2.com"},
+		"aliyun":         {"kunlun", "aliyunddos", "aliyunwaf", "aligaofang", "aliyundunwaf", ".yundunwaf2.com", ".yundunwaf1.com"},
 		"xuanwudun":      {".saaswaf.com", ".dbappwaf.cn"},
 		"yundun":         {".hwwsdns.cn", ".yunduncname.com"},
 		"knownsec-ns":    {".jiasule.net"},

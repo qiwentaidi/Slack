@@ -34,6 +34,14 @@ export function ExecSqlStatement(arg1, arg2) {
   return window['go']['main']['Database']['ExecSqlStatement'](arg1, arg2);
 }
 
+export function ExportWebReportWithHtml(arg1, arg2) {
+  return window['go']['main']['Database']['ExportWebReportWithHtml'](arg1, arg2);
+}
+
+export function ExportWebReportWithJson(arg1, arg2) {
+  return window['go']['main']['Database']['ExportWebReportWithJson'](arg1, arg2);
+}
+
 export function FetchDatabaseInfoFromOracle() {
   return window['go']['main']['Database']['FetchDatabaseInfoFromOracle']();
 }
@@ -98,12 +106,20 @@ export function InsertScanTask(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['Database']['InsertScanTask'](arg1, arg2, arg3, arg4, arg5);
 }
 
+export function ReadWebReportWithJson(arg1) {
+  return window['go']['main']['Database']['ReadWebReportWithJson'](arg1);
+}
+
 export function RemoveConnection(arg1) {
   return window['go']['main']['Database']['RemoveConnection'](arg1);
 }
 
 export function RemoveFavGrammarFiled(arg1, arg2, arg3) {
   return window['go']['main']['Database']['RemoveFavGrammarFiled'](arg1, arg2, arg3);
+}
+
+export function RenameScanTask(arg1, arg2) {
+  return window['go']['main']['Database']['RenameScanTask'](arg1, arg2);
 }
 
 export function SearchAgentPool() {

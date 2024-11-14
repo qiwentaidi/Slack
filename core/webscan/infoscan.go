@@ -50,18 +50,6 @@ type WebInfo struct {
 	Cert string // TLS证书
 }
 
-type InfoResult struct {
-	URL          string
-	StatusCode   int
-	Length       int
-	Title        string
-	Fingerprints []string
-	IsWAF        bool
-	WAF          string
-	Detect       string
-	Screenshot   string // 截图图片路径
-}
-
 type FingerScanner struct {
 	ctx                     context.Context
 	urls                    []*url.URL
@@ -108,7 +96,7 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 func (s *FingerScanner) NewFingerScan() {
 	var wg sync.WaitGroup
 	single := make(chan struct{})
-	retChan := make(chan InfoResult, len(s.urls))
+	retChan := make(chan structs.InfoResult, len(s.urls))
 	go func() {
 		for pr := range retChan {
 			runtime.EventsEmit(s.ctx, "webFingerScan", pr)
@@ -144,7 +132,7 @@ func (s *FingerScanner) NewFingerScan() {
 				goto ContinueExecution
 			}
 			// 如果是正常的无法响应则直接返回
-			retChan <- InfoResult{
+			retChan <- structs.InfoResult{
 				URL:        u.String(),
 				StatusCode: 0,
 			}
@@ -202,7 +190,7 @@ func (s *FingerScanner) NewFingerScan() {
 			fingerprints = append(fingerprints, "Fastjson")
 		}
 
-		if len(fingerprints) >= 20 {
+		if checkHoneypotWithHeaders(web.HeadeString) || checkHoneypotWithFingerprintLength(len(fingerprints)) {
 			fingerprints = []string{"疑似蜜罐"}
 		}
 
@@ -218,7 +206,7 @@ func (s *FingerScanner) NewFingerScan() {
 		s.basicURLWithFingerprint[u.String()] = append(s.basicURLWithFingerprint[u.String()], fingerprints...)
 		s.mutex.Unlock()
 
-		retChan <- InfoResult{
+		retChan <- structs.InfoResult{
 			URL:          u.String(),
 			StatusCode:   web.StatusCode,
 			Length:       web.ContentLength,
@@ -266,7 +254,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 	visited := make(map[string]bool) // 用于记录已访问的URL和路径组合
 
 	single := make(chan struct{})
-	retChan := make(chan InfoResult, len(s.urls))
+	retChan := make(chan structs.InfoResult, len(s.urls))
 	go func() {
 		for pr := range retChan {
 			runtime.EventsEmit(s.ctx, "webFingerScan", pr)
@@ -315,7 +303,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 			s.basicURLWithFingerprint[fp.URL.String()] = append(s.basicURLWithFingerprint[fp.URL.String()], result...)
 			s.mutex.Unlock()
 
-			retChan <- InfoResult{
+			retChan <- structs.InfoResult{
 				URL:          fullURL,
 				StatusCode:   ti.StatusCode,
 				Length:       ti.ContentLength,

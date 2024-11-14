@@ -126,17 +126,8 @@ func GetCompanyID(ctx context.Context, company string) (string, string) {
 	return company_id, company_name
 }
 
-type CompanyInfo struct {
-	CompanyName string
-	Holding     string
-	Investment  string // 投资比例
-	RegStatus   string
-	Domains     []string
-	CompanyId   string
-}
-
 // 返回查询公司的名称和子公司的名称, isSecond 是否为二次查询
-func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int, isSecond bool, searchDomain bool, machine string) (Asset []CompanyInfo) {
+func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio int, isSecond bool, searchDomain bool, machine string) (Asset []structs.CompanyInfo) {
 	data := make(map[string]interface{})
 	data["gid"] = companyId
 	data["pageSize"] = 100
@@ -161,7 +152,14 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 				gologger.Debug(ctx, err)
 			}
 		}
-		Asset = append(Asset, CompanyInfo{companyName, "本公司", "", qr.State, util.RemoveDuplicates(domains), companyId})
+		Asset = append(Asset, structs.CompanyInfo{
+			CompanyName: companyName,
+			Holding:     "本公司",
+			Investment:  "",
+			RegStatus:   qr.State,
+			Domains:     util.RemoveDuplicates(domains),
+			CompanyId:   companyId,
+		})
 	}
 	for _, result := range qr.Data.Result {
 		gq, _ := strconv.Atoi(strings.TrimSuffix(result.Percent, "%"))
@@ -174,7 +172,14 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 					gologger.Debug(ctx, err)
 				}
 			}
-			Asset = append(Asset, CompanyInfo{result.Name, result.Percent, result.Amount, result.RegStatus, util.RemoveDuplicates(subsidiaryDomains), fmt.Sprint(result.ID)})
+			Asset = append(Asset, structs.CompanyInfo{
+				CompanyName: result.Name,
+				Holding:     result.Percent,
+				Investment:  result.Amount,
+				RegStatus:   result.RegStatus,
+				Domains:     util.RemoveDuplicates(subsidiaryDomains),
+				CompanyId:   fmt.Sprint(result.ID),
+			})
 		}
 	}
 	return
@@ -199,17 +204,8 @@ type OfficialAccounts struct {
 	} `json:"data"`
 }
 
-type WechatReulst struct {
-	CompanyName  string
-	WechatName   string
-	WechatNums   string
-	Logo         string
-	Qrcode       string
-	Introduction string
-}
-
 // 获取微信公众号信息
-func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) (wr []WechatReulst) {
+func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) (wr []structs.WechatReulst) {
 	_, b, err := clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize=1&pageNum=1", gethead, nil, 10, true, clients.DefaultClient())
 	if err != nil {
 		gologger.Error(ctx, err)
@@ -228,7 +224,7 @@ func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) 
 	}
 	json.Unmarshal(b, &oa)
 	for _, result := range oa.Data.ResultList {
-		wr = append(wr, WechatReulst{
+		wr = append(wr, structs.WechatReulst{
 			CompanyName:  companyName,
 			WechatNums:   result.PublicNum,
 			WechatName:   result.Title,

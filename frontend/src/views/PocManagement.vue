@@ -194,22 +194,20 @@ function deleteFingerprint(fingerprint: string) {
                     </span>
                 </template>
                 <el-card v-show="step == 0">
-                    <template #header>
-                        <div class="my-header">
-                            <el-input :suffix-icon="Search" v-model="filter" @input="filterPocList()"
-                                placeholder="根据规则过滤POC" style="width: 50%;">
-                                <template #prepend>
-                                    <el-select v-model="defaultFilter" style="width: 150px;">
-                                        <el-option v-for="item in filterOptions" :key="item.value" :label="item.label"
-                                            :value="item.value">
-                                        </el-option>
-                                    </el-select>
-                                </template>
-                            </el-input>
-                            <el-button :icon="CirclePlusFilled" @click="step = 1">POC</el-button>
-                        </div>
-                    </template>
-                    <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 230px);">
+                    <div class="my-header" style="margin-bottom: 10px;">
+                        <el-input :suffix-icon="Search" v-model="filter" @input="filterPocList()"
+                            placeholder="根据规则过滤POC" style="width: 50%;">
+                            <template #prepend>
+                                <el-select v-model="defaultFilter" style="width: 150px;">
+                                    <el-option v-for="item in filterOptions" :key="item.value" :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </template>
+                        </el-input>
+                        <el-button :icon="CirclePlusFilled" @click="step = 1">POC</el-button>
+                    </div>
+                    <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 225px);">
                         <el-table-column prop="Name" label="名称" />
                         <el-table-column label="关联指纹" width="400px">
                             <template #default="scope">
@@ -277,17 +275,16 @@ function deleteFingerprint(fingerprint: string) {
                     </span>
                 </template>
                 <el-card>
-                    <template #header>
-                        <div class="my-header">
-                            <el-select-v2 v-model="selectHighlightFinger" placeholder="请选择需要高亮的指纹" filterable
-                                :options="highlightFingerOptions" multiple clearable />
-                            <el-space style="margin-left: 10px">
-                                <el-button :icon="CirclePlusFilled" type="primary" @click="addFingerprint(selectHighlightFinger)">添加</el-button>
-                                <el-button :icon="saveIcon" type="primary" @click="SaveConfig">保存</el-button>
-                            </el-space>
-                        </div>
-                    </template>
-                    <el-table :data="global.webscan.highlight_fingerprints" style="height: calc(100vh - 200px);">
+                    <div class="my-header" style="margin-bottom: 10px;">
+                        <el-select-v2 v-model="selectHighlightFinger" placeholder="请选择需要高亮的指纹" filterable
+                            :options="highlightFingerOptions" multiple clearable />
+                        <el-space style="margin-left: 10px">
+                            <el-button :icon="CirclePlusFilled" type="primary"
+                                @click="addFingerprint(selectHighlightFinger)">添加</el-button>
+                            <el-button :icon="saveIcon" type="primary" @click="SaveConfig">保存</el-button>
+                        </el-space>
+                    </div>
+                    <el-table :data="global.webscan.highlight_fingerprints" style="height: calc(100vh - 195px);">
                         <el-table-column type="index" width="50" />
                         <el-table-column label="Fingerprint">
                             <template #default="scope">
@@ -321,17 +318,3 @@ function deleteFingerprint(fingerprint: string) {
         </el-card>
     </el-drawer>
 </template>
-
-<style scoped>
-:deep(.el-card__header) {
-    padding: 5px;
-}
-
-.controls {
-    position: absolute;
-    top: 90px;
-    right: 30px;
-    z-index: 1000;
-    /* Ensure it's above the code */
-}
-</style>

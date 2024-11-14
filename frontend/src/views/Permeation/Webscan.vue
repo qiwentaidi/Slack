@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue } from 'wailsjs/go/main/App'
-import { ElMessage, ElNotification } from 'element-plus';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit } from '@element-plus/icons-vue';
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger } from 'wailsjs/go/main/App'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead, generateRandomString } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
@@ -12,12 +12,12 @@ import { LinkDirsearch, LinkFOFA, LinkHunter } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize, getClassBySeverity } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
-import { CheckFileStat, DirectoryDialog, List, ReadFile } from 'wailsjs/go/main/File';
+import { CheckFileStat, DirectoryDialog, FileDialog, List, ReadFile, SaveFileDialog } from 'wailsjs/go/main/File';
 import { validateWebscan } from '@/stores/validate';
-import { structs, webscan } from 'wailsjs/go/models';
-import { webscanOptions } from '@/stores/options'
+import { structs } from 'wailsjs/go/models';
+import { webReportOptions, webscanOptions } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
-import { DeletePocscanResult, DeleteScanTask, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/main/Database';
+import { DeletePocscanResult, DeleteScanTask, ExportWebReportWithHtml, ExportWebReportWithJson, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, ReadWebReportWithJson, RenameScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/main/Database';
 import saveIcon from '@/assets/icon/save.svg'
 import githubIcon from '@/assets/icon/github.svg'
 import { SaveConfig } from '@/config';
@@ -69,6 +69,7 @@ const form = reactive({
     hideResponse: false,
     showYamlPoc: false,
     pocContent: '',
+    exportTask: <structs.TaskResult>{},
 })
 
 const config = reactive({
@@ -86,8 +87,8 @@ const historyDialog = ref(false)
 
 const selectedRow = ref();
 
-let fp = usePagination<webscan.InfoResult>(50)
-let vp = usePagination<webscan.VulnerabilityInfo>(50)
+let fp = usePagination<structs.InfoResult>(50)
+let vp = usePagination<structs.VulnerabilityInfo>(50)
 let rp = usePagination<structs.TaskResult>(10)
 
 // 初始化时调用
@@ -313,7 +314,16 @@ const uncover = {
             }
         })
     },
+}
 
+function highlightFingerprints(fingerprint: string) {
+    if (fingerprint == "疑似蜜罐") {
+        return "warning"
+    }
+    if (global.webscan.highlight_fingerprints.includes(fingerprint)) {
+        return "danger"
+    }
+    return "primary"
 }
 
 function filterHandlerSeverity(value: string, row: any): boolean {
@@ -392,6 +402,9 @@ async function ShowWebPictrue(filepath: string) {
     document.getElementById('webscan-img')!.setAttribute('src', bs64)
 }
 
+const reportOption = ref('HTML')
+const exportDialog = ref(false)
+
 // 任务管理
 const taskManager = {
     viewTask: async function (row: any) {
@@ -432,32 +445,108 @@ const taskManager = {
             vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
         }
     },
-    deleteTask: async function (taskId: string) {
-        let isSuccess = await DeleteScanTask(taskId)
-        if (isSuccess) {
-            ElMessage.success("删除成功")
-            rp.table.result = rp.table.result.filter(item => item.TaskId != taskId)
-            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
-            return
-        }
-        ElMessage.error("删除失败")
+    deleteTask: function (taskId: string) {
+        ElMessageBox.confirm(
+            '确定删除该任务记录?',
+            '警告',
+            {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+            .then(async () => {
+                let isSuccess = await DeleteScanTask(taskId)
+                if (isSuccess) {
+                    ElMessage.success("删除成功")
+                    rp.table.result = rp.table.result.filter(item => item.TaskId != taskId)
+                    rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+                    return
+                }
+                ElMessage.error("删除失败")
+            })
+            .catch(() => {
+                Callgologger("error", "[webscan] delete task failed")
+            })
     },
-    exportTask: async function (taskId: string) {
+    renameTask: async function (taskId: string) {
+        ElMessageBox.prompt('重命名任务', '编辑', {
+            confirmButtonText: '确定',
+        })
+            .then(async ({ value }) => {
+                let isSuccess = await RenameScanTask(taskId, value)
+                if (isSuccess) {
+                    const taskIndex = rp.table.result.findIndex(task => task.TaskId === taskId);
+                    if (taskIndex !== -1) {
+                        rp.table.result[taskIndex] = { ...rp.table.result[taskIndex], TaskName: value };
+                        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
+                    }
+                    ElMessage.success("修改成功")
+                } else {
+                    ElMessage.error("修改失败")
+                }
+            })
+    },
+    importTask: async function () {
+        const filepath = await FileDialog("*.json")
+        const result = await ReadWebReportWithJson(filepath)
+        if (result) {
+            const id = nano()
+            let isSuccess = await InsertScanTask(id, id, result.Targets, 0, 0)
+            if (!isSuccess) {
+                ElMessage.error("添加任务失败")
+                return false
+            }
+            rp.table.result.push({
+                TaskId: id,
+                TaskName: id,
+                Targets: result.Targets,
+                Failed: 0,
+                Vulnerability: 0,
+            })
+            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+            result.Fingerprints.forEach(item => {
+                InsertFingerscanResult(id, item)
+            })
+            if (result.POCs) {
+                result.POCs.forEach(item => {
+                    InsertPocscanResult(id, item)
+                })
+            }
+        }
+    },
+    exportTask: async function () {
+        let filepath = ""
+        let isSuccess = false
         var [fingerResult, nucleiResult] = await Promise.all([
-            SelectFingerscanResult(taskId),
-            SelectPocscanResult(taskId)
+            SelectFingerscanResult(form.exportTask.TaskId),
+            SelectPocscanResult(form.exportTask.TaskId)
         ]);
         if (!nucleiResult) {
             nucleiResult = []
         }
-        ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Risk, URL, Extract }) => ({
-            ID,
-            Name,
-            Type,
-            Risk,
-            URL,
-            Extract,
-        })))
+        switch (reportOption.value) {
+            case "EXCEL":
+                ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Risk, URL, Extract }) => ({
+                    ID,
+                    Name,
+                    Type,
+                    Risk,
+                    URL,
+                    Extract,
+                })))
+                break
+            case "JSON":
+                filepath = await SaveFileDialog(form.exportTask.TaskId)
+                isSuccess = await ExportWebReportWithJson(filepath + ".json", form.exportTask)
+                isSuccess ? ElMessage.success("导出成功") : ElMessage.error("导出失败")
+                break
+            default:
+                filepath = await SaveFileDialog(form.exportTask.TaskId)
+                isSuccess = await ExportWebReportWithHtml(filepath + ".html", form.exportTask.TaskId)
+                isSuccess ? ElMessage.success("导出成功") : ElMessage.error("导出失败")
+        }
+        exportDialog.value = false
     },
     updateTaskTable: function (taskId: string) {
         let vulcount = dashboard.riskLevel.CRITICAL + dashboard.riskLevel.HIGH + dashboard.riskLevel.MEDIUM + dashboard.riskLevel.LOW + dashboard.riskLevel.INFO
@@ -469,7 +558,7 @@ const taskManager = {
             rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
         }
     },
-    appendTaskToDatabase: async function() {
+    appendTaskToDatabase: async function () {
         if (vp.table.result.length == 0 && fp.table.result.length == 0) {
             ElMessage.warning('请先添加扫描任务')
             return
@@ -627,9 +716,9 @@ async function showPocDetail(filename: string) {
                             <div class="finger-container">
                                 <el-tag v-for="finger in scope.row.Fingerprints" :key="finger"
                                     :effect="scope.row.Detect === 'Default' ? 'light' : 'dark'"
-                                    :type="global.webscan.highlight_fingerprints.includes(finger) ? 'danger' : 'primary'">{{
+                                    :type="highlightFingerprints(finger)">{{
                                         finger }}</el-tag>
-                                <el-tag type="danger" v-if="scope.row.IsWAF">{{ scope.row.WAF }}</el-tag>
+                                <el-tag type="warning" v-if="scope.row.IsWAF">{{ scope.row.WAF }}</el-tag>
                             </div>
                         </template>
                     </el-table-column>
@@ -941,11 +1030,14 @@ async function showPocDetail(filename: string) {
                         <el-tooltip content="查看">
                             <el-button :icon="View" link @click="taskManager.viewTask(scope.row)" />
                         </el-tooltip>
+                        <el-tooltip content="编辑">
+                            <el-button :icon="Edit" link @click="taskManager.renameTask(scope.row.TaskId)" />
+                        </el-tooltip>
                         <el-tooltip content="删除">
                             <el-button :icon="Delete" link @click="taskManager.deleteTask(scope.row.TaskId)" />
                         </el-tooltip>
-                        <el-tooltip content="结果导出">
-                            <el-button :icon="Share" link @click="taskManager.exportTask(scope.row.TaskId)" />
+                        <el-tooltip content="导出">
+                            <el-button :icon="Share" link @click="exportDialog = true; form.exportTask = scope.row" />
                         </el-tooltip>
                     </el-button-group>
                 </template>
@@ -955,7 +1047,12 @@ async function showPocDetail(filename: string) {
             </template>
         </el-table>
         <div class="my-header" style="margin-top: 5px;">
-            <el-button :icon="UploadFilled" @click="taskManager.appendTaskToDatabase">将本次记录入库</el-button>
+            <el-space>
+                <el-tooltip content="存储当前结果数据">
+                    <el-button :icon="saveIcon" @click="taskManager.appendTaskToDatabase">临时入库</el-button>
+                </el-tooltip>
+                <el-button :icon="UploadFilled" @click="taskManager.importTask()">导入任务</el-button>
+            </el-space>
             <el-pagination size="small" background @size-change="rp.ctrl.handleSizeChange"
                 @current-change="rp.ctrl.handleCurrentChange" :pager-count="5" :current-page="rp.table.currentPage"
                 :page-sizes="[10, 20]" :page-size="rp.table.pageSize" layout="total, sizes, prev, pager, next"
@@ -963,6 +1060,19 @@ async function showPocDetail(filename: string) {
             </el-pagination>
         </div>
     </el-drawer>
+    <el-dialog title="选择导出格式" v-model="exportDialog">
+        <el-radio-group v-model="reportOption">
+            <el-radio v-for="item in webReportOptions" :key="item" :label="item">{{ item }}</el-radio>
+        </el-radio-group>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button @click="exportDialog = false">取消</el-button>
+                <el-button type="primary" @click="taskManager.exportTask()">
+                    导出
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 
 <style scoped>
@@ -990,5 +1100,9 @@ async function showPocDetail(filename: string) {
     overflow-y: auto;
     padding-right: 20px;
     scrollbar-width: thin;
+}
+
+.vertical-radio .el-radio {
+    display: block;
 }
 </style>

@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	rt "runtime"
+	"slack-wails/lib/fileutil"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/update"
@@ -101,7 +102,7 @@ func (f *File) DirectoryDialog() string {
 }
 
 // selection会返回保存的文件路径+文件名 例如/Users/xxx/Downloads/test.xlsx
-func (f *File) SaveFile(filename string) string {
+func (f *File) SaveFileDialog(filename string) string {
 	selection, err := runtime.SaveFileDialog(f.ctx, runtime.SaveDialogOptions{
 		Title:           "保存文件",
 		DefaultFilename: filename,
@@ -227,7 +228,7 @@ func (f *File) UpdatePocFile(version string) bool {
 		gologger.Error(f.ctx, err)
 		return false
 	}
-	uz := util.NewUnzip()
+	uz := fileutil.NewUnzip()
 	if _, err := uz.Extract(defaultFile+"config.zip", defaultFile); err != nil {
 		gologger.Error(f.ctx, err)
 		return false
@@ -302,7 +303,7 @@ func (a *App) DownloadCyberChef(url string) error {
 		return err
 	}
 	runtime.EventsEmit(a.ctx, "downloadComplete", fileName)
-	uz := util.NewUnzip()
+	uz := fileutil.NewUnzip()
 	if _, err := uz.Extract(util.HomeDir()+cyber, a.defaultPath); err != nil {
 		return err
 	}
@@ -454,7 +455,7 @@ func (f *File) GetLocalNaConfig() *[]structs.Navigation {
 
 func (f *File) InsetGroupNavigation(n structs.Navigation) bool {
 	navigation = append(navigation, n)
-	return f.SaveJsonFile(navigation)
+	return fileutil.SaveJsonWithFormat(f.ctx, na, navigation)
 }
 
 func (f *File) InsetItemNavigation(groupName string, child structs.Children) bool {
@@ -463,25 +464,12 @@ func (f *File) InsetItemNavigation(groupName string, child structs.Children) boo
 			navigation[i].Children = append(n.Children, child)
 		}
 	}
-	return f.SaveJsonFile(navigation)
+	return fileutil.SaveJsonWithFormat(f.ctx, na, navigation)
 }
 
 func (f *File) SaveNavigation(n []structs.Navigation) bool {
 	navigation = n
-	return f.SaveJsonFile(navigation)
-}
-
-func (f *File) SaveJsonFile(content interface{}) bool {
-	b, err := json.MarshalIndent(content, "", "  ")
-	if err != nil {
-		gologger.Error(f.ctx, err)
-		return false
-	}
-	if err := os.WriteFile(na, b, 0777); err != nil {
-		gologger.Error(f.ctx, err)
-		return false
-	}
-	return true
+	return fileutil.SaveJsonWithFormat(f.ctx, na, navigation)
 }
 
 func (f *File) OpenFolder(filepath string) string {

@@ -220,8 +220,8 @@ function updatePorts(index: number) {
 
 const moreOperate = ({
     // 复制端口扫描中的所有HTTP链接
-    CopyURLs: function (type: string, result: PortScanData[]) {
-        if (result.length <= 1) {
+    CopyURLs: function (type: string) {
+        if (pagination.table.result.length <= 1) {
             ElNotification.warning({
                 message: "复制内容条数需大于1",
                 position: 'bottom-right',
@@ -229,7 +229,7 @@ const moreOperate = ({
             return;
         }
         if (type == "url") {
-           let urls = pagination.table.result.map(item => {
+            let urls = pagination.table.result.map(item => {
                 if (item.Server == "http" || item.Server == "https") {
                     return item.Link
                 }
@@ -337,23 +337,23 @@ function stopShodan() {
                     </template>
                 </el-input>
                 <el-dropdown>
-                <el-button text bg>
-                    更多功能<el-icon class="el-icon--right">
-                        <ArrowDown />
-                    </el-icon>
-                </el-button>
-                <template #dropdown>
-                    <el-dropdown-menu>
-                        <el-dropdown-item :icon="CopyDocument" @click="moreOperate.CopyURLs('url', pagination.table.result)">复制全部URL</el-dropdown-item>
-                        <el-dropdown-item :icon="CopyDocument" @click="moreOperate.CopyURLs('brute', pagination.table.result)">复制全部可爆破协议</el-dropdown-item>
-                        <el-dropdown-item :icon="Promotion" @click="moreOperate.Linkage('webscan')" divided>发送至网站扫描</el-dropdown-item>
-                        <el-dropdown-item :icon="Promotion" @click="moreOperate.Linkage('crack')">发送至暴破与未授权检测</el-dropdown-item>
-                        <el-dropdown-item :icon="exportIcon" 
-                        @click="ExportToXlsx(['IP', 'Port', 'Title', 'Link', 'Protocol'], '端口扫描', 'portscan', pagination.table.result)"
-                        divided>结果导出</el-dropdown-item>
-                    </el-dropdown-menu>
-                </template>
-            </el-dropdown>
+                    <el-button text bg>
+                        更多功能<el-icon class="el-icon--right">
+                            <ArrowDown />
+                        </el-icon>
+                    </el-button>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item :icon="Promotion" 
+                                @click="moreOperate.Linkage('webscan')">发送至网站扫描</el-dropdown-item>
+                            <el-dropdown-item :icon="Promotion"
+                                @click="moreOperate.Linkage('crack')">发送至暴破与未授权检测</el-dropdown-item>
+                            <el-dropdown-item :icon="exportIcon"
+                                @click="ExportToXlsx(['IP', 'Port', 'Title', 'Link', 'Protocol'], '端口扫描', 'portscan', pagination.table.result)"
+                                divided>结果导出</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
             </el-space>
             <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
                 v-if="!ctrl.runningStatus">新建任务</el-button>
@@ -364,8 +364,19 @@ function stopShodan() {
             <el-table-column type="selection" width="55px" align="center" />
             <el-table-column prop="IP" label="Host" />
             <el-table-column prop="Port" label="Port" width="100px" />
-            <el-table-column prop="Server" label="Fingerprint" />
-            <el-table-column prop="Link" label="Link" :show-overflow-tooltip="true" />
+            <el-table-column prop="Server" label="Fingerprint" width="150px" />
+            <el-table-column prop="Link" :show-overflow-tooltip="true">
+                <template #header>
+                    <el-text><span>Link</span>
+                        <el-divider direction="vertical" />
+                        <el-button size="small" text bg @click="moreOperate.CopyURLs('url')">复制URLs</el-button>
+                        <el-divider direction="vertical" />
+                        <el-tooltip content="复制所有可暴破协议">
+                            <el-button size="small" text bg @click="moreOperate.CopyURLs('brute')">复制Cracks</el-button>
+                        </el-tooltip>
+                    </el-text>
+                </template>
+            </el-table-column>
             <el-table-column prop="HttpTitle" label="WebTitle" :show-overflow-tooltip="true" />
             <el-table-column label="Operate" width="100px" align="center">
                 <template #default="scope">
