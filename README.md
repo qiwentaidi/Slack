@@ -78,19 +78,23 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 # 特色功能介绍
 
-## 端口扫描
-
-可以联动网站扫描以及协议爆破
-
-![image-20240928220948717](assets/image-20240928220948717.png)
-
 ## 网站扫描
 
-目前内置8700+指纹，3000+POC，易用可扩展
+目前内置8800+指纹，3100+POC，引擎使用的Nuclei v3，得益于Nulcei强大的社区及丰富的POC易用可扩展，以及多种格式报告导出。
 
-![image-20241006193512657](assets/image-20241006193512657.png)
+![image-20241115124501303](assets/image-20241115124501303.png)
 
-![image-20240929152018714](assets/image-20240929152018714.png)
+![image-20241115125324700](assets/image-20241115125324700.png)
+
+![image-20241115130810507](assets/image-20241115130810507.png)
+
+![image-20241115131038135](assets/image-20241115131038135.png)
+
+## 目录扫描
+
+完美兼容dirsearch常用参数和supersearchplus的查看响应包功能，以及对重复出现的响应包长度进行了过滤，便于查看。
+
+![image-20241115131626314](assets/image-20241115131626314.png)
 
 ## 公司信息查询
 
@@ -100,8 +104,6 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240907180805041](assets/image-20240907180805041.png)
 
-![image-20240907202829701](assets/image-20240907202829701.png)
-
 ## 空间搜索
 
 `FOFA`、`Hunter`、`Quake`查询功能，保留搜索提示、语法收藏以及数据可视性的同时，增加特色功能区，减少数据导出操作。
@@ -109,12 +111,6 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 ![image-20240907172923247](assets/image-20240907172923247.png)
 
 ![image-20240907172244822](assets/image-20240907172244822.png)
-
-![image-20240907172356305](assets/image-20240907172356305.png)
-
-![image-20240907172750605](assets/image-20240907172750605.png)
-
-![image-20240907173203880](assets/image-20240907173203880.png)
 
 ## 数据库自动取样
 
@@ -140,7 +136,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 用于管理繁琐的脚本，可以自定义启动命令，支持`cmd`打开文件所在命令行、`java`以`java -jar`命令启动`java GUI`应用、`App`打开`exe GUI`
 
-![image-20240907234517306](assets/image-20240907234517306.png)
+![image-20241115130109041](assets/image-20241115130109041.png)
 
 可视化日志（右上角终端符号打开）
 

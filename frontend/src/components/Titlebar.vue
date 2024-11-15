@@ -44,9 +44,7 @@ function setTitle(path: string) {
 
 const searchFilter = ref("");
 const filteredOptions = computed(() => {
-    if (!searchFilter.value) {
-        return onlineOptions;
-    }
+    if (!searchFilter.value) return onlineOptions;
     return onlineOptions.map((group) => ({
         ...group,
         value: group.value.filter((item) =>

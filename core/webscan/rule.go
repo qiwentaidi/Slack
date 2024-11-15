@@ -22,8 +22,6 @@ func NewConfig() *InitConfig {
 	return &InitConfig{}
 }
 
-var fps map[string]interface{}
-
 type FingerPEntity struct {
 	ProductName      string
 	AllString        string
@@ -53,37 +51,43 @@ func (ic *InitConfig) InitFingprintDB(ctx context.Context, fingerprintFile strin
 	if err != nil {
 		return err
 	}
-	fps = make(map[string]interface{})
-	m := make(map[string][]string)
-	err = yaml.Unmarshal(data, &fps)
-	if err == nil {
-		for productName, rulesInterface := range fps {
-			for _, ruleInterface := range rulesInterface.([]interface{}) {
-				ruleL, ok := ruleInterface.(string)
-				if !ok {
-					fmt.Printf("指纹规则格式错误，产品名称为[%s]，规则为[%v]", productName, ruleInterface)
-					continue
-				}
-				_, ok = m[productName]
-				if ok {
-					f := m[productName]
-					if util.GetItemInArray(f, ruleL) == -1 {
-						f = append(f, ruleL)
-					}
-					m[productName] = f
-				} else {
-					m[productName] = []string{ruleL}
-				}
-			}
-		}
-	} else {
+
+	fps := make(map[string]interface{})
+	if err := yaml.Unmarshal(data, &fps); err != nil {
 		return err
 	}
-	for productName, ruleLs := range m {
-		for _, ruleL := range ruleLs {
-			FingerprintDB = append(FingerprintDB, FingerPEntity{ProductName: productName, Rule: ParseRule(ruleL), AllString: ruleL})
+
+	m := make(map[string][]string)
+	for productName, rulesInterface := range fps {
+		rules, ok := rulesInterface.([]interface{})
+		if !ok {
+			fmt.Printf("Invalid fingerprint format for product [%s], rules [%v]\n", productName, rulesInterface)
+			continue
+		}
+
+		for _, ruleInterface := range rules {
+			rule, ok := ruleInterface.(string)
+			if !ok {
+				fmt.Printf("Invalid rule format for product [%s], rule [%v]\n", productName, ruleInterface)
+				continue
+			}
+
+			if !util.ArrayContains(rule, m[productName]) {
+				m[productName] = append(m[productName], rule)
+			}
 		}
 	}
+
+	for productName, ruleList := range m {
+		for _, rule := range ruleList {
+			FingerprintDB = append(FingerprintDB, FingerPEntity{
+				ProductName: productName,
+				Rule:        ParseRule(rule),
+				AllString:   rule,
+			})
+		}
+	}
+
 	return nil
 }
 func (ic *InitConfig) InitActiveScanPath(activefingerFile string) error {

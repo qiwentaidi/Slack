@@ -57,7 +57,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "1.7.1"
+const LOCAL_VERSION = "1.7.2"
 
 const Language = ref("zh")
 const Theme = ref(false)

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from "element-plus";
-import { reactive, ref, h } from "vue";
-import { DeleteFilled, Edit, FolderOpened, Document, Menu, InfoFilled } from "@element-plus/icons-vue";
+import { reactive, ref, h, computed } from "vue";
+import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
 import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal } from "wailsjs/go/main/File";
@@ -66,10 +66,21 @@ const config = reactive({
     editChild: {} as structs.Children,
     editGroupName: "", // 正在被编辑的组名
     addItemDialog: false,
+    tipsDialog: false,
 })
 
+const searchFilter = ref("")
+
+const filteredGroups = computed(() => {
+    if (!searchFilter.value) return localGroup.options.value; // 如果没有搜索关键词，返回所有组
+    return localGroup.options.value.filter(group => {
+        // 检查组内是否有元素包含搜索关键词
+        return group.Children?.some(item => item.Name.includes(searchFilter.value)) || false;
+    });
+});
+
 const localGroup = ({
-    options: ref([] as structs.Navigation[]),
+    options: ref<structs.Navigation[]>([]),
     openGroup: ["CMD", "APP", "JAR"],
     getGroupNames: function () {
         return localGroup.options.value.map(item => item.Name)
@@ -94,8 +105,8 @@ const localGroup = ({
     },
     addGroup: function () {
         ElMessageBox.prompt('请输入名称(不能重名)', "添加分组", {
-            confirmButtonText: 'OK',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
             inputPattern: /.+/,
             inputErrorMessage: "Group name can't be empty",
         })
@@ -210,43 +221,6 @@ const localGroup = ({
     },
 })
 
-function handDivContextMenu(e: MouseEvent) {
-    e.preventDefault();
-    //show our menu
-    ContextMenu.showContextMenu({
-        x: e.x,
-        y: e.y,
-        items: [
-            {
-                label: "添加分组",
-                icon: h(groupIcon, defaultIconSize),
-                onClick: () => {
-                    localGroup.addGroup()
-                }
-            },
-            {
-                label: "视图模式",
-                icon: h(Menu, defaultIconSize),
-                children: [
-                    {
-                        label: "图标模式",
-                        icon: h(gridIcon, defaultIconSize),
-                        onClick: () => {
-                            global.temp.isGrid = true
-                        }
-                    },
-                    {
-                        label: "按钮模式",
-                        icon: h(buttonIcon, defaultIconSize),
-                        onClick: () => {
-                            global.temp.isGrid = false
-                        }
-                    },
-                ]
-            },
-        ]
-    });
-}
 function handleCardContextMenu(e: MouseEvent, groups: any) {
     //prevent the browser's default menu
     e.preventDefault();
@@ -273,9 +247,30 @@ function handleCardContextMenu(e: MouseEvent, groups: any) {
             {
                 label: "删除分组",
                 icon: h(DeleteFilled, defaultIconSize),
+                divided: true,
                 onClick: () => {
                     localGroup.deleteGroup(groups.Name)
                 }
+            },
+            {
+                label: "视图模式",
+                icon: h(Menu, defaultIconSize),
+                children: [
+                    {
+                        label: "图标模式",
+                        icon: h(gridIcon, defaultIconSize),
+                        onClick: () => {
+                            global.temp.isGrid = true
+                        }
+                    },
+                    {
+                        label: "按钮模式",
+                        icon: h(buttonIcon, defaultIconSize),
+                        onClick: () => {
+                            global.temp.isGrid = false
+                        }
+                    },
+                ]
             },
         ]
     });
@@ -332,25 +327,19 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
 
 
 <template>
-    <div style="height: 100%;" @contextmenu.prevent="handDivContextMenu($event)">
-        <el-collapse>
-            <el-collapse-item name="1">
-                <template #title>
+    <div style="height: 100%;">
+        <div class="my-header" style="margin-bottom: 10px;">
+            <el-button plain :icon="WarningFilled" @click="config.tipsDialog = true">使用须知</el-button>
+            <el-input v-model="searchFilter" placeholder="根据名称过滤搜索..." style="margin-inline: 5px">
+                <template #prefix>
                     <el-icon>
-                        <InfoFilled />
+                        <Filter />
                     </el-icon>
-                    <p class="custom-block-title">Tips</p>
                 </template>
-                <div class="tip custom-block">
-                    jar应用在默认点击启动时，会使用以java -jar启动应用<br />
-                    如果默认配置无法满足使用，可以通过填写目标自定义启动命令<strong>(类型必须为CMD)</strong>，%path%关键词可以自动替换为应用路径<br />
-                    e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为:
-                    <code>java -javaagent:%path% -jar %path%</code>
-                </div>
-            </el-collapse-item>
-        </el-collapse>
-
-        <div v-for="groups in localGroup.options.value" style="margin-bottom: 10px;">
+            </el-input>
+            <el-button :icon="groupIcon" @click="localGroup.addGroup()">添加分组</el-button>
+        </div>
+        <div v-for="groups in filteredGroups" style="margin-bottom: 10px;">
             <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
                 @contextmenu.stop @contextmenu.prevent="handleCardContextMenu($event, groups)">
                 <div class="my-header" style="margin-bottom: 20px">
@@ -441,6 +430,16 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             </el-button>
         </template>
     </el-dialog>
+    <el-dialog v-model="config.tipsDialog" title="使用须知" width="900px">
+        <div class="tip custom-block">
+            1、jar应用在默认点击启动时，会使用以java -jar启动应用<br /><br />
+            2、如果默认配置无法满足使用，可以通过填写目标自定义启动命令<strong>(类型必须为CMD)</strong>，%path%关键词可以自动替换为应用路径<br />
+            e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为:
+            <code>java -javaagent:%path% -jar %path%</code><br /><br />
+            3、拖入应用到分组中会自动按类型添加元素<br /><br />
+            4、每个面板右键都有独立的功能!!!
+        </div>
+    </el-dialog>
 </template>
 
 
@@ -487,10 +486,5 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
     border-radius: 4px;
     border-left: 5px solid var(--el-color-primary);
     margin-bottom: 10px;
-}
-
-.custom-block-title {
-    font-weight: 700;
-    margin-left: 5px;
 }
 </style>
