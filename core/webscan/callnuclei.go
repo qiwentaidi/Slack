@@ -57,16 +57,17 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o structs.NucleiO
 			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
 		}
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
-			ID:          event.TemplateID,
-			Name:        event.Info.Name,
-			Description: event.Info.Description,
-			Reference:   reference,
-			URL:         showMatched(event),
-			Request:     showRequest(event),
-			Response:    showResponse(event),
-			Extract:     strings.Join(event.ExtractedResults, " | "),
-			Type:        strings.ToUpper(event.Type),
-			Risk:        strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
+			ID:           event.TemplateID,
+			Name:         event.Info.Name,
+			Description:  event.Info.Description,
+			Reference:    reference,
+			URL:          showMatched(event),
+			Request:      showRequest(event),
+			Response:     showResponse(event),
+			ResponseTime: limitDecimalPlaces(event.ResponseTime),
+			Extract:      strings.Join(event.ExtractedResults, " | "),
+			Type:         strings.ToUpper(event.Type),
+			Severity:     strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
 		})
 	})
 	if err != nil {
@@ -105,4 +106,13 @@ func showResponse(event *output.ResultEvent) string {
 		return event.Interaction.RawResponse
 	}
 	return ""
+}
+
+// 限制小数为2位
+func limitDecimalPlaces(value string) string {
+	parts := strings.Split(value, ".")
+	if len(parts) == 2 && len(parts[1]) > 2 {
+		value = parts[0] + "." + parts[1][:2] // 截取小数点后两位
+	}
+	return value
 }

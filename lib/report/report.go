@@ -38,9 +38,9 @@ func reportBody(Fingerprints []structs.InfoResult, POCs []structs.VulnerabilityI
 			<td class="vuln">%d&nbsp;&nbsp;%s</td>
 			<td class="security %s">%s</td>
 			<td class="url">%s</td>
-		</thead>`, index+1, poc.ID, strings.ToLower(poc.Risk), poc.Risk, util.GetBasicURL(poc.URL))
+		</thead>`, index+1, poc.ID, strings.ToLower(poc.Severity), poc.Severity, util.GetBasicURL(poc.URL))
 		info := fmt.Sprintf("<b>name:</b> %s&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>security:</b> %s",
-			poc.Name, poc.Risk)
+			poc.Name, poc.Severity)
 		if len(poc.Extract) > 0 {
 			info += fmt.Sprintf("<br><b>extract:</b> %s", poc.Extract)
 		}

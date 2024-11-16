@@ -12,9 +12,7 @@ import CustomTabs from '@/components/CustomTabs.vue';
 
 onMounted(async () => {
     let hosts = await SearchAgentPool()
-    if (Array.isArray(hosts)) {
-        form.pool.push(...hosts)
-    }
+    if (Array.isArray(hosts)) form.pool = hosts
 });
 
 const form = reactive({

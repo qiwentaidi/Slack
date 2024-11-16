@@ -3,7 +3,7 @@ import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
 import { Copy, SplitTextArea, UploadFileAndRead } from '@/util'
 import { ExportToXlsx } from '@/export'
-import { QuestionFilled, ChromeFilled, Promotion, CopyDocument, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
+import { QuestionFilled, ChromeFilled, Promotion, DocumentCopy, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, ExitScanner, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
@@ -384,7 +384,7 @@ function stopShodan() {
                         <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.Link)" />
                     </el-tooltip>
                     <el-tooltip content="复制链接">
-                        <el-button link :icon="CopyDocument" @click.prevent="Copy(scope.row.Link)" />
+                        <el-button link :icon="DocumentCopy" @click.prevent="Copy(scope.row.Link)" />
                     </el-tooltip>
                 </template>
             </el-table-column>

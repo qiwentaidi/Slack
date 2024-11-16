@@ -311,3 +311,24 @@ html {
   word-break: break-word; 
   overflow-wrap: break-word;
 }
+
+/* 文本域容器 */
+
+.textarea-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-textarea {
+  width: 100%;
+  padding-right: 50px;
+  /* Space for the action area */
+}
+
+.action-area {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+}

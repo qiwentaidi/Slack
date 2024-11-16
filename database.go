@@ -66,17 +66,48 @@ func (d *Database) SearchAgentPool() (hosts []string) {
 	}
 	return hosts
 }
+
+// SQLite 检查字段是否已存在
+func columnExists(db *sql.DB, tableName, columnName string) bool {
+	query := `PRAGMA table_info(` + tableName + `);`
+	rows, _ := db.Query(query)
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			cid        int
+			name       string
+			fieldType  string
+			notnull    int
+			dflt_value interface{}
+			pk         int
+		)
+		rows.Scan(&cid, &name, &fieldType, &notnull, &dflt_value, &pk)
+		if name == columnName {
+			return true
+		}
+	}
+	return false
+}
 func (d *Database) CreateTable() bool {
-	_, err := d.DB.Exec(`CREATE TABLE IF NOT EXISTS hunter_syntax ( name TEXT, content TEXT );
-	CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );
-	CREATE TABLE IF NOT EXISTS fofa_syntax ( name TEXT, content TEXT );
-	CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );
-	CREATE TABLE IF NOT EXISTS dirsearch ( path TEXT, times INTEGER );
-	CREATE TABLE IF NOT EXISTS dbManager ( nanoid TEXT, scheme TEXT, host TEXT, port INTEGER, username TEXT, password TEXT, notes TEXT );
-	CREATE TABLE IF NOT EXISTS scanTask ( task_id TEXT PRIMARY KEY, task_name TEXT, targets TEXT, failed INTEGER, vulnerability INTEGER );
-	CREATE TABLE IF NOT EXISTS FingerprintInfo ( task_id TEXT, url TEXT, status INTEGER, length INTEGER, title TEXT, detect TEXT, is_waf INTEGER, waf TEXT, fingerprints TEXT, screenshot TEXT );
-	CREATE TABLE IF NOT EXISTS VulnerabilityInfo ( task_id TEXT, template_id TEXT, vuln_name TEXT, protocol TEXT, severity TEXT, vuln_url TEXT, extract TEXT, request TEXT, response TEXT, description TEXT, reference TEXT );
-	`)
+	if !columnExists(d.DB, "VulnerabilityInfo", "response_time") {
+		_, err := d.DB.Exec(`ALTER TABLE VulnerabilityInfo ADD COLUMN response_time TEXT`)
+		if err != nil {
+			return false
+		}
+	}
+
+	_, err := d.DB.Exec(`
+        CREATE TABLE IF NOT EXISTS hunter_syntax ( name TEXT, content TEXT );
+        CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );
+        CREATE TABLE IF NOT EXISTS fofa_syntax ( name TEXT, content TEXT );
+        CREATE TABLE IF NOT EXISTS agent_pool ( hosts TEXT );
+        CREATE TABLE IF NOT EXISTS dirsearch ( path TEXT, times INTEGER );
+        CREATE TABLE IF NOT EXISTS dbManager ( nanoid TEXT, scheme TEXT, host TEXT, port INTEGER, username TEXT, password TEXT, notes TEXT );
+        CREATE TABLE IF NOT EXISTS scanTask ( task_id TEXT PRIMARY KEY, task_name TEXT, targets TEXT, failed INTEGER, vulnerability INTEGER );
+        CREATE TABLE IF NOT EXISTS FingerprintInfo ( task_id TEXT, url TEXT, status INTEGER, length INTEGER, title TEXT, detect TEXT, is_waf INTEGER, waf TEXT, fingerprints TEXT, screenshot TEXT );
+        CREATE TABLE IF NOT EXISTS VulnerabilityInfo ( task_id TEXT, template_id TEXT, vuln_name TEXT, protocol TEXT, severity TEXT, vuln_url TEXT, extract TEXT, request TEXT, response TEXT, description TEXT, reference TEXT, response_time TEXT );
+    `)
 	return err == nil
 }
 
@@ -868,10 +899,14 @@ func (d *Database) SelectPocscanResult(taskid string) []structs.VulnerabilityInf
 	for rows.Next() {
 		var result structs.VulnerabilityInfo
 		var task_id string
-		err = rows.Scan(&task_id, &result.ID, &result.Name, &result.Type, &result.Risk, &result.URL, &result.Extract, &result.Request, &result.Response, &result.Description, &result.Reference)
+		var responseTime *string // 使用指针来处理可能的 NULL 值
+		err = rows.Scan(&task_id, &result.ID, &result.Name, &result.Type, &result.Severity, &result.URL, &result.Extract, &result.Request, &result.Response, &result.Description, &result.Reference, &responseTime)
 		if err != nil {
 			gologger.Debug(d.ctx, err)
 			continue
+		}
+		if responseTime != nil {
+			result.ResponseTime = *responseTime // 只有在 responseTime 不为 NULL 时才赋值
 		}
 		results = append(results, result)
 	}
@@ -884,8 +919,8 @@ func (d *Database) InsertFingerscanResult(taskid string, result structs.InfoResu
 }
 
 func (d *Database) InsertPocscanResult(taskid string, result structs.VulnerabilityInfo) bool {
-	insertStmt := "INSERT INTO VulnerabilityInfo (task_id, template_id, vuln_name, protocol, severity, vuln_url, extract, request, response, description, reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	return d.ExecSqlStatement(insertStmt, taskid, result.ID, result.Name, result.Type, result.Risk, result.URL, result.Extract, result.Request, result.Response, result.Description, result.Reference)
+	insertStmt := "INSERT INTO VulnerabilityInfo (task_id, template_id, vuln_name, protocol, severity, vuln_url, extract, request, response, description, reference, response_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	return d.ExecSqlStatement(insertStmt, taskid, result.ID, result.Name, result.Type, result.Severity, result.URL, result.Extract, result.Request, result.Response, result.Description, result.Reference, result.ResponseTime)
 }
 
 func (d *Database) DeletePocscanResult(taskid, template_id, vuln_url string) bool {

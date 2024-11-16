@@ -135,24 +135,3 @@ async function uploadFile() {
     form.url = file.Content!
 }
 </script>
-
-<style scoped>
-.textarea-container {
-    position: relative;
-    width: 100%;
-}
-
-.custom-textarea {
-    width: 100%;
-    padding-right: 50px;
-    /* Space for the action area */
-}
-
-.action-area {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    display: flex;
-    gap: 5px;
-}
-</style>

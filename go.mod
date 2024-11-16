@@ -2,8 +2,6 @@ module slack-wails
 
 go 1.21.0
 
-toolchain go1.21.6
-
 require (
 	github.com/XinRoom/go-portScan v1.4.2
 	github.com/XinRoom/iprange v1.1.4
@@ -19,7 +17,6 @@ require (
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/mozillazg/go-pinyin v0.20.0
 	github.com/panjf2000/ants/v2 v2.9.1
-	github.com/projectdiscovery/nuclei/v3 v3.3.5
 	github.com/sijms/go-ora/v2 v2.8.19
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/stacktitan/smb v0.0.0-20190531122847-da9a425dceb8
@@ -27,9 +24,9 @@ require (
 	github.com/wailsapp/wails/v2 v2.9.2
 	github.com/zmap/zcrypto v0.0.0-20240512203510-0fef58d9a9db
 	go.mongodb.org/mongo-driver v1.17.0
-	golang.org/x/crypto v0.27.0
-	golang.org/x/net v0.29.0
-	golang.org/x/text v0.18.0
+	golang.org/x/crypto v0.28.0
+	golang.org/x/net v0.30.0
+	golang.org/x/text v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -144,7 +141,7 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -228,35 +225,35 @@ require (
 	github.com/projectdiscovery/blackrock v0.0.1 // indirect
 	github.com/projectdiscovery/cdncheck v1.1.0 // indirect
 	github.com/projectdiscovery/clistats v0.1.1 // indirect
-	github.com/projectdiscovery/dsl v0.2.1 // indirect
+	github.com/projectdiscovery/dsl v0.3.0 // indirect
 	github.com/projectdiscovery/fastdialer v0.2.9 // indirect
 	github.com/projectdiscovery/fasttemplate v0.0.2 // indirect
-	github.com/projectdiscovery/freeport v0.0.6 // indirect
+	github.com/projectdiscovery/freeport v0.0.7 // indirect
 	github.com/projectdiscovery/go-smb2 v0.0.0-20240129202741-052cc450c6cb // indirect
 	github.com/projectdiscovery/goflags v0.1.64 // indirect
-	github.com/projectdiscovery/gologger v1.1.24 // indirect
+	github.com/projectdiscovery/gologger v1.1.31 // indirect
 	github.com/projectdiscovery/gostruct v0.0.2 // indirect
-	github.com/projectdiscovery/gozero v0.0.2 // indirect
-	github.com/projectdiscovery/hmap v0.0.59 // indirect
-	github.com/projectdiscovery/httpx v1.6.8 // indirect
+	github.com/projectdiscovery/gozero v0.0.3 // indirect
+	github.com/projectdiscovery/hmap v0.0.65 // indirect
+	github.com/projectdiscovery/httpx v1.6.9 // indirect
 	github.com/projectdiscovery/interactsh v1.2.0 // indirect
 	github.com/projectdiscovery/ldapserver v1.0.2-0.20240219154113-dcc758ebc0cb // indirect
 	github.com/projectdiscovery/machineid v0.0.0-20240226150047-2e2c51e35983 // indirect
 	github.com/projectdiscovery/mapcidr v1.1.34 // indirect
 	github.com/projectdiscovery/n3iwf v0.0.0-20230523120440-b8cd232ff1f5 // indirect
 	github.com/projectdiscovery/networkpolicy v0.0.9 // indirect
-	github.com/projectdiscovery/ratelimit v0.0.56 // indirect
-	github.com/projectdiscovery/rawhttp v0.1.67 // indirect
+	github.com/projectdiscovery/ratelimit v0.0.61 // indirect
+	github.com/projectdiscovery/rawhttp v0.1.73 // indirect
 	github.com/projectdiscovery/rdap v0.9.1-0.20221108103045-9865884d1917 // indirect
-	github.com/projectdiscovery/retryabledns v1.0.77 // indirect
-	github.com/projectdiscovery/retryablehttp-go v1.0.78 // indirect
+	github.com/projectdiscovery/retryabledns v1.0.83 // indirect
+	github.com/projectdiscovery/retryablehttp-go v1.0.86 // indirect
 	github.com/projectdiscovery/sarif v0.0.1 // indirect
 	github.com/projectdiscovery/stringsutil v0.0.2 // indirect
-	github.com/projectdiscovery/tlsx v1.1.7 // indirect
+	github.com/projectdiscovery/tlsx v1.1.8 // indirect
 	github.com/projectdiscovery/uncover v1.0.9 // indirect
-	github.com/projectdiscovery/useragent v0.0.71 // indirect
-	github.com/projectdiscovery/utils v0.2.11 // indirect
-	github.com/projectdiscovery/wappalyzergo v0.1.18 // indirect
+	github.com/projectdiscovery/useragent v0.0.78 // indirect
+	github.com/projectdiscovery/utils v0.2.17 // indirect
+	github.com/projectdiscovery/wappalyzergo v0.2.2 // indirect
 	github.com/projectdiscovery/yamldoc-go v1.0.4 // indirect
 	github.com/redis/go-redis/v9 v9.1.0 // indirect
 	github.com/refraction-networking/utls v1.6.7 // indirect
@@ -321,7 +318,7 @@ require (
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/term v0.24.0 // indirect
+	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
@@ -368,3 +365,8 @@ require (
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 )
+
+// nuclei
+require github.com/projectdiscovery/nuclei/v3 v3.3.5
+
+replace github.com/projectdiscovery/nuclei/v3 v3.3.5 => ./lib/nuclei

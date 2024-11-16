@@ -2,7 +2,7 @@
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
 import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger } from 'wailsjs/go/main/App'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
+import { ElMessage, ElMessageBox, ElNotification, TableColumnCtx } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead, generateRandomString } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
 import global from "@/global"
@@ -129,7 +129,7 @@ onMounted(() => {
     initialize()
     // 获得结果回调
     EventsOn("nucleiResult", (result: any) => {
-        const riskLevelKey = result.Risk as keyof typeof dashboard.riskLevel;
+        const riskLevelKey = result.Severity as keyof typeof dashboard.riskLevel;
         dashboard.riskLevel[riskLevelKey]++;
         vp.table.result.push(result)
         vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
@@ -326,8 +326,8 @@ function highlightFingerprints(fingerprint: string) {
     return "primary"
 }
 
-function filterHandlerSeverity(value: string, row: any): boolean {
-    return row.severity === value;
+function filterSeverity(value: string, row: structs.VulnerabilityInfo, column: TableColumnCtx<structs.VulnerabilityInfo>) :boolean {
+    return row.Severity === value
 }
 
 function handleContextMenu(row: any, column: any, e: MouseEvent) {
@@ -435,7 +435,7 @@ const taskManager = {
             vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
             // 遍历结果，统计每个风险等级的数量
             vp.table.result.forEach(item => {
-                const riskLevelKey = item.Risk as keyof typeof dashboard.riskLevel;
+                const riskLevelKey = item.Severity as keyof typeof dashboard.riskLevel;
                 if (dashboard.riskLevel[riskLevelKey] !== undefined) {
                     dashboard.riskLevel[riskLevelKey]++;
                 }
@@ -527,11 +527,11 @@ const taskManager = {
         }
         switch (reportOption.value) {
             case "EXCEL":
-                ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Risk, URL, Extract }) => ({
+                ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Severity, URL, Extract }) => ({
                     ID,
                     Name,
                     Type,
-                    Risk,
+                    Severity,
                     URL,
                     Extract,
                 })))
@@ -601,11 +601,11 @@ async function deleteVuln(row: any) {
     let isSuccess = await DeletePocscanResult(form.taskId, row.ID, row.URL)
     if (isSuccess) {
         ElMessage.success("删除成功")
-        const riskLevelKey = row.Risk as keyof typeof dashboard.riskLevel;
+        const riskLevelKey = row.Severity as keyof typeof dashboard.riskLevel;
         if (dashboard.riskLevel[riskLevelKey] !== undefined) {
             dashboard.riskLevel[riskLevelKey]--;
         }
-        vp.table.result = vp.table.result.filter(item => !(item.URL == row.URL && item.Risk == row.Risk && item.Name == row.Name));
+        vp.table.result = vp.table.result.filter(item => !(item.URL == row.URL && item.Severity == row.Severity && item.Name == row.Name));
         vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
         taskManager.updateTaskTable(form.taskId)
 
@@ -750,7 +750,7 @@ async function showPocDetail(filename: string) {
                     :header-cell-style="{ 'text-align': 'center' }">
                     <el-table-column prop="ID" label="Template" width="250px" />
                     <el-table-column prop="Type" label="Type" width="150px" />
-                    <el-table-column prop="Risk" width="150px" label="Severity" :filter-method="filterHandlerSeverity"
+                    <el-table-column prop="Severity" width="150px" label="Severity" :filter-method="filterSeverity"
                         :filters="[
                             { text: 'INFO', value: 'INFO' },
                             { text: 'LOW', value: 'LOW' },
@@ -762,7 +762,7 @@ async function showPocDetail(filename: string) {
                             <Filter />
                         </template>
                         <template #default="scope">
-                            <span :class="getClassBySeverity(scope.row.Risk)">{{ scope.row.Risk }}</span>
+                            <span :class="getClassBySeverity(scope.row.Severity)">{{ scope.row.Severity }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column prop="URL" label="URL" />
@@ -947,7 +947,9 @@ async function showPocDetail(filename: string) {
                 </el-card>
                 <el-card v-show="!form.hideResponse" style="flex: 1;">
                     <div class="my-header">
-                        <span style="font-weight: bold;">Response</span>
+                        <span style="font-weight: bold;">Response
+                            <el-tag type="success" style="margin-left: 2px;">{{ selectedRow.ResponseTime ? selectedRow.ResponseTime : '0' }}ms</el-tag>
+                        </span>
                         <el-button-group>
                             <el-tooltip content="查看/关闭POC内容">
                                 <el-button :icon="Tickets" link @click="showPocDetail(selectedRow.ID)" />

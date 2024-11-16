@@ -405,16 +405,17 @@ type Results struct {
 }
 
 type VulnerabilityInfo struct {
-	ID          string
-	Name        string
-	Description string
-	Reference   string
-	Type        string
-	Risk        string
-	URL         string
-	Request     string
-	Response    string
-	Extract     string
+	ID           string
+	Name         string
+	Description  string
+	Reference    string
+	Type         string
+	Severity     string
+	URL          string
+	Request      string
+	Response     string
+	ResponseTime string
+	Extract      string
 }
 
 type NucleiOption struct {

@@ -1065,10 +1065,11 @@ export namespace structs {
 	    Description: string;
 	    Reference: string;
 	    Type: string;
-	    Risk: string;
+	    Severity: string;
 	    URL: string;
 	    Request: string;
 	    Response: string;
+	    ResponseTime: string;
 	    Extract: string;
 	
 	    static createFrom(source: any = {}) {
@@ -1082,10 +1083,11 @@ export namespace structs {
 	        this.Description = source["Description"];
 	        this.Reference = source["Reference"];
 	        this.Type = source["Type"];
-	        this.Risk = source["Risk"];
+	        this.Severity = source["Severity"];
 	        this.URL = source["URL"];
 	        this.Request = source["Request"];
 	        this.Response = source["Response"];
+	        this.ResponseTime = source["ResponseTime"];
 	        this.Extract = source["Extract"];
 	    }
 	}
