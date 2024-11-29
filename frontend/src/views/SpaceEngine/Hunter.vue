@@ -2,24 +2,24 @@
 import { ExportToXlsx } from '@/export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Search, ChromeFilled, CopyDocument, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
+import { Search, ChromeFilled, DocumentCopy, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { splitInt, Copy, CsegmentIpv4 } from '@/util'
 import { TableTabs, HunterEntryTips } from "@/stores/interface"
 import global from "@/global"
-import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/main/App'
-import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/main/Database'
+import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/services/App'
+import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/services/Database'
 import { BrowserOpenURL } from 'wailsjs/runtime'
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
-import { main } from 'wailsjs/go/models';
 import { hunterOptions } from '@/stores/options';
+import { structs } from 'wailsjs/go/models';
 
 // ref得单独校验
 const ruleFormRef = ref<FormInstance>()
 
 const syntax = ({
     starDialog: ref(false),
-    ruleForm: reactive<main.Syntax>({
+    ruleForm: reactive<structs.SpaceEngineSyntax>({
         Name: '',
         Content: '',
     }),
@@ -63,7 +63,7 @@ const form = reactive({
     deduplication: false,
     batchdialog: false,
     batchURL: '',
-    syntaxData: [] as main.Syntax[],
+    syntaxData: [] as structs.SpaceEngineSyntax[],
 })
 
 const entry = ({
@@ -413,7 +413,7 @@ function searchCsegmentIpv4(ip: string) {
                             <el-button :icon="Star" link @click="syntax.createStarDialog" />
                         </el-tooltip>
                         <el-tooltip content="复制语法" placement="bottom">
-                            <el-button :icon="CopyDocument" link @click="Copy(form.query)" />
+                            <el-button :icon="DocumentCopy" link @click="Copy(form.query)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                     </el-space>
@@ -480,8 +480,8 @@ function searchCsegmentIpv4(ip: string) {
                     <el-dropdown-menu>
                         <el-dropdown-item :icon="exportIcon" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
                         <el-dropdown-item :icon="exportIcon" @click="SaveData(1)">导出全部数据</el-dropdown-item>
-                        <el-dropdown-item :icon="CopyDocument" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
-                        <el-dropdown-item :icon="CopyDocument" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>

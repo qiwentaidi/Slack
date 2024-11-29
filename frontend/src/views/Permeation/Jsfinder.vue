@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { reactive, ref, h } from 'vue';
 import { Copy, CopyALL, FormatWebURL } from '@/util';
-import { JSFind } from 'wailsjs/go/main/App';
-import { QuestionFilled, Search, CopyDocument, ChromeFilled } from '@element-plus/icons-vue';
+import { JSFind } from 'wailsjs/go/services/App';
+import { QuestionFilled, Search, DocumentCopy, ChromeFilled } from '@element-plus/icons-vue';
 import async from 'async';
 import global from "@/global";
 import { ElNotification, ElMessage } from 'element-plus';
@@ -169,14 +169,14 @@ function onContextMenu(e: MouseEvent, data: any) {
     items: [
       {
         label: "复制",
-        icon: h(CopyDocument, defaultIconSize),
+        icon: h(DocumentCopy, defaultIconSize),
         onClick: () => {
           Copy(data.Filed)
         }
       },
       {
         label: "复制来源",
-        icon: h(CopyDocument, defaultIconSize),
+        icon: h(DocumentCopy, defaultIconSize),
         divided: true,
         onClick: () => {
           Copy(data.Source)

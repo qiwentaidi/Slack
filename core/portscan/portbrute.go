@@ -16,31 +16,34 @@ type Burte struct {
 
 var ExitBruteFunc = false
 
-var DefaultPorts = map[string]string{
+var defaultPorts = map[string]string{
 	"ftp":        "21",
 	"ssh":        "22",
 	"telnet":     "23",
 	"ldap":       "389",
 	"smb":        "445", // SMB 通常使用445端口
 	"socks5":     "1080",
+	"rmi":        "1099",
 	"oracle":     "1521",
 	"mssql":      "1433",
 	"mqtt":       "1883",
 	"mysql":      "3306",
 	"rdp":        "3389",
 	"postgresql": "5432",
+	"adb":        "5555",
 	"vnc":        "5900",
 	"redis":      "6379",
+	"jdwp":       "8000",
 	"memcached":  "11211",
 	"mongodb":    "27017",
 }
 
-// AddDefaultPort 检查并为给定的主机添加默认端口号
-func AddDefaultPort(scheme, host string) string {
+// 检查并为给定的主机添加默认端口号
+func addDefaultPort(scheme, host string) string {
 	if strings.Contains(host, ":") {
 		return host
 	}
-	defaultPort := DefaultPorts[scheme]
+	defaultPort := defaultPorts[scheme]
 	return host + ":" + defaultPort
 }
 
@@ -49,7 +52,7 @@ func PortBrute(ctx context.Context, host string, usernames, passwords []string) 
 	if err != nil {
 		return
 	}
-	u.Host = AddDefaultPort(u.Scheme, u.Host)
+	u.Host = addDefaultPort(u.Scheme, u.Host)
 	switch u.Scheme {
 	case "ftp":
 		FtpScan(ctx, u.Host, usernames, passwords)
@@ -83,5 +86,11 @@ func PortBrute(ctx context.Context, host string, usernames, passwords []string) 
 		MqttScan(ctx, u.Host, usernames, passwords)
 	case "socks5":
 		Socks5Scan(ctx, u.Host, usernames, passwords)
+	case "jdwp":
+		JdwpScan(ctx, u.Host)
+	case "adb":
+		AdbScan(ctx, u.Host)
+	case "rmi":
+		RmiScan(ctx, u.Host)
 	}
 }

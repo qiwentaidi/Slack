@@ -10,9 +10,9 @@
         </el-form-item>
         <el-form-item>
             <template #label>
-                <div style="display: flex;">
+                <div class="my-header">
                     <span style="font-weight: bold; width: 50%;">关键词列表</span>
-                    <el-select v-model="dictionary" size="small" style="height: 17px;">
+                    <el-select v-model="dictionary" size="small" style="height: 17px; margin-right: -11px;">
                         <el-option v-for="item in dorksOptions" :key="item.label" :value="item.label">
                             <span style="float: left">{{ item.label }}</span>
                             <span style="float: right">
@@ -88,7 +88,7 @@ import { ISICResult } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import { sleep, SplitTextArea } from '@/util';
 import { onMounted, reactive, ref, watch } from 'vue';
-import { Callgologger, GitDorks } from 'wailsjs/go/main/App';
+import { Callgologger, GitDorks } from 'wailsjs/go/services/App';
 import dorks from '@/stores/dorks'
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import { ElMessage, ElNotification } from 'element-plus';

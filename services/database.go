@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"context"
@@ -31,7 +31,7 @@ type Database struct {
 	MongoClient   *mongo.Client // mongodb连接池
 }
 
-func (d *Database) startup(ctx context.Context) {
+func (d *Database) Startup(ctx context.Context) {
 	d.ctx = ctx
 }
 
@@ -134,12 +134,7 @@ func (d *Database) ExecSqlStatement(query string, args ...interface{}) bool {
 	return err == nil
 }
 
-type Syntax struct {
-	Name    string
-	Content string
-}
-
-func (d *Database) SelectAllSyntax(module string) (data []Syntax) {
+func (d *Database) SelectAllSyntax(module string) (data []structs.SpaceEngineSyntax) {
 	rows, err := d.DB.Query(fmt.Sprintf(`SELECT name, content FROM %v;`, chooseSyntaxDbName(module)))
 	if err != nil {
 		return
@@ -151,7 +146,7 @@ func (d *Database) SelectAllSyntax(module string) (data []Syntax) {
 		if err != nil {
 			return
 		}
-		data = append(data, Syntax{
+		data = append(data, structs.SpaceEngineSyntax{
 			Name:    name,
 			Content: content,
 		})
@@ -220,12 +215,7 @@ func (d *Database) UpdateOrInsertPath(path string) bool {
 	return tx.Commit() == nil
 }
 
-type pathTimes struct {
-	Path  string
-	Times int
-}
-
-func (d *Database) GetAllPathsAndTimes() []pathTimes {
+func (d *Database) GetAllPathsAndTimes() []structs.PathTimes {
 	d.lock.RLock()         // 读操作前加锁
 	defer d.lock.RUnlock() // 函数结束时解锁
 
@@ -235,10 +225,10 @@ func (d *Database) GetAllPathsAndTimes() []pathTimes {
 	}
 	defer rows.Close()
 
-	var results []pathTimes
+	var results []structs.PathTimes
 
 	for rows.Next() {
-		var ds pathTimes
+		var ds structs.PathTimes
 		err := rows.Scan(&ds.Path, &ds.Times)
 		if err != nil {
 			return nil

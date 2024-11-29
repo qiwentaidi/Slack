@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"bufio"
@@ -47,7 +47,7 @@ type File struct {
 	downloadPath string
 }
 
-func (f *File) startup(ctx context.Context) {
+func (f *File) Startup(ctx context.Context) {
 	f.ctx = ctx
 }
 
@@ -63,8 +63,8 @@ func NewFile() *File {
 func init() {
 	var userPath = util.HomeDir() + "/slack/portburte/username"
 	var passPath = util.HomeDir() + "/slack/portburte/password"
-	os.MkdirAll(userPath, 0755)
-	os.MkdirAll(passPath, 0755)
+	os.MkdirAll(userPath, 0644)
+	os.MkdirAll(passPath, 0644)
 	for name, dict := range Userdict {
 		file := fmt.Sprintf("%s/%s.txt", userPath, name)
 		// 文件不存在则需要创建
@@ -297,17 +297,17 @@ func (*File) WriteFile(filetype, path, content string) bool {
 }
 
 func (a *App) DownloadCyberChef(url string) error {
-	cyber := "/slack/CyberChef.zip"
+	cyber := util.HomeDir() + "/slack/CyberChef.zip"
 	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath, "downloadProgress", "")
 	if err != nil {
 		return err
 	}
 	runtime.EventsEmit(a.ctx, "downloadComplete", fileName)
 	uz := fileutil.NewUnzip()
-	if _, err := uz.Extract(util.HomeDir()+cyber, a.defaultPath); err != nil {
+	if _, err := uz.Extract(cyber, a.defaultPath); err != nil {
 		return err
 	}
-	return os.Remove(util.HomeDir() + cyber)
+	return os.Remove(cyber)
 }
 
 func (f *File) Restart() {

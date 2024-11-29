@@ -1,6 +1,6 @@
 import { FormRules } from 'element-plus'
 import { reactive, ref } from 'vue'
-import { main } from 'wailsjs/go/models'
+import { structs } from 'wailsjs/go/models'
 
 var space = reactive({
     fofaapi: 'https://fofa.info/',
@@ -48,6 +48,7 @@ var temp = reactive({
     NetworkCardList: ["Auto"],
     nucleiEnabled: false,
     isMacOS: false,
+    isMax: false,
     isGrid: true,
     goos: '',
 })
@@ -57,7 +58,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "1.7.2"
+const LOCAL_VERSION = "1.7.3"
 
 const Language = ref("zh")
 const Theme = ref(false)
@@ -85,7 +86,7 @@ var jsfind = reactive({
     defaultType: ["info", "warning", "danger", "primary", "success", "info"]
 })
 
-var syntaxRules = reactive<FormRules<main.Syntax>>({
+var syntaxRules = reactive<FormRules<structs.SpaceEngineSyntax>>({
     Name: [
         { required: true, message: '请输入语法名称', trigger: 'blur' },
     ],

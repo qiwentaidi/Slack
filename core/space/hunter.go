@@ -13,17 +13,18 @@ import (
 )
 
 func HunterApiSearch(api, query, pageSize, page, startTime, asset string, deduplication bool) *structs.HunterResult {
-	var hunterStartTime string
+	var beforeTime string
+	currentTime := time.Now().Format("2006-01-02")
 	switch startTime {
 	case "0":
-		hunterStartTime = time.Now().AddDate(0, -1, 0).Format("2006-01-02")
+		beforeTime = time.Now().AddDate(0, -1, 0).Format("2006-01-02")
 	case "1":
-		hunterStartTime = time.Now().AddDate(0, 0, -179).Format("2006-01-02")
+		beforeTime = time.Now().AddDate(0, 0, -179).Format("2006-01-02")
 	case "2":
-		hunterStartTime = time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
+		beforeTime = time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
 	}
 	address := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(query) + "&page=" +
-		page + "&page_size=" + pageSize + "&is_web=" + asset + "&port_filter=" + fmt.Sprint(deduplication) + "&start_time=" + hunterStartTime + "&end_time=" + time.Now().Format("2006-01-02")
+		page + "&page_size=" + pageSize + "&is_web=" + asset + "&port_filter=" + fmt.Sprint(deduplication) + "&start_time=" + beforeTime + "&end_time=" + currentTime
 	var hr structs.HunterResult
 	_, b, err := clients.NewSimpleGetRequest(address, clients.DefaultClient())
 	if err != nil {
@@ -34,11 +35,12 @@ func HunterApiSearch(api, query, pageSize, page, startTime, asset string, dedupl
 	return &hr
 }
 
+// 暂时不用
 func SearchTotal(api, search string) (total int64, message string) {
-	current_time := time.Now()
-	before_time := current_time.AddDate(0, -1, 0)
+	currentTime := time.Now().Format("2006-01-02")
+	beforeTime := time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
 	addr := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(search) +
-		"&page=1&page_size=1&is_web=3&port_filter=false&start_time=" + before_time.Format("2006-01-02") + "&end_time=" + current_time.Format("2006-01-02")
+		"&page=1&page_size=1&is_web=3&port_filter=false&start_time=" + beforeTime + "&end_time=" + currentTime
 	_, b, err := clients.NewSimpleGetRequest(addr, clients.DefaultClient())
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())

@@ -20,7 +20,7 @@ export const leftStyle = computed(() => {
 })
 
 export const macStyle = computed(() => {
-    return global.temp.isMacOS ? { marginLeft: '80px' } : {};
+    return global.temp.isMacOS && !global.temp.isMax ? { marginLeft: '80px' } : {};
 })
 
 export const defaultIconSize = {
@@ -59,17 +59,19 @@ export const eldividerStyle = computed(() => {
     }
 });
 
-export function getClassBySeverity(severity: string) {
+// v2.7.3 更新漏洞风险等级显示样式
+export function getTagTypeBySeverity(severity: string) {
     switch (severity) {
         case 'CRITICAL':
-            return 'severity-critical';
+            return 'critical';
         case 'HIGH':
-            return 'severity-high';
+            return 'danger';
         case 'MEDIUM':
-            return 'severity-medium';
+            return 'warning';
         case 'LOW':
-            return 'severity-low';
+            return 'primary';
         default:
-            return 'severity-info';
+            return 'info';
     }
 }
+

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, CopyDocument, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger } from 'wailsjs/go/main/App'
+import { VideoPause, QuestionFilled, Plus, ZoomIn, DocumentCopy, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit } from '@element-plus/icons-vue';
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification, TableColumnCtx } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead, generateRandomString } from '@/util'
 import { ExportWebScanToXlsx } from '@/export'
@@ -10,14 +10,14 @@ import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import usePagination from '@/usePagination';
 import { LinkDirsearch, LinkFOFA, LinkHunter } from '@/linkage';
 import ContextMenu from '@imengyu/vue3-context-menu'
-import { defaultIconSize, getClassBySeverity } from '@/stores/style';
+import { defaultIconSize, getTagTypeBySeverity } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
-import { CheckFileStat, DirectoryDialog, FileDialog, List, ReadFile, SaveFileDialog } from 'wailsjs/go/main/File';
+import { CheckFileStat, DirectoryDialog, FileDialog, List, ReadFile, SaveFileDialog } from 'wailsjs/go/services/File';
 import { validateWebscan } from '@/stores/validate';
 import { structs } from 'wailsjs/go/models';
 import { webReportOptions, webscanOptions } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
-import { DeletePocscanResult, DeleteScanTask, ExportWebReportWithHtml, ExportWebReportWithJson, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, ReadWebReportWithJson, RenameScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/main/Database';
+import { DeletePocscanResult, DeleteScanTask, ExportWebReportWithHtml, ExportWebReportWithJson, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, ReadWebReportWithJson, RenameScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/services/Database';
 import saveIcon from '@/assets/icon/save.svg'
 import githubIcon from '@/assets/icon/github.svg'
 import { SaveConfig } from '@/config';
@@ -74,6 +74,7 @@ const form = reactive({
 
 const config = reactive({
     screenhost: false,
+    honeypot: true,
     rootPathScan: true,
     webscanOption: 0,
     skipNucleiWithoutTags: false,
@@ -138,7 +139,7 @@ onMounted(() => {
         taskManager.updateTaskTable(form.taskId)
     });
     EventsOn("webFingerScan", (result: any) => {
-        if (result.StatusCode == 0) {
+        if (result.StatusCode == 0 || result.StatusCode == 422) {
             dashboard.reqErrorURLs.push(result.URL)
             return
         }
@@ -267,6 +268,7 @@ class WebscanEngine {
             Target: this.urls,
             Thread: global.webscan.web_thread,
             Screenshot: config.screenhost,
+            Honeypot: config.honeypot,
             DeepScan: deepScan,
             RootPath: config.rootPathScan,
             CallNuclei: callNuclei,
@@ -340,7 +342,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
         items: [
             {
                 label: "复制链接",
-                icon: h(CopyDocument, defaultIconSize),
+                icon: h(DocumentCopy, defaultIconSize),
                 onClick: () => {
                     Copy(row.URL)
                 }
@@ -348,7 +350,7 @@ function handleContextMenu(row: any, column: any, e: MouseEvent) {
             {
                 label: "复制选中链接",
                 divided: true,
-                icon: h(CopyDocument, defaultIconSize),
+                icon: h(DocumentCopy, defaultIconSize),
                 onClick: () => {
                     CopyALL(fp.table.selectRows.map(item => item.URL))
                 }
@@ -681,7 +683,7 @@ async function showPocDetail(filename: string) {
                                     <p v-for="u in dashboard.reqErrorURLs" class="scrollbar-demo-item">
                                         {{ u }}</p>
                                 </el-scrollbar>
-                                <el-button :icon="CopyDocument" @click="CopyALL(dashboard.reqErrorURLs)"
+                                <el-button :icon="DocumentCopy" @click="CopyALL(dashboard.reqErrorURLs)"
                                     style="width: 100%;">复制全部失败目标</el-button>
                                 <template #reference>
                                     <el-icon style="margin-left: 4px" :size="12">
@@ -762,7 +764,7 @@ async function showPocDetail(filename: string) {
                             <Filter />
                         </template>
                         <template #default="scope">
-                            <span :class="getClassBySeverity(scope.row.Severity)">{{ scope.row.Severity }}</span>
+                            <el-tag :type="getTagTypeBySeverity(scope.row.Severity)">{{ scope.row.Severity }}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="URL" label="URL" />
@@ -860,8 +862,8 @@ async function showPocDetail(filename: string) {
                             <template #content>
                                 1、指纹扫描: 只进行简单的指纹探测，不会探测敏感目录<br />
                                 2、全指纹扫描: 会在指纹扫描基础上增加主动敏感目录探测，例如Nacos、报错页面信息判断指纹等<br />
-                                3、指纹漏洞扫描: 指纹+主动敏感目录探测，扫描完成后扫描指纹对应POC<br />
-                                4、专项扫描: 只扫描简单指纹和已选择的漏洞
+                                3、指纹漏洞扫描: 指纹+主动敏感目录探测，扫描完成后扫描指纹对应POC，如果网站未识别到指纹会扫描全漏洞<br />
+                                4、专项扫描: 只扫描简单指纹和已选择的漏洞，如果不指定漏洞会扫指纹漏洞(忽略主动探测功能)
                             </template>
                             <el-icon>
                                 <QuestionFilled size="24" />
@@ -871,13 +873,16 @@ async function showPocDetail(filename: string) {
                     <el-segmented v-model="config.webscanOption" :options="webscanOptions" block style="width: 100%;">
                         <template #default="{ item }">
                             <div style="display: flex; align-items: center">
-                                <el-icon size="16" style="margin-right: 3px;">
+                                <el-icon :size="16" style="margin-right: 3px;">
                                     <component :is="item.icon" />
                                 </el-icon>
                                 <span>{{ item.label }}</span>
                             </div>
                         </template>
                     </el-segmented>
+                </el-form-item>
+                <el-form-item label="蜜罐识别:">
+                    <el-switch v-model="config.honeypot" />
                 </el-form-item>
                 <div v-if="config.webscanOption == 3">
                     <el-form-item label="指定漏洞:">
@@ -940,7 +945,7 @@ async function showPocDetail(filename: string) {
                         <el-button-group>
                             <el-button :icon="form.hideResponse ? DArrowLeft : DArrowRight" link
                                 @click="toggleRequest" />
-                            <el-button :icon="CopyDocument" link @click="Copy(selectedRow.Request)" />
+                            <el-button :icon="DocumentCopy" link @click="Copy(selectedRow.Request)" />
                         </el-button-group>
                     </div>
                     <highlightjs language="http" :code="selectedRow.Request" style="font-size: small;"></highlightjs>
@@ -948,7 +953,7 @@ async function showPocDetail(filename: string) {
                 <el-card v-show="!form.hideResponse" style="flex: 1;">
                     <div class="my-header">
                         <span style="font-weight: bold;">Response
-                            <el-tag type="success" style="margin-left: 2px;">{{ selectedRow.ResponseTime ? selectedRow.ResponseTime : '0' }}ms</el-tag>
+                            <el-tag type="success" style="margin-left: 2px;">{{ selectedRow.ResponseTime ? selectedRow.ResponseTime : '0' }}s</el-tag>
                         </span>
                         <el-button-group>
                             <el-tooltip content="查看/关闭POC内容">
@@ -956,7 +961,7 @@ async function showPocDetail(filename: string) {
                             </el-tooltip>
                             <el-button :icon="form.hideRequest ? DArrowRight : DArrowLeft" link
                                 @click="toggleResponse" />
-                            <el-button :icon="CopyDocument" link @click="Copy(selectedRow.Response)" />
+                            <el-button :icon="DocumentCopy" link @click="Copy(selectedRow.Response)" />
                         </el-button-group>
                     </div>
                     <highlightjs language="http" :code="selectedRow.Response" style="font-size: small;"></highlightjs>
@@ -1100,11 +1105,6 @@ async function showPocDetail(filename: string) {
 .form-container {
     height: calc(100% - 40px);
     overflow-y: auto;
-    padding-right: 20px;
     scrollbar-width: thin;
-}
-
-.vertical-radio .el-radio {
-    display: block;
 }
 </style>

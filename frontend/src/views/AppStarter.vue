@@ -4,7 +4,7 @@ import { reactive, ref, h, computed } from "vue";
 import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
-import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal } from "wailsjs/go/main/File";
+import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal } from "wailsjs/go/services/File";
 import ContextMenu from '@imengyu/vue3-context-menu'
 import groupIcon from "@/assets/icon/tag-group.svg"
 import tagIcon from "@/assets/icon/tag.svg"
@@ -44,7 +44,7 @@ onMounted(async () => {
         if (result) {
             localGroup.options.value.push(...result)
         } else {
-            ElMessageBox.alert('可以通过右键添加分组，再通过分组右键添加启动应用', 'Tips', {
+            ElMessageBox.alert('可以通过右上角|右键添加分组，然后分组右键添加启动应用', 'Tips', {
                 confirmButtonText: 'OK',
             })
         }
@@ -73,10 +73,15 @@ const searchFilter = ref("")
 
 const filteredGroups = computed(() => {
     if (!searchFilter.value) return localGroup.options.value; // 如果没有搜索关键词，返回所有组
-    return localGroup.options.value.filter(group => {
+    return localGroup.options.value.map(group => {
         // 检查组内是否有元素包含搜索关键词
-        return group.Children?.some(item => item.Name.includes(searchFilter.value)) || false;
-    });
+        const filteredChildren = group.Children?.filter(item => item.Name.toLowerCase().includes(searchFilter.value.toLowerCase())) || [];
+        if (filteredChildren.length === 0) return null; // 如果过滤后没有元素，则不返回该组
+        return {
+            ...group,
+            Children: filteredChildren,
+        };
+    }).filter(group => group !== null); // 过滤掉返回为null的组
 });
 
 const localGroup = ({
@@ -205,6 +210,7 @@ const localGroup = ({
     },
     handleDrop: function (event: DragEvent, groupName: string) {
         event.preventDefault();
+        ElMessage(groupName)
         config.mouseOnGroupName = groupName
     },
     handleOpenFolder: async function (filepath: string) {
@@ -234,6 +240,7 @@ function handleCardContextMenu(e: MouseEvent, groups: any) {
                 icon: h(tagIcon, defaultIconSize),
                 onClick: () => {
                     config.addItemDialog = true
+                    config.defualtGroupName = config.mouseOnGroupName
                 }
             },
             {
@@ -339,7 +346,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             </el-input>
             <el-button :icon="groupIcon" @click="localGroup.addGroup()">添加分组</el-button>
         </div>
-        <div v-for="groups in filteredGroups" style="margin-bottom: 10px;">
+        <div v-if="filteredGroups.length > 0" v-for="groups in filteredGroups" style="margin-bottom: 5px;">
             <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
                 @contextmenu.stop @contextmenu.prevent="handleCardContextMenu($event, groups)">
                 <div class="my-header" style="margin-bottom: 20px">
@@ -368,6 +375,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 </div>
             </el-card>
         </div>
+        <el-empty v-else></el-empty>
     </div>
     <el-dialog v-model="config.addItemDialog" :title="$t('navigator.add_item')" width="500">
         <el-form :model="config" label-width="auto">

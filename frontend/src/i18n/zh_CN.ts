@@ -50,6 +50,7 @@ export default {
         'poc_manage': 'POC和指纹管理',
         'script': '脚本管理',
         'extract_database_info': "数据库自动取样",
+        'fscan': "Fscan专区",
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

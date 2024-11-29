@@ -4,9 +4,9 @@ import { Search, Filter, QuestionFilled } from '@element-plus/icons-vue';
 import { splitInt } from '@/util'
 import { ExportTXT } from '@/export'
 import { reactive, onMounted } from 'vue';
-import { Socks5Conn, FofaSearch } from 'wailsjs/go/main/App'
+import { Socks5Conn, FofaSearch } from 'wailsjs/go/services/App'
 import global from "@/global"
-import { SearchAgentPool, ExecSqlStatement } from 'wailsjs/go/main/Database';
+import { SearchAgentPool, ExecSqlStatement } from 'wailsjs/go/services/Database';
 import { ElMessage } from 'element-plus';
 import CustomTabs from '@/components/CustomTabs.vue';
 

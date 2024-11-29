@@ -30,7 +30,7 @@ func SynScan(ctx context.Context, ip string, ports []uint16, id *int32) {
 				Port:   int(ret.Port),
 			}
 			gologger.Success(ctx, fmt.Sprintf("[syn] %v is open ! ", ret))
-			pr := Connect(ret.Ip.String(), int(ret.Port), synTimeout)
+			pr := Connect(ret.Ip.String(), int(ret.Port), synTimeout, nil)
 			if pr.Status {
 				result.HttpTitle = pr.HttpTitle
 				result.Server = pr.Server

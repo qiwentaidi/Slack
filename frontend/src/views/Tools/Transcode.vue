@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ElMessage, ElNotification } from 'element-plus';
-import { CheckFileStat } from 'wailsjs/go/main/File';
-import { DownloadCyberChef, CyberChefLocalServer } from 'wailsjs/go/main/App';
+import { CheckFileStat } from 'wailsjs/go/services/File';
+import { DownloadCyberChef, CyberChefLocalServer } from 'wailsjs/go/services/App';
 import { onMounted, ref, reactive } from 'vue';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import global from '@/global';

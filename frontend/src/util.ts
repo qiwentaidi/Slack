@@ -1,7 +1,7 @@
 import { ElMessage, ElNotification } from "element-plus";
 import global from "./global";
-import { Callgologger, CheckTarget, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/main/App";
-import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/main/File";
+import { Callgologger, CheckTarget, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/services/App";
+import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/services/File";
 import Loading from "./components/Loading.vue";
 import { ProxyOptions } from "./stores/interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
@@ -171,11 +171,11 @@ export async function TestProxy(mode: number) {
       let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password);
       if (!error) {
         ElNotification.closeAll();
-        ElNotification.error("The sock5 proxy is unreachable");
+        ElNotification.error("The socks5 proxy is unreachable");
         return false;
       }
       ElNotification.closeAll();
-      ElNotification.success("Connect to http://www.baidu.com is success");
+      ElNotification.success("The socks5 proxy is enabled");
     }
   }
   return true;
@@ -320,8 +320,8 @@ export function getBasicURL(rawURL: string) {
   }
 }
 
-export function getProxy() {
-  let proxy: clients.Proxy = {
+export function getProxy() :clients.Proxy {
+  return {
     Enabled: global.proxy.enabled,
     Mode: global.proxy.mode,
     Address: global.proxy.address,
@@ -329,5 +329,4 @@ export function getProxy() {
     Username: global.proxy.username,
     Password: global.proxy.password,
   }
-  return proxy
 }

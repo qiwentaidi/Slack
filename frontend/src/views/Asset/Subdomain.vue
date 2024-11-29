@@ -3,8 +3,8 @@ import global from "@/global";
 import { Copy, ReadLine, transformArrayFields } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { reactive, ref, onMounted } from "vue";
-import { ExitScanner, Subdomain } from "wailsjs/go/main/App";
-import { CheckFileStat, FileDialog } from "wailsjs/go/main/File";
+import { ExitScanner, Subdomain } from "wailsjs/go/services/App";
+import { CheckFileStat, FileDialog } from "wailsjs/go/services/File";
 import { ElMessage, ElNotification } from 'element-plus'
 import { WarningFilled, Setting } from '@element-plus/icons-vue';
 import exportIcon from '@/assets/icon/doucment-export.svg'

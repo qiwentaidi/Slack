@@ -7,6 +7,12 @@ html.dark {
     --list-item-hover-color: #303030;
     --list-item-selected-color: #3B3B3B;
 
+    .el-tag.el-tag--critical {
+        background-color: #2F141A;
+        border-color: #411F23;
+        color: #CF364C;
+    }
+
     .list-container {
         box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
     }

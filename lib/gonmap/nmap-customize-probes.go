@@ -13,5 +13,15 @@ ports 443,80,8443,8080
 
 match jsonrpc m|^{"jsonrpc":"([\d.]+)".*"height":(\d+),"seed_hash".*|s v/$1/ p/ETH/ i/height:$2/
 match jsonrpc m|^{"jsonrpc":"([\d.]+)".*|s v/$1/
+# Java RMI Registry probe
+# RMI协议的JRMP握手消息
+Probe TCP JavaRMI q|\x4a\x52\x4d\x49\x00\x02\x4b|
+rarity 7
+ports 1098,1099,1090,10999,4444,9010,8999
 
+# 标准RMI registry响应
+match rmi m|^\x4e\x00\x09\x31\x32\x37\x2e\x30\x2e\x30\x2e\x31\x00\x00| p/Java RMI Registry/ i/Standard RMI service/
+
+# 通用RMI响应匹配
+match rmi m|^\x4e| p/Java RMI Registry/
 `

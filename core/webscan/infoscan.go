@@ -3,8 +3,6 @@ package webscan
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,15 +21,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/panjf2000/ants/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var (
-	iconRels = []string{"icon", "shortcut icon", "apple-touch-icon", "mask-icon"}
-	ExitFunc = false
-)
+var ExitFunc = false
 
 type WebInfo struct {
 	Protocol      string
@@ -55,6 +49,7 @@ type FingerScanner struct {
 	urls                    []*url.URL
 	aliveURLs               []*url.URL          // 默认指纹扫描结束后，存活的URL，以便后续主动指纹过滤目标
 	screenshot              bool                // 是否截屏
+	honeypot                bool                // 是否识别蜜罐
 	thread                  int                 // 指纹线程
 	deepScan                bool                // 代表主动指纹探测
 	rootPath                bool                // 主动指纹是否采取根路径扫描
@@ -85,6 +80,7 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 		client:                  clients.DefaultWithProxyClient(proxy),
 		notFollowClient:         clients.NotFollowWithProxyClient(proxy),
 		screenshot:              options.Screenshot,
+		honeypot:                options.Honeypot,
 		thread:                  options.Thread,
 		deepScan:                options.DeepScan,
 		rootPath:                options.RootPath,
@@ -121,6 +117,15 @@ func (s *FingerScanner) NewFingerScan() {
 		resp, _, _ := clients.NewSimpleGetRequest(u.String(), s.notFollowClient)
 		if resp != nil && resp.StatusCode == 302 {
 			rawHeaders = DumpResponseHeadersOnly(resp)
+		}
+
+		// 过滤CDN
+		if resp != nil && resp.StatusCode == 422 {
+			retChan <- structs.InfoResult{
+				URL:        u.String(),
+				StatusCode: 422,
+			}
+			return
 		}
 
 		// 正常请求指纹
@@ -190,7 +195,7 @@ func (s *FingerScanner) NewFingerScan() {
 			fingerprints = append(fingerprints, "Fastjson")
 		}
 
-		if checkHoneypotWithHeaders(web.HeadeString) || checkHoneypotWithFingerprintLength(len(fingerprints)) {
+		if s.honeypot && checkHoneypotWithHeaders(web.HeadeString) || checkHoneypotWithFingerprintLength(len(fingerprints)) {
 			fingerprints = []string{"疑似蜜罐"}
 		}
 
@@ -488,56 +493,6 @@ func (s *FingerScanner) FingerScan(ctx context.Context, web *WebInfo, targetDB [
 	}
 	wg.Wait()
 	return util.RemoveDuplicates(fingerPrintResults)
-}
-
-// parseIcons 解析HTML文档head中的<link>标签中rel属性包含icon信息的href链接
-func parseIcons(doc *goquery.Document) []string {
-	var icons []string
-	doc.Find("head link").Each(func(i int, s *goquery.Selection) {
-		href, exists := s.Attr("href")
-		if exists {
-			// 匹配ICON链接
-			if rel, exists := s.Attr("rel"); exists && util.ArrayContains(rel, iconRels) {
-				icons = append(icons, href)
-			}
-		}
-	})
-	// 找不到自定义icon链接就使用默认的favicon地址
-	if len(icons) == 0 {
-		icons = append(icons, "favicon.ico")
-	}
-	return icons
-}
-
-// 获取favicon Mmh3Hash32 和 MD5值
-func FaviconHash(u *url.URL, client *http.Client) (string, string) {
-	_, body, err := clients.NewSimpleGetRequest(u.String(), client)
-	if err != nil {
-		return "", ""
-	}
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
-	if err != nil {
-		return "", ""
-	}
-	iconLink := parseIcons(doc)[0]
-	var finalLink string
-	// 如果是完整的链接，则直接请求
-	if strings.HasPrefix(iconLink, "http") {
-		finalLink = iconLink
-		// 如果为 // 开头采用与网站同协议
-	} else if strings.HasPrefix(iconLink, "//") {
-		finalLink = u.Scheme + ":" + iconLink
-	} else {
-		finalLink = fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, iconLink)
-	}
-	resp, body, err := clients.NewSimpleGetRequest(finalLink, client)
-	if err == nil && resp.StatusCode == 200 {
-		hasher := md5.New()
-		hasher.Write(body)
-		sum := hasher.Sum(nil)
-		return util.Mmh3Hash32(util.Base64Encode(body)), hex.EncodeToString(sum)
-	}
-	return "", ""
 }
 
 func (s *FingerScanner) GetBanner(host string) string {

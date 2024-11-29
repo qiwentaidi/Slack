@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
-import { ICPInfo, CheckCdn, Ip138IpHistory, Ip138Subdomain } from 'wailsjs/go/main/App'
-import { Document, UploadFilled, Promotion } from '@element-plus/icons-vue';
+import { ICPInfo, CheckCdn, Ip138IpHistory, Ip138Subdomain } from 'wailsjs/go/services/App'
+import { Document, UploadFilled, Promotion, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { Copy, SplitTextArea } from '@/util';
 import async from 'async'
@@ -81,14 +81,16 @@ function CopyAndJump() {
                 域名
             </template>
             <template #suffix>
-                <el-button type="primary" link @click="startSearch()">开始查询</el-button>
+                <el-divider direction="vertical" />
+                <el-button type="primary" link :icon="Search" @click="startSearch()">查询</el-button>
             </template>
         </el-input>
     </div>
     <div class="grid-container">
         <el-card shadow="never" class="grid-item">
             <el-text><el-icon><img src="/chinaz.ico"></el-icon><span class="title">备案信息:</span></el-text>
-            <el-input v-model="domain.icp" type="textarea" :rows="13" resize="none" style="margin-top: 10px;"></el-input>
+            <el-input v-model="domain.icp" type="textarea" :rows="13" resize="none"
+                style="margin-top: 10px;"></el-input>
         </el-card>
         <el-card shadow="never" class="grid-item">
             <div class="my-header">
@@ -102,7 +104,8 @@ function CopyAndJump() {
                                 </el-tooltip>
                             </div>
                         </template>
-                        <el-button text bg :icon="UploadFilled" style="width: 100%; margin-bottom: 5px;">选择域名文件</el-button>
+                        <el-button text bg :icon="UploadFilled"
+                            style="width: 100%; margin-bottom: 5px;">选择域名文件</el-button>
                         <el-input v-model="domain.batch" type="textarea" :rows="5" placeholder="请输入域名，按换行分割"></el-input>
                         <div class="my-header" style="margin-top: 5px;">
                             <div></div>
@@ -110,11 +113,12 @@ function CopyAndJump() {
                         </div>
                     </el-popover>
                     <el-tooltip content="复制内容并跳转到数据处理">
-                        <el-button :icon="Promotion" @click="CopyAndJump"/>
+                        <el-button :icon="Promotion" @click="CopyAndJump" />
                     </el-tooltip>
                 </div>
             </div>
-            <el-input v-model="domain.cdn" type="textarea" :rows="13" resize="none" style="margin-top: 10px;"></el-input>
+            <el-input v-model="domain.cdn" type="textarea" :rows="13" resize="none"
+                style="margin-top: 10px;"></el-input>
 
         </el-card>
         <el-card shadow="never" class="grid-item">

@@ -4,13 +4,7 @@
             <el-space style="margin-bottom: 10px; float: right;">
                 <el-button type="primary" :icon="Plus" @click="dialog = true">添加</el-button>
                 <el-tooltip content="不点击保存按钮的话数据不会存储">
-                    <el-button type="primary" :icon="saveIcon" @click="
-                        save()
-                    ElNotification.success({
-                        message: 'Save successfully',
-                        position: 'bottom-right',
-                    });
-                    ">保存</el-button>
+                    <el-button type="primary" :icon="saveIcon" @click="saveWithNotice">保存</el-button>
                 </el-tooltip>
             </el-space>
             <el-table :data="data.memo" border highlight-current-row :show-header="false" @current-change="handleChange"
@@ -27,19 +21,19 @@
         </div>
         <el-card style="width: 70%; margin-left: 10px;">
             <div class="my-header">
-                <el-tag effect="dark" type="info">{{ reverse.name }}</el-tag>
-                <el-button :icon="CopyDocument" link @click="Copy(reverse.show)" />
+                <el-tag effect="dark" type="info">{{ config.name }}</el-tag>
+                <el-button :icon="DocumentCopy" link @click="Copy(config.show)" />
             </div>
-            <highlightjs language="bash" :code="reverse.show" style="border: 1px solid;"></highlightjs>
+            <highlightjs language="bash" :code="config.show" style="border: 1px solid;"></highlightjs>
         </el-card>
     </div>
     <el-dialog title="添加" v-model="dialog" width="500">
         <el-form>
             <el-form-item label="标题:">
-                <el-input v-model="reverse.name"></el-input>
+                <el-input v-model="config.addName"></el-input>
             </el-form-item>
             <el-form-item label="内容:">
-                <el-input v-model="reverse.content" type="textarea" :rows="5"></el-input>
+                <el-input v-model="config.addContent" type="textarea" :rows="5"></el-input>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -56,8 +50,8 @@
 <script lang="ts" setup>
 import { reactive, ref, onMounted } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
-import { CheckFileStat, InitMemo, ReadMemo } from 'wailsjs/go/main/File';
-import { CopyDocument, Plus } from '@element-plus/icons-vue';
+import { CheckFileStat, InitMemo, ReadMemo } from 'wailsjs/go/services/File';
+import { DocumentCopy, Plus } from '@element-plus/icons-vue';
 import saveIcon from '@/assets/icon/save.svg'
 import { Copy } from '@/util';
 import global from '@/global';
@@ -77,16 +71,14 @@ onMounted(async () => {
 
 const dialog = ref(false)
 
-const reverse = reactive({
-    name: '',
-    content: '',
-    ip: '10.10.10.1',
-    port: '60001',
-    show: '',
-    currentID: 0
+const config = reactive({
+    name: '', //  显示的名称
+    show: '', // 显示的内容
+    addName: '', // 添加时的名称
+    addContent: '', // 添加时的内容
 })
 
-var data = reactive({
+var data = ({
     memo: [
         {
             label: "Windows下载文件",
@@ -147,31 +139,38 @@ REG ADD HKLM\SYSTEM\CurrentControlSet\Control\Terminal" "Server /v fDenyTSConnec
 })
 
 function handleChange(row: any) {
-    reverse.show = row.value;
-    reverse.name = row.label;
+    config.show = row.value;
+    config.name = row.label;
 }
 
 function deleteRow(index: number) {
-    data.memo.splice(index, 1)
+    data.memo = data.memo.splice(index, 1)
 }
 
 function onAddItem() {
-    if (!reverse.name) {
+    if (!config.addName) {
         ElMessage.warning("标题名称不能为空！");
         return
     }
     for (const item of data.memo) {
-        if (reverse.name == item.label) {
+        if (config.addName == item.label) {
             ElMessage.warning("标题名称不能重复！");
             return
         }
     }
     data.memo.push({
-        label: reverse.name,
-        value: reverse.content
+        label: config.addName,
+        value: config.addContent
     })
-    reverse.content = ''
     dialog.value = false
+}
+
+function saveWithNotice() {
+    save()
+    ElNotification.success({
+        message: 'Save successfully',
+        position: 'bottom-right',
+    });
 }
 
 async function save() {

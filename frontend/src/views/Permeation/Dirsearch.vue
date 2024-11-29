@@ -1,17 +1,17 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/main/App";
+import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/services/App";
 import { SplitTextArea, Copy, ReadLine } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
-import { QuestionFilled, RefreshRight, Document, FolderOpened, CopyDocument, ChromeFilled, Reading, Setting } from '@element-plus/icons-vue';
+import { QuestionFilled, RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '@/global';
-import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/main/File';
+import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/services/File';
 import { Dir } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import redirectIcon from '@/assets/icon/redirect.svg'
-import { GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/main/Database';
+import { GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/services/Database';
 import { dirsearch } from 'wailsjs/go/models';
 import throttle from 'lodash/throttle';
 
@@ -283,14 +283,11 @@ function copyHistory(length: number) {
             {{ config.runningStatus ? '停止扫描' : '开始扫描' }}
         </el-button>
     </div>
-    <el-card>
+    <el-card shadow="never">
         <div class="my-header" style="margin-bottom: 5px;">
             <el-space>
-                <el-checkbox v-model="config.redirectClient" label="重定向跟随" />
-                <el-divider direction="vertical" />
                 <el-tag>递归层级:{{ config.recursion }}</el-tag>
                 <el-tag>字典大小:{{ global.temp.dirsearchPathConut }}</el-tag>
-                <el-tag>线程:{{ config.thread }}</el-tag>
                 <el-tooltip placement="bottom" content="请求失败数量">
                     <el-tag type="danger">ERROR:{{ from.errorCounts }}</el-tag>
                 </el-tooltip>
@@ -322,14 +319,14 @@ function copyHistory(length: number) {
             <el-table-column prop="Recursion" width="100px" label="递归层级" />
             <el-table-column label="操作" width="120px" align="center">
                 <template #default="scope">
-                    <el-tooltip content="复制链接">
-                        <el-button :icon="CopyDocument" link @click.prevent="Copy(scope.row.URL)"></el-button>
+                    <el-tooltip content="查看响应包">
+                        <el-button :icon="Reading" link @click.prevent="DispalyResponse(scope.row.Body)"></el-button>
                     </el-tooltip>
                     <el-tooltip content="打开链接">
                         <el-button :icon="ChromeFilled" link @click.prevent="BrowserOpenURL(scope.row.URL)"></el-button>
                     </el-tooltip>
-                    <el-tooltip content="查看响应包">
-                        <el-button :icon="Reading" link @click.prevent="DispalyResponse(scope.row.Body)"></el-button>
+                    <el-tooltip content="复制链接">
+                        <el-button :icon="DocumentCopy" link @click.prevent="Copy(scope.row.URL)"></el-button>
                     </el-tooltip>
                 </template>
             </el-table-column>
@@ -355,6 +352,9 @@ function copyHistory(length: number) {
             <span class="drawer-title">设置高级参数</span>
         </template>
         <el-form label-width="auto">
+            <el-form-item label="重定向跟随:">
+                <el-switch v-model="config.redirectClient" />
+            </el-form-item>
             <el-form-item label="线程(MAX 500):">
                 <el-input-number v-model="config.thread" :min="1" :max="500" />
             </el-form-item>

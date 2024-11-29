@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import { GoFetch } from "wailsjs/go/main/App";
+import { GoFetch } from "wailsjs/go/services/App";
 import { QuestionFilled, InfoFilled } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { generateRandomString, proxys } from "@/util";

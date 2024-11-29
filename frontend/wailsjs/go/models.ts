@@ -25,6 +25,91 @@ export namespace clients {
 
 }
 
+export namespace core {
+	
+	export class NetworkCategory {
+	    name: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new NetworkCategory(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	    }
+	}
+	export class NetworkLink {
+	    source: string;
+	    target: string;
+	    subnet: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new NetworkLink(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.source = source["source"];
+	        this.target = source["target"];
+	        this.subnet = source["subnet"];
+	    }
+	}
+	export class NetworkNode {
+	    name: string;
+	    category: string;
+	    isDouble?: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new NetworkNode(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.category = source["category"];
+	        this.isDouble = source["isDouble"];
+	    }
+	}
+	export class FscanGraphData {
+	    nodes: NetworkNode[];
+	    links: NetworkLink[];
+	    categories: NetworkCategory[];
+	
+	    static createFrom(source: any = {}) {
+	        return new FscanGraphData(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.nodes = this.convertValues(source["nodes"], NetworkNode);
+	        this.links = this.convertValues(source["links"], NetworkLink);
+	        this.categories = this.convertValues(source["categories"], NetworkCategory);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
+	
+
+}
+
 export namespace dirsearch {
 	
 	export class Options {
@@ -146,7 +231,24 @@ export namespace jsfind {
 
 }
 
-export namespace main {
+export namespace mongo {
+	
+	export class Client {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new Client(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
+
+}
+
+export namespace services {
 	
 	export class FileInfo {
 	    Error: boolean;
@@ -198,51 +300,6 @@ export namespace main {
 	        this.Name = source["Name"];
 	        this.Ext = source["Ext"];
 	        this.Dir = source["Dir"];
-	    }
-	}
-	export class Syntax {
-	    Name: string;
-	    Content: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new Syntax(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Name = source["Name"];
-	        this.Content = source["Content"];
-	    }
-	}
-	export class pathTimes {
-	    Path: string;
-	    Times: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new pathTimes(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Path = source["Path"];
-	        this.Times = source["Times"];
-	    }
-	}
-
-}
-
-export namespace mongo {
-	
-	export class Client {
-	
-	
-	    static createFrom(source: any = {}) {
-	        return new Client(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	
 	    }
 	}
 
@@ -738,6 +795,55 @@ export namespace structs {
 	        this.Screenshot = source["Screenshot"];
 	    }
 	}
+	export class NacosNode {
+	    Auth: number;
+	    OSS: number;
+	    Database: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new NacosNode(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Auth = source["Auth"];
+	        this.OSS = source["OSS"];
+	        this.Database = source["Database"];
+	    }
+	}
+	export class NacosConfig {
+	    Name: string;
+	    NodeInfo: NacosNode;
+	
+	    static createFrom(source: any = {}) {
+	        return new NacosConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Name = source["Name"];
+	        this.NodeInfo = this.convertValues(source["NodeInfo"], NacosNode);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class Navigation {
 	    Name: string;
 	    Children: Children[];
@@ -769,6 +875,20 @@ export namespace structs {
 		    }
 		    return a;
 		}
+	}
+	export class PathTimes {
+	    Path: string;
+	    Times: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new PathTimes(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Path = source["Path"];
+	        this.Times = source["Times"];
+	    }
 	}
 	export class QuakeData {
 	    URL: string;
@@ -923,6 +1043,20 @@ export namespace structs {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.Columns = source["Columns"];
 	        this.Rows = source["Rows"];
+	    }
+	}
+	export class SpaceEngineSyntax {
+	    Name: string;
+	    Content: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SpaceEngineSyntax(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Name = source["Name"];
+	        this.Content = source["Content"];
 	    }
 	}
 	export class SpaceOption {
@@ -1129,6 +1263,7 @@ export namespace structs {
 	    Target: string[];
 	    Thread: number;
 	    Screenshot: boolean;
+	    Honeypot: boolean;
 	    DeepScan: boolean;
 	    RootPath: boolean;
 	    CallNuclei: boolean;
@@ -1146,6 +1281,7 @@ export namespace structs {
 	        this.Target = source["Target"];
 	        this.Thread = source["Thread"];
 	        this.Screenshot = source["Screenshot"];
+	        this.Honeypot = source["Honeypot"];
 	        this.DeepScan = source["DeepScan"];
 	        this.RootPath = source["RootPath"];
 	        this.CallNuclei = source["CallNuclei"];

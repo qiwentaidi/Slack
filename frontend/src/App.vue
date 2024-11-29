@@ -8,10 +8,10 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
 import { LogInfo } from "./stores/interface";
 import { useDark } from '@vueuse/core'
-import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/main/File";
+import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/services/File";
 import { InitConfigFile } from "./config";
 import { check } from "@/util";
-import { GOOS } from "wailsjs/go/main/App";
+import { GOOS } from "wailsjs/go/services/App";
 
 const levelClassMap: { [key: string]: string } = {
   "[INF]": "log-info",

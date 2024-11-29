@@ -5,6 +5,7 @@ import {structs} from '../models';
 import {dirsearch} from '../models';
 import {isic} from '../models';
 import {jsfind} from '../models';
+import {context} from '../models';
 import {space} from '../models';
 
 export function AlibabaNacos(arg1:string,arg2:string,arg3:number,arg4:string,arg5:string,arg6:string,arg7:string,arg8:clients.Proxy):Promise<string>;
@@ -71,11 +72,13 @@ export function JSFind(arg1:string,arg2:string):Promise<jsfind.FindSomething>;
 
 export function LoadDirsearchDict(arg1:Array<string>,arg2:Array<string>):Promise<Array<string>>;
 
+export function NacosCategoriesExtract(arg1:string):Promise<Array<structs.NacosConfig>>;
+
 export function NetDial(arg1:string):Promise<boolean>;
 
 export function NewSynScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>):Promise<void>;
 
-export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>,arg4:number,arg5:number):Promise<void>;
+export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>,arg4:number,arg5:number,arg6:clients.Proxy):Promise<void>;
 
 export function NewWebScanner(arg1:structs.WebscanOptions,arg2:clients.Proxy):Promise<void>;
 
@@ -90,6 +93,8 @@ export function QuakeTips(arg1:string):Promise<structs.QuakeTipsResult>;
 export function Socks5Conn(arg1:string,arg2:number,arg3:number,arg4:string,arg5:string):Promise<boolean>;
 
 export function SpaceGetPort(arg1:string):Promise<Array<number>>;
+
+export function Startup(arg1:context.Context):Promise<void>;
 
 export function Subdomain(arg1:structs.SubdomainOption):Promise<void>;
 

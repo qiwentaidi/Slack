@@ -16,10 +16,21 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type InitConfig struct{}
+type Config struct {
+	// 总和需要加载的模板文件夹
+	TemplateFolders []string
+	// 指纹规则文件
+	// FingerprintRuleFile string
+	// 主动探测的规则文件
+	// ActiveRuleFile string
+	// 默认模板文件夹
+	// DefaultTemplateFolder string
+}
 
-func NewConfig() *InitConfig {
-	return &InitConfig{}
+func NewConfig(template []string) *Config {
+	return &Config{
+		TemplateFolders: template,
+	}
 }
 
 type FingerPEntity struct {
@@ -46,7 +57,7 @@ type ActiveFingerPEntity struct {
 var FingerprintDB []FingerPEntity
 var ActiveFingerprintDB []ActiveFingerPEntity
 
-func (ic *InitConfig) InitFingprintDB(ctx context.Context, fingerprintFile string) error {
+func (config *Config) InitFingprintDB(ctx context.Context, fingerprintFile string) error {
 	data, err := os.ReadFile(fingerprintFile)
 	if err != nil {
 		return err
@@ -90,7 +101,7 @@ func (ic *InitConfig) InitFingprintDB(ctx context.Context, fingerprintFile strin
 
 	return nil
 }
-func (ic *InitConfig) InitActiveScanPath(activefingerFile string) error {
+func (config *Config) InitActiveScanPath(activefingerFile string) error {
 	data, err := os.ReadFile(activefingerFile)
 	if err != nil {
 		return err
@@ -381,17 +392,17 @@ func dataCheckInt(op int16, dataSource int, dataRule int) bool {
 
 var WorkFlowDB map[string][]string
 
-func (ic *InitConfig) InitAll(ctx context.Context, webfinger, activefinger string, templateFolders []string) bool {
+func (config *Config) InitAll(ctx context.Context, webfinger, activefinger string) bool {
 	FingerprintDB = nil
-	if err := ic.InitFingprintDB(ctx, webfinger); err != nil {
+	if err := config.InitFingprintDB(ctx, webfinger); err != nil {
 		gologger.Error(ctx, err)
 		return false
 	}
-	if err := ic.InitActiveScanPath(activefinger); err != nil {
+	if err := config.InitActiveScanPath(activefinger); err != nil {
 		gologger.Error(ctx, err)
 		return false
 	}
-	if err := GetTagsList(templateFolders); err != nil {
+	if err := GetTagsList(config.TemplateFolders); err != nil {
 		gologger.Error(ctx, err)
 		return false
 	}

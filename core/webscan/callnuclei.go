@@ -108,7 +108,7 @@ func showResponse(event *output.ResultEvent) string {
 	return ""
 }
 
-// 限制小数为2位
+// 限制小数为2位，用于截取时间字符串
 func limitDecimalPlaces(value string) string {
 	parts := strings.Split(value, ".")
 	if len(parts) == 2 && len(parts[1]) > 2 {

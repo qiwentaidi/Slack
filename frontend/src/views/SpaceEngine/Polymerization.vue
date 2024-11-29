@@ -89,7 +89,7 @@
 import { reactive } from 'vue';
 import { Search, WarningFilled, ChromeFilled, Grid } from '@element-plus/icons-vue';
 import { Uncover } from '@/stores/interface';
-import { UncoverSearch } from 'wailsjs/go/main/App';
+import { UncoverSearch } from 'wailsjs/go/services/App';
 import global from '@/global';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import { CsegmentIpv4 } from '@/util';

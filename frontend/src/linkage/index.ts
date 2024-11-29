@@ -1,4 +1,4 @@
-import { Callgologger, PortBrute, NewWebScanner, LoadDirsearchDict, DirScan, HunterSearch, Subdomain, FofaSearch } from 'wailsjs/go/main/App'
+import { Callgologger, PortBrute, NewWebScanner, LoadDirsearchDict, DirScan, HunterSearch, Subdomain, FofaSearch } from 'wailsjs/go/services/App'
 import global from '@/global'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
@@ -12,6 +12,7 @@ export async function LinkWebscan(ips: string[]) {
         Target: ips,
         Thread: 50,
         Screenshot: false,
+        Honeypot: true,
         DeepScan: true,
         RootPath: true,
         CallNuclei: true,
@@ -77,7 +78,6 @@ export async function LinkHunter(query: string, count: string) {
         return
     }
     ElMessage.info("正在查询鹰图数据，请稍后...")
-    let urls = <string[]>[]
     let result = await HunterSearch(global.space.hunterkey, query, count, "1", "0", "3", false)
     if (result.code !== 200) {
         if (result.code == 40205) {
@@ -87,10 +87,7 @@ export async function LinkHunter(query: string, count: string) {
             return
         }
     }
-    result.data.arr.forEach((item: any) => {
-        urls.push(item.url)
-    });
-    return urls
+    return result.data.arr.map(item => item.url);
 }
 
 export async function LinkFOFA(query: string, count: number) {
@@ -104,11 +101,7 @@ export async function LinkFOFA(query: string, count: number) {
         ElMessage.warning(result.Message)
         return
     }
-    let urls = <string[]>[]
-    for (const item of result.Results!) {
-        urls.push(item.URL)
-    }
-    return urls
+    return result.Results.map(item => item.URL)
 }
 
 export async function LinkSubdomain(domains: string[]) {

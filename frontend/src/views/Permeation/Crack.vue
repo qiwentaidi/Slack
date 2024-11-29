@@ -6,11 +6,11 @@ import { ElMessage } from 'element-plus';
 import async from 'async';
 import global from '@/global';
 import { Copy, ReadLine, SplitTextArea, UploadFileAndRead } from '@/util';
-import { PortBrute, Callgologger, ExitScanner } from 'wailsjs/go/main/App';
+import { PortBrute, Callgologger, ExitScanner } from 'wailsjs/go/services/App';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { BruteResult } from '@/stores/interface';
 import usePagination from '@/usePagination';
-import { CheckFileStat, FileDialog } from 'wailsjs/go/main/File';
+import { CheckFileStat, FileDialog } from 'wailsjs/go/services/File';
 import { crackDict } from '@/stores/options';
 
 onMounted(() => {

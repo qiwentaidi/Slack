@@ -20,22 +20,37 @@ import (
 
 type Tools struct{}
 
+type FscanNode struct {
+	Hostname string
+	IPs      []string
+	Ports    []string
+	RiskType string // 风险类型
+}
+
 var (
 	FscanRegs = map[string][]string{
-		"FTP":             {"[+] ftp"},
-		"SSH":             {"[+] SSH"},
-		"Mssql":           {"[+] mssql"},
-		"Oracle":          {"[+] oracle"},
-		"Mysql":           {"[+] mysql"},
-		"RDP":             {"[+] RDP"},
-		"Redis":           {"[+] Redis"},
-		"Postgres":        {"[+] Postgres"},
-		"Mongodb":         {"[+] Mongodb"},
-		"Memcached":       {"[+] Memcached"},
-		"MS17-010":        {"[+] MS17-010"},
-		"POC":             {"poc"},
-		"DC INFO":         {"[+] DC"},
-		"Vcenter":         {"ID_VC_Welcome"},
+		// 横向拓扑信息
+		// "SSH":          {":22 open"},
+		// "SMB":          {":445 open", ":139 open"},
+		// "RDP":          {":3389 open"},
+		// "Database":     {":1433 open", ":1521 open", ":3306 open", ":5432 open", ":27017 open", ":6379 open"},
+		// "K8S":               {":2375 open", ":2376 open", ":2379 open", "Kubernetes"},
+		// "Domain Controller": {"[+] DC"},
+		// "Code Repositories": {"Gitlab", "Nexus", "Harbor", "ATLASSIAN-Confluence", "jira"},
+		// "Vcenter && Exsi":   {"ID_VC_Welcome", "ID_EESX_Welcome"},
+		"FTP":       {"[+] ftp"},
+		"SSH":       {"[+] SSH"},
+		"Mssql":     {"[+] mssql"},
+		"Oracle":    {"[+] oracle"},
+		"Mysql":     {"[+] mysql"},
+		"RDP":       {"[+] RDP"},
+		"Redis":     {"[+] Redis"},
+		"Postgres":  {"[+] Postgres"},
+		"Mongodb":   {"[+] Mongodb"},
+		"Memcached": {"[+] Memcached"},
+		"MS17-010":  {"[+] MS17-010"},
+		"POC":       {"poc"},
+		// 其他信息
 		"Web INFO":        {"[*] WebTitle"},
 		"INFO":            {"[+] InfoScan"},
 		"Hikvison Camera": {"len:2512", "len:600", "len:481", "len:480"},
@@ -47,16 +62,49 @@ func (t *Tools) FormatOutput(content string) map[string][]string {
 	var result = make(map[string][]string)
 	nets := NetInfoReg.FindAllString(content, -1)
 	if len(nets) > 0 {
-		result["NetInfo"] = nets
+		var multiNetInfo []string
+		for _, net := range FormatNetInfo(nets) {
+			if len(net.IPs) > 1 {
+				multiNetInfo = append(multiNetInfo, fmt.Sprintf("%s: \n%s\n", net.Hostname, strings.Join(net.IPs, "\n")))
+			}
+		}
+		result["NetInfo"] = multiNetInfo
 	}
 	lines := strings.Split(content, "\n")
 	for name, reg := range FscanRegs {
-		var match = MatchLines(name, reg, lines)
+		match := MatchLines(name, reg, lines)
 		if len(match) > 0 {
 			result[name] = match
 		}
 	}
 	return result
+}
+
+type NetInfo struct {
+	Hostname string
+	IPs      []string
+}
+
+func FormatNetInfo(nets []string) []NetInfo {
+	var netinfo []NetInfo
+	for _, net := range nets {
+		lines := strings.Split(net, "\n")
+		var hostname string
+		var IPs []string
+		for index, line := range lines {
+			line = strings.Replace(line, "   [->]", "", -1)
+			if index == 1 {
+				hostname = line
+			} else if index > 1 {
+				IPs = append(IPs, line)
+			}
+		}
+		netinfo = append(netinfo, NetInfo{
+			Hostname: hostname,
+			IPs:      IPs,
+		})
+	}
+	return netinfo
 }
 
 func MatchLines(name string, contains, lines []string) []string {

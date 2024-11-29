@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	core "slack-wails/core/tools"
+	"slack-wails/services"
 
 	rt "runtime"
 
@@ -20,9 +21,9 @@ var assets embed.FS
 
 func main() {
 	// Create an instance of the app structure
-	app := NewApp()
-	file := NewFile()
-	db := NewDatabase()
+	app := services.NewApp()
+	file := services.NewFile()
+	db := services.NewDatabase()
 	// Create application with options
 	winDropOptions := &options.DragAndDrop{
 		EnableFileDrop:     true,
@@ -40,9 +41,9 @@ func main() {
 		},
 		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		OnStartup: func(ctx context.Context) {
-			app.startup(ctx)
-			file.startup(ctx)
-			db.startup(ctx)
+			app.Startup(ctx)
+			file.Startup(ctx)
+			db.Startup(ctx)
 		},
 		DragAndDrop: func() *options.DragAndDrop {
 			if rt.GOOS == "windows" {

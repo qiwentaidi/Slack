@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { Close, Minus, Search, Back, Right, RefreshRight } from '@element-plus/icons-vue';
 import { Quit, WindowMinimise, WindowReload, WindowToggleMaximise } from "wailsjs/runtime/runtime";
-import { IsMacOS } from "wailsjs/go/main/File";
+import { IsMacOS } from "wailsjs/go/services/File";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import global from "@/global";
 import { onlineOptions }  from '@/stores/options';
 import { useRoute } from "vue-router";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import updateUI from "./Update.vue";
 import onlineIcon from "@/assets/icon/online.svg"
 import runnerIcon from "@/assets/icon/apprunner.svg"
@@ -16,23 +16,35 @@ import consoleIcon from "@/assets/icon/console.svg"
 import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/style';
 import router from '@/router';
 
-const isMax = ref(false)
 const onlineDrawer = ref(false)
 const showLogger = ref(false)
 const route = useRoute();
 const updateDialog = ref(false)
 
+onMounted(() => {
+    IsMacOS().then(res => {
+        global.temp.isMacOS = res
+    })
+    isFullScreen()
+})
+
 window.addEventListener('resize', () => {
-    if (screen.availWidth <= window.innerWidth && screen.availHeight <= window.innerHeight) {
-        isMax.value = true
-    } else {
-        isMax.value = false
-    }
+    isFullScreen()
 });
 
-IsMacOS().then(res => {
-    global.temp.isMacOS = res
-})
+function isFullScreen() {
+    const isWindowSameAsScreen = screen.availWidth == window.innerWidth && screen.availHeight == window.innerHeight;
+    
+    // macOS 只有在 window.innerHeight > screen.availHeight 才成立
+    if (global.temp.isMacOS && isWindowSameAsScreen) {
+        global.temp.isMax = false;
+        return;
+    }
+    
+    // 通用判断：当窗口尺寸大于等于屏幕可用尺寸时认为是全屏
+    global.temp.isMax = screen.availWidth <= window.innerWidth && screen.availHeight <= window.innerHeight;
+}
+
 function setTitle(path: string) {
     switch (path) {
         case "/":
@@ -109,7 +121,7 @@ const windowsControl = computed(() => [
         },
     },
     {
-        icon: isMax.value ? reductionIcon : maxmizeIcon,
+        icon: global.temp.isMax ? reductionIcon : maxmizeIcon,
         action: () => {
             WindowToggleMaximise();
         },
@@ -129,7 +141,7 @@ const windowsControl = computed(() => [
 <template>
     <div class="titlebar" :style="titlebarStyle">
         <div :style="macStyle">
-            <el-divider direction="vertical" v-if="global.temp.isMacOS" />
+            <el-divider direction="vertical" v-if="global.temp.isMacOS && !global.temp.isMax" />
             <el-button-group :style="leftStyle">
                 <el-tooltip v-for="item in routerControl" :content="item.label">
                     <el-button text class="custom-button" @click="item.action">

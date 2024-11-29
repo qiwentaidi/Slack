@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { ElMessage } from 'element-plus';
-import { AlibabaNacos } from 'wailsjs/go/main/App';
+import { AlibabaNacos } from 'wailsjs/go/services/App';
 import { reactive } from 'vue';
-import global from "@/global/index"
 import { AddRightSubString, getProxy } from '@/util';
 const form = reactive({
     url: "",
@@ -58,7 +57,7 @@ const vulnerabilityGroup = [
     {
         name: "Derby SQLi 条件竞争 RCE",
         value: 3
-    }
+    },
 ]
 
 async function useVulnerability() {

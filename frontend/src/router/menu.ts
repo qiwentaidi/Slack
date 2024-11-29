@@ -130,8 +130,8 @@ const MenuList = [
           icon: "/app/memo.png"
         },
         {
-          name: "aside.reverse",
-          path: "/Reverse",
+          name: "aside.fscan",
+          path: "/Fscan",
           icon: "/app/skull.png"
         },
         {

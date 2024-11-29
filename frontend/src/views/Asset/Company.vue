@@ -2,7 +2,7 @@
 import { onMounted, reactive } from "vue";
 import { QuestionFilled, Plus, ChromeFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
-import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger, TycCheckLogin } from "wailsjs/go/main/App";
+import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger, TycCheckLogin } from "wailsjs/go/services/App";
 import { ExportAssetToXlsx } from '@/export'
 import usePagination from "@/usePagination";
 import { Copy, transformArrayFields } from "@/util";
@@ -218,10 +218,10 @@ function copyAllDomains() {
                     </el-table-column>
                     <el-table-column prop="Domains">
                         <template #header>
-                            <el-text><span>域名</span>
+                            <span class="vertical-center">域名
                                 <el-divider direction="vertical" />
                                 <el-button size="small" text bg @click="copyAllDomains()">复制全部域名</el-button>
-                            </el-text>
+                            </span>
                         </template>
                         <template #default="scope">
                             <div class="finger-container" v-if="scope.row.Domains.length > 0">

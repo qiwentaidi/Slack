@@ -189,7 +189,7 @@ func ApiPolymerization(ctx context.Context, o structs.SubdomainOption) {
 			ch := chaos.FetchHosts(ctx, domain, o.ChaosApi)
 			if ch != nil {
 				for _, sub := range ch.Subdomains {
-					if sub == "*" {
+					if strings.Contains(sub, "*") {
 						continue
 					}
 					subdomains = append(subdomains, sub+"."+domain)
@@ -197,7 +197,11 @@ func ApiPolymerization(ctx context.Context, o structs.SubdomainOption) {
 			}
 		}
 		if util.ArrayContains("FOFA", o.AppendEngines) && o.FofaApi != "" {
-			fh := fofa.FetchHosts(ctx, domain, nil)
+			fh := fofa.FetchHosts(ctx, domain, structs.FofaAuth{
+				Address: o.FofaAddress,
+				Email:   o.FofaEmail,
+				Key:     o.FofaApi,
+			})
 			subdomains = append(subdomains, fh...)
 		}
 

@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"bytes"
@@ -44,7 +44,6 @@ type App struct {
 	activefingerFile string
 	cdnFile          string
 	qqwryFile        string
-	avFile           string
 	templateDir      string
 	defaultPath      string
 }
@@ -57,7 +56,6 @@ func NewApp() *App {
 		activefingerFile: home + "/slack/config/dir.yaml",
 		cdnFile:          home + "/slack/config/cdn.yaml",
 		qqwryFile:        home + "/slack/config/qqwry.dat",
-		avFile:           home + "/slack/config/antivirues.yaml",
 		templateDir:      home + "/slack/config/pocs",
 		defaultPath:      home + "/slack/",
 	}
@@ -65,7 +63,7 @@ func NewApp() *App {
 
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
-func (a *App) startup(ctx context.Context) {
+func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
@@ -345,7 +343,7 @@ func (a *App) SpaceGetPort(ip string) []float64 {
 	return space.GetShodanAllPort(a.ctx, ip)
 }
 
-func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, thread, timeout int) {
+func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, thread, timeout int, proxy clients.Proxy) {
 	portscan.ExitFunc = false
 	addresses := make(chan portscan.Address)
 
@@ -367,7 +365,7 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 			addresses <- portscan.Address{IP: temp[0], Port: port}
 		}
 	}()
-	portscan.TcpScan(a.ctx, addresses, thread, timeout)
+	portscan.TcpScan(a.ctx, addresses, thread, timeout, &proxy)
 }
 func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint16) {
 	portscan.ExitFunc = false
@@ -433,7 +431,7 @@ func (a *App) IconHash(target string) string {
 	if err != nil {
 		return ""
 	}
-	return util.Mmh3Hash32(util.Base64Encode(b))
+	return webscan.Mmh3Hash32(b)
 }
 
 // infoscan
@@ -454,9 +452,9 @@ func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
 
 // 仅在执行时调用一次
 func (a *App) InitRule(appendTemplateFolder string) bool {
-	ic := webscan.NewConfig()
 	templateFolders := []string{a.templateDir, appendTemplateFolder}
-	return ic.InitAll(a.ctx, a.webfingerFile, a.activefingerFile, templateFolders)
+	config := webscan.NewConfig(templateFolders)
+	return config.InitAll(a.ctx, a.webfingerFile, a.activefingerFile)
 }
 
 // webscan
@@ -633,6 +631,10 @@ func (a *App) AlibabaNacos(target, headers string, attackType int, username, pas
 		return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.DefaultWithProxyClient(proxy))
 	}
 	return target + "不存在该漏洞"
+}
+
+func (a *App) NacosCategoriesExtract(filePath string) []structs.NacosConfig {
+	return nacos.ProcessDirectory(filePath)
 }
 
 func (a *App) HikvsionCamera(target string, attackType int, passwordList []string, cmd string, proxy clients.Proxy) string {

@@ -81,10 +81,9 @@ const bottomControl = [
 
 .react-menu-item {
   font-size: 16px;
-  width: 94%;
   align-items: center;
   display: flex;
-  margin-left: 3%;
+  margin: 3%;
 }
 
 .el-menu-item:hover {

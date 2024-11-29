@@ -53,9 +53,9 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { Close, Picture, Upload } from '@element-plus/icons-vue';
-import { HikvsionCamera } from 'wailsjs/go/main/App';
+import { HikvsionCamera } from 'wailsjs/go/services/App';
 import { FormatWebURL, getProxy } from '@/util';
-import { FileDialog, ReadFile } from 'wailsjs/go/main/File';
+import { FileDialog, ReadFile } from 'wailsjs/go/services/File';
 import { File } from '@/stores/interface';
 import { ElMessage } from 'element-plus';
 import async from 'async';

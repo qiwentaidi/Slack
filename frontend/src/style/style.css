@@ -199,6 +199,11 @@ html {
   align-items: center;
 }
 
+.vertical-center {
+  display: flex;
+  justify-content: center;
+}
+
 :deep(.el-table__header) {
   width: 100% !important;
 }
@@ -235,7 +240,7 @@ html {
 
 /* 网站扫描风险等级颜色 */
 
-.severity-critical {
+/* .severity-critical {
   color: #AF63F6;
 }
 
@@ -253,7 +258,7 @@ html {
 
 .severity-info {
   color: #7EC050;
-}
+} */
 
 .el-drawer__header {
   margin-bottom: 0px;

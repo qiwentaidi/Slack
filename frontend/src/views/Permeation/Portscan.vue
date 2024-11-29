@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
-import { Copy, SplitTextArea, UploadFileAndRead } from '@/util'
+import { Copy, getProxy, SplitTextArea, UploadFileAndRead } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { QuestionFilled, ChromeFilled, Promotion, DocumentCopy, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
-import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, ExitScanner, Callgologger, SpaceGetPort } from 'wailsjs/go/main/App'
+import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, ExitScanner, Callgologger, SpaceGetPort } from 'wailsjs/go/services/App'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import global from '@/global'
 import { PortScanData } from '@/stores/interface';
@@ -173,7 +173,7 @@ class Scanner {
             Callgologger("info", "Portscan task is ending")
             return
         }
-        await NewTcpScanner(specialTarget, ips, portsList, global.webscan.port_thread, global.webscan.port_timeout)
+        await NewTcpScanner(specialTarget, ips, portsList, global.webscan.port_thread, global.webscan.port_timeout, getProxy())
         // 恢复配置
         ctrl.runningStatus = false
         portsList = []
@@ -367,14 +367,14 @@ function stopShodan() {
             <el-table-column prop="Server" label="Fingerprint" width="150px" />
             <el-table-column prop="Link" :show-overflow-tooltip="true">
                 <template #header>
-                    <el-text><span>Link</span>
+                    <span class="vertical-center">Link
                         <el-divider direction="vertical" />
                         <el-button size="small" text bg @click="moreOperate.CopyURLs('url')">复制URLs</el-button>
                         <el-divider direction="vertical" />
                         <el-tooltip content="复制所有可暴破协议">
                             <el-button size="small" text bg @click="moreOperate.CopyURLs('brute')">复制Cracks</el-button>
                         </el-tooltip>
-                    </el-text>
+                    </span>
                 </template>
             </el-table-column>
             <el-table-column prop="HttpTitle" label="WebTitle" :show-overflow-tooltip="true" />

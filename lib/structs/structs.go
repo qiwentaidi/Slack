@@ -158,6 +158,7 @@ type WebscanOptions struct {
 	Target                []string
 	Thread                int
 	Screenshot            bool
+	Honeypot              bool
 	DeepScan              bool
 	RootPath              bool
 	CallNuclei            bool
@@ -384,6 +385,16 @@ type FofaResult struct {
 	Size    int64      `json:"size"`
 }
 
+type FofaSingleFiledResult struct {
+	Error   bool     `json:"error"`
+	Errmsg  string   `json:"errmsg"`
+	Mode    string   `json:"mode"`
+	Page    int64    `json:"page"`
+	Query   string   `json:"query"`
+	Results []string `json:"results"`
+	Size    int64    `json:"size"`
+}
+
 type FofaSearchResult struct {
 	Error   bool
 	Message string
@@ -460,4 +471,58 @@ type WechatReulst struct {
 	Logo         string
 	Qrcode       string
 	Introduction string
+}
+
+// Node 表示一个主机节点
+type NetworkNode struct {
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	SymbolSize int     `json:"symbolSize"`
+	X          float64 `json:"x"`
+	Y          float64 `json:"y"`
+	Value      int     `json:"value"`
+	Category   int     `json:"category"`
+	IP         string  `json:"ip"`
+	IsDC       bool    `json:"isDC"`
+	Ports      []int   `json:"ports"`
+}
+
+// Link 表示节点之间的连接
+type NetworkLink struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
+	Subnet string `json:"subnet"`
+}
+
+// Category 表示一个类别
+type NetworkCategory struct {
+	Name string `json:"name"`
+}
+
+// GraphData 表示整个图数据
+type FscanGraphData struct {
+	Nodes      []NetworkNode     `json:"nodes"`
+	Links      []NetworkLink     `json:"links"`
+	Categories []NetworkCategory `json:"categories"`
+}
+
+type SpaceEngineSyntax struct {
+	Name    string
+	Content string
+}
+
+type PathTimes struct {
+	Path  string
+	Times int
+}
+
+type NacosConfig struct {
+	Name     string
+	NodeInfo NacosNode
+}
+
+type NacosNode struct {
+	Auth     int
+	OSS      int
+	Database int
 }

@@ -11467,6 +11467,8 @@ match syncplay-json m|^\{"Error": \{"message": "Not a json encoded string GET / 
 
 match tcpmux m|^-Service not available\r\n$|
 
+match jraft m|^\x00\x00\x12\x04\x00\x00\x00\x00\x00\x00\x03\x7f\xff\xff\xff.*request|s p/JRaft service/ 
+
 match telnet m|^\xff\xfb\x01\xff\xfe\"\n\r\tNetDSL Copyright by ARESCOM 2003\n\r\n\r\n\rUsername:GET / HTTP/1\.0\r\n\n\rPassword:\r\n\n\rUsername:| p/ARESCOM NetDSL 1000 router/ d/router/
 match telnet m|^\xff\xfb\x03\xff\xfb\x01\xff\xfbi\r\n\tWelcome to Magicunix's TCP Server\.\r\n\r\n\r\nLogin: P/1\.0\r\nPassword: \r\nLogin incorrect\r\nLogin: | p/MagicUnix telnetd/
 match telnet m|^\xff\xfb\x03\xff\xfb\x01\r\n\r\n\x07HP ([\w+]+) AdvanceStack 10BT Switching Hub Management Module\r\n| p/HP $1 switch telnetd/ d/switch/ cpe:/h:hp:$1/a

@@ -79,7 +79,7 @@
                             <el-button :icon="Star" link @click="syntax.starDialog.value = true" />
                         </el-tooltip>
                         <el-tooltip content="复制语法" placement="bottom">
-                            <el-button :icon="CopyDocument" link @click="Copy(quake.query)" />
+                            <el-button :icon="DocumentCopy" link @click="Copy(quake.query)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                     </el-space>
@@ -177,7 +177,7 @@
                     <el-dropdown-menu>
                         <el-dropdown-item :icon="exportIcon" @click="exportData">导出当前查询页数据</el-dropdown-item>
                         <el-dropdown-item :icon="exportIcon" @click="exportData">导出全部数据</el-dropdown-item>
-                        <el-dropdown-item :icon="CopyDocument" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -273,21 +273,21 @@
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowDown, CopyDocument, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
+import { Search, ArrowDown, DocumentCopy, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4 } from '@/util';
 import { ExportToXlsx } from '@/export';
 import { QuakeTableTabs, QuakeTipsData } from '@/stores/interface';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
-import { Callgologger, FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/main/App';
+import { Callgologger, FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/services/App';
 import global from '@/global';
 import { ElMessage, ElNotification, FormInstance } from 'element-plus';
-import { FileDialog } from 'wailsjs/go/main/File';
-import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/main/Database';
+import { FileDialog } from 'wailsjs/go/services/File';
+import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { validateSingleURL } from '@/stores/validate';
-import { main, structs } from 'wailsjs/go/models';
+import { structs } from 'wailsjs/go/models';
 import { quakeSyntaxOptions } from '@/stores/options';
 
 const options = ({
@@ -344,7 +344,7 @@ const syntax = ({
         quake.query += " AND " + row.Content
     },
     starDialog: ref(false),
-    ruleForm: reactive<main.Syntax>({
+    ruleForm: reactive<structs.SpaceEngineSyntax>({
         Name: '',
         Content: '',
     }),
@@ -387,7 +387,7 @@ const quake = reactive({
     iconFile: "",
     batchIps: "",
     batchFile: "",
-    syntaxData: [] as main.Syntax[],
+    syntaxData: [] as structs.SpaceEngineSyntax[],
     certcommon: "",
 })
 

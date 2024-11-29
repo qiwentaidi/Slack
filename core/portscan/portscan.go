@@ -26,7 +26,7 @@ type PortResult struct {
 	HttpTitle string
 }
 
-func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int) {
+func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int, proxy *clients.Proxy) {
 	var id int32
 	single := make(chan struct{})
 	retChan := make(chan PortResult)
@@ -43,7 +43,7 @@ func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int
 		if ExitFunc {
 			return
 		}
-		pr := Connect(add.IP, add.Port, timeout)
+		pr := Connect(add.IP, add.Port, timeout, proxy)
 		atomic.AddInt32(&id, 1)
 		runtime.EventsEmit(ctx, "progressID", id)
 		if pr.Status {
@@ -76,10 +76,10 @@ type Address struct {
 	Port int
 }
 
-func Connect(ip string, port, timeout int) PortResult {
+func Connect(ip string, port, timeout int, proxy *clients.Proxy) PortResult {
 	var pr PortResult
 	scanner := gonmap.New()
-	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout))
+	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout), proxy)
 	switch status {
 	case gonmap.Closed:
 		pr.Status = false
