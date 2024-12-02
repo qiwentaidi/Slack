@@ -124,7 +124,7 @@ func roundToTwoDecimals(value float64) float64 {
 
 func InitConfig(ctx context.Context) bool {
 	var defaultFile = util.HomeDir() + "/slack/"
-	// os.MkdirAll(defaultFile, 0777)
+	// os.MkdirAll(defaultFile, 0644)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
 	_, b, err := clients.NewSimpleGetRequest(latestConfigVersion, http.DefaultClient)
 	if err != nil {

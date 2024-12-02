@@ -40,7 +40,7 @@ func GetScreenshot(url string) (string, error) {
 	fp := filepath.Join(dir, renameOutput(url))
 
 	// 确保目标目录存在
-	if err := os.MkdirAll(dir, 0644); err != nil {
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
 

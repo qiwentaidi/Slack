@@ -63,8 +63,8 @@ func NewFile() *File {
 func init() {
 	var userPath = util.HomeDir() + "/slack/portburte/username"
 	var passPath = util.HomeDir() + "/slack/portburte/password"
-	os.MkdirAll(userPath, 0644)
-	os.MkdirAll(passPath, 0644)
+	os.MkdirAll(userPath, 0777)
+	os.MkdirAll(passPath, 0777)
 	for name, dict := range Userdict {
 		file := fmt.Sprintf("%s/%s.txt", userPath, name)
 		// 文件不存在则需要创建

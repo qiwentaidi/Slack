@@ -6,15 +6,17 @@ import {context} from '../models';
 
 export function AddConnection(arg1:structs.DatabaseConnection):Promise<boolean>;
 
+export function AddFingerscanResult(arg1:string,arg2:structs.InfoResult):Promise<boolean>;
+
+export function AddPocscanResult(arg1:string,arg2:structs.VulnerabilityInfo):Promise<boolean>;
+
+export function AddScanTask(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<boolean>;
+
 export function ConnectDatabase(arg1:structs.DatabaseConnection):Promise<boolean>;
 
 export function ConnectMongodb(arg1:string,arg2:string,arg3:string):Promise<mongo.Client>;
 
 export function CreateTable():Promise<boolean>;
-
-export function DeletePocscanResult(arg1:string,arg2:string,arg3:string):Promise<boolean>;
-
-export function DeleteScanTask(arg1:string):Promise<boolean>;
 
 export function DisconnectDatabase(arg1:string):Promise<boolean>;
 
@@ -46,15 +48,7 @@ export function GetAllDatabaseConnections():Promise<Array<structs.DatabaseConnec
 
 export function GetAllPathsAndTimes():Promise<Array<structs.PathTimes>>;
 
-export function GetAllScanTask():Promise<Array<structs.TaskResult>>;
-
 export function InsertFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
-
-export function InsertFingerscanResult(arg1:string,arg2:structs.InfoResult):Promise<boolean>;
-
-export function InsertPocscanResult(arg1:string,arg2:structs.VulnerabilityInfo):Promise<boolean>;
-
-export function InsertScanTask(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<boolean>;
 
 export function ReadWebReportWithJson(arg1:string):Promise<structs.WebReport>;
 
@@ -62,15 +56,21 @@ export function RemoveConnection(arg1:string):Promise<boolean>;
 
 export function RemoveFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
+export function RemovePocscanResult(arg1:string,arg2:string,arg3:string):Promise<boolean>;
+
+export function RemoveScanTask(arg1:string):Promise<boolean>;
+
 export function RenameScanTask(arg1:string,arg2:string):Promise<boolean>;
+
+export function RetrieveAllScanTasks():Promise<Array<structs.TaskResult>>;
+
+export function RetrieveFingerscanResults(arg1:string):Promise<Array<structs.InfoResult>>;
+
+export function RetrievePocscanResults(arg1:string):Promise<Array<structs.VulnerabilityInfo>>;
 
 export function SearchAgentPool():Promise<Array<string>>;
 
 export function SelectAllSyntax(arg1:string):Promise<Array<structs.SpaceEngineSyntax>>;
-
-export function SelectFingerscanResult(arg1:string):Promise<Array<structs.InfoResult>>;
-
-export function SelectPocscanResult(arg1:string):Promise<Array<structs.VulnerabilityInfo>>;
 
 export function Startup(arg1:context.Context):Promise<void>;
 
@@ -78,4 +78,4 @@ export function UpdateConnection(arg1:structs.DatabaseConnection):Promise<boolea
 
 export function UpdateOrInsertPath(arg1:string):Promise<boolean>;
 
-export function UpdateScanWithResult(arg1:string,arg2:number,arg3:number):Promise<boolean>;
+export function UpdateScanTaskWithResults(arg1:string,arg2:number,arg3:number):Promise<boolean>;

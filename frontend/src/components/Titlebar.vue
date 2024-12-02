@@ -33,16 +33,9 @@ window.addEventListener('resize', () => {
 });
 
 function isFullScreen() {
-    const isWindowSameAsScreen = screen.availWidth == window.innerWidth && screen.availHeight == window.innerHeight;
-    
-    // macOS 只有在 window.innerHeight > screen.availHeight 才成立
-    if (global.temp.isMacOS && isWindowSameAsScreen) {
-        global.temp.isMax = false;
-        return;
-    }
-    
-    // 通用判断：当窗口尺寸大于等于屏幕可用尺寸时认为是全屏
-    global.temp.isMax = screen.availWidth <= window.innerWidth && screen.availHeight <= window.innerHeight;
+    let height = window.innerHeight - screen.availHeight
+    // 通用判断：当窗口高度比屏幕高度大于等于20时认为是全屏,
+    global.temp.isMax = screen.availWidth == window.innerWidth && height >= 20;
 }
 
 function setTitle(path: string) {

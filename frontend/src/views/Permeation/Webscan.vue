@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
-import { VideoPause, QuestionFilled, Plus, ZoomIn, DocumentCopy, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit } from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, ZoomIn, DocumentCopy, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification, TableColumnCtx } from 'element-plus';
 import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead, generateRandomString } from '@/util'
@@ -17,7 +17,7 @@ import { validateWebscan } from '@/stores/validate';
 import { structs } from 'wailsjs/go/models';
 import { webReportOptions, webscanOptions } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
-import { DeletePocscanResult, DeleteScanTask, ExportWebReportWithHtml, ExportWebReportWithJson, GetAllScanTask, InsertFingerscanResult, InsertPocscanResult, InsertScanTask, ReadWebReportWithJson, RenameScanTask, SelectFingerscanResult, SelectPocscanResult, UpdateScanWithResult } from 'wailsjs/go/services/Database';
+import { RemovePocscanResult, RemoveScanTask, ExportWebReportWithHtml, ExportWebReportWithJson, RetrieveAllScanTasks, AddFingerscanResult, AddPocscanResult, AddScanTask, ReadWebReportWithJson, RenameScanTask, RetrieveFingerscanResults, RetrievePocscanResults, UpdateScanTaskWithResults } from 'wailsjs/go/services/Database';
 import saveIcon from '@/assets/icon/save.svg'
 import githubIcon from '@/assets/icon/github.svg'
 import { SaveConfig } from '@/config';
@@ -118,7 +118,7 @@ async function initialize() {
     }
     templateLoading.value = false; // 加载完毕
 
-    let result = await GetAllScanTask();
+    let result = await RetrieveAllScanTasks();
     if (Array.isArray(result)) {
         rp.table.result = result;
         rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
@@ -135,7 +135,7 @@ onMounted(() => {
         vp.table.result.push(result)
         vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
         if (!config.writeDB) return
-        InsertPocscanResult(form.taskId, result)
+        AddPocscanResult(form.taskId, result)
         taskManager.updateTaskTable(form.taskId)
     });
     EventsOn("webFingerScan", (result: any) => {
@@ -146,7 +146,7 @@ onMounted(() => {
         fp.table.result.push(result)
         throttleUpdate()
         if (!config.writeDB) return
-        InsertFingerscanResult(form.taskId, result)
+        AddFingerscanResult(form.taskId, result)
         taskManager.updateTaskTable(form.taskId)
     });
     EventsOn("ActiveCounts", (count: number) => {
@@ -209,7 +209,7 @@ class WebscanEngine {
         }
         if (config.writeDB) {
             form.taskId = nano()
-            let isSuccess = await InsertScanTask(form.taskId, form.taskName, form.url, 0, 0)
+            let isSuccess = await AddScanTask(form.taskId, form.taskName, form.url, 0, 0)
             if (!isSuccess) {
                 ElMessage.error("添加任务失败")
                 return false
@@ -420,8 +420,8 @@ const taskManager = {
             row.Targets!.includes('\n') ? dashboard.count = row.Targets.split('\n').length : dashboard.count = 1
         }
         const [fingerResult, nucleiResult] = await Promise.all([
-            SelectFingerscanResult(row.TaskId),
-            SelectPocscanResult(row.TaskId)
+            RetrieveFingerscanResults(row.TaskId),
+            RetrievePocscanResults(row.TaskId)
         ]);
 
         if (fingerResult) {
@@ -458,7 +458,7 @@ const taskManager = {
             }
         )
             .then(async () => {
-                let isSuccess = await DeleteScanTask(taskId)
+                let isSuccess = await RemoveScanTask(taskId)
                 if (isSuccess) {
                     ElMessage.success("删除成功")
                     rp.table.result = rp.table.result.filter(item => item.TaskId != taskId)
@@ -494,7 +494,7 @@ const taskManager = {
         const result = await ReadWebReportWithJson(filepath)
         if (result) {
             const id = nano()
-            let isSuccess = await InsertScanTask(id, id, result.Targets, 0, 0)
+            let isSuccess = await AddScanTask(id, id, result.Targets, 0, 0)
             if (!isSuccess) {
                 ElMessage.error("添加任务失败")
                 return false
@@ -508,11 +508,11 @@ const taskManager = {
             })
             rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
             result.Fingerprints.forEach(item => {
-                InsertFingerscanResult(id, item)
+                AddFingerscanResult(id, item)
             })
             if (result.POCs) {
                 result.POCs.forEach(item => {
-                    InsertPocscanResult(id, item)
+                    AddPocscanResult(id, item)
                 })
             }
         }
@@ -521,8 +521,8 @@ const taskManager = {
         let filepath = ""
         let isSuccess = false
         var [fingerResult, nucleiResult] = await Promise.all([
-            SelectFingerscanResult(form.exportTask.TaskId),
-            SelectPocscanResult(form.exportTask.TaskId)
+            RetrieveFingerscanResults(form.exportTask.TaskId),
+            RetrievePocscanResults(form.exportTask.TaskId)
         ]);
         if (!nucleiResult) {
             nucleiResult = []
@@ -552,7 +552,7 @@ const taskManager = {
     },
     updateTaskTable: function (taskId: string) {
         let vulcount = dashboard.riskLevel.CRITICAL + dashboard.riskLevel.HIGH + dashboard.riskLevel.MEDIUM + dashboard.riskLevel.LOW + dashboard.riskLevel.INFO
-        UpdateScanWithResult(taskId, dashboard.reqErrorURLs.length, vulcount)
+        UpdateScanTaskWithResults(taskId, dashboard.reqErrorURLs.length, vulcount)
         // 更新对应taskId的表格列中的漏洞数量
         const taskIndex = rp.table.result.findIndex(task => task.TaskId === taskId);
         if (taskIndex !== -1) {
@@ -567,7 +567,7 @@ const taskManager = {
         }
         form.taskId = nano()
         form.taskName = generateRandomString(10)
-        let isSuccess = await InsertScanTask(form.taskId, form.taskName, form.url, 0, 0)
+        let isSuccess = await AddScanTask(form.taskId, form.taskName, form.url, 0, 0)
         if (!isSuccess) {
             ElMessage.error('添加任务失败')
             return
@@ -581,14 +581,14 @@ const taskManager = {
         })
         rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
         for (const item of fp.table.result) {
-            let isSuccess = await InsertFingerscanResult(form.taskId, item)
+            let isSuccess = await AddFingerscanResult(form.taskId, item)
             if (!isSuccess) {
                 ElMessage.error('添加指纹识别结果失败')
                 return
             }
         }
         for (const item of vp.table.result) {
-            let isSuccess = await InsertPocscanResult(form.taskId, item)
+            let isSuccess = await AddPocscanResult(form.taskId, item)
             if (!isSuccess) {
                 ElMessage.error('添加漏洞扫描结果失败')
                 return
@@ -600,9 +600,12 @@ const taskManager = {
 }
 
 async function deleteVuln(row: any) {
-    let isSuccess = await DeletePocscanResult(form.taskId, row.ID, row.URL)
+    let isSuccess = await RemovePocscanResult(form.taskId, row.ID, row.URL)
     if (isSuccess) {
-        ElMessage.success("删除成功")
+        ElMessage.success({
+            message: "删除成功",
+            grouping: true,
+        })
         const riskLevelKey = row.Severity as keyof typeof dashboard.riskLevel;
         if (dashboard.riskLevel[riskLevelKey] !== undefined) {
             dashboard.riskLevel[riskLevelKey]--;
@@ -637,6 +640,12 @@ async function showPocDetail(filename: string) {
     let file = await ReadFile(filepath)
     form.pocContent = file.Content
 }
+
+// 热加载节流触发，防止反序列化过于频繁导致闪退
+
+const throttleInitialize = throttle(() => {
+    initialize()
+}, 2000);
 </script>
 
 <template>
@@ -669,7 +678,16 @@ async function showPocDetail(filename: string) {
                 <el-statistic title="指纹数量" :value="dashboard.fingerLength" />
             </el-col>
             <el-col :span="3">
-                <el-statistic title="漏洞数量" :value="dashboard.yamlPocsLength" />
+                <el-statistic :value="dashboard.yamlPocsLength">
+                    <template #title>
+                        <span class="vertical-center">
+                            漏洞数量
+                            <el-tooltip content="热加载指纹和POC">
+                                <el-button :icon="Refresh" link @click="throttleInitialize()"></el-button>
+                            </el-tooltip>
+                        </span>
+                    </template>
+                </el-statistic>
             </el-col>
             <el-divider direction="vertical" style="height: 7vh;" />
             <el-col :span="7">
@@ -1016,7 +1034,7 @@ async function showPocDetail(filename: string) {
                 </el-icon><span>扫描任务历史</span></el-text>
         </template>
         <el-table :data="rp.table.pageContent" stripe :cell-style="{ textAlign: 'center' }"
-            :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 120px)">
+            :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 125px)">
             <el-table-column prop="TaskName" label="任务名称" :show-overflow-tooltip="true"></el-table-column>
             <el-table-column prop="Targets" label="目标" :show-overflow-tooltip="true">
                 <template #default="scope">

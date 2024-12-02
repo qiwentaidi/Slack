@@ -804,7 +804,8 @@ func (d *Database) FetchTableInfoFromPostgres(schemaName, tableName string) stru
 	}
 }
 
-func (d *Database) GetAllScanTask() []structs.TaskResult {
+// 检索所有扫描记录
+func (d *Database) RetrieveAllScanTasks() []structs.TaskResult {
 	rows, err := d.DB.Query(`SELECT * FROM scanTask;`)
 	if err != nil {
 		return []structs.TaskResult{}
@@ -822,18 +823,20 @@ func (d *Database) GetAllScanTask() []structs.TaskResult {
 	return tasks
 }
 
-func (d *Database) InsertScanTask(taskid, taskname, targets string, failed, vulnerability int) bool {
+// 添加任务记录
+func (d *Database) AddScanTask(taskid, taskname, targets string, failed, vulnerability int) bool {
 	insertStmt := "INSERT INTO scanTask (task_id, task_name, targets, failed, vulnerability) VALUES (?, ?, ?, ?, ?)"
 	return d.ExecSqlStatement(insertStmt, taskid, taskname, targets, failed, vulnerability)
 }
 
-// 改变扫描结果，漏洞数量
-func (d *Database) UpdateScanWithResult(taskid string, failed, vulnerability int) bool {
+// 修改扫描结果 - 失败数量，漏洞数量
+func (d *Database) UpdateScanTaskWithResults(taskid string, failed, vulnerability int) bool {
 	updateStmt := "UPDATE scanTask SET failed = ?, vulnerability = ? WHERE task_id = ?"
 	return d.ExecSqlStatement(updateStmt, failed, vulnerability, taskid)
 }
 
-func (d *Database) DeleteScanTask(taskid string) bool {
+// 移除扫描记录
+func (d *Database) RemoveScanTask(taskid string) bool {
 	deleteStmt := "DELETE FROM scanTask WHERE task_id = ?"
 	isSuccess := d.ExecSqlStatement(deleteStmt, taskid)
 	if isSuccess {
@@ -843,12 +846,14 @@ func (d *Database) DeleteScanTask(taskid string) bool {
 	return isSuccess
 }
 
+// 重命名任务
 func (d *Database) RenameScanTask(taskid, taskname string) bool {
 	updateStmt := "UPDATE scanTask SET task_name = ? WHERE task_id = ?"
 	return d.ExecSqlStatement(updateStmt, taskname, taskid)
 }
 
-func (d *Database) SelectFingerscanResult(taskid string) []structs.InfoResult {
+// 根据taskid检索指纹扫描的结果
+func (d *Database) RetrieveFingerscanResults(taskid string) []structs.InfoResult {
 	rows, err := d.DB.Query("SELECT * FROM FingerprintInfo WHERE task_id = ?;", taskid)
 	if err != nil {
 		gologger.Debug(d.ctx, err)
@@ -879,7 +884,8 @@ func (d *Database) SelectFingerscanResult(taskid string) []structs.InfoResult {
 	return results
 }
 
-func (d *Database) SelectPocscanResult(taskid string) []structs.VulnerabilityInfo {
+// 根据taskid检索漏洞扫描记录
+func (d *Database) RetrievePocscanResults(taskid string) []structs.VulnerabilityInfo {
 	rows, err := d.DB.Query("SELECT * FROM VulnerabilityInfo WHERE task_id = ?", taskid)
 	if err != nil {
 		return []structs.VulnerabilityInfo{}
@@ -903,24 +909,28 @@ func (d *Database) SelectPocscanResult(taskid string) []structs.VulnerabilityInf
 	return results
 }
 
-func (d *Database) InsertFingerscanResult(taskid string, result structs.InfoResult) bool {
+// 添加指纹扫描结果
+func (d *Database) AddFingerscanResult(taskid string, result structs.InfoResult) bool {
 	insertStmt := "INSERT INTO FingerprintInfo (task_id, url, status, length, title, detect, is_waf, waf, fingerprints, screenshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	return d.ExecSqlStatement(insertStmt, taskid, result.URL, result.StatusCode, result.Length, result.Title, result.Detect, result.IsWAF, result.WAF, strings.Join(result.Fingerprints, ","), result.Screenshot)
 }
 
-func (d *Database) InsertPocscanResult(taskid string, result structs.VulnerabilityInfo) bool {
+// 添加漏洞扫描结果
+func (d *Database) AddPocscanResult(taskid string, result structs.VulnerabilityInfo) bool {
 	insertStmt := "INSERT INTO VulnerabilityInfo (task_id, template_id, vuln_name, protocol, severity, vuln_url, extract, request, response, description, reference, response_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	return d.ExecSqlStatement(insertStmt, taskid, result.ID, result.Name, result.Type, result.Severity, result.URL, result.Extract, result.Request, result.Response, result.Description, result.Reference, result.ResponseTime)
 }
 
-func (d *Database) DeletePocscanResult(taskid, template_id, vuln_url string) bool {
+// 移除某个漏洞
+func (d *Database) RemovePocscanResult(taskid, template_id, vuln_url string) bool {
 	deleteStmt := "DELETE FROM VulnerabilityInfo WHERE task_id = ? AND template_id = ? AND vuln_url = ?"
 	return d.ExecSqlStatement(deleteStmt, taskid, template_id, vuln_url)
 }
 
+// 导出JSON报告
 func (d *Database) ExportWebReportWithJson(reportpath string, task structs.TaskResult) bool {
-	fingerprintsResult := d.SelectFingerscanResult(task.TaskId)
-	pocsResult := d.SelectPocscanResult(task.TaskId)
+	fingerprintsResult := d.RetrieveFingerscanResults(task.TaskId)
+	pocsResult := d.RetrievePocscanResults(task.TaskId)
 	result := structs.WebReport{
 		Targets:      task.Targets,
 		Fingerprints: fingerprintsResult,
@@ -929,6 +939,7 @@ func (d *Database) ExportWebReportWithJson(reportpath string, task structs.TaskR
 	return fileutil.SaveJsonWithFormat(d.ctx, reportpath, result)
 }
 
+// 加载JSON报告
 func (d *Database) ReadWebReportWithJson(reportpath string) (result structs.WebReport, err error) {
 	data, err := os.ReadFile(reportpath)
 	if err != nil {
@@ -938,8 +949,9 @@ func (d *Database) ReadWebReportWithJson(reportpath string) (result structs.WebR
 	return
 }
 
+// 导出HTML报告
 func (d *Database) ExportWebReportWithHtml(reportpath, taskid string) bool {
-	fingerprintsResult := d.SelectFingerscanResult(taskid)
-	pocsResult := d.SelectPocscanResult(taskid)
+	fingerprintsResult := d.RetrieveFingerscanResults(taskid)
+	pocsResult := d.RetrievePocscanResults(taskid)
 	return os.WriteFile(reportpath, []byte(report.GenerateReport(fingerprintsResult, pocsResult)), 0644) == nil
 }

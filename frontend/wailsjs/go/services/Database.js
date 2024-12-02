@@ -6,6 +6,18 @@ export function AddConnection(arg1) {
   return window['go']['services']['Database']['AddConnection'](arg1);
 }
 
+export function AddFingerscanResult(arg1, arg2) {
+  return window['go']['services']['Database']['AddFingerscanResult'](arg1, arg2);
+}
+
+export function AddPocscanResult(arg1, arg2) {
+  return window['go']['services']['Database']['AddPocscanResult'](arg1, arg2);
+}
+
+export function AddScanTask(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['services']['Database']['AddScanTask'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function ConnectDatabase(arg1) {
   return window['go']['services']['Database']['ConnectDatabase'](arg1);
 }
@@ -16,14 +28,6 @@ export function ConnectMongodb(arg1, arg2, arg3) {
 
 export function CreateTable() {
   return window['go']['services']['Database']['CreateTable']();
-}
-
-export function DeletePocscanResult(arg1, arg2, arg3) {
-  return window['go']['services']['Database']['DeletePocscanResult'](arg1, arg2, arg3);
-}
-
-export function DeleteScanTask(arg1) {
-  return window['go']['services']['Database']['DeleteScanTask'](arg1);
 }
 
 export function DisconnectDatabase(arg1) {
@@ -86,24 +90,8 @@ export function GetAllPathsAndTimes() {
   return window['go']['services']['Database']['GetAllPathsAndTimes']();
 }
 
-export function GetAllScanTask() {
-  return window['go']['services']['Database']['GetAllScanTask']();
-}
-
 export function InsertFavGrammarFiled(arg1, arg2, arg3) {
   return window['go']['services']['Database']['InsertFavGrammarFiled'](arg1, arg2, arg3);
-}
-
-export function InsertFingerscanResult(arg1, arg2) {
-  return window['go']['services']['Database']['InsertFingerscanResult'](arg1, arg2);
-}
-
-export function InsertPocscanResult(arg1, arg2) {
-  return window['go']['services']['Database']['InsertPocscanResult'](arg1, arg2);
-}
-
-export function InsertScanTask(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['services']['Database']['InsertScanTask'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function ReadWebReportWithJson(arg1) {
@@ -118,8 +106,28 @@ export function RemoveFavGrammarFiled(arg1, arg2, arg3) {
   return window['go']['services']['Database']['RemoveFavGrammarFiled'](arg1, arg2, arg3);
 }
 
+export function RemovePocscanResult(arg1, arg2, arg3) {
+  return window['go']['services']['Database']['RemovePocscanResult'](arg1, arg2, arg3);
+}
+
+export function RemoveScanTask(arg1) {
+  return window['go']['services']['Database']['RemoveScanTask'](arg1);
+}
+
 export function RenameScanTask(arg1, arg2) {
   return window['go']['services']['Database']['RenameScanTask'](arg1, arg2);
+}
+
+export function RetrieveAllScanTasks() {
+  return window['go']['services']['Database']['RetrieveAllScanTasks']();
+}
+
+export function RetrieveFingerscanResults(arg1) {
+  return window['go']['services']['Database']['RetrieveFingerscanResults'](arg1);
+}
+
+export function RetrievePocscanResults(arg1) {
+  return window['go']['services']['Database']['RetrievePocscanResults'](arg1);
 }
 
 export function SearchAgentPool() {
@@ -128,14 +136,6 @@ export function SearchAgentPool() {
 
 export function SelectAllSyntax(arg1) {
   return window['go']['services']['Database']['SelectAllSyntax'](arg1);
-}
-
-export function SelectFingerscanResult(arg1) {
-  return window['go']['services']['Database']['SelectFingerscanResult'](arg1);
-}
-
-export function SelectPocscanResult(arg1) {
-  return window['go']['services']['Database']['SelectPocscanResult'](arg1);
 }
 
 export function Startup(arg1) {
@@ -150,6 +150,6 @@ export function UpdateOrInsertPath(arg1) {
   return window['go']['services']['Database']['UpdateOrInsertPath'](arg1);
 }
 
-export function UpdateScanWithResult(arg1, arg2, arg3) {
-  return window['go']['services']['Database']['UpdateScanWithResult'](arg1, arg2, arg3);
+export function UpdateScanTaskWithResults(arg1, arg2, arg3) {
+  return window['go']['services']['Database']['UpdateScanTaskWithResults'](arg1, arg2, arg3);
 }
