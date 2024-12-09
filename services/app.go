@@ -627,8 +627,8 @@ func (a *App) AlibabaNacos(target, headers string, attackType int, username, pas
 		}
 	case 2:
 		return nacos.CVE_2021_29442(target, clients.DefaultWithProxyClient(proxy))
-	case 3:
-		return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.DefaultWithProxyClient(proxy))
+		// case 3:
+		// 	return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.DefaultWithProxyClient(proxy))
 	}
 	return target + "不存在该漏洞"
 }

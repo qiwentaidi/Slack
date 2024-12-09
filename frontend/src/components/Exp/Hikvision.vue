@@ -23,8 +23,8 @@
             <el-col :span="14">
                 <el-form-item label="目标:">
                     <div class="textarea-container">
-                        <el-input v-model="form.url" type="textarea" placeholder="请输入URL根路径" :rows="5" resize="none"
-                            class="custom-textarea"></el-input>
+                        <el-input v-model="form.url" type="textarea" placeholder="请输入URL根路径" 
+                            :rows="5" resize="none"></el-input>
                         <div class="action-area">
                             <el-button :icon="Upload" size="small" @click="uploadFile">Upload</el-button>
                         </div>
@@ -35,7 +35,7 @@
                 <el-form-item label="密码:">
                     <div class="textarea-container">
                         <el-input v-model="form.passwordList" type="textarea" :rows="5" resize="none"
-                            placeholder="请输入密码列表" class="custom-textarea"></el-input>
+                            placeholder="请输入密码列表"></el-input>
                         <div class="action-area">
                             <el-button :icon="Close" circle size="small" @click="form.passwordList = ''"></el-button>
                         </div>

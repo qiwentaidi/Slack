@@ -1034,6 +1034,7 @@ export namespace structs {
 	export class RowData {
 	    Columns: string[];
 	    Rows: any[][];
+	    RowsCount: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new RowData(source);
@@ -1043,6 +1044,7 @@ export namespace structs {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.Columns = source["Columns"];
 	        this.Rows = source["Rows"];
+	        this.RowsCount = source["RowsCount"];
 	    }
 	}
 	export class SpaceEngineSyntax {

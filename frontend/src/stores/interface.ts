@@ -136,9 +136,10 @@ export interface PocDetail {
 
 
 export interface TablePane {
-    title: string
     name: string
     content: string
+    rowsCount: number
+    matchedType: string
 }
 
 export interface DatabaseConnection {

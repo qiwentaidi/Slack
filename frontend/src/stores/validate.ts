@@ -76,3 +76,8 @@ export function validateWebscan(input: string) {
 export const regexpPhone = /(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}/g;
 export const regexpIdCard = /[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]/g;
 export const regexpAKSK = /access/g;
+export const regexAlibabaDruidWebURI = /(?<="URI":")[^"]+/g;
+
+export const regexAlibabaDruidWebSession = /(?<="SESSIONID":")[^"]+/g;
+export const regexURL = /https?:\/\/[^\s/$.?#].[^\s]*/g;
+

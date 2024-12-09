@@ -1,12 +1,13 @@
 <template>
     <div v-show="fscan.showType == 'default'">
         <div class="head">
-            <el-input v-model="fscan.input" placeholder="移入或者选择文件路径">
+            <el-button :icon="InfoFilled" @click="fscan.tipsDialog = true">模块介绍</el-button>
+            <el-input v-model="fscan.input" placeholder="移入或者选择文件路径" style="margin-inline: 5px;">
                 <template #suffix>
                     <el-button link :icon="Document" @click="selectFilePath"></el-button>
                 </template>
             </el-input>
-            <el-button type="primary" @click="fscanParse" style="margin-left: 5px">开始解析</el-button>
+            <el-button type="primary" @click="fscanParse">开始解析</el-button>
             <el-button type="primary" @click="initChart" :disabled="true" style="margin-left: 5px">绘制网络拓扑</el-button>
         </div>
         <el-tabs type="border-card" style="margin-top: 15px;" class="demo-tabs">
@@ -87,7 +88,7 @@
                         </template>
                     </el-table-column>
                     <el-table-column prop="extend" label="Extend" width="200px" />
-                    <el-table-column label="Operations" width="100" align="center">
+                    <el-table-column label="Operate" width="100" align="center">
                         <template #default="scope">
                             <el-button link :icon="ChromeFilled" @click="BrowserOpenURL(scope.row.url)"></el-button>
                             <el-button link :icon="DocumentCopy" @click="Copy(scope.row.url)"></el-button>
@@ -109,7 +110,7 @@
                     <el-table-column type="index" width="60px" />
                     <el-table-column prop="url" label="URL" :show-overflow-tooltip="true" />
                     <el-table-column prop="fingerprint" label="Fingerprints" />
-                    <el-table-column label="Operations" width="100" align="center">
+                    <el-table-column label="Operate" width="100" align="center">
                         <template #default="scope">
                             <el-button link :icon="ChromeFilled" @click="BrowserOpenURL(scope.row.url)"></el-button>
                             <el-button link :icon="DocumentCopy" @click="Copy(scope.row.url)"></el-button>
@@ -171,6 +172,17 @@
         </el-tabs>
     </div>
     <div id="main" v-show="fscan.showType == 'graph'" style="width: 100%; height: 100vh;"></div>
+    <el-dialog v-model="fscan.tipsDialog" title="模块介绍" width="50%">
+        <el-descriptions :column="1" border>
+            <template #extra>
+                <el-tag type="warning">其他魔改过输出内容的版本，其他模块无法适配</el-tag>
+            </template>
+            <el-descriptions-item label="Raw:">按行匹配筛选规则</el-descriptions-item>
+            <el-descriptions-item label="其他模块:">
+                只有在使用官网项目 <strong>https://github.com/shadow1ng/fscan</strong> 时才能正常使用
+            </el-descriptions-item>
+        </el-descriptions>
+    </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -181,7 +193,7 @@ import bugIcon from "@/assets/icon/bug.svg";
 import fingerprintIcon from "@/assets/icon/fingerprint.svg";
 import consoleIcon from "@/assets/icon/console.svg";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
-import { Document, ChromeFilled, DocumentCopy, Filter, Camera, Box, RefreshLeft } from "@element-plus/icons-vue";
+import { Document, ChromeFilled, DocumentCopy, Filter, Camera, Box, RefreshLeft, InfoFilled } from "@element-plus/icons-vue";
 import { Copy } from "@/util";
 import usePagination from "@/usePagination";
 import { FileDialog, ReadFile } from "wailsjs/go/services/File";
@@ -195,6 +207,7 @@ const fscan = reactive({
     weakpass: [] as { type: string, ip: string, port: string, username: string, password: string, extend: string }[],
     virus: [] as { url: string, pocinfo: string, extend: string }[],
     fingerprint: [] as { url: string, fingerprint: string }[],
+    tipsDialog: false,
 });
 
 const wip = usePagination<{ url: string, code: string, title: string, length: string, redirect: string }>(20)
@@ -473,7 +486,7 @@ async function initChart() {
             categories: data.categories,
             data: data.nodes.map(node => ({
                 ...node,
-                itemStyle: node.isDouble ? {color: 'red'} : {}
+                itemStyle: node.isDouble ? { color: 'red' } : {}
             })),
             links: data.links,
             roam: true,

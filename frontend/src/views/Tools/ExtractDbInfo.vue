@@ -60,19 +60,37 @@
             <template v-for="(connection, index) in connections">
                 <el-tab-pane :key="index" :label="connection.type + '://' + connection.host + ':' + connection.port"
                     :name="connection.host + ':' + connection.port" v-if="connection.connected">
-                    <el-tabs type="card" closable class="editor-tabs" @tab-remove="removeTableTab(connection, $event)"
-                        v-if="connection.tablePanes.length != 0">
-                        <el-tab-pane v-for="tableContent in connection.tablePanes" :label="tableContent.title"
-                            :name="tableContent.name">
-                            <div v-html="tableContent.content"></div>
-                        </el-tab-pane>
-                    </el-tabs>
-                    <el-empty v-else>
-                        <el-button :icon="View" text bg @click="collectInfo(connection)"
-                            :disabled="!connection.connected">
-                            采集信息
-                        </el-button>
-                    </el-empty>
+                    <el-table :data="connection.tablePanes" :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 175px);" >
+                        <el-table-column label="#" type="index" width="60" />
+                        <el-table-column label="Table Name">
+                            <template #default="scope">
+                                <span>{{ scope.row.title }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="Matched Type">
+                            <template #default="scope">
+                                <span>{{ scope.row.matchedType }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="Number of Rows">
+                            <template #default="scope">
+                                <span>{{ scope.row.rowsCount }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="Operate" style="width: 200px;">
+                            <template #default="scope">
+                                <el-button size="small" :icon="Reading" @click="showTable(scope.row.content)">查看</el-button>
+                                <el-button size="small" :icon="Delete" @click="removeTable(connection, scope.row.name)">删除</el-button>
+                            </template>
+                        </el-table-column>
+                        <template #empty>
+                            <el-empty />                        </template>
+                    </el-table>
+                    <div class="my-header" style="margin-top: 5px;">
+                        <span>{{ progressTips }}</span>
+                        <div></div>
+                    </div>
                 </el-tab-pane>
             </template>
         </el-tabs>
@@ -128,7 +146,7 @@
         </template>
     </el-dialog>
     <el-dialog v-model="settingDialog" title="设置" width="50%">
-        <el-alert :closable="false" style="margin-bottom: 10px;">{{tips}}</el-alert>
+        <el-alert :closable="false" style="margin-bottom: 10px;">{{ tips }}</el-alert>
         <el-form :model="currentConnection">
             <el-form-item label="列名关键字">
                 <el-input v-model="global.database.columnsNameKeywords" type="textarea" :rows="3"></el-input>
@@ -137,13 +155,15 @@
             </el-form-item>
         </el-form>
     </el-dialog>
+    <el-drawer v-model="detailDialogVisible" title="数据内容详情" size="80%">
+        <div v-html="detailDialogContent"></div>
+    </el-drawer>
 </template>
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted, nextTick } from 'vue'
-import { Connection, Setting, Plus, Delete, Coin, View, Postcard } from '@element-plus/icons-vue'
+import { Connection, Setting, Plus, Delete, Coin, View, Postcard, Reading } from '@element-plus/icons-vue'
 import { AddConnection, ConnectDatabase, DisconnectDatabase, FetchDatabaseinfoFromMongodb, FetchDatabaseinfoFromMysql, FetchDatabaseInfoFromOracle, FetchDatabaseInfoFromPostgres, FetchDatabaseinfoFromSqlServer, FetchTableInfoFromMysql, FetchTableInfoFromOracle, FetchTableInfoFromPostgres, FetchTableInfoFromSqlServer, GetAllDatabaseConnections, RemoveConnection, UpdateConnection } from 'wailsjs/go/services/Database'
-import { structs } from 'wailsjs/go/models'
 import { ElMessage } from 'element-plus'
 import mysqlIcon from '@/assets/icon/mysql.svg'
 import mssqlIcon from '@/assets/icon/sqlserver.svg'
@@ -158,14 +178,18 @@ import global from '@/global'
 import { SaveConfig } from '@/config'
 import { databaseOptions } from '@/stores/options'
 import { DatabaseConnection } from '@/stores/interface'
+import { structs } from 'wailsjs/go/models'
 
 const activeTab = ref('dashborad')
 
 const connections = ref<DatabaseConnection[]>([])
 
 const dialogVisible = ref(false)
+const detailDialogVisible = ref(false)
+const detailDialogContent = ref('')
 const isEditing = ref(false)
 const editingIndex = ref(-1)
+const progressTips = ref('')
 const currentConnection = reactive<DatabaseConnection>({
     nanoid: '',
     type: 'mysql',
@@ -180,7 +204,7 @@ const currentConnection = reactive<DatabaseConnection>({
 })
 
 // 初始化为空对象, 低版本mac不初始化会提示 ReferenceError: Cannot access uninitialized variable
-var dbinfo: { [key: string]: string[] } = {}; 
+var dbinfo: { [key: string]: string[] } = {};
 
 const settingDialog = ref(false)
 
@@ -400,33 +424,64 @@ async function openConnection(connection: DatabaseConnection) {
     connection.loading = false
 }
 
-const regexPatterns = [regexpPhone, regexpIdCard, regexpAKSK];
-
 // 提取列名匹配函数
-function matchColumn(columns: string[]): boolean {
+function matchColumn(columns: string[]): { matched: boolean; keyword?: string } {
     let keywordColumns = global.database.columnsNameKeywords.split(",")
     if (keywordColumns.length == 0) keywordColumns = ['phone', 'telephone', 'idcard', 'card', 'password', 'username', 'mobile', 'sfz', 'secret']
-    return columns.some(column =>
-        keywordColumns.some(keyword => column.toLowerCase().includes(keyword))
-    );
-};
-
-// 提取行数据匹配函数
-function matchRows(rows: any[][]): boolean {
-    return rows.some(row =>
-        row.some(cell => {
-            if (typeof cell === 'string') {
-                try {
-                    const decodedValue = atob(cell); // Base64 解码
-                    return regexPatterns.some(pattern => pattern.test(decodedValue));
-                } catch (error) {
-                    return regexPatterns.some(pattern => pattern.test(cell));
-                }
+    let matched = columns.some(column =>
+        keywordColumns.some(keyword => {
+            if (column.toLowerCase().includes(keyword)) {
+                return true;
             }
             return false;
         })
     );
+    let keyword = matched ? keywordColumns.find(keyword => columns.some(column => column.toLowerCase().includes(keyword))) : undefined;
+    return { matched, keyword };
 };
+
+
+const regexOptions = [
+    {
+        label: 'ID Card',
+        regex: regexpIdCard
+    },
+    {
+        label: 'AKSK',
+        regex: regexpAKSK
+    },
+];
+
+// 提取行数据匹配函数，手机号正则需要单独提取，避免误报情况， 此处匹配成功也需要返回匹配的正则是哪种
+function matchRows(rows: any[][]): { matched: boolean, matchedLabel?: string } {
+    for (let row of rows) {
+        for (let cell of row) {
+            if (!cell) continue; // Skip empty or null cells
+            try {
+                const decodedValue = atob(cell); // Attempt Base64 decoding
+                if (regexpPhone.test(decodedValue) && (decodedValue.length === 11)) {
+                    return { matched: true, matchedLabel: "Phone Number" };
+                }
+                for (let option of regexOptions) {
+                     if (option.regex.test(decodedValue)) {
+                        return { matched: true, matchedLabel: option.label };
+                    }
+                }
+            } catch (error) {
+                if (regexpPhone.test(cell) && (cell.length === 11)) {
+                    return { matched: true, matchedLabel: "Phone Number" };
+                }
+                for (let option of regexOptions) {
+                     if (option.regex.test(cell)) {
+                        return { matched: true, matchedLabel: option.label };
+                    }
+                }
+            }
+        }
+    }
+    return { matched: false }; // No match found
+}
+
 
 async function collectInfo(connection: DatabaseConnection) {
     if (!connection.connected) {
@@ -459,18 +514,27 @@ async function collectInfo(connection: DatabaseConnection) {
             return
     }
     // 遍历数据库表
+    let totalTables = Object.values(dbinfo).reduce((acc, tables) => acc + tables.length, 0);
+    let processedTables = 0;
     for (const [dbname, tables] of Object.entries(dbinfo)) {
         for (const table of tables) {
+            processedTables++;
+            progressTips.value = `当前采集进度: (${processedTables}/${totalTables})`;
             let render = await fetchTable(dbname, table);
-            if (render.Rows && render.Rows.length > 0 && (matchColumn(render.Columns) || matchRows(render.Rows))) {
-                // 匹配到列名或行数据后，渲染表格
-                const tableDataHtml = renderToHtmlTable(render);
-                const tabName = `${dbname}.${table}`;
-                connection.tablePanes.push({
-                    title: tabName,
-                    name: tabName,
-                    content: tableDataHtml
-                });
+            if (render.Rows && render.Rows.length > 0) {
+                const columnResult = matchColumn(render.Columns);
+                const rowsResult = matchRows(render.Rows);
+                if (columnResult.matched || rowsResult.matched) {
+                    // 匹配到列名或行数据后，渲染表格
+                    const tableDataHtml = renderToHtmlTable(render);
+                    const tabName = `${dbname}.${table}`;
+                    connection.tablePanes.push({
+                        name: tabName,
+                        content: tableDataHtml,
+                        rowsCount: render.RowsCount,
+                        matchedType: columnResult.keyword ? columnResult.keyword : rowsResult.matchedLabel,
+                    });
+                }
             }
         }
     }
@@ -478,7 +542,7 @@ async function collectInfo(connection: DatabaseConnection) {
 
 
 function renderToHtmlTable(data: structs.RowData) {
-    let html = '<div class="table-responsive"><table class="el-table">';
+    let html = '<div class="table-responsive"><table class="db-table">';
 
     // 添加列名
     html += '<thead><tr>';
@@ -520,8 +584,13 @@ function decodeBase64ToUtf8(base64String: string): string {
     return decoder.decode(bytes);
 }
 
-function removeTableTab(connection: DatabaseConnection, targetName: string) {
+function removeTable(connection: DatabaseConnection, targetName: string) {
     connection.tablePanes = connection.tablePanes.filter(tab => tab.name !== targetName);
+}
+
+function showTable(content: string) {
+    detailDialogVisible.value = true
+    detailDialogContent.value = content
 }
 </script>
 
@@ -547,18 +616,18 @@ function removeTableTab(connection: DatabaseConnection, targetName: string) {
     overflow-x: auto;
 }
 
-:deep(.el-table) {
+:deep(.db-table) {
     width: 100%;
     border-collapse: collapse;
 }
 
-:deep(.el-table th),
-:deep(.el-table td) {
+:deep(.db-table th),
+:deep(.db-table td) {
     padding: 12px;
     border: 1px solid;
 }
 
-:deep(.el-table th) {
+:deep(.db-table th) {
     font-weight: bold;
 }
 

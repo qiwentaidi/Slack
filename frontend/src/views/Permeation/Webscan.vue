@@ -224,6 +224,7 @@ class WebscanEngine {
             rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
         }
         fp.table.result = []
+        fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
         vp.table.result = []
         vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
         Object.keys(dashboard.riskLevel).forEach(key => {
@@ -499,14 +500,6 @@ const taskManager = {
                 ElMessage.error("添加任务失败")
                 return false
             }
-            rp.table.result.push({
-                TaskId: id,
-                TaskName: id,
-                Targets: result.Targets,
-                Failed: 0,
-                Vulnerability: 0,
-            })
-            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
             result.Fingerprints.forEach(item => {
                 AddFingerscanResult(id, item)
             })
@@ -514,7 +507,23 @@ const taskManager = {
                 result.POCs.forEach(item => {
                     AddPocscanResult(id, item)
                 })
+                rp.table.result.push({
+                    TaskId: id,
+                    TaskName: id,
+                    Targets: result.Targets,
+                    Failed: 0,
+                    Vulnerability: result.POCs.length,
+                })
+            } else {
+                rp.table.result.push({
+                    TaskId: id,
+                    TaskName: id,
+                    Targets: result.Targets,
+                    Failed: 0,
+                    Vulnerability: 0,
+                })
             }
+            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
         }
     },
     exportTask: async function () {

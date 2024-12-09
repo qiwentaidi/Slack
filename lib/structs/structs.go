@@ -150,8 +150,9 @@ type DatabaseConnection struct {
 }
 
 type RowData struct {
-	Columns []string
-	Rows    [][]interface{}
+	Columns   []string
+	Rows      [][]interface{}
+	RowsCount int
 }
 
 type WebscanOptions struct {
@@ -525,4 +526,14 @@ type NacosNode struct {
 	Auth     int
 	OSS      int
 	Database int
+}
+
+type DatabaseInfo struct {
+	Name  string
+	Table []TableInfo
+}
+
+type TableInfo struct {
+	Name      string
+	RowsCount int
 }

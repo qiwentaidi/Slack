@@ -496,9 +496,18 @@ func (d *Database) FetchTableInfoFromMysql(dbName, tableName string) structs.Row
 		data = append(data, row)
 	}
 
+	// Query to get the total row count for the table
+	var rowCount int
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM `%s`.`%s`", dbName, tableName)
+	err = d.OtherDatabase.QueryRow(countQuery).Scan(&rowCount)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[mysql] 获取总行数失败: %v", err))
+	}
+
 	return structs.RowData{
-		Columns: columns,
-		Rows:    data,
+		Columns:   columns,
+		Rows:      data,
+		RowsCount: rowCount,
 	}
 }
 
@@ -597,10 +606,18 @@ func (d *Database) FetchTableInfoFromSqlServer(dbName, tableName string) structs
 		}
 		data = append(data, row)
 	}
+	// Query to get the total row count for the table
+	var rowCount int
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM [%s].dbo.[%s]", dbName, tableName)
+	err = d.OtherDatabase.QueryRow(countQuery).Scan(&rowCount)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[mysql] 获取总行数失败: %v", err))
+	}
 
 	return structs.RowData{
-		Columns: columns,
-		Rows:    data,
+		Columns:   columns,
+		Rows:      data,
+		RowsCount: rowCount,
 	}
 }
 
@@ -697,10 +714,18 @@ func (d *Database) FetchTableInfoFromOracle(schemaName, tableName string) struct
 		}
 		data = append(data, row)
 	}
+	// Query to get the total row count for the table
+	var rowCount int
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s.%s", schemaName, tableName)
+	err = d.OtherDatabase.QueryRow(countQuery).Scan(&rowCount)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[oracle] 获取总行数失败: %v", err))
+	}
 
 	return structs.RowData{
-		Columns: columns,
-		Rows:    data,
+		Columns:   columns,
+		Rows:      data,
+		RowsCount: rowCount,
 	}
 }
 
@@ -797,10 +822,18 @@ func (d *Database) FetchTableInfoFromPostgres(schemaName, tableName string) stru
 		}
 		data = append(data, row)
 	}
+	// Query to get the total row count for the table
+	var rowCount int
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s.%s", schemaName, tableName)
+	err = d.OtherDatabase.QueryRow(countQuery).Scan(&rowCount)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[postgres] 获取总行数失败: %v", err))
+	}
 
 	return structs.RowData{
-		Columns: columns,
-		Rows:    data,
+		Columns:   columns,
+		Rows:      data,
+		RowsCount: rowCount,
 	}
 }
 

