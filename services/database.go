@@ -961,13 +961,21 @@ func (d *Database) RemovePocscanResult(taskid, template_id, vuln_url string) boo
 }
 
 // 导出JSON报告
-func (d *Database) ExportWebReportWithJson(reportpath string, task structs.TaskResult) bool {
-	fingerprintsResult := d.RetrieveFingerscanResults(task.TaskId)
-	pocsResult := d.RetrievePocscanResults(task.TaskId)
+func (d *Database) ExportWebReportWithJson(reportpath string, tasks []structs.TaskResult) bool {
+	var fingerprintsResults []structs.InfoResult
+	var pocsResults []structs.VulnerabilityInfo
+	var targets []string
+	for _, task := range tasks {
+		fingerprintsResult := d.RetrieveFingerscanResults(task.TaskId)
+		pocsResult := d.RetrievePocscanResults(task.TaskId)
+		fingerprintsResults = append(fingerprintsResults, fingerprintsResult...)
+		pocsResults = append(pocsResults, pocsResult...)
+		targets = append(targets, task.Targets)
+	}
 	result := structs.WebReport{
-		Targets:      task.Targets,
-		Fingerprints: fingerprintsResult,
-		POCs:         pocsResult,
+		Targets:      strings.Join(targets, ","),
+		Fingerprints: fingerprintsResults,
+		POCs:         pocsResults,
 	}
 	return fileutil.SaveJsonWithFormat(d.ctx, reportpath, result)
 }
@@ -983,8 +991,14 @@ func (d *Database) ReadWebReportWithJson(reportpath string) (result structs.WebR
 }
 
 // 导出HTML报告
-func (d *Database) ExportWebReportWithHtml(reportpath, taskid string) bool {
-	fingerprintsResult := d.RetrieveFingerscanResults(taskid)
-	pocsResult := d.RetrievePocscanResults(taskid)
-	return os.WriteFile(reportpath, []byte(report.GenerateReport(fingerprintsResult, pocsResult)), 0644) == nil
+func (d *Database) ExportWebReportWithHtml(reportpath string, taskids []string) bool {
+	var fingerprintsResults []structs.InfoResult
+	var pocsResults []structs.VulnerabilityInfo
+	for _, taskid := range taskids {
+		fingerprintsResult := d.RetrieveFingerscanResults(taskid)
+		pocsResult := d.RetrievePocscanResults(taskid)
+		fingerprintsResults = append(fingerprintsResults, fingerprintsResult...)
+		pocsResults = append(pocsResults, pocsResult...)
+	}
+	return os.WriteFile(reportpath, []byte(report.GenerateReport(fingerprintsResults, pocsResults)), 0644) == nil
 }

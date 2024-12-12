@@ -76,8 +76,8 @@ async function Collect() {
     from.runningStatus = true
     const lines = from.company.split(/[(\r\n)\r\n]+/);
     let companys = lines.map(line => line.trim().replace(/\s+/g, ''));    
-    pc.ctrl.initTable()
-    pw.ctrl.initTable()
+    pc.initTable()
+    pw.initTable()
     let allCompany = [] as string[]
     let allSubdomain = [] as string[]
     const promises = companys.map(async companyName => {
@@ -218,7 +218,7 @@ function copyAllDomains() {
                     </el-table-column>
                     <el-table-column prop="Domains">
                         <template #header>
-                            <span class="vertical-center">域名
+                            <span class="position-center">域名
                                 <el-divider direction="vertical" />
                                 <el-button size="small" text bg @click="copyAllDomains()">复制全部域名</el-button>
                             </span>

@@ -164,7 +164,7 @@ class Dirsearch {
         }
         global.temp.dirsearchPathConut = from.paths.length
         from.errorCounts = 0
-        pagination.ctrl.initTable()
+        pagination.initTable()
         global.temp.dirsearchStartTime = Date.now();
     }
 
@@ -255,6 +255,25 @@ const config = reactive({
     recursion: 0,
 })
 
+
+function sortChangePathTimes(data: {column: any, prop: string, order: any }) {
+    if (data.order == 'ascending') {
+        pathTimes.table.result.sort((a, b) => a.times - b.times)
+    } else {
+        pathTimes.table.result.sort((a, b) => b.times - a.times)
+    }
+    pathTimes.table.pageContent = pathTimes.ctrl.watchResultChange(pathTimes.table);
+}
+
+function sortChange(data: {column: any, prop: string, order: any }) {
+    if (data.order == 'ascending') {
+        pagination.table.result.sort((a, b) => a[data.prop] - b[data.prop])
+    } else {
+        pagination.table.result.sort((a, b) => b[data.prop] - a[data.prop])
+    }
+    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
+}
+
 function copyHistory(length: number) {
     // 对 items 进行排序，按 times 值降序排列
     const sortedItems = pathTimes.table.result.sort((a, b) => b.times - a.times);
@@ -294,12 +313,11 @@ function copyHistory(length: number) {
             </el-space>
             <el-button :icon="Setting" @click="config.drawer = true">参数设置</el-button>
         </div>
-        <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 205px);">
+        <el-table :data="pagination.table.pageContent" @sort-change="sortChange"
+             style="height: calc(100vh - 205px);">
             <el-table-column type="index" label="#" width="60px" />
-            <el-table-column prop="Status" width="100px" label="状态码"
-                :sort-method="(a: any, b: any) => { return a.Status - b.Status }" sortable />
-            <el-table-column prop="Length" width="100px" label="长度"
-                :sort-method="(a: any, b: any) => { return a.Length - b.Length }" sortable />
+            <el-table-column prop="Status" width="100px" label="状态码" sortable="custom" />
+            <el-table-column prop="Length" width="100px" label="长度" sortable="custom" />
             <el-table-column prop="URL" label="目录路径" :show-overflow-tooltip="true">
                 <template #default="scope">
                     <el-tooltip placement="top">
@@ -459,7 +477,8 @@ function copyHistory(length: number) {
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-table :data="pathTimes.table.pageContent" border style="width: 100%; height: 50vh;">
+                <el-table :data="pathTimes.table.pageContent" border 
+                @sort-change="sortChangePathTimes" style="width: 100%; height: 50vh;">
                     <el-table-column prop="path">
                         <template #header>
                             <el-text><span>路径</span>
@@ -471,7 +490,7 @@ function copyHistory(length: number) {
                         </template>
                     </el-table-column>
                     <el-table-column prop="times" label="出现次数" width="200"
-                        :sort-method="(a: any, b: any) => { return a.times - b.times }" sortable>
+                        sortable="custom">
                     </el-table-column>
                     <template #empty>
                         <el-empty />

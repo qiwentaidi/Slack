@@ -35,7 +35,7 @@ type Nmap struct {
 
 //扫描类
 
-func (n *Nmap) Scan(ip string, port int, timeout time.Duration, proxy *clients.Proxy) (status Status, response *Response) {
+func (n *Nmap) Scan(ip string, port int, timeout time.Duration, proxy clients.Proxy) (status Status, response *Response) {
 	n.timeout = timeout
 	var probeNames ProbeList
 	if n.bypassAllProbePort.exist(port) {
@@ -56,7 +56,7 @@ func (n *Nmap) Scan(ip string, port int, timeout time.Duration, proxy *clients.P
 	return n.getRealResponse(ip, port, n.timeout, proxy, otherProbes...)
 }
 
-func (n *Nmap) getRealResponse(host string, port int, timeout time.Duration, proxy *clients.Proxy, probes ...string) (status Status, response *Response) {
+func (n *Nmap) getRealResponse(host string, port int, timeout time.Duration, proxy clients.Proxy, probes ...string) (status Status, response *Response) {
 	status, response = n.getResponseByProbes(host, port, timeout, proxy, probes...)
 	if status != Matched {
 		return status, response
@@ -70,7 +70,7 @@ func (n *Nmap) getRealResponse(host string, port int, timeout time.Duration, pro
 	return status, response
 }
 
-func (n *Nmap) getResponseBySSLSecondProbes(host string, port int, timeout time.Duration, proxy *clients.Proxy) (status Status, response *Response) {
+func (n *Nmap) getResponseBySSLSecondProbes(host string, port int, timeout time.Duration, proxy clients.Proxy) (status Status, response *Response) {
 	status, response = n.getResponseByProbes(host, port, timeout, proxy, n.sslSecondProbeMap...)
 	if status != Matched || response.FingerPrint.Service == "ssl" {
 		status, response = n.getResponseByHTTPS(host, port, timeout, proxy)
@@ -84,12 +84,12 @@ func (n *Nmap) getResponseBySSLSecondProbes(host string, port int, timeout time.
 	return NotMatched, response
 }
 
-func (n *Nmap) getResponseByHTTPS(host string, port int, timeout time.Duration, proxy *clients.Proxy) (status Status, response *Response) {
+func (n *Nmap) getResponseByHTTPS(host string, port int, timeout time.Duration, proxy clients.Proxy) (status Status, response *Response) {
 	var httpRequest = n.probeNameMap["TCP_GetRequest"]
 	return n.getResponse(host, port, true, timeout, httpRequest, proxy)
 }
 
-func (n *Nmap) getResponseByProbes(host string, port int, timeout time.Duration, proxy *clients.Proxy, probes ...string) (status Status, response *Response) {
+func (n *Nmap) getResponseByProbes(host string, port int, timeout time.Duration, proxy clients.Proxy, probes ...string) (status Status, response *Response) {
 	var responseNotMatch *Response
 	for _, requestName := range probes {
 		if n.probeUsed.exist(requestName) {
@@ -120,7 +120,7 @@ func (n *Nmap) getResponseByProbes(host string, port int, timeout time.Duration,
 	return status, response
 }
 
-func (n *Nmap) getResponse(host string, port int, tls bool, timeout time.Duration, p *probe, proxy *clients.Proxy) (Status, *Response) {
+func (n *Nmap) getResponse(host string, port int, tls bool, timeout time.Duration, p *probe, proxy clients.Proxy) (Status, *Response) {
 	if port == 53 {
 		if DnsScan(host, port) {
 			return Matched, &dnsResponse

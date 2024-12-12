@@ -70,7 +70,7 @@ async function NewScanner() {
     }
     let passDict = [] as string[]
     let userDict = [] as string[]
-    pagination.ctrl.initTable()
+    pagination.initTable()
     if (config.builtInUsername) {
         for (var item of crackDict.usernames) {
             item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!

@@ -33,7 +33,7 @@ export const webscanOptions = [
     },
 ]
 
-export const webReportOptions = ["HTML", "JSON", "EXCEL"]
+export const webReportOptions = ["HTML", "JSON"]
 
 export const portscanOptions = [
     {

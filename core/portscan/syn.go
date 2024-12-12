@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"sync"
 	"sync/atomic"
@@ -30,7 +31,7 @@ func SynScan(ctx context.Context, ip string, ports []uint16, id *int32) {
 				Port:   int(ret.Port),
 			}
 			gologger.Success(ctx, fmt.Sprintf("[syn] %v is open ! ", ret))
-			pr := Connect(ret.Ip.String(), int(ret.Port), synTimeout, nil)
+			pr := Connect(ret.Ip.String(), int(ret.Port), synTimeout, clients.Proxy{})
 			if pr.Status {
 				result.HttpTitle = pr.HttpTitle
 				result.Server = pr.Server

@@ -365,7 +365,7 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 			addresses <- portscan.Address{IP: temp[0], Port: port}
 		}
 	}()
-	portscan.TcpScan(a.ctx, addresses, thread, timeout, &proxy)
+	portscan.TcpScan(a.ctx, addresses, thread, timeout, proxy)
 }
 func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint16) {
 	portscan.ExitFunc = false

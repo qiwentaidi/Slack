@@ -224,7 +224,7 @@ func tlsSendWithProxy(protocol string, netloc string, data string, duration time
 	return string(buf), nil
 }
 
-func Send(protocol string, tls bool, netloc string, data string, duration time.Duration, size int, pr *clients.Proxy) (string, error) {
+func Send(protocol string, tls bool, netloc string, data string, duration time.Duration, size int, pr clients.Proxy) (string, error) {
 	if pr.Enabled && pr.Mode != "HTTP" {
 		auth := &proxy.Auth{User: pr.Username, Password: pr.Password}
 		socksAddress := fmt.Sprintf("%v:%v", pr.Address, pr.Port)

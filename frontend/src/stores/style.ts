@@ -59,11 +59,12 @@ export const eldividerStyle = computed(() => {
     }
 });
 
-// v2.7.3 更新漏洞风险等级显示样式
+// v1.7.3 更新漏洞风险等级显示样式
 export function getTagTypeBySeverity(severity: string) {
     switch (severity) {
-        case 'CRITICAL':
-            return 'critical';
+        // v1.7.4 CRITICAL 类型由动态类实现，不然会出现控制台类型报错
+        // case 'CRITICAL':
+        //     return 'success';
         case 'HIGH':
             return 'danger';
         case 'MEDIUM':

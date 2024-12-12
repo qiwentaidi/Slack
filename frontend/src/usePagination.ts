@@ -1,4 +1,4 @@
-import { shallowReactive, watch } from 'vue';
+import { shallowReactive } from 'vue';
 
 interface PaginationState<T> {
     currentPage: number;
@@ -13,12 +13,10 @@ interface PaginationController<T> {
     handleSizeChange: (val: number) => void;
     handleCurrentChange: (val: number) => void;
     handleSelectChange: (rows:any[]) => void;
-    getColumnData: (prop: string) => any[];
     watchResultChange: (table: PaginationState<T>) => T[];
-    initTable: () => void; // 初始化表格数据
 }
 
-function usePagination<T>(initialPageSize: number): { table: PaginationState<T>, ctrl: PaginationController<T> } {
+function usePagination<T>(initialPageSize: number): { table: PaginationState<T>, ctrl: PaginationController<T>, initTable: () => void } {
     const table = shallowReactive<PaginationState<T>>({
         currentPage: 1,
         pageSize: initialPageSize,
@@ -40,21 +38,19 @@ function usePagination<T>(initialPageSize: number): { table: PaginationState<T>,
         handleSelectChange: (rows) => {
             table.selectRows = rows
         },
-        getColumnData: (prop: string) => {
-            return table.result.map((item: any) => item[prop]);
-        },
         watchResultChange: (table: PaginationState<T>) => {
             const start = (table.currentPage - 1) * table.pageSize;
             const end = table.currentPage * table.pageSize;
             return table.result.slice(start, end);
         },
-        initTable: () => {
-            table.result = []
-            table.pageContent = []
-            table.selectRows = []
-        }
     };
-    return { table, ctrl };
+    const initTable = () => {
+        table.result = []
+        table.temp = []
+        table.selectRows = []
+        table.pageContent = ctrl.watchResultChange(table)
+    };
+    return { table, ctrl, initTable };
 }
 
 export default usePagination;

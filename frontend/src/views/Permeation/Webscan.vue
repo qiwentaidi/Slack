@@ -2,9 +2,8 @@
 import { reactive, onMounted, ref, h, nextTick } from 'vue'
 import { VideoPause, QuestionFilled, Plus, ZoomIn, DocumentCopy, ChromeFilled, Promotion, Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger } from 'wailsjs/go/services/App'
-import { ElMessage, ElMessageBox, ElNotification, TableColumnCtx } from 'element-plus';
-import { TestProxy, Copy, CopyALL, transformArrayFields, FormatWebURL, UploadFileAndRead, generateRandomString } from '@/util'
-import { ExportWebScanToXlsx } from '@/export'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
+import { TestProxy, Copy, CopyALL, FormatWebURL, UploadFileAndRead, generateRandomString } from '@/util'
 import global from "@/global"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import usePagination from '@/usePagination';
@@ -69,8 +68,9 @@ const form = reactive({
     hideResponse: false,
     showYamlPoc: false,
     pocContent: '',
-    exportTask: <structs.TaskResult>{},
 })
+
+const exportTask = ref<structs.TaskResult[]>([])
 
 const config = reactive({
     screenhost: false,
@@ -223,10 +223,8 @@ class WebscanEngine {
             })
             rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
         }
-        fp.table.result = []
-        fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
-        vp.table.result = []
-        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
+        fp.initTable()
+        vp.initTable()
         Object.keys(dashboard.riskLevel).forEach(key => {
             dashboard.riskLevel[key] = 0;
         });
@@ -329,8 +327,33 @@ function highlightFingerprints(fingerprint: string) {
     return "primary"
 }
 
-function filterSeverity(value: string, row: structs.VulnerabilityInfo, column: TableColumnCtx<structs.VulnerabilityInfo>) :boolean {
-    return row.Severity === value
+const filterId = ref(0)
+
+const sortSeverity = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
+
+const vultableCtrl = {
+    sortChange: function(data: {column: any, prop: string, order: any }) {
+        if (data.order == 'ascending') {
+            vp.table.result.sort((a, b) => sortSeverity.indexOf(a.Severity) - sortSeverity.indexOf(b.Severity))
+        } else {
+            vp.table.result.sort((a, b) => sortSeverity.indexOf(b.Severity) - sortSeverity.indexOf(a.Severity))
+        }
+        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
+    },
+    filterChange: function(newFilters: any) {
+        if (filterId.value == 0) {
+            vp.table.temp = vp.table.result
+        }
+        filterId.value++
+        const selectedFilters = newFilters.severity ? [...newFilters.severity] : [];
+        // 如果没有选中项，返回空数组
+        if (selectedFilters.length === 0) {
+            vp.table.result = vp.table.temp
+        } else {
+            vp.table.result = vp.table.temp.filter(item => selectedFilters.includes(item.Severity));
+        }
+        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
+    },
 }
 
 function handleContextMenu(row: any, column: any, e: MouseEvent) {
@@ -406,6 +429,7 @@ async function ShowWebPictrue(filepath: string) {
 }
 
 const reportOption = ref('HTML')
+const reportName = ref('')
 const exportDialog = ref(false)
 
 // 任务管理
@@ -526,35 +550,38 @@ const taskManager = {
             rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
         }
     },
+    showExportDialog: function() {
+        if (rp.table.selectRows.length >= 2) {
+            reportName.value = "合并报告-" + nano()
+        } else {
+            reportName.value = rp.table.selectRows[0].TaskId
+        }
+        exportDialog.value = true
+    },
     exportTask: async function () {
         let filepath = ""
         let isSuccess = false
-        var [fingerResult, nucleiResult] = await Promise.all([
-            RetrieveFingerscanResults(form.exportTask.TaskId),
-            RetrievePocscanResults(form.exportTask.TaskId)
-        ]);
-        if (!nucleiResult) {
-            nucleiResult = []
-        }
+        let taskids = rp.table.selectRows.map(item => item.TaskId)
         switch (reportOption.value) {
-            case "EXCEL":
-                ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Severity, URL, Extract }) => ({
-                    ID,
-                    Name,
-                    Type,
-                    Severity,
-                    URL,
-                    Extract,
-                })))
-                break
+            // v 1.7.5 弃用
+            // case "EXCEL":
+            //     ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Severity, URL, Extract }) => ({
+            //         ID,
+            //         Name,
+            //         Type,
+            //         Severity,
+            //         URL,
+            //         Extract,
+            //     })))
+            //     break
             case "JSON":
-                filepath = await SaveFileDialog(form.exportTask.TaskId)
-                isSuccess = await ExportWebReportWithJson(filepath + ".json", form.exportTask)
+                filepath = await SaveFileDialog(reportName.value)
+                isSuccess = await ExportWebReportWithJson(filepath + ".json", rp.table.selectRows)
                 isSuccess ? ElMessage.success("导出成功") : ElMessage.error("导出失败")
                 break
             default:
-                filepath = await SaveFileDialog(form.exportTask.TaskId)
-                isSuccess = await ExportWebReportWithHtml(filepath + ".html", form.exportTask.TaskId)
+                filepath = await SaveFileDialog(reportName.value)
+                isSuccess = await ExportWebReportWithHtml(filepath + ".html", taskids)
                 isSuccess ? ElMessage.success("导出成功") : ElMessage.error("导出失败")
         }
         exportDialog.value = false
@@ -776,22 +803,32 @@ const throttleInitialize = throttle(() => {
             </el-tab-pane>
             <el-tab-pane label="漏洞">
                 <el-table :data="vp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
-                    :header-cell-style="{ 'text-align': 'center' }">
+                    :header-cell-style="{ 'text-align': 'center' }" @sort-change="vultableCtrl.sortChange"
+                    @filter-change="vultableCtrl.filterChange">
                     <el-table-column prop="ID" label="Template" width="250px" />
                     <el-table-column prop="Type" label="Type" width="150px" />
-                    <el-table-column prop="Severity" width="150px" label="Severity" :filter-method="filterSeverity"
+                    <el-table-column 
+                        prop="Severity" 
+                        width="150px" 
+                        column-key="severity"
+                        label="Severity" 
                         :filters="[
                             { text: 'INFO', value: 'INFO' },
                             { text: 'LOW', value: 'LOW' },
                             { text: 'MEDIUM', value: 'MEDIUM' },
                             { text: 'HIGH', value: 'HIGH' },
                             { text: 'CRITICAL', value: 'CRITICAL' },
-                        ]">
+                        ]" sortable="custom">
                         <template #filter-icon>
                             <Filter />
                         </template>
+                        <!-- 需要通过设置动态类图来设置自定义的tag类型 -->
                         <template #default="scope">
-                            <el-tag :type="getTagTypeBySeverity(scope.row.Severity)">{{ scope.row.Severity }}</el-tag>
+                            <el-tag 
+                            :type="getTagTypeBySeverity(scope.row.Severity)" 
+                            :class="{'el-tag--critical': scope.row.Severity === 'CRITICAL'}">
+                            {{ scope.row.Severity }}
+                        </el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="URL" label="URL" />
@@ -1042,8 +1079,12 @@ const throttleInitialize = throttle(() => {
                     <Clock />
                 </el-icon><span>扫描任务历史</span></el-text>
         </template>
-        <el-table :data="rp.table.pageContent" stripe :cell-style="{ textAlign: 'center' }"
-            :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 125px)">
+        <el-table :data="rp.table.pageContent" stripe 
+            @selection-change="rp.ctrl.handleSelectChange" 
+            :cell-style="{ textAlign: 'center' }"
+            :header-cell-style="{ 'text-align': 'center' }" 
+            style="height: calc(100vh - 125px)">
+            <el-table-column type="selection" width="50px" />
             <el-table-column prop="TaskName" label="任务名称" :show-overflow-tooltip="true"></el-table-column>
             <el-table-column prop="Targets" label="目标" :show-overflow-tooltip="true">
                 <template #default="scope">
@@ -1070,9 +1111,6 @@ const throttleInitialize = throttle(() => {
                         <el-tooltip content="删除">
                             <el-button :icon="Delete" link @click="taskManager.deleteTask(scope.row.TaskId)" />
                         </el-tooltip>
-                        <el-tooltip content="导出">
-                            <el-button :icon="Share" link @click="exportDialog = true; form.exportTask = scope.row" />
-                        </el-tooltip>
                     </el-button-group>
                 </template>
             </el-table-column>
@@ -1086,6 +1124,8 @@ const throttleInitialize = throttle(() => {
                     <el-button :icon="saveIcon" @click="taskManager.appendTaskToDatabase">临时入库</el-button>
                 </el-tooltip>
                 <el-button :icon="UploadFilled" @click="taskManager.importTask()">导入任务</el-button>
+                <el-button :icon="Share" @click="taskManager.showExportDialog"
+                 :disabled="rp.table.selectRows.length < 1">导出报告</el-button>
             </el-space>
             <el-pagination size="small" background @size-change="rp.ctrl.handleSizeChange"
                 @current-change="rp.ctrl.handleCurrentChange" :pager-count="5" :current-page="rp.table.currentPage"
@@ -1094,10 +1134,16 @@ const throttleInitialize = throttle(() => {
             </el-pagination>
         </div>
     </el-drawer>
-    <el-dialog title="选择导出格式" v-model="exportDialog">
-        <el-radio-group v-model="reportOption">
-            <el-radio v-for="item in webReportOptions" :key="item" :label="item">{{ item }}</el-radio>
-        </el-radio-group>
+    <el-dialog title="导出报告" v-model="exportDialog">
+        <el-form-item label="报告类型">
+            <el-radio-group v-model="reportOption">
+                <el-radio v-for="item in webReportOptions" :key="item" :label="item" :value="item"></el-radio>
+            </el-radio-group>
+        </el-form-item>
+        <el-form-item label="报告名称">
+            <el-input v-model="reportName"></el-input>
+            <span class="form-item-tips">多选任务可以合并导出</span>
+        </el-form-item>
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="exportDialog = false">取消</el-button>

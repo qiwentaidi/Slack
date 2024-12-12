@@ -56,17 +56,11 @@ const form = reactive({
     target: '',
     portlist: '',
     percentage: 0,
-    id: 0,
     count: 0,
-    radio: "2",
     isRoot: false,
     filter: '',
     defaultFilterGroup: "Fingerprint",
     newscanner: false,
-})
-
-const table = reactive({
-    temp: [] as PortScanData[], // 用于存储过滤之前的数据，后续需要还原给result
     filterId: 0
 })
 
@@ -80,29 +74,29 @@ const options = ({
     filterGroup: ["Host", "Port", "Fingerprint", "Link", "WebTitle"],
     filterField: function () {
         const filter = form.filter.trim();
-        if (table.filterId == 0) {
-            table.temp = pagination.table.result
-            table.filterId++
+        if (form.filterId == 0) {
+            pagination.table.temp = pagination.table.result
+            form.filterId++
         }
         if (filter) {
             switch (form.defaultFilterGroup) {
                 case "Host":
-                    pagination.table.result = table.temp.filter((p: PortScanData) => p.IP.includes(filter));
+                    pagination.table.result = pagination.table.temp.filter((p: PortScanData) => p.IP.includes(filter));
                     break
                 case "Port":
-                    pagination.table.result = table.temp.filter((p: PortScanData) => p.Port.toString().includes(filter));
+                    pagination.table.result = pagination.table.temp.filter((p: PortScanData) => p.Port.toString().includes(filter));
                     break
                 case "Fingerprint":
-                    pagination.table.result = table.temp.filter((p: PortScanData) => p.Server.includes(filter));
+                    pagination.table.result = pagination.table.temp.filter((p: PortScanData) => p.Server.includes(filter));
                     break
                 case "Link":
-                    pagination.table.result = table.temp.filter((p: PortScanData) => p.Link.includes(filter));
+                    pagination.table.result = pagination.table.temp.filter((p: PortScanData) => p.Link.includes(filter));
                     break
                 case "WebTitle":
-                    pagination.table.result = table.temp.filter((p: PortScanData) => p.HttpTitle.includes(filter));
+                    pagination.table.result = pagination.table.temp.filter((p: PortScanData) => p.HttpTitle.includes(filter));
             }
         } else {
-            pagination.table.result = table.temp;
+            pagination.table.result = pagination.table.temp;
         }
         pagination.table.currentPage = 1; // 重置分页
         pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
@@ -135,11 +129,9 @@ class Scanner {
             return
         }
         // 初始化
-        pagination.ctrl.initTable()
-        form.id = 0
+        pagination.initTable()
         form.count = 0
         form.percentage = 0
-        table.temp = []
         var ips = [] as string[]
         var portsList = [] as number[]
         const lines = SplitTextArea(form.target)
@@ -252,8 +244,7 @@ const moreOperate = ({
     // 联动
     Linkage: function (mode: string) {
         // 处理对象，不然map拿不到值
-        const selectRows = JSON.parse(JSON.stringify(pagination.table.selectRows));
-        let targets = selectRows.map((item: any) => item.Link)
+        let targets = pagination.table.selectRows.map(item => item.Link)
         if (targets.length == 0) {
             ElMessage("至少选择1个联动目标")
             return
@@ -367,7 +358,7 @@ function stopShodan() {
             <el-table-column prop="Server" label="Fingerprint" width="150px" />
             <el-table-column prop="Link" :show-overflow-tooltip="true">
                 <template #header>
-                    <span class="vertical-center">Link
+                    <span class="position-center">Link
                         <el-divider direction="vertical" />
                         <el-button size="small" text bg @click="moreOperate.CopyURLs('url')">复制URLs</el-button>
                         <el-divider direction="vertical" />

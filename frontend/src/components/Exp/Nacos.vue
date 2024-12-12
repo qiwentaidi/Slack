@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ElMessage } from 'element-plus';
 import { AlibabaNacos } from 'wailsjs/go/services/App';
 import { reactive } from 'vue';
 import { AddRightSubString, getProxy } from '@/util';

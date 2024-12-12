@@ -26,7 +26,7 @@ type PortResult struct {
 	HttpTitle string
 }
 
-func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int, proxy *clients.Proxy) {
+func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int, proxy clients.Proxy) {
 	var id int32
 	single := make(chan struct{})
 	retChan := make(chan PortResult)
@@ -76,7 +76,7 @@ type Address struct {
 	Port int
 }
 
-func Connect(ip string, port, timeout int, proxy *clients.Proxy) PortResult {
+func Connect(ip string, port, timeout int, proxy clients.Proxy) PortResult {
 	var pr PortResult
 	scanner := gonmap.New()
 	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout), proxy)

@@ -16622,4 +16622,8 @@ tcpwrappedms 3000
 
 # http://docs.oracle.com/javase/1.5.0/docs/guide/jpda/jdwp-spec.html
 match jdwp m|^JDWP-Handshake$| p/Java Debug Wire Protocol/
+##############################NEXT PROBE##############################
+Probe TCP Kafka q|\x00\x00\x00\x14\x00\x03\x00\x01\x00\x00\x00\x00\x00\x06\x73\x61\x72\x61\x6d\x61\xff\xff\xff\xff|
+ports 9092
+match kafka m|^\x00\x00[\x01-\xff][\x01-\xff]\x00\x00\x00\x00\x00\x00\x00[\x01-\xff]\x00\x00\x00| p/Kafka/
 `

@@ -2,7 +2,10 @@ package portscan
 
 import (
 	"fmt"
+	"slack-wails/lib/clients"
+	"slack-wails/lib/gonmap"
 	"testing"
+	"time"
 )
 
 func TestWrapperTcpWithTimeout(t *testing.T) {
@@ -32,8 +35,9 @@ func TestWrapperTcpWithTimeout(t *testing.T) {
 	// SynScan(context.Background(), "1.1.1.1", []uint16{53, 80, 443, 8080}, &id)
 
 	// mongodb connect
-
-	flag, err := MongodbConn("192.168.0.107:27017", "", "")
-	fmt.Printf("flag1: %v\n", flag)
-	fmt.Printf("err: %v\n", err)
+	ip := "127.0.0.1"
+	scanner := gonmap.New()
+	status, response := scanner.Scan(ip, 7080, time.Second*time.Duration(5), clients.Proxy{})
+	fmt.Printf("status: %v\n", status)
+	fmt.Printf("response: %v\n", response.FingerPrint.Service)
 }
