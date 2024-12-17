@@ -262,9 +262,6 @@ func (a *App) ExitScanner(scanType string) {
 		webscan.ExitFunc = true
 	}
 }
-func (a *App) InitTycHeader(token string) {
-	info.InitHEAD(token)
-}
 
 func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool, machine string) []structs.CompanyInfo {
 	tkm := info.CheckKeyMap(a.ctx, query)
@@ -307,8 +304,8 @@ func (a *App) WechatOfficial(query string) []structs.WechatReulst {
 	return info.WeChatOfficialAccounts(a.ctx, query, companyId)
 }
 
-func (a *App) TycCheckLogin() bool {
-	return info.CheckLogin()
+func (a *App) TycCheckLogin(token string) bool {
+	return info.CheckLogin(token)
 }
 
 // dirsearch

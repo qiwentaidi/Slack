@@ -63,7 +63,7 @@ type FingerScanner struct {
 func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
 	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
 	for _, t := range options.Target {
-		u, err := url.Parse(strings.TrimSpace(t))
+		u, err := url.Parse(t)
 		if err != nil {
 			gologger.Error(ctx, err)
 			continue
@@ -143,7 +143,6 @@ func (s *FingerScanner) NewFingerScan() {
 			}
 			return
 		}
-
 		// 合并请求头数据
 		rawHeaders = append(rawHeaders, DumpResponseHeadersOnly(resp)...)
 
@@ -512,7 +511,8 @@ func (s *FingerScanner) GetBanner(host string) string {
 func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte {
 	var nextCheckUrl string
 	newPath := checkJSRedirect(respRaw)
-	if newPath == "" {
+	// 跳转到ie.html需要忽略，fix in v1.7.5
+	if newPath == "" || newPath == "/html/ie.html" {
 		return nil
 	}
 	newPath = strings.Trim(newPath, " ")

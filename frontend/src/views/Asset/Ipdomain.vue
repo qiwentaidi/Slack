@@ -3,7 +3,7 @@ import { reactive } from 'vue';
 import { ICPInfo, CheckCdn, Ip138IpHistory, Ip138Subdomain } from 'wailsjs/go/services/App'
 import { Document, UploadFilled, Promotion, Search } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
-import { Copy, SplitTextArea } from '@/util';
+import { Copy, ProcessTextAreaInput } from '@/util';
 import async from 'async'
 import router from '@/router';
 
@@ -53,7 +53,7 @@ function startSearch() {
 
 function batchQuery() {
     let id = 0
-    const lines = SplitTextArea(domain.batch)
+    const lines = ProcessTextAreaInput(domain.batch)
     ElMessage.info("正在执行CDN批量检测，目标数: " + lines.length)
     async.eachLimit(lines, 20, (target: string, callback: () => void) => {
         CheckCdn(target).then(result => {

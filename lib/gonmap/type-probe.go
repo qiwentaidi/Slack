@@ -41,13 +41,11 @@ func (p *probe) scan(host string, port int, tls bool, timeout time.Duration, siz
 	sendRaw := strings.Replace(p.sendRaw, "{Host}", fmt.Sprintf("%s:%d", host, port), -1)
 
 	text, err := simplenet.Send(p.protocol, tls, uri, sendRaw, timeout, size, proxy)
-	fmt.Printf("text1: %v\n", text)
 	if err == nil {
 		return text, tls, nil
 	}
 	if strings.Contains(err.Error(), "STEP1") && tls {
 		text, err := simplenet.Send(p.protocol, false, uri, p.sendRaw, timeout, size, proxy)
-		fmt.Printf("text2: %v\n", text)
 		return text, false, err
 	}
 	return text, tls, err

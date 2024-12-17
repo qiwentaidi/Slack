@@ -5,7 +5,7 @@ import resultIcon from '@/assets/icon/result.svg'
 import { ElMessage } from 'element-plus';
 import async from 'async';
 import global from '@/global';
-import { Copy, ReadLine, SplitTextArea, UploadFileAndRead } from '@/util';
+import { Copy, ReadLine, ProcessTextAreaInput, UploadFileAndRead } from '@/util';
 import { PortBrute, Callgologger, ExitScanner } from 'wailsjs/go/services/App';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import { BruteResult } from '@/stores/interface';
@@ -81,13 +81,13 @@ async function NewScanner() {
         passDict.push("")
     }
     if (config.username != "") {
-        let users = SplitTextArea(config.username)
+        let users = ProcessTextAreaInput(config.username)
         for (var item of crackDict.usernames) {
             item.dic.push(...users)
         }
     }
     if (config.password != "") {
-        let pass = SplitTextArea(config.password)
+        let pass = ProcessTextAreaInput(config.password)
         passDict.push(...pass)
     }
     ElMessage.info("任务已开始")

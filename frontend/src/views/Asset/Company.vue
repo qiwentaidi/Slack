@@ -2,10 +2,10 @@
 import { onMounted, reactive } from "vue";
 import { QuestionFilled, Plus, ChromeFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
-import { WechatOfficial, SubsidiariesAndDomains, InitTycHeader, Callgologger, TycCheckLogin } from "wailsjs/go/services/App";
+import { WechatOfficial, SubsidiariesAndDomains, TycCheckLogin, Callgologger } from "wailsjs/go/services/App";
 import { ExportAssetToXlsx } from '@/export'
 import usePagination from "@/usePagination";
-import { Copy, transformArrayFields } from "@/util";
+import { Copy, getRootDomain, transformArrayFields } from "@/util";
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import global from "@/global";
 import { LinkSubdomain } from "@/linkage";
@@ -55,13 +55,14 @@ async function Collect() {
         return
     } else {
         from.token = from.token.replace(/[\r\n\s]/g, '')
-        InitTycHeader(from.token)
-        let isLogin = await TycCheckLogin()
+        ElMessage.info("正在校验天眼查Token，请稍后...")
+        let isLogin = await TycCheckLogin(from.token)
         if (!isLogin) {
             ElMessage.warning('天眼查Token已失效')
             return
         }
     }
+    
     if (from.domain && from.machineStr == "") {
         ElMessage.warning('MachineStr为空，无法进行子域名查询，请先配置该内容')
         return
@@ -80,47 +81,48 @@ async function Collect() {
     pw.initTable()
     let allCompany = [] as string[]
     let allSubdomain = [] as string[]
-    const promises = companys.map(async companyName => {
-        Callgologger("info", `正在收集${companyName}的子公司信息`)
+    // 1. 收集子公司信息
+    for (const companyName of companys) {
+        Callgologger("info", `正在收集${companyName}的子公司信息`);
         if (typeof companyName === 'string') {
             const result = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain, from.machineStr);
             if (result.length > 0) {
-                pc.table.result.push(...result)
-                throttleUpdate()
+                pc.table.result.push(...result);
+                throttleUpdate();
                 for (const item of result) {
-                    allCompany.push(item.CompanyName!)
+                    allCompany.push(item.CompanyName!);
                     if (from.linkSubdomain && item.Domains!.length > 0) {
-                        allSubdomain.push(...item.Domains!)
+                        allSubdomain.push(...item.Domains!);
                     }
                 }
             }
         }
-    });
-    Promise.all(promises).then(() => {
-        Callgologger("info", "已完成子公司查询任务")
-        if (allSubdomain.length != 0) {
-            LinkSubdomain(allSubdomain)
-        }
-        if (from.wechat) {
-            const promises2 = allCompany.map(async companyName => {
-                Callgologger("info", `正在收集${companyName}的微信公众号资产`)
-                if (typeof companyName === 'string') {
-                    const result = await WechatOfficial(companyName);
-                    if (Array.isArray(result) && result.length > 0) {
-                        pw.table.result.push(...result);
-                        pw.table.pageContent = pw.ctrl.watchResultChange(pw.table)
-                    }
-                }
-            });
-            Promise.all(promises2).then(() => {
-                Callgologger("info", "已完成微信公众查询任务")
-                from.runningStatus = false
-            });
-        } else {
-            from.runningStatus = false
-        }
-    });
+    }
 
+    Callgologger("info", "已完成子公司查询任务")
+
+    // 2. 处理子域名链接
+    if (allSubdomain.length != 0) {
+        await LinkSubdomain(allSubdomain)
+    }
+
+    // 3. 收集微信公众号信息
+    if (from.wechat) {
+        for (const companyName of allCompany) {
+            Callgologger("info", `正在收集${companyName}的微信公众号资产`)
+            if (typeof companyName === 'string') {
+                const result = await WechatOfficial(companyName);
+                if (Array.isArray(result) && result.length > 0) {
+                    pw.table.result.push(...result);
+                    pw.table.pageContent = pw.ctrl.watchResultChange(pw.table)
+                }
+            }
+        }
+        Callgologger("info", "已完成微信公众查询任务")
+    }
+
+    // 4. 完成所有任务
+    from.runningStatus = false
 }
 
 function recheckLinkSubdomain() {
@@ -133,13 +135,10 @@ const debouncedInput = debounce(() => {
 }, 2000);
 
 function copyAllDomains() {
-    let allDomains = [];
-    pc.table.result.forEach(item => {
-        if (item.Domains.length > 0) {
-            allDomains.push(...item.Domains);
-        }
-    });
-    Copy(allDomains.join('\n'))
+    const allDomains = pc.table.result
+        .flatMap(item => item.Domains)
+        .map(getRootDomain);
+    Copy(allDomains.join('\n'));
 }
 </script>
 
@@ -161,8 +160,8 @@ function copyAllDomains() {
             </el-form-item>
             <el-form-item label="其他查询内容:">
                 <el-checkbox v-model="from.wechat" label="公众号" />
-                <el-checkbox v-model="from.domain" label="查询子域名" @change="recheckLinkSubdomain" />
-                <el-checkbox v-model="from.linkSubdomain" label="联动子域名收集" :disabled="!from.domain"/>
+                <el-checkbox v-model="from.domain" label="域名查询" @change="recheckLinkSubdomain" />
+                <!-- <el-checkbox v-model="from.linkSubdomain" label="联动子域名收集" :disabled="!from.domain"/> -->
             </el-form-item>
             <el-form-item>
                 <template #label>
@@ -220,7 +219,7 @@ function copyAllDomains() {
                         <template #header>
                             <span class="position-center">域名
                                 <el-divider direction="vertical" />
-                                <el-button size="small" text bg @click="copyAllDomains()">复制全部域名</el-button>
+                                <el-button size="small" text bg @click="copyAllDomains()">复制全部根域名</el-button>
                             </span>
                         </template>
                         <template #default="scope">

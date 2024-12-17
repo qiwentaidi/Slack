@@ -58,8 +58,6 @@ export function IconHash(arg1:string):Promise<string>;
 
 export function InitRule(arg1:string):Promise<boolean>;
 
-export function InitTycHeader(arg1:string):Promise<void>;
-
 export function Ip138IpHistory(arg1:string):Promise<string>;
 
 export function Ip138Subdomain(arg1:string):Promise<string>;
@@ -100,7 +98,7 @@ export function Subdomain(arg1:structs.SubdomainOption):Promise<void>;
 
 export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number,arg4:boolean,arg5:string):Promise<Array<structs.CompanyInfo>>;
 
-export function TycCheckLogin():Promise<boolean>;
+export function TycCheckLogin(arg1:string):Promise<boolean>;
 
 export function UncoverSearch(arg1:string,arg2:string,arg3:structs.SpaceOption):Promise<Array<space.Result>>;
 

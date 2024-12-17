@@ -14,6 +14,30 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+// func BeianxWithChromedp(company string, machine string) ([]string, error) {
+// 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+// 		chromedp.Flag("headless", true),
+// 		chromedp.Flag("disable-background-timer-throttling", false),
+// 	)
+
+// 	allocatorCtx, chromedpCancel := chromedp.NewExecAllocator(context.Background(), opts...)
+// 	defer chromedpCancel()
+
+// 	ctx, cancel := chromedp.NewContext(allocatorCtx)
+// 	defer cancel()
+// 	ctx, cancel = context.WithTimeout(ctx, time.Second*10)
+// 	defer cancel()
+
+// 	var res string
+// 	err := chromedp.Run(ctx,
+// 		chromedp.Navigate(url),
+// 		chromedp.SendKeys(`//*[@id="username"]`, "admin"),
+// 		chromedp.SendKeys(`//*[@id="password"]`, pass),
+// 		chromedp.Click(`//*[@id="login"]/table/tbody/tr/td[2]/div/div[5]/button`),
+// 		chromedp.Location(&res),
+// 	)
+// }
+
 // 如果请求到开头为
 var acwscv2 = ""
 

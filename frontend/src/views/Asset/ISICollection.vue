@@ -86,7 +86,7 @@
 import global from '@/global';
 import { ISICResult } from '@/stores/interface';
 import usePagination from '@/usePagination';
-import { sleep, SplitTextArea } from '@/util';
+import { sleep, ProcessTextAreaInput } from '@/util';
 import { onMounted, reactive, ref, watch } from 'vue';
 import { Callgologger, GitDorks } from 'wailsjs/go/services/App';
 import dorks from '@/stores/dorks'
@@ -142,8 +142,8 @@ function updateKeyword() {
 }
 
 async function Collect() {
-    let targets = SplitTextArea(parameter.target)
-    let dorks = SplitTextArea(parameter.keyword)
+    let targets = ProcessTextAreaInput(parameter.target)
+    let dorks = ProcessTextAreaInput(parameter.keyword)
     if (targets.length == 0 || dorks.length == 0) {
         ElMessage.warning("目标地址和关键字均不能为空")
         return

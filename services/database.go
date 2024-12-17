@@ -27,8 +27,9 @@ type Database struct {
 	ctx           context.Context
 	DB            *sql.DB // 系统数据库
 	lock          sync.RWMutex
-	OtherDatabase *sql.DB       // 数据库信息采集时的连接池
-	MongoClient   *mongo.Client // mongodb连接池
+	OtherDatabase *sql.DB                     // 数据库信息采集时的连接池
+	MongoClient   *mongo.Client               // mongodb连接池
+	PostgresInfo  *structs.DatabaseConnection // 用于临时存储postgres数据库连接信息，方便其他方法调用
 }
 
 func (d *Database) Startup(ctx context.Context) {
@@ -90,13 +91,6 @@ func columnExists(db *sql.DB, tableName, columnName string) bool {
 	return false
 }
 func (d *Database) CreateTable() bool {
-	if !columnExists(d.DB, "VulnerabilityInfo", "response_time") {
-		_, err := d.DB.Exec(`ALTER TABLE VulnerabilityInfo ADD COLUMN response_time TEXT`)
-		if err != nil {
-			return false
-		}
-	}
-
 	_, err := d.DB.Exec(`
         CREATE TABLE IF NOT EXISTS hunter_syntax ( name TEXT, content TEXT );
         CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );
@@ -108,6 +102,16 @@ func (d *Database) CreateTable() bool {
         CREATE TABLE IF NOT EXISTS FingerprintInfo ( task_id TEXT, url TEXT, status INTEGER, length INTEGER, title TEXT, detect TEXT, is_waf INTEGER, waf TEXT, fingerprints TEXT, screenshot TEXT );
         CREATE TABLE IF NOT EXISTS VulnerabilityInfo ( task_id TEXT, template_id TEXT, vuln_name TEXT, protocol TEXT, severity TEXT, vuln_url TEXT, extract TEXT, request TEXT, response TEXT, description TEXT, reference TEXT, response_time TEXT );
     `)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[sqlite] create table: %s", err))
+		return false
+	}
+	if !columnExists(d.DB, "VulnerabilityInfo", "response_time") {
+		_, err := d.DB.Exec(`ALTER TABLE VulnerabilityInfo ADD COLUMN response_time TEXT`)
+		if err != nil {
+			return false
+		}
+	}
 	return err == nil
 }
 
@@ -729,13 +733,14 @@ func (d *Database) FetchTableInfoFromOracle(schemaName, tableName string) struct
 	}
 }
 
-var postgresSystemSchemas = []string{"pg_catalog", "information_schema", "pg_toast"}
+var postgresSystemSchemas = []string{"pg_catalog", "template0", "template1", "information_schema", "postgres", "pg_toast"}
 
-func (d *Database) FetchDatabaseInfoFromPostgres() map[string][]string {
+func (d *Database) FetchDatabaseInfoFromPostgres(info structs.DatabaseConnection) map[string][]string {
+	d.PostgresInfo = &info
 	// Query to retrieve all schemas in PostgreSQL
-	schemas, err := d.OtherDatabase.Query("SELECT schema_name FROM information_schema.schemata")
+	schemas, err := d.OtherDatabase.Query("SELECT datname FROM pg_database WHERE datistemplate = false")
 	if err != nil {
-		gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 查询模式失败: %v", err))
+		gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 查询数据库失败: %v", err))
 		return nil
 	}
 	defer schemas.Close()
@@ -754,26 +759,13 @@ func (d *Database) FetchDatabaseInfoFromPostgres() map[string][]string {
 			continue
 		}
 
-		// Query to retrieve tables for the current schema
-		tables, err := d.OtherDatabase.Query(fmt.Sprintf("SELECT table_name FROM information_schema.tables WHERE table_schema = '%s'", schemaName))
+		tables, err := getPostgresTables(info, schemaName)
 		if err != nil {
-			gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 查询表失败: %v", err))
+			gologger.Warning(d.ctx, err)
 			continue
 		}
-		defer tables.Close()
 
-		for tables.Next() {
-			var tableName string
-			if err := tables.Scan(&tableName); err != nil {
-				gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 扫描表名称失败: %v", err))
-				continue
-			}
-			databaseInfo[schemaName] = append(databaseInfo[schemaName], tableName)
-		}
-
-		if err := tables.Err(); err != nil {
-			gologger.Warning(d.ctx, fmt.Sprintf("[postgres] 遍历表时出错: %v", err))
-		}
+		databaseInfo[schemaName] = tables
 	}
 
 	if err := schemas.Err(); err != nil {
@@ -783,12 +775,52 @@ func (d *Database) FetchDatabaseInfoFromPostgres() map[string][]string {
 	return databaseInfo
 }
 
+func getPostgresTables(info structs.DatabaseConnection, dbName string) ([]string, error) {
+	// 切换到目标数据库
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", info.Host, info.Port, info.Username, info.Password, dbName)
+	targetDB, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, fmt.Errorf("[postgres] 连接数据库查询表[%s]失败: %v", dbName, err)
+	}
+	defer targetDB.Close()
+
+	// 查询当前数据库中所有表
+	query := "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+	rows, err := targetDB.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("[postgres] 数据库[%s]查询表名失败: %v", dbName, err)
+	}
+	defer rows.Close()
+	var tables []string
+	for rows.Next() {
+		var tableName string
+		err = rows.Scan(&tableName)
+		if err != nil {
+			continue
+		}
+		tables = append(tables, tableName)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("[postgres] 遍历表名时出错: %v", err)
+	}
+	return tables, nil
+}
+
 func (d *Database) FetchTableInfoFromPostgres(schemaName, tableName string) structs.RowData {
+	// 切换到目标数据库
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", d.PostgresInfo.Host, d.PostgresInfo.Port, d.PostgresInfo.Username, d.PostgresInfo.Password, schemaName)
+	targetDB, err := sql.Open("postgres", connStr)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[postgres] 连接数据库失败: %v", err))
+	}
+	defer targetDB.Close()
+
 	// Construct SQL query to fetch the first three rows of the specified table
-	sqlQuery := fmt.Sprintf("SELECT * FROM %s.%s LIMIT 3", schemaName, tableName)
+	sqlQuery := fmt.Sprintf(`SELECT * FROM %s LIMIT 3`, tableName)
 
 	// Execute the query
-	rows, err := d.OtherDatabase.Query(sqlQuery)
+	rows, err := targetDB.Query(sqlQuery)
 	if err != nil {
 		gologger.Debug(d.ctx, fmt.Sprintf("[postgres] 查询表数据失败: %v", err))
 		return structs.RowData{}
@@ -824,8 +856,8 @@ func (d *Database) FetchTableInfoFromPostgres(schemaName, tableName string) stru
 	}
 	// Query to get the total row count for the table
 	var rowCount int
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s.%s", schemaName, tableName)
-	err = d.OtherDatabase.QueryRow(countQuery).Scan(&rowCount)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)
+	err = targetDB.QueryRow(countQuery).Scan(&rowCount)
 	if err != nil {
 		gologger.Debug(d.ctx, fmt.Sprintf("[postgres] 获取总行数失败: %v", err))
 	}

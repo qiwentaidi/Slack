@@ -70,7 +70,6 @@ const form = reactive({
     pocContent: '',
 })
 
-const exportTask = ref<structs.TaskResult[]>([])
 
 const config = reactive({
     screenhost: false,
@@ -863,7 +862,7 @@ const throttleInitialize = throttle(() => {
         </el-tabs>
         <template #ctrl>
             <el-tooltip content="扫描任务历史">
-                <el-button :icon="Clock" @click="historyDialog = true" />
+                <el-button :icon="Clock" @click="historyDialog = true">任务管理</el-button>
             </el-tooltip>
         </template>
     </CustomTabs>

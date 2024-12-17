@@ -28,7 +28,7 @@ export function ExportWebReportWithJson(arg1:string,arg2:Array<structs.TaskResul
 
 export function FetchDatabaseInfoFromOracle():Promise<{[key: string]: Array<string>}>;
 
-export function FetchDatabaseInfoFromPostgres():Promise<{[key: string]: Array<string>}>;
+export function FetchDatabaseInfoFromPostgres(arg1:structs.DatabaseConnection):Promise<{[key: string]: Array<string>}>;
 
 export function FetchDatabaseinfoFromMongodb():Promise<{[key: string]: Array<string>}>;
 

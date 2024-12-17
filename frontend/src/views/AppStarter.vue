@@ -51,6 +51,7 @@ onMounted(async () => {
     })
 })
 
+
 const config = reactive({
     defaultType: "CMD",
     defualtGroupName: "",
@@ -210,8 +211,7 @@ const localGroup = ({
     },
     handleDrop: function (event: DragEvent, groupName: string) {
         event.preventDefault();
-        ElMessage(groupName)
-        config.mouseOnGroupName = groupName
+        // config.mouseOnGroupName = groupName
     },
     handleOpenFolder: async function (filepath: string) {
         let result = await OpenFolder(filepath)
@@ -348,7 +348,8 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
         </div>
         <div v-if="filteredGroups.length > 0" v-for="groups in filteredGroups" style="margin-bottom: 5px;">
             <el-card @drop="(event: any) => localGroup.handleDrop(event, groups.Name)" class="drop-enable"
-                @contextmenu.stop @contextmenu.prevent="handleCardContextMenu($event, groups)">
+                @contextmenu.stop.prevent="handleCardContextMenu($event, groups)" 
+                @mouseover="config.mouseOnGroupName = groups.Name">
                 <div class="my-header" style="margin-bottom: 20px">
                     <span style="font-weight: bold">{{ groups.Name }}</span>
                     <el-button :icon="DeleteFilled" link @click="localGroup.deleteGroup(groups.Name)"></el-button>
@@ -356,18 +357,18 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 <div v-if="groups.Children" :style="appStartStyle">
                     <div v-for="(item, index) in groups.Children" :key="index">
                         <el-tooltip :content="item.Name" :show-after="500">
-                            <div class="card-content" v-show="global.temp.isGrid" @contextmenu.stop
+                            <div class="card-content" v-show="global.temp.isGrid"
                                 @click="RunApp(item.Type, item.Path, item.Target)"
-                                @contextmenu.prevent="handleButtonContextMenu($event, groups, item)">
+                                @contextmenu.stop.prevent="handleButtonContextMenu($event, groups, item)">
                                 <component :is="localGroup.chooseSvg(item.Type)" style="width: 40px; height: 40px;">
                                 </component>
                                 <span class="fixed-length-span">{{ item.Name }}</span>
                             </div>
                         </el-tooltip>
                         <div v-show="!global.temp.isGrid">
-                            <el-button bg text :icon="localGroup.chooseSvg(item.Type)" @contextmenu.stop
+                            <el-button bg text :icon="localGroup.chooseSvg(item.Type)"
                                 @click="RunApp(item.Type, item.Path, item.Target)"
-                                @contextmenu.prevent="handleButtonContextMenu($event, groups, item)">
+                                @contextmenu.stop.prevent="handleButtonContextMenu($event, groups, item)">
                                 {{ item.Name }}
                             </el-button>
                         </div>

@@ -1,4 +1,4 @@
-import { SplitTextArea } from "@/util";
+import { ProcessTextAreaInput } from "@/util";
 import { ElMessage } from "element-plus";
 
 export function validatePortscan(input: string) {
@@ -62,7 +62,7 @@ export function isPrivateIP(ip: string) {
 
 export function validateWebscan(input: string) {
     const ipPatterns = /^[a-zA-Z0-9\-]+.[a-zA-Z0-9\-]+/ // 符合域名规范即可
-    var lines = SplitTextArea(input)
+    var lines = ProcessTextAreaInput(input)
     lines = lines.filter(line => line.trim() !== '');
     for (const line of lines) {
         if (!ipPatterns.test(line)) {

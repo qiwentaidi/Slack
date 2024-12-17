@@ -3,7 +3,7 @@ import global from '@/global'
 import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
 import { dirsearch, structs } from 'wailsjs/go/models';
-import { getProxy } from '@/util';
+import { getProxy, getRootDomain } from '@/util';
 import { crackDict } from '@/stores/options';
 
 
@@ -133,11 +133,3 @@ export async function LinkSubdomain(domains: string[]) {
     await Subdomain(option)
 }
 
-function getRootDomain(hostname: string) {
-    var parts = hostname.split('.'); // 拆分域名部分
-    if (parts.length > 2) {
-        // 如果域名有子域名（例如：sub.example.com）
-        return parts.slice(-2).join('.'); // 返回最后两部分（例如：example.com）
-    }
-    return hostname; // 如果没有子域名，直接返回（例如：example.com）
-}

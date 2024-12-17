@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, DocumentCopy, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
-import { SplitTextArea, splitInt, Copy, CsegmentIpv4 } from '@/util'
+import { ProcessTextAreaInput, splitInt, Copy, CsegmentIpv4 } from '@/util'
 import { TableTabs, Results } from "@/stores/interface"
 import { ExportToXlsx } from '@/export'
 import { FofaTips, FofaSearch, IconHash, Callgologger } from 'wailsjs/go/services/App'
@@ -216,7 +216,7 @@ function batchSearch() {
         showCancelButton: false,
     })
         .then(async ({ value }) => {
-            const lines = SplitTextArea(value);
+            const lines = ProcessTextAreaInput(value);
             const temp = [];
 
             for (const line of lines) {

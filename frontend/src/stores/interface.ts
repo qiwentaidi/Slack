@@ -155,4 +155,5 @@ export interface DatabaseConnection {
     databaseCount?: number
     tableCount?: number
     tablePanes: TablePane[]
+    progress: number // 当前采集进度
 }

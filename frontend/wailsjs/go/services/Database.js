@@ -50,8 +50,8 @@ export function FetchDatabaseInfoFromOracle() {
   return window['go']['services']['Database']['FetchDatabaseInfoFromOracle']();
 }
 
-export function FetchDatabaseInfoFromPostgres() {
-  return window['go']['services']['Database']['FetchDatabaseInfoFromPostgres']();
+export function FetchDatabaseInfoFromPostgres(arg1) {
+  return window['go']['services']['Database']['FetchDatabaseInfoFromPostgres'](arg1);
 }
 
 export function FetchDatabaseinfoFromMongodb() {

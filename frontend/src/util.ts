@@ -62,11 +62,14 @@ export function CopyALL(filed: string[]) {
   Copy(filed.join("\n"));
 }
 
-export function SplitTextArea(textarea: string) {
-  let lines = textarea.split(/[(\r\n)\r\n]+/); // 根据换行或者回车进行识别
-  lines = lines.filter((item) => item.trim() !== ""); // 删除空项并去除左右空格
+// Function to process the input target in the text area
+// 处理文本域的目标输入
+export function ProcessTextAreaInput(textarea: string) {
+  let lines = textarea.split(/[(\r\n)\r\n]+/).map(line => line.trim()); // Recognize and remove leading and trailing spaces based on line breaks or carriage returns
+  lines = lines.filter(item => item !== ""); // Remove empty items
   return Array.from(new Set(lines));;
 }
+
 
 export function splitInt(n: number, slice: number): number[] {
   let res: number[] = [];
@@ -80,7 +83,7 @@ export function splitInt(n: number, slice: number): number[] {
 
 export async function FormatWebURL(host: string): Promise<string[]> {
   let urls: Array<string> = [];
-  const targets = SplitTextArea(host);
+  const targets = ProcessTextAreaInput(host);
   Callgologger("info", "正在解析目标 ...")
   // Wrap the asynchronous processing of each target with async.eachLimit
   await new Promise((resolve, reject) => {
@@ -329,4 +332,13 @@ export function getProxy() :clients.Proxy {
     Username: global.proxy.username,
     Password: global.proxy.password,
   }
+}
+
+export function getRootDomain(hostname: string) {
+  var parts = hostname.split('.'); // 拆分域名部分
+  if (parts.length > 2) {
+      // 如果域名有子域名（例如：sub.example.com）
+      return parts.slice(-2).join('.'); // 返回最后两部分（例如：example.com）
+  }
+  return hostname; // 如果没有子域名，直接返回（例如：example.com）
 }

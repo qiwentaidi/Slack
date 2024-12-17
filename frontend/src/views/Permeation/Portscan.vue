@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus'
-import { Copy, getProxy, SplitTextArea, UploadFileAndRead } from '@/util'
+import { Copy, getProxy, ProcessTextAreaInput, UploadFileAndRead } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { QuestionFilled, ChromeFilled, Promotion, DocumentCopy, Search, Plus, Upload, CircleClose } from '@element-plus/icons-vue';
 import { PortParse, IPParse, NewTcpScanner, HostAlive, IsRoot, NewSynScanner, ExitScanner, Callgologger, SpaceGetPort } from 'wailsjs/go/services/App'
@@ -134,7 +134,7 @@ class Scanner {
         form.percentage = 0
         var ips = [] as string[]
         var portsList = [] as number[]
-        const lines = SplitTextArea(form.target)
+        const lines = ProcessTextAreaInput(form.target)
         let specialTarget = [] as string[]
         let conventionTarget = [] as string[]
         // 处理目标 192.168.1.1:6379 与其他形式
@@ -270,7 +270,7 @@ async function LinkShodan() {
         ElMessage.warning("目标输入格式不正确!")
         return
     }
-    const lines = SplitTextArea(shodanIp.value)
+    const lines = ProcessTextAreaInput(shodanIp.value)
     for (const line of lines) {
         if (isPrivateIP(line)) {
             ElMessage.warning(line + " 为内网地址不支持扫描!")

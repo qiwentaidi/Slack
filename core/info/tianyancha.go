@@ -16,83 +16,13 @@ import (
 	"strings"
 )
 
-type TycSearchID struct {
-	State      string `json:"state"`
-	Message    string `json:"message"`
-	Special    string `json:"special"`
-	VipMessage string `json:"vipMessage"`
-	IsLogin    int    `json:"isLogin"`
-	ErrorCode  int    `json:"errorCode"`
-	Data       []struct {
-		ID         int         `json:"id"`
-		GraphID    string      `json:"graphId"`
-		Type       int         `json:"type"`
-		MatchType  string      `json:"matchType"` // 商标信息匹配 > 股票简称匹配 > 公司名称匹配 > 公司品牌匹配 > 公司信息匹配
-		ComName    string      `json:"comName"`
-		Name       string      `json:"name"`
-		Alias      string      `json:"alias"`
-		Logo       string      `json:"logo"`
-		ClaimLevel interface{} `json:"claimLevel"`
-		RegStatus  int         `json:"regStatus"`
-	} `json:"data"`
-}
-
-type TycResult struct {
-	State      string `json:"state"`
-	Message    string `json:"message"`
-	Special    string `json:"special"`
-	VipMessage string `json:"vipMessage"`
-	IsLogin    int    `json:"isLogin"`
-	ErrorCode  int    `json:"errorCode"`
-	Data       struct {
-		Result []struct {
-			Name             string      `json:"name"` // 公司名称
-			PersonType       int         `json:"personType"`
-			ServiceType      interface{} `json:"serviceType"`
-			RegStatus        string      `json:"regStatus"`
-			Percent          string      `json:"percent"` // 股权比例
-			LegalPersonTitle string      `json:"legalPersonTitle"`
-			LegalPersonName  string      `json:"legalPersonName"`
-			Logo             interface{} `json:"logo"`
-			Alias            string      `json:"alias"`
-			ID               int64       `json:"id"` // 子公司的companyId
-			Amount           string      `json:"amount"`
-			EstiblishTime    int64       `json:"estiblishTime"`
-			LegalPersonID    int         `json:"legalPersonId"`
-			ServiceCount     interface{} `json:"serviceCount"`
-			LegalAlias       interface{} `json:"legalAlias"`
-			LegalLogo        interface{} `json:"legalLogo"`
-			JigouName        interface{} `json:"jigouName"`
-			JigouLogo        interface{} `json:"jigouLogo"`
-			JigouID          interface{} `json:"jigouId"`
-			ProductName      interface{} `json:"productName"`
-			ProductLogo      interface{} `json:"productLogo"`
-			ProductID        interface{} `json:"productId"`
-		} `json:"result"`
-		SortField   interface{} `json:"sortField"`
-		PercentList []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
-		} `json:"percentList"`
-		ProvinceList []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
-		} `json:"provinceList"`
-		CategoryList []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
-		} `json:"categoryList"`
-		Total int `json:"total"`
-	} `json:"data"`
-}
-
 var (
 	gethead   = map[string]string{}
 	posthead  = map[string]string{}
 	TycKeyMap = make(map[string]structs.TycCompanyInfo)
 )
 
-func InitHEAD(token string) {
+func initTycHeader(token string) {
 	gethead = map[string]string{
 		"Version":      "TYC-Web",
 		"X-Auth-Token": token,
@@ -110,13 +40,13 @@ func GetCompanyID(ctx context.Context, company string) (string, string) {
 	data := make(map[string]interface{})
 	data["keyword"] = company
 	bytesData, _ := json.Marshal(data)
-	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-tempest/search/suggest/v3", posthead, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
+	_, body, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-tempest/search/suggest/v3", posthead, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
 		gologger.Error(ctx, err)
 	}
-	var qs TycSearchID
-	if err = json.Unmarshal(b, &qs); err != nil {
-		gologger.Error(ctx, err)
+	var qs structs.TycSearchID
+	if err = json.Unmarshal(body, &qs); err != nil {
+		gologger.Error(ctx, fmt.Sprintf("[tianyancha] company %s 请求过快导致触发人机校验", company))
 	}
 	if len(qs.Data) > 0 { // 接口会自动进行 商标信息匹配 > 股票简称匹配 > 公司名称匹配 > 公司品牌匹配 > 公司信息匹配 五种规则的匹配
 		company_id = qs.Data[0].GraphID
@@ -138,10 +68,10 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 	bytesData, _ := json.Marshal(data)
 	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-company-background/company/investListV2", posthead, bytes.NewReader(bytesData), 10, true, clients.DefaultClient())
 	if err != nil {
-		gologger.Error(ctx, err)
+		gologger.Error(ctx, fmt.Sprintf("[tianyancha] company: %s request interface err: %v", companyName, err))
 		return
 	}
-	var qr TycResult
+	var qr structs.TycResult
 	json.Unmarshal(b, &qr)
 	// 获取到本公司对应的域名，若是二次查询跳过
 	if !isSecond {
@@ -149,7 +79,7 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 		if searchDomain {
 			domains, err = Beianx(companyName, machine)
 			if err != nil {
-				gologger.Debug(ctx, err)
+				gologger.Debug(ctx, fmt.Sprintf("[beianx] company: %s request interface err: %v", companyName, err))
 			}
 		}
 		Asset = append(Asset, structs.CompanyInfo{
@@ -169,7 +99,7 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 			if (result.RegStatus == "存续" || result.RegStatus == "ok") && searchDomain { // 注销的公司不用查备案
 				subsidiaryDomains, err = Beianx(result.Name, machine)
 				if err != nil {
-					gologger.Debug(ctx, err)
+					gologger.Debug(ctx, fmt.Sprintf("[beianx] company: %s request interface err: %v", result.Name, err))
 				}
 			}
 			Asset = append(Asset, structs.CompanyInfo{
@@ -185,25 +115,6 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 	return
 }
 
-type OfficialAccounts struct {
-	State      string `json:"state"`
-	Message    string `json:"message"`
-	Special    string `json:"special"`
-	VipMessage string `json:"vipMessage"`
-	IsLogin    int    `json:"isLogin"`
-	ErrorCode  int    `json:"errorCode"`
-	Data       struct {
-		Count      int `json:"count"`
-		ResultList []struct {
-			PublicNum   string `json:"publicNum"`   // 微信号
-			CodeImg     string `json:"codeImg"`     // 二维码
-			Recommend   string `json:"recommend"`   // 简介
-			Title       string `json:"title"`       // 名称
-			TitleImgURL string `json:"titleImgURL"` // 公众号LOGO
-		} `json:"resultList"`
-	} `json:"data"`
-}
-
 // 获取微信公众号信息
 func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) (wr []structs.WechatReulst) {
 	_, b, err := clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize=1&pageNum=1", gethead, nil, 10, true, clients.DefaultClient())
@@ -211,7 +122,7 @@ func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) 
 		gologger.Error(ctx, err)
 		return
 	}
-	var oa OfficialAccounts
+	var oa structs.OfficialAccounts
 	json.Unmarshal(b, &oa)
 	if oa.ErrorCode != 0 || oa.Data.Count == 0 {
 		gologger.Info(ctx, "公众号查询出现错误或不存在公众号资产,公司名称: "+companyName)
@@ -236,7 +147,8 @@ func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) 
 	return
 }
 
-func CheckLogin() bool {
+func CheckLogin(token string) bool {
+	initTycHeader(token)
 	u := "https://capi.tianyancha.com/cloud-monitor-provider/v4/monitor/checkMonitorTip.json"
 	_, body, err := clients.NewRequest("GET", u, gethead, nil, 10, true, clients.DefaultClient())
 	if err != nil {

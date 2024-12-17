@@ -102,10 +102,6 @@ export function InitRule(arg1) {
   return window['go']['services']['App']['InitRule'](arg1);
 }
 
-export function InitTycHeader(arg1) {
-  return window['go']['services']['App']['InitTycHeader'](arg1);
-}
-
 export function Ip138IpHistory(arg1) {
   return window['go']['services']['App']['Ip138IpHistory'](arg1);
 }
@@ -186,8 +182,8 @@ export function SubsidiariesAndDomains(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['services']['App']['SubsidiariesAndDomains'](arg1, arg2, arg3, arg4, arg5);
 }
 
-export function TycCheckLogin() {
-  return window['go']['services']['App']['TycCheckLogin']();
+export function TycCheckLogin(arg1) {
+  return window['go']['services']['App']['TycCheckLogin'](arg1);
 }
 
 export function UncoverSearch(arg1, arg2, arg3) {

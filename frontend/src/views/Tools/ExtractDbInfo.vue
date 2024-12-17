@@ -48,7 +48,7 @@
                                         :{{ connection.tableCount }}
                                     </el-button>
                                 </el-space>
-                                <el-button :icon="View" text bg @click="collectInfo(connection)"
+                                <el-button :icon="View" text bg @click="collectInfo(connection, false)"
                                     :disabled="!connection.connected">
                                     采集信息
                                 </el-button>
@@ -61,11 +61,11 @@
                 <el-tab-pane :key="index" :label="connection.type + '://' + connection.host + ':' + connection.port"
                     :name="connection.host + ':' + connection.port" v-if="connection.connected">
                     <el-table :data="connection.tablePanes" :cell-style="{ textAlign: 'center' }"
-                    :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 175px);" >
+                        :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 175px);">
                         <el-table-column label="#" type="index" width="60" />
                         <el-table-column label="Table Name">
                             <template #default="scope">
-                                <span>{{ scope.row.title }}</span>
+                                <span>{{ scope.row.name }}</span>
                             </template>
                         </el-table-column>
                         <el-table-column label="Matched Type">
@@ -80,16 +80,33 @@
                         </el-table-column>
                         <el-table-column label="Operate" style="width: 200px;">
                             <template #default="scope">
-                                <el-button size="small" :icon="Reading" @click="showTable(scope.row.content)">查看</el-button>
-                                <el-button size="small" :icon="Delete" @click="removeTable(connection, scope.row.name)">删除</el-button>
+                                <el-button size="small" :icon="Reading"
+                                    @click="showTable(scope.row.content)">查看</el-button>
+                                <el-button size="small" :icon="Delete" type="danger" plain
+                                    @click="removeTable(connection, scope.row.name)">删除</el-button>
                             </template>
                         </el-table-column>
                         <template #empty>
-                            <el-empty />                        </template>
+                            <el-empty />
+                        </template>
                     </el-table>
                     <div class="my-header" style="margin-top: 5px;">
-                        <span>{{ progressTips }}</span>
-                        <div></div>
+                        <span>当前采集进度: {{ connection.progress }}/{{ connection.tableCount }}</span>
+                        <div>
+                            <el-button v-show="!isRunning" type="success"
+                               :icon="VideoPlay" @click="collectInfo(connection, false)">
+                                开始采集
+                            </el-button>
+                            <el-button v-show="isRunning" 
+                                :type="isPaused ? 'primary' : 'warning'"
+                                :icon="isPaused ? VideoPlay : VideoPause"
+                                @click="togglePauseResume(connection)">
+                                {{ isPaused ? '继续采集' : '暂停采集' }}
+                            </el-button>
+                            <el-button type="danger" :icon="SwitchButton" @click="exitCollect(), connection.progress = 0">
+                                退出采集
+                            </el-button>
+                        </div>
                     </div>
                 </el-tab-pane>
             </template>
@@ -162,9 +179,9 @@
 
 <script lang="ts" setup>
 import { ref, reactive, onMounted, nextTick } from 'vue'
-import { Connection, Setting, Plus, Delete, Coin, View, Postcard, Reading } from '@element-plus/icons-vue'
+import { Connection, Setting, Plus, Delete, Coin, View, Postcard, Reading, VideoPlay, VideoPause, SwitchButton } from '@element-plus/icons-vue'
 import { AddConnection, ConnectDatabase, DisconnectDatabase, FetchDatabaseinfoFromMongodb, FetchDatabaseinfoFromMysql, FetchDatabaseInfoFromOracle, FetchDatabaseInfoFromPostgres, FetchDatabaseinfoFromSqlServer, FetchTableInfoFromMysql, FetchTableInfoFromOracle, FetchTableInfoFromPostgres, FetchTableInfoFromSqlServer, GetAllDatabaseConnections, RemoveConnection, UpdateConnection } from 'wailsjs/go/services/Database'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import mysqlIcon from '@/assets/icon/mysql.svg'
 import mssqlIcon from '@/assets/icon/sqlserver.svg'
 import oracleIcon from '@/assets/icon/oracle.svg'
@@ -179,6 +196,7 @@ import { SaveConfig } from '@/config'
 import { databaseOptions } from '@/stores/options'
 import { DatabaseConnection } from '@/stores/interface'
 import { structs } from 'wailsjs/go/models'
+import { Callgologger } from 'wailsjs/go/services/App'
 
 const activeTab = ref('dashborad')
 
@@ -189,7 +207,7 @@ const detailDialogVisible = ref(false)
 const detailDialogContent = ref('')
 const isEditing = ref(false)
 const editingIndex = ref(-1)
-const progressTips = ref('')
+
 const currentConnection = reactive<DatabaseConnection>({
     nanoid: '',
     type: 'mysql',
@@ -201,6 +219,7 @@ const currentConnection = reactive<DatabaseConnection>({
     connected: false,
     loading: false,
     tablePanes: [],
+    progress: 0,
 })
 
 // 初始化为空对象, 低版本mac不初始化会提示 ReferenceError: Cannot access uninitialized variable
@@ -248,6 +267,7 @@ onMounted(async () => {
                 databaseCount: 0,
                 tableCount: 0,
                 tablePanes: [],
+                progress: 0,
             })
         })
     }
@@ -314,6 +334,7 @@ async function addConnection() {
         databaseCount: 0,
         tableCount: 0,
         tablePanes: [],
+        progress: 0,
     })
     dialogVisible.value = false
     resetCurrentConnection()
@@ -340,12 +361,27 @@ async function updateConnection() {
 }
 
 async function deleteConnection(index: number, nanoid: string) {
-    connections.value.map(item => {
-        if (item.nanoid === nanoid && item.connected) DisconnectDatabase(item.type)
-    })
-    connections.value.splice(index, 1)
-    let result = await RemoveConnection(nanoid)
-    result ? ElMessage.success('删除成功') : ElMessage.error('删除失败')
+    ElMessageBox.confirm(
+        '确定删除该连接?',
+        '警告',
+        {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    )
+        .then(async () => {
+            connections.value.map(item => {
+                if (item.nanoid === nanoid && item.connected) DisconnectDatabase(item.type)
+            })
+            connections.value.splice(index, 1)
+            let result = await RemoveConnection(nanoid)
+            result ? ElMessage.success('删除成功') : ElMessage.error('删除失败')
+        })
+        .catch(() => {
+
+        })
+
 }
 
 function getDbIcon(connection: DatabaseConnection) {
@@ -411,7 +447,7 @@ async function openConnection(connection: DatabaseConnection) {
             dbinfo = await FetchDatabaseInfoFromOracle()
             break
         case 'postgres':
-            dbinfo = await FetchDatabaseInfoFromPostgres()
+            dbinfo = await FetchDatabaseInfoFromPostgres(option)
             break
         default:
             dbinfo = await FetchDatabaseinfoFromMongodb()
@@ -463,7 +499,7 @@ function matchRows(rows: any[][]): { matched: boolean, matchedLabel?: string } {
                     return { matched: true, matchedLabel: "Phone Number" };
                 }
                 for (let option of regexOptions) {
-                     if (option.regex.test(decodedValue)) {
+                    if (option.regex.test(decodedValue)) {
                         return { matched: true, matchedLabel: option.label };
                     }
                 }
@@ -472,7 +508,7 @@ function matchRows(rows: any[][]): { matched: boolean, matchedLabel?: string } {
                     return { matched: true, matchedLabel: "Phone Number" };
                 }
                 for (let option of regexOptions) {
-                     if (option.regex.test(cell)) {
+                    if (option.regex.test(cell)) {
                         return { matched: true, matchedLabel: option.label };
                     }
                 }
@@ -482,8 +518,14 @@ function matchRows(rows: any[][]): { matched: boolean, matchedLabel?: string } {
     return { matched: false }; // No match found
 }
 
+// 状态控制变量
+const isRunning = ref(false)
+const isPaused = ref(false)
+const currentDbname = ref('')
+const currentTableIndex = ref(0)
 
-async function collectInfo(connection: DatabaseConnection) {
+async function collectInfo(connection: DatabaseConnection, resumeFrom: boolean) {
+    // 基础检查
     if (!connection.connected) {
         ElMessage.warning("请先连接数据库");
         return;
@@ -492,52 +534,132 @@ async function collectInfo(connection: DatabaseConnection) {
         ElMessage.warning("未发现系统数据库外的数据库，已跳过数据采集");
         return;
     }
-    // 切换到该连接的选项卡
-    activeTab.value = `${connection.host}:${connection.port}`;
-    connection.tablePanes = [];
-    let fetchTable: (arg1: string, arg2: string) => Promise<structs.RowData>
-    switch (connection.type) {
-        case 'mysql':
-            fetchTable = FetchTableInfoFromMysql
-            break
-        case 'mssql':
-            fetchTable = FetchTableInfoFromSqlServer
-            break
-        case 'oracle':
-            fetchTable = FetchTableInfoFromOracle
-            break
-        case 'postgres':
-            fetchTable = FetchTableInfoFromPostgres
-            break
-        default:
-            ElMessage.warning("不支持该数据库类型进行信息收集")
-            return
+
+    // 如果已经在运行中，防止重复启动
+    if (isRunning.value && !isPaused.value) {
+        ElMessage.warning("采集任务正在进行中");
+        return;
     }
-    // 遍历数据库表
-    let totalTables = Object.values(dbinfo).reduce((acc, tables) => acc + tables.length, 0);
-    let processedTables = 0;
-    for (const [dbname, tables] of Object.entries(dbinfo)) {
-        for (const table of tables) {
-            processedTables++;
-            progressTips.value = `当前采集进度: (${processedTables}/${totalTables})`;
-            let render = await fetchTable(dbname, table);
-            if (render.Rows && render.Rows.length > 0) {
-                const columnResult = matchColumn(render.Columns);
-                const rowsResult = matchRows(render.Rows);
-                if (columnResult.matched || rowsResult.matched) {
-                    // 匹配到列名或行数据后，渲染表格
-                    const tableDataHtml = renderToHtmlTable(render);
-                    const tabName = `${dbname}.${table}`;
-                    connection.tablePanes.push({
-                        name: tabName,
-                        content: tableDataHtml,
-                        rowsCount: render.RowsCount,
-                        matchedType: columnResult.keyword ? columnResult.keyword : rowsResult.matchedLabel,
-                    });
+
+    try {
+        // 设置运行状态
+        isRunning.value = true
+        isPaused.value = false
+
+        // 切换到该连接的选项卡
+        activeTab.value = `${connection.host}:${connection.port}`;
+        if (!resumeFrom) {
+            connection.tablePanes = [];
+            currentDbname.value = '';
+            currentTableIndex.value = 0;
+            connection.progress = 0;  // 仅在首次采集时重置进度
+        }
+
+        // 确定数据库类型对应的获取函数
+        let fetchTable: (arg1: string, arg2: string) => Promise<structs.RowData>
+        switch (connection.type) {
+            case 'mysql':
+                fetchTable = FetchTableInfoFromMysql
+                break
+            case 'mssql':
+                fetchTable = FetchTableInfoFromSqlServer
+                break
+            case 'oracle':
+                fetchTable = FetchTableInfoFromOracle
+                break
+            case 'postgres':
+                fetchTable = FetchTableInfoFromPostgres
+                break
+            default:
+                ElMessage.warning("不支持该数据库类型进行信息收集")
+                return
+        }
+
+        const dbEntries = Object.entries(dbinfo);
+        let startDbIndex = 0;
+        let startTableIndex = 0;
+
+        // 如果是继续执行，找到上次暂停的位置
+        if (resumeFrom && currentDbname.value) {
+            startDbIndex = dbEntries.findIndex(([dbname]) => dbname === currentDbname.value);
+            if (startDbIndex !== -1) {
+                startTableIndex = currentTableIndex.value;
+            }
+        }
+
+        // 从指定位置继续处理
+        for (let i = startDbIndex; i < dbEntries.length; i++) {
+            const [dbname, tables] = dbEntries[i];
+            currentDbname.value = dbname;
+
+            for (let j = (i === startDbIndex ? startTableIndex : 0); j < tables.length; j++) {
+                // 检查是否需要暂停
+                if (isPaused.value) {
+                    currentTableIndex.value = j;
+                    return;
+                }
+
+                const table = tables[j];
+                connection.progress++;
+
+                try {
+                    let render = await fetchTable(dbname, table);
+                    if (render.Rows && render.Rows.length > 0) {
+                        const columnResult = matchColumn(render.Columns);
+                        const rowsResult = matchRows(render.Rows);
+                        if (columnResult.matched || rowsResult.matched) {
+                            const tabName = `${dbname}.${table}`;
+                            const tableDataHtml = renderToHtmlTable(render);
+                            connection.tablePanes.push({
+                                name: tabName,
+                                content: tableDataHtml,
+                                rowsCount: render.RowsCount,
+                                matchedType: columnResult.keyword ? columnResult.keyword : rowsResult.matchedLabel,
+                            });
+                        }
+                    }
+                } catch (error) {
+                    Callgologger("error", `[extractdbinfo] Processing table error: ${error}`);
+                    continue;
                 }
             }
         }
+
+        isRunning.value = false;
+        isPaused.value = false;
+        currentDbname.value = '';
+        currentTableIndex.value = 0;
+
+    } catch (error) {
+        Callgologger("error", `[extractdbinfo] Collection process error: ${error}`);
+        ElMessage.error("采集过程出错，请查看控制台日志");
     }
+}
+
+// 切换函数
+
+function togglePauseResume(connection: DatabaseConnection) {
+    if (isRunning && isPaused.value) {
+        // 如果当前是暂停状态，则继续采集
+        collectInfo(connection, true);
+        ElMessage.info("继续采集...");
+    } else {
+        // 如果当前是运行状态，则暂停
+        isPaused.value = true;
+        ElMessage.info("正在暂停采集...");
+    }
+}
+
+// 退出采集
+function exitCollect() {
+    isRunning.value = false;
+    isPaused.value = false;
+    currentDbname.value = '';
+    currentTableIndex.value = 0;
+    ElNotification.error({
+        message: "用户已终止采集任务",
+        position: 'bottom-right',
+    })
 }
 
 

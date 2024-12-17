@@ -5,7 +5,7 @@ import { UserFilled, Filter, Location, Cellphone, Postcard, Upload, DeleteFilled
 import alibabaIcon from "@/assets/icon/alibaba.svg";
 import onlineIcon from "@/assets/icon/online.svg";
 import { ElMessage } from "element-plus";
-import { SplitTextArea, UploadFileAndRead } from "@/util";
+import { ProcessTextAreaInput, UploadFileAndRead } from "@/util";
 import async from "async";
 import { regexpIdCard, regexpPhone, regexAlibabaDruidWebURI, regexURL, regexAlibabaDruidWebSession } from "@/stores/validate";
 import ContextMenu from '@imengyu/vue3-context-menu'
@@ -183,7 +183,7 @@ function handleContextMenu(e: MouseEvent) {
                             if (!isEmpty()) {
                                 return
                             }
-                            let lines = SplitTextArea(input.value);
+                            let lines = ProcessTextAreaInput(input.value);
                             form.result = "";
                             async.eachLimit(lines, 20, async (ip: string, callback: () => void) => {
                                 let result = await IpLocation(ip);

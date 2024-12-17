@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/services/App";
-import { SplitTextArea, Copy, ReadLine } from '@/util'
+import { ProcessTextAreaInput, Copy, ReadLine } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting } from '@element-plus/icons-vue';
@@ -153,7 +153,7 @@ class Dirsearch {
     public async init() {
         config.runningStatus = true
         if (config.customDict != "") {
-            from.paths = SplitTextArea(config.customDict)
+            from.paths = ProcessTextAreaInput(config.customDict)
         } else {
             if (from.selectDict.length == 0) {
                 from.selectDict = [from.configPath + "/dicc.txt"]
