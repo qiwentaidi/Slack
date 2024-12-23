@@ -27,13 +27,7 @@ onMounted(async () => {
     updatePorts(1); // 更新初始化显示
     // 扫描状态，把结果从后端传输到前端
     EventsOn("portScanLoading", (result: any) => {
-        pagination.table.result.push({
-            IP: result.IP,
-            Port: result.Port,
-            HttpTitle: result.HttpTitle,
-            Link: result.Link,
-            Server: result.Server
-        })
+        pagination.table.result.push(updateSSLServer(result))
         throttleUpdate()
     });
     // 进度条
@@ -51,6 +45,19 @@ onMounted(async () => {
         EventsOff("progressID");
     };
 });
+
+function updateSSLServer(result: PortScanData) {
+    if (result.Server == "ssl") {
+        return {
+            IP: result.IP,
+            Port: result.Port,
+            HttpTitle: result.HttpTitle,
+            Link: result.Link,
+            Server: "https"
+        }
+    }
+    return result
+}
 
 const form = reactive({
     target: '',
@@ -398,7 +405,7 @@ function stopShodan() {
             <span class="drawer-title">新建扫描任务</span>
             <el-button text bg @click="shodanVisible = true">
                 <template #icon>
-                    <img src="/navigation/shodan.png" style="width: 14px; height: 14px;">
+                    <img src="/shodan.png" style="width: 14px; height: 14px;">
                 </template>
                 从Shodan导入
             </el-button>
@@ -479,7 +486,7 @@ function stopShodan() {
     <el-dialog v-model="shodanVisible" width="500">
         <template #header>
             <span style="display: flex; align-items: center">
-                <img src="/navigation/shodan.png" style="margin-right: 5px;">
+                <img src="/shodan.png" style="margin-right: 5px;">
                 从Shodan拉取资产端口开放情况
             </span>
         </template>

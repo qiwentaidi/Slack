@@ -174,7 +174,7 @@ func TestWithCustomHeadersNuclei(t *testing.T) {
 		nuclei.EnableStatsWithOpts(nuclei.StatsOptions{MetricServerPort: 6064}), // optionally enable metrics server for better observability
 		nuclei.DisableUpdateCheck(), // -duc
 		nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
-			Templates: []string{"/Users/qwtd/slack/config/pocs/yonyou-u8-cloud-measquery-sqli.yaml"},
+			Templates: []string{},
 		}),
 	}
 	ne, err := nuclei.NewNucleiEngineCtx(context.Background(), options...)
@@ -182,7 +182,7 @@ func TestWithCustomHeadersNuclei(t *testing.T) {
 		fmt.Printf("nuclei init engine err: %v\n", err)
 		return
 	}
-	ne.LoadTargets([]string{"http://47.101.138.206:8081/"}, false)
+	ne.LoadTargets([]string{}, false)
 	err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
 		fmt.Printf("event.TemplateID: %v\n", event.TemplateID)
 		fmt.Printf("event.ResponseTime: %v\n", event.ResponseTime)

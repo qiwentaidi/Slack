@@ -4,6 +4,7 @@ import (
 	"bytes"
 	rand2 "crypto/rand"
 	"errors"
+	"math"
 	"math/big"
 	"math/rand"
 	"time"
@@ -125,4 +126,10 @@ func IntN(max int) (int, error) {
 		return rand.Intn(max), nil
 	}
 	return int(nBig.Int64()), nil
+}
+
+// sleep start - start + 1
+func SleepRandTime(start float64) time.Duration {
+	randomDelay := start + math.Round(rand.Float64()*10)/10 // 生成2到3秒之间的随机延时，保留1位小数
+	return time.Duration(randomDelay) * time.Second
 }

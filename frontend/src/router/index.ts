@@ -8,6 +8,9 @@ const generateRoutes = () => {
     let routePath = path
       .replace('../views', '')
       .replace('.vue', '');
+    if (routePath === "/Tools/CyberChef") {
+        continue
+    }
     // 指定根路由
     routePath = routePath === "/Home" ? "/" : routePath;
 

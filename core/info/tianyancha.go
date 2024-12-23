@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/gomessage"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"sync"
@@ -46,13 +47,14 @@ func GetCompanyID(ctx context.Context, company string) (string, string) {
 	}
 	var qs structs.TycSearchID
 	if err = json.Unmarshal(body, &qs); err != nil {
+		gomessage.Error(ctx, fmt.Sprintf("[tianyancha] company %s 请求过快导致触发人机校验", company))
 		gologger.Error(ctx, fmt.Sprintf("[tianyancha] company %s 请求过快导致触发人机校验", company))
 	}
 	if len(qs.Data) > 0 { // 接口会自动进行 商标信息匹配 > 股票简称匹配 > 公司名称匹配 > 公司品牌匹配 > 公司信息匹配 五种规则的匹配
 		company_id = qs.Data[0].GraphID
 		company_name = qs.Data[0].ComName
 	}
-	time.Sleep(time.Second * 2)
+	time.Sleep(util.SleepRandTime(2))
 	return company_id, company_name
 }
 

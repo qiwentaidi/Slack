@@ -3,7 +3,6 @@ html.dark {
     --sidebar-text-color: #fff;
     --titlebar-hover-color: #303030;
     --response-bg-color: #1c1b1b;
-    --nav-item-hover-color: #3c3c3c;
     --list-item-hover-color: #303030;
     --list-item-selected-color: #3B3B3B;
 
@@ -11,10 +10,6 @@ html.dark {
         background-color: #2F141A;
         border-color: #411F23;
         color: #CF364C;
-    }
-
-    .list-container {
-        box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
     }
 
     .el-result:hover {

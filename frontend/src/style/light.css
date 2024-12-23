@@ -3,7 +3,6 @@ html.light {
     --sidebar-text-color: hsl(0, 0%, 0%);
     --titlebar-hover-color: #dcdcdc;
     --response-bg-color: #f6f6f6;
-    --nav-item-hover-color: #E1E3E1;
     --list-item-hover-color: #EDEDED;
     --list-item-selected-color: #E6E6E6;
 
@@ -11,10 +10,6 @@ html.light {
         background-color: #FFE6E6;
         border-color: #FFE3B3;
         color: #CC0000;
-    }
-
-    .list-container {
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     .el-result:hover {

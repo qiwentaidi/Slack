@@ -128,18 +128,6 @@ func (config *Config) InitActiveScanPath(activefingerFile string) error {
 	return nil
 }
 
-func FullPocName(pocs []string) []string {
-	var news []string
-	for _, poc := range pocs {
-		if !strings.HasSuffix(poc, ".yaml") {
-			poc = poc + ".yaml"
-		}
-		poc = util.HomeDir() + "/slack/config/pocs/" + poc
-		news = append(news, poc)
-	}
-	return news
-}
-
 func ParseRule(rule string) []RuleData {
 	var result []RuleData
 	empty := RuleData{}

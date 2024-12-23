@@ -227,7 +227,7 @@ async function fscanParse() {
     if (!result) return
     fscan.weakpass = []
     fscan.virus = []
-
+    fscan.result = ""
     for (const [key, values] of Object.entries(result)) {
         fscan.result += `[${key}]\n${values.join("\n")}\n\n`
         if (key == "NetInfo") {

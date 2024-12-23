@@ -16,7 +16,7 @@ export default {
         '360quake': 'Quake',
         'agent_pool': 'Agent Pool',
         'tools': 'Tools',
-        'en_and_de': 'Encryption And Decryption',
+        'cyberchef': 'CyberChef',
         'systeminfo': 'AV/Patch Detection',
         'data_handing': 'Data Handing',
         'memorandum': 'Memorandum',
@@ -51,6 +51,7 @@ export default {
         'script': 'Script',
         'extract_database_info': 'Extract database info',
         'fscan': "Fscan",
+        'timestamp': "Timestamp"
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

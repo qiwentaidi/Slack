@@ -302,7 +302,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 			StatusCode:    resp.StatusCode,
 		}
 		result := s.FingerScan(s.ctx, ti, fp.Fpe)
-		if len(result) > 0 {
+		if len(result) > 0 && ti.StatusCode != 404 {
 			s.mutex.Lock()
 			s.basicURLWithFingerprint[fp.URL.String()] = append(s.basicURLWithFingerprint[fp.URL.String()], result...)
 			s.mutex.Unlock()

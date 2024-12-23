@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, ref, h, computed } from "vue";
-import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled } from "@element-plus/icons-vue";
+import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled, Guide } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
 import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal } from "wailsjs/go/services/File";
@@ -13,6 +13,7 @@ import consoleIcon from '@/assets/icon/console.svg'
 import appIcon from '@/assets/icon/app.svg'
 import javaIcon from '@/assets/icon/java.svg'
 import itermIcon from '@/assets/icon/iterm.svg'
+import chromeIcon from '@/assets/icon/chrome.svg'
 import buttonIcon from '@/assets/icon/button.svg'
 import gridIcon from '@/assets/icon/grid.svg'
 import global from "@/global";
@@ -87,7 +88,7 @@ const filteredGroups = computed(() => {
 
 const localGroup = ({
     options: ref<structs.Navigation[]>([]),
-    openGroup: ["CMD", "APP", "JAR"],
+    openGroup: ["CMD", "APP", "JAR", "Link"],
     getGroupNames: function () {
         return localGroup.options.value.map(item => item.Name)
     },
@@ -97,6 +98,8 @@ const localGroup = ({
                 return javaIcon
             case "APP":
                 return appIcon
+            case "Link":
+                return chromeIcon
             default:
                 return itermIcon
         }
@@ -209,6 +212,26 @@ const localGroup = ({
             });
         }
     },
+    moveItem: function (toGroupName: string, child: structs.Children) {
+        const fromGroupIndex = localGroup.options.value.findIndex(group =>
+            group.Name == config.mouseOnGroupName
+        );
+        const toGroupIndex = localGroup.options.value.findIndex(group =>
+            group.Name == toGroupName
+        );
+
+        if (fromGroupIndex !== -1 && toGroupIndex !== -1) {
+            const itemToMoveIndex = localGroup.options.value[fromGroupIndex].Children!.findIndex(item =>
+                item.Name == child.Name && item.Type == child.Type && item.Path == child.Path
+            );
+
+            if (itemToMoveIndex !== -1) {
+                const [itemToMove] = localGroup.options.value[fromGroupIndex].Children!.splice(itemToMoveIndex, 1);
+                localGroup.options.value[toGroupIndex].Children!.push(itemToMove);
+                SaveNavigation(localGroup.options.value);
+            }
+        }
+    },
     handleDrop: function (event: DragEvent, groupName: string) {
         event.preventDefault();
         // config.mouseOnGroupName = groupName
@@ -304,6 +327,16 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 }
             },
             {
+                label: "移动至",
+                icon: h(Guide, defaultIconSize),
+                children: localGroup.getGroupNames().map(name => ({
+                    label: name,
+                    onClick: () => {
+                        localGroup.moveItem(name, item);
+                    }
+                }))
+            },
+            {
                 label: "编辑",
                 icon: h(Edit, defaultIconSize),
                 onClick: () => {
@@ -395,7 +428,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="命令">
-                <el-input v-model="config.target" placeholder="如类型为CMD可自定义启动命令" />
+                <el-input v-model="config.target" placeholder="如类型为CMD可自定义启动命令" :disabled="config.defaultType != 'CMD'" />
             </el-form-item>
             <el-form-item label="路径">
                 <el-input v-model="config.path">
@@ -403,6 +436,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         <el-button :icon="Document" link @click="localGroup.selectFile()" />
                     </template>
                 </el-input>
+                <span class="form-item-tips">类型为Link时路径填写URL网址</span>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -423,7 +457,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="命令" placeholder="如类型为CMD可自定义启动命令">
-                <el-input v-model="config.editTarget"></el-input>
+                <el-input v-model="config.editTarget" :disabled="config.editType != 'CMD'"></el-input>
             </el-form-item>
             <el-form-item label="路径">
                 <el-input v-model="config.editPath">
@@ -431,6 +465,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         <el-button :icon="Document" link @click="localGroup.selectEditFile()" />
                     </template>
                 </el-input>
+                <span class="form-item-tips">类型为Link时路径填写URL网址</span>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -446,7 +481,8 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为:
             <code>java -javaagent:%path% -jar %path%</code><br /><br />
             3、拖入应用到分组中会自动按类型添加元素<br /><br />
-            4、每个面板右键都有独立的功能!!!
+            4、每个面板右键都有独立的功能!!!<br /><br />
+            5、Link类型可以在路径处填写网址链接，作为书签使用
         </div>
     </el-dialog>
 </template>

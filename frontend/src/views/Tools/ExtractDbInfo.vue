@@ -433,7 +433,10 @@ async function openConnection(connection: DatabaseConnection) {
     }
     connection.loading = true
     let flag = await ConnectDatabase(option)
-    if (!flag) return
+    if (!flag) {
+        connection.loading = false
+        return
+    }
     connection.connected = true
     ElMessage.success('连接成功')
     switch (connection.type) {

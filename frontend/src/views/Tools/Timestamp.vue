@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { VideoPause, Switch, VideoPlay } from '@element-plus/icons-vue';
+import { Copy } from '@/util';
+import { VideoPause, Switch, VideoPlay, DocumentCopy } from '@element-plus/icons-vue';
 import { reactive, ref, onUnmounted } from 'vue'
 
 const timestamp = reactive({
@@ -61,45 +62,48 @@ onUnmounted(() => {
     <template #header>
       <div class="card-header">
         <span>时间戳转换</span>
-        <el-button class="button" type="primary" :icon="paused ? VideoPlay : VideoPause"
+        <el-button class="button" :type="paused ? 'primary' : 'danger'" :icon="paused ? VideoPlay : VideoPause"
           @click="togglePrintingTimestamp">{{ paused ? '开始' : '停止' }}</el-button>
       </div>
     </template>
     <el-form :model="timestamp" label-position="top">
+      <el-form-item label="时间格式">
+        <el-select v-model="timestamp.currentMode" placeholder="Select">
+          <el-option v-for="item in timestamp.options" :value="item" :label="item" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="现在 (Unix 时间戳是从1970年1月1日开始所经过的秒数)">
-        <el-input v-model="timestamp.now" />
+        <el-input v-model="timestamp.now">
+          <template #suffix>
+            <el-button :icon="DocumentCopy" link @click="Copy(timestamp.now)"></el-button>
+          </template>
+        </el-input>
       </el-form-item>
 
       <el-form-item label="时间戳 >> 北京时间">
-        <el-col :span="10">
+        <el-col :span="11">
           <el-input v-model="timestamp.cptime" />
         </el-col>
-        <el-col :span="3">
-          <el-select v-model="timestamp.currentMode" placeholder="Select">
-            <el-option v-for="item in timestamp.options" :value="item" :label="item" />
-          </el-select>
+        <el-col :span="2">
+          <el-button :icon="Switch" @click="convertTimestampToTime">
+            转换
+          </el-button>
         </el-col>
-        <el-col :span="10">
+        <el-col :span="11">
           <el-input v-model="timestamp.time2bj" />
-        </el-col>
-        <el-col :span="1">
-          <el-button type="info" :icon="Switch" @click="convertTimestampToTime" style="margin-left: 5px; width: 100%;"/>
         </el-col>
       </el-form-item>
       <el-form-item label="北京时间 >> 时间戳">
-        <el-col :span="10">
+        <el-col :span="11">
           <el-input v-model="timestamp.cpbj" />
         </el-col>
-        <el-col :span="3">
-          <el-select v-model="timestamp.currentMode" placeholder="Select">
-            <el-option v-for="item in timestamp.options" :value="item" :label="item" />
-          </el-select>
+        <el-col :span="2">
+          <el-button :icon="Switch" @click="convertTimeToTimestamp">
+            转换
+          </el-button>
         </el-col>
-        <el-col :span="10">
+        <el-col :span="11">
           <el-input v-model="timestamp.bj2time" />
-        </el-col>
-        <el-col :span="1">
-          <el-button type="info" :icon="Switch" @click="convertTimeToTimestamp" style="margin-left: 5px; width: 100%;" />
         </el-col>
       </el-form-item>
     </el-form>

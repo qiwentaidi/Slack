@@ -106,6 +106,10 @@ export function SaveNavigation(arg1) {
   return window['go']['services']['File']['SaveNavigation'](arg1);
 }
 
+export function SaveToTempFile(arg1) {
+  return window['go']['services']['File']['SaveToTempFile'](arg1);
+}
+
 export function Startup(arg1) {
   return window['go']['services']['File']['Startup'](arg1);
 }

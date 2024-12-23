@@ -70,7 +70,7 @@ const code = `var categories = map[string][]string{
         </el-table-column>
 
         <!-- Auth 列 -->
-        <el-table-column label="Auth (账号密码)" width="200px">
+        <el-table-column label="Auth" width="200px">
             <template #default="scope">
                 {{ scope.row.NodeInfo.Auth }}
             </template>

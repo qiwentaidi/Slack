@@ -16,7 +16,7 @@ export default {
         '360quake': '360夸克',
         'agent_pool': '代理池',
         'tools': '小工具',
-        'en_and_de': '加解密模块',
+        'cyberchef': '加解密模块',
         'systeminfo': '杀软识别/提权补丁',
         'data_handing': '数据处理',
         'memorandum': '备忘录',
@@ -51,6 +51,7 @@ export default {
         'script': '脚本管理',
         'extract_database_info': "数据库自动取样",
         'fscan': "Fscan专区",
+        'timestamp': "时间戳转换",
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

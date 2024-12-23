@@ -56,6 +56,8 @@ export function SaveFileDialog(arg1:string):Promise<string>;
 
 export function SaveNavigation(arg1:Array<structs.Navigation>):Promise<boolean>;
 
+export function SaveToTempFile(arg1:string):Promise<string>;
+
 export function Startup(arg1:context.Context):Promise<void>;
 
 export function UpdatePocFile(arg1:string):Promise<boolean>;

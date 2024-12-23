@@ -330,6 +330,16 @@ const filterId = ref(0)
 
 const sortSeverity = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
 
+function webfingerSortChange(data: {column: any, prop: string, order: any }) {
+    if (data.order == 'ascending') {
+        fp.table.result.sort((a, b) => a[data.prop] - b[data.prop])
+    } else {
+        fp.table.result.sort((a, b) => b[data.prop] - a[data.prop])
+    }
+    fp.table.pageContent = fp.ctrl.watchResultChange(fp.table);
+}
+
+
 const vultableCtrl = {
     sortChange: function(data: {column: any, prop: string, order: any }) {
         if (data.order == 'ascending') {
@@ -756,15 +766,14 @@ const throttleInitialize = throttle(() => {
             <el-tab-pane label="网站">
                 <el-table :data="fp.table.pageContent" stripe height="100vh"
                     @selection-change="fp.ctrl.handleSelectChange" :cell-style="{ textAlign: 'center' }"
-                    :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleContextMenu">
+                    :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleContextMenu"
+                    @sort-change="webfingerSortChange">
                     <el-table-column type="selection" width="55px" />
                     <el-table-column fixed prop="URL" label="URL" width="300px" />
                     <el-table-column prop="StatusCode" width="100px" label="Code"
-                        :sort-method="(a: any, b: any) => { return a.status - b.status }" sortable
-                        :show-overflow-tooltip="true" />
+                        sortable="custom" :show-overflow-tooltip="true" />
                     <el-table-column prop="Length" width="100px" label="Length"
-                        :sort-method="(a: any, b: any) => { return a.length - b.length }" sortable
-                        :show-overflow-tooltip="true" />
+                        sortable="custom" :show-overflow-tooltip="true" />
                     <el-table-column prop="Title" label="Title" />
                     <el-table-column prop="Fingerprints" label="Fingerprint" width="350px">
                         <template #default="scope">
@@ -861,9 +870,7 @@ const throttleInitialize = throttle(() => {
             </el-tab-pane>
         </el-tabs>
         <template #ctrl>
-            <el-tooltip content="扫描任务历史">
-                <el-button :icon="Clock" @click="historyDialog = true">任务管理</el-button>
-            </el-tooltip>
+            <el-button :icon="Clock" @click="historyDialog = true">任务管理</el-button>
         </template>
     </CustomTabs>
 
@@ -956,8 +963,8 @@ const throttleInitialize = throttle(() => {
                 </div>
                 <div v-if="config.webscanOption == 2">
                     <el-form-item label="Log4j2:">
-                        <el-switch v-model="config.generateLog4j2" style="margin-right: 5px;" />
-                        <el-tag>开启后会将所有目标添加Generate-Log4j2指纹</el-tag>
+                        <el-switch v-model="config.generateLog4j2" style="width: 100%;" />
+                        <span class="form-item-tips">开启后会将所有目标添加Generate-Log4j2指纹</span>
                     </el-form-item>
                 </div>
                 <el-form-item label="结果入库:">
@@ -1076,7 +1083,7 @@ const throttleInitialize = throttle(() => {
         <template #header>
             <el-text style="font-weight: bold; font-size: 16px;"><el-icon :size="18" style="margin-right: 5px;">
                     <Clock />
-                </el-icon><span>扫描任务历史</span></el-text>
+                </el-icon><span>任务管理</span></el-text>
         </template>
         <el-table :data="rp.table.pageContent" stripe 
             @selection-change="rp.ctrl.handleSelectChange" 

@@ -116,54 +116,6 @@ html {
   justify-content: flex-end;
 }
 
-.right-click {
-  border: 0cap;
-
-  .el-menu-item {
-    font-size: 13px;
-    height: 30px;
-  }
-
-  .el-menu-item.is-active::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 5px;
-    /*  色块的宽度 */
-    height: 100%;
-    background-color: #fff;
-    /*  色块的颜色 */
-    border-radius: 0 3px 3px 0;
-    /* 轨道的形状 */
-  }
-}
-
-/* 菜单栏 */
-.nav-item {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  gap: 10px;
-
-  /* 设置右键菜单图标和文字之间的间距 */
-  img {
-    margin-left: 5px;
-    width: 16px; 
-    height: 16px; 
-    margin-right: -5px;
-  }
-}
-
-.nav-item:hover {
-  background-color: var(--nav-item-hover-color);
-  border-radius: 5px;
-}
-
-.nav-text {
-  text-align: left;
-  margin-right: 10px;
-}
 
 .el-divider__text {
   background-color: var(--el-fill-color-blank);
@@ -171,22 +123,6 @@ html {
 
 .el-textarea__inner {
   height: 100%;
-}
-
-.list-container {
-  width: 20vh;   
-  border-radius: 5px;
-  text-align: center;
-  max-height: 120px;
-}
-
-.list-item.selected {
-  background-color: var(--list-item-selected-color);
-}
-
-.list-item:hover {
-  cursor: pointer;
-  background-color: var(--list-item-hover-color);
 }
 
 .el-card__body {

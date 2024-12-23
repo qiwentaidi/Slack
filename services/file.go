@@ -17,6 +17,7 @@ import (
 	"slack-wails/lib/update"
 	"slack-wails/lib/util"
 	"strings"
+	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -296,6 +297,15 @@ func (*File) WriteFile(filetype, path, content string) bool {
 	return err == nil
 }
 
+func (*File) SaveToTempFile(content string) string {
+	tempDir := os.TempDir()
+	tempFileName := fmt.Sprintf("%stemp_%d.txt", tempDir, time.Now().UnixNano())
+	if err := os.WriteFile(tempFileName, []byte(content), 0644); err != nil {
+		return ""
+	}
+	return tempFileName
+}
+
 func (a *App) DownloadCyberChef(url string) error {
 	cyber := util.HomeDir() + "/slack/CyberChef.zip"
 	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath, "downloadProgress", "")
@@ -542,6 +552,9 @@ func (f *File) RunApp(types, file, target string) bool {
 		default:
 			cmd = exec.Command("cmd", "/c", "start", name)
 		}
+	case "Link":
+		runtime.BrowserOpenURL(f.ctx, file)
+		return true
 	default:
 		if target == "" {
 			f.OpenTerminal(file)

@@ -1,14 +1,11 @@
 <script lang="ts" setup>
-import { Close, Minus, Search, Back, Right, RefreshRight } from '@element-plus/icons-vue';
+import { Close, Minus, Back, Right, RefreshRight } from '@element-plus/icons-vue';
 import { Quit, WindowMinimise, WindowReload, WindowToggleMaximise } from "wailsjs/runtime/runtime";
 import { IsMacOS } from "wailsjs/go/services/File";
-import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import global from "@/global";
-import { onlineOptions }  from '@/stores/options';
 import { useRoute } from "vue-router";
 import { ref, computed, onMounted } from "vue";
 import updateUI from "./Update.vue";
-import onlineIcon from "@/assets/icon/online.svg"
 import runnerIcon from "@/assets/icon/apprunner.svg"
 import maxmizeIcon from "@/assets/icon/maximize.svg"
 import reductionIcon from "@/assets/icon/reduction.svg"
@@ -16,7 +13,6 @@ import consoleIcon from "@/assets/icon/console.svg"
 import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/style';
 import router from '@/router';
 
-const onlineDrawer = ref(false)
 const showLogger = ref(false)
 const route = useRoute();
 const updateDialog = ref(false)
@@ -46,17 +42,6 @@ function setTitle(path: string) {
             return path.split('/').slice(-1)[0];
     }
 }
-
-const searchFilter = ref("");
-const filteredOptions = computed(() => {
-    if (!searchFilter.value) return onlineOptions;
-    return onlineOptions.map((group) => ({
-        ...group,
-        value: group.value.filter((item) =>
-            item.name.toLowerCase().includes(searchFilter.value.toLowerCase())
-        ),
-    }));
-});
 
 const routerControl = [
     {
@@ -95,13 +80,6 @@ const appControl = [
         icon: runnerIcon,
         action: () => {
             router.push('/AppStarter')
-        },
-    },
-    {
-        label: "在线导航",
-        icon: onlineIcon,
-        action: () => {
-            onlineDrawer.value = true
         },
     },
 ]
@@ -174,28 +152,6 @@ const windowsControl = computed(() => [
             </div>
         </div>
     </div>
-    <!-- 在线导航 -->
-    <el-drawer v-model="onlineDrawer" direction="rtl" size="35%">
-        <template #header>
-            <el-input :suffix-icon="Search" placeholder="根据名称过滤" v-model="searchFilter" @input="filteredOptions" />
-        </template>
-        <div v-for="groups in filteredOptions" :key="groups.label" style="margin-bottom: 5px;">
-            <el-card v-if="groups.value.length > 0">
-                <div style="margin-bottom: 10px">
-                    <span style="font-weight: bold">{{ $t(groups.label) }}</span>
-                </div>
-                <div style="display: grid; gap: 10px;">
-                    <div v-for="item in groups.value" :key="item.name">
-                        <el-tooltip :content="item.url" placement="top" :show-after="1000">
-                            <div class="nav-item" @click="BrowserOpenURL(item.url)">
-                                <img :src="item.icon"><span class="nav-text">{{ item.name }}</span>
-                            </div>
-                        </el-tooltip>
-                    </div>
-                </div>
-            </el-card>
-        </div>
-    </el-drawer>
     <!-- running logs -->
     <el-drawer v-model="showLogger" title="运行日志" direction="rtl" size="50%">
         <div class="log-textarea" v-html="global.Logger.value"></div>

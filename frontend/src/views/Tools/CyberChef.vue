@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import { ElMessage, ElNotification } from 'element-plus';
-import { CheckFileStat } from 'wailsjs/go/services/File';
+import { ElMessage } from 'element-plus';
+import { CheckFileStat, UserHomeDir } from 'wailsjs/go/services/File';
 import { DownloadCyberChef, CyberChefLocalServer } from 'wailsjs/go/services/App';
 import { onMounted, ref, reactive } from 'vue';
 import { EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
-import global from '@/global';
 import fishIcon from '@/assets/icon/fish.svg'
 import bearIcon from '@/assets/icon/bear.svg'
 
@@ -37,10 +36,8 @@ onMounted(() => {
 });
 
 onMounted(async () => {
-    if (await CheckFileStat(global.PATH.homedir + "/slack/CyberChef")) {
+    if (await CheckFileStat(await UserHomeDir() + "/slack/CyberChef")) {
         config.LocalENV = true
-        ElNotification.success('检测到本地环境存在，优先使用本地环境')
-        loadLocal()
     }
 });
 
@@ -68,7 +65,7 @@ function loadRemote() {
 async function loadLocal() {
     await CyberChefLocalServer()
     isRemote.value = false;
-    showIframe.value = true;  
+    showIframe.value = true;
 }
 </script>
 
@@ -76,7 +73,7 @@ async function loadLocal() {
 <template>
     <div class="container" v-if="!showIframe">
         <div>
-            <el-result title="本地加载" sub-title="需要下载CyberChef环境，后续会在本机8731端口启动一个简单HTTP服务，适用部分内网环境，一次下载后续优先使用">
+            <el-result title="本地加载" sub-title="需要下载解密模块，后续会在本机8731端口部署CyberChef服务，适用部分内网环境，一次下载后续优先使用">
                 <template #icon>
                     <fishIcon />
                 </template>
@@ -104,7 +101,7 @@ async function loadLocal() {
 <style scoped>
 .external-page {
     width: 100%;
-    height: 87vh;
+    height: 91vh;
 }
 
 .container {

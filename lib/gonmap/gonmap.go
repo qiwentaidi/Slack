@@ -214,9 +214,6 @@ func FixProtocol(oldProtocol string) string {
 	if oldProtocol == "socks-proxy" {
 		return "socks5"
 	}
-	if oldProtocol == "ssl" {
-		return "https"
-	}
 	if len(oldProtocol) > 4 {
 		if oldProtocol[:4] == "ssl/" {
 			return oldProtocol[4:] + "-ssl"

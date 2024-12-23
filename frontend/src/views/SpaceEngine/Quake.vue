@@ -1,8 +1,8 @@
 <template>
-    <el-form v-model="quake" @keydown.enter.native.prevent="tableCtrl.addTab(quake.query, false)">
+    <el-form :model="quake" @keydown.enter.native.prevent="tableCtrl.addTab(quake.query, false)">
         <el-form-item>
             <el-autocomplete v-model="quake.query" placeholder="Search..." :fetch-suggestions="syntax.querySearchAsync"
-                @select="syntax.handleSelect" :trigger-on-focus="false" :debounce="1000" style="width: 100%;">
+                @select="syntax.handleSelect" :trigger-on-focus="false" :debounce="500" style="width: 100%;">
                 <template #prepend>
                     查询条件
                 </template>
@@ -21,7 +21,7 @@
                                     <el-table :data="item.data" class="keyword-search" @row-click="syntax.rowClick">
                                         <el-table-column width="300" property="key" label="例句">
                                             <template #default="scope">
-                                                {{ scope.row.key }}<el-tag type="success" effect="dark" color="#4CA87D"
+                                                {{ scope.row.key }}<el-tag type="success" effect="plain" color="#4CA87D"
                                                     v-if="scope.row.isVip" style="margin-left: 5px;">VIP</el-tag>
                                             </template>
                                         </el-table-column>
@@ -30,36 +30,21 @@
                                 </el-tab-pane>
                             </el-tabs>
                         </el-popover>
-                        <el-popover placement="bottom-end" :width="400" trigger="click">
-                            <template #reference>
-                                <div>
-                                    <el-tooltip content="使用网页图标搜索" placement="bottom">
-                                        <el-button :icon="PictureRounded" link />
-                                    </el-tooltip>
-                                </div>
-                            </template>
-                            <div class="batch-search">
-                                <el-alert type="info" :closable="false" title="如果上传文件与URL均不为空时优先检测文件" show-icon />
-                                <el-input v-model="quake.iconURL" placeholder="Favicon URL地址"></el-input>
-                                <el-button class="upload" :icon="UploadFilled">上传图片文件</el-button>
-                                <div class="my-header">
-                                    <div></div>
-                                    <el-button color="#4CA87D" :dark="true" class="search"
-                                        @click="tableCtrl.searchFavicon">检索</el-button>
-                                </div>
-                            </div>
-                        </el-popover>
+                        <el-tooltip content="使用网页图标搜索" placement="bottom">
+                            <el-button :icon="PictureRounded" link @click="tableCtrl.searchFavicon" />
+                        </el-tooltip>
                         <el-popover placement="bottom-end" :width="400" title="IP/域名批量搜索" trigger="click">
                             <template #reference>
                                 <div>
                                     <el-tooltip content="IP/域名批量搜索" placement="bottom">
-                                        <el-button :icon="Document" link />
+                                        <!-- 使用el-popover需要增加底部margin 2px才能对其-->
+                                        <el-button :icon="Document" link style="margin-bottom: 2px;" />
                                     </el-tooltip>
                                 </div>
                             </template>
                             <div class="batch-search">
                                 <el-alert type="info" :closable="false" title="上传包含IP/域名的.txt文件，数量不超过1000个" show-icon />
-                                <el-button class="upload" :icon="UploadFilled">上传文件</el-button>
+                                <el-button class="upload" :icon="UploadFilled" @click="UploadFileAndReadText">上传文件</el-button>
                                 <el-input v-model="quake.batchIps" type="textarea" :rows="5"
                                     placeholder="请输入IP/域名，每行一个，多个请换行输入"></el-input>
                                 <div class="my-header">
@@ -275,18 +260,17 @@
 <script lang="ts" setup>
 import { Search, ArrowDown, DocumentCopy, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
-import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4 } from '@/util';
+import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, UploadFileAndRead } from '@/util';
 import { ExportToXlsx } from '@/export';
 import { QuakeTableTabs, QuakeTipsData } from '@/stores/interface';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import { Callgologger, FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/services/App';
 import global from '@/global';
-import { ElMessage, ElNotification, FormInstance } from 'element-plus';
+import { ElMessage, ElMessageBox, ElNotification, FormInstance } from 'element-plus';
 import { FileDialog } from 'wailsjs/go/services/File';
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
-import { validateSingleURL } from '@/stores/validate';
 import { structs } from 'wailsjs/go/models';
 import { quakeSyntaxOptions } from '@/stores/options';
 
@@ -299,6 +283,10 @@ const options = ({
         cdn: false,
     }),
 })
+
+async function UploadFileAndReadText() {
+    quake.batchIps = await UploadFileAndRead()
+}
 
 const ruleFormRef = ref<FormInstance>()
 
@@ -408,6 +396,10 @@ const tableCtrl = ({
         let ipList = [] as string[]
         if (isBatch) {
             ipList = await tableCtrl.getIpList()
+            if (ipList.length > 1000) {
+                ElMessage.warning("批量检索数量不能超过1000个目标!")
+                return
+            }
         }
         table.loading = true
         let result = await QuakeSearch(ipList, query, 1, 10, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
@@ -498,17 +490,21 @@ const tableCtrl = ({
         table.loading = false
     },
     searchFavicon: function () {
-        if (!quake.iconURL && !quake.iconFile) {
-            ElMessage.warning("请输入URL或者上传图标");
-            return;
-        }
-        let target = quake.iconFile || validateSingleURL(quake.iconURL) ? quake.iconURL : quake.batchFile
-        if (!target) {
-            return;
-        }
-        FaviconMd5(target).then((result: string) => {
-            tableCtrl.addTab(`favicon:${result}`, false);
-        });
+        ElMessageBox.prompt('输入目标Favicon地址会自动计算并搜索相关资产', '图标搜索', {
+            confirmButtonText: '查询',
+            inputPattern: /^(https?:\/\/)?((([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})|localhost|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/[^\s]*)?$/,
+            inputErrorMessage: 'Invalid URL',
+            showCancelButton: false,
+        })
+            .then(async ({ value }) => {
+                let hash = await FaviconMd5(value.trim())
+                if (!hash) {
+                    ElNotification.warning("目标不可达或者URL格式错误");
+                    return
+                }
+                tableCtrl.addTab(`favicon:${hash}`, false);
+            }).catch(() => {
+            })
     },
     // type 0 choose txt , type 1 choose img
     handleFileupload: async function (type: number) {
@@ -614,10 +610,6 @@ async function exportData() {
         width: 100%;
         border-style: dashed;
         color: #4CA87D;
-    }
-
-    .upload:hover {
-        background-color: #F9FAFD;
     }
 
     .search {

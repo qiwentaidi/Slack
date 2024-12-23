@@ -110,8 +110,8 @@ const MenuList = [
       icon: toolsIcon,
       children: [
         {
-          name: "aside.en_and_de",
-          path: "/Codec",
+          name: "aside.cyberchef",
+          path: "/CyberChef",
           icon: "/app/encrypt.png"
         },
         {
@@ -148,6 +148,11 @@ const MenuList = [
           name: "aside.extract_database_info",
           path: "/ExtractDbInfo",
           icon: "/app/database.png"
+        },
+        {
+          name: "aside.timestamp",
+          path: "/Timestamp",
+          icon: "/app/timestamp.png"
         },
       ]
     },

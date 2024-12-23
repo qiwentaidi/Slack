@@ -363,10 +363,10 @@ function searchCsegmentIpv4(ip: string) {
 </script>
 
 <template>
-    <el-form v-model="form" @keydown.enter.native.prevent="tableCtrl.addTab(form.query)">
+    <el-form :model="form" @keydown.enter.native.prevent="tableCtrl.addTab(form.query)">
         <el-form-item>
             <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                @select="entry.handleSelect" :debounce="1000" style="width: 100%;">
+                @select="entry.handleSelect" :debounce="500" style="width: 100%;">
                 <template #prepend>
                     查询条件
                 </template>

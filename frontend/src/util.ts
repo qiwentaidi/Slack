@@ -323,7 +323,7 @@ export function getBasicURL(rawURL: string) {
   }
 }
 
-export function getProxy() :clients.Proxy {
+export function getProxy(): clients.Proxy {
   return {
     Enabled: global.proxy.enabled,
     Mode: global.proxy.mode,
@@ -337,8 +337,22 @@ export function getProxy() :clients.Proxy {
 export function getRootDomain(hostname: string) {
   var parts = hostname.split('.'); // 拆分域名部分
   if (parts.length > 2) {
-      // 如果域名有子域名（例如：sub.example.com）
-      return parts.slice(-2).join('.'); // 返回最后两部分（例如：example.com）
+    // 如果域名有子域名（例如：sub.example.com）
+    return parts.slice(-2).join('.'); // 返回最后两部分（例如：example.com）
   }
   return hostname; // 如果没有子域名，直接返回（例如：example.com）
+}
+
+// 处理 {{file:///xxxx}} 获取到文件路径
+export function getFilepath(raw: string) {
+  const startTag = "{{file://";
+  const endTag = "}}";
+
+  const startIndex = raw.indexOf(startTag);
+  const endIndex = raw.indexOf(endTag, startIndex);
+
+  if (startIndex !== -1 && endIndex !== -1) {
+    return raw.substring(startIndex + startTag.length, endIndex);
+  }
+  return ""
 }

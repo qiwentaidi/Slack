@@ -10,8 +10,9 @@
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98">常见问题</a>
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E7%BD%91%E7%AB%99%E6%89%AB%E6%8F%8F%E8%A7%84%E5%88%99%E4%BA%8C%E6%AC%A1%E6%8B%93%E5%B1%95">规则拓展</a>
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91">二次开发</a>
-<a href="https://github.com/qiwentaidi/Slack/wiki/%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97">更新日志</a>
+<a href="https://github.com/qiwentaidi/Slack/releases">更新日志</a>
 </p>
+
 
 
 
@@ -80,7 +81,7 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ## 网站扫描
 
-目前内置8800+指纹，3100+POC，引擎使用的Nuclei v3，得益于Nulcei强大的社区及丰富的POC易用可扩展，以及多种格式报告导出。
+目前内置8900+指纹，3300+POC，引擎使用的Nuclei v3，得益于Nulcei强大的社区及丰富的POC易用可扩展，以及多种格式报告导出。
 
 ![image-20241115124501303](assets/image-20241115124501303.png)
 
@@ -124,13 +125,15 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 可通过下载`CyberChef`集成环境实现本地调用
 
-![image-20240907172017116](assets/image-20240907172017116.png)
+![image-20241221135416001](assets/image-20241221135416001.png)
 
-## 数据处理
+## Fscan&数据处理
 
-针对日常工作中一些常见的数据进行处理，例如提取Fscan结果、提取IP、数据去重等
+针对日常工作中一些常见的数据进行处理，例如提取Fscan结果、提取IP、数据去重、密码解密等
 
 ![image-20241102165307715](assets/image-20241102165307715.png)
+
+![image-20241221135523227](assets/image-20241221135523227.png)
 
 ## 应用启动器
 

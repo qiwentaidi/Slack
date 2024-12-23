@@ -11,7 +11,7 @@ import global from "@/global";
 import { LinkSubdomain } from "@/linkage";
 import throttle from 'lodash/throttle';
 import CustomTabs from "@/components/CustomTabs.vue";
-import wechatIcon from "@/assets/icon/wechat.svg"
+import wechatIcon from "@/assets/icon/wechatOfficialAccount.svg"
 import { debounce } from "lodash"
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import { structs } from "wailsjs/go/models";

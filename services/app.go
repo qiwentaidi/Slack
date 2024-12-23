@@ -265,7 +265,7 @@ func (a *App) ExitScanner(scanType string) {
 
 func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool, machine string) []structs.CompanyInfo {
 	tkm := info.CheckKeyMap(a.ctx, query)
-	time.Sleep(time.Second)
+	time.Sleep(util.SleepRandTime(1))
 	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false, searchDomain, machine)
 	var secondCompanyNames []string
 	if subLevel >= 2 {
@@ -276,7 +276,7 @@ func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDo
 			secondCompanyNames = append(secondCompanyNames, r.CompanyName)
 			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain, machine)
 			result = append(result, secondResult...)
-			time.Sleep(time.Second)
+			time.Sleep(util.SleepRandTime(2))
 		}
 	}
 	if subLevel == 3 {
@@ -286,7 +286,7 @@ func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDo
 			}
 			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain, machine)
 			result = append(result, secondResult...)
-			time.Sleep(time.Second)
+			time.Sleep(util.SleepRandTime(1))
 		}
 	}
 	return result
