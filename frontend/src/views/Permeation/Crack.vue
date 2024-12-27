@@ -23,7 +23,7 @@ onMounted(() => {
             Username: result.Username,
             Password: result.Password,
         })
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+        pagination.ctrl.watchResultChange(pagination.table)
     });
     return () => {
         EventsOff("bruteResult");

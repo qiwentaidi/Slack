@@ -1,52 +1,38 @@
 package jsfind
 
 import (
-	"context"
 	"fmt"
 	"net/url"
-	"strings"
-	"sync"
+	"slack-wails/lib/clients"
 	"testing"
 )
 
 func TestFindInfo(t *testing.T) {
-	var fs *FindSomething
-	target := "https://www.baidu.com/"
-	jsLinks := ExtractJS(context.TODO(), target)
-	fmt.Printf("jsLinks: %v\n", jsLinks)
-	var wg sync.WaitGroup
-	limiter := make(chan bool, 100)
-	wg.Add(1)
-	limiter <- true
-	go func() {
-		fs = FindInfo(context.TODO(), target, limiter, &wg)
-	}()
-	wg.Wait()
-	u, _ := url.Parse(target)
-	fs.JS = *AppendSource(target, jsLinks)
-	host := u.Scheme + "://" + u.Host
-	for _, jslink := range jsLinks {
-		wg.Add(1)
-		limiter <- true
-		go func(js string) {
-			var newURL string
-			if strings.HasPrefix(js, "http") {
-				newURL = js
-			} else {
-				newURL = host + "/" + js
-			}
-			fs2 := FindInfo(context.TODO(), newURL, limiter, &wg)
-			fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
-			fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
-			fs.ChinesePhone = append(fs.ChinesePhone, fs2.ChinesePhone...)
-			fs.SensitiveField = append(fs.SensitiveField, fs2.SensitiveField...)
-			fs.APIRoute = append(fs.APIRoute, fs2.APIRoute...)
-		}(jslink)
+
+}
+
+// 发送 GET 请求，直到参数补全
+func sendRequest(apiURL string, params url.Values) url.Values {
+	// 构造完整 URL
+	fullURL := fmt.Sprintf("%s?%s", apiURL, params.Encode())
+
+	// 发送 GET 请求
+	_, body, err := clients.NewSimpleGetRequest(fullURL, clients.DefaultClient())
+	if err != nil {
+		fmt.Println("请求失败:", err)
+		return params
 	}
-	wg.Wait()
-	fs.APIRoute = RemoveDuplicatesInfoSource(fs.APIRoute)
-	fs.ChineseIDCard = RemoveDuplicatesInfoSource(fs.ChineseIDCard)
-	fs.ChinesePhone = RemoveDuplicatesInfoSource(fs.ChinesePhone)
-	fs.SensitiveField = RemoveDuplicatesInfoSource(fs.SensitiveField)
-	fs.IP_URL = RemoveDuplicatesInfoSource(fs.IP_URL)
+
+	// 提取缺失参数
+	missingParam := extractMissingParams(string(body))
+	if missingParam != nil {
+		// 生成默认值并补全参数
+		defaultValue := generateDefaultValue(missingParam.Type)
+		params.Set(missingParam.Name, fmt.Sprint(defaultValue))
+		// 递归调用，直到所有参数补全
+		return sendRequest(apiURL, params)
+	}
+	// 如果没有缺失参数提示，返回当前参数集
+	fmt.Println(fullURL)
+	return params
 }

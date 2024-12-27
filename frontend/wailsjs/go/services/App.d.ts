@@ -74,6 +74,8 @@ export function NacosCategoriesExtract(arg1:string):Promise<Array<structs.NacosC
 
 export function NetDial(arg1:string):Promise<boolean>;
 
+export function NewDSStoreEngine(arg1:string):Promise<Array<string>>;
+
 export function NewSynScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>):Promise<void>;
 
 export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<number>,arg4:number,arg5:number,arg6:clients.Proxy):Promise<void>;

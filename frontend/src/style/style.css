@@ -30,6 +30,10 @@ html {
   align-items: center;
 }
 
+.card-header span {
+  font-weight: bold;
+}
+
 .head {
   display: flex;
   width: 100%;
@@ -48,23 +52,23 @@ html {
 }
 
 .log-info {
-  color: #518BE1;
+  color: #518be1;
 }
 
 .log-warning {
-  color: #FF8800;
+  color: #ff8800;
 }
 
 .log-error {
-  color: #FF0000;
+  color: #ff0000;
 }
 
 .log-debug {
-  color: #57B435;
+  color: #57b435;
 }
 
 .log-success {
-  color: #00FF00;
+  color: #00ff00;
 }
 
 .my-header {
@@ -88,7 +92,7 @@ html {
 
 .console-log {
   height: 25px;
-  background-color: #F2F3F5;
+  background-color: #f2f3f5;
   position: absolute;
   width: 100%;
   bottom: 0;
@@ -116,7 +120,6 @@ html {
   justify-content: flex-end;
 }
 
-
 .el-divider__text {
   background-color: var(--el-fill-color-blank);
 }
@@ -130,7 +133,7 @@ html {
 }
 
 .position-center {
-  display: flex; 
+  display: flex;
   justify-content: center;
   align-items: center;
 }
@@ -173,7 +176,6 @@ html {
   cursor: pointer;
 }
 
-
 /* 网站扫描风险等级颜色 */
 
 /* .severity-critical {
@@ -202,6 +204,19 @@ html {
 
 .drawer-title {
   font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.drawer-title img {
+  width: 18px;
+  height: 18px;
+  margin-right: 2px;
+}
+
+.el-card-title {
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .el-col {
@@ -211,7 +226,7 @@ html {
 .el-text {
   display: flex;
   align-items: center;
-  text-align: center
+  text-align: center;
 }
 
 .finger-container {
@@ -243,13 +258,13 @@ html {
 /* 文字超出换行且包括识别回车符号 */
 
 .all-break {
-  word-break: break-word; 
-  overflow-wrap: break-word; 
+  word-break: break-word;
+  overflow-wrap: break-word;
   white-space: pre-wrap;
 }
 
 .text-overflow-break {
-  word-break: break-word; 
+  word-break: break-word;
   overflow-wrap: break-word;
 }
 

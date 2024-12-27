@@ -2,15 +2,21 @@ package services
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/png"
 	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	rt "runtime"
+	"slack-wails/core/webscan"
+	"slack-wails/lib/clients"
 	"slack-wails/lib/fileutil"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
@@ -19,6 +25,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mat/besticon/v3/ico"
+	"github.com/nfnt/resize"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -368,6 +376,7 @@ func (f *File) DownloadLastestClient() structs.Status {
 				Msg:   err.Error(),
 			}
 		}
+		exec.Command("xattr", "-c", f.downloadPath+filename).Run()
 		return structs.Status{
 			Error: false,
 			Msg:   "Update success!",
@@ -565,7 +574,7 @@ func (f *File) RunApp(types, file, target string) bool {
 		cmd = exec.Command(args[0], args[1:]...)
 	}
 	cmd.Dir = filepath.Dir(file)
-
+	gologger.Info(f.ctx, "Opening app in "+cmd.Dir)
 	go func() {
 		if err := cmd.Run(); err != nil {
 			gologger.Debug(f.ctx, err)
@@ -597,6 +606,69 @@ func getExecName() string {
 	}
 
 	return filepath.Base(execPath)
+}
+
+// 从网址获取到图标后保存在本地，并返回保存路径
+// 为了防止图片过大，还需要压缩图片
+func (f *File) GenerateFaviconBase64WithOnline(rawURL string) string {
+	u, _ := url.Parse(rawURL)
+	faviconURL, err := webscan.GetFaviconFullLink(u, clients.DefaultClient())
+	fmt.Printf("faviconURL: %v\n", faviconURL)
+	if err != nil {
+		return ""
+	}
+	resp, body, err := clients.NewSimpleGetRequest(faviconURL, clients.DefaultClient())
+	if err != nil || resp == nil {
+		return ""
+	}
+	if resp.StatusCode != 200 {
+		return ""
+	}
+	return compressPictures(rawURL, body)
+}
+
+// 读取本读图片
+func (f *File) GenerateFaviconBase64(filePath string) string {
+	if _, err := os.Stat(filePath); err != nil {
+		return ""
+	}
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return ""
+	}
+	return compressPictures(filePath, data)
+}
+
+// path可以是文件路径也可以是url,主要用来判断文件格式
+func compressPictures(path string, data []byte) string {
+	// 如果是svg图标，则直接返回base64，因为svg图标文件比较小
+	if strings.HasSuffix(path, ".svg") {
+		return fmt.Sprintf("data:image/svg+xml;base64,%s", base64.StdEncoding.EncodeToString(data))
+	}
+	// 小于20kb可以直接返回
+	if len(data) <= 1024*20 {
+		return "data:image/png;base64," + base64.StdEncoding.EncodeToString(data)
+	}
+	// 尝试解析不同格式的图像
+	var img image.Image
+	var err error
+	if strings.HasSuffix(path, ".ico") {
+		img, err = ico.Decode(bytes.NewReader(data)) // 处理ICO文件
+	} else {
+		img, _, err = image.Decode(bytes.NewReader(data)) // 默认解码
+	}
+	if err != nil {
+		return ""
+	}
+	// 将图像缩放为40x40
+	resizedImg := resize.Resize(40, 40, img, resize.Lanczos3)
+	// 将缩放后的图像编码为Base64
+	var buf bytes.Buffer
+	err = png.Encode(&buf, resizedImg)
+	if err != nil {
+		return ""
+	}
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 }
 
 func (f *File) SaveDataToFile(data interface{}) bool {

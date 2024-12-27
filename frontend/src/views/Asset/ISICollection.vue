@@ -152,7 +152,7 @@ async function Collect() {
     parameter.runningStatus = true
     parameter.id = 0
     pagination.table.result = []
-    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+    pagination.ctrl.watchResultChange(pagination.table)
     for (const t of targets) {
         for (const d of dorks) {
             if (!parameter.runningStatus) {
@@ -167,7 +167,7 @@ async function Collect() {
                     Items: result.Items,
                     Link: result.Link,
                 })
-                pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+                pagination.ctrl.watchResultChange(pagination.table)
             } else {
                 Callgologger("info", `${t} ${d} 搜索结果为空，已跳过`)
             }

@@ -24,7 +24,7 @@ import throttle from 'lodash/throttle';
 
 
 const throttleUpdate = throttle(() => {
-    fp.table.pageContent = fp.ctrl.watchResultChange(fp.table)
+    fp.ctrl.watchResultChange(fp.table)
 }, 1000);
 
 // webscan
@@ -51,12 +51,6 @@ const form = reactive({
     url: '',
     tags: [] as string[],
     newscanner: false,
-    fofaDialog: false,
-    fofaNum: 1000,
-    hunterDialog: false,
-    hunterNum: ["10", "20", "50", "100"],
-    defaultNum: "100",
-    query: '',
     runnningStatus: false,
     percentage: 0,
     nucleiPercentage: 0,
@@ -68,6 +62,15 @@ const form = reactive({
     hideResponse: false,
     showYamlPoc: false,
     pocContent: '',
+})
+
+const spaceEngineConfig = reactive({
+    fofaQuery: '',
+    fofaDialog: false,
+    fofaPageSize: 1000,
+    hunterQuery: '',
+    hunterDialog: false,
+    hunterPageSize: "100",
 })
 
 
@@ -120,7 +123,7 @@ async function initialize() {
     let result = await RetrieveAllScanTasks();
     if (Array.isArray(result)) {
         rp.table.result = result;
-        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
+        rp.ctrl.watchResultChange(rp.table);
     }
 }
 
@@ -132,7 +135,7 @@ onMounted(() => {
         const riskLevelKey = result.Severity as keyof typeof dashboard.riskLevel;
         dashboard.riskLevel[riskLevelKey]++;
         vp.table.result.push(result)
-        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table)
+        vp.ctrl.watchResultChange(vp.table)
         if (!config.writeDB) return
         AddPocscanResult(form.taskId, result)
         taskManager.updateTaskTable(form.taskId)
@@ -220,7 +223,7 @@ class WebscanEngine {
                 Failed: 0,
                 Vulnerability: 0,
             })
-            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+            rp.ctrl.watchResultChange(rp.table)
         }
         fp.initTable()
         vp.initTable()
@@ -299,16 +302,16 @@ class WebscanEngine {
 
 const uncover = {
     fofa: function () {
-        form.fofaDialog = false
-        LinkFOFA(form.query, form.fofaNum).then(urls => {
+        spaceEngineConfig.fofaDialog = false
+        LinkFOFA(spaceEngineConfig.fofaQuery, spaceEngineConfig.fofaPageSize).then(urls => {
             if (urls) {
                 form.url = urls.join("\n")
             }
         })
     },
     hunter: function () {
-        form.hunterDialog = false
-        LinkHunter(form.query, form.defaultNum).then(urls => {
+        spaceEngineConfig.hunterDialog = false
+        LinkHunter(spaceEngineConfig.hunterQuery, spaceEngineConfig.hunterPageSize).then(urls => {
             if (urls) {
                 form.url = urls.join("\n")
             }
@@ -330,26 +333,34 @@ const filterId = ref(0)
 
 const sortSeverity = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
 
-function webfingerSortChange(data: {column: any, prop: string, order: any }) {
-    if (data.order == 'ascending') {
-        fp.table.result.sort((a, b) => a[data.prop] - b[data.prop])
-    } else {
-        fp.table.result.sort((a, b) => b[data.prop] - a[data.prop])
-    }
-    fp.table.pageContent = fp.ctrl.watchResultChange(fp.table);
-}
-
-
 const vultableCtrl = {
-    sortChange: function(data: {column: any, prop: string, order: any }) {
-        if (data.order == 'ascending') {
-            vp.table.result.sort((a, b) => sortSeverity.indexOf(a.Severity) - sortSeverity.indexOf(b.Severity))
+    sortChange: function (data: { column: any, prop: string, order: any }) {
+        if (!data.prop || !data.order) {
+            // 使用原数据进行输出，即可恢复数据状态
+            vp.ctrl.watchResultChange(vp.table)
         } else {
-            vp.table.result.sort((a, b) => sortSeverity.indexOf(b.Severity) - sortSeverity.indexOf(a.Severity))
+            // 排序的数据都由temp提供
+            vp.table.temp = [...vp.table.result];
+
+            // 根据排序规则对结果进行排序
+            vp.table.temp.sort((a, b) => {
+                const valA = sortSeverity.indexOf(a.Severity);
+                const valB = sortSeverity.indexOf(b.Severity);
+
+                if (valA < valB) {
+                    return data.order === 'ascending' ? -1 : 1;
+                } else if (valA > valB) {
+                    return data.order === 'ascending' ? 1 : -1;
+                } else {
+                    return 0;
+                }
+            });
+            const start = (vp.table.currentPage - 1) * vp.table.pageSize;
+            const end = vp.table.currentPage * vp.table.pageSize;
+            vp.table.pageContent = vp.table.temp.slice(start, end);
         }
-        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
     },
-    filterChange: function(newFilters: any) {
+    filterChange: function (newFilters: any) {
         if (filterId.value == 0) {
             vp.table.temp = vp.table.result
         }
@@ -361,7 +372,7 @@ const vultableCtrl = {
         } else {
             vp.table.result = vp.table.temp.filter(item => selectedFilters.includes(item.Severity));
         }
-        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
+        vp.ctrl.watchResultChange(vp.table);
     },
 }
 
@@ -460,7 +471,7 @@ const taskManager = {
 
         if (fingerResult) {
             fp.table.result = fingerResult;
-            fp.table.pageContent = fp.ctrl.watchResultChange(fp.table);
+            fp.ctrl.watchResultChange(fp.table);
         }
         // 初始化风险等级计数
         Object.keys(dashboard.riskLevel).forEach(key => {
@@ -468,7 +479,7 @@ const taskManager = {
         });
         if (nucleiResult) {
             vp.table.result = nucleiResult;
-            vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
+            vp.ctrl.watchResultChange(vp.table);
             // 遍历结果，统计每个风险等级的数量
             vp.table.result.forEach(item => {
                 const riskLevelKey = item.Severity as keyof typeof dashboard.riskLevel;
@@ -478,7 +489,7 @@ const taskManager = {
             });
         } else {
             vp.table.result = []
-            vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
+            vp.ctrl.watchResultChange(vp.table);
         }
     },
     deleteTask: function (taskId: string) {
@@ -496,7 +507,7 @@ const taskManager = {
                 if (isSuccess) {
                     ElMessage.success("删除成功")
                     rp.table.result = rp.table.result.filter(item => item.TaskId != taskId)
-                    rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+                    rp.ctrl.watchResultChange(rp.table)
                     return
                 }
                 ElMessage.error("删除失败")
@@ -515,7 +526,7 @@ const taskManager = {
                     const taskIndex = rp.table.result.findIndex(task => task.TaskId === taskId);
                     if (taskIndex !== -1) {
                         rp.table.result[taskIndex] = { ...rp.table.result[taskIndex], TaskName: value };
-                        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
+                        rp.ctrl.watchResultChange(rp.table);
                     }
                     ElMessage.success("修改成功")
                 } else {
@@ -556,10 +567,10 @@ const taskManager = {
                     Vulnerability: 0,
                 })
             }
-            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+            rp.ctrl.watchResultChange(rp.table)
         }
     },
-    showExportDialog: function() {
+    showExportDialog: function () {
         if (rp.table.selectRows.length >= 2) {
             reportName.value = "合并报告-" + nano()
         } else {
@@ -602,7 +613,7 @@ const taskManager = {
         const taskIndex = rp.table.result.findIndex(task => task.TaskId === taskId);
         if (taskIndex !== -1) {
             rp.table.result[taskIndex].Vulnerability = vulcount;
-            rp.table.pageContent = rp.ctrl.watchResultChange(rp.table);
+            rp.ctrl.watchResultChange(rp.table);
         }
     },
     appendTaskToDatabase: async function () {
@@ -624,7 +635,7 @@ const taskManager = {
             Failed: 0,
             Vulnerability: 0,
         })
-        rp.table.pageContent = rp.ctrl.watchResultChange(rp.table)
+        rp.ctrl.watchResultChange(rp.table)
         for (const item of fp.table.result) {
             let isSuccess = await AddFingerscanResult(form.taskId, item)
             if (!isSuccess) {
@@ -656,7 +667,7 @@ async function deleteVuln(row: any) {
             dashboard.riskLevel[riskLevelKey]--;
         }
         vp.table.result = vp.table.result.filter(item => !(item.URL == row.URL && item.Severity == row.Severity && item.Name == row.Name));
-        vp.table.pageContent = vp.ctrl.watchResultChange(vp.table);
+        vp.ctrl.watchResultChange(vp.table);
         taskManager.updateTaskTable(form.taskId)
 
         return
@@ -697,7 +708,7 @@ const throttleInitialize = throttle(() => {
     <el-card style="margin-bottom: 10px; height: 140px">
         <template #header>
             <div class="card-header">
-                <span class="title">仪表盘</span>
+                <span>仪表盘</span>
                 <el-space>
                     <el-tag>主动指纹</el-tag>
                     <el-progress :text-inside="true" :stroke-width="18" :percentage="form.percentage"
@@ -767,13 +778,13 @@ const throttleInitialize = throttle(() => {
                 <el-table :data="fp.table.pageContent" stripe height="100vh"
                     @selection-change="fp.ctrl.handleSelectChange" :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleContextMenu"
-                    @sort-change="webfingerSortChange">
+                    @sort-change="fp.ctrl.sortChange">
                     <el-table-column type="selection" width="55px" />
                     <el-table-column fixed prop="URL" label="URL" width="300px" />
-                    <el-table-column prop="StatusCode" width="100px" label="Code"
-                        sortable="custom" :show-overflow-tooltip="true" />
-                    <el-table-column prop="Length" width="100px" label="Length"
-                        sortable="custom" :show-overflow-tooltip="true" />
+                    <el-table-column prop="StatusCode" width="100px" label="Code" sortable="custom"
+                        :show-overflow-tooltip="true" />
+                    <el-table-column prop="Length" width="100px" label="Length" sortable="custom"
+                        :show-overflow-tooltip="true" />
                     <el-table-column prop="Title" label="Title" />
                     <el-table-column prop="Fingerprints" label="Fingerprint" width="350px">
                         <template #default="scope">
@@ -815,28 +826,22 @@ const throttleInitialize = throttle(() => {
                     @filter-change="vultableCtrl.filterChange">
                     <el-table-column prop="ID" label="Template" width="250px" />
                     <el-table-column prop="Type" label="Type" width="150px" />
-                    <el-table-column 
-                        prop="Severity" 
-                        width="150px" 
-                        column-key="severity"
-                        label="Severity" 
-                        :filters="[
-                            { text: 'INFO', value: 'INFO' },
-                            { text: 'LOW', value: 'LOW' },
-                            { text: 'MEDIUM', value: 'MEDIUM' },
-                            { text: 'HIGH', value: 'HIGH' },
-                            { text: 'CRITICAL', value: 'CRITICAL' },
-                        ]" sortable="custom">
+                    <el-table-column prop="Severity" width="150px" column-key="severity" label="Severity" :filters="[
+                        { text: 'INFO', value: 'INFO' },
+                        { text: 'LOW', value: 'LOW' },
+                        { text: 'MEDIUM', value: 'MEDIUM' },
+                        { text: 'HIGH', value: 'HIGH' },
+                        { text: 'CRITICAL', value: 'CRITICAL' },
+                    ]" sortable="custom">
                         <template #filter-icon>
                             <Filter />
                         </template>
                         <!-- 需要通过设置动态类图来设置自定义的tag类型 -->
                         <template #default="scope">
-                            <el-tag 
-                            :type="getTagTypeBySeverity(scope.row.Severity)" 
-                            :class="{'el-tag--critical': scope.row.Severity === 'CRITICAL'}">
-                            {{ scope.row.Severity }}
-                        </el-tag>
+                            <el-tag :type="getTagTypeBySeverity(scope.row.Severity)"
+                                :class="{ 'el-tag--critical': scope.row.Severity === 'CRITICAL' }">
+                                {{ scope.row.Severity }}
+                            </el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="URL" label="URL" />
@@ -877,14 +882,14 @@ const throttleInitialize = throttle(() => {
     <el-drawer v-model="form.newscanner" size="50%">
         <template #header>
             <span class="drawer-title">新建扫描任务</span>
-            <el-button link @click="form.fofaDialog = true">
+            <el-button link @click="spaceEngineConfig.fofaDialog = true">
                 <template #icon>
                     <img src="/app/fofa.ico">
                 </template>
                 FOFA
             </el-button>
             <el-divider direction="vertical" />
-            <el-button link @click="form.hunterDialog = true">
+            <el-button link @click="spaceEngineConfig.hunterDialog = true">
                 <template #icon>
                     <img src="/app/hunter.ico" style="width: 16px; height: 16px;">
                 </template>
@@ -1023,7 +1028,8 @@ const throttleInitialize = throttle(() => {
                 <el-card v-show="!form.hideResponse" style="flex: 1;">
                     <div class="my-header">
                         <span style="font-weight: bold;">Response
-                            <el-tag type="success" style="margin-left: 2px;">{{ selectedRow.ResponseTime ? selectedRow.ResponseTime : '0' }}s</el-tag>
+                            <el-tag type="success" style="margin-left: 2px;">{{ selectedRow.ResponseTime ?
+                                selectedRow.ResponseTime : '0' }}s</el-tag>
                         </span>
                         <el-button-group>
                             <el-tooltip content="查看/关闭POC内容">
@@ -1046,27 +1052,33 @@ const throttleInitialize = throttle(() => {
             </el-card>
         </div>
     </el-drawer>
-    <el-dialog v-model="form.fofaDialog" title="导入FOFA目标(MAX 10000)" width="50%" center>
+    <el-dialog v-model="spaceEngineConfig.fofaDialog">
+        <template #header>
+            <span class="drawer-title"><img src="/app/hunter.ico">导入FOFA目标</span>
+        </template>
         <el-form :model="form" label-width="auto">
             <el-form-item label="查询条件">
-                <el-input v-model="form.query"></el-input>
+                <el-input v-model="spaceEngineConfig.fofaQuery"></el-input>
             </el-form-item>
             <el-form-item label="导入数量">
-                <el-input-number v-model="form.fofaNum" :min="1" :max="10000" />
+                <el-input-number v-model="spaceEngineConfig.fofaPageSize" :min="1" :max="10000" />
             </el-form-item>
         </el-form>
         <template #footer>
             <el-button type="primary" @click="uncover.fofa">导入</el-button>
         </template>
     </el-dialog>
-    <el-dialog v-model="form.hunterDialog" title="导入鹰图目标(MAX100)，由于API查询大小限制，大数据推荐使用官网进行数据导出" width="50%" center>
+    <el-dialog v-model="spaceEngineConfig.hunterDialog">
+        <template #header>
+            <span class="drawer-title"><img src="/app/hunter.ico">导入鹰图目标，由于API查询限制，大数据推荐使用官网进行数据导出</span>
+        </template>
         <el-form :model="form" label-width="auto">
             <el-form-item label="查询条件">
-                <el-input v-model="form.query"></el-input>
+                <el-input v-model="spaceEngineConfig.hunterQuery"></el-input>
             </el-form-item>
             <el-form-item label="导入数量">
-                <el-select v-model="form.defaultNum" style="width: 150px;">
-                    <el-option v-for="item in form.hunterNum" :label="item" :value="item" />
+                <el-select v-model="spaceEngineConfig.hunterPageSize" style="width: 150px;">
+                    <el-option v-for='item in ["10", "20", "50", "100"]' :label="item" :value="item" />
                 </el-select>
             </el-form-item>
         </el-form>
@@ -1085,11 +1097,9 @@ const throttleInitialize = throttle(() => {
                     <Clock />
                 </el-icon><span>任务管理</span></el-text>
         </template>
-        <el-table :data="rp.table.pageContent" stripe 
-            @selection-change="rp.ctrl.handleSelectChange" 
-            :cell-style="{ textAlign: 'center' }"
-            :header-cell-style="{ 'text-align': 'center' }" 
-            style="height: calc(100vh - 125px)">
+        <el-table :data="rp.table.pageContent" stripe @selection-change="rp.ctrl.handleSelectChange"
+            :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }"
+            style="height: calc(100vh - 115px)">
             <el-table-column type="selection" width="50px" />
             <el-table-column prop="TaskName" label="任务名称" :show-overflow-tooltip="true"></el-table-column>
             <el-table-column prop="Targets" label="目标" :show-overflow-tooltip="true">
@@ -1127,11 +1137,11 @@ const throttleInitialize = throttle(() => {
         <div class="my-header" style="margin-top: 5px;">
             <el-space>
                 <el-tooltip content="存储当前结果数据">
-                    <el-button :icon="saveIcon" @click="taskManager.appendTaskToDatabase">临时入库</el-button>
+                    <el-button :icon="saveIcon" size="small" @click="taskManager.appendTaskToDatabase">临时入库</el-button>
                 </el-tooltip>
-                <el-button :icon="UploadFilled" @click="taskManager.importTask()">导入任务</el-button>
-                <el-button :icon="Share" @click="taskManager.showExportDialog"
-                 :disabled="rp.table.selectRows.length < 1">导出报告</el-button>
+                <el-button :icon="UploadFilled" size="small" @click="taskManager.importTask()">导入任务</el-button>
+                <el-button :icon="Share" size="small" @click="taskManager.showExportDialog"
+                    :disabled="rp.table.selectRows.length < 1">导出报告</el-button>
             </el-space>
             <el-pagination size="small" background @size-change="rp.ctrl.handleSizeChange"
                 @current-change="rp.ctrl.handleCurrentChange" :pager-count="5" :current-page="rp.table.currentPage"
@@ -1141,15 +1151,19 @@ const throttleInitialize = throttle(() => {
         </div>
     </el-drawer>
     <el-dialog title="导出报告" v-model="exportDialog">
-        <el-form-item label="报告类型">
-            <el-radio-group v-model="reportOption">
-                <el-radio v-for="item in webReportOptions" :key="item" :label="item" :value="item"></el-radio>
-            </el-radio-group>
-        </el-form-item>
-        <el-form-item label="报告名称">
-            <el-input v-model="reportName"></el-input>
-            <span class="form-item-tips">多选任务可以合并导出</span>
-        </el-form-item>
+        <el-alert :title="'已选择' + rp.table.selectRows.length + '个任务'" type="info" show-icon :closable="false"
+            v-show="rp.table.selectRows.length >= 1" style="margin-bottom: 5px" />
+        <el-form :model="form" label-width="auto">
+            <el-form-item label="报告类型">
+                <el-radio-group v-model="reportOption">
+                    <el-radio v-for="item in webReportOptions" :key="item" :label="item" :value="item"></el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="报告名称">
+                <el-input v-model="reportName"></el-input>
+                <span class="form-item-tips">多选任务可以合并导出</span>
+            </el-form-item>
+        </el-form>
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="exportDialog = false">取消</el-button>
@@ -1174,11 +1188,6 @@ const throttleInitialize = throttle(() => {
     color: var(--el-color-primary);
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.title {
-    font-size: 16px;
-    font-weight: bold;
 }
 
 .form-container {

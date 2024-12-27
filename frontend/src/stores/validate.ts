@@ -8,7 +8,7 @@ export function validatePortscan(input: string) {
         /^(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3}|(\d{1,3}\.){2}\d{1,3}|\d{1,3}\)$/, // 192.168.1.1-192.168.255.255, 192.168.1.1-255
         /^(\d{1,3}\.){3}\d{1,3}:\d{1,5}$/, // 192.168.0.1:6379
         /^!((\d{1,3}\.){3}\d{1,3}(\/\d+)?|(\d{1,3}\.){2}\d{1,3}|\d{1,3})$/, // !192.168.1.6/28
-        /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/, // domain
+        /^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?$/, // domain
         /^\s*$/ // 空行
     ];
     const lines = input.split('\n');
@@ -32,7 +32,7 @@ export function validateIp(input: string) {
 
 export function validateSingleIP(ip: string) {
     const regex =
-        /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(3[0-2]|[12]?[0-9])?$/;
+        /^((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}$/;
     return regex.test(ip);
 }
 
@@ -62,10 +62,3 @@ export function validateWebscan(input: string) {
 export const regexpPhone = /(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}/g;
 export const regexpIdCard = /[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]/g;
 export const regexpAKSK = /access/g;
-export const regexAlibabaDruidWebURI = /(?<="URI":")[^"]+/g;
-
-export const regexAlibabaDruidWebSession = /(?<="SESSIONID":")[^"]+/g;
-export const regexURL = /https?:\/\/[^\s/$.?#].[^\s]*/g;
-
-// 正则提取路径信息
-export const regexFileProtocol = /\{\{file:\/\/(.+?)\}\}/g;

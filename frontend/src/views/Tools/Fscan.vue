@@ -284,7 +284,7 @@ async function fscanParse() {
                     redirect: redirect,
                 };
             });
-            wip.table.pageContent = wip.ctrl.watchResultChange(wip.table)
+            wip.ctrl.watchResultChange(wip.table)
         }
 
         if (key == "POC") {
@@ -351,12 +351,12 @@ const filter = ({
     vm: ["ID_VC_Welcome", "ID_EESX_Welcome"],
     reset: () => {
         if (wip.table.temp.length != 0) wip.table.result = wip.table.temp
-        wip.table.pageContent = wip.ctrl.watchResultChange(wip.table);
+        wip.ctrl.watchResultChange(wip.table);
     },
     hikvisionFilter: () => {
         if (wip.table.temp.length == 0) wip.table.temp = wip.table.result
         wip.table.result = wip.table.temp.filter(item => filter.hikvsion.includes(item.length))
-        wip.table.pageContent = wip.ctrl.watchResultChange(wip.table)
+        wip.ctrl.watchResultChange(wip.table)
     },
     vmFilter: () => {
         if (wip.table.temp.length == 0) wip.table.temp = wip.table.result
@@ -365,7 +365,7 @@ const filter = ({
                 if (item.title.includes(name)) return item
             }
         });
-        wip.table.pageContent = wip.ctrl.watchResultChange(wip.table)
+        wip.ctrl.watchResultChange(wip.table)
     },
     pocinfo(value: string, row: any): boolean {
         return row.pocinfo === value;

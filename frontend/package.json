@@ -15,7 +15,7 @@
     "async": "^3.2.5",
     "echarts": "^5.5.1",
     "element-plus": "^2.8.0",
-    "highlight.js": "^11.10.0",
+    "highlight.js": "^11.11.1",
     "marked": "^14.0.0",
     "monaco-editor": "^0.52.0",
     "nanoid": "^5.0.7",

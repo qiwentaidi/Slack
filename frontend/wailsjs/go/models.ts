@@ -379,6 +379,7 @@ export namespace structs {
 	    Type: string;
 	    Path: string;
 	    Target: string;
+	    Favicon: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Children(source);
@@ -390,6 +391,7 @@ export namespace structs {
 	        this.Type = source["Type"];
 	        this.Path = source["Path"];
 	        this.Target = source["Target"];
+	        this.Favicon = source["Favicon"];
 	    }
 	}
 	export class CompanyInfo {
@@ -1015,6 +1017,7 @@ export namespace structs {
 	export class Response {
 	    Error: boolean;
 	    Proto: string;
+	    StatsCode: number;
 	    Header: {[key: string]: string};
 	    Body: string;
 	
@@ -1026,6 +1029,7 @@ export namespace structs {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.Error = source["Error"];
 	        this.Proto = source["Proto"];
+	        this.StatsCode = source["StatsCode"];
 	        this.Header = source["Header"];
 	        this.Body = source["Body"];
 	    }

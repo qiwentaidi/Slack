@@ -5,12 +5,12 @@ import { UserFilled, Filter, Location, Cellphone, Postcard, Upload, DeleteFilled
 import alibabaIcon from "@/assets/icon/alibaba.svg";
 import onlineIcon from "@/assets/icon/online.svg";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Copy, getFilepath, ProcessTextAreaInput } from "@/util";
-import async from "async";
-import { regexpIdCard, regexpPhone, regexAlibabaDruidWebURI, regexURL, regexAlibabaDruidWebSession, regexFileProtocol } from "@/stores/validate";
+import { Copy } from "@/util";
+import { regexpIdCard, regexpPhone } from "@/stores/validate";
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize } from "@/stores/style";
 import { CheckFileStat, FileDialog, ReadFile, SaveToTempFile } from "wailsjs/go/services/File";
+import { ExtractAlibabaDruidWebSession, ExtractAlibabaDruidWebURI, ExtractURLs } from "wailsjs/go/core/Tools";
 
 let content = "" // 实际要处理的内容
 
@@ -35,19 +35,18 @@ async function processInput() {
         })
         return false
     }
-    let path = form.input.match(regexFileProtocol) || []
-    if (path && path.length == 0) {
-        content = form.input
+    if (form.input.startsWith("{{file://") && form.input.endsWith("}}")) {
+        let filepath = form.input.substring(8, form.input.length - 2);        
+        let isStat = await CheckFileStat(filepath)
+        if (!isStat) {
+            ElMessage.warning('文件不存在!')
+            return false
+        }
+        let file = await ReadFile(filepath)
+        content = file.Content
         return true
     }
-    let filepath = getFilepath(path[0])
-    let isStat = await CheckFileStat(filepath)
-    if (!isStat) {
-        ElMessage.warning('文件不存在!')
-        return false
-    }
-    let file = await ReadFile(filepath)
-    content = file.Content
+    content = form.input
     return true
 }
 
@@ -96,13 +95,13 @@ function deduplication() {
 }
 
 function getDomains() {
-    processInput().then(isSuccess => {
+    processInput().then(async isSuccess => {
         if (!isSuccess) {
             return
         }
-        const urls = content.match(regexURL) || [];
+        const urls = await ExtractURLs(content);
         const uniqueArray = Array.from(new Set(urls))
-        const domains = urls
+        const domains = uniqueArray
         .map((url: string) => {
             try {
                 const parsedUrl = new URL(url);
@@ -118,11 +117,11 @@ function getDomains() {
 }
 
 function getURLs() {
-    processInput().then(isSuccess => {
+    processInput().then(async isSuccess => {
         if (!isSuccess) {
             return
         }
-        const urls = content.match(regexURL) || [];
+        const urls = await ExtractURLs(content);
         const uniqueArray = Array.from(new Set(urls))
         form.result = uniqueArray.join("\n");
         form.tips = `共提取 ${uniqueArray.length} 个结果`
@@ -154,22 +153,22 @@ function getIdCards() {
 }
 
 function getAlibabaDruidWebURI() {
-    processInput().then(isSuccess => {
+    processInput().then(async isSuccess => {
         if (!isSuccess) {
             return
         }
-        const uris = content.match(regexAlibabaDruidWebURI) || [];
+        const uris = await ExtractAlibabaDruidWebURI(content);
         form.result = uris.join("\n");
         form.tips = `共提取 ${uris.length} 个结果`
     }) 
 }
 
 function getAlibabaDruidWebSession() {
-    processInput().then(isSuccess => {
+    processInput().then(async isSuccess => {
         if (!isSuccess) {
             return
         }
-        const sessions = content.match(regexAlibabaDruidWebSession) || [];
+        const sessions = await ExtractAlibabaDruidWebSession(content);
         form.result = sessions.join("\n");
         form.tips = `共提取 ${sessions.length} 个结果`
     })

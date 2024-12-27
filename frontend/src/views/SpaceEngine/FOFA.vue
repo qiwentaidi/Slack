@@ -215,7 +215,7 @@ function batchSearch() {
         inputType: 'textarea',
         showCancelButton: false,
     })
-        .then(async ({ value }) => {
+        .then(({ value }) => {
             const lines = ProcessTextAreaInput(value);
             const temp = [];
 

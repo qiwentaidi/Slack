@@ -1,6 +1,8 @@
 module slack-wails
 
-go 1.21.0
+go 1.23
+
+toolchain go1.23.0
 
 require (
 	github.com/XinRoom/go-portScan v1.4.2
@@ -10,12 +12,13 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/lib/pq v1.10.9
+	github.com/mat/besticon/v3 v3.21.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/microsoft/go-mssqldb v1.6.0
 	github.com/miekg/dns v1.1.59
 	github.com/minio/selfupdate v0.6.1-0.20230907112617-f11e74f84ca7
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
-	github.com/mozillazg/go-pinyin v0.20.0
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/panjf2000/ants/v2 v2.9.1
 	github.com/sijms/go-ora/v2 v2.8.19
 	github.com/stacktitan/smb v0.0.0-20190531122847-da9a425dceb8
@@ -74,7 +77,7 @@ require (
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/caddyserver/certmagic v0.19.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/glamour v0.8.0 // indirect
 	github.com/charmbracelet/lipgloss v0.13.0 // indirect
 	github.com/charmbracelet/x/ansi v0.3.2 // indirect
@@ -160,7 +163,7 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/kataras/jwt v0.1.10 // indirect
 	github.com/kitabisa/go-ci v1.0.3 // indirect
-	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/klauspost/compress v1.17.10 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
@@ -287,6 +290,7 @@ require (
 	go.uber.org/zap v1.25.0 // indirect
 	goftp.io/server/v2 v2.0.1 // indirect
 	golang.org/x/arch v0.3.0 // indirect
+	golang.org/x/image v0.20.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
@@ -301,7 +305,7 @@ require (
 )
 
 require (
-	github.com/PuerkitoBio/goquery v1.9.2
+	github.com/PuerkitoBio/goquery v1.10.0
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/chromedp/chromedp v0.10.0
 	github.com/go-ole/go-ole v1.2.6 // indirect

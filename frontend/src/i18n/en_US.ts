@@ -51,7 +51,8 @@ export default {
         'script': 'Script',
         'extract_database_info': 'Extract database info',
         'fscan': "Fscan",
-        'timestamp': "Timestamp"
+        'timestamp': "Timestamp",
+        'dumpall': "Dumpall",
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

@@ -18,6 +18,14 @@ export function FileDialog(arg1) {
   return window['go']['services']['File']['FileDialog'](arg1);
 }
 
+export function GenerateFaviconBase64(arg1) {
+  return window['go']['services']['File']['GenerateFaviconBase64'](arg1);
+}
+
+export function GenerateFaviconBase64WithOnline(arg1) {
+  return window['go']['services']['File']['GenerateFaviconBase64WithOnline'](arg1);
+}
+
 export function GetLocalNaConfig() {
   return window['go']['services']['File']['GetLocalNaConfig']();
 }

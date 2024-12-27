@@ -7,10 +7,14 @@ export function AntivirusIdentify(arg1:string):Promise<Array<structs.AntivirusRe
 
 export function ConnectAndExecute(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<string>;
 
+export function ExtractAlibabaDruidWebSession(arg1:string):Promise<Array<string>>;
+
+export function ExtractAlibabaDruidWebURI(arg1:string):Promise<Array<string>>;
+
+export function ExtractURLs(arg1:string):Promise<Array<string>>;
+
 export function FormatOutput(arg1:string):Promise<{[key: string]: Array<string>}>;
 
 export function FscanToGraph(arg1:string):Promise<core.FscanGraphData>;
-
-export function GenerateDict(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string,arg8:Array<string>):Promise<Array<string>>;
 
 export function PatchIdentify(arg1:string):Promise<Array<structs.AuthPatch>>;

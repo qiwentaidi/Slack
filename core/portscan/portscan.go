@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"slack-wails/lib/gonmap"
-	"slack-wails/lib/util"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,6 +31,7 @@ func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int
 	single := make(chan struct{})
 	retChan := make(chan PortResult)
 	var wg sync.WaitGroup
+	openPorts := make(map[string]bool) // 记录开放的端口
 	go func() {
 		for pr := range retChan {
 			runtime.EventsEmit(ctx, "portScanLoading", pr)
@@ -44,6 +45,16 @@ func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int
 			return
 		}
 		pr := Connect(add.IP, add.Port, timeout, proxy)
+		// 检查1-10端口的开放情况
+		if pr.Port >= 1 && pr.Port <= 20 && pr.Status {
+			openPorts[pr.IP] = true // 记录该IP有开放端口
+			gologger.IntervalError(ctx, fmt.Sprintf("[portscan] %s 疑似cdn地址，会对未识别到服务的端口进行过滤", pr.IP))
+		} else {
+			// 如果该IP在1-10端口有开放，后续端口必须识别到服务
+			if openPorts[pr.IP] && !pr.Status {
+				return // 如果没有识别到服务，则不返回
+			}
+		}
 		atomic.AddInt32(&id, 1)
 		runtime.EventsEmit(ctx, "progressID", id)
 		if pr.Status {
@@ -103,8 +114,8 @@ func Connect(ip string, port, timeout int, proxy clients.Proxy) PortResult {
 				if resp.StatusCode == 422 {
 					pr.Status = false
 				}
-				if match := util.RegTitle.FindSubmatch(b); len(match) > 1 {
-					pr.HttpTitle = util.Str2UTF8(string(match[1]))
+				if title := clients.GetTitle(b); title != "" {
+					pr.HttpTitle = title
 				} else {
 					pr.HttpTitle = "-"
 				}

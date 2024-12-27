@@ -7,9 +7,9 @@ import { getProxy, getRootDomain } from '@/util';
 import { crackDict } from '@/stores/options';
 
 
-export async function LinkWebscan(ips: string[]) {
+export async function LinkWebscan(urls: string[]) {
     let options: structs.WebscanOptions = {
-        Target: ips,
+        Target: urls,
         Thread: 50,
         Screenshot: false,
         Honeypot: true,
@@ -17,7 +17,7 @@ export async function LinkWebscan(ips: string[]) {
         RootPath: true,
         CallNuclei: true,
         TemplateFiles: [],
-        SkipNucleiWithoutTags: true,
+        SkipNucleiWithoutTags: false,
         GenerateLog4j2: true,
         AppendTemplateFolder: global.webscan.append_pocfile
     }

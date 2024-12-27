@@ -344,15 +344,15 @@ export function getRootDomain(hostname: string) {
 }
 
 // 处理 {{file:///xxxx}} 获取到文件路径
-export function getFilepath(raw: string) {
-  const startTag = "{{file://";
-  const endTag = "}}";
+// export function getFilepath(raw: string) {
+//   const startTag = "{{file://";
+//   const endTag = "}}";
 
-  const startIndex = raw.indexOf(startTag);
-  const endIndex = raw.indexOf(endTag, startIndex);
+//   const startIndex = raw.indexOf(startTag);
+//   const endIndex = raw.indexOf(endTag, startIndex);
 
-  if (startIndex !== -1 && endIndex !== -1) {
-    return raw.substring(startIndex + startTag.length, endIndex);
-  }
-  return ""
-}
+//   if (startIndex !== -1 && endIndex !== -1) {
+//     return raw.substring(startIndex + startTag.length, endIndex);
+//   }
+//   return ""
+// }

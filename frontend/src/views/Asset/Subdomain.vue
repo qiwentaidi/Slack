@@ -17,7 +17,7 @@ import { structs } from "wailsjs/go/models";
 import { dnsServerOptions, subdomainRunnerOptions } from "@/stores/options";
 
 const throttleUpdate = throttle(() => {
-    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
+    pagination.ctrl.watchResultChange(pagination.table);
 }, 1000);
 
 onMounted(() => {

@@ -39,7 +39,7 @@ func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
 		"Content-Type": "application/json",
 		"X-QuakeToken": o.Token,
 	}
-	_, body, err := clients.NewRequest("POST", quakeServerApi, header, bytes.NewReader(bytesData), 10, false, clients.DefaultClient())
+	_, body, err := clients.NewRequest("POST", quakeServerApi, header, bytes.NewReader(bytesData), 20, false, clients.DefaultClient())
 	if err != nil {
 		return &structs.QuakeResult{
 			Code:    502,

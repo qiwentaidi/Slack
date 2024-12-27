@@ -10,16 +10,24 @@ export function ConnectAndExecute(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['core']['Tools']['ConnectAndExecute'](arg1, arg2, arg3, arg4, arg5);
 }
 
+export function ExtractAlibabaDruidWebSession(arg1) {
+  return window['go']['core']['Tools']['ExtractAlibabaDruidWebSession'](arg1);
+}
+
+export function ExtractAlibabaDruidWebURI(arg1) {
+  return window['go']['core']['Tools']['ExtractAlibabaDruidWebURI'](arg1);
+}
+
+export function ExtractURLs(arg1) {
+  return window['go']['core']['Tools']['ExtractURLs'](arg1);
+}
+
 export function FormatOutput(arg1) {
   return window['go']['core']['Tools']['FormatOutput'](arg1);
 }
 
 export function FscanToGraph(arg1) {
   return window['go']['core']['Tools']['FscanToGraph'](arg1);
-}
-
-export function GenerateDict(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-  return window['go']['core']['Tools']['GenerateDict'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
 export function PatchIdentify(arg1) {

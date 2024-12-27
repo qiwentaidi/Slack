@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/services/App";
 import { ProcessTextAreaInput, Copy, ReadLine } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
@@ -23,7 +23,7 @@ const updatePercentageThrottled = throttle((id: number) => {
 onMounted(() => {
     // 获取当前全部字典
     getDictList()
-    GetAllPathsAndTimes().then((result: any) => {
+    GetAllPathsAndTimes().then(result => {
         if (Array.isArray(result)) {
             for (const item of result) {
                 pathTimes.table.result.push({
@@ -32,7 +32,7 @@ onMounted(() => {
                 })
             }
         }
-        pathTimes.table.pageContent = pathTimes.ctrl.watchResultChange(pathTimes.table)
+        pathTimes.ctrl.watchResultChange(pathTimes.table)
     })
     EventsOn("dirsearchLoading", (result: any) => {
         switch (result.Status) {
@@ -51,7 +51,7 @@ onMounted(() => {
                     }
                 }
                 pagination.table.result.push(result)
-                pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+                pagination.ctrl.watchResultChange(pagination.table)
                 break
         }
     });
@@ -255,25 +255,6 @@ const config = reactive({
     recursion: 0,
 })
 
-
-function sortChangePathTimes(data: {column: any, prop: string, order: any }) {
-    if (data.order == 'ascending') {
-        pathTimes.table.result.sort((a, b) => a.times - b.times)
-    } else {
-        pathTimes.table.result.sort((a, b) => b.times - a.times)
-    }
-    pathTimes.table.pageContent = pathTimes.ctrl.watchResultChange(pathTimes.table);
-}
-
-function sortChange(data: {column: any, prop: string, order: any }) {
-    if (data.order == 'ascending') {
-        pagination.table.result.sort((a, b) => a[data.prop] - b[data.prop])
-    } else {
-        pagination.table.result.sort((a, b) => b[data.prop] - a[data.prop])
-    }
-    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
-}
-
 function copyHistory(length: number) {
     // 对 items 进行排序，按 times 值降序排列
     const sortedItems = pathTimes.table.result.sort((a, b) => b.times - a.times);
@@ -313,12 +294,12 @@ function copyHistory(length: number) {
             </el-space>
             <el-button :icon="Setting" @click="config.drawer = true">参数设置</el-button>
         </div>
-        <el-table :data="pagination.table.pageContent" @sort-change="sortChange"
+        <el-table :data="pagination.table.pageContent" @sort-change="pagination.ctrl.sortChange"
              style="height: calc(100vh - 205px);">
             <el-table-column type="index" label="#" width="60px" />
-            <el-table-column prop="Status" width="100px" label="状态码" sortable="custom" />
-            <el-table-column prop="Length" width="100px" label="长度" sortable="custom" />
-            <el-table-column prop="URL" label="目录路径" :show-overflow-tooltip="true">
+            <el-table-column prop="Status" width="100px" label="Code" sortable="custom" />
+            <el-table-column prop="Length" width="100px" label="Length" sortable="custom" />
+            <el-table-column prop="URL" label="URL" :show-overflow-tooltip="true">
                 <template #default="scope">
                     <el-tooltip placement="top">
                         <template #content>Redirect to {{ scope.row.Location }}</template>
@@ -334,8 +315,8 @@ function copyHistory(length: number) {
                     {{ scope.row.URL }}
                 </template>
             </el-table-column>
-            <el-table-column prop="Recursion" width="100px" label="递归层级" />
-            <el-table-column label="操作" width="120px" align="center">
+            <el-table-column prop="Recursion" width="100px" label="Recursion" />
+            <el-table-column label="Operate" width="120px" align="center">
                 <template #default="scope">
                     <el-tooltip content="查看响应包">
                         <el-button :icon="Reading" link @click.prevent="DispalyResponse(scope.row.Body)"></el-button>
@@ -418,16 +399,7 @@ function copyHistory(length: number) {
                 </template>
                 <el-input v-model="from.exts"></el-input>
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    <span>过滤响应体:</span>
-                    <el-tooltip placement="left">
-                        <template #content>过滤响应包中某些关键字段存在的数据</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
+            <el-form-item label="过滤响应体内容:">
                 <el-input v-model="config.exclude"></el-input>
             </el-form-item>
             <el-form-item label="排除状态码:">
@@ -436,16 +408,7 @@ function copyHistory(length: number) {
             <el-form-item label="自定义请求头:">
                 <el-input v-model="config.headers" placeholder="以键:值形式输入，多行请用换行分割" type="textarea" :rows="3"></el-input>
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    <span>字典列表:</span>
-                    <el-tooltip placement="left">
-                        <template #content>若文本框中存在内容，则加载其内容目录为字典，不使用选中字典</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
+            <el-form-item label="字典列表:">
                 <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip
                     placeholder="不选择默认加载dicc字典" :max-collapse-tags="1">
                     <template #prefix>
@@ -463,25 +426,15 @@ function copyHistory(length: number) {
                     </template>
                     <el-option v-for="item in from.dictList" :label="item" :value="item" />
                 </el-select>
-                <el-input v-model="config.customDict" type="textarea" :rows="8"></el-input>
+                <el-input v-model="config.customDict" type="textarea" :rows="8" placeholder="若该文本框中存在内容，则加载其内容目录为字典，不使用选中字典"></el-input>
             </el-form-item>
-            <el-form-item class="align-right">
-                <template #label>
-                    <span>字典扫描记录:</span>
-                    <el-tooltip placement="left">
-                        <template #content>每次应用启动时，会加载历史响应码为200，500路径扫描记录次数<br />
-                            数据不会实时更新，复制功能会将Topxx个记录复制到字典列表中
-                        </template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
+            <el-form-item label="扫描记录:" class="align-right">
+                <el-alert title="记录响应码为200、500路径出现次数，数据非实时，每次启动/刷新应用时会刷新" type="info" show-icon :closable="false"></el-alert>
                 <el-table :data="pathTimes.table.pageContent" border 
-                @sort-change="sortChangePathTimes" style="width: 100%; height: 50vh;">
+                @sort-change="pathTimes.ctrl.sortChange" style="width: 100%; height: 50vh; margin-top: 5px;">
                     <el-table-column prop="path">
                         <template #header>
-                            <el-text><span>路径</span>
+                            <el-text><span>Path</span>
                                 <el-divider direction="vertical" />
                                 <el-button size="small" text bg @click="copyHistory(100)">复制Top100</el-button>
                                 <el-divider direction="vertical" />
@@ -489,7 +442,7 @@ function copyHistory(length: number) {
                             </el-text>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="times" label="出现次数" width="200"
+                    <el-table-column prop="times" label="Occurrences" width="200"
                         sortable="custom">
                     </el-table-column>
                     <template #empty>

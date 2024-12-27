@@ -25,7 +25,10 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var ExitFunc = false
+var (
+	ExitFunc  = false
+	IsRunning = false
+)
 
 type WebInfo struct {
 	Protocol      string

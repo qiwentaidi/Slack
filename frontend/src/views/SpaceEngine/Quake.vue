@@ -21,7 +21,7 @@
                                     <el-table :data="item.data" class="keyword-search" @row-click="syntax.rowClick">
                                         <el-table-column width="300" property="key" label="例句">
                                             <template #default="scope">
-                                                {{ scope.row.key }}<el-tag type="success" effect="plain" color="#4CA87D"
+                                                {{ scope.row.key }}<el-tag type="success" effect="plain"
                                                     v-if="scope.row.isVip" style="margin-left: 5px;">VIP</el-tag>
                                             </template>
                                         </el-table-column>
@@ -139,18 +139,20 @@
                     style="--el-switch-on-color: #4CA87D;" />
             </div>
             <el-divider direction="vertical" />
-            <div>
-                <span class="mr">CertCommon</span>
-                <el-input v-model="quake.certcommon" size="small" style="width: 250px;">
-                    <template #prefix>
+            <el-input v-model="quake.certcommon" size="small" style="width: 300px;" class="mr">
+                <template #prepend>
+                    <el-text class="position-center">CertCommon
                         <el-tooltip content="由于排除字段的值为按时间自动生成，请填写网页版登录后的Cookie中的cert_common字段，排除才可正常使用">
-                            <el-icon>
+                            <el-icon style="margin-left: 2px;">
                                 <QuestionFilled />
                             </el-icon>
                         </el-tooltip>
-                    </template>
-                </el-input>
-            </div>
+                    </el-text>
+                </template>
+                <template #suffix>
+                    <el-button :icon="ChromeFilled" link @click="BrowserOpenURL('https://quake.360.net/quake/#/index')" />
+                </template>
+            </el-input>
             <div style="flex-grow: 1;"></div>
             <el-dropdown>
                 <el-button :dark="true" text bg style="color: #4CA87D;">

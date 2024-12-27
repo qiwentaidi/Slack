@@ -40,7 +40,7 @@ useDark({
 // 初始化语言
 const locale = computed(() => (global.Language.value === 'zh' ? zhCn : en))
 
-const logArray = [] as string[]
+var logArray = [] as string[]
 
 onMounted(async () => {
   // 初始化目录

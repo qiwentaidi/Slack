@@ -15,6 +15,7 @@ import (
 	"path"
 	rt "runtime"
 	"slack-wails/core/dirsearch"
+	"slack-wails/core/dumpall"
 	"slack-wails/core/exp/hikvision"
 	"slack-wails/core/exp/nacos"
 	"slack-wails/core/info"
@@ -67,6 +68,25 @@ func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
+// 返回 true 将导致应用程序继续，false 将继续正常关闭
+func (a *App) BeforeClose(ctx context.Context) (prevent bool) {
+	if !webscan.IsRunning {
+		return false
+	}
+	dialog, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
+		Type:          runtime.QuestionDialog,
+		Title:         "Quit?",
+		Message:       "Webscan is running are you sure you want to quit?",
+		DefaultButton: "Confirm",
+		CancelButton:  "Cancel",
+		Buttons:       []string{"Confirm", "Cancel"},
+	})
+	if err != nil {
+		return false
+	}
+	return dialog == "Cancel"
+}
+
 func (a *App) Callgologger(level, msg string) {
 	switch level {
 	case "info":
@@ -98,10 +118,7 @@ func (a *App) GOOS() string {
 func (a *App) GoFetch(method, target string, body interface{}, headers map[string]string, timeout int, proxy clients.Proxy) *structs.Response {
 	if _, err := url.Parse(target); err != nil {
 		return &structs.Response{
-			Error:  true,
-			Proto:  "",
-			Header: nil,
-			Body:   "",
+			Error: true,
 		}
 	}
 	var content []byte
@@ -112,12 +129,9 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 		content = []byte(body.(string))
 	}
 	resp, b, err := clients.NewRequest(method, target, headers, bytes.NewReader(content), 10, true, clients.DefaultWithProxyClient(proxy))
-	if err != nil {
+	if err != nil || resp == nil {
 		return &structs.Response{
-			Error:  true,
-			Proto:  "",
-			Header: nil,
-			Body:   "",
+			Error: true,
 		}
 	}
 	headerMap := make(map[string]string)
@@ -127,10 +141,11 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 		headerMap["value"] = strings.Join(values, " ")
 	}
 	return &structs.Response{
-		Error:  false,
-		Proto:  resp.Proto,
-		Header: headerMap,
-		Body:   string(b),
+		Error:     false,
+		Proto:     resp.Proto,
+		StatsCode: resp.StatusCode,
+		Header:    headerMap,
+		Body:      string(b),
 	}
 }
 
@@ -466,10 +481,13 @@ func (a *App) FingerprintList() []string {
 
 func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy) {
 	webscan.ExitFunc = false
+	webscan.IsRunning = true
 	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
 	gologger.Info(a.ctx, "Fingerscan is running ...")
 	engine := webscan.NewFingerScanner(a.ctx, proxy, options)
 	if engine == nil {
+		gologger.Error(a.ctx, "Init fingerscan engine failed")
+		webscan.IsRunning = false
 		return
 	}
 	engine.NewFingerScan()
@@ -490,6 +508,7 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 		for target, tags := range fpm {
 			if webscan.ExitFunc {
 				gologger.Warning(a.ctx, "User exits vulnerability scanning")
+				webscan.IsRunning = false
 				return
 			}
 			id++
@@ -505,6 +524,7 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 		}
 		gologger.Info(a.ctx, "Vulnerability scan has ended")
 	}
+	webscan.IsRunning = false
 }
 
 func (a *App) GetFingerPocMap() map[string][]string {
@@ -669,4 +689,14 @@ func (a *App) ViewPictrue(file string) string {
 func (a *App) NetDial(host string) bool {
 	_, err := net.Dial("tcp", host)
 	return err == nil
+}
+
+func (a *App) NewDSStoreEngine(url string) []string {
+	url = strings.TrimSpace(url)
+	links, err := dumpall.ExtractDSStore(url)
+	if err != nil {
+		gologger.Debug(a.ctx, err)
+		return nil
+	}
+	return links
 }

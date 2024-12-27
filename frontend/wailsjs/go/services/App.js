@@ -134,6 +134,10 @@ export function NetDial(arg1) {
   return window['go']['services']['App']['NetDial'](arg1);
 }
 
+export function NewDSStoreEngine(arg1) {
+  return window['go']['services']['App']['NewDSStoreEngine'](arg1);
+}
+
 export function NewSynScanner(arg1, arg2, arg3) {
   return window['go']['services']['App']['NewSynScanner'](arg1, arg2, arg3);
 }

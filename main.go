@@ -45,6 +45,7 @@ func main() {
 			file.Startup(ctx)
 			db.Startup(ctx)
 		},
+		OnBeforeClose: app.BeforeClose,
 		DragAndDrop: func() *options.DragAndDrop {
 			if rt.GOOS == "windows" {
 				return winDropOptions

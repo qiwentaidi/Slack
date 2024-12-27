@@ -43,6 +43,11 @@ const MenuList = [
           path: "/Exploitation",
           icon: "/app/attack.png"
         },
+        {
+          name: "aside.dumpall",
+          path: "/Dumpall",
+          icon: "/app/dropbox.png"
+        },
       ]
     },
     {
@@ -133,11 +138,6 @@ const MenuList = [
           name: "aside.fscan",
           path: "/Fscan",
           icon: "/app/skull.png"
-        },
-        {
-          name: "aside.associate_dictionary_generator",
-          path: "/Thinkdict",
-          icon: "/app/dict.png"
         },
         {
           name: "aside.aksk",

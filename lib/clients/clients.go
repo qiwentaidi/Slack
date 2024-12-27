@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"slack-wails/lib/util"
 	"strings"
 	"time"
@@ -158,11 +159,13 @@ func IsWeb(host string, client *http.Client) (string, error) {
 	return "", fmt.Errorf("host %q is empty", host)
 }
 
+var regTitle = regexp.MustCompile(`(?is)<title\b[^>]*>(.*?)</title>`)
+
 func GetTitle(body []byte) string {
 	if len(body) == 0 {
 		return ""
 	}
-	if match := util.RegTitle.FindSubmatch(body); len(match) > 1 {
+	if match := regTitle.FindSubmatch(body); len(match) > 1 {
 		return strings.TrimSpace(util.Str2UTF8(string(match[1])))
 	}
 	return ""

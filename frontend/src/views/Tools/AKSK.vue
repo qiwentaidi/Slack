@@ -74,7 +74,7 @@ const wechatOption = ({
       ElMessage.warning(warning);
       return;
     }
-    let response: any = await GoFetch(method, url + wechat.accessToken, "", {}, 10, proxys);
+    let response = await GoFetch(method, url + wechat.accessToken, "", {}, 10, proxys);
     result.value = JSON.parse(response.Body);
   }
 })
@@ -112,7 +112,7 @@ const dingdingOption = ({
     }
   ],
   checksecret: async function () {
-    let response: any = await GoFetch("GET", `https://oapi.dingtalk.com/gettoken?appkey=${dingtalk.appid}&appsecret=${dingtalk.secert}`, "", {}, 10, proxys)
+    let response = await GoFetch("GET", `https://oapi.dingtalk.com/gettoken?appkey=${dingtalk.appid}&appsecret=${dingtalk.secert}`, "", {}, 10, proxys)
     if (response.Error) {
       result.value += "请求失败\n";
       return;
@@ -135,7 +135,7 @@ const dingdingOption = ({
     } else {
       body = parameter
     }
-    let response: any = await GoFetch(method, url + dingtalk.accessToken, body, {}, 10, proxys);
+    let response = await GoFetch(method, url + dingtalk.accessToken, body, {}, 10, proxys);
     result.value = JSON.parse(response.Body);
   },
   addUser: async function (formEl: FormInstance | undefined) {
@@ -168,7 +168,9 @@ POST 参数: {"dept_id":1,"cursor":0,"size":100}`
   },
 })
 
-
+function CopyResult() {
+  Copy(result.value)
+}
 </script>
 
 <template>
@@ -257,7 +259,7 @@ POST 参数: {"dept_id":1,"cursor":0,"size":100}`
   <div class="textarea-container">
     <pre class="pretty-response" style="height: 50vh"><code>{{ result }}</code></pre>
     <div class="action-area">
-      <el-button :icon="DocumentCopy" size="small" @click="Copy(result)">Copy</el-button>
+      <el-button :icon="DocumentCopy" size="small" @click="CopyResult">Copy</el-button>
     </div>
   </div>
   <el-dialog v-model="dingtalk.addUserDialog" title="Dingtalk添加用户" width="40%">

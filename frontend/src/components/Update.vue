@@ -178,7 +178,7 @@ function updateSuccess() {
     <el-card class="box-card">
         <template #header>
             <div class="card-header">
-                <span style="font-weight: bold;">POC&指纹: 最新{{ global.UPDATE.RemotePocVersion }}/当前{{
+                <span>POC&指纹: 最新{{ global.UPDATE.RemotePocVersion }}/当前{{
                     global.UPDATE.LocalPocVersion }}</span>
                 <el-button type="primary" :icon="Download" text @click="update.poc"
                     v-if="global.UPDATE.PocStatus">立即下载</el-button>
@@ -193,7 +193,7 @@ function updateSuccess() {
     <el-card class="box-card" style="margin-top: 10px;">
         <template #header>
             <div class="card-header">
-                <span style="font-weight: bold;">客户端: 最新{{ global.UPDATE.RemoteClientVersion }}/当前{{
+                <span>客户端: 最新{{ global.UPDATE.RemoteClientVersion }}/当前{{
                     global.LOCAL_VERSION }}</span>
                 <el-button type="primary" :icon="Download" text @click="update.client"
                     v-if="global.UPDATE.ClientStatus">立即下载</el-button>

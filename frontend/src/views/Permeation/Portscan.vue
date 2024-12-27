@@ -18,7 +18,7 @@ import throttle from 'lodash/throttle';
 import async from 'async'
 
 const throttleUpdate = throttle(() => {
-    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table);
+    pagination.ctrl.watchResultChange(pagination.table);
 }, 1000);
 
 // syn 扫描模式
@@ -27,7 +27,7 @@ onMounted(async () => {
     updatePorts(1); // 更新初始化显示
     // 扫描状态，把结果从后端传输到前端
     EventsOn("portScanLoading", (result: any) => {
-        pagination.table.result.push(updateSSLServer(result))
+        pagination.table.result.push(result)
         throttleUpdate()
     });
     // 进度条
@@ -45,19 +45,6 @@ onMounted(async () => {
         EventsOff("progressID");
     };
 });
-
-function updateSSLServer(result: PortScanData) {
-    if (result.Server == "ssl") {
-        return {
-            IP: result.IP,
-            Port: result.Port,
-            HttpTitle: result.HttpTitle,
-            Link: result.Link,
-            Server: "https"
-        }
-    }
-    return result
-}
 
 const form = reactive({
     target: '',
@@ -106,7 +93,7 @@ const options = ({
             pagination.table.result = pagination.table.temp;
         }
         pagination.table.currentPage = 1; // 重置分页
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+        pagination.ctrl.watchResultChange(pagination.table)
     }
 })
 
@@ -178,10 +165,10 @@ class Scanner {
         portsList = []
         Callgologger("info", "Portscan task is ending")
         if (config.webscan) {
-            let ips = pagination.table.result.filter(line => {
+            let urls = pagination.table.result.filter(line => {
                 if (line.Link.startsWith("http")) return true
             }).map(line => line.Link)
-            LinkWebscan(ips)
+            LinkWebscan(urls)
         }
         if (config.crack) {
             let ips = pagination.table.result.filter(item => {
@@ -403,11 +390,11 @@ function stopShodan() {
     <el-drawer v-model="form.newscanner" size="40%">
         <template #header>
             <span class="drawer-title">新建扫描任务</span>
-            <el-button text bg @click="shodanVisible = true">
+            <el-button link @click="shodanVisible = true">
                 <template #icon>
                     <img src="/shodan.png" style="width: 14px; height: 14px;">
                 </template>
-                从Shodan导入
+                Shodan
             </el-button>
         </template>
         <el-form :model="config" label-width="auto">
@@ -485,10 +472,7 @@ function stopShodan() {
     </el-drawer>
     <el-dialog v-model="shodanVisible" width="500">
         <template #header>
-            <span style="display: flex; align-items: center">
-                <img src="/shodan.png" style="margin-right: 5px;">
-                从Shodan拉取资产端口开放情况
-            </span>
+            <span class="drawer-title"><img src="/shodan.png">从Shodan拉取资产端口开放情况</span>
         </template>
         <el-form :model="form" label-position="top" :inline="true">
             <el-form-item label="扫描线程:">

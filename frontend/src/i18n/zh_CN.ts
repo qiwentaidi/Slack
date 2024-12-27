@@ -52,6 +52,7 @@ export default {
         'extract_database_info': "数据库自动取样",
         'fscan': "Fscan专区",
         'timestamp': "时间戳转换",
+        'dumpall': "Dumpall",
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

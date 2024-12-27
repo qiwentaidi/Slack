@@ -9,10 +9,11 @@ type Status struct {
 }
 
 type Response struct {
-	Error  bool
-	Proto  string
-	Header map[string]string
-	Body   string
+	Error     bool
+	Proto     string
+	StatsCode int
+	Header    map[string]string
+	Body      string
 }
 
 type Navigation struct {
@@ -21,10 +22,11 @@ type Navigation struct {
 }
 
 type Children struct {
-	Name   string
-	Type   string
-	Path   string
-	Target string
+	Name    string
+	Type    string
+	Path    string
+	Target  string
+	Favicon string // 纯图标路径
 }
 
 type TycCompanyInfo struct {

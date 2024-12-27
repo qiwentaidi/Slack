@@ -22,7 +22,7 @@ onMounted(async () => {
             AssociatedFingerprint: Array.from(new Set(tags))
         })
     }
-    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+    pagination.ctrl.watchResultChange(pagination.table)
     pagination.table.temp = pagination.table.result
     let fingers = await FingerprintList()
     const uniqueValues = new Set();
@@ -60,7 +60,7 @@ const filter = ref('')
 function filterPocList() {
     if (filter.value == '') {
         pagination.table.result = pagination.table.temp
-        pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+        pagination.ctrl.watchResultChange(pagination.table)
         return
     }
     pagination.table.result = []
@@ -81,7 +81,7 @@ function filterPocList() {
         }
     }
 
-    pagination.table.pageContent = pagination.ctrl.watchResultChange(pagination.table)
+    pagination.ctrl.watchResultChange(pagination.table)
 }
 
 const selectHighlightFinger = ref<string[]>([])

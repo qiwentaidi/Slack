@@ -85,11 +85,11 @@ func NewDownload(ctx context.Context, target, dest, events, execName string) (st
 		return "", err
 	}
 	defer res.Body.Close()
-
+	bufferSize := 128 * 1024
 	totalSize := res.ContentLength
 	downloadedSize := int64(0)
 
-	reader := bufio.NewReaderSize(res.Body, 32*1024)
+	reader := bufio.NewReaderSize(res.Body, bufferSize)
 	file, err := os.Create(dest + fileName)
 	if err != nil {
 		return "", err
@@ -97,7 +97,7 @@ func NewDownload(ctx context.Context, target, dest, events, execName string) (st
 	defer file.Close()
 
 	writer := bufio.NewWriter(file)
-	buf := make([]byte, 32*1024)
+	buf := make([]byte, bufferSize)
 	for {
 		n, err := reader.Read(buf)
 		if n > 0 {

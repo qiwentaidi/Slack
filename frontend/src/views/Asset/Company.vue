@@ -17,7 +17,7 @@ import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import { structs } from "wailsjs/go/models";
 
 const throttleUpdate = throttle(() => {
-    pc.table.pageContent = pc.ctrl.watchResultChange(pc.table);
+    pc.ctrl.watchResultChange(pc.table);
 }, 1000);
 
 
@@ -114,7 +114,7 @@ async function Collect() {
                 const result = await WechatOfficial(companyName);
                 if (Array.isArray(result) && result.length > 0) {
                     pw.table.result.push(...result);
-                    pw.table.pageContent = pw.ctrl.watchResultChange(pw.table)
+                    pw.ctrl.watchResultChange(pw.table)
                 }
             }
         }

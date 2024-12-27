@@ -12,6 +12,10 @@ export function DownloadLastestClient():Promise<structs.Status>;
 
 export function FileDialog(arg1:string):Promise<string>;
 
+export function GenerateFaviconBase64(arg1:string):Promise<string>;
+
+export function GenerateFaviconBase64WithOnline(arg1:string):Promise<string>;
+
 export function GetLocalNaConfig():Promise<any>;
 
 export function InitConfig():Promise<boolean>;
