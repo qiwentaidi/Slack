@@ -50,7 +50,6 @@ func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int
 			// 如果该IP在1-10端口有开放，后续端口必须识别到服务
 			return // 如果没有识别到服务，则不返回
 		}
-		fmt.Printf("pr.StatusCode: %v\n", pr.StatusCode)
 		retChan <- pr
 	}
 	threadPool, _ := ants.NewPoolWithFunc(workers, func(ipaddr interface{}) {
@@ -99,7 +98,7 @@ func Connect(ip string, port, timeout int, proxy clients.Proxy) *structs.InfoRes
 			URL:    fmt.Sprintf("%v://%v:%v", response.FingerPrint.Service, ip, port),
 		}
 		resp, _, err := clients.NewSimpleGetRequest(result.URL, clients.DefaultClient())
-		if err != nil && resp != nil {
+		if err == nil && resp != nil {
 			result.StatusCode = resp.StatusCode
 		}
 		return result

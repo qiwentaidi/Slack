@@ -262,6 +262,8 @@ function stopScan() {
     if (!form.runnningStatus) return
     form.runnningStatus = false
     ExitScanner("[webscan]")
+    ExitScanner("[portscan]")
+    ExitScanner("[portbrute]")
     ElMessage.warning("任务已停止")
 }
 
@@ -387,7 +389,7 @@ class Engine {
             ).map(item => item.URL);
             // 对web服务先去提取再去除，之后扫描
             updateActivities({
-                content: "Remove result data and wait fingerprint count: " + this.inputLines.length.toString(),
+                content: "Extracting and removing webpage activity detection information, totaling: " + this.inputLines.length.toString() + ", followed by fingerprint detection",
                 timestamp: (new Date()).toTimeString()
             })
             fp.table.result = fp.table.result.filter(
@@ -395,7 +397,10 @@ class Engine {
             );
             fp.ctrl.watchResultChange(fp.table)
         }
-
+        // 每个阶段任务前检查是否为退出状态
+        if (!form.runnningStatus) {
+            return
+        }
         // 指纹扫描      
         let deepScan = false
         let callNuclei = false
@@ -447,6 +452,10 @@ class Engine {
             form.runnningStatus = false
             return
         }
+         // 每个阶段任务前检查是否为退出状态
+         if (!form.runnningStatus) {
+            return
+        }
         let crackLinks = fp.table.result.filter(
             (line) => crackDict.options.includes(line.Scheme.toLowerCase())
         ).map(item => item.URL);
@@ -483,6 +492,9 @@ class Engine {
             timestamp: (new Date()).toTimeString()
         })
         async.eachLimit(crackLinks, global.webscan.crack_thread, async (target: string, callback: () => void) => {
+            if (!form.runnningStatus) {
+                return
+            }
             let protocol = target.split("://")[0]
             userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
             Callgologger("info", target + " is start brute")
@@ -1383,7 +1395,7 @@ function checkDictInput() {
     <!-- 联动模块 dialog -->
     <el-dialog v-model="spaceEngineConfig.fofaDialog">
         <template #header>
-            <span class="drawer-title"><img src="/app/hunter.ico">导入FOFA目标</span>
+            <span class="drawer-title"><img src="/app/fofa.ico">导入FOFA目标</span>
         </template>
         <el-form :model="form" label-width="auto">
             <el-form-item label="查询条件">

@@ -42,6 +42,13 @@ export async function InitConfigFile(timeout: number) {
       catchError(result, loading)
     }
   }
+  // 联动
+  loading.setText('正在初始化资源中...')
+  const waitRouter = ["/Permeation/Webscan", "/"]
+  for (const route of waitRouter) {
+    await sleep(timeout)
+    router.push(route);
+  }
   loading.close();
 }
 
