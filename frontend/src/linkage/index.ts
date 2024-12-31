@@ -1,50 +1,8 @@
-import { Callgologger, PortBrute, NewWebScanner, LoadDirsearchDict, DirScan, HunterSearch, Subdomain, FofaSearch } from 'wailsjs/go/services/App'
+import { Callgologger, LoadDirsearchDict, DirScan, HunterSearch, Subdomain, FofaSearch } from 'wailsjs/go/services/App'
 import global from '@/global'
-import async from 'async';
 import { ElMessage, ElNotification } from 'element-plus';
 import { dirsearch, structs } from 'wailsjs/go/models';
-import { getProxy, getRootDomain } from '@/util';
-import { crackDict } from '@/stores/options';
-
-
-export async function LinkWebscan(urls: string[]) {
-    let options: structs.WebscanOptions = {
-        Target: urls,
-        Thread: 50,
-        Screenshot: false,
-        Honeypot: true,
-        DeepScan: true,
-        RootPath: true,
-        CallNuclei: true,
-        TemplateFiles: [],
-        SkipNucleiWithoutTags: false,
-        GenerateLog4j2: true,
-        AppendTemplateFolder: global.webscan.append_pocfile
-    }
-    await NewWebScanner(options, getProxy())
-}
-
-export function LinkCrack(ips: string[]) {
-    let id = 0
-    async.eachLimit(ips, 20, async (target: string, callback: () => void) => {
-        let protocol = target.split("://")[0]
-        let userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
-        if (crackDict.options.includes(protocol)) {
-            Callgologger("info", target + " is start brute")
-        }
-        await PortBrute(target, userDict, crackDict.passwords)
-        id++
-        if (id == ips.length) {
-            callback()
-        }
-    }, (err: any) => {
-        Callgologger("info", "PortBrute Finished")
-        ElNotification.success({
-            message: "Crack Finished",
-            position: "bottom-right"
-        })
-    });
-}
+import { getRootDomain } from '@/util';
 
 export async function LinkDirsearch(url: string) {
     ElNotification.success({

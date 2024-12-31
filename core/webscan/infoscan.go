@@ -9,7 +9,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	rt "runtime"
-	"slack-wails/core/portscan"
 	"slack-wails/core/subdomain"
 	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
@@ -66,6 +65,7 @@ type FingerScanner struct {
 func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
 	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
 	for _, t := range options.Target {
+		t = strings.TrimRight(t, "/")
 		u, err := url.Parse(t)
 		if err != nil {
 			gologger.Error(ctx, err)
@@ -135,7 +135,7 @@ func (s *FingerScanner) NewFingerScan() {
 		resp, body, err := clients.NewSimpleGetRequest(u.String(), s.client)
 		if err != nil || resp == nil {
 			if len(rawHeaders) > 0 {
-				gologger.Debug(s.ctx, fmt.Sprintf("%s hash error to 302, response headers: %s", u.String(), string(rawHeaders)))
+				gologger.Debug(s.ctx, fmt.Sprintf("%s has error to 302, response headers: %s", u.String(), string(rawHeaders)))
 				statusCode = 302
 				goto ContinueExecution
 			}
@@ -215,6 +215,9 @@ func (s *FingerScanner) NewFingerScan() {
 
 		retChan <- structs.InfoResult{
 			URL:          u.String(),
+			Scheme:       u.Scheme,
+			Host:         u.Host,
+			Port:         web.Port,
 			StatusCode:   web.StatusCode,
 			Length:       web.ContentLength,
 			Title:        web.Title,
@@ -497,19 +500,19 @@ func (s *FingerScanner) FingerScan(ctx context.Context, web *WebInfo, targetDB [
 	return util.RemoveDuplicates(fingerPrintResults)
 }
 
-func (s *FingerScanner) GetBanner(host string) string {
-	conn, err := portscan.NewSocket("tcp", host, 3)
-	if err != nil {
-		return ""
-	}
-	defer conn.Close()
-	senddataStr := fmt.Sprintf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host)
-	content, err := conn.Request([]byte(senddataStr), 1024)
-	if err != nil {
-		return ""
-	}
-	return string(content)
-}
+// func (s *FingerScanner) GetBanner(host string) string {
+// 	conn, err := portscan.NewSocket("tcp", host, 3)
+// 	if err != nil {
+// 		return ""
+// 	}
+// 	defer conn.Close()
+// 	senddataStr := fmt.Sprintf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host)
+// 	content, err := conn.Request([]byte(senddataStr), 1024)
+// 	if err != nil {
+// 		return ""
+// 	}
+// 	return string(content)
+// }
 
 func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte {
 	var nextCheckUrl string

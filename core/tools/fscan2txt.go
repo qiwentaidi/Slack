@@ -20,24 +20,8 @@ import (
 
 type Tools struct{}
 
-type FscanNode struct {
-	Hostname string
-	IPs      []string
-	Ports    []string
-	RiskType string // 风险类型
-}
-
 var (
 	FscanRegs = map[string][]string{
-		// 横向拓扑信息
-		// "SSH":          {":22 open"},
-		// "SMB":          {":445 open", ":139 open"},
-		// "RDP":          {":3389 open"},
-		// "Database":     {":1433 open", ":1521 open", ":3306 open", ":5432 open", ":27017 open", ":6379 open"},
-		// "K8S":               {":2375 open", ":2376 open", ":2379 open", "Kubernetes"},
-		// "Domain Controller": {"[+] DC"},
-		// "Code Repositories": {"Gitlab", "Nexus", "Harbor", "ATLASSIAN-Confluence", "jira"},
-		// "Vcenter && Exsi":   {"ID_VC_Welcome", "ID_EESX_Welcome"},
 		"FTP":       {"[+] ftp"},
 		"SSH":       {"[+] SSH"},
 		"Mssql":     {"[+] mssql"},
@@ -49,6 +33,7 @@ var (
 		"Mongodb":   {"[+] Mongodb"},
 		"Memcached": {"[+] Memcached"},
 		"MS17-010":  {"[+] MS17-010"},
+		"DC INFO":   {"[+]DC"},
 		"POC":       {"poc"},
 		// 其他信息
 		"Web INFO":        {"[*] WebTitle"},
@@ -155,7 +140,7 @@ func (t *Tools) ConnectAndExecute(protocol, ip, port string, username, password 
 	if err != nil {
 		return fmt.Sprintf("[Error] %v", err)
 	}
-	return fmt.Sprintf("[Commond] " + commond + "\n" + result)
+	return fmt.Sprint("[Commond] " + commond + "\n" + result)
 }
 
 func executeSshCommand(host, username, password, command string) (string, error) {

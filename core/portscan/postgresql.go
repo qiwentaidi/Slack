@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -21,12 +22,13 @@ func PostgresScan(ctx context.Context, host string, usernames, passwords []strin
 			pass = strings.Replace(pass, "{user}", string(user), -1)
 			flag, err := PostgresConn(host, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "postgres",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "postgres weak password",
+					Name:     "postgres weak password",
+					URL:      host,
+					Type:     "Postgres",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

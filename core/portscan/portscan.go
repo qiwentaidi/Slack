@@ -7,6 +7,7 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/gonmap"
+	"slack-wails/lib/structs"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -17,24 +18,15 @@ import (
 
 var ExitFunc = false
 
-type PortResult struct {
-	Status    bool
-	IP        string
-	Port      int
-	Server    string
-	Link      string
-	HttpTitle string
-}
-
 func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int, proxy clients.Proxy) {
 	var id int32
 	single := make(chan struct{})
-	retChan := make(chan PortResult)
+	retChan := make(chan *structs.InfoResult)
 	var wg sync.WaitGroup
 	openPorts := make(map[string]bool) // 记录开放的端口
 	go func() {
 		for pr := range retChan {
-			runtime.EventsEmit(ctx, "portScanLoading", pr)
+			runtime.EventsEmit(ctx, "webFingerScan", pr)
 		}
 		close(single)
 		runtime.EventsEmit(ctx, "scanComplete", "done")
@@ -45,24 +37,21 @@ func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int
 			return
 		}
 		pr := Connect(add.IP, add.Port, timeout, proxy)
-		// 检查1-10端口的开放情况
-		if pr.Port >= 1 && pr.Port <= 20 && pr.Status {
-			openPorts[pr.IP] = true // 记录该IP有开放端口
-			gologger.IntervalError(ctx, fmt.Sprintf("[portscan] %s 疑似cdn地址，会对未识别到服务的端口进行过滤", pr.IP))
-		} else {
-			// 如果该IP在1-10端口有开放，后续端口必须识别到服务
-			if openPorts[pr.IP] && !pr.Status {
-				return // 如果没有识别到服务，则不返回
-			}
-		}
 		atomic.AddInt32(&id, 1)
 		runtime.EventsEmit(ctx, "progressID", id)
-		if pr.Status {
-			pr.IP = add.IP
-			pr.Port = add.Port
-			retChan <- pr
+		if pr == nil {
+			return
 		}
-		// gologger.Info(ctx, pr)
+		// 检查1-10端口的开放情况
+		if pr.Port >= 1 && pr.Port <= 20 {
+			openPorts[pr.Host] = true // 记录该IP有开放端口
+			gologger.IntervalError(ctx, fmt.Sprintf("[portscan] %s 疑似cdn地址，会对未识别到服务的端口进行过滤", pr.Host))
+		} else if openPorts[pr.Host] && pr.Scheme == "" {
+			// 如果该IP在1-10端口有开放，后续端口必须识别到服务
+			return // 如果没有识别到服务，则不返回
+		}
+		fmt.Printf("pr.StatusCode: %v\n", pr.StatusCode)
+		retChan <- pr
 	}
 	threadPool, _ := ants.NewPoolWithFunc(workers, func(ipaddr interface{}) {
 		ipa := ipaddr.(Address)
@@ -87,42 +76,41 @@ type Address struct {
 	Port int
 }
 
-func Connect(ip string, port, timeout int, proxy clients.Proxy) PortResult {
-	var pr PortResult
+func Connect(ip string, port, timeout int, proxy clients.Proxy) *structs.InfoResult {
 	scanner := gonmap.New()
 	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout), proxy)
-	switch status {
-	case gonmap.Closed:
-		pr.Status = false
-	// filter 未知状态
-	case gonmap.Unknown:
-		pr.Status = true
-		pr.Server = "filter"
-	default:
-		pr.Status = true
+	if status == gonmap.Closed || status == gonmap.Unknown {
+		return nil
 	}
-	if response != nil {
-		if response.FingerPrint.Service != "" {
-			pr.Server = response.FingerPrint.Service
-		} else {
-			pr.Server = "unknow"
-		}
-		pr.Link = fmt.Sprintf("%v://%v:%v", pr.Server, ip, port)
-		if pr.Server == "http" || pr.Server == "https" {
-			if resp, b, err := clients.NewSimpleGetRequest(pr.Link, clients.DefaultClient()); err == nil {
-				// 过滤云防护
-				if resp.StatusCode == 422 {
-					pr.Status = false
-				}
-				if title := clients.GetTitle(b); title != "" {
-					pr.HttpTitle = title
-				} else {
-					pr.HttpTitle = "-"
-				}
-			}
+	if response == nil || response.FingerPrint.Service == "" {
+		return &structs.InfoResult{
+			Host:   ip,
+			Port:   port,
+			Scheme: "unknow",
+			URL:    fmt.Sprintf("%v://%v:%v", "unknow", ip, port),
 		}
 	}
-	return pr
+
+	if response.FingerPrint.Service == "http" || response.FingerPrint.Service == "https" {
+		result := &structs.InfoResult{
+			Host:   ip,
+			Port:   port,
+			Scheme: response.FingerPrint.Service,
+			URL:    fmt.Sprintf("%v://%v:%v", response.FingerPrint.Service, ip, port),
+		}
+		resp, _, err := clients.NewSimpleGetRequest(result.URL, clients.DefaultClient())
+		if err != nil && resp != nil {
+			result.StatusCode = resp.StatusCode
+		}
+		return result
+	}
+
+	return &structs.InfoResult{
+		Host:   ip,
+		Port:   port,
+		Scheme: response.FingerPrint.Service,
+		URL:    fmt.Sprintf("%v://%v:%v", response.FingerPrint.Service, ip, port),
+	}
 }
 
 func WrapperTcpWithTimeout(network, address string, timeout time.Duration) (net.Conn, error) {

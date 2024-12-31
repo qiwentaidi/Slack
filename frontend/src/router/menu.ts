@@ -19,16 +19,6 @@ const MenuList = [
           icon: "/app/webscan.png"
         },
         {
-          name: "aside.portscan",
-          path: "/Portscan",
-          icon: "/app/portscan.png"
-        },
-        {
-          name: "aside.crack",
-          path: "/Crack",
-          icon: "/app/target.png"
-        },
-        {
           name: "aside.dirscan",
           path: "/Dirsearch",
           icon: "/app/dirscan.png"

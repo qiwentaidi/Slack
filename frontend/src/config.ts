@@ -42,13 +42,6 @@ export async function InitConfigFile(timeout: number) {
       catchError(result, loading)
     }
   }
-  // 联动
-  loading.setText('正在初始化联动模块中...')
-  const waitRouter = ["/Permeation/Crack", "/Permeation/Webscan", "/Permeation/Dirsearch", "/Asset/Subdomain", "/"]
-  for (const route of waitRouter) {
-    await sleep(timeout)
-    router.push(route);
-  }
   loading.close();
 }
 

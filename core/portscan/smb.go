@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strconv"
 	"strings"
 	"time"
@@ -22,12 +23,13 @@ func SmbScan(ctx context.Context, host string, usernames, passwords []string) {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := doWithTimeOut(host, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "smb",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "smb weak password",
+					Name:     "smb weak password",
+					URL:      host,
+					Type:     "SMB",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

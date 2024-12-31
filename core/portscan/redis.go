@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -13,12 +14,12 @@ import (
 func RedisScan(ctx context.Context, host string, passwords []string) {
 	flag, err := RedisUnauth(host)
 	if flag && err == nil {
-		runtime.EventsEmit(ctx, "bruteResult", Burte{
-			Status:   true,
-			Host:     host,
-			Protocol: "redis",
-			Username: "unauthorized",
-			Password: "",
+		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			ID:       "redis unauthorized",
+			Name:     "redis unauthorized",
+			URL:      host,
+			Type:     "Redis",
+			Severity: "HIGH",
 		})
 		gologger.Success(ctx, fmt.Sprintf("redis://%s is unauthorized access", host))
 		return
@@ -32,12 +33,13 @@ func RedisScan(ctx context.Context, host string, passwords []string) {
 		pass = strings.Replace(pass, "{user}", "redis", -1)
 		flag, err := RedisConn(host, pass)
 		if flag && err == nil {
-			runtime.EventsEmit(ctx, "bruteResult", Burte{
-				Status:   true,
-				Host:     host,
-				Protocol: "redis",
-				Username: "",
-				Password: pass,
+			runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+				ID:       "redis weak password",
+				Name:     "redis weak password",
+				URL:      host,
+				Type:     "Redis",
+				Severity: "HIGH",
+				Extract:  pass,
 			})
 			return
 		} else {

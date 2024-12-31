@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/gotelnet"
+	"slack-wails/lib/structs"
 	"strconv"
 	"strings"
 
@@ -23,12 +24,13 @@ func TelenetScan(ctx context.Context, host string, usernames, passwords []string
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := TelnetConn(h, user, pass, p, serverType)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "telnet",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "telnet weak password",
+					Name:     "telnet weak password",
+					URL:      host,
+					Type:     "Telnet",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

@@ -99,15 +99,27 @@ func (d *Database) CreateTable() bool {
         CREATE TABLE IF NOT EXISTS dirsearch ( path TEXT, times INTEGER );
         CREATE TABLE IF NOT EXISTS dbManager ( nanoid TEXT, scheme TEXT, host TEXT, port INTEGER, username TEXT, password TEXT, notes TEXT );
         CREATE TABLE IF NOT EXISTS scanTask ( task_id TEXT PRIMARY KEY, task_name TEXT, targets TEXT, failed INTEGER, vulnerability INTEGER );
-        CREATE TABLE IF NOT EXISTS FingerprintInfo ( task_id TEXT, url TEXT, status INTEGER, length INTEGER, title TEXT, detect TEXT, is_waf INTEGER, waf TEXT, fingerprints TEXT, screenshot TEXT );
+        CREATE TABLE IF NOT EXISTS FingerprintInfo ( task_id TEXT, url TEXT, status INTEGER, length INTEGER, title TEXT, detect TEXT, is_waf INTEGER, waf TEXT, fingerprints TEXT, screenshot TEXT, host TEXT, scheme TEXT, port INTEGER );
         CREATE TABLE IF NOT EXISTS VulnerabilityInfo ( task_id TEXT, template_id TEXT, vuln_name TEXT, protocol TEXT, severity TEXT, vuln_url TEXT, extract TEXT, request TEXT, response TEXT, description TEXT, reference TEXT, response_time TEXT );
     `)
 	if err != nil {
 		gologger.Debug(d.ctx, fmt.Sprintf("[sqlite] create table: %s", err))
 		return false
 	}
-	if !columnExists(d.DB, "VulnerabilityInfo", "response_time") {
-		_, err := d.DB.Exec(`ALTER TABLE VulnerabilityInfo ADD COLUMN response_time TEXT`)
+	if !columnExists(d.DB, "FingerprintInfo", "host") {
+		_, err := d.DB.Exec(`ALTER TABLE FingerprintInfo ADD COLUMN host TEXT`)
+		if err != nil {
+			return false
+		}
+	}
+	if !columnExists(d.DB, "FingerprintInfo", "scheme") {
+		_, err := d.DB.Exec(`ALTER TABLE FingerprintInfo ADD COLUMN scheme TEXT`)
+		if err != nil {
+			return false
+		}
+	}
+	if !columnExists(d.DB, "FingerprintInfo", "port") {
+		_, err := d.DB.Exec(`ALTER TABLE FingerprintInfo ADD COLUMN port INTEGER`)
 		if err != nil {
 			return false
 		}
@@ -930,7 +942,10 @@ func (d *Database) RetrieveFingerscanResults(taskid string) []structs.InfoResult
 		var result structs.InfoResult
 		var fingerprintsStr string
 		var task_id string
-		err = rows.Scan(&task_id, &result.URL, &result.StatusCode, &result.Length, &result.Title, &result.Detect, &result.IsWAF, &result.WAF, &fingerprintsStr, &result.Screenshot)
+		var host *string // 使用指针来处理可能的 NULL 值
+		var scheme *string
+		var port *int
+		err = rows.Scan(&task_id, &result.URL, &result.StatusCode, &result.Length, &result.Title, &result.Detect, &result.IsWAF, &result.WAF, &fingerprintsStr, &result.Screenshot, &host, &scheme, &port)
 		if err != nil {
 			gologger.Debug(d.ctx, err)
 			continue
@@ -976,8 +991,8 @@ func (d *Database) RetrievePocscanResults(taskid string) []structs.Vulnerability
 
 // 添加指纹扫描结果
 func (d *Database) AddFingerscanResult(taskid string, result structs.InfoResult) bool {
-	insertStmt := "INSERT INTO FingerprintInfo (task_id, url, status, length, title, detect, is_waf, waf, fingerprints, screenshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	return d.ExecSqlStatement(insertStmt, taskid, result.URL, result.StatusCode, result.Length, result.Title, result.Detect, result.IsWAF, result.WAF, strings.Join(result.Fingerprints, ","), result.Screenshot)
+	insertStmt := "INSERT INTO FingerprintInfo (task_id, url, status, length, title, detect, is_waf, waf, fingerprints, screenshot, host, scheme, port) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	return d.ExecSqlStatement(insertStmt, taskid, result.URL, result.StatusCode, result.Length, result.Title, result.Detect, result.IsWAF, result.WAF, strings.Join(result.Fingerprints, ","), result.Screenshot, result.Host, result.Scheme, result.Port)
 }
 
 // 添加漏洞扫描结果
@@ -1005,7 +1020,7 @@ func (d *Database) ExportWebReportWithJson(reportpath string, tasks []structs.Ta
 		targets = append(targets, task.Targets)
 	}
 	result := structs.WebReport{
-		Targets:      strings.Join(targets, ","),
+		Targets:      strings.Join(targets, "\n"),
 		Fingerprints: fingerprintsResults,
 		POCs:         pocsResults,
 	}

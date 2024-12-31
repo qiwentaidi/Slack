@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strconv"
 	"strings"
 
@@ -20,12 +21,13 @@ func Socks5Scan(ctx context.Context, host string, usernames, passwords []string)
 	}
 	flag := Socks5Conn(hostwithoutport, port, 3, "", "")
 	if flag {
-		runtime.EventsEmit(ctx, "bruteResult", Burte{
-			Status:   false,
-			Host:     host,
-			Protocol: "socks5",
-			Username: "",
-			Password: "",
+
+		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			ID:       "socks5 unauthorized",
+			Name:     "socks5 unauthorized",
+			URL:      host,
+			Type:     "socks5",
+			Severity: "HIGH",
 		})
 		return
 	} else {
@@ -39,12 +41,13 @@ func Socks5Scan(ctx context.Context, host string, usernames, passwords []string)
 			pass = strings.Replace(pass, "{user}", string(user), -1)
 			flag = Socks5Conn(hostwithoutport, port, 3, user, pass)
 			if flag {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "socks5",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "socks5 weak password",
+					Name:     "socks5 weak password",
+					URL:      host,
+					Type:     "SOCKS5",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

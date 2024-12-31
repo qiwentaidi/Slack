@@ -244,7 +244,11 @@ const localGroup = ({
         let filepath = await FileDialog("*.ico;*.png;*.jpg;*.jpeg;*.svg")
         config.favicon = await GenerateFaviconBase64(filepath)
     },
-    selectEditFile: async function () {
+    editFaviconFile: async function () {
+        let filepath = await FileDialog("*.ico;*.png;*.jpg;*.jpeg;*.svg")
+        edit.Favicon = await GenerateFaviconBase64(filepath)
+    },
+    editPathFile: async function () {
         edit.Path = await FileDialog("")
     },
 })
@@ -473,7 +477,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             <el-form-item label="路径">
                 <el-input v-model="edit.Path">
                     <template #suffix>
-                        <el-button :icon="Document" link @click="localGroup.selectEditFile()" />
+                        <el-button :icon="Document" link @click="localGroup.editPathFile" />
                     </template>
                 </el-input>
                 <span class="form-item-tips">类型为Link时路径填写URL网址</span>
@@ -481,7 +485,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             <el-form-item label="图标">
                 <el-input v-model="edit.Favicon">
                     <template #suffix>
-                        <el-button :icon="PictureRounded" link @click="localGroup.selctFaviconFile" />
+                        <el-button :icon="PictureRounded" link @click="localGroup.editFaviconFile" />
                     </template>
                 </el-input>
                 <span class="form-item-tips">类型为Link时，点击保存会自动生成网页Logo信息</span>

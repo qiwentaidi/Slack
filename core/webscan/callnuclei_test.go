@@ -12,21 +12,21 @@ import (
 )
 
 func TestNucleiCaller(t *testing.T) {
-	proxys := []string{"http://127.0.0.1:8080"}
+	// proxys := []string{"http://127.0.0.1:8080"}
 	ne, err := nuclei.NewNucleiEngineCtx(context.Background(),
 		nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
 			Templates: []string{util.HomeDir() + "/slack/config/pocs"},
 		}), // -t
-		nuclei.WithTemplateFilters(nuclei.TemplateFilters{Tags: []string{"Jeecg-Boot"}}), // 过滤 poc
-		nuclei.EnableStatsWithOpts(nuclei.StatsOptions{MetricServerPort: 6064}),          // optionally enable metrics server for better observability
-		nuclei.DisableUpdateCheck(),     // -duc
-		nuclei.WithProxy(proxys, false), // -proxy
+		nuclei.WithTemplateFilters(nuclei.TemplateFilters{Tags: []string{}}),    // 过滤 poc
+		nuclei.EnableStatsWithOpts(nuclei.StatsOptions{MetricServerPort: 6064}), // optionally enable metrics server for better observability
+		nuclei.DisableUpdateCheck(), // -duc
+		// nuclei.WithProxy(proxys, false), // -proxy
 	)
 	if err != nil {
 		panic(err)
 	}
 	// load targets and optionally probe non http/https targets
-	ne.LoadTargets([]string{"http://xxxx"}, false)
+	ne.LoadTargets([]string{}, false)
 	err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
 		fmt.Printf("[%s] [%s] %s\n", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched)
 		if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {

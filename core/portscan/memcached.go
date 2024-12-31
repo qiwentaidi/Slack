@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -26,12 +27,14 @@ func MemcachedScan(ctx context.Context, host string) {
 				n, err := client.Read(rev)
 				if err == nil {
 					if strings.Contains(string(rev[:n]), "STAT") {
-						runtime.EventsEmit(ctx, "bruteResult", Burte{
-							Status:   true,
-							Host:     host,
-							Protocol: "memcached",
-							Username: "unauthorized",
-							Password: "",
+						runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+							ID:       "memcached unauthorized",
+							Name:     "memcached unauthorized",
+							URL:      host,
+							Type:     "Memcached",
+							Severity: "HIGH",
+							Request:  "stats\n",
+							Response: string(rev[:n]),
 						})
 						return
 					}

@@ -26,9 +26,11 @@ var proxy = reactive({
 
 var webscan = reactive({
     web_thread: 50,
-    port_thread: 300,
+    crack_thread: 20, // 暴破任务线程
+    port_thread: 1000,
     port_timeout: 7,
     ping_check_alive: false,
+    default_portscan_module: 1,
     default_alive_module: "None",
     default_network: "Auto",
     highlight_fingerprints: ["畅捷通-TPlus", "泛微-协同办公OA", "致远互联-OA", "易宝OA", "用友-NC-Cloud", "用友-GRP-U8", "用友-U8-CRM", "用友U8", "泛微-EOffice", "泛微-云桥e-Bridge", "泛微-EMobile", "泛微-E-message", "GitLab", "金蝶云星空", "K8s-Etcd", "Jeecg-Boot", "KindEditor"],

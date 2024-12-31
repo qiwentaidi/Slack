@@ -25,19 +25,11 @@ func SynScan(ctx context.Context, ip string, ports []uint16, id *int32) {
 	retChan := make(chan port.OpenIpPort, 65535)
 	go func() {
 		for ret := range retChan {
-			result := PortResult{
-				Status: true,
-				IP:     ret.Ip.String(),
-				Port:   int(ret.Port),
-			}
 			gologger.Success(ctx, fmt.Sprintf("[syn] %v is open ! ", ret))
-			pr := Connect(ret.Ip.String(), int(ret.Port), synTimeout, clients.Proxy{})
-			if pr.Status {
-				result.HttpTitle = pr.HttpTitle
-				result.Server = pr.Server
-				result.Link = pr.Link
+			result := Connect(ret.Ip.String(), int(ret.Port), synTimeout, clients.Proxy{})
+			if result != nil {
+				runtime.EventsEmit(ctx, "webFingerScan", result)
 			}
-			runtime.EventsEmit(ctx, "portScanLoading", result)
 		}
 		single <- struct{}{}
 	}()

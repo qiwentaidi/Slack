@@ -32,7 +32,8 @@ func TestErrorClient() *http.Client {
 func DefaultClient() *http.Client {
 	return &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: TlsConfig,
+			TLSClientConfig:     TlsConfig,
+			TLSHandshakeTimeout: 10 * time.Second,
 		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 10 {
@@ -80,6 +81,7 @@ func NewRequest(method, url string, headers map[string]string, body io.Reader, t
 		return nil, nil, err
 	}
 	r.Header.Set("User-Agent", util.RandomUA())
+	r.Header.Set("Connection", "close")
 	for key, value := range headers {
 		r.Header.Set(key, value)
 	}

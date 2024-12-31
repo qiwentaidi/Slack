@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/services/App";
-import { ProcessTextAreaInput, Copy, ReadLine } from '@/util'
+import { ProcessTextAreaInput, Copy, ReadLine, selectFileAndAssign } from '@/util'
 import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting } from '@element-plus/icons-vue';
@@ -100,17 +100,6 @@ async function getDictList() {
     from.dictList = files.map((item: any) => item.Path)
 }
 
-async function handleFileChange() {
-    let path = await FileDialog("*.txt")
-    if (!path) return
-    from.selectDict.push(path)
-}
-
-async function GetFilepath() {
-    let path = await FileDialog("*.txt")
-    if (!path) return
-    from.input = path
-}
 async function dirscan() {
     // true is in running 
     if (!config.runningStatus) {
@@ -275,7 +264,7 @@ function copyHistory(length: number) {
                 </el-select>
             </template>
             <template #suffix>
-                <el-button link :icon="Document" @click="GetFilepath" />
+                <el-button link :icon="Document" @click="selectFileAndAssign(from, 'input', '*.txt')" />
             </template>
         </el-input>
         <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="dirscan"
@@ -354,8 +343,8 @@ function copyHistory(length: number) {
             <el-form-item label="重定向跟随:">
                 <el-switch v-model="config.redirectClient" />
             </el-form-item>
-            <el-form-item label="线程(MAX 500):">
-                <el-input-number v-model="config.thread" :min="1" :max="500" />
+            <el-form-item label="线程:">
+                <el-input-number v-model="config.thread" :min="1" :max="100" />
             </el-form-item>
             <el-form-item label="超时时长(s):">
                 <el-input-number v-model="config.timeout" :min="1" :max="20" />
@@ -414,7 +403,7 @@ function copyHistory(length: number) {
                     <template #prefix>
                         <el-button-group>
                             <el-tooltip content="加载自定义字典">
-                                <el-button link :icon="Document" @click="handleFileChange()" />
+                                <el-button link :icon="Document" @click="selectFileAndAssign(from, 'selectDict', '*.txt')" />
                             </el-tooltip>
                             <el-tooltip content="打开文件夹">
                                 <el-button link :icon="FolderOpened" @click="OpenFolder(from.configPath)" />

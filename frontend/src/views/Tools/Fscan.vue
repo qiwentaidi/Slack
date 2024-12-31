@@ -4,11 +4,10 @@
             <el-button :icon="InfoFilled" @click="fscan.tipsDialog = true">模块介绍</el-button>
             <el-input v-model="fscan.input" placeholder="移入或者选择文件路径" style="margin-inline: 5px;">
                 <template #suffix>
-                    <el-button link :icon="Document" @click="selectFilePath"></el-button>
+                    <el-button link :icon="Document" @click="selectFileAndAssign(fscan, 'input', '*.txt')"></el-button>
                 </template>
             </el-input>
             <el-button type="primary" @click="fscanParse">开始解析</el-button>
-            <el-button type="primary" @click="initChart" :disabled="true" style="margin-left: 5px">绘制网络拓扑</el-button>
         </div>
         <el-tabs type="border-card" style="margin-top: 15px;" class="demo-tabs">
             <el-tab-pane>
@@ -187,17 +186,16 @@
 
 <script setup lang="ts">
 import { ref, reactive } from "vue";
-import * as echarts from "echarts";
 import passwordIcon from "@/assets/icon/password.svg";
 import bugIcon from "@/assets/icon/bug.svg";
 import fingerprintIcon from "@/assets/icon/fingerprint.svg";
 import consoleIcon from "@/assets/icon/console.svg";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import { Document, ChromeFilled, DocumentCopy, Filter, Camera, Box, RefreshLeft, InfoFilled } from "@element-plus/icons-vue";
-import { Copy } from "@/util";
+import { Copy, selectFileAndAssign } from "@/util";
 import usePagination from "@/usePagination";
-import { FileDialog, ReadFile } from "wailsjs/go/services/File";
-import { ConnectAndExecute, FormatOutput, FscanToGraph } from "wailsjs/go/core/Tools";
+import { ReadFile } from "wailsjs/go/services/File";
+import { ConnectAndExecute, FormatOutput } from "wailsjs/go/core/Tools";
 import { ElMessage } from "element-plus";
 
 const fscan = reactive({
@@ -211,10 +209,6 @@ const fscan = reactive({
 });
 
 const wip = usePagination<{ url: string, code: string, title: string, length: string, redirect: string }>(20)
-
-async function selectFilePath() {
-    fscan.input = await FileDialog("*.txt");
-}
 
 const weekProtocol = ["ftp", "ssh", "telnet", "mysql", "oracle", "mssql", "postgres", "rdp", "mongodb", "redis"]
 async function fscanParse() {
@@ -350,17 +344,17 @@ const filter = ({
     hikvsion: ["2512", "600", "481", "480"],
     vm: ["ID_VC_Welcome", "ID_EESX_Welcome"],
     reset: () => {
-        if (wip.table.temp.length != 0) wip.table.result = wip.table.temp
+        if (wip.table.filterTemp.length != 0) wip.table.result = wip.table.filterTemp
         wip.ctrl.watchResultChange(wip.table);
     },
     hikvisionFilter: () => {
-        if (wip.table.temp.length == 0) wip.table.temp = wip.table.result
-        wip.table.result = wip.table.temp.filter(item => filter.hikvsion.includes(item.length))
+        if (wip.table.filterTemp.length == 0) wip.table.filterTemp = wip.table.result
+        wip.table.result = wip.table.filterTemp.filter(item => filter.hikvsion.includes(item.length))
         wip.ctrl.watchResultChange(wip.table)
     },
     vmFilter: () => {
-        if (wip.table.temp.length == 0) wip.table.temp = wip.table.result
-        wip.table.result = wip.table.temp.filter(item => {
+        if (wip.table.filterTemp.length == 0) wip.table.filterTemp = wip.table.result
+        wip.table.result = wip.table.filterTemp.filter(item => {
             for (const name of filter.vm) {
                 if (item.title.includes(name)) return item
             }
@@ -374,135 +368,6 @@ const filter = ({
         return row.type.toLowerCase() == value;
     },
 })
-
-const chartInstance = ref<echarts.ECharts | null>(null);
-// 初始化图表
-async function initChart() {
-    if (!fscan.input) {
-        ElMessage.warning("请输入文件路径")
-        return
-    }
-    fscan.showType = 'graph'
-    let data = await FscanToGraph(fscan.input)
-    // const chartDom = document.getElementById("main")!;
-    // chartInstance.value = echarts.init(chartDom);
-    // chartInstance.value.showLoading();
-
-    // // 获取数据并设置图表选项
-
-    // // 为节点添加标签条件
-    // graph.nodes.forEach((node: any) => {
-    //     node.label = {
-    //         show: node.symbolSize > 30,
-    //     };
-    //     // 添加tooltip内容
-    //     node.tooltip = {
-    //         formatter: `
-    //             <div>
-    //                 <strong>${node.name}</strong><br/>
-    //                 IP: ${node.ip}<br/>
-    //                 端口: ${node.ports.join(", ")}<br/>
-    //                 网站: ${node.website}
-    //             </div>
-    //         `,
-    //     };
-    // });
-
-    // // 配置图表选项
-    // const option: echarts.EChartsOption = {
-    //     title: {
-    //         text: "网络拓扑",
-    //         // subtext: "Default layout",
-    //         top: "bottom",
-    //         left: "right",
-    //     },
-    //     tooltip: {
-    //         formatter: function (params) {
-    //             if (params.dataType === 'edge') {
-    //                 return '网段: ' + params.data.subnet;
-    //             }
-    //         }
-    //     },
-    //     legend: [
-    //         {
-    //             data: graph.categories.map((a: { name: string }) => a.name),
-    //         },
-    //     ],
-    //     animationDuration: 1500,
-    //     animationEasingUpdate: "quinticInOut",
-    //     series: [
-    //         {
-    //             name: "Les Miserables",
-    //             type: "graph",
-    //             legendHoverLink: false,
-    //             layout: "none",
-    //             data: graph.nodes,
-    //             links: graph.links,
-    //             categories: graph.categories,
-    //             roam: true,
-    //             label: {
-    //                 position: "right",
-    //                 formatter: "{b}",
-    //             },
-    //             lineStyle: {
-    //                 color: "source",
-    //                 curveness: 0.3,
-    //             },
-    //             emphasis: {
-    //                 focus: "adjacency",
-    //                 lineStyle: {
-    //                     width: 10,
-    //                 },
-    //             },
-    //         },
-    //     ],
-    // };
-
-    // chartInstance.value?.hideLoading();
-    // chartInstance.value?.setOption(option);
-    var chart = echarts.init(document.getElementById('main'));
-
-    var option = {
-        title: {
-            text: 'Fscan Network Graph',
-            left: 'right',
-            top: 'bottom'
-        },
-        tooltip: {
-            formatter: function (param) {
-                if (param.dataType === 'node') {
-                    return `${param.data.name}<br>Category: ${param.data.category}`;
-                } else if (param.dataType === 'edge') {
-                    return `Source: ${param.data.source}<br>Target: ${param.data.target}`;
-                }
-            }
-        },
-        legend: [{
-            data: data.categories.map(cat => cat.name),
-        }],
-        series: [{
-            type: 'graph',
-            layout: 'force',
-            categories: data.categories,
-            data: data.nodes.map(node => ({
-                ...node,
-                itemStyle: node.isDouble ? { color: 'red' } : {}
-            })),
-            links: data.links,
-            roam: true,
-            // label: {
-            //     show: true,
-            //     formatter: '{b}'
-            // },
-            force: {
-                repulsion: 1000
-            }
-        }]
-    };
-
-    chart.setOption(option);
-
-};
 
 </script>
 

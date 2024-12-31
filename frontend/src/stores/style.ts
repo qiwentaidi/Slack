@@ -76,3 +76,18 @@ export function getTagTypeBySeverity(severity: string) {
     }
 }
 
+export function getBadgeClass(level: string) {
+    switch (level) {
+        case 'CRITICAL':
+            return 'risk-badge-critical'
+        case 'HIGH':
+            return 'risk-badge-red'
+        case 'MEDIUM':
+            return 'risk-badge-yellow'
+        case 'LOW':
+            return 'risk-badge-green'
+        case 'INFO':
+        default:
+            return 'risk-badge-gray'
+    }
+}

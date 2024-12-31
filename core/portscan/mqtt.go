@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -13,12 +14,12 @@ import (
 func MqttScan(ctx context.Context, host string, usernames, passwords []string) {
 	flag, err := MqttUnauth(host)
 	if flag && err == nil {
-		runtime.EventsEmit(ctx, "bruteResult", Burte{
-			Status:   true,
-			Host:     host,
-			Protocol: "mqtt",
-			Username: "unauthorized",
-			Password: "",
+		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			ID:       "mqtt unauthorized",
+			Name:     "mqtt unauthorized",
+			URL:      host,
+			Type:     "MQTT",
+			Severity: "HIGH",
 		})
 		gologger.Success(ctx, fmt.Sprintf("mqtt://%s is unauthorized access", host))
 		return
@@ -33,12 +34,13 @@ func MqttScan(ctx context.Context, host string, usernames, passwords []string) {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := MqttConn(host, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "mqtt",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "mqtt weak password",
+					Name:     "mqtt weak password",
+					URL:      host,
+					Type:     "mqtt",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 			} else {
 				gologger.Info(ctx, fmt.Sprintf("mqtt://%s %s:%s is login failed", host, user, pass))

@@ -6,14 +6,6 @@ import (
 	"strings"
 )
 
-type Burte struct {
-	Status   bool
-	Protocol string
-	Host     string
-	Username string
-	Password string
-}
-
 var ExitBruteFunc = false
 
 var defaultPorts = map[string]string{
@@ -62,6 +54,7 @@ func PortBrute(ctx context.Context, host string, usernames, passwords []string) 
 		TelenetScan(ctx, u.Host, usernames, passwords)
 	case "smb":
 		SmbScan(ctx, u.Host, usernames, passwords)
+		MS17010(ctx, u.Host)
 	case "oracle":
 		OracleScan(ctx, u.Host, usernames, passwords)
 	case "mssql":

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -21,12 +22,13 @@ func MssqlScan(ctx context.Context, host string, usernames, passwords []string) 
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := MssqlConn(host, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "mssql",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "mssql weak password",
+					Name:     "mssql weak password",
+					URL:      host,
+					Type:     "Mssql",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

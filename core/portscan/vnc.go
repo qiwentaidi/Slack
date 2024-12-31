@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -19,12 +20,13 @@ func VncScan(ctx context.Context, host string, passwords []string) {
 		pass = strings.Replace(pass, "{user}", "vnc", -1)
 		flag, err := VncConn(host, pass)
 		if flag && err == nil {
-			runtime.EventsEmit(ctx, "bruteResult", Burte{
-				Status:   true,
-				Host:     host,
-				Protocol: "vnc",
-				Username: "",
-				Password: pass,
+			runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+				ID:       "vnc weak password",
+				Name:     "vnc weak password",
+				URL:      host,
+				Type:     "VNC",
+				Severity: "HIGH",
+				Extract:  pass,
 			})
 			return
 		} else {

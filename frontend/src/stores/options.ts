@@ -10,6 +10,8 @@ import layersIcon from "@/assets/icon/layers.svg"
 import aboutIcon from "@/assets/icon/about.svg"
 import scriptIcon from "@/assets/icon/script.svg"
 
+export const webscanInputOptions = ['URL', 'IP/域名']
+
 export const webscanOptions = [
     {
         label: "指纹扫描",
@@ -34,6 +36,8 @@ export const webscanOptions = [
 ]
 
 export const webReportOptions = ["HTML", "JSON"]
+
+export const sortSeverityOptions = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
 
 export const portscanOptions = [
     {
@@ -360,7 +364,8 @@ export const fofaOptions = ({
 })
 
 export var crackDict = ({
-    options: ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "rdp", "postgresql", "vnc", "redis", "memcached", "mongodb", "ldap", "mqtt", "socks5"],
+    // 可以进行漏洞检测的列表，包括未授权
+    options: ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "postgresql", "vnc", "redis", "memcached", "mongodb", "ldap", "mqtt", "socks5", "jdwp", "rmi"],
     usernames: [
         {
             name: "FTP",
@@ -631,4 +636,15 @@ export const databaseOptions = [
         label: "Mongodb",
         value: "mongodb"
     }
+]
+
+export const pocdetailFilterOptions = [
+    {
+        label: '名称',
+        value: 'Name'
+    },
+    {
+        label: '关联指纹',
+        value: 'Fingerprint'
+    },
 ]

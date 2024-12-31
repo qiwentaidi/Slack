@@ -59,10 +59,10 @@ async function Start() {
         <el-button type="primary" loading v-else>正在检测</el-button>
     </div>
     <highlightjs language="customlog" :code="log"></highlightjs>
-    <el-dialog v-model="introduceDialog" title="模块介绍">
+    <el-dialog v-model="introduceDialog" title="模块介绍" width="60%">
         <el-descriptions :column="1" border>
             <el-descriptions-item label="描述">
-                <el-text>适用于.git | .svn | .DS_Store信息泄漏时使用，功能详情参考
+                <el-text>适用于 .git | .svn | .DS_Store 信息泄漏时使用，功能详情参考
                     <el-link @click="BrowserOpenURL('https://github.com/0xHJK/dumpall')">dumpall<el-icon
                             class="el-icon--right">
                             <githubIcon />

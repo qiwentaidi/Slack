@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -21,12 +22,13 @@ func MysqlScan(ctx context.Context, host string, usernames, passwords []string) 
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := MysqlConn(host, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "mysql",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "mysql weak password",
+					Name:     "mysql weak password",
+					URL:      host,
+					Type:     "Mysql",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -21,12 +22,13 @@ func SshScan(ctx context.Context, host string, usernames, passwords []string) {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := SshConn(host, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "ssh",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "ssh weak password",
+					Name:     "ssh weak password",
+					URL:      host,
+					Type:     "SSH",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 			} else {
 				gologger.Info(ctx, fmt.Sprintf("ssh://%s %s:%s is login failed", host, user, pass))

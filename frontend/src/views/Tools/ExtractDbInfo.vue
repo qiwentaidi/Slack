@@ -3,12 +3,12 @@
         <el-tabs v-model="activeTab" type="card" class="demo-tabs">
             <el-tab-pane name="dashborad">
                 <template #label>
-                    <span class="custom-tabs-label">
-                        <el-icon>
+                    <el-text class="position-center">
+                        <el-icon style="margin-right: 2px;">
                             <DataAnalysis />
                         </el-icon>
-                        <span>连接池</span>
-                    </span>
+                        连接池
+                    </el-text>
                 </template>
                 <el-row :gutter="12" v-if="connections && connections.length > 0">
                     <el-col :span="12" v-for="(connection, index) in connections" :key="index">
@@ -113,8 +113,8 @@
         </el-tabs>
         <template #ctrl>
             <el-space :size="5">
-                <el-button type="primary" :icon="Plus" @click="showAddConnectionDialog">添加连接</el-button>
-                <el-button :icon="Setting" text bg @click="settingDialog = true"></el-button>
+                <el-button :icon="Plus" @click="showAddConnectionDialog">添加连接</el-button>
+                <el-button :icon="Setting" @click="settingDialog = true" style="margin-right: -5px;"></el-button>
             </el-space>
         </template>
     </CustomTabs>
@@ -163,11 +163,12 @@
         </template>
     </el-dialog>
     <el-dialog v-model="settingDialog" title="设置" width="50%">
-        <el-alert :closable="false" style="margin-bottom: 10px;">{{ tips }}</el-alert>
+        <el-alert title="在连接除Mongodb之外的数据库时，程序会自动忽略系统数据库，所以有时面板显示数据库数量为0"
+        show-icon :closable="false" style="margin-bottom: 10px;"></el-alert>
         <el-form :model="currentConnection">
             <el-form-item label="列名关键字">
                 <el-input v-model="global.database.columnsNameKeywords" type="textarea" :rows="3"></el-input>
-                <span style="font-size: smaller">当数据库列名包含上述关键字时，会采集信息时会进行打印。以,分隔</span>
+                <span class="form-item-tips">当数据库列名包含上述关键字时，会采集信息时会进行打印。以,分隔</span>
                 <el-button type="primary" @click="SaveConfig" size="small" style="margin-inline: 10px;">保存</el-button>
             </el-form-item>
         </el-form>
@@ -226,8 +227,6 @@ const currentConnection = reactive<DatabaseConnection>({
 var dbinfo: { [key: string]: string[] } = {};
 
 const settingDialog = ref(false)
-
-const tips = `Tips: 在连接除Mongodb之外的数据库时，程序会自动忽略系统数据库，所以有时面板显示数据库数量为0`
 
 function chooseDefaultPort() {
     switch (currentConnection.type) {

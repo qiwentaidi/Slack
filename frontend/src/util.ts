@@ -184,11 +184,6 @@ export async function TestProxy(mode: number) {
   return true;
 }
 
-export function currentTimestamp() {
-  const now = new Date();
-  return Math.floor(now.getTime() / 1000).toString();
-}
-
 const download = {
   RemotePocVersion:
     "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version",
@@ -297,22 +292,6 @@ export function renderedMarkdown(content: string) {
   return marked.parse(content);
 }
 
-export async function UploadFileAndRead() {
-  let filepath = await FileDialog("*.txt")
-  if (!filepath) {
-    return ""
-  }
-  let file = await ReadFile(filepath)
-  if (file.Error) {
-    ElMessage({
-      type: "warning",
-      message: file.Message
-    })
-    return ""
-  }
-  return file.Content!
-}
-
 export function getBasicURL(rawURL: string) {
   try {
     const url = new URL(rawURL);
@@ -341,6 +320,43 @@ export function getRootDomain(hostname: string) {
     return parts.slice(-2).join('.'); // 返回最后两部分（例如：example.com）
   }
   return hostname; // 如果没有子域名，直接返回（例如：example.com）
+}
+
+// target参数表示需要传入的对象，property参数表示需要传入的对象的属性名
+// fileType参数传入文件类型，eg: "*.txt" || "*.txt;*.csv"
+// 然后会弹出一个对话框，将选择到的文件路径赋值到target对象的property属性中
+export function selectFileAndAssign(target: Record<string, any>, property: string, fileType: string) {
+  try {
+    FileDialog(fileType).then((path: string) => {
+      if (!path) return;
+      target[property] = path;
+    })
+  } catch (error) {
+    Callgologger("error", "Error select file");
+  }
+}
+
+// target参数表示需要传入的对象，property参数表示需要传入的对象的属性名
+// 然后会弹出一个对话框，将选中的txt文件内容赋值到target对象的property属性中
+export async function UploadFileAndRead(target: Record<string, any>, property: string) {
+  let filepath = await FileDialog("*.txt")
+  if (!filepath) {
+    return
+  }
+  let file = await ReadFile(filepath)
+  if (file.Error) {
+    ElMessage({
+      type: "warning",
+      message: file.Message
+    })
+    return
+  }
+  try {
+    target[property] = file.Content!
+
+  } catch (error) {
+    Callgologger("error", "Incorrect assignment");
+  }
 }
 
 // 处理 {{file:///xxxx}} 获取到文件路径

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -16,12 +17,12 @@ import (
 func MongodbScan(ctx context.Context, host string, usernames, passwords []string) {
 	flag, err := MongodbConn(host, "", "")
 	if flag && err == nil {
-		runtime.EventsEmit(ctx, "bruteResult", Burte{
-			Status:   false,
-			Host:     host,
-			Protocol: "mongodb",
-			Username: "unauthorized",
-			Password: "",
+		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			ID:       "mongodb unauthorized",
+			Name:     "mongodb unauthorized",
+			URL:      host,
+			Type:     "Mongodb",
+			Severity: "HIGH",
 		})
 		return
 	} else {
@@ -35,12 +36,13 @@ func MongodbScan(ctx context.Context, host string, usernames, passwords []string
 			pass = strings.Replace(pass, "{user}", string(user), -1)
 			flag, err := MongodbConn(host, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "mongodb",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "mongodb weak password",
+					Name:     "mongodb weak password",
+					URL:      host,
+					Type:     "mongodb",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

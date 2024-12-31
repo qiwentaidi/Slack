@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -21,12 +22,13 @@ func OracleScan(ctx context.Context, host string, usernames, passwords []string)
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := OracleConn(host, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     host,
-					Protocol: "oracle",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "oracle weak password",
+					Name:     "oracle weak password",
+					URL:      host,
+					Type:     "Oracle",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

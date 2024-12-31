@@ -27,7 +27,6 @@ export interface PortScanData {
     Port: number;
     Server: string;
     Link: string;
-    HttpTitle: string;
 }
 
 export interface Dir {

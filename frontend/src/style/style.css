@@ -24,6 +24,52 @@ html {
   overflow: hidden;
 }
 
+/* 重写一些elementplus的样式 */
+
+.el-drawer__footer {
+  height: 30px;
+}
+
+.el-divider__text {
+  background-color: var(--el-fill-color-blank);
+}
+
+.el-textarea__inner {
+  height: 100%;
+}
+
+.el-card__body {
+  padding: 10px;
+}
+
+.el-col {
+  text-align: center;
+}
+
+.el-text {
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+.el-drawer__header {
+  margin-bottom: 0px;
+}
+
+:deep(.el-table__header) {
+  width: 100% !important;
+}
+
+:deep(.el-table__body) {
+  width: 100% !important;
+}
+
+.iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -108,29 +154,12 @@ html {
   display: flex;
 }
 
-.iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
 /* 设置align-right的元素内容右对齐 */
 .align-right .el-form-item__content {
   display: flex;
   justify-content: flex-end;
 }
 
-.el-divider__text {
-  background-color: var(--el-fill-color-blank);
-}
-
-.el-textarea__inner {
-  height: 100%;
-}
-
-.el-card__body {
-  padding: 10px;
-}
 
 .position-center {
   display: flex;
@@ -141,14 +170,6 @@ html {
 .vertical-center {
   display: flex;
   justify-content: center;
-}
-
-:deep(.el-table__header) {
-  width: 100% !important;
-}
-
-:deep(.el-table__body) {
-  width: 100% !important;
 }
 
 .editor-tabs .el-tabs__item {
@@ -176,31 +197,65 @@ html {
   cursor: pointer;
 }
 
+/* 仪表盘进度条样式 */
+
+.percentage-value {
+  display: block;
+  margin-top: 10px;
+  font-size: 28px;
+}
+
+.percentage-label {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
 /* 网站扫描风险等级颜色 */
 
-/* .severity-critical {
-  color: #AF63F6;
+.risk-level-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.severity-high {
-  color: red;
+.risk-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.severity-medium {
-  color: orange;
+.risk-badge-critical {
+  background-color: #931024;
+  color: white;
 }
 
-.severity-low {
-  color: rgb(0, 145, 255);
+.risk-badge-red {
+  background-color: rgb(247, 65, 65);
+  color: white;
 }
 
-.severity-info {
-  color: #7EC050;
-} */
-
-.el-drawer__header {
-  margin-bottom: 0px;
+.risk-badge-yellow {
+  background-color: #e6a23c;
+  color: white;
 }
+
+.risk-badge-green {
+  background-color: #73a8ed;
+  color: white;
+}
+
+.risk-badge-gray {
+  background-color: #909399;
+  color: white;
+}
+
 
 .drawer-title {
   font-weight: bold;
@@ -214,20 +269,6 @@ html {
   margin-right: 2px;
 }
 
-.el-card-title {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.el-col {
-  text-align: center;
-}
-
-.el-text {
-  display: flex;
-  align-items: center;
-  text-align: center;
-}
 
 .finger-container {
   flex-wrap: wrap;

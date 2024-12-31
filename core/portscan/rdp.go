@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"sync"
 	"time"
@@ -41,12 +42,13 @@ func RdpScan(ctx context.Context, host string, usernames, passwords []string) {
 				flag, err := RdpConn(host, "", user, pass, 10)
 				mutex.Lock()
 				if flag && err == nil {
-					runtime.EventsEmit(ctx, "bruteResult", Burte{
-						Status:   true,
-						Host:     host,
-						Protocol: "rdp",
-						Username: user,
-						Password: pass,
+					runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+						ID:       "rdp weak password",
+						Name:     "rdp weak password",
+						URL:      host,
+						Type:     "RDP",
+						Severity: "CRITICAL",
+						Extract:  user + "/" + pass,
 					})
 					return
 				} else {

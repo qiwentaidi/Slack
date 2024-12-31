@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -94,12 +95,12 @@ func AdbScan(ctx context.Context, address string) {
 	}
 
 	if result != "" {
-		runtime.EventsEmit(ctx, "bruteResult", Burte{
-			Status:   true,
-			Host:     address,
-			Protocol: "adb",
-			Username: "unauthorized",
-			Password: "",
+		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			ID:       "adb unauthorized",
+			Name:     "adb unauthorized",
+			URL:      address,
+			Type:     "ADB",
+			Severity: "HIGH",
 		})
 		return
 	}

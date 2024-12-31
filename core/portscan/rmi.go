@@ -3,11 +3,15 @@ package portscan
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+var rmiVulRegexp = regexp.MustCompile(`^N[\s\S]{1,2}\d*\.\d*\.\d*\.\d*`)
 
 func RmiScan(ctx context.Context, host string) {
 	// 使用10秒超时建立TCP连接
@@ -18,7 +22,7 @@ func RmiScan(ctx context.Context, host string) {
 		}
 	}()
 
-	if err != nil {
+	if err == nil {
 		err = client.SetDeadline(time.Now().Add(10 * time.Second))
 		if err == nil {
 			// RMI协议握手包
@@ -34,13 +38,16 @@ func RmiScan(ctx context.Context, host string) {
 				n, err := client.Read(rev)
 				if err == nil {
 					// 检查返回的数据是否包含RMI响应特征
-					if n > 4 && string(rev[:4]) == "JRMI" {
-						runtime.EventsEmit(ctx, "bruteResult", Burte{
-							Status:   true,
-							Host:     host,
-							Protocol: "rmi",
-							Username: "unauthorized",
-							Password: "",
+					result := rmiVulRegexp.Find(rev)
+					if result != nil {
+						runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+							ID:       "rmi unauthorized",
+							Name:     "rmi unauthorized",
+							URL:      host,
+							Type:     "RMI",
+							Severity: "CRITICAL",
+							Request:  string(handshake),
+							Response: string(rev[:n]),
 						})
 						return
 					}
@@ -48,6 +55,5 @@ func RmiScan(ctx context.Context, host string) {
 			}
 		}
 	}
-
 	gologger.Info(ctx, fmt.Sprintf("rmi://%s is no unauthorized access", host))
 }

@@ -44,7 +44,7 @@
                             </template>
                             <div class="batch-search">
                                 <el-alert type="info" :closable="false" title="上传包含IP/域名的.txt文件，数量不超过1000个" show-icon />
-                                <el-button class="upload" :icon="UploadFilled" @click="UploadFileAndReadText">上传文件</el-button>
+                                <el-button class="upload" :icon="UploadFilled" @click="UploadFileAndRead(quake, 'batchIps')">上传文件</el-button>
                                 <el-input v-model="quake.batchIps" type="textarea" :rows="5"
                                     placeholder="请输入IP/域名，每行一个，多个请换行输入"></el-input>
                                 <div class="my-header">
@@ -285,10 +285,6 @@ const options = ({
         cdn: false,
     }),
 })
-
-async function UploadFileAndReadText() {
-    quake.batchIps = await UploadFileAndRead()
-}
 
 const ruleFormRef = ref<FormInstance>()
 

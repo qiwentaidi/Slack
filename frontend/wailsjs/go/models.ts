@@ -25,91 +25,6 @@ export namespace clients {
 
 }
 
-export namespace core {
-	
-	export class NetworkCategory {
-	    name: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new NetworkCategory(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.name = source["name"];
-	    }
-	}
-	export class NetworkLink {
-	    source: string;
-	    target: string;
-	    subnet: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new NetworkLink(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.source = source["source"];
-	        this.target = source["target"];
-	        this.subnet = source["subnet"];
-	    }
-	}
-	export class NetworkNode {
-	    name: string;
-	    category: string;
-	    isDouble?: boolean;
-	
-	    static createFrom(source: any = {}) {
-	        return new NetworkNode(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.name = source["name"];
-	        this.category = source["category"];
-	        this.isDouble = source["isDouble"];
-	    }
-	}
-	export class FscanGraphData {
-	    nodes: NetworkNode[];
-	    links: NetworkLink[];
-	    categories: NetworkCategory[];
-	
-	    static createFrom(source: any = {}) {
-	        return new FscanGraphData(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.nodes = this.convertValues(source["nodes"], NetworkNode);
-	        this.links = this.convertValues(source["links"], NetworkLink);
-	        this.categories = this.convertValues(source["categories"], NetworkCategory);
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-	
-	
-
-}
-
 export namespace dirsearch {
 	
 	export class Options {
@@ -771,6 +686,9 @@ export namespace structs {
 	
 	export class InfoResult {
 	    URL: string;
+	    Scheme: string;
+	    Host: string;
+	    Port: number;
 	    StatusCode: number;
 	    Length: number;
 	    Title: string;
@@ -787,6 +705,9 @@ export namespace structs {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.URL = source["URL"];
+	        this.Scheme = source["Scheme"];
+	        this.Host = source["Host"];
+	        this.Port = source["Port"];
 	        this.StatusCode = source["StatusCode"];
 	        this.Length = source["Length"];
 	        this.Title = source["Title"];

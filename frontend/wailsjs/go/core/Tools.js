@@ -26,10 +26,6 @@ export function FormatOutput(arg1) {
   return window['go']['core']['Tools']['FormatOutput'](arg1);
 }
 
-export function FscanToGraph(arg1) {
-  return window['go']['core']['Tools']['FscanToGraph'](arg1);
-}
-
 export function PatchIdentify(arg1) {
   return window['go']['core']['Tools']['PatchIdentify'](arg1);
 }

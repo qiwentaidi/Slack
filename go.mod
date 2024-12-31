@@ -20,7 +20,7 @@ require (
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/panjf2000/ants/v2 v2.9.1
-	github.com/sijms/go-ora/v2 v2.8.19
+	github.com/sijms/go-ora/v2 v2.8.22
 	github.com/stacktitan/smb v0.0.0-20190531122847-da9a425dceb8
 	github.com/tomatome/grdp v0.1.0
 	github.com/twmb/murmur3 v1.1.8

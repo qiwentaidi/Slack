@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 	"time"
 
@@ -14,12 +15,12 @@ import (
 func FtpScan(ctx context.Context, address string, usernames, passwords []string) {
 	flag, err := FtpConn(address, "anonymous", "")
 	if flag && err == nil {
-		runtime.EventsEmit(ctx, "bruteResult", Burte{
-			Status:   true,
-			Host:     address,
-			Protocol: "ftp",
-			Username: "anonymous",
-			Password: "",
+		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			ID:       "ftp unauthorized",
+			Name:     "ftp unauthorized",
+			URL:      address,
+			Type:     "FTP",
+			Severity: "HIGH",
 		})
 		return
 	} else {
@@ -33,12 +34,13 @@ func FtpScan(ctx context.Context, address string, usernames, passwords []string)
 			pass = strings.Replace(pass, "{user}", user, -1)
 			flag, err := FtpConn(address, user, pass)
 			if flag && err == nil {
-				runtime.EventsEmit(ctx, "bruteResult", Burte{
-					Status:   true,
-					Host:     address,
-					Protocol: "ftp",
-					Username: user,
-					Password: pass,
+				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					ID:       "ftp weak password",
+					Name:     "ftp weak password",
+					URL:      address,
+					Type:     "ftp",
+					Severity: "HIGH",
+					Extract:  user + "/" + pass,
 				})
 				return
 			} else {

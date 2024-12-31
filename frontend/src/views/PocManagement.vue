@@ -13,6 +13,7 @@ import saveIcon from '@/assets/icon/save.svg'
 import { SaveConfig } from '@/config';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution";
+import { pocdetailFilterOptions } from '@/stores/options';
 
 onMounted(async () => {
     const pocMap = await GetFingerPocMap();
@@ -23,7 +24,7 @@ onMounted(async () => {
         })
     }
     pagination.ctrl.watchResultChange(pagination.table)
-    pagination.table.temp = pagination.table.result
+    pagination.table.filterTemp = pagination.table.result
     let fingers = await FingerprintList()
     const uniqueValues = new Set();
     fingers.forEach(item => {
@@ -45,27 +46,16 @@ const pagination = usePagination<PocDetail>(20)
 
 const defaultFilter = ref('Name')
 
-const filterOptions = [
-    {
-        label: '名称',
-        value: 'Name'
-    },
-    {
-        label: '关联指纹',
-        value: 'Fingerprint'
-    },
-]
-
 const filter = ref('')
 function filterPocList() {
     if (filter.value == '') {
-        pagination.table.result = pagination.table.temp
+        pagination.table.result = pagination.table.filterTemp
         pagination.ctrl.watchResultChange(pagination.table)
         return
     }
     pagination.table.result = []
     if (defaultFilter.value != "Name") {
-        for (const item of pagination.table.temp) {
+        for (const item of pagination.table.filterTemp) {
             for (const finger of item.AssociatedFingerprint) {
                 if (finger.toLowerCase().includes(filter.value.toLowerCase())) {
                     pagination.table.result.push(item)
@@ -74,7 +64,7 @@ function filterPocList() {
             }
         }
     } else {
-        for (const item of pagination.table.temp) {
+        for (const item of pagination.table.filterTemp) {
             if (item.Name.toLowerCase().includes(filter.value.toLowerCase())) {
                 pagination.table.result.push(item)
             }
@@ -275,7 +265,7 @@ onUnmounted(() => {
                             placeholder="根据规则过滤POC" style="width: 50%;">
                             <template #prepend>
                                 <el-select v-model="defaultFilter" style="width: 150px;">
-                                    <el-option v-for="item in filterOptions" :key="item.value" :label="item.label"
+                                    <el-option v-for="item in pocdetailFilterOptions" :key="item.value" :label="item.label"
                                         :value="item.value">
                                     </el-option>
                                 </el-select>

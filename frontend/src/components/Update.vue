@@ -56,7 +56,7 @@ const update = ({
     client: async function () {
         global.UPDATE.updateDialog = false
         LoadProgress(clientUpdate)
-        let result: any = await DownloadLastestClient()
+        let result = await DownloadLastestClient()
         if (result.Error) {
             ElNotification.error("Download client failed! " + result.Msg);
         }

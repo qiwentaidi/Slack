@@ -441,7 +441,10 @@ type NucleiOption struct {
 }
 
 type InfoResult struct {
-	URL          string
+	URL          string // 网站链接
+	Scheme       string // 协议
+	Host         string // 域名 或者 IP
+	Port         int
 	StatusCode   int
 	Length       int
 	Title        string
@@ -474,39 +477,6 @@ type WechatReulst struct {
 	Logo         string
 	Qrcode       string
 	Introduction string
-}
-
-// Node 表示一个主机节点
-type NetworkNode struct {
-	ID         string  `json:"id"`
-	Name       string  `json:"name"`
-	SymbolSize int     `json:"symbolSize"`
-	X          float64 `json:"x"`
-	Y          float64 `json:"y"`
-	Value      int     `json:"value"`
-	Category   int     `json:"category"`
-	IP         string  `json:"ip"`
-	IsDC       bool    `json:"isDC"`
-	Ports      []int   `json:"ports"`
-}
-
-// Link 表示节点之间的连接
-type NetworkLink struct {
-	Source string `json:"source"`
-	Target string `json:"target"`
-	Subnet string `json:"subnet"`
-}
-
-// Category 表示一个类别
-type NetworkCategory struct {
-	Name string `json:"name"`
-}
-
-// GraphData 表示整个图数据
-type FscanGraphData struct {
-	Nodes      []NetworkNode     `json:"nodes"`
-	Links      []NetworkLink     `json:"links"`
-	Categories []NetworkCategory `json:"categories"`
 }
 
 type SpaceEngineSyntax struct {

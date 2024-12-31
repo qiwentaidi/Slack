@@ -12,7 +12,7 @@
             <template #label>
                 <div class="my-header">
                     <span style="font-weight: bold; width: 50%;">关键词列表</span>
-                    <el-select v-model="dictionary" size="small" style="height: 17px; margin-right: -11px;">
+                    <el-select v-model="dictionary" size="small" style="width: 250px; height: 17px;">
                         <el-option v-for="item in dorksOptions" :key="item.label" :value="item.label">
                             <span style="float: left">{{ item.label }}</span>
                             <span style="float: right">

@@ -15,10 +15,22 @@
       <el-form :model="global.webscan" label-width="auto" v-show="currentDisplay == '0'">
         <h3>{{ $t(setupOptions[0].name) }}</h3>
         <el-form-item label="网站指纹线程">
-          <el-input-number controls-position="right" v-model="global.webscan.web_thread" :min="1" :max="200" />
+          <el-input-number v-model="global.webscan.web_thread" :min="1" :max="200" />
         </el-form-item>
-        <el-form-item label="端口指纹超时">
-          <el-input-number controls-position="right" v-model="global.webscan.port_timeout" :min="1" :max="20" />
+        <el-form-item label="暴破线程">
+          <el-input-number v-model="global.webscan.crack_thread" :min="1" :max="200" />
+        </el-form-item>
+        <el-form-item label="端口扫描线程">
+          <el-input-number v-model="global.webscan.port_thread" :min="1" :max="10000" />
+        </el-form-item>
+        <el-form-item label="端口指纹超时(s)">
+          <el-input-number v-model="global.webscan.port_timeout" :min="1" :max="20" />
+        </el-form-item>
+        <el-form-item label="端口扫描模式">
+            <el-select v-model="global.webscan.default_portscan_module">
+              <el-option v-for="item in portscanOptions" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+            <span class="form-item-tips">SYN需要以管理员模式运行 Mac - sudo /Applications/Slack.app/Contents/MacOS/Slack</span>
         </el-form-item>
         <el-form-item label="存活验证模式">
           <el-select v-model="global.webscan.default_alive_module">
@@ -35,8 +47,9 @@
             <el-option v-for="value in global.temp.NetworkCardList" :label="value" :value="value" />
           </el-select>
         </el-form-item>
+        <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
       </el-form>
-      <el-form :inline="true" :model="global.proxy" label-width="auto" class="demo-form-inline"
+      <el-form :model="global.proxy" label-width="auto"
         v-show="currentDisplay == '1'">
         <h3>{{ $t(setupOptions[1].name) }}</h3>
         <el-form-item :label="$t('setting.enable')">
@@ -44,7 +57,6 @@
           <el-button type="primary" size="small" @click="TestProxy(0)" style="margin-left: 20px;"
             v-if="global.proxy.enabled">{{ $t('setting.test_agent') }}</el-button>
         </el-form-item>
-        <div>
           <el-form-item :label="$t('setting.mode')">
             <el-select v-model="global.proxy.mode">
               <el-option label="HTTP" value="HTTP" />
@@ -55,8 +67,7 @@
             <el-input v-model="global.proxy.address" clearable></el-input>
           </el-form-item>
           <el-form-item :label="$t('setting.port')">
-            <el-input-number v-model.number="global.proxy.port" :min="1" :max="65535"
-              style="width: 220px;"></el-input-number>
+            <el-input-number v-model.number="global.proxy.port" :min="1" :max="65535"></el-input-number>
           </el-form-item>
           <el-form-item :label="$t('setting.username')">
             <el-input v-model="global.proxy.username" clearable></el-input>
@@ -64,10 +75,7 @@
           <el-form-item :label="$t('setting.password')">
             <el-input v-model="global.proxy.password" type="password" show-password></el-input>
           </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
-          </el-form-item>
-        </div>
+        <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
       </el-form>
       <el-form :model="global.space" label-width="auto" v-show="currentDisplay == '2'">
         <h3>{{ $t(setupOptions[2].name) }}<el-divider direction="vertical" />Ⓓ标识符API主要用于收集子域名信息</h3>
@@ -165,7 +173,7 @@ import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import { SaveConfig } from "@/config";
-import { aliveGroupOptions, crackDict, setupOptions } from "@/stores/options";
+import { aliveGroupOptions, crackDict, portscanOptions, setupOptions } from "@/stores/options";
 
 const bevigilURL = "https://bevigil.com/osint-api"
 const chaosURL = "https://cloud.projectdiscovery.io/"
@@ -187,8 +195,6 @@ const changeLanguage = (lang: string) => {
   locale.value = lang;
 }
 
-
-
 const ctrl = reactive({
   innerDrawer: false,
   currentDic: '',
@@ -197,13 +203,12 @@ const ctrl = reactive({
 
 async function ReadDict(path: string) {
   let file: File = await ReadFile(global.PATH.homedir + global.PATH.PortBurstPath + path)
-  ctrl.currentDic = file.Content!
+  ctrl.currentDic = file.Content
 }
 
 async function SaveFile(path: string) {
-  WriteFile('txt', global.PATH.homedir + global.PATH.PortBurstPath + path, ctrl.currentDic).then(result => {
-    result ? ElMessage.success('保存成功!') : ElMessage.error('保存失败!')
-  })
+  let isSuccess = await WriteFile('txt', global.PATH.homedir + global.PATH.PortBurstPath + path, ctrl.currentDic)
+  isSuccess ? ElMessage.success('保存成功!') : ElMessage.error('保存失败!')
 }
 
 const currentDisplay = ref('0')
@@ -216,14 +221,6 @@ function selectItem(item: MenuItemRegistered) {
 </script>
 
 <style scoped>
-.demo-form-inline .el-input {
-  --el-input-width: 220px;
-}
-
-.demo-form-inline .el-select {
-  --el-select-width: 220px;
-}
-
 .el-main {
   padding-top: 0px;
   padding-right: 0px;
