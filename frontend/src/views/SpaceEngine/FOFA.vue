@@ -7,7 +7,7 @@ import { ExportToXlsx } from '@/export'
 import { FofaTips, FofaSearch, IconHash, Callgologger } from 'wailsjs/go/services/App'
 import { BrowserOpenURL } from 'wailsjs/runtime'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus';
-import global from "@/global"
+import global from "@/stores"
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
@@ -404,9 +404,9 @@ function searchCsegmentIpv4(ip: string) {
                                 class="keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
-                                <el-table-column label="操作" width="100">
+                                <el-table-column label="操作" width="100" align="center">
                                     <template #default="scope">
-                                        <el-button link
+                                        <el-button type="danger" plain size="small" :icon="Delete"
                                             @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
                                         </el-button>
                                     </template>

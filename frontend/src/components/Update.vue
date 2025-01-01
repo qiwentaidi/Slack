@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Download } from "@element-plus/icons-vue";
-import global from "@/global"
+import global from "@/stores"
 import { UpdatePocFile, DownloadLastestClient, Restart, IsMacOS } from "wailsjs/go/services/File";
 import { ElMessageBox, ElNotification } from "element-plus";
 import { onMounted, h } from "vue";

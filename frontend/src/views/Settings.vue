@@ -162,13 +162,12 @@
 </template>
 
 <script lang="ts" setup>
-import global from "@/global"
+import global from "@/stores"
 import { ElMessage, MenuItemRegistered } from 'element-plus';
 import { TestProxy } from "@/util";
 import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, WriteFile } from "wailsjs/go/services/File";
-import { File } from '@/stores/interface';
 import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
@@ -202,7 +201,7 @@ const ctrl = reactive({
 })
 
 async function ReadDict(path: string) {
-  let file: File = await ReadFile(global.PATH.homedir + global.PATH.PortBurstPath + path)
+  let file = await ReadFile(global.PATH.homedir + global.PATH.PortBurstPath + path)
   ctrl.currentDic = file.Content
 }
 

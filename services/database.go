@@ -959,6 +959,15 @@ func (d *Database) RetrieveFingerscanResults(taskid string) []structs.InfoResult
 		} else {
 			result.Fingerprints = []string{}
 		}
+		if port != nil {
+			result.Port = *port
+		}
+		if host != nil {
+			result.Host = *host
+		}
+		if scheme != nil {
+			result.Scheme = *scheme
+		}
 		results = append(results, result)
 	}
 	return results
@@ -1005,6 +1014,33 @@ func (d *Database) AddPocscanResult(taskid string, result structs.VulnerabilityI
 func (d *Database) RemovePocscanResult(taskid, template_id, vuln_url string) bool {
 	deleteStmt := "DELETE FROM VulnerabilityInfo WHERE task_id = ? AND template_id = ? AND vuln_url = ?"
 	return d.ExecSqlStatement(deleteStmt, taskid, template_id, vuln_url)
+}
+
+// 移除某组指纹信息，用于删除探测http的基本状态，后续会由指纹探测重新写入
+func (d *Database) RemoveFingerprintResult(taskid string, link []string) bool {
+	// 如果链接列表为空，直接返回 false 表示操作未执行
+	if len(link) == 0 {
+		gologger.Info(d.ctx, "No link provided to remove fingerprint result")
+		return true
+	}
+
+	// 构造占位符和参数列表
+	placeholders := make([]string, len(link))
+	params := make([]interface{}, len(link)+1)
+	params[0] = taskid
+	for i, l := range link {
+		placeholders[i] = "?"
+		params[i+1] = l
+	}
+
+	// 构造 SQL 语句
+	deleteStmt := fmt.Sprintf(
+		"DELETE FROM FingerprintInfo WHERE task_id = ? AND url IN (%s)",
+		strings.Join(placeholders, ","),
+	)
+
+	// 执行 SQL 语句
+	return d.ExecSqlStatement(deleteStmt, params...)
 }
 
 // 导出JSON报告

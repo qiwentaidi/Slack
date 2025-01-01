@@ -3,7 +3,7 @@ export default {
         'slogan': "安服集成化工具平台，希望能让你少开几个应用测试",
         'home': '首页',
         'penetration': '渗透测试',
-        'webscan': '网站扫描',
+        'webscan': '漏洞扫描',
         'portscan': '端口扫描',
         'dirscan': '目录扫描',
         'pocdetail': '漏洞详情',

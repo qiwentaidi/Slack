@@ -7,7 +7,7 @@ import { ExportAssetToXlsx } from '@/export'
 import usePagination from "@/usePagination";
 import { Copy, getRootDomain, transformArrayFields } from "@/util";
 import exportIcon from '@/assets/icon/doucment-export.svg'
-import global from "@/global";
+import global from "@/stores";
 import { LinkSubdomain } from "@/linkage";
 import throttle from 'lodash/throttle';
 import CustomTabs from "@/components/CustomTabs.vue";

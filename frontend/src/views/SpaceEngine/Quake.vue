@@ -84,9 +84,9 @@
                             <el-table :data="quake.syntaxData" @row-click="syntax.rowClick2" class="keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
-                                <el-table-column label="操作" width="100">
+                                <el-table-column label="操作" width="100" align="center">
                                     <template #default="scope">
-                                        <el-button link style="color: #4CA87D"
+                                        <el-button type="danger" plain size="small" :icon="Delete"
                                             @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
                                         </el-button>
                                     </template>
@@ -267,7 +267,7 @@ import { ExportToXlsx } from '@/export';
 import { QuakeTableTabs, QuakeTipsData } from '@/stores/interface';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import { Callgologger, FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/services/App';
-import global from '@/global';
+import global from '@/stores';
 import { ElMessage, ElMessageBox, ElNotification, FormInstance } from 'element-plus';
 import { FileDialog } from 'wailsjs/go/services/File';
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';

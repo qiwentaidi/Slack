@@ -10,7 +10,7 @@ import "element-plus/theme-chalk/el-message-box.css";
 import "element-plus/theme-chalk/el-notification.css";
 import 'element-plus/theme-chalk/el-loading.css'
 import * as ElementPlusIconsVue from "@element-plus/icons-vue";
-import global from "./global";
+import global from "./stores";
 import "./style/dark.css"
 import "./style/light.css"
 //引入依赖和语言

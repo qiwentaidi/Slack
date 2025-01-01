@@ -6,7 +6,7 @@ import { ElMessage, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import { QuestionFilled, RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
-import global from '@/global';
+import global from '@/stores';
 import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/services/File';
 import { Dir } from '@/stores/interface';
 import usePagination from '@/usePagination';

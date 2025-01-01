@@ -54,7 +54,7 @@ import { CheckFileStat, InitMemo, ReadMemo } from 'wailsjs/go/services/File';
 import { DocumentCopy, Plus } from '@element-plus/icons-vue';
 import saveIcon from '@/assets/icon/save.svg'
 import { Copy } from '@/util';
-import global from '@/global';
+import global from '@/stores';
 onMounted(async () => {
     handleChange(data.memo[0])
     let fp = global.PATH.homedir + "/slack/memo.txt"

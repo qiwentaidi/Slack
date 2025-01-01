@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, computed } from "vue";
-import global from "./global";
+import global from "./stores";
 import Sidebar from "./components/Sidebar.vue";
 import Titlebar from "./components/Titlebar.vue";
 import { EventsOn } from "wailsjs/runtime/runtime";

@@ -8,7 +8,7 @@ import {
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, IPParse, SpaceGetPort, IsRoot, PortParse, HostAlive, NewSynScanner, NewTcpScanner, PortBrute } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import { TestProxy, Copy, UploadFileAndRead, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
-import global from "@/global"
+import global from "@/stores"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import usePagination from '@/usePagination';
 import { LinkFOFA, LinkHunter } from '@/linkage';
@@ -23,7 +23,8 @@ import {
     RemovePocscanResult, RemoveScanTask, ExportWebReportWithHtml,
     ExportWebReportWithJson, RetrieveAllScanTasks, AddFingerscanResult,
     AddPocscanResult, AddScanTask, ReadWebReportWithJson, RenameScanTask,
-    RetrieveFingerscanResults, RetrievePocscanResults, UpdateScanTaskWithResults
+    RetrieveFingerscanResults, RetrievePocscanResults, UpdateScanTaskWithResults,
+    RemoveFingerprintResult
 } from 'wailsjs/go/services/Database';
 import saveIcon from '@/assets/icon/save.svg'
 import githubIcon from '@/assets/icon/github.svg'
@@ -75,10 +76,6 @@ const param = reactive({
     allTemplate: <{ label: string, value: string }[]>[],
     hostFilter: '',
 })
-
-function handleInputTypeChange(val: any) {
-    if (param.inputType != 'URL') config.webscanOption = 0
-}
 
 function updatePorts(index: number) {
     if (index >= 0 && index < portGroupOptions.length) {
@@ -387,15 +384,23 @@ class Engine {
             this.inputLines = fp.table.result.filter(
                 (line) => line.Scheme === "http" || line.Scheme === "https"
             ).map(item => item.URL);
+
             // 对web服务先去提取再去除，之后扫描
-            updateActivities({
-                content: "Extracting and removing webpage activity detection information, totaling: " + this.inputLines.length.toString() + ", followed by fingerprint detection",
-                timestamp: (new Date()).toTimeString()
-            })
-            fp.table.result = fp.table.result.filter(
-                (line) => line.Scheme !== "http" && line.Scheme !== "https"
-            );
-            fp.ctrl.watchResultChange(fp.table)
+            if (this.inputLines.length != 0) {
+                updateActivities({
+                    content: "Extracting and removing webpage activity detection information, totaling: " + this.inputLines.length.toString() + ", followed by fingerprint detection",
+                    timestamp: (new Date()).toTimeString()
+                })
+                fp.table.result = fp.table.result.filter(
+                    (line) => line.Scheme !== "http" && line.Scheme !== "https"
+                );
+                fp.ctrl.watchResultChange(fp.table)
+                if (config.writeDB) {
+                    RemoveFingerprintResult(form.taskId, this.inputLines)
+                }
+            }
+            // 设置后续的扫描类型
+            config.webscanOption = 2
         }
         // 每个阶段任务前检查是否为退出状态
         if (!form.runnningStatus) {
@@ -433,7 +438,7 @@ class Engine {
             AppendTemplateFolder: global.webscan.append_pocfile,
         }
         updateActivities({
-            content: "Loading webscan engine",
+            content: "Loading webscan engine, current mode: " + config.webscanOption.toString(),
             timestamp: (new Date()).toTimeString()
         })
         await NewWebScanner(options, {
@@ -452,8 +457,8 @@ class Engine {
             form.runnningStatus = false
             return
         }
-         // 每个阶段任务前检查是否为退出状态
-         if (!form.runnningStatus) {
+        // 每个阶段任务前检查是否为退出状态
+        if (!form.runnningStatus) {
             return
         }
         let crackLinks = fp.table.result.filter(
@@ -497,10 +502,10 @@ class Engine {
             }
             let protocol = target.split("://")[0]
             userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
-            Callgologger("info", target + " is start brute")
+            Callgologger("info", target + " is start weak password cracking")
             await PortBrute(target, userDict, passDict)
         }, (err: any) => {
-            Callgologger("info", "PortBrute Finished")
+            Callgologger("info", "Crack Finished")
             updateActivities({
                 content: "All task completed",
                 timestamp: (new Date()).toTimeString(),
@@ -508,7 +513,6 @@ class Engine {
             form.runnningStatus = false
         });
     }
-
 }
 
 // 联动空间引擎
@@ -651,6 +655,8 @@ const taskManager = {
                 ElMessage.success("删除成功")
                 rp.table.result = rp.table.result.filter(item => item.TaskId != taskId)
                 rp.ctrl.watchResultChange(rp.table)
+                fp.initTable()
+                vp.initTable()
             })
             .catch(() => {
                 Callgologger("error", "[webscan] delete task failed")
@@ -956,15 +962,14 @@ function checkDictInput() {
         <el-tabs type="border-card">
             <el-tab-pane label="信息">
                 <el-table :data="fp.table.pageContent" stripe height="100vh"
-                    @selection-change="fp.ctrl.handleSelectChange" :cell-style="{ textAlign: 'center' }"
-                    :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleWebscanContextMenu"
-                    @sort-change="fp.ctrl.sortChange">
-                    <el-table-column fixed type="selection" width="55px" />
+                    :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }" 
+                    @row-contextmenu="handleWebscanContextMenu" @sort-change="fp.ctrl.sortChange">
                     <el-table-column fixed prop="URL" label="Link" width="300px" />
                     <el-table-column width="150px" label="Port/Protocol" :show-overflow-tooltip="true">
                         <template #default="scope">
                             <el-tag type="primary" round effect="plain">{{ scope.row.Port }}</el-tag>
-                            <el-tag type="primary" round effect="plain" style="margin-left: 5px;">{{ scope.row.Scheme }}</el-tag>
+                            <el-tag type="primary" round effect="plain" style="margin-left: 5px;">{{ scope.row.Scheme
+                                }}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="StatusCode" width="100px" label="Code" sortable="custom"
@@ -1037,9 +1042,6 @@ function checkDictInput() {
                             <el-tooltip content="查看详情">
                                 <el-button :icon="Reading" type="primary" link
                                     @click="detailDialog = true; selectedRow = scope.row" />
-                            </el-tooltip>
-                            <el-tooltip content="打开漏洞链接">
-                                <el-button :icon="ChromeFilled" link @click="BrowserOpenURL(scope.row.URL)" />
                             </el-tooltip>
                             <el-tooltip content="删除">
                                 <el-button :icon="Delete" link @click="deleteVuln(scope.row)" />
@@ -1124,7 +1126,8 @@ function checkDictInput() {
                     </el-tooltip>
                 </template>
                 <el-segmented v-model="param.inputType" :options="webscanInputOptions" block
-                    @change="handleInputTypeChange" style="width: 100%; margin-bottom: 2px;" />
+                    @change="param.inputType != 'URL' ? config.webscanOption = 0 : config.crack = false"
+                     style="width: 100%; margin-bottom: 2px;" />
                 <div class="textarea-container" style="margin-block: 10px;">
                     <el-input v-model="form.input" type="textarea" :rows="6"></el-input>
                     <el-space class="action-area">
@@ -1205,9 +1208,7 @@ function checkDictInput() {
                 <el-tooltip content="启用后主动指纹只拼接根路径，否则会拼接输入的完整URL">
                     <el-checkbox label="根路径扫描" v-model="config.rootPathScan" />
                 </el-tooltip>
-                <el-tooltip content="关闭状态无指纹目标会扫全漏洞">
-                    <el-checkbox label="跳过无指纹目标漏扫" v-model="config.skipNucleiWithoutTags" />
-                </el-tooltip>
+                <el-checkbox label="无指纹目标跳过漏扫" v-model="config.skipNucleiWithoutTags" />
                 <el-checkbox label="网站截图" v-model="config.screenhost" />
             </el-form-item>
             <el-form-item label="口令暴破:" v-show="param.inputType != 'URL'">
@@ -1271,6 +1272,7 @@ function checkDictInput() {
                             <el-button :icon="form.hideResponse ? DArrowLeft : DArrowRight" link
                                 @click="form.hideResponse = !form.hideResponse" />
                             <el-button :icon="DocumentCopy" link @click="Copy(selectedRow.Request)" />
+                            <el-button :icon="ChromeFilled" link @click="BrowserOpenURL(selectedRow.URL)" />
                         </el-button-group>
                     </div>
                     <highlightjs language="http" :code="selectedRow.Request" style="font-size: small;"></highlightjs>

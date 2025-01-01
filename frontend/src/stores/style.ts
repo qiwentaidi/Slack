@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import global from '@/global';
+import global from '@/stores';
 
 export const titlebarStyle = computed(() => {
     return global.Theme.value ? {

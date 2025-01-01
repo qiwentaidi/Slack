@@ -5,7 +5,7 @@ import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from
 import { Search, ChromeFilled, DocumentCopy, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
 import { splitInt, Copy, CsegmentIpv4 } from '@/util'
 import { TableTabs, HunterEntryTips } from "@/stores/interface"
-import global from "@/global"
+import global from "@/stores"
 import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/services/App'
 import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/services/Database'
 import { BrowserOpenURL } from 'wailsjs/runtime'
@@ -433,9 +433,9 @@ function searchCsegmentIpv4(ip: string) {
                             <el-table :data="form.syntaxData" @row-click="entry.rowClick2" class="keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
-                                <el-table-column label="操作" width="100">
+                                <el-table-column label="操作" width="100" align="center">
                                     <template #default="scope">
-                                        <el-button link type="primary"
+                                        <el-button type="danger" plain size="small" :icon="Delete"
                                             @click="syntax.deleteStar(scope.row.Name, scope.row.Content)">删除
                                         </el-button>
                                     </template>

@@ -2,7 +2,7 @@
 import { watch, onMounted, onUnmounted, ref, nextTick, toRaw } from 'vue';
 import { Search, CirclePlusFilled, Delete, DocumentCopy, Reading, Edit } from "@element-plus/icons-vue";
 import { CheckFileStat, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/services/File';
-import global from '@/global';
+import global from '@/stores';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/services/App';
 import { Copy } from '@/util';
 import { PocDetail } from '@/stores/interface';

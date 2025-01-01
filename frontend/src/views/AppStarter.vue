@@ -16,7 +16,7 @@ import itermIcon from '@/assets/icon/iterm.svg'
 import chromeIcon from '@/assets/icon/chrome.svg'
 import buttonIcon from '@/assets/icon/button.svg'
 import gridIcon from '@/assets/icon/grid.svg'
-import global from "@/global";
+import global from "@/stores";
 import { structs } from "wailsjs/go/models";
 
 

@@ -56,6 +56,8 @@ export function RemoveConnection(arg1:string):Promise<boolean>;
 
 export function RemoveFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
+export function RemoveFingerprintResult(arg1:string,arg2:Array<string>):Promise<boolean>;
+
 export function RemovePocscanResult(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
 export function RemoveScanTask(arg1:string):Promise<boolean>;

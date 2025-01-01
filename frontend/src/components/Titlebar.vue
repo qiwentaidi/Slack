@@ -2,7 +2,7 @@
 import { Close, Minus, Back, Right, RefreshRight } from '@element-plus/icons-vue';
 import { Quit, WindowMinimise, WindowReload, WindowToggleMaximise } from "wailsjs/runtime/runtime";
 import { IsMacOS } from "wailsjs/go/services/File";
-import global from "@/global";
+import global from "@/stores";
 import { useRoute } from "vue-router";
 import { ref, computed, onMounted } from "vue";
 import updateUI from "./Update.vue";

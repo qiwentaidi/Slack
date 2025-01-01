@@ -1,5 +1,5 @@
 import { ElMessage, ElNotification } from "element-plus";
-import global from "./global";
+import global from "./stores";
 import { Callgologger, CheckTarget, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/services/App";
 import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/services/File";
 import Loading from "./components/Loading.vue";
@@ -56,11 +56,7 @@ function isEmpty(obj: string) {
     return true;
   }
   return false;
-}
-
-export function CopyALL(filed: string[]) {
-  Copy(filed.join("\n"));
-}
+} 
 
 // Function to process the input target in the text area
 // 处理文本域的目标输入

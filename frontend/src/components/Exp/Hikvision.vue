@@ -56,7 +56,6 @@ import { Close, Picture, Upload } from '@element-plus/icons-vue';
 import { HikvsionCamera } from 'wailsjs/go/services/App';
 import { FormatWebURL, getProxy } from '@/util';
 import { FileDialog, ReadFile } from 'wailsjs/go/services/File';
-import { File } from '@/stores/interface';
 import { ElMessage } from 'element-plus';
 import async from 'async';
 
@@ -127,7 +126,7 @@ async function uploadFile() {
     if (!path) {
         return
     }
-    let file: File = await ReadFile(path)
+    let file = await ReadFile(path)
     if (file.Error) {
         ElMessage.warning(file.Message)
         return

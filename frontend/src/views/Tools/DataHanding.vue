@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { h, reactive } from "vue";
 import { ExtractIP, IpLocation } from "wailsjs/go/services/App";
-import { UserFilled, Filter, Location, Cellphone, Postcard, Upload, DeleteFilled, Unlock, DocumentCopy } from "@element-plus/icons-vue";
+import { UserFilled, Location, Cellphone, Postcard, Upload, CloseBold, Unlock, DocumentCopy } from "@element-plus/icons-vue";
 import alibabaIcon from "@/assets/icon/alibaba.svg";
 import onlineIcon from "@/assets/icon/online.svg";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -36,7 +36,7 @@ async function processInput() {
         return false
     }
     if (form.input.startsWith("{{file://") && form.input.endsWith("}}")) {
-        let filepath = form.input.substring(8, form.input.length - 2);        
+        let filepath = form.input.substring(8, form.input.length - 2);
         let isStat = await CheckFileStat(filepath)
         if (!isStat) {
             ElMessage.warning('文件不存在!')
@@ -66,13 +66,13 @@ function handlePaste(event: any) {
     }
 }
 
-function deduplication() {
+function deduplication(input: string) {
     processInput().then(isSuccess => {
         if (!isSuccess) {
             return
         }
         let lines = [] as string[];
-        if (form.dedupSplit == "\\n") {
+        if (input == "") {
             lines = content.split(/[(\r\n)\r\n]+/); // 根据换行或者回车进行识别
         } else {
             lines = content.split(form.dedupSplit);
@@ -86,10 +86,7 @@ function deduplication() {
             });
             return;
         }
-        ElMessage.success({
-            message: `已去重数据${lines.length - uniqueArray.length}条`,
-            grouping: true,
-        });
+        form.tips = `已去重数据${lines.length - uniqueArray.length}条`,
         form.result = uniqueArray.join("\n");
     })
 }
@@ -102,18 +99,18 @@ function getDomains() {
         const urls = await ExtractURLs(content);
         const uniqueArray = Array.from(new Set(urls))
         const domains = uniqueArray
-        .map((url: string) => {
-            try {
-                const parsedUrl = new URL(url);
-                return parsedUrl.hostname;
-            } catch (e) {
+            .map((url: string) => {
+                try {
+                    const parsedUrl = new URL(url);
+                    return parsedUrl.hostname;
+                } catch (e) {
 
-            }
-        })
-        .filter((domain) => domain); // 过滤掉空字符串
+                }
+            })
+            .filter((domain) => domain); // 过滤掉空字符串
         form.result = domains.join("\n");
         form.tips = `共提取 ${domains.length} 个结果`
-    })    
+    })
 }
 
 function getURLs() {
@@ -125,7 +122,7 @@ function getURLs() {
         const uniqueArray = Array.from(new Set(urls))
         form.result = uniqueArray.join("\n");
         form.tips = `共提取 ${uniqueArray.length} 个结果`
-    })    
+    })
 }
 
 function getPhoneNumbers() {
@@ -137,7 +134,7 @@ function getPhoneNumbers() {
         const uniqueArray = Array.from(new Set(phoneNumbers))
         form.result = uniqueArray.join("\n");
         form.tips = `共提取 ${uniqueArray.length} 个结果`
-    })  
+    })
 }
 
 function getIdCards() {
@@ -149,7 +146,7 @@ function getIdCards() {
         const uniqueArray = Array.from(new Set(idcards))
         form.result = uniqueArray.join("\n");
         form.tips = `共提取 ${uniqueArray.length} 个结果`
-    }) 
+    })
 }
 
 function getAlibabaDruidWebURI() {
@@ -160,7 +157,7 @@ function getAlibabaDruidWebURI() {
         const uris = await ExtractAlibabaDruidWebURI(content);
         form.result = uris.join("\n");
         form.tips = `共提取 ${uris.length} 个结果`
-    }) 
+    })
 }
 
 function getAlibabaDruidWebSession() {
@@ -262,6 +259,87 @@ function decryptWinSCPIniContent(iniContent: string) {
     return decodedSessions;
 }
 
+/**
+ * 将包含整数列表和有效字节数信息的字典数据转换为字符串，用于处理在断点调试时无法找到字符串密钥，只有字典数据时使用
+ */
+function dataDictConvertToString(dataDict: { words: number[]; sigBytes: number }): string {
+    const { words, sigBytes } = dataDict;
+    // 验证有效字节数是否合理
+    if (sigBytes < 0) {
+        return "有效字节数不能为负数，转换操作无法进行。";
+    }
+
+    let byteSequence: Uint8Array;
+    try {
+        // 将 "words" 数组转化为字节序列
+        const buffer = new ArrayBuffer(words.length * 4);
+        const dataView = new DataView(buffer);
+
+        words.forEach((num, index) => {
+            dataView.setUint32(index * 4, num, false); // Big-endian (network byte order)
+        });
+
+        byteSequence = new Uint8Array(buffer);
+
+        // 截取实际有效字节数
+        if (sigBytes > byteSequence.length) {
+            form.tips = "指定的有效字节数超过了实际生成字节序列的长度，将按实际长度截取。"
+            byteSequence = byteSequence.slice(0, byteSequence.length);
+        } else {
+            byteSequence = byteSequence.slice(0, sigBytes);
+        }
+        // 将字节序列转化为字符串
+        return new TextDecoder("utf-8").decode(byteSequence);
+    } catch (error) {
+        if (error instanceof RangeError) {
+            return `在将整数转换为字节序列时出现错误: ${error.message}`
+        } else if (error instanceof TypeError) {
+
+            return "字节序列无法按照UTF-8编码进行解码，请检查数据来源和编码格式！"
+        } else {
+            return "发生了未知错误：" + error
+        }
+    }
+}
+
+function parseDataDict(input: string): { words: number[]; sigBytes: number } | string {
+    /**
+     * 解析前端传入的字符串形式的 dataDict
+     * 并验证其格式是否符合要求
+     */
+    try {
+        // 尝试解析 JSON 字符串
+        const parsed = JSON.parse(input);
+
+        // 检查是否包含所需的 "words" 和 "sigBytes" 字段
+        if (
+            !Array.isArray(parsed.words) ||
+            typeof parsed.sigBytes !== "number"
+        ) {
+            return "输入数据的结构不正确，应包含 'words' 数组和 'sigBytes' 数字。"
+        }
+
+        // 验证 "words" 的每个值是否为有效整数
+        for (const num of parsed.words) {
+            if (!Number.isInteger(num)) {
+                return "'words' 数组中包含无效的整数值。"
+            }
+        }
+
+        // 验证 "sigBytes" 是否为非负整数
+        if (parsed.sigBytes < 0) {
+            return "'sigBytes' 必须是非负整数。"
+        }
+
+        return {
+            words: parsed.words,
+            sigBytes: parsed.sigBytes,
+        };
+    } catch (error) {
+        return "解析失败：" + error.message
+    }
+}
+
 function handleContextMenu(e: MouseEvent) {
     //prevent the browser's default menu
     e.preventDefault();
@@ -290,7 +368,6 @@ function handleContextMenu(e: MouseEvent) {
             },
             {
                 label: "网络信息",
-                divided: true,
                 icon: h(onlineIcon, defaultIconSize),
                 children: [
                     {
@@ -304,7 +381,7 @@ function handleContextMenu(e: MouseEvent) {
                                     form.result = result;
                                 });
                             })
-                            
+
                         }
                     },
                     {
@@ -340,7 +417,6 @@ function handleContextMenu(e: MouseEvent) {
             {
                 label: "个人敏感信息",
                 icon: h(UserFilled, defaultIconSize),
-                divided: true,
                 children: [
                     {
                         label: "提取手机号",
@@ -382,7 +458,7 @@ function handleContextMenu(e: MouseEvent) {
                     },
                     {
                         label: "Finereport v8 - privilege.xml",
-                        onClick: async() => {
+                        onClick: async () => {
                             if (! await processInput()) {
                                 return
                             }
@@ -403,7 +479,8 @@ function handleContextMenu(e: MouseEvent) {
                     },
                     {
                         label: "Seeyon OA - datasourceCtp.properties",
-                        onClick: async() => {
+                        divided: true,
+                        onClick: async () => {
                             if (! await processInput()) {
                                 return
                             }
@@ -424,16 +501,35 @@ function handleContextMenu(e: MouseEvent) {
                             form.tips = `解密成功`
                         }
                     },
+                    {
+                        label: "AES | DES json key to string",
+                        onClick: async () => {
+                            if (! await processInput()) {
+                                return
+                            }
+                            let result = parseDataDict(content)
+                            if (typeof result === "string") {
+                                form.result = result
+                                form.result += "\n\n" + `示例数据(是否换行无所谓是JSON就行):\n {"words": [1161312566,808858179,892351288,1145124405], "sigBytes": 16}`
+                                return
+                            }
+                            form.result = dataDictConvertToString(result)
+                        }
+                    }
                 ]
             },
             {
-                label: "清空文本框",
-                icon: h(DeleteFilled, defaultIconSize),
+                label: "数据去重",
                 onClick: () => {
-                    form.input = ""
+                    ElMessageBox.prompt('在此处输入分隔字符后会将数据转换成数组然后去重，不输入默认按换行去重', '数据去重', {
+                        confirmButtonText: '去重',
+                    })
+                        .then(({ value }) => {
+                            deduplication(value)
+                        })
                 }
             }
-        ]
+        ],
     });
 }
 
@@ -444,24 +540,16 @@ druid数据提取需要输出响应包内容
 </script>
 
 <template>
-    <el-input v-model.lazy="form.dedupSplit" placeholder="在此处输入分隔字符后会将数据转换成数组然后去重，换行输入\n">
-        <template #prepend>
-            数据去重
-        </template>
-        <template #suffix>
-            <el-divider direction="vertical" />
-            <el-button type="primary" :icon="Filter" link @click="deduplication">去重</el-button>
-        </template>
-    </el-input>
-    <div class="textarea-container" style="margin-block: 10px;">
-        <el-input v-model="form.input" type="textarea" :rows="10" :placeholder="code"
+    <div class="textarea-container" style="margin-bottom: 10px;">
+        <el-input v-model="form.input" type="textarea" :rows="12" :placeholder="code"
             @contextmenu.stop.prevent="handleContextMenu" @paste="handlePaste"></el-input>
-        <div class="action-area">
+        <el-space class="action-area">
             <el-button :icon="Upload" size="small" @click="uploadFile">Upload</el-button>
-        </div>
+            <el-button :icon="CloseBold" size="small" @click="form.input = ''"></el-button>
+        </el-space>
     </div>
     <div class="textarea-container">
-        <el-input v-model="form.result" type="textarea" :rows="19" readonly />
+        <el-input v-model="form.result" type="textarea" :rows="20" readonly />
         <div class="action-area">
             <el-button :icon="DocumentCopy" size="small" @click="Copy(form.result)">Copy</el-button>
         </div>

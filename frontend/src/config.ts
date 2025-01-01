@@ -1,9 +1,8 @@
 import { CheckFileStat, InitConfig, ReadFile, RemoveOldConfig, SaveDataToFile, ReadLocalStore } from 'wailsjs/go/services/File';
 import { ElLoading, ElNotification } from 'element-plus';
-import global from "./global";
+import global from "./stores";
 import { compareVersion, ReadLine, sleep } from './util';
 import router from "./router";
-import { File } from "./stores/interface";
 import { CreateTable } from 'wailsjs/go/services/Database';
 import { crackDict } from './stores/options';
 
@@ -33,7 +32,7 @@ export async function InitConfigFile(timeout: number) {
     let result = await InitConfig();
     catchError(result, loading)
   } else {
-    let result: File = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile)
+    let result = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile)
     global.UPDATE.LocalPocVersion = result.Content!
     if (!global.UPDATE.LocalPocVersion || compareVersion(global.UPDATE.LocalPocVersion, "0.0.4") != 1) {
       await RemoveOldConfig();

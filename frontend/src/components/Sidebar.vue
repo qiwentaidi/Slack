@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Refresh, Setting } from "@element-plus/icons-vue";
 import updateUI from "./Update.vue";
-import global from "@/global/index";
+import global from "@/stores";
 import menus from "@/router/menu";
 import pocIcon from '@/assets/icon/pocmanagement.svg'
 

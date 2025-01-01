@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { reactive, ref, h } from 'vue';
-import { Copy, CopyALL, FormatWebURL } from '@/util';
+import { Copy, FormatWebURL } from '@/util';
 import { JSFind } from 'wailsjs/go/services/App';
 import { QuestionFilled, Search, DocumentCopy, ChromeFilled } from '@element-plus/icons-vue';
 import async from 'async';
-import global from "@/global";
+import global from "@/stores";
 import { ElNotification, ElMessage } from 'element-plus';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 import ContextMenu from '@imengyu/vue3-context-menu'
@@ -234,7 +234,7 @@ function onContextMenu(e: MouseEvent, data: any) {
             <span style="font-weight: bold; margin-right: 5px;">{{ item.title }}: {{ getLength(item.data.value)
               }}</span>
           </div>
-          <el-button round type="primary" size="small" @click="CopyALL(item.data.value.map(item => item.Filed))">Copy
+          <el-button round type="primary" size="small" @click="Copy((item.data.value.map(item => item.Filed).join('\n')))">Copy
             ALL</el-button>
         </div>
         <!-- CONTENT -->

@@ -1,5 +1,5 @@
 import { Callgologger, LoadDirsearchDict, DirScan, HunterSearch, Subdomain, FofaSearch } from 'wailsjs/go/services/App'
-import global from '@/global'
+import global from '@/stores'
 import { ElMessage, ElNotification } from 'element-plus';
 import { dirsearch, structs } from 'wailsjs/go/models';
 import { getRootDomain } from '@/util';

@@ -83,7 +83,7 @@
 </template>
 
 <script lang="ts" setup>
-import global from '@/global';
+import global from '@/stores';
 import { ISICResult } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import { sleep, ProcessTextAreaInput } from '@/util';

@@ -22,13 +22,6 @@ export interface QuakeTableTabs {
     message: string;
 }
 
-export interface PortScanData {
-    IP: string;
-    Port: number;
-    Server: string;
-    Link: string;
-}
-
 export interface Dir {
     Status: number;
     URL: string;
@@ -59,11 +52,6 @@ export interface Results {
     ICP: string;
 }
 
-export interface File {
-    Error?: boolean;
-    Message?: string;
-    Content?: string;
-}
 
 export interface HunterEntryTips {
     value: string;

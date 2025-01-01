@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import global from "@/global";
+import global from "@/stores";
 import { Copy, ReadLine, transformArrayFields } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { reactive, ref, onMounted } from "vue";
@@ -340,7 +340,7 @@ const handleCheckAllChange = (val: boolean) => {
         </el-form>
     </el-drawer>
     <el-dialog v-model="usefulDialog" title="使用须知">
-        <el-descriptions title="" direction="vertical" :column="4" border>
+        <el-descriptions direction="vertical" :column="4" border>
             <template #title>
                 <span>下面为各API查询页码及积分获取情况，优先推荐配置Chaos，注册链接可在设置中查看</span>
                 <el-tag style="margin-block: 5px;">FOFA、Quake、Hunter默认不参与测绘，需要在设置中手动开启</el-tag>
