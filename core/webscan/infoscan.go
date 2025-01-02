@@ -320,7 +320,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 				Title:        ti.Title,
 				Fingerprints: []string{fp.Fpe[0].ProductName},
 				Detect:       "Active",
-				Port:         ti.StatusCode,
+				Port:         ti.Port,
 				Scheme:       fp.URL.Scheme,
 				Host:         fp.URL.Host,
 			}
