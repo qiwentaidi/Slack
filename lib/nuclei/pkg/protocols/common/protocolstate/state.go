@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 	"golang.org/x/net/proxy"
 
@@ -155,9 +154,9 @@ func Init(options *types.Options) error {
 	Dialer = dialer
 
 	// override dialer in mysql
-	mysql.RegisterDialContext("tcp", func(ctx context.Context, addr string) (net.Conn, error) {
-		return Dialer.Dial(ctx, "tcp", addr)
-	})
+	// mysql.RegisterDialContext("tcp", func(ctx context.Context, addr string) (net.Conn, error) {
+	// 	return Dialer.Dial(ctx, "tcp", addr)
+	// })
 
 	StartActiveMemGuardian(context.Background())
 
