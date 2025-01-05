@@ -151,7 +151,7 @@ func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) 
 
 func CheckLogin(token string) bool {
 	initTycHeader(token)
-	u := "https://capi.tianyancha.com/cloud-monitor-provider/v4/monitor/checkMonitorTip.json"
+	u := "https://capi.tianyancha.com/cloud-app-management/service/layout/vipStatus"
 	_, body, err := clients.NewRequest("GET", u, gethead, nil, 10, true, clients.NewHttpClient(nil, true))
 	if err != nil {
 		return false

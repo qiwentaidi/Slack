@@ -55,7 +55,6 @@ async function Collect() {
         return
     } else {
         from.token = from.token.replace(/[\r\n\s]/g, '')
-        ElMessage.info("正在校验天眼查Token，请稍后...")
         let isLogin = await TycCheckLogin(from.token)
         if (!isLogin) {
             ElMessage.warning('天眼查Token已失效')
@@ -109,6 +108,7 @@ async function Collect() {
     // 3. 收集微信公众号信息
     if (from.wechat) {
         for (const companyName of allCompany) {
+            if (companyName == "") return
             Callgologger("info", `正在收集${companyName}的微信公众号资产`)
             if (typeof companyName === 'string') {
                 const result = await WechatOfficial(companyName);
