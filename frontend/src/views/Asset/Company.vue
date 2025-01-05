@@ -163,18 +163,9 @@ function copyAllDomains() {
                 <el-checkbox v-model="from.domain" label="域名查询" @change="recheckLinkSubdomain" />
                 <!-- <el-checkbox v-model="from.linkSubdomain" label="联动子域名收集" :disabled="!from.domain"/> -->
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    Token:
-                    <el-tooltip>
-                        <template #content>由于天眼查登录校验机制，为了确保爬取数据准确需要在此处填入网页<br />
-                            登录后Cookie头中auth_token字段，等待2s会自动保存Token</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
+            <el-form-item label="Token:">
                 <el-input v-model="from.token" type="textarea" :rows="4" @input="debouncedInput"></el-input>
+                <span class="form-item-tips">填写TYC网页登录后Cookie头中auth_token字段</span>
             </el-form-item>
             <el-form-item>
                 <template #label>

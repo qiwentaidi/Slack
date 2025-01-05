@@ -6,7 +6,7 @@ import { ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
 import { Copy, generateRandomString, proxys } from "@/util";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import CustomTabs from "@/components/CustomTabs.vue";
-import { wechatResponseDescription } from "@/stores/options";
+import { dingtalkApiOptions, enterpriseWechatApiOptions, wechatApiOptions, wechatResponseDescription } from "@/stores/options";
 import dingtalkIcon from "@/assets/icon/dingtalk.svg"
 import wechatIcon from "@/assets/icon/wechat.svg"
 
@@ -17,6 +17,12 @@ const warning = "First, need to obtain the accesstoken"
 const wechat = reactive({
   appid: "",
   secert: "",
+  accessToken: "",
+});
+
+const enterpriseWechat = reactive({
+  corpid: "",
+  corpsecret: "",
   accessToken: "",
 });
 
@@ -32,52 +38,50 @@ const dingtalk = reactive({
 
 const result = ref("");
 
-const wechatOption = ({
-  api: [
-    {
-      name: "查询域名配置",
-      method: "POST",
-      url: "https://api.weixin.qq.com/wxa/getwxadevinfo?access_token=",
-    },
-    {
-      name: "获取长期订阅用户",
-      method: "POST",
-      url: "https://api.weixin.qq.com/wxa/business/get_wxa_followers?access_token=",
-    },
-    {
-      name: "获取用户列表(1w)",
-      method: "POST",
-      url: "https://api.weixin.qq.com/cgi-bin/user/get?count=10000&access_token=",
-    },
-    {
-      name: "获取用户反馈列表",
-      method: "GET",
-      url: "https://api.weixin.qq.com/wxaapi/feedback/list?access_token=",
-    },
-  ],
-  checksecret: async function () {
-    let url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat.appid}&secret=${wechat.secert}`
-    let response: any = await GoFetch("GET", url, "", {}, 10, proxys);
-    if (response.Error) {
-      result.value += "请求失败\n";
-      return;
-    }
-    const jsonResult = JSON.parse(response.Body);
-    if (response.Body.includes("access_token")) {
-      wechat.accessToken = jsonResult.access_token;
-      ElMessage.success("Successfully");
-    }
-    result.value = jsonResult;
-  },
-  doRequest: async function (method: string, url: string) {
-    if (!wechat.accessToken) {
-      ElMessage.warning(warning);
-      return;
-    }
-    let response = await GoFetch(method, url + wechat.accessToken, "", {}, 10, proxys);
-    result.value = JSON.parse(response.Body);
+async function doRequest(accessToken: string, method: string, url: string, param: string) {
+  if (!accessToken) {
+    ElMessage.warning(warning);
+    return;
   }
-})
+  let body = ""
+  if (param != "") {
+    body = JSON.parse(param);
+  } else {
+    body = param
+  }
+  let response = await GoFetch(method, url + accessToken, body, {}, 10, proxys);
+  result.value = JSON.parse(response.Body);
+}
+
+async function wechatCheckSecret() {
+  let url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat.appid}&secret=${wechat.secert}`
+  let response = await GoFetch("GET", url, "", {}, 10, proxys);
+  if (response.Error) {
+    result.value += "请求失败\n";
+    return;
+  }
+  const jsonResult = JSON.parse(response.Body);
+  if (response.Body.includes("access_token")) {
+    wechat.accessToken = jsonResult.access_token;
+    ElMessage.success("Successfully");
+  }
+  result.value = jsonResult;
+}
+
+async function enterpriseWechatCheckSecret() {
+  let url = `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${enterpriseWechat.corpid}&corpsecret=${enterpriseWechat.corpsecret}`
+  let response = await GoFetch("GET", url, "", {}, 10, proxys);
+  if (response.Error) {
+    result.value += "请求失败\n";
+    return;
+  }
+  const jsonResult = JSON.parse(response.Body);
+  if (response.Body.includes("access_token")) {
+    enterpriseWechat.accessToken = jsonResult.access_token;
+    ElMessage.success("Successfully");
+  }
+  result.value = jsonResult;
+}
 
 const ruleFormRef = ref<FormInstance>()
 
@@ -91,26 +95,6 @@ const dingtalkRules = reactive<FormRules>({
 })
 
 const dingdingOption = ({
-  api: [
-    {
-      name: "获取员工人数",
-      method: "POST",
-      url: "https://oapi.dingtalk.com/topapi/user/count?access_token=",
-      body: `{"only_active":"true"}`,
-    },
-    {
-      name: "获取管理员列表",
-      method: "GET",
-      url: "https://oapi.dingtalk.com/topapi/user/listadmin?access_token=",
-      body: ``
-    },
-    {
-      name: "获取部门用户完整信息(100)",
-      method: "POST",
-      url: "https://oapi.dingtalk.com/topapi/v2/user/list?access_token=",
-      body: `{"dept_id":1,"cursor":0,"size":100}`
-    }
-  ],
   checksecret: async function () {
     let response = await GoFetch("GET", `https://oapi.dingtalk.com/gettoken?appkey=${dingtalk.appid}&appsecret=${dingtalk.secert}`, "", {}, 10, proxys)
     if (response.Error) {
@@ -123,20 +107,6 @@ const dingdingOption = ({
       dingtalk.accessToken = jsonResult.access_token;
       ElMessage.success("Successfully");
     }
-  },
-  doRequest: async function (method: string, url: string, parameter: string) {
-    if (!dingtalk.accessToken) {
-      ElMessage.warning(warning);
-      return;
-    }
-    let body = ""
-    if (parameter != "") {
-      body = JSON.parse(parameter);
-    } else {
-      body = parameter
-    }
-    let response = await GoFetch(method, url + dingtalk.accessToken, body, {}, 10, proxys);
-    result.value = JSON.parse(response.Body);
   },
   addUser: async function (formEl: FormInstance | undefined) {
     if (!formEl) return
@@ -179,7 +149,7 @@ function CopyResult() {
       <el-tab-pane name="wechat">
         <template #label>
           <el-text class="position-center">
-            <wechatIcon style="margin-right: 2px;" />Wechat
+            <wechatIcon style="margin-right: 2px;" />Wechat official account
           </el-text>
         </template>
         <el-form label-width="auto">
@@ -192,12 +162,42 @@ function CopyResult() {
           <el-form-item label="Token">
             <el-input v-model="wechat.accessToken" style="width: 100%">
               <template #suffix>
-                <el-button type="primary" link @click="wechatOption.checksecret">获取Token</el-button>
+                <el-button type="primary" link @click="wechatCheckSecret">获取Token</el-button>
               </template>
             </el-input>
           </el-form-item>
           <el-form-item label="Operate">
-            <el-button v-for="yw in wechatOption.api" @click="wechatOption.doRequest(yw.method, yw.url)">{{ yw.name
+            <el-button v-for="request in wechatApiOptions"
+              @click="doRequest(wechat.accessToken, request.method, request.url, '')">{{
+                request.name
+              }}</el-button>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+      <el-tab-pane name="enterprise wechat">
+        <template #label>
+          <el-text class="position-center">
+            <wechatIcon style="margin-right: 2px;" />Enterprise Wechat
+          </el-text>
+        </template>
+        <el-form label-width="auto">
+          <el-form-item label="Corpid">
+            <el-input v-model="enterpriseWechat.corpid" />
+          </el-form-item>
+          <el-form-item label="Secert">
+            <el-input v-model="enterpriseWechat.corpsecret" />
+          </el-form-item>
+          <el-form-item label="Token">
+            <el-input v-model="enterpriseWechat.accessToken" style="width: 100%">
+              <template #suffix>
+                <el-button type="primary" link @click="enterpriseWechatCheckSecret">获取Token</el-button>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item label="Operate">
+            <el-button v-for="request in enterpriseWechatApiOptions"
+              @click="doRequest(enterpriseWechat.accessToken, request.method, request.url, request.body)">{{
+                request.name
               }}</el-button>
           </el-form-item>
         </el-form>
@@ -223,8 +223,9 @@ function CopyResult() {
             </el-input>
           </el-form-item>
           <el-form-item label="Operate">
-            <el-button v-for="yw in dingdingOption.api" @click="dingdingOption.doRequest(yw.method, yw.url, yw.body)">{{
-              yw.name
+            <el-button v-for="request in dingtalkApiOptions"
+              @click="doRequest(dingtalk.accessToken, request.method, request.url, request.body)">{{
+                request.name
               }}</el-button>
             <el-button @click="dingdingOption.getAllUsers">获取部门用户完整信息(所有)</el-button>
             <el-button type="danger" plain @click="dingtalk.addUserDialog = true">添加用户</el-button>
@@ -245,15 +246,18 @@ function CopyResult() {
             <el-table-column width="300" property="solution" label="解决方案" />
           </el-table>
         </el-popover>
-        <el-button :icon="ChromeFilled" plain type="info" @click="BrowserOpenURL('https://developers.weixin.qq.com/doc/offiaccount/User_Management/User_Tag_Management.html')">
+        <el-button :icon="ChromeFilled" plain type="info"
+          @click="BrowserOpenURL('https://developers.weixin.qq.com/doc/offiaccount/User_Management/User_Tag_Management.html')">
           API文档
         </el-button>
         <el-button :icon="ChromeFilled" plain type="info" @click="BrowserOpenURL('https://mp.weixin.qq.com/debug/')">
           官方调试工具
         </el-button>
       </el-space>
+      <el-button :icon="ChromeFilled" plain type="info" v-show="activeName == 'enterprise wechat'"
+        @click="BrowserOpenURL('https://developer.work.weixin.qq.com/document/path/90664')">API文档</el-button>
       <el-button :icon="ChromeFilled" plain type="info" v-show="activeName == 'dingtalk'"
-        @click="BrowserOpenURL('https://open.dingtalk.com/document/orgapp/delete-a-user')">API文档</el-button>
+        @click="BrowserOpenURL('https://open.dingtalk.com/document/orgapp/api-overview')">API文档</el-button>
     </template>
   </CustomTabs>
   <div class="textarea-container">

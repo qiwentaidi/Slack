@@ -648,3 +648,71 @@ export const pocdetailFilterOptions = [
         value: 'Fingerprint'
     },
 ]
+
+// 普通微信公众号
+export const wechatApiOptions = [
+    {
+        name: "查询域名配置",
+        method: "POST",
+        url: "https://api.weixin.qq.com/wxa/getwxadevinfo?access_token=",
+    },
+    {
+        name: "获取长期订阅用户",
+        method: "POST",
+        url: "https://api.weixin.qq.com/wxa/business/get_wxa_followers?access_token=",
+    },
+    {
+        name: "获取用户列表(1w)",
+        method: "POST",
+        url: "https://api.weixin.qq.com/cgi-bin/user/get?count=10000&access_token=",
+    },
+    {
+        name: "获取用户反馈列表",
+        method: "GET",
+        url: "https://api.weixin.qq.com/wxaapi/feedback/list?access_token=",
+    },
+]
+
+// 企业微信
+
+export const enterpriseWechatApiOptions = [
+    {
+        name: "获取成员ID列表(1000)",
+        method: "POST",
+        url: "https://qyapi.weixin.qq.com/cgi-bin/user/list_id?access_token=",
+        body: `{"limit": 10000}`
+    },
+    {
+        name: "获取部门列表",
+        method: "GET",
+        url: "https://qyapi.weixin.qq.com/cgi-bin/department/list?access_token=",
+        body: ``
+    },
+    {
+        name: "获取部门的成员信息",
+        method: "GET",
+        url: "https://qyapi.weixin.qq.com/cgi-bin/user/simplelist?department_id=1&access_token=",
+        body: ``
+    }
+]
+
+export const dingtalkApiOptions = [
+    {
+        name: "获取员工人数",
+        method: "POST",
+        url: "https://oapi.dingtalk.com/topapi/user/count?access_token=",
+        body: `{"only_active":"true"}`,
+    },
+    {
+        name: "获取管理员列表",
+        method: "GET",
+        url: "https://oapi.dingtalk.com/topapi/user/listadmin?access_token=",
+        body: ``
+    },
+    {
+        name: "获取部门用户完整信息(100)",
+        method: "POST",
+        url: "https://oapi.dingtalk.com/topapi/v2/user/list?access_token=",
+        body: `{"dept_id":1,"cursor":0,"size":100}`
+    }
+]
