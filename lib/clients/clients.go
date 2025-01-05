@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -19,21 +20,25 @@ var TlsConfig = &tls.Config{
 	MinVersion:         tls.VersionTLS10, // 最低支持TLS 1.0
 }
 
-func TestErrorClient() *http.Client {
-	client, _ := SelectProxy(&Proxy{
-		Enabled: true,
-		Mode:    "HTTP",
-		Address: "127.0.0.1",
-		Port:    8080}, DefaultClient())
-	return client
-}
-
-// 跟随页面跳转最多10次
-func DefaultClient() *http.Client {
-	return &http.Client{
+func NewHttpClient(interfaceIp net.IP, followRedirect bool) *http.Client {
+	dialer := &net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	if interfaceIp != nil {
+		dialer.LocalAddr = &net.TCPAddr{
+			IP: interfaceIp,
+		}
+	}
+	client := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig:     TlsConfig,
-			TLSHandshakeTimeout: 10 * time.Second,
+			TLSClientConfig:       TlsConfig,
+			Proxy:                 http.ProxyFromEnvironment,
+			DialContext:           dialer.DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
 		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 10 {
@@ -42,30 +47,11 @@ func DefaultClient() *http.Client {
 			return nil
 		},
 	}
-}
-
-// 不跟随页面跳转
-func NotFollowClient() *http.Client {
-	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: TlsConfig,
-		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-}
-
-func DefaultWithProxyClient(proxy Proxy) *http.Client {
-	client := DefaultClient()
-	if proxy.Enabled {
-		client, _ = SelectProxy(&proxy, client)
-	}
 	return client
 }
 
-func NotFollowWithProxyClient(proxy Proxy) *http.Client {
-	client := NotFollowClient()
+func NewHttpClientWithProxy(interfaceIp net.IP, followRedirect bool, proxy Proxy) *http.Client {
+	client := NewHttpClient(interfaceIp, followRedirect)
 	if proxy.Enabled {
 		client, _ = SelectProxy(&proxy, client)
 	}

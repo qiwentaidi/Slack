@@ -34,7 +34,7 @@ func New(target string, customHeaders string, proxy clients.Proxy) *Exp {
 		DerbyURL:   target + derbyURI,
 		RemovalURL: target + removalURI,
 		Headers:    header,
-		Client:     clients.DefaultWithProxyClient(proxy),
+		Client:     clients.NewHttpClientWithProxy(nil, true, proxy),
 	}
 }
 

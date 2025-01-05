@@ -11,7 +11,7 @@ import (
 
 func BingSearch(query string) (string, error) {
 	link := "https://www.bing.com/search?q=site%3a+" + strings.TrimSpace(query)
-	_, body, err := clients.NewSimpleGetRequest(link, clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(link, clients.NewHttpClient(nil, true))
 	if err != nil {
 		return "请求失败", err
 	}

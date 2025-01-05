@@ -65,7 +65,7 @@ func Socks5Conn(ip string, port, timeout int, username, password string) bool {
 		Port:     port,
 		Username: username,
 		Password: password,
-	}, clients.DefaultClient())
+	}, clients.NewHttpClient(nil, true))
 	if err != nil {
 		return false
 	}

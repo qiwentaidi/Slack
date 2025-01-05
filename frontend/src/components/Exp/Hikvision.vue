@@ -54,7 +54,7 @@
 import { reactive } from 'vue';
 import { Close, Picture, Upload } from '@element-plus/icons-vue';
 import { HikvsionCamera } from 'wailsjs/go/services/App';
-import { FormatWebURL, getProxy } from '@/util';
+import { getProxy, ProcessTextAreaInput } from '@/util';
 import { FileDialog, ReadFile } from 'wailsjs/go/services/File';
 import { ElMessage } from 'element-plus';
 import async from 'async';
@@ -88,7 +88,7 @@ const vulnerabilityGroup = [
 ]
 
 async function useVulnerability(mode: number) {
-    let urls = await FormatWebURL(form.url)
+    let urls = ProcessTextAreaInput(form.url)
     if (urls.length == 0) {
         ElMessage.warning("请输入URL地址")
         return

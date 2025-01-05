@@ -799,6 +799,20 @@ export namespace structs {
 		    return a;
 		}
 	}
+	export class NetwordCard {
+	    Name: string;
+	    IP: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new NetwordCard(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Name = source["Name"];
+	        this.IP = source["IP"];
+	    }
+	}
 	export class PathTimes {
 	    Path: string;
 	    Times: number;
@@ -1198,6 +1212,7 @@ export namespace structs {
 	    SkipNucleiWithoutTags: boolean;
 	    GenerateLog4j2: boolean;
 	    AppendTemplateFolder: string;
+	    NetworkCard: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new WebscanOptions(source);
@@ -1216,6 +1231,7 @@ export namespace structs {
 	        this.SkipNucleiWithoutTags = source["SkipNucleiWithoutTags"];
 	        this.GenerateLog4j2 = source["GenerateLog4j2"];
 	        this.AppendTemplateFolder = source["AppendTemplateFolder"];
+	        this.NetworkCard = source["NetworkCard"];
 	    }
 	}
 	export class WechatReulst {

@@ -46,7 +46,7 @@ var temp = reactive({
     dirsearchPathConut: 0,
     dirsearchConut: 0,
     dirsearchStartTime: 0,
-    NetworkCardList: ["Auto"],
+    NetworkCardList: <structs.NetwordCard[]>[{Name: "", IP: "Auto"}],
     nucleiEnabled: false,
     isMacOS: false,
     isMax: false,

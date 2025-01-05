@@ -30,7 +30,7 @@ func FetchHosts(ctx context.Context, domain, apikey string) *ZoomeyeHost {
 	header := map[string]string{
 		"API-KEY": apikey,
 	}
-	_, body, err := clients.NewRequest("GET", searchURL, header, nil, 10, true, clients.DefaultClient())
+	_, body, err := clients.NewRequest("GET", searchURL, header, nil, 10, true, clients.NewHttpClient(nil, true))
 	if err != nil {
 		gologger.Debug(ctx, err)
 		return nil

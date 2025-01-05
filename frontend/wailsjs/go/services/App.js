@@ -14,10 +14,6 @@ export function CheckCdn(arg1) {
   return window['go']['services']['App']['CheckCdn'](arg1);
 }
 
-export function CheckTarget(arg1, arg2) {
-  return window['go']['services']['App']['CheckTarget'](arg1, arg2);
-}
-
 export function CyberChefLocalServer() {
   return window['go']['services']['App']['CyberChefLocalServer']();
 }

@@ -27,7 +27,7 @@ func FetchHosts(ctx context.Context, domain, apikey string) *SecuritytrailsHost 
 		"APIKEY": apikey,
 	}
 	searchURL := fmt.Sprintf("%sv1/domain/%s/subdomains?children_only=false&include_inactive=true", securitytrailsURL, domain)
-	_, body, err := clients.NewRequest("GET", searchURL, header, nil, 10, true, clients.DefaultClient())
+	_, body, err := clients.NewRequest("GET", searchURL, header, nil, 10, true, clients.NewHttpClient(nil, true))
 	if err != nil {
 		fmt.Println(err)
 	}

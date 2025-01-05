@@ -44,7 +44,10 @@
         </el-form-item>
         <el-form-item :label="$t('setting.network_list')">
           <el-select v-model="global.webscan.default_network">
-            <el-option v-for="value in global.temp.NetworkCardList" :label="value" :value="value" />
+            <el-option v-for="item in global.temp.NetworkCardList" :value="item.IP">
+              <span v-if="item.Name ==''">{{ item.IP }}</span>
+              <span v-else>{{ item.Name + '(' + item.IP + ')' }}</span>
+            </el-option>
           </el-select>
         </el-form-item>
         <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>

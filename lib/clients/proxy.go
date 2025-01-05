@@ -27,9 +27,12 @@ func SelectProxy(pr *Proxy, client *http.Client) (*http.Client, error) {
 	if pr.Mode == "HTTP" {
 		urlproxy, _ := url.Parse(fmt.Sprintf("%v://%v:%v", pr.Mode, pr.Address, pr.Port)) //"https://127.0.0.1:9743"
 		client.Transport = &http.Transport{
-			Proxy:               http.ProxyURL(urlproxy),
-			TLSClientConfig:     TlsConfig, // 防止HTTPS报错
-			TLSHandshakeTimeout: time.Second * 10,
+			Proxy:                 http.ProxyURL(urlproxy),
+			TLSClientConfig:       TlsConfig, // 防止HTTPS报错
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
 		}
 	} else {
 		auth := &proxy.Auth{User: pr.Username, Password: pr.Password}
@@ -38,9 +41,12 @@ func SelectProxy(pr *Proxy, client *http.Client) (*http.Client, error) {
 			return nil, errors.New("socks address not available")
 		}
 		client.Transport = &http.Transport{
-			TLSClientConfig:     TlsConfig, // 防止HTTPS报错
-			Dial:                dialer.Dial,
-			TLSHandshakeTimeout: time.Second * 3,
+			TLSClientConfig:       TlsConfig, // 防止HTTPS报错
+			Dial:                  dialer.Dial,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
 			// 设置sock5
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				conn, err := dialer.Dial(network, addr)

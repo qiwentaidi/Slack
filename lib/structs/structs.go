@@ -169,6 +169,7 @@ type WebscanOptions struct {
 	SkipNucleiWithoutTags bool
 	GenerateLog4j2        bool // 开启后会将所有目标添加 Generate-Log4j2 的指纹
 	AppendTemplateFolder  string
+	NetworkCard           string
 }
 
 type AntivirusResult struct {
@@ -597,4 +598,9 @@ type OfficialAccounts struct {
 			TitleImgURL string `json:"titleImgURL"` // 公众号LOGO
 		} `json:"resultList"`
 	} `json:"data"`
+}
+
+type NetwordCard struct {
+	Name string
+	IP   string
 }

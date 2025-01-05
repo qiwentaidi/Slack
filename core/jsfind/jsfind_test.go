@@ -17,7 +17,7 @@ func sendRequest(apiURL string, params url.Values) url.Values {
 	fullURL := fmt.Sprintf("%s?%s", apiURL, params.Encode())
 
 	// 发送 GET 请求
-	_, body, err := clients.NewSimpleGetRequest(fullURL, clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(fullURL, clients.NewHttpClient(nil, true))
 	if err != nil {
 		fmt.Println("请求失败:", err)
 		return params

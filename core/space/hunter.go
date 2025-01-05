@@ -26,7 +26,7 @@ func HunterApiSearch(api, query, pageSize, page, startTime, asset string, dedupl
 	address := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(query) + "&page=" +
 		page + "&page_size=" + pageSize + "&is_web=" + asset + "&port_filter=" + fmt.Sprint(deduplication) + "&start_time=" + beforeTime + "&end_time=" + currentTime
 	var hr structs.HunterResult
-	_, b, err := clients.NewSimpleGetRequest(address, clients.DefaultClient())
+	_, b, err := clients.NewSimpleGetRequest(address, clients.NewHttpClient(nil, true))
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 		return &hr
@@ -41,7 +41,7 @@ func SearchTotal(api, search string) (total int64, message string) {
 	beforeTime := time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
 	addr := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(search) +
 		"&page=1&page_size=1&is_web=3&port_filter=false&start_time=" + beforeTime + "&end_time=" + currentTime
-	_, b, err := clients.NewSimpleGetRequest(addr, clients.DefaultClient())
+	_, b, err := clients.NewSimpleGetRequest(addr, clients.NewHttpClient(nil, true))
 	if err != nil {
 		logger.NewDefaultLogger().Debug(err.Error())
 		return
@@ -62,7 +62,7 @@ func HunterBaseEncode(str string) string {
 
 func SearchHunterTips(query string) *structs.HunterTips {
 	var ts structs.HunterTips
-	_, b, err := clients.NewSimpleGetRequest("https://hunter.qianxin.com/api/recommend?keyword="+HunterBaseEncode(query), clients.DefaultClient())
+	_, b, err := clients.NewSimpleGetRequest("https://hunter.qianxin.com/api/recommend?keyword="+HunterBaseEncode(query), clients.NewHttpClient(nil, true))
 	if err != nil {
 		return &ts
 	}

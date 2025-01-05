@@ -1,12 +1,11 @@
 import { ElMessage, ElNotification } from "element-plus";
 import global from "./stores";
-import { Callgologger, CheckTarget, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/services/App";
+import { Callgologger, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/services/App";
 import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/services/File";
 import Loading from "./components/Loading.vue";
 import { ProxyOptions } from "./stores/interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
-import async from "async";
 import { clients } from "wailsjs/go/models";
 
 export var proxys: ProxyOptions; // wails2.9之后替换原来的null
@@ -75,33 +74,6 @@ export function splitInt(n: number, slice: number): number[] {
   }
   res.push(n);
   return res;
-}
-
-export async function FormatWebURL(host: string): Promise<string[]> {
-  let urls: Array<string> = [];
-  const targets = ProcessTextAreaInput(host);
-  Callgologger("info", "正在解析目标 ...")
-  // Wrap the asynchronous processing of each target with async.eachLimit
-  await new Promise((resolve, reject) => {
-    async.eachLimit(targets, 50, async (target: string, callback: () => void) => {
-      if (!target.startsWith("http")) {
-        const result: any = await CheckTarget(target, getProxy());
-        if (!result.Error) {
-          target = result.Msg;
-        }
-      }
-      urls.push(TrimRightSubString(target, "/"));
-    },
-      (err: any) => {
-        if (err) {
-          reject(err); // Reject the promise if any task encounters an error
-        } else {
-          resolve(urls); // Resolve the promise once all tasks are completed
-        }
-      }
-    );
-  });
-  return urls;
 }
 
 export function TrimRightSubString(str: string, sub: string) {

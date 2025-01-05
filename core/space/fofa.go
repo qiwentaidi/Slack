@@ -46,7 +46,7 @@ func (f *FofaClient) GetTips(key string) ([]byte, error) {
 	params.Set("ts", ts)
 	params.Set("sign", f.GetInputSign(signParam))
 	params.Set("app_id", f.AppId)
-	_, body, err := clients.NewSimpleGetRequest(TipApi+params.Encode(), clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(TipApi+params.Encode(), clients.NewHttpClient(nil, true))
 	if err != nil {
 		return nil, err
 	}

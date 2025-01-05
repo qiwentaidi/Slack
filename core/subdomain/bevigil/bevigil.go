@@ -21,7 +21,7 @@ func FetchHosts(ctx context.Context, domain, apikey string) *BevigilHosts {
 		"X-Access-Token": apikey,
 	}
 	searchURL := fmt.Sprintf("%sapi/%s/subdomains/", bevigilURL, domain)
-	resp, body, err := clients.NewRequest("GET", searchURL, header, nil, 10, true, clients.DefaultClient())
+	resp, body, err := clients.NewRequest("GET", searchURL, header, nil, 10, true, clients.NewHttpClient(nil, true))
 	if err != nil {
 		gologger.Debug(ctx, err)
 		return nil

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -80,8 +81,8 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 	return &FingerScanner{
 		ctx:                     ctx,
 		urls:                    urls,
-		client:                  clients.DefaultWithProxyClient(proxy),
-		notFollowClient:         clients.NotFollowWithProxyClient(proxy),
+		client:                  clients.NewHttpClientWithProxy(net.ParseIP(options.NetworkCard), true, proxy),
+		notFollowClient:         clients.NewHttpClientWithProxy(net.ParseIP(options.NetworkCard), false, proxy),
 		screenshot:              options.Screenshot,
 		honeypot:                options.Honeypot,
 		thread:                  options.Thread,

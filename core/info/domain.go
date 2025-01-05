@@ -21,7 +21,7 @@ func SeoChinaz(ctx context.Context, domain string) (string, string, string) {
 	h := map[string]string{
 		"Content-Type": "text/html; charset=utf-8",
 	}
-	_, b, err := clients.NewRequest("GET", "https://seo.chinaz.com/"+domain, h, nil, 10, true, clients.DefaultClient())
+	_, b, err := clients.NewRequest("GET", "https://seo.chinaz.com/"+domain, h, nil, 10, true, clients.NewHttpClient(nil, true))
 	if err != nil {
 		gologger.Warning(ctx, err)
 	}
@@ -36,7 +36,7 @@ func SeoChinaz(ctx context.Context, domain string) (string, string, string) {
 }
 
 func Ip138IpHistory(domain string) string {
-	_, body, err := clients.NewSimpleGetRequest(fmt.Sprintf("https://site.ip138.com/%s/", domain), clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(fmt.Sprintf("https://site.ip138.com/%s/", domain), clients.NewHttpClient(nil, true))
 	if err != nil {
 		return "ip138网站响应异常!"
 	}
@@ -58,7 +58,7 @@ func Ip138IpHistory(domain string) string {
 }
 
 func Ip138Subdomain(domain string) string {
-	_, body, err := clients.NewSimpleGetRequest(fmt.Sprintf("https://site.ip138.com/%s/domain.htm", domain), clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(fmt.Sprintf("https://site.ip138.com/%s/domain.htm", domain), clients.NewHttpClient(nil, true))
 	if err != nil {
 		return "ip138网站响应异常!"
 	}

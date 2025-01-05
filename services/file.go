@@ -612,12 +612,11 @@ func getExecName() string {
 // 为了防止图片过大，还需要压缩图片
 func (f *File) GenerateFaviconBase64WithOnline(rawURL string) string {
 	u, _ := url.Parse(rawURL)
-	faviconURL, err := webscan.GetFaviconFullLink(u, clients.DefaultClient())
-	fmt.Printf("faviconURL: %v\n", faviconURL)
+	faviconURL, err := webscan.GetFaviconFullLink(u, clients.NewHttpClient(nil, true))
 	if err != nil {
 		return ""
 	}
-	resp, body, err := clients.NewSimpleGetRequest(faviconURL, clients.DefaultClient())
+	resp, body, err := clients.NewSimpleGetRequest(faviconURL, clients.NewHttpClient(nil, true))
 	if err != nil || resp == nil {
 		return ""
 	}
@@ -688,7 +687,7 @@ func (f *File) ReadLocalStore() map[string]interface{} {
 	return data
 }
 
-func (f *File) NetworkCardInfo() (networks []string) {
+func (f *File) NetworkCardInfo() (networks []structs.NetwordCard) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		gologger.Error(f.ctx, err)
@@ -706,7 +705,10 @@ func (f *File) NetworkCardInfo() (networks []string) {
 			switch v := addr.(type) {
 			case *net.IPNet:
 				if v.IP.To4() != nil {
-					networks = append(networks, fmt.Sprintf("%s(%s)", iface.Name, v.IP.String()))
+					networks = append(networks, structs.NetwordCard{
+						Name: iface.Name,
+						IP:   v.IP.String(),
+					})
 				}
 			}
 		}

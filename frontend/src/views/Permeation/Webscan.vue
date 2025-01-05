@@ -402,6 +402,13 @@ class Engine {
             // 设置后续的扫描类型
             config.webscanOption = 2
         }
+        if (fp.table.result.length == 0) {
+            updateActivities({
+                content: "No surviving target detected and has exited the task",
+                timestamp: (new Date()).toTimeString()
+            })
+            return
+        }
         // 每个阶段任务前检查是否为退出状态
         if (!form.runnningStatus) {
             return
@@ -436,19 +443,13 @@ class Engine {
             SkipNucleiWithoutTags: config.skipNucleiWithoutTags,
             GenerateLog4j2: config.generateLog4j2,
             AppendTemplateFolder: global.webscan.append_pocfile,
+            NetworkCard: global.webscan.default_network
         }
         updateActivities({
             content: "Loading webscan engine, current mode: " + config.webscanOption.toString(),
             timestamp: (new Date()).toTimeString()
         })
-        await NewWebScanner(options, {
-            Enabled: global.proxy.enabled,
-            Mode: global.proxy.mode,
-            Address: global.proxy.address,
-            Port: global.proxy.port,
-            Username: global.proxy.username,
-            Password: global.proxy.password,
-        })
+        await NewWebScanner(options, getProxy())
         if (!config.crack) {
             updateActivities({
                 content: "All task completed",

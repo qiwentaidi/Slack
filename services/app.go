@@ -128,7 +128,7 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 	} else {
 		content = []byte(body.(string))
 	}
-	resp, b, err := clients.NewRequest(method, target, headers, bytes.NewReader(content), 10, true, clients.DefaultWithProxyClient(proxy))
+	resp, b, err := clients.NewRequest(method, target, headers, bytes.NewReader(content), 10, true, clients.NewHttpClientWithProxy(nil, true, proxy))
 	if err != nil || resp == nil {
 		return &structs.Response{
 			Error: true,
@@ -439,27 +439,11 @@ func (a *App) Socks5Conn(ip string, port, timeout int, username, password string
 }
 
 func (a *App) IconHash(target string) string {
-	_, b, err := clients.NewSimpleGetRequest(target, clients.DefaultClient())
+	_, b, err := clients.NewSimpleGetRequest(target, clients.NewHttpClient(nil, true))
 	if err != nil {
 		return ""
 	}
 	return webscan.Mmh3Hash32(b)
-}
-
-// infoscan
-
-func (a *App) CheckTarget(host string, proxy clients.Proxy) *structs.Status {
-	protocolURL, err := clients.IsWeb(host, clients.DefaultWithProxyClient(proxy))
-	if err != nil {
-		return &structs.Status{
-			Error: true,
-			Msg:   host,
-		}
-	}
-	return &structs.Status{
-		Error: false,
-		Msg:   protocolURL,
-	}
 }
 
 // 仅在执行时调用一次
@@ -616,7 +600,7 @@ func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
 func (a *App) FaviconMd5(target string) string {
 	hasher := md5.New()
 	if _, err := os.Stat(target); err != nil {
-		_, body, err := clients.NewSimpleGetRequest(target, clients.DefaultClient())
+		_, body, err := clients.NewSimpleGetRequest(target, clients.NewHttpClient(nil, true))
 		if err != nil {
 			return ""
 		}
@@ -635,17 +619,17 @@ func (a *App) FaviconMd5(target string) string {
 func (a *App) AlibabaNacos(target, headers string, attackType int, username, password, command, service string, proxy clients.Proxy) string {
 	switch attackType {
 	case 0:
-		if nacos.CVE_2021_29441_Step1(target, username, password, clients.DefaultWithProxyClient(proxy)) {
+		if nacos.CVE_2021_29441_Step1(target, username, password, clients.NewHttpClientWithProxy(nil, true, proxy)) {
 			return "添加用户成功: \n username: " + username + "， password: " + password
 		}
 	case 1:
-		if nacos.CVE_2021_29441_Step2(target, username, clients.DefaultWithProxyClient(proxy)) {
+		if nacos.CVE_2021_29441_Step2(target, username, clients.NewHttpClientWithProxy(nil, true, proxy)) {
 			return "删除用户成功!"
 		}
 	case 2:
-		return nacos.CVE_2021_29442(target, clients.DefaultWithProxyClient(proxy))
+		return nacos.CVE_2021_29442(target, clients.NewHttpClientWithProxy(nil, true, proxy))
 		// case 3:
-		// 	return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.DefaultWithProxyClient(proxy))
+		// 	return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.NewHttpClientWithProxy(nil,true,proxy))
 	}
 	return target + "不存在该漏洞"
 }
@@ -657,12 +641,12 @@ func (a *App) NacosCategoriesExtract(filePath string) []structs.NacosConfig {
 func (a *App) HikvsionCamera(target string, attackType int, passwordList []string, cmd string, proxy clients.Proxy) string {
 	switch attackType {
 	case 0:
-		body := hikvision.CVE_2017_7921_Snapshot(target, clients.DefaultWithProxyClient(proxy))
+		body := hikvision.CVE_2017_7921_Snapshot(target, clients.NewHttpClientWithProxy(nil, true, proxy))
 		return base64.RawStdEncoding.EncodeToString(body)
 	case 1:
-		return hikvision.CVE_2017_7921_Config(target, clients.DefaultWithProxyClient(proxy))
+		return hikvision.CVE_2017_7921_Config(target, clients.NewHttpClientWithProxy(nil, true, proxy))
 	case 2:
-		return hikvision.CVE_2021_36260(target, cmd, clients.DefaultWithProxyClient(proxy))
+		return hikvision.CVE_2021_36260(target, cmd, clients.NewHttpClientWithProxy(nil, true, proxy))
 	case 3:
 		return hikvision.CameraHandlessLogin(a.ctx, target, passwordList)
 	}

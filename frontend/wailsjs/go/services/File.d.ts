@@ -30,7 +30,7 @@ export function IsMacOS():Promise<boolean>;
 
 export function List(arg1:Array<string>):Promise<Array<services.FileListInfo>>;
 
-export function NetworkCardInfo():Promise<Array<string>>;
+export function NetworkCardInfo():Promise<Array<structs.NetwordCard>>;
 
 export function OpenFolder(arg1:string):Promise<string>;
 

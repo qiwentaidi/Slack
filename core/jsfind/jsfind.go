@@ -55,7 +55,7 @@ func init() {
 }
 
 func ExtractJS(ctx context.Context, url string) (allJS []string) {
-	_, body, err := clients.NewSimpleGetRequest(url, clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(url, clients.NewHttpClient(nil, true))
 	if err != nil || body == nil {
 		gologger.Debug(ctx, err)
 		return
@@ -81,7 +81,7 @@ func ExtractJS(ctx context.Context, url string) (allJS []string) {
 func FindInfo(ctx context.Context, url string, limiter chan bool, wg *sync.WaitGroup) *FindSomething {
 	defer wg.Done()
 	var fs FindSomething
-	_, body, err := clients.NewSimpleGetRequest(url, clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(url, clients.NewHttpClient(nil, true))
 	if err != nil || body == nil {
 		gologger.Debug(ctx, err)
 		return &fs

@@ -395,7 +395,7 @@ func utf16be2utf8(utf16be []byte) string {
 }
 
 func ExtractDSStore(url string) ([]string, error) {
-	_, body, err := clients.NewSimpleGetRequest(url, clients.DefaultClient())
+	_, body, err := clients.NewSimpleGetRequest(url, clients.NewHttpClient(nil, true))
 	if err != nil {
 		return nil, err
 	}

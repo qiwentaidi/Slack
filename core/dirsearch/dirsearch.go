@@ -54,10 +54,7 @@ func NewScanner(ctx context.Context, o Options) {
 	if o.Timeout == 0 {
 		o.Timeout = 8
 	}
-	client := clients.NotFollowClient()
-	if o.Redirect {
-		client = clients.DefaultClient()
-	}
+	client := clients.NewHttpClient(nil, o.Redirect)
 	var header = map[string]string{}
 	if o.CustomHeader != "" {
 		for _, single := range strings.Split(o.CustomHeader, "\n") {
