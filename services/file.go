@@ -536,10 +536,14 @@ func (f *File) OpenTerminal(filepath string) string {
 	return ""
 }
 
-func (f *File) RunApp(types, file, target string) bool {
-	cmd := &exec.Cmd{}
+func (f *File) RunApp(types, file, target string) {
+	var cmd *exec.Cmd
 	name := filepath.Base(file)
 	switch types {
+	// 超链接类型
+	case "Link":
+		runtime.BrowserOpenURL(f.ctx, file)
+		return
 	case "JAR":
 		cmd = exec.Command("java", "-jar", name)
 	case "APP":
@@ -550,38 +554,37 @@ func (f *File) RunApp(types, file, target string) bool {
 				Type:          runtime.InfoDialog,
 				DefaultButton: "Ok",
 			})
-			return false
+			return
 		}
 		switch filepath.Ext(file) {
 		case ".exe":
 			cmd = exec.Command(name)
 		case ".url":
 			runtime.BrowserOpenURL(f.ctx, name)
-			return true
+			return
 		default:
 			cmd = exec.Command("cmd", "/c", "start", name)
 		}
-	case "Link":
-		runtime.BrowserOpenURL(f.ctx, file)
-		return true
 	default:
 		if target == "" {
 			f.OpenTerminal(file)
-			return true
+			return
 		}
 		target = strings.ReplaceAll(target, "%path%", name)
 		args := strings.Split(target, " ")
 		cmd = exec.Command(args[0], args[1:]...)
 	}
 	cmd.Dir = filepath.Dir(file)
-	gologger.Info(f.ctx, "Opening app in "+cmd.Dir)
-	go func() {
-		if err := cmd.Run(); err != nil {
+	if _, err := os.Stat(cmd.Dir); os.IsPermission(err) {
+		gologger.Debug(f.ctx, "Insufficient permissions for directory: "+cmd.Dir)
+		return
+	}
+	go func(localCmd *exec.Cmd) {
+		if err := localCmd.Run(); err != nil {
 			gologger.Debug(f.ctx, err)
 			return
 		}
-	}()
-	return true
+	}(cmd)
 }
 
 func getDirectoryPath(path string) (string, error) {

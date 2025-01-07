@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -75,14 +74,14 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 		urls = append(urls, u)
 	}
 	if len(urls) == 0 {
-		gologger.Error(ctx, "未发现可用目标，请检查输入")
+		gologger.Error(ctx, "No available targets found, please check input")
 		return nil
 	}
 	return &FingerScanner{
 		ctx:                     ctx,
 		urls:                    urls,
-		client:                  clients.NewHttpClientWithProxy(net.ParseIP(options.NetworkCard), true, proxy),
-		notFollowClient:         clients.NewHttpClientWithProxy(net.ParseIP(options.NetworkCard), false, proxy),
+		client:                  clients.NewHttpClientWithProxy(nil, true, proxy),
+		notFollowClient:         clients.NewHttpClientWithProxy(nil, false, proxy),
 		screenshot:              options.Screenshot,
 		honeypot:                options.Honeypot,
 		thread:                  options.Thread,
@@ -256,10 +255,10 @@ type TFP struct {
 
 func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 	if len(s.aliveURLs) == 0 {
-		gologger.Warning(s.ctx, "未发现存活目标，已跳过主动指纹扫描")
+		gologger.Warning(s.ctx, "No surviving target found, active fingerprint scanning has been skipped")
 		return
 	}
-	gologger.Info(s.ctx, "正在进行主动指纹探测 ...")
+	gologger.Info(s.ctx, "Active fingerprint detection in progress")
 	var id = 0
 	var wg sync.WaitGroup
 	visited := make(map[string]bool) // 用于记录已访问的URL和路径组合

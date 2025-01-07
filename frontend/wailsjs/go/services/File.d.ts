@@ -52,7 +52,7 @@ export function RemoveOldConfig():Promise<void>;
 
 export function Restart():Promise<void>;
 
-export function RunApp(arg1:string,arg2:string,arg3:string):Promise<boolean>;
+export function RunApp(arg1:string,arg2:string,arg3:string):Promise<void>;
 
 export function SaveDataToFile(arg1:any):Promise<boolean>;
 

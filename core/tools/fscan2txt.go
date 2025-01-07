@@ -49,7 +49,7 @@ func (t *Tools) FormatOutput(content string) map[string][]string {
 	if len(nets) > 0 {
 		var multiNetInfo []string
 		for _, net := range FormatNetInfo(nets) {
-			if len(net.IPs) > 1 {
+			if len(net.IPs) >= 1 {
 				multiNetInfo = append(multiNetInfo, fmt.Sprintf("%s: \n%s\n", net.Hostname, strings.Join(net.IPs, "\n")))
 			}
 		}

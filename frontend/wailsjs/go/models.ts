@@ -1208,6 +1208,7 @@ export namespace structs {
 	    DeepScan: boolean;
 	    RootPath: boolean;
 	    CallNuclei: boolean;
+	    Tags: string[];
 	    TemplateFiles: string[];
 	    SkipNucleiWithoutTags: boolean;
 	    GenerateLog4j2: boolean;
@@ -1227,6 +1228,7 @@ export namespace structs {
 	        this.DeepScan = source["DeepScan"];
 	        this.RootPath = source["RootPath"];
 	        this.CallNuclei = source["CallNuclei"];
+	        this.Tags = source["Tags"];
 	        this.TemplateFiles = source["TemplateFiles"];
 	        this.SkipNucleiWithoutTags = source["SkipNucleiWithoutTags"];
 	        this.GenerateLog4j2 = source["GenerateLog4j2"];

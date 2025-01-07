@@ -165,6 +165,7 @@ type WebscanOptions struct {
 	DeepScan              bool
 	RootPath              bool
 	CallNuclei            bool
+	Tags                  []string
 	TemplateFiles         []string
 	SkipNucleiWithoutTags bool
 	GenerateLog4j2        bool // 开启后会将所有目标添加 Generate-Log4j2 的指纹
@@ -436,7 +437,8 @@ type VulnerabilityInfo struct {
 type NucleiOption struct {
 	SkipNucleiWithoutTags bool // 如果没有扫描到指纹，是否需要扫描全漏洞还是直接跳过
 	URL                   string
-	Tags                  []string // 全漏洞扫描时，使用自定义标签
+	Tags                  []string // 指纹识别到的标签
+	CustomTags            []string // 自定义的指纹标签
 	TemplateFile          []string
 	TemplateFolders       []string
 }

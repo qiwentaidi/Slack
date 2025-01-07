@@ -223,10 +223,12 @@ async function fscanParse() {
     fscan.virus = []
     fscan.result = ""
     for (const [key, values] of Object.entries(result)) {
-        fscan.result += `[${key}]\n${values.join("\n")}\n\n`
-        if (key == "NetInfo") {
-
+        if (values) {
+            fscan.result += `[${key}]\n${values.join("\n")}\n\n`
         }
+        // if (key == "NetInfo") {
+
+        // }
         if (weekProtocol.includes(key.toLocaleLowerCase())) {
             const uniqueWeakpass = new Set();
             values.forEach(line => {

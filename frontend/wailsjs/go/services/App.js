@@ -54,6 +54,10 @@ export function GOOS() {
   return window['go']['services']['App']['GOOS']();
 }
 
+export function GetAllFinger() {
+  return window['go']['services']['App']['GetAllFinger']();
+}
+
 export function GetFingerPocMap() {
   return window['go']['services']['App']['GetFingerPocMap']();
 }

@@ -36,6 +36,7 @@ import (
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"gopkg.in/yaml.v2"
 )
 
 // App struct
@@ -503,6 +504,7 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 				TemplateFile:          options.TemplateFiles,
 				SkipNucleiWithoutTags: options.SkipNucleiWithoutTags,
 				TemplateFolders:       allTemplateFolders,
+				CustomTags:            options.Tags,
 			})
 			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)
 		}
@@ -513,6 +515,23 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 
 func (a *App) GetFingerPocMap() map[string][]string {
 	return webscan.WorkFlowDB
+}
+
+func (a *App) GetAllFinger() []string {
+	data, err := os.ReadFile(a.webfingerFile)
+	if err != nil {
+		return []string{}
+	}
+
+	fps := make(map[string]interface{})
+	if err := yaml.Unmarshal(data, &fps); err != nil {
+		return []string{}
+	}
+	var fingerprints []string
+	for fingerprint := range fps {
+		fingerprints = append(fingerprints, fingerprint)
+	}
+	return util.RemoveDuplicates(fingerprints)
 }
 
 // hunter

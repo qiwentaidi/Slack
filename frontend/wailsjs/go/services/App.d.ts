@@ -34,6 +34,8 @@ export function FofaTips(arg1:string):Promise<structs.TipsResult>;
 
 export function GOOS():Promise<string>;
 
+export function GetAllFinger():Promise<Array<string>>;
+
 export function GetFingerPocMap():Promise<{[key: string]: Array<string>}>;
 
 export function GitDorks(arg1:string,arg2:string,arg3:string):Promise<isic.GithubResult>;

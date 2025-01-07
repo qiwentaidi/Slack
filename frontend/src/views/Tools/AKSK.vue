@@ -148,9 +148,7 @@ function CopyResult() {
     <el-tabs v-model="activeName" type="border-card">
       <el-tab-pane name="wechat">
         <template #label>
-          <el-text class="position-center">
-            <wechatIcon style="margin-right: 2px;" />Wechat official account
-          </el-text>
+          <el-text class="position-center"><wechatIcon style="margin-right: 2px;" />微信公众号</el-text>
         </template>
         <el-form label-width="auto">
           <el-form-item label="Appid">
@@ -176,9 +174,7 @@ function CopyResult() {
       </el-tab-pane>
       <el-tab-pane name="enterprise wechat">
         <template #label>
-          <el-text class="position-center">
-            <wechatIcon style="margin-right: 2px;" />Enterprise Wechat
-          </el-text>
+          <el-text class="position-center"><wechatIcon style="margin-right: 2px;" />企业微信</el-text>
         </template>
         <el-form label-width="auto">
           <el-form-item label="Corpid">
@@ -204,9 +200,7 @@ function CopyResult() {
       </el-tab-pane>
       <el-tab-pane name="dingtalk">
         <template #label>
-          <el-text class="position-center">
-            <dingtalkIcon style="margin-right: 2px;" />Dingtalk
-          </el-text>
+          <el-text class="position-center"><dingtalkIcon style="margin-right: 2px;" />钉钉</el-text>
         </template>
         <el-form label-width="auto">
           <el-form-item label="Appid">

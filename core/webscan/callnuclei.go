@@ -28,8 +28,9 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o structs.NucleiO
 		options = append(options, nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
 			Templates: o.TemplateFolders,
 		}))
+		// 如果自定义标签不为空则使用
 		options = append(options, nuclei.WithTemplateFilters(nuclei.TemplateFilters{
-			Tags: o.Tags,
+			Tags: finalTags(o.Tags, o.CustomTags),
 		}))
 	} else {
 		// 指定poc文件的时候就要删除tags标签
@@ -75,6 +76,13 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o structs.NucleiO
 		return
 	}
 	defer ne.Close()
+}
+
+func finalTags(detectTags, customTags []string) []string {
+	if len(customTags) != 0 {
+		return customTags
+	}
+	return detectTags
 }
 
 // func NewThreadSafeNucleiEngine(ctx context.Context, proxy clients.Proxy, o structs.NucleiOption) {

@@ -5,7 +5,7 @@ import {
     Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft,
     Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, MoreFilled
 } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, IPParse, SpaceGetPort, IsRoot, PortParse, HostAlive, NewSynScanner, NewTcpScanner, PortBrute } from 'wailsjs/go/services/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, IPParse, SpaceGetPort, IsRoot, PortParse, HostAlive, NewSynScanner, NewTcpScanner, PortBrute, GetAllFinger } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import { TestProxy, Copy, UploadFileAndRead, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
 import global from "@/stores"
@@ -74,6 +74,7 @@ const param = reactive({
     username: '',
     password: '',
     allTemplate: <{ label: string, value: string }[]>[],
+    allFingerprint: <{ label: string, value: string }[]>[],
     hostFilter: '',
 })
 
@@ -134,6 +135,7 @@ const spaceEngineConfig = reactive({
 
 const config = reactive({
     customTemplate: <string[]>[],
+    customTags: <string[]>[],
     screenhost: false,
     honeypot: true,
     rootPathScan: true,
@@ -170,6 +172,7 @@ async function initialize() {
     // 获取POC数量
     let pocMap = await GetFingerPocMap();
     dashboard.pocLength = pocMap ? Object.keys(pocMap).length : 0; // 使用可选链
+    param.allFingerprint = (await GetAllFinger()).map(item => ({ label: item, value: item }))
 
     // 遍历模板
     let files = await List([global.PATH.homedir + "/slack/config/pocs", global.webscan.append_pocfile]);
@@ -402,13 +405,6 @@ class Engine {
             // 设置后续的扫描类型
             config.webscanOption = 2
         }
-        if (fp.table.result.length == 0) {
-            updateActivities({
-                content: "No surviving target detected and has exited the task",
-                timestamp: (new Date()).toTimeString()
-            })
-            return
-        }
         // 每个阶段任务前检查是否为退出状态
         if (!form.runnningStatus) {
             return
@@ -443,7 +439,8 @@ class Engine {
             SkipNucleiWithoutTags: config.skipNucleiWithoutTags,
             GenerateLog4j2: config.generateLog4j2,
             AppendTemplateFolder: global.webscan.append_pocfile,
-            NetworkCard: global.webscan.default_network
+            NetworkCard: global.webscan.default_network,
+            Tags: config.customTags
         }
         updateActivities({
             content: "Loading webscan engine, current mode: " + config.webscanOption.toString(),
@@ -1186,6 +1183,12 @@ function checkDictInput() {
                     </template>
                 </el-segmented>
             </el-form-item>
+            <div v-if="config.webscanOption == 3">
+                <el-form-item label="指定指纹:">
+                    <el-select-v2 v-model="config.customTags" :options="param.allFingerprint"
+                        filterable multiple clearable />
+                </el-form-item>
+            </div>
             <div v-if="config.webscanOption == 3">
                 <el-form-item label="指定漏洞:">
                     <el-select-v2 v-model="config.customTemplate" :options="param.allTemplate" placeholder="可选择1-10个漏洞"
