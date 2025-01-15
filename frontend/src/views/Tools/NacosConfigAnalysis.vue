@@ -59,8 +59,8 @@ const code = `var categories = map[string][]string{
         </el-input>
         <el-button type="primary" plain :icon="DataAnalysis" @click="startAnalysis">分析</el-button>
     </div>
-    <el-table :data="config.result" :cell-style="{ textAlign: 'center' }"
-        :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 180px);">
+    <el-table :data="config.result" border :cell-style="{ textAlign: 'center' }"
+        :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 125px);">
 
         <!-- 序号列 -->
         <el-table-column type="index" label="#" width="60px" />
@@ -98,6 +98,9 @@ const code = `var categories = map[string][]string{
                 </el-button>
             </template>
         </el-table-column>
+        <template #empty>
+            <el-empty />
+        </template>
     </el-table>
     <el-drawer v-model="config.detailDialog" title="查看详情" size="70%">
         <highlightjs language="yaml" :code="config.content"></highlightjs>

@@ -24,6 +24,7 @@ func main() {
 	app := services.NewApp()
 	file := services.NewFile()
 	db := services.NewDatabase()
+	exp := services.NewExp()
 	// Create application with options
 	winDropOptions := &options.DragAndDrop{
 		EnableFileDrop:     true,
@@ -44,6 +45,7 @@ func main() {
 			app.Startup(ctx)
 			file.Startup(ctx)
 			db.Startup(ctx)
+			exp.Startup(ctx)
 		},
 		OnBeforeClose: app.BeforeClose,
 		DragAndDrop: func() *options.DragAndDrop {
@@ -64,6 +66,7 @@ func main() {
 			app,
 			file,
 			db,
+			exp,
 			&core.Tools{},
 		},
 		Mac: &mac.Options{

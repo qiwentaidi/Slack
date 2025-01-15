@@ -343,8 +343,8 @@ onUnmounted(() => {
                 <el-space>
                     <el-tooltip content="点击切换状态">
                         <el-button :icon="isEditable ? Edit : Reading" size="small" @click="toggleEditable">
-                        {{ isEditable ? '当前状态: 编辑' : '当前状态: 只读' }}
-                    </el-button>
+                            {{ isEditable ? '当前状态: 编辑' : '当前状态: 只读' }}
+                        </el-button>
                     </el-tooltip>
                     <el-tag type="warning" v-show="hasUnsavedChanges">未保存</el-tag>
                 </el-space>

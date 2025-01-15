@@ -10,7 +10,16 @@ import layersIcon from "@/assets/icon/layers.svg"
 import aboutIcon from "@/assets/icon/about.svg"
 import scriptIcon from "@/assets/icon/script.svg"
 
-export const webscanInputOptions = ['URL', 'IP/域名']
+export const webscanInputOptions = [
+    {
+        label: '网站扫描',
+        value: 0,
+    },
+    {
+        label: '主机扫描',
+        value: 1,
+    }
+]
 
 export const webscanOptions = [
     {
@@ -39,16 +48,16 @@ export const webReportOptions = ["HTML", "JSON"]
 
 export const sortSeverityOptions = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
 
-export const portscanOptions = [
-    {
-        label: "SYN",
-        value: 0,
-    },
-    {
-        label: "全连接",
-        value: 1,
-    },
-]
+// export const portscanOptions = [
+//     {
+//         label: "SYN",
+//         value: 0,
+//     },
+//     {
+//         label: "全连接",
+//         value: 1,
+//     },
+// ]
 
 export const quakeSyntaxOptions = [
     {
@@ -715,4 +724,36 @@ export const dingtalkApiOptions = [
         url: "https://oapi.dingtalk.com/topapi/v2/user/list?access_token=",
         body: `{"dept_id":1,"cursor":0,"size":100}`
     }
+]
+
+// export const dgworkApiOptions = [
+
+// ]
+
+export const ApiDocsOptions = [
+    {
+        show: "wechat",
+        label: "API文档",
+        link: "https://developers.weixin.qq.com/doc/offiaccount/User_Management/User_Tag_Management.html"
+    },
+    {
+        show: "wechat",
+        label: "官方调试工具",
+        link: "https://mp.weixin.qq.com/debug/"
+    },
+    {
+        show: "enterprise wechat",
+        label: "API文档",
+        link: "https://developer.work.weixin.qq.com/document/path/90664"
+    },
+    {
+        show: "dingtalk",
+        label: "API文档",
+        link: "https://open.dingtalk.com/document/orgapp/api-overview"
+    },
+    {
+        show: "dgwork",
+        label: "API文档",
+        link: "https://openplatform-portal.dg-work.cn/portal/#/helpdoc?apiType=serverapi&docKey=2674834"
+    },
 ]

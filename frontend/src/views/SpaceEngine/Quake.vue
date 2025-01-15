@@ -175,8 +175,9 @@
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%;height: calc(100vh - 280px);">
-                <el-table-column prop="URL" fixed label="URL" width="240" :show-overflow-tooltip="true" />
-                <el-table-column prop="IP" fixed label="IP" width="130" />
+                <el-table-column type="index" fixed label="#" width="60px" />
+                <el-table-column prop="URL" fixed label="URL" :min-width="240" :show-overflow-tooltip="true" />
+                <el-table-column prop="IP" fixed label="IP" width="150" />
                 <el-table-column prop="Port" label="端口/协议" width="130">
                     <template #default="scope">
                         {{ scope.row.Port }}<el-tag type=info>{{ scope.row.Protocol }}</el-tag>
@@ -191,7 +192,7 @@
                 <el-table-column prop="Title" label="标题" width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="Component" label="产品应用/版本" width="260">
                     <template #default="scope">
-                        <el-button type="success" plain
+                        <el-button type="success" plain size="small"
                             v-if="Array.isArray(scope.row.Components) && scope.row.Components.length > 0">
                             <template #icon v-if="scope.row.Components.length > 1">
                                 <el-popover placement="bottom" :width="350" trigger="hover">
@@ -212,7 +213,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="IcpName" label="备案名称" width="160" :show-overflow-tooltip="true" />
-                <el-table-column prop="IcpNumber" label="备案号" :show-overflow-tooltip="true" />
+                <el-table-column prop="IcpNumber" label="备案号" width="160" :show-overflow-tooltip="true" />
                 <el-table-column prop="Isp" label="运营商" width="100" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="200" :show-overflow-tooltip="true" />
                 <el-table-column fixed="right" label="操作" width="100" align="center">

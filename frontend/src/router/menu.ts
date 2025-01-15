@@ -31,7 +31,7 @@ const MenuList = [
         {
           name: "aside.exp",
           path: "/Exploitation",
-          icon: "/app/attack.png"
+          icon: "/app/target.png"
         },
         {
           name: "aside.dumpall",
@@ -138,6 +138,11 @@ const MenuList = [
           name: "aside.extract_database_info",
           path: "/ExtractDbInfo",
           icon: "/app/database.png"
+        },
+        {
+          name: "aside.nacos_config_analysis",
+          path: "/NacosConfigAnalysis",
+          icon: "/app/analysis.png"
         },
         {
           name: "aside.timestamp",

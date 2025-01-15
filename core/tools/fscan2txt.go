@@ -113,8 +113,14 @@ func (t *Tools) ConnectAndExecute(protocol, ip, port string, username, password 
 		commond = "ls"
 		result, err = executeFtp(host, username, password)
 	case "ssh":
-		commond = "whoami && id && ifconfig"
-		result, err = executeSshCommand(host, username, password, commond)
+		commands := []string{"whoami", "id", "ip a"}
+		for _, cmd := range commands {
+			output, err := executeSshCommand(host, username, password, cmd)
+			if err == nil {
+				result += fmt.Sprintf("[Commond] %s\n%s\n", cmd, output)
+			}
+		}
+		return result
 	case "mysql":
 		commond = "SHOW DATABASES"
 		result, err = executeMysqlQuery(host, username, password, commond)

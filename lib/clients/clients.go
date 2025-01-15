@@ -4,11 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
-	"net/url"
 	"regexp"
 	"slack-wails/lib/util"
 	"strings"
@@ -97,56 +95,6 @@ func NewSimpleGetRequest(url string, client *http.Client) (*http.Response, []byt
 	return NewRequest("GET", url, nil, nil, 10, true, client)
 }
 
-var (
-	HTTP_PREFIX  = "http://"
-	HTTPS_PREFIX = "https://"
-)
-
-// return error if host is not living
-// or if host is live return http(s) url
-func IsWeb(host string, client *http.Client) (string, error) {
-	var result string
-	if len(strings.TrimSpace(host)) == 0 {
-		return result, fmt.Errorf("host %q is empty", host)
-	}
-	u, err := url.Parse(HTTP_PREFIX + host)
-	if err != nil {
-		return result, err
-	}
-	parsePort := u.Port()
-	switch {
-	case parsePort == "80":
-		_, _, err := NewSimpleGetRequest(HTTP_PREFIX+host, client)
-		if err != nil {
-			return result, err
-		}
-		return HTTP_PREFIX + host, nil
-	case parsePort == "443":
-		_, _, err := NewSimpleGetRequest(HTTPS_PREFIX+host, client)
-		if err != nil {
-			return result, err
-		}
-
-		return HTTPS_PREFIX + host, nil
-
-	default:
-		_, _, err := NewSimpleGetRequest(HTTPS_PREFIX+host, client)
-		if err == nil {
-			return HTTPS_PREFIX + host, err
-		}
-
-		_, body, err := NewSimpleGetRequest(HTTP_PREFIX+host, client)
-		if err == nil {
-			if strings.Contains(string(body), "<title>400 The plain HTTP request was sent to HTTPS port</title>") {
-				return HTTPS_PREFIX + host, nil
-			}
-			return HTTP_PREFIX + host, nil
-		}
-
-	}
-	return "", fmt.Errorf("host %q is empty", host)
-}
-
 var regTitle = regexp.MustCompile(`(?is)<title\b[^>]*>(.*?)</title>`)
 
 func GetTitle(body []byte) string {
@@ -157,4 +105,36 @@ func GetTitle(body []byte) string {
 		return strings.TrimSpace(util.Str2UTF8(string(match[1])))
 	}
 	return ""
+}
+
+func Str2HeadersMap(str string) map[string]string {
+	headers := make(map[string]string)
+	if str == "" {
+		return headers
+	}
+	for _, line := range strings.Split(str, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if i := strings.IndexByte(line, ':'); i > 0 {
+			headers[strings.TrimSpace(line[:i])] = strings.TrimSpace(line[i+1:])
+		}
+	}
+	return headers
+}
+
+func Str2HeaderList(str string) []string {
+	headers := make([]string, 0)
+	if str == "" {
+		return headers
+	}
+	for _, line := range strings.Split(str, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		headers = append(headers, line)
+	}
+	return headers
 }

@@ -55,7 +55,7 @@ function isEmpty(obj: string) {
     return true;
   }
   return false;
-} 
+}
 
 // Function to process the input target in the text area
 // 处理文本域的目标输入
@@ -120,33 +120,50 @@ export async function ReadLine(filepath: string) {
   return Array.from(result.split("\n"));
 }
 
-// mode 0 is button click
-export async function TestProxy(mode: number) {
-  if (global.proxy.enabled) {
-    const host = global.proxy.address + ":" + global.proxy.port;
-    if (global.proxy.mode == "HTTP") {
-      let error = await NetDial(host)
-      if (!error) {
-        ElNotification.warning("The proxy is unreachable");
-        return false;
-      }
-      if (mode == 0) {
-        ElNotification.success("The proxy is enabled");
-      }
-    } else {
-      ElNotification({
-        duration: 0,
-        message: "Connecting to http://www.baidu.com",
-        icon: Loading,
-      });
-      let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password);
-      if (!error) {
-        ElNotification.closeAll();
-        ElNotification.error("The socks5 proxy is unreachable");
-        return false;
-      }
+export async function TestProxyWithNotify() {
+  if (!global.proxy.enabled) {
+    return true;
+  }
+  if (global.proxy.mode == "HTTP") {
+    let error = await NetDial(global.proxy.address + ":" + global.proxy.port)
+    if (!error) {
+      ElNotification.warning("The proxy is unreachable");
+      return false;
+    }
+    ElNotification.success("The proxy is enabled");
+  } else {
+    ElNotification({
+      duration: 0,
+      message: "Connecting to http://www.baidu.com",
+      icon: Loading,
+    });
+    let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password);
+    if (!error) {
       ElNotification.closeAll();
-      ElNotification.success("The socks5 proxy is enabled");
+      ElNotification.error("The socks5 proxy is unreachable");
+      return false;
+    }
+    ElNotification.closeAll();
+    ElNotification.success("The socks5 proxy is enabled");
+  }
+  return true;
+}
+export async function TestProxy() {
+  if (!global.proxy.enabled) {
+    return true
+  }
+  if (global.proxy.mode == "HTTP") {
+    let error = await NetDial(global.proxy.address + ":" + global.proxy.port)
+    if (!error) {
+      ElNotification.warning("The proxy is unreachable");
+      return false;
+    }
+  } else {
+    let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password);
+    if (!error) {
+      ElNotification.closeAll();
+      ElNotification.error("The socks5 proxy is unreachable");
+      return false;
     }
   }
   return true;
@@ -195,7 +212,7 @@ export const check = {
   client: async function () {
     let resp = await GoFetch("GET", download.RemoteClientVersion, "", {}, 10, proxys);
     if (resp.Error) {
-      global.UPDATE.RemoteClientVersion = "检测更新失败";
+      global.UPDATE.ClientContent = "检测更新失败";
       global.UPDATE.ClientStatus = false;
     } else {
       global.UPDATE.RemoteClientVersion = resp.Body!;

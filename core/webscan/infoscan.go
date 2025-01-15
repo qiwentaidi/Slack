@@ -56,6 +56,7 @@ type FingerScanner struct {
 	deepScan                bool                // 代表主动指纹探测
 	rootPath                bool                // 主动指纹是否采取根路径扫描
 	basicURLWithFingerprint map[string][]string // 后续nuclei需要扫描的目标列表
+	headers                 map[string]string   // 请求头
 	generateLog4j2          bool                // 是否添加Log4j2指纹，后续nuclei可以添加扫描
 	client                  *http.Client
 	notFollowClient         *http.Client
@@ -88,6 +89,7 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 		deepScan:                options.DeepScan,
 		rootPath:                options.RootPath,
 		basicURLWithFingerprint: make(map[string][]string),
+		headers:                 clients.Str2HeadersMap(options.CustomHeaders),
 		generateLog4j2:          options.GenerateLog4j2,
 	}
 }
@@ -117,7 +119,7 @@ func (s *FingerScanner) NewFingerScan() {
 		)
 
 		// 先进行一次不会重定向的扫描，可以获得重定向前页面的响应头中获取指纹
-		resp, _, _ := clients.NewSimpleGetRequest(u.String(), s.notFollowClient)
+		resp, _, _ := clients.NewRequest("GET", u.String(), s.headers, nil, 10, true, s.notFollowClient)
 		if resp != nil && resp.StatusCode == 302 {
 			rawHeaders = DumpResponseHeadersOnly(resp)
 		}
@@ -127,12 +129,13 @@ func (s *FingerScanner) NewFingerScan() {
 			retChan <- structs.InfoResult{
 				URL:        u.String(),
 				StatusCode: 422,
+				Scheme:     u.Scheme,
 			}
 			return
 		}
 
 		// 正常请求指纹
-		resp, body, err := clients.NewSimpleGetRequest(u.String(), s.client)
+		resp, body, err := clients.NewRequest("GET", u.String(), s.headers, nil, 10, true, s.client)
 		if err != nil || resp == nil {
 			if len(rawHeaders) > 0 {
 				gologger.Debug(s.ctx, fmt.Sprintf("%s has error to 302, response headers: %s", u.String(), string(rawHeaders)))
@@ -143,6 +146,7 @@ func (s *FingerScanner) NewFingerScan() {
 			retChan <- structs.InfoResult{
 				URL:        u.String(),
 				StatusCode: 0,
+				Scheme:     u.Scheme,
 			}
 			return
 		}
@@ -150,7 +154,7 @@ func (s *FingerScanner) NewFingerScan() {
 		rawHeaders = append(rawHeaders, DumpResponseHeadersOnly(resp)...)
 
 		// 请求Logo
-		faviconHash, faviconMd5 = FaviconHash(u, s.client)
+		faviconHash, faviconMd5 = FaviconHash(u, s.headers, s.client)
 
 		// 发送shiro探测
 		rawHeaders = append(rawHeaders, []byte(fmt.Sprintf("Set-Cookie: %s", s.ShiroScan(u)))...)
@@ -253,7 +257,7 @@ type TFP struct {
 	Path string
 }
 
-func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
+func (s *FingerScanner) NewActiveFingerScan() {
 	if len(s.aliveURLs) == 0 {
 		gologger.Warning(s.ctx, "No surviving target found, active fingerprint scanning has been skipped")
 		return
@@ -286,7 +290,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 		visited[fullURL] = true
 		s.mutex.Unlock()
 
-		resp, body, _ := clients.NewRequest("GET", fullURL, nil, nil, 5, false, s.client)
+		resp, body, _ := clients.NewRequest("GET", fullURL, s.headers, nil, 5, false, s.client)
 		if resp == nil {
 			return
 		}
@@ -338,7 +342,7 @@ func (s *FingerScanner) NewActiveFingerScan(rootPath bool) {
 				wg.Add(1)
 				id += 1
 				runtime.EventsEmit(s.ctx, "ActiveProgressID", id)
-				if rootPath {
+				if s.rootPath {
 					target, _ = url.Parse(util.GetBasicURL(target.String()))
 				}
 				threadPool.Invoke(TFP{

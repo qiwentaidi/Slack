@@ -1,16 +1,18 @@
 <script lang="ts" setup>
 import { h, reactive } from "vue";
 import { ExtractIP, IpLocation } from "wailsjs/go/services/App";
-import { UserFilled, Location, Cellphone, Postcard, Upload, CloseBold, Unlock, DocumentCopy } from "@element-plus/icons-vue";
+import { UserFilled, Location, Cellphone, Postcard, Upload, CloseBold, Unlock } from "@element-plus/icons-vue";
 import alibabaIcon from "@/assets/icon/alibaba.svg";
 import onlineIcon from "@/assets/icon/online.svg";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Copy } from "@/util";
-import { regexpIdCard, regexpPhone } from "@/stores/validate";
+import { regexpIdCard, regexpPhone, validateSingleIP } from "@/stores/validate";
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize } from "@/stores/style";
 import { CheckFileStat, FileDialog, ReadFile, SaveToTempFile } from "wailsjs/go/services/File";
 import { ExtractAlibabaDruidWebSession, ExtractAlibabaDruidWebURI, ExtractURLs } from "wailsjs/go/core/Tools";
+import CustomTextarea from "@/components/CustomTextarea.vue";
+import { ProcessTextAreaInput } from "@/util";
+import async from "async";
 
 let content = "" // 实际要处理的内容
 
@@ -401,15 +403,24 @@ function handleContextMenu(e: MouseEvent) {
                         label: "IP定位查询",
                         icon: h(Location, defaultIconSize),
                         onClick: () => {
-                            // if (!processInput()) {
-                            //     return
-                            // }
-                            // let lines = ProcessTextAreaInput(content);
-                            // form.result = "";
-                            // async.eachLimit(lines, 20, async (ip: string, callback: () => void) => {
-                            //     let result = await IpLocation(ip);
-                            //     form.result += `${ip}  |  ${result}\n`;
-                            // });
+                            processInput().then(isSuccess => {
+                                if (!isSuccess) {
+                                    return
+                                }
+                                let lines = ProcessTextAreaInput(content);
+                                let ips = [] as string[]
+                                for (const line of lines) {
+                                    if (validateSingleIP(line)) ips.push(line)
+                                }
+                                
+                                const uniqueArray = Array.from(new Set(ips))
+                                form.result = "";
+                                async.eachLimit(ips, 20, async (ip: string, callback: () => void) => {
+                                    let result = await IpLocation(ip);
+                                    form.result += `${ip}  |  ${result}\n`;
+                                });
+                                form.tips = `共定位了 ${uniqueArray.length} 个结果`
+                            })         
                         }
                     },
                 ]
@@ -548,11 +559,11 @@ druid数据提取需要输出响应包内容
             <el-button :icon="CloseBold" size="small" @click="form.input = ''"></el-button>
         </el-space>
     </div>
-    <div class="textarea-container">
-        <el-input v-model="form.result" type="textarea" :rows="20" readonly />
-        <div class="action-area">
-            <el-button :icon="DocumentCopy" size="small" @click="Copy(form.result)">Copy</el-button>
-        </div>
-    </div>
+    <CustomTextarea 
+        v-model="form.result" 
+        :rows="20" 
+        :readonly="true"
+    >
+    </CustomTextarea>
     <span class="form-item-tips">{{ form.tips }}</span>
 </template>

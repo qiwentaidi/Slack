@@ -24,8 +24,8 @@ var (
 )
 
 // 获取favicon Mmh3Hash32 和 MD5值
-func FaviconHash(u *url.URL, client *http.Client) (string, string) {
-	_, body, err := clients.NewSimpleGetRequest(u.String(), client)
+func FaviconHash(u *url.URL, headers map[string]string, client *http.Client) (string, string) {
+	_, body, err := clients.NewRequest("GET", u.String(), headers, nil, 10, true, client)
 	if err != nil {
 		return "", ""
 	}
@@ -44,7 +44,7 @@ func FaviconHash(u *url.URL, client *http.Client) (string, string) {
 	} else {
 		finalLink = fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, iconLink)
 	}
-	resp, body, err := clients.NewSimpleGetRequest(finalLink, client)
+	resp, body, err := clients.NewRequest("GET", finalLink, headers, nil, 10, true, client)
 	if err == nil && resp.StatusCode == 200 {
 		hasher := md5.New()
 		hasher.Write(body)

@@ -454,7 +454,7 @@ function searchCsegmentIpv4(ip: string) {
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border style="width: 100%; height: calc(100vh - 280px);">
                 <el-table-column type="index" fixed label="#" width="60px" />
-                <el-table-column prop="URL" fixed label="URL" width="300" :show-overflow-tooltip="true" />
+                <el-table-column prop="URL" fixed label="URL" :min-width="300" :show-overflow-tooltip="true" />
                 <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
                     :filter-method="tableCtrl.filterTitle" width="200" :show-overflow-tooltip="true">
                     <template #filter-icon>
@@ -472,9 +472,9 @@ function searchCsegmentIpv4(ip: string) {
                         <Filter />
                     </template>
                 </el-table-column>
-                <el-table-column prop="Product" label="组件" width="200">
+                <el-table-column prop="Product" label="组件" :min-width="200">
                     <template #default="scope">
-                        <el-button type="primary" plain v-if="formatProduct(scope.row.Product).length > 0">
+                        <el-button type="primary" plain size="small" v-if="formatProduct(scope.row.Product).length > 0">
                             <template #icon v-if="formatProduct(scope.row.Product).length > 1">
                                 <el-popover placement="bottom" :width="350" trigger="hover">
                                     <template #reference>
@@ -492,7 +492,7 @@ function searchCsegmentIpv4(ip: string) {
                         </el-button>
                     </template>
                 </el-table-column>
-                <el-table-column prop="Region" label="地区" :show-overflow-tooltip="true" />
+                <el-table-column prop="Region" label="地区" width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="ICP" label="备案号" width="200" :show-overflow-tooltip="true" />
                 <el-table-column fixed="right" label="操作" width="100" align="center">
                     <template #default="scope">

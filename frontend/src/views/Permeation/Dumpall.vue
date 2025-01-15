@@ -54,7 +54,7 @@ async function Start() {
 <template>
     <div class="my-header" style="margin-bottom: 10px;">
         <el-button plain :icon="InfoFilled" @click="introduceDialog = true">模块介绍</el-button>
-        <el-input v-model="url" style="margin-inline: 5px"></el-input>
+        <el-input v-model="url" placeholder="请输入URL地址" style="margin-inline: 5px"></el-input>
         <el-button type="primary" :icon="Search" @click="Start" v-if="!isRunning">开始任务</el-button>
         <el-button type="primary" loading v-else>正在检测</el-button>
     </div>

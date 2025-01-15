@@ -168,9 +168,10 @@ type WebscanOptions struct {
 	Tags                  []string
 	TemplateFiles         []string
 	SkipNucleiWithoutTags bool
-	GenerateLog4j2        bool // 开启后会将所有目标添加 Generate-Log4j2 的指纹
-	AppendTemplateFolder  string
-	NetworkCard           string
+	GenerateLog4j2        bool   // 开启后会将所有目标添加 Generate-Log4j2 的指纹
+	AppendTemplateFolder  string // 追加模板文件夹
+	NetworkCard           string // 指定扫描网卡
+	CustomHeaders         string // 自定义请求头
 }
 
 type AntivirusResult struct {
@@ -441,6 +442,7 @@ type NucleiOption struct {
 	CustomTags            []string // 自定义的指纹标签
 	TemplateFile          []string
 	TemplateFolders       []string
+	CustomHeaders         string
 }
 
 type InfoResult struct {

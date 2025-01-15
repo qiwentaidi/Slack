@@ -49,10 +49,11 @@ export default {
         'isic': 'Internet Info Collection',
         'poc_manage': 'Poc Management',
         'script': 'Script',
-        'extract_database_info': 'Extract database info',
+        'extract_database_info': 'Extract Database Info',
         'fscan': "Fscan",
         'timestamp': "Timestamp",
         'dumpall': "Dumpall",
+        'nacos_config_analysis': "Nacos Config Analysis",
     },
     navigator: {
         'enterprise': 'Enterprise and filing information inquiry',

@@ -70,6 +70,13 @@ html {
   border: none;
 }
 
+.el-tabs--border-card {
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;

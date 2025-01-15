@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     About: typeof import('./src/components/About.vue')['default']
     CustomTabs: typeof import('./src/components/CustomTabs.vue')['default']
+    CustomTextarea: typeof import('./src/components/CustomTextarea.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
@@ -66,10 +67,7 @@ declare module 'vue' {
     ElTimeline: typeof import('element-plus/es')['ElTimeline']
     ElTimelineItem: typeof import('element-plus/es')['ElTimelineItem']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
-    Hikvision: typeof import('./src/components/Exp/Hikvision.vue')['default']
     Loading: typeof import('./src/components/Loading.vue')['default']
-    Nacos: typeof import('./src/components/Exp/Nacos.vue')['default']
-    NacosConfig: typeof import('./src/components/Exp/NacosConfig.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sidebar: typeof import('./src/components/Sidebar.vue')['default']

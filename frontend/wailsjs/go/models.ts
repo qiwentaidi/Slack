@@ -1214,6 +1214,7 @@ export namespace structs {
 	    GenerateLog4j2: boolean;
 	    AppendTemplateFolder: string;
 	    NetworkCard: string;
+	    CustomHeaders: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new WebscanOptions(source);
@@ -1234,6 +1235,7 @@ export namespace structs {
 	        this.GenerateLog4j2 = source["GenerateLog4j2"];
 	        this.AppendTemplateFolder = source["AppendTemplateFolder"];
 	        this.NetworkCard = source["NetworkCard"];
+	        this.CustomHeaders = source["CustomHeaders"];
 	    }
 	}
 	export class WechatReulst {

@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, nextTick } from 'vue'
 import {
-    VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled,
-    Filter, Upload, View, Clock, Delete, Share, DArrowRight, DArrowLeft,
-    Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, MoreFilled
+    VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled, CircleCheck, Notification,
+    Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Warning,
+    Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, MoreFilled,
 } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, IPParse, SpaceGetPort, IsRoot, PortParse, HostAlive, NewSynScanner, NewTcpScanner, PortBrute, GetAllFinger } from 'wailsjs/go/services/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, IPParse, SpaceGetPort, PortParse, HostAlive, NewTcpScanner, PortBrute, GetAllFinger } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
-import { TestProxy, Copy, UploadFileAndRead, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
+import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
 import global from "@/stores"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import usePagination from '@/usePagination';
@@ -36,6 +36,7 @@ import { SaveConfig } from '@/config';
 import throttle from 'lodash/throttle';
 import async from 'async'
 import { handleWebscanContextMenu } from '@/linkage/contextMenu';
+import CustomTextarea from '@/components/CustomTextarea.vue';
 
 // 仪表盘内容
 const dashboard = reactive({
@@ -67,7 +68,7 @@ const dashboard = reactive({
 
 // 界面参数，仅作用于前端显示或者输入匹配，与后端无交互
 const param = reactive({
-    inputType: 'URL', // 输入类型
+    inputType: 0, // 输入类型
     portGroup: portGroupOptions[1].text,
     builtInUsername: true,
     builtInPassword: true,
@@ -95,12 +96,17 @@ const throttleInitialize = throttle(() => {
 }, 2000);
 
 
-const activities = ref<{ content: string, timestamp: string }[]>([])
+const activities = ref<{ content: string, type: string, timestamp: string, icon: any }[]>([])
 
 const timelineContainer = ref<HTMLElement | null>(null); // 创建一个 ref
 
-function updateActivities(newActivity: { content: string, timestamp: string }) {
-    activities.value.push(newActivity);
+function updateActivities(newActivity: { content: string, type: string, icon: any }) {
+    activities.value.push({
+        content: newActivity.content,
+        timestamp: (new Date()).toTimeString(),
+        type: newActivity.type,
+        icon: newActivity.icon
+    });
     if (timelineContainer.value) {
         timelineContainer.value.scrollTop = timelineContainer.value.scrollHeight; // 滚动到最底部
     }
@@ -109,11 +115,11 @@ function updateActivities(newActivity: { content: string, timestamp: string }) {
 // webscan
 
 const form = reactive({
-    isRoot: false,
     input: '',
     tags: [] as string[],
     newscanner: false,
     runnningStatus: false,
+    scanStopped: false,
     taskName: '',
     taskId: '',
     hideRequest: false,
@@ -144,6 +150,7 @@ const config = reactive({
     generateLog4j2: false,
     writeDB: false,
     crack: false, // 是否开启暴破
+    customHeaders: '',
 })
 
 const detailDialog = ref(false)
@@ -188,8 +195,7 @@ async function initialize() {
 }
 
 // 初始化时调用
-onMounted(async () => {
-    form.isRoot = await IsRoot()
+onMounted(() => {
     updatePorts(1);
     initialize()
     // 获得结果回调
@@ -203,8 +209,20 @@ onMounted(async () => {
         taskManager.updateTaskTable(form.taskId)
     });
     EventsOn("webFingerScan", (result: any) => {
-        if ((result.Scheme == "http" || result.Scheme == "https") && (result.StatusCode == 0 || result.StatusCode == 422)) {
-            Callgologger("error", "Web fingerprint scan failed: " + result.URL)
+        if ((result.Scheme == "http" || result.Scheme == "https") && result.StatusCode == 0) {
+            updateActivities({
+                content: result.URL + " access failed",
+                type: "warning",
+                icon: Warning,
+            })
+            return
+        }
+        if ((result.Scheme == "http" || result.Scheme == "https") && result.StatusCode == 422) {
+            updateActivities({
+                content: result.URL + " is cloud protected and has been filtered",
+                type: "warning",
+                icon: Warning,
+            })
             return
         }
         fp.table.result.push(result)
@@ -255,25 +273,60 @@ async function startScan() {
     let engine = new Engine
     if (!await engine.checkOptions()) return
     form.newscanner = false // 隐藏界面
+    activities.value = [] // 清空前面的任务进度
+    switch (param.inputType) {
+        // 网站扫描
+        case 0:
+            if (!engine.checkWebscanOptions()) return
+            break
+        // 主机扫描
+        case 1:
+            if (!await engine.checkHostscanOptions()) return
+            break
+        default:
+            ElMessage.warning("未知扫描类型")
+            return
+    }
+    engine.clearDashboard()
+    // 检查是否需要写入任务
+    if (config.writeDB && !(await taskManager.writeTask())) {
+        form.runnningStatus = false
+        return
+    }
+    form.runnningStatus = true
     await engine.Runner()
 }
 
 function stopScan() {
     if (!form.runnningStatus) return
-    form.runnningStatus = false
+    ElMessage.error("正在停止任务, 请稍后!")
     ExitScanner("[webscan]")
     ExitScanner("[portscan]")
     ExitScanner("[portbrute]")
-    ElMessage.warning("任务已停止")
+    // 新增一个标志变量来确保setTimeout只执行一次
+    if (!form.scanStopped) {
+        form.scanStopped = true; // 设置标志为true，表示扫描已停止
+        // 增加10s的暂停时间，先立即退出扫描，等10s之后再将扫描状态停止，以应对一些数据依旧在增加等问题
+        setTimeout(() => {
+            form.runnningStatus = false
+            form.scanStopped = false; // 重置标志，以便下次可以再次调用stopScan
+            updateActivities({
+                content: "The user has canceled the scanning task",
+                type: "danger",
+                icon: CloseBold
+            })
+        }, 10000);
+    }
 }
 
 // 自动化扫描引擎
 class Engine {
-    inputLines = [] as string[]
-    ips = [] as string[]
+    inputLines = [] as string[] // 输入的目标行
+    ips = [] as string[] // IP列表
     portsList = [] as number[] // 端口列表
     specialTarget = [] as string[] // IP:PORT 特殊目标
     conventionTarget = [] as string[] // 其他IP规则的目标
+    // 检查基本条件
     public async checkOptions() {
         if (form.input == "") {
             ElMessage.warning({
@@ -282,82 +335,81 @@ class Engine {
             })
             return
         }
+
+        // 检查是否需要写入任务
+        if (config.writeDB && form.taskName == '') {
+            ElMessage.warning({
+                message: "任务名称不能为空",
+                grouping: true,
+            });
+            return
+        }
+
         // 检测代理连通性
-        if (!await TestProxy(1)) {
-            return false
+        if (!await TestProxy()) {
+            return
         }
 
         this.inputLines = ProcessTextAreaInput(form.input)
-        if (param.inputType == 'URL') {
-            this.inputLines = this.inputLines.filter(item => item.startsWith("http://") || item.startsWith("https://"))
-            if (this.inputLines.length == 0) {
-                ElMessage.warning('URL可用目标为空')
-            }
-        } else {
-            if (global.webscan.default_portscan_module == 0 && !form.isRoot) {
-                ElMessage.warning("当前为非ROOT用户，无法使用SYN扫描模式")
-                return
-            }
-            const invalidLines = this.inputLines.filter(item => !validateIpAndDomain.some(validate => validate.test(item)));
-            if (invalidLines.length > 0) {
-                ElMessage.warning("IP/域名可用目标为空，可通过控制台检查")
-                Callgologger("error", "以下行目标错误:\n" + invalidLines.join("\n"));
-                return false
-            }
-            for (const line of this.inputLines) {
-                if (line.includes(":")) {
-                    this.specialTarget.push(line)
-                } else {
-                    this.conventionTarget.push(line)
-                }
-            }
-            // 处理端口和IP组
-            this.portsList = await PortParse(form.portlist)
-            this.ips = await IPParse(this.conventionTarget)
-            if (this.ips == null) {
-                dashboard.portscanCount = this.specialTarget.length
+        return true
+    }
+
+    public checkWebscanOptions() {
+        this.inputLines = this.inputLines.filter(item => item.startsWith("http://") || item.startsWith("https://"))
+        if (this.inputLines.length == 0) {
+            ElMessage.warning('网站扫描URL输入目标有误, 请检查!')
+            return
+        }
+        return true
+    }
+
+    public async checkHostscanOptions() {
+        const invalidLines = this.inputLines.filter(item => !validateIpAndDomain.some(validate => validate.test(item)));
+        if (invalidLines.length > 0) {
+            ElMessage.warning("主机扫描输入目标有误, 可通过控制台检查!")
+            Callgologger("error", "以下行目标错误:\n" + invalidLines.join("\n"));
+            return
+        }
+        for (const line of this.inputLines) {
+            if (line.includes(":")) {
+                this.specialTarget.push(line)
             } else {
-                dashboard.portscanCount = this.ips.length * this.portsList.length + this.specialTarget.length
+                this.conventionTarget.push(line)
             }
-            if (dashboard.portscanCount == 0) {
-                ElMessage.warning('可用目标或端口为空')
-                return
-            }
-            // 判断是否进行存活探测
-            if (global.webscan.default_alive_module != "None") {
-                global.webscan.default_alive_module === 'ICMP' ? global.webscan.ping_check_alive = false : global.webscan.ping_check_alive = true
-                this.ips = await HostAlive(this.ips, global.webscan.ping_check_alive)
-            }
+        }
+        // 处理端口和IP组
+        this.portsList = await PortParse(form.portlist)
+        this.ips = await IPParse(this.conventionTarget)
+        if (this.ips == null) {
+            dashboard.portscanCount = this.specialTarget.length
+        } else {
+            dashboard.portscanCount = this.ips.length * this.portsList.length + this.specialTarget.length
+        }
+        if (dashboard.portscanCount == 0) {
+            ElMessage.warning('可用目标或端口为空')
+            return
+        }
+        // 判断是否进行存活探测
+        if (global.webscan.default_alive_module != "None") {
             updateActivities({
-                content: "Wait portscan count: " + dashboard.portscanCount.toString(),
-                timestamp: (new Date()).toTimeString()
+                content: "Loading host alive scan engine, for more info check console",
+                type: "primary",
+                icon: MoreFilled,
+            })
+            form.runnningStatus = true
+            global.webscan.ping_check_alive = global.webscan.default_alive_module != 'ICMP'
+            this.ips = await HostAlive(this.ips, global.webscan.ping_check_alive)
+            updateActivities({
+                content: "Host alive count: " + this.ips.length.toString(),
+                type: "info",
+                icon: Notification
             })
         }
+        return true
+    }
 
-        if (config.writeDB && form.taskName == '') {
-            ElMessage.warning({
-                showClose: true,
-                message: "任务名称不能为空",
-            });
-            return false
-        }
-
-        if (config.writeDB) {
-            form.taskId = nano()
-            let isSuccess = await AddScanTask(form.taskId, form.taskName, form.input, 0, 0)
-            if (!isSuccess) {
-                ElMessage.error("添加任务失败")
-                return false
-            }
-            rp.table.result.push({
-                TaskId: form.taskId,
-                TaskName: form.taskName,
-                Targets: form.input,
-                Failed: 0,
-                Vulnerability: 0,
-            })
-            rp.ctrl.watchResultChange(rp.table)
-        }
+    // 清空仪表盘以及表格数据
+    public clearDashboard() {
         fp.initTable()
         vp.initTable()
         Object.keys(dashboard.riskLevel).forEach(key => {
@@ -365,34 +417,29 @@ class Engine {
         });
         dashboard.nucleiPercentage = 0
         dashboard.activePercentage = 0
-        activities.value = []
-        form.runnningStatus = true
-        return true
     }
 
     public async Runner() {
         // 先扫端口
-        if (param.inputType != "URL") {
+        if (param.inputType == 1) {
             updateActivities({
-                content: "Loading portscan engine",
-                timestamp: (new Date()).toTimeString()
+                content: "Loading portscan engine, count: " + dashboard.portscanCount.toString(),
+                type: "primary",
+                icon: MoreFilled,
             })
-            if (global.webscan.default_portscan_module == 0) {
-                await NewSynScanner(this.specialTarget, this.ips, this.portsList)
-                Callgologger("info", "Portscan task is ending")
-                return
-            }
             await NewTcpScanner(this.specialTarget, this.ips, this.portsList, global.webscan.port_thread, global.webscan.port_timeout, getProxy())
-            Callgologger("info", "Portscan task is ending")
             this.inputLines = fp.table.result.filter(
                 (line) => line.Scheme === "http" || line.Scheme === "https"
             ).map(item => item.URL);
-
+            if (!form.runnningStatus || form.scanStopped) {
+                return
+            }
             // 对web服务先去提取再去除，之后扫描
             if (this.inputLines.length != 0) {
                 updateActivities({
                     content: "Extracting and removing webpage activity detection information, totaling: " + this.inputLines.length.toString() + ", followed by fingerprint detection",
-                    timestamp: (new Date()).toTimeString()
+                    type: "primary",
+                    icon: MoreFilled
                 })
                 fp.table.result = fp.table.result.filter(
                     (line) => line.Scheme !== "http" && line.Scheme !== "https"
@@ -404,10 +451,6 @@ class Engine {
             }
             // 设置后续的扫描类型
             config.webscanOption = 2
-        }
-        // 每个阶段任务前检查是否为退出状态
-        if (!form.runnningStatus) {
-            return
         }
         // 指纹扫描      
         let deepScan = false
@@ -440,23 +483,29 @@ class Engine {
             GenerateLog4j2: config.generateLog4j2,
             AppendTemplateFolder: global.webscan.append_pocfile,
             NetworkCard: global.webscan.default_network,
-            Tags: config.customTags
+            Tags: config.customTags,
+            CustomHeaders: config.customHeaders,
         }
         updateActivities({
             content: "Loading webscan engine, current mode: " + config.webscanOption.toString(),
-            timestamp: (new Date()).toTimeString()
+            type: "primary",
+            icon: MoreFilled,
         })
         await NewWebScanner(options, getProxy())
-        if (!config.crack) {
-            updateActivities({
-                content: "All task completed",
-                timestamp: (new Date()).toTimeString(),
-            })
-            form.runnningStatus = false
+        this.CrackRunner()
+    }
+
+    public async CrackRunner() {
+        if (!form.runnningStatus || form.scanStopped) {
             return
         }
-        // 每个阶段任务前检查是否为退出状态
-        if (!form.runnningStatus) {
+        if (!config.crack) {
+            updateActivities({
+                content: "Not enable crack, task completed",
+                type: "success",
+                icon: CircleCheck,
+            })
+            form.runnningStatus = false
             return
         }
         let crackLinks = fp.table.result.filter(
@@ -465,7 +514,8 @@ class Engine {
         if (crackLinks.length == 0) {
             updateActivities({
                 content: "No protocol that can be crack detected, task completed",
-                timestamp: (new Date()).toTimeString(),
+                type: "warning",
+                icon: Warning,
             })
             return
         }
@@ -492,10 +542,11 @@ class Engine {
         }
         updateActivities({
             content: "Loading crack engine, target count:" + crackLinks.length.toString(),
-            timestamp: (new Date()).toTimeString()
+            type: "primary",
+            icon: MoreFilled,
         })
         async.eachLimit(crackLinks, global.webscan.crack_thread, async (target: string, callback: () => void) => {
-            if (!form.runnningStatus) {
+            if (!form.runnningStatus || form.scanStopped) {
                 return
             }
             let protocol = target.split("://")[0]
@@ -506,7 +557,8 @@ class Engine {
             Callgologger("info", "Crack Finished")
             updateActivities({
                 content: "All task completed",
-                timestamp: (new Date()).toTimeString(),
+                type: "success",
+                icon: CircleCheck,
             })
             form.runnningStatus = false
         });
@@ -600,6 +652,23 @@ const exportDialog = ref(false)
 
 // 任务管理
 const taskManager = {
+    writeTask: async function () {
+        form.taskId = nano()
+        let isSuccess = await AddScanTask(form.taskId, form.taskName, form.input, 0, 0)
+        if (!isSuccess) {
+            ElMessage.error("添加任务失败")
+            return false
+        }
+        rp.table.result.push({
+            TaskId: form.taskId,
+            TaskName: form.taskName,
+            Targets: form.input,
+            Failed: 0,
+            Vulnerability: 0,
+        })
+        rp.ctrl.watchResultChange(rp.table)
+        return true
+    },
     viewTask: async function (row: any) {
         historyDialog.value = false;
         form.input = row.Targets;
@@ -946,8 +1015,8 @@ function checkDictInput() {
                 <div ref="timelineContainer" style="max-height: 150px; overflow-y: auto;">
                     <el-timeline v-if="activities.length >= 1"
                         style="margin-top: 10px; text-align: left; padding-left: 5px;">
-                        <el-timeline-item v-for="(activity, index) in activities" :key="index" :icon="MoreFilled"
-                            type="primary" :timestamp="activity.timestamp">
+                        <el-timeline-item v-for="(activity, index) in activities" :key="index" :icon="activity.icon"
+                            :type="activity.type" :timestamp="activity.timestamp">
                             {{ activity.content }}
                         </el-timeline-item>
                     </el-timeline>
@@ -959,9 +1028,9 @@ function checkDictInput() {
     <CustomTabs>
         <el-tabs type="border-card">
             <el-tab-pane label="信息">
-                <el-table :data="fp.table.pageContent" stripe height="100vh"
-                    :cell-style="{ textAlign: 'center' }" :header-cell-style="{ 'text-align': 'center' }" 
-                    @row-contextmenu="handleWebscanContextMenu" @sort-change="fp.ctrl.sortChange">
+                <el-table :data="fp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleWebscanContextMenu"
+                    @sort-change="fp.ctrl.sortChange">
                     <el-table-column fixed prop="URL" label="Link" width="300px" />
                     <el-table-column width="150px" label="Port/Protocol" :show-overflow-tooltip="true">
                         <template #default="scope">
@@ -975,7 +1044,7 @@ function checkDictInput() {
                     <el-table-column prop="Length" width="100px" label="Length" sortable="custom"
                         :show-overflow-tooltip="true" />
                     <el-table-column prop="Title" label="Title" width="220px" />
-                    <el-table-column prop="Fingerprints" label="Fingerprint" width="350px">
+                    <el-table-column prop="Fingerprints" label="Fingerprint" :min-width="350">
                         <template #default="scope">
                             <div class="finger-container">
                                 <el-tag v-for="finger in scope.row.Fingerprints" :key="finger"
@@ -994,7 +1063,6 @@ function checkDictInput() {
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
-
                     <template #empty>
                         <el-empty />
                     </template>
@@ -1101,7 +1169,7 @@ function checkDictInput() {
                     <el-tooltip placement="left">
                         <template #content>
                             目标仅支持换行分割，支持下面两种模式<br />
-                            IP/域名模式:<br />
+                            主机扫描模式:<br />
                             192.168.1.1<br />
                             192.168.1.1/8<br />
                             192.168.1.1/16<br />
@@ -1115,7 +1183,7 @@ function checkDictInput() {
                             !192.168.1.6/28<br />
                             <br />
                             www.example.com (SYN不支持)<br /><br />
-                            URL模式:<br />
+                            网站扫描模式:<br />
                             https://www.baidu.com<br />
                         </template>
                         <el-icon>
@@ -1124,19 +1192,11 @@ function checkDictInput() {
                     </el-tooltip>
                 </template>
                 <el-segmented v-model="param.inputType" :options="webscanInputOptions" block
-                    @change="param.inputType != 'URL' ? config.webscanOption = 0 : config.crack = false"
-                     style="width: 100%; margin-bottom: 2px;" />
-                <div class="textarea-container" style="margin-block: 10px;">
-                    <el-input v-model="form.input" type="textarea" :rows="6"></el-input>
-                    <el-space class="action-area">
-                        <el-button :icon="Upload" size="small" @mousedown.prevent
-                            @click="UploadFileAndRead(form, 'input');">Upload</el-button>
-                        <el-button :icon="CloseBold" size="small" @mousedown.prevent
-                            @click="form.input = ''"></el-button>
-                    </el-space>
-                </div>
+                    @change="param.inputType == 1 ? config.webscanOption = 0 : config.crack = false"
+                    style="width: 100%; margin-bottom: 2px;" />
+                <CustomTextarea v-model="form.input" :rows="6"></CustomTextarea>
             </el-form-item>
-            <el-form-item label="端口:" v-show="param.inputType != 'URL'">
+            <el-form-item label="端口:" v-show="param.inputType == 1">
                 <el-select v-model="param.portGroup" @change="updatePorts">
                     <el-option v-for="(item, index) in portGroupOptions" :label="item.text" :value="index" />
                 </el-select>
@@ -1157,7 +1217,7 @@ function checkDictInput() {
                 </el-input>
                 <span class="form-item-tips">额外追加一个文件夹下的所有YAML POC文件，便于管理自添加POC</span>
             </el-form-item>
-            <el-form-item v-show="param.inputType == 'URL'">
+            <el-form-item v-show="param.inputType == 0">
                 <template #label>模式:
                     <el-tooltip>
                         <template #content>
@@ -1183,10 +1243,15 @@ function checkDictInput() {
                     </template>
                 </el-segmented>
             </el-form-item>
+            <div v-if="param.inputType == 0">
+                <el-form-item label="请求头:">
+                    <el-input v-model="config.customHeaders" :rows="3" type="textarea" placeholder="自定义请求头以键:值形式输入，多行请用换行分割"></el-input>
+                </el-form-item>
+            </div>
             <div v-if="config.webscanOption == 3">
                 <el-form-item label="指定指纹:">
-                    <el-select-v2 v-model="config.customTags" :options="param.allFingerprint"
-                        filterable multiple clearable />
+                    <el-select-v2 v-model="config.customTags" :options="param.allFingerprint" filterable multiple
+                        clearable />
                 </el-form-item>
             </div>
             <div v-if="config.webscanOption == 3">
@@ -1215,34 +1280,18 @@ function checkDictInput() {
                 <el-checkbox label="无指纹目标跳过漏扫" v-model="config.skipNucleiWithoutTags" />
                 <el-checkbox label="网站截图" v-model="config.screenhost" />
             </el-form-item>
-            <el-form-item label="口令暴破:" v-show="param.inputType != 'URL'">
+            <el-form-item label="口令暴破:" v-show="param.inputType == 1">
                 <el-switch v-model="config.crack"></el-switch>
                 <span class="form-item-tips" v-show="config.crack" style="margin-left: 10px;">默认字典可通过 设置->
                     字典管理处修改，由于RDP暴破可能存在闪退，暂时不支持暴破</span>
             </el-form-item>
             <el-form-item label="用户字典:" v-show="config.crack">
-                <div class="textarea-container">
-                    <el-input v-model="param.username" type="textarea" :rows="5" @input="checkDictInput"></el-input>
-                    <el-space class="action-area">
-                        <el-button :icon="Upload" size="small"
-                            @click="UploadFileAndRead(param, 'username')">Upload</el-button>
-                        <el-button :icon="CloseBold" size="small" @mousedown.prevent
-                            @click="param.username = ''"></el-button>
-                    </el-space>
-                </div>
+                <CustomTextarea v-model="param.username" :rows="5" @input="checkDictInput"></CustomTextarea>
                 <el-checkbox v-model="param.builtInUsername"
                     :disabled="param.username.length == 0">使用默认用户字典</el-checkbox>
             </el-form-item>
             <el-form-item label="密码字典:" v-show="config.crack">
-                <div class="textarea-container">
-                    <el-input v-model="param.password" type="textarea" :rows="5" @input="checkDictInput"></el-input>
-                    <el-space class="action-area">
-                        <el-button :icon="Upload" size="small"
-                            @click="UploadFileAndRead(param, 'password')">Upload</el-button>
-                        <el-button :icon="CloseBold" size="small" @mousedown.prevent
-                            @click="param.password = ''"></el-button>
-                    </el-space>
-                </div>
+                <CustomTextarea v-model="param.password" :rows="5" @input="checkDictInput"></CustomTextarea>
                 <el-checkbox v-model="param.builtInPassword"
                     :disabled="param.password.length == 0">使用默认密码字典</el-checkbox>
             </el-form-item>

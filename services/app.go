@@ -16,7 +16,6 @@ import (
 	rt "runtime"
 	"slack-wails/core/dirsearch"
 	"slack-wails/core/dumpall"
-	"slack-wails/core/exp/hikvision"
 	"slack-wails/core/exp/nacos"
 	"slack-wails/core/info"
 	"slack-wails/core/isic"
@@ -380,31 +379,6 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 	}()
 	portscan.TcpScan(a.ctx, addresses, thread, timeout, proxy)
 }
-func (a *App) NewSynScanner(specialTargets []string, ips []string, ports []uint16) {
-	portscan.ExitFunc = false
-	// Generate addresses from special targets
-	var id int32 = 0
-	for _, target := range specialTargets {
-		if portscan.ExitFunc {
-			return
-		}
-		temp := strings.Split(target, ":")
-		port, err := strconv.Atoi(temp[1]) // Skip if port conversion fails
-		if err != nil {
-			continue
-		}
-		portscan.SynScan(a.ctx, temp[0], []uint16{uint16(port)}, &id)
-	}
-	// Generate addresses from ips and ports
-	for _, ip := range ips {
-		if portscan.ExitFunc {
-			return
-		}
-		portscan.SynScan(a.ctx, ip, ports, &id)
-	}
-	runtime.EventsEmit(a.ctx, "scanComplete", id)
-
-}
 
 // 端口暴破
 func (a *App) PortBrute(host string, usernames, passwords []string) {
@@ -476,10 +450,10 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 		return
 	}
 	engine.NewFingerScan()
-	if options.DeepScan {
-		engine.NewActiveFingerScan(options.RootPath)
+	if options.DeepScan && !webscan.ExitFunc {
+		engine.NewActiveFingerScan()
 	}
-	if options.CallNuclei {
+	if options.CallNuclei && !webscan.ExitFunc {
 		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
 		var id = 0
 		var allTemplateFolders = []string{a.templateDir}
@@ -505,6 +479,7 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 				SkipNucleiWithoutTags: options.SkipNucleiWithoutTags,
 				TemplateFolders:       allTemplateFolders,
 				CustomTags:            options.Tags,
+				CustomHeaders:         options.CustomHeaders,
 			})
 			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)
 		}
@@ -635,41 +610,8 @@ func (a *App) FaviconMd5(target string) string {
 	return hex.EncodeToString(sum)
 }
 
-func (a *App) AlibabaNacos(target, headers string, attackType int, username, password, command, service string, proxy clients.Proxy) string {
-	switch attackType {
-	case 0:
-		if nacos.CVE_2021_29441_Step1(target, username, password, clients.NewHttpClientWithProxy(nil, true, proxy)) {
-			return "添加用户成功: \n username: " + username + "， password: " + password
-		}
-	case 1:
-		if nacos.CVE_2021_29441_Step2(target, username, clients.NewHttpClientWithProxy(nil, true, proxy)) {
-			return "删除用户成功!"
-		}
-	case 2:
-		return nacos.CVE_2021_29442(target, clients.NewHttpClientWithProxy(nil, true, proxy))
-		// case 3:
-		// 	return nacos.DerbySqljinstalljarRCE(a.ctx, headers, target, command, service, clients.NewHttpClientWithProxy(nil,true,proxy))
-	}
-	return target + "不存在该漏洞"
-}
-
 func (a *App) NacosCategoriesExtract(filePath string) []structs.NacosConfig {
 	return nacos.ProcessDirectory(filePath)
-}
-
-func (a *App) HikvsionCamera(target string, attackType int, passwordList []string, cmd string, proxy clients.Proxy) string {
-	switch attackType {
-	case 0:
-		body := hikvision.CVE_2017_7921_Snapshot(target, clients.NewHttpClientWithProxy(nil, true, proxy))
-		return base64.RawStdEncoding.EncodeToString(body)
-	case 1:
-		return hikvision.CVE_2017_7921_Config(target, clients.NewHttpClientWithProxy(nil, true, proxy))
-	case 2:
-		return hikvision.CVE_2021_36260(target, cmd, clients.NewHttpClientWithProxy(nil, true, proxy))
-	case 3:
-		return hikvision.CameraHandlessLogin(a.ctx, target, passwordList)
-	}
-	return ""
 }
 
 func (a *App) UncoverSearch(query, types string, option structs.SpaceOption) []space.Result {

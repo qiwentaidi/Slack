@@ -14,4 +14,6 @@ export function ExtractURLs(arg1:string):Promise<Array<string>>;
 
 export function FormatOutput(arg1:string):Promise<{[key: string]: Array<string>}>;
 
+export function GetToken(arg1:string,arg2:string,arg3:string):Promise<string>;
+
 export function PatchIdentify(arg1:string):Promise<Array<structs.AuthPatch>>;

@@ -6,9 +6,10 @@ import { ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
 import { Copy, generateRandomString, proxys } from "@/util";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import CustomTabs from "@/components/CustomTabs.vue";
-import { dingtalkApiOptions, enterpriseWechatApiOptions, wechatApiOptions, wechatResponseDescription } from "@/stores/options";
+import { ApiDocsOptions, dingtalkApiOptions, enterpriseWechatApiOptions, wechatApiOptions, wechatResponseDescription } from "@/stores/options";
 import dingtalkIcon from "@/assets/icon/dingtalk.svg"
 import wechatIcon from "@/assets/icon/wechat.svg"
+import { GetToken } from "wailsjs/go/core/Tools";
 
 const activeName = ref("wechat")
 
@@ -34,6 +35,13 @@ const dingtalk = reactive({
   phone: "",
   addUserDialog: false,
   delUserDialiog: false,
+})
+
+const dgwork = reactive({
+  domain: "",
+  appkey: "",
+  secert: "",
+  accessToken: "",
 })
 
 const result = ref("");
@@ -77,7 +85,7 @@ async function enterpriseWechatCheckSecret() {
   }
   const jsonResult = JSON.parse(response.Body);
   if (response.Body.includes("access_token")) {
-    enterpriseWechat.accessToken = jsonResult.access_token;
+    enterpriseWechat.accessToken = jsonResult.content.data.access_token;
     ElMessage.success("Successfully");
   }
   result.value = jsonResult;
@@ -138,6 +146,16 @@ POST 参数: {"dept_id":1,"cursor":0,"size":100}`
   },
 })
 
+async function dgworkCheckSecret() {
+  let response = await GetToken(dgwork.domain, dgwork.appkey, dgwork.secert)
+  const jsonResult = JSON.parse(response);
+  result.value = jsonResult;
+  if (response.includes("7200")) {
+    dgwork.accessToken = jsonResult.content.data.accessToken;
+    ElMessage.success("Successfully");
+  }
+}
+
 function CopyResult() {
   Copy(result.value)
 }
@@ -150,7 +168,7 @@ function CopyResult() {
         <template #label>
           <el-text class="position-center"><wechatIcon style="margin-right: 2px;" />微信公众号</el-text>
         </template>
-        <el-form label-width="auto">
+        <el-form :model="wechat" label-width="auto">
           <el-form-item label="Appid">
             <el-input v-model="wechat.appid" />
           </el-form-item>
@@ -176,7 +194,7 @@ function CopyResult() {
         <template #label>
           <el-text class="position-center"><wechatIcon style="margin-right: 2px;" />企业微信</el-text>
         </template>
-        <el-form label-width="auto">
+        <el-form :model="enterpriseWechat" label-width="auto">
           <el-form-item label="Corpid">
             <el-input v-model="enterpriseWechat.corpid" />
           </el-form-item>
@@ -202,7 +220,7 @@ function CopyResult() {
         <template #label>
           <el-text class="position-center"><dingtalkIcon style="margin-right: 2px;" />钉钉</el-text>
         </template>
-        <el-form label-width="auto">
+        <el-form :model="dingtalk" label-width="auto">
           <el-form-item label="Appid">
             <el-input v-model="dingtalk.appid" />
           </el-form-item>
@@ -227,31 +245,44 @@ function CopyResult() {
           </el-form-item>
         </el-form>
       </el-tab-pane>
+      <el-tab-pane name="dgwork">
+        <template #label>
+          <el-text class="position-center"><dingtalkIcon style="margin-right: 2px;" />专有钉钉</el-text>
+        </template>
+        <el-form :model="dgwork" label-width="auto">
+          <el-form-item label="Domain">
+            <el-input v-model="dgwork.domain" placeholder="e.g: https://openplatform.dg-work.cn" />
+          </el-form-item>
+          <el-form-item label="Appid">
+            <el-input v-model="dgwork.appkey" />
+          </el-form-item>
+          <el-form-item label="Secert">
+            <el-input v-model="dgwork.secert" />
+          </el-form-item>
+          <el-form-item label="Token">
+            <el-input v-model="dgwork.accessToken">
+              <template #suffix>
+                <el-button type="primary" link @click="dgworkCheckSecret">获取Token</el-button>
+              </template>
+            </el-input>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>  
     </el-tabs>
     <template #ctrl>
-      <el-space v-show="activeName == 'wechat'">
-        <el-popover placement="left" :width="630" :height="300" trigger="hover">
-          <template #reference>
-            <el-button :icon="QuestionFilled" plain type="warning">错误码详情</el-button>
-          </template>
-          <el-table :data="wechatResponseDescription" style="height: 50vh">
-            <el-table-column width="100" property="code" label="错误码" />
-            <el-table-column width="200" property="describe" label="错误描述" />
-            <el-table-column width="300" property="solution" label="解决方案" />
-          </el-table>
-        </el-popover>
-        <el-button :icon="ChromeFilled" plain type="info"
-          @click="BrowserOpenURL('https://developers.weixin.qq.com/doc/offiaccount/User_Management/User_Tag_Management.html')">
-          API文档
-        </el-button>
-        <el-button :icon="ChromeFilled" plain type="info" @click="BrowserOpenURL('https://mp.weixin.qq.com/debug/')">
-          官方调试工具
-        </el-button>
-      </el-space>
-      <el-button :icon="ChromeFilled" plain type="info" v-show="activeName == 'enterprise wechat'"
-        @click="BrowserOpenURL('https://developer.work.weixin.qq.com/document/path/90664')">API文档</el-button>
-      <el-button :icon="ChromeFilled" plain type="info" v-show="activeName == 'dingtalk'"
-        @click="BrowserOpenURL('https://open.dingtalk.com/document/orgapp/api-overview')">API文档</el-button>
+      <el-popover placement="left" :width="630" :height="300" trigger="hover">
+        <template #reference>
+          <el-button :icon="QuestionFilled" plain type="warning" v-show="activeName == 'wechat'">错误码详情</el-button>
+        </template>
+        <el-table :data="wechatResponseDescription" style="height: 50vh">
+          <el-table-column width="100" property="code" label="错误码" />
+          <el-table-column width="200" property="describe" label="错误描述" />
+          <el-table-column width="300" property="solution" label="解决方案" />
+        </el-table>
+      </el-popover>
+      <el-button v-for="item in ApiDocsOptions" :icon="ChromeFilled" plain type="info"
+       v-show="activeName == item.show"
+        @click="BrowserOpenURL(item.link)">{{ item.label }}</el-button>      
     </template>
   </CustomTabs>
   <div class="textarea-container">

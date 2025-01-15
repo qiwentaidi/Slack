@@ -26,6 +26,10 @@ export function FormatOutput(arg1) {
   return window['go']['core']['Tools']['FormatOutput'](arg1);
 }
 
+export function GetToken(arg1, arg2, arg3) {
+  return window['go']['core']['Tools']['GetToken'](arg1, arg2, arg3);
+}
+
 export function PatchIdentify(arg1) {
   return window['go']['core']['Tools']['PatchIdentify'](arg1);
 }

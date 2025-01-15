@@ -55,13 +55,7 @@ func NewScanner(ctx context.Context, o Options) {
 		o.Timeout = 8
 	}
 	client := clients.NewHttpClient(nil, o.Redirect)
-	var header = map[string]string{}
-	if o.CustomHeader != "" {
-		for _, single := range strings.Split(o.CustomHeader, "\n") {
-			temp := strings.Split(single, ":")
-			header[temp[0]] = temp[1]
-		}
-	}
+	headers := clients.Str2HeadersMap(o.CustomHeader)
 	var id int32
 	single := make(chan struct{})
 	retChan := make(chan Result)
@@ -76,7 +70,7 @@ func NewScanner(ctx context.Context, o Options) {
 	}()
 
 	dirScan := func(url string) {
-		r := Scan(ctx, url, header, o, client)
+		r := Scan(ctx, url, headers, o, client)
 		atomic.AddInt32(&id, 1)
 		runtime.EventsEmit(ctx, "dirsearchProgressID", id)
 		retChan <- r
@@ -141,45 +135,3 @@ func Scan(ctx context.Context, url string, header map[string]string, o Options, 
 	result.Location = resp.Header.Get("Location")
 	return result
 }
-
-// func termFrequency(text string) map[string]int {
-// 	freq := make(map[string]int)
-// 	words := strings.Fields(text)
-// 	for _, word := range words {
-// 		freq[word]++
-// 	}
-// 	return freq
-// }
-
-// // 计算两个向量的余弦相似度
-// func cosineSimilarity(vecA, vecB map[string]int) float64 {
-// 	// 计算点积
-// 	dotProduct := 0
-// 	for key, value := range vecA {
-// 		if valueB, exists := vecB[key]; exists {
-// 			dotProduct += value * valueB
-// 		}
-// 	}
-
-// 	// 计算 vecA 的模长
-// 	magnitudeA := 0.0
-// 	for _, value := range vecA {
-// 		magnitudeA += float64(value * value)
-// 	}
-// 	magnitudeA = math.Sqrt(magnitudeA)
-
-// 	// 计算 vecB 的模长
-// 	magnitudeB := 0.0
-// 	for _, value := range vecB {
-// 		magnitudeB += float64(value * value)
-// 	}
-// 	magnitudeB = math.Sqrt(magnitudeB)
-
-// 	// 防止分母为0
-// 	if magnitudeA == 0 || magnitudeB == 0 {
-// 		return 0.0
-// 	}
-
-// 	// 计算余弦相似度
-// 	return float64(dotProduct) / (magnitudeA * magnitudeB)
-// }

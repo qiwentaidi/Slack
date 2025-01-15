@@ -22,6 +22,11 @@ func NewNucleiEngine(ctx context.Context, proxy clients.Proxy, o structs.NucleiO
 	options := []nuclei.NucleiSDKOptions{
 		nuclei.EnableStatsWithOpts(nuclei.StatsOptions{MetricServerPort: 6064}), // optionally enable metrics server for better observability
 		nuclei.DisableUpdateCheck(), // -duc
+		// nuclei.WithNetworkConfig(nuclei.NetworkConfig{SourceIP: ""}),
+	}
+	// 自定义请求头
+	if o.CustomHeaders != "" {
+		options = append(options, nuclei.WithHeaders(clients.Str2HeaderList(o.CustomHeaders)))
 	}
 	// 判断是使用指定poc文件还是根据标签
 	if len(o.TemplateFile) == 0 {

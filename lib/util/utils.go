@@ -76,6 +76,9 @@ func GetItemInArray(a []string, s string) int {
 }
 
 func GetBasicURL(rawURL string) string {
-	u, _ := url.Parse(rawURL)
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
 	return u.Scheme + "://" + u.Host
 }

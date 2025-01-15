@@ -26,12 +26,12 @@
         <el-form-item label="端口指纹超时(s)">
           <el-input-number v-model="global.webscan.port_timeout" :min="1" :max="20" />
         </el-form-item>
-        <el-form-item label="端口扫描模式">
+        <!-- <el-form-item label="端口扫描模式">
             <el-select v-model="global.webscan.default_portscan_module">
               <el-option v-for="item in portscanOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
             <span class="form-item-tips">SYN需要以管理员模式运行 Mac - sudo /Applications/Slack.app/Contents/MacOS/Slack</span>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="存活验证模式">
           <el-select v-model="global.webscan.default_alive_module">
             <el-option v-for="item in aliveGroupOptions" :key="item.value" :value="item.value">
@@ -57,7 +57,7 @@
         <h3>{{ $t(setupOptions[1].name) }}</h3>
         <el-form-item :label="$t('setting.enable')">
           <el-switch v-model="global.proxy.enabled" />
-          <el-button type="primary" size="small" @click="TestProxy(0)" style="margin-left: 20px;"
+          <el-button type="primary" size="small" @click="TestProxyWithNotify" style="margin-left: 20px;"
             v-if="global.proxy.enabled">{{ $t('setting.test_agent') }}</el-button>
         </el-form-item>
           <el-form-item :label="$t('setting.mode')">
@@ -167,7 +167,7 @@
 <script lang="ts" setup>
 import global from "@/stores"
 import { ElMessage, MenuItemRegistered } from 'element-plus';
-import { TestProxy } from "@/util";
+import { TestProxyWithNotify } from "@/util";
 import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, WriteFile } from "wailsjs/go/services/File";
@@ -175,7 +175,7 @@ import { useI18n } from "vue-i18n";
 import { useDark, useToggle } from '@vueuse/core'
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import { SaveConfig } from "@/config";
-import { aliveGroupOptions, crackDict, portscanOptions, setupOptions } from "@/stores/options";
+import { aliveGroupOptions, crackDict, setupOptions } from "@/stores/options";
 
 const bevigilURL = "https://bevigil.com/osint-api"
 const chaosURL = "https://cloud.projectdiscovery.io/"
