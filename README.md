@@ -10,70 +10,10 @@
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98">常见问题</a>
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E7%BD%91%E7%AB%99%E6%89%AB%E6%8F%8F%E8%A7%84%E5%88%99%E4%BA%8C%E6%AC%A1%E6%8B%93%E5%B1%95">规则拓展</a>
 <a href="https://github.com/qiwentaidi/Slack/wiki/%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91">二次开发</a>
-<a href="https://github.com/qiwentaidi/Slack/releases">更新日志</a>
+<a href="https://github.com/qiwentaidi/Slack/wiki">支持平台/运行代码</a>
 </p>
 
-
-
-
-# 支持的平台
-
-- Windows 10/11 AMD64/ARM64
-- MacOS 10.13+ AMD64
-- MacOS 11.0+ ARM64
-- Linux AMD64/ARM64
-
-# 运行代码
-
-## 安装依赖
-
-- Go 1.21+
-- Node.js 18+
-- Wails 2.92+  `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
-
-### Linux
-
-- build-essential
-- libgtk-3-dev
-- libpcap-dev
-- libwebkit2gtk-4.0-dev or libwebkit2gtk-4.1-dev
-
-> [!NOTE]
->
-> 新版`Linux`安装`libwebkit2gtk-4.1-dev`编译应用时需要增加 `-tags webkit2_41`
-
-### Windows
-
-- [gcc](https://github.com/niXman/mingw-builds-binaries/releases)
-
-### Mac
-
-- xcode-select（已默认安装）
-
-## 编译/调试
-
-``````sh
-git clone https://github.com/qiwentaidi/Slack.git && cd Slack
-
-wails dev # 调试模式运行
-
-wails build # 编译应用 文件存在于build/bin路径下
-
-wails build -debug -devtools # 编译可开启调试模式应用
-``````
-
-`Mac build dmg`
-
-``````sh
-# 需要先编译完Slack.app
-brew install create-dmg
-
-create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-size 100  --icon "Slack.app" 200 190 --app-drop-link 600 185 --hide-extension "Slack.app" --volicon build/bin/Slack.app/Contents/Resources/iconfile.icns  "Slack.dmg" build/bin/Slack.app
-``````
-
 # 首页
-
-![image-20241024200154496](assets/image-20241024200154496.png)
 
 ![image-20241024200326487](assets/image-20241024200326487.png)
 
@@ -145,19 +85,26 @@ create-dmg --volname "Slack" --window-pos 200 120 --window-size 800 400 --icon-s
 
 ![image-20240907181024885](assets/image-20240907181024885.png)
 
-## 其他
-
-### 配套Chrome指纹提取插件
-
-[Luckycat](https://github.com/qiwentaidi/LuckyCat/)
-
-![image-20241017134431099](assets/image-20241017134431099.png)
-
 ### 联系方式
 
 如果有问题或者好的提议可以Issue提问或者加我联系方式（请备注来意 进群或者问题交流）
 
 ![image-20231006124944803](assets/image-20231006124944803.png)
+
+## POC贡献者
+
+<div><table frame=void>
+	<tr>
+        <td align="center">
+            <img src="https://avatars.githubusercontent.com/u/94044430?v=4"
+                   alt="Typora-Logo" style="width: 60px"
+                 />
+            <br>
+            <a href="https://github.com/onewinner"><sub>onewinner</sub></a>
+        </td>    
+    </tr>
+    </table>
+</div>
 
 # 免责声明
 
