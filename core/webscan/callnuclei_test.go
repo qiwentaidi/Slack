@@ -3,6 +3,7 @@ package webscan
 import (
 	"context"
 	"fmt"
+	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"strings"
 	"testing"
@@ -38,4 +39,16 @@ func TestNucleiCaller(t *testing.T) {
 		panic(err)
 	}
 	defer ne.Close()
+}
+
+func TestThreadNucleiCaller(t *testing.T) {
+	option1 := structs.NucleiOption{
+		URL:          "http://xxxxx",
+		TemplateFile: []string{util.HomeDir() + "/slack/config/pocs/iis-shortname.yaml"},
+	}
+	option2 := structs.NucleiOption{
+		URL:          "https://xxxx/",
+		TemplateFile: []string{util.HomeDir() + "/slack/config/pocs/iis-shortname.yaml"},
+	}
+	NewThreadSafeNucleiEngine(context.Background(), []structs.NucleiOption{option1, option2})
 }

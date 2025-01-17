@@ -443,6 +443,7 @@ type NucleiOption struct {
 	TemplateFile          []string
 	TemplateFolders       []string
 	CustomHeaders         string
+	Proxy                 string
 }
 
 type InfoResult struct {

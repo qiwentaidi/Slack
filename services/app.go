@@ -455,24 +455,15 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 	}
 	if options.CallNuclei && !webscan.ExitFunc {
 		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
-		var id = 0
+		// var id = 0
 		var allTemplateFolders = []string{a.templateDir}
 		if options.AppendTemplateFolder != "" {
 			allTemplateFolders = append(allTemplateFolders, options.AppendTemplateFolder)
 		}
 		fpm := engine.URLWithFingerprintMap()
-		count := len(fpm)
-		runtime.EventsEmit(a.ctx, "NucleiCounts", count)
-
+		allOptions := []structs.NucleiOption{}
 		for target, tags := range fpm {
-			if webscan.ExitFunc {
-				gologger.Warning(a.ctx, "User exits vulnerability scanning")
-				webscan.IsRunning = false
-				return
-			}
-			id++
-			gologger.Info(a.ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
-			webscan.NewNucleiEngine(a.ctx, proxy, structs.NucleiOption{
+			option := structs.NucleiOption{
 				URL:                   target,
 				Tags:                  util.RemoveDuplicates(tags),
 				TemplateFile:          options.TemplateFiles,
@@ -480,9 +471,11 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 				TemplateFolders:       allTemplateFolders,
 				CustomTags:            options.Tags,
 				CustomHeaders:         options.CustomHeaders,
-			})
-			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)
+				Proxy:                 clients.GetRawProxy(proxy),
+			}
+			allOptions = append(allOptions, option)
 		}
+		webscan.NewThreadSafeNucleiEngine(a.ctx, allOptions)
 		gologger.Info(a.ctx, "Vulnerability scan has ended")
 	}
 	webscan.IsRunning = false

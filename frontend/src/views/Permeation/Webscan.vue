@@ -1178,7 +1178,7 @@ function checkDictInput() {
                             排除IP可以在可支持输入的IP格式前加!:<br />
                             !192.168.1.6/28<br />
                             <br />
-                            www.example.com (SYN不支持)<br /><br />
+                            www.example.com<br /><br />
                             网站扫描模式:<br />
                             https://www.baidu.com<br />
                         </template>

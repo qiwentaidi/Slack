@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -263,7 +264,7 @@ func (s *FingerScanner) NewActiveFingerScan() {
 		return
 	}
 	gologger.Info(s.ctx, "Active fingerprint detection in progress")
-	var id = 0
+	var id int32
 	var wg sync.WaitGroup
 	visited := make(map[string]bool) // 用于记录已访问的URL和路径组合
 
@@ -340,7 +341,7 @@ func (s *FingerScanner) NewActiveFingerScan() {
 					return
 				}
 				wg.Add(1)
-				id += 1
+				atomic.AddInt32(&id, 1)
 				runtime.EventsEmit(s.ctx, "ActiveProgressID", id)
 				if s.rootPath {
 					target, _ = url.Parse(util.GetBasicURL(target.String()))

@@ -60,3 +60,10 @@ func SelectProxy(pr *Proxy, client *http.Client) (*http.Client, error) {
 	}
 	return client, nil
 }
+
+func GetRawProxy(proxy Proxy) string {
+	if proxy.Enabled {
+		return fmt.Sprintf("%s://%s:%s@%s:%d", proxy.Mode, proxy.Username, proxy.Password, proxy.Address, proxy.Port)
+	}
+	return ""
+}
