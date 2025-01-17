@@ -84,8 +84,6 @@ function deletePoc(pocName: string) {
         '确定删除该POC?',
         '警告',
         {
-            confirmButtonText: '确认',
-            cancelButtonText: '取消',
             type: 'warning',
         }
     )
@@ -201,8 +199,6 @@ function handleBeforeClose(done: () => void) {
             '您有未保存的更改，是否保存？',
             '未保存的更改',
             {
-                confirmButtonText: '保存',
-                cancelButtonText: '放弃',
                 type: 'warning',
             }
         )

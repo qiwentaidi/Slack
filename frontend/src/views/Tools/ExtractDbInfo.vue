@@ -364,8 +364,6 @@ async function deleteConnection(index: number, nanoid: string) {
         '确定删除该连接?',
         '警告',
         {
-            confirmButtonText: '确认',
-            cancelButtonText: '取消',
             type: 'warning',
         }
     )

@@ -35,20 +35,18 @@ const update = ({
         let isSuccess = await UpdatePocFile(global.UPDATE.RemotePocVersion)
         if (isSuccess) {
             ElMessageBox.confirm(
-            "POC更新成功，需要重载应用生效",
-            {
-                confirmButtonText: '确认',
-                cancelButtonText: '取消',
-                type: 'success',
-                center: true,
-            }
-        )
-            .then(() => {
-                WindowReload()
-            })
-            .catch(() => {
-                console.log('User cancelled or chose another option.')
-            })
+                "POC更新成功，需要重载应用生效",
+                {
+                    type: 'success',
+                    center: true,
+                }
+            )
+                .then(() => {
+                    WindowReload()
+                })
+                .catch(() => {
+                    console.log('User cancelled or chose another option.')
+                })
         } else {
             ElNotification.error("POC update failed!");
         }
@@ -158,8 +156,6 @@ function updateSuccess() {
         ElMessageBox.confirm(
             message,
             {
-                confirmButtonText: '确认',
-                cancelButtonText: '取消',
                 type: 'success',
                 center: true,
             }
@@ -178,10 +174,10 @@ function updateSuccess() {
     <el-card class="box-card">
         <template #header>
             <div class="card-header">
-                <span>POC&指纹: 最新{{ global.UPDATE.RemotePocVersion }}/当前{{
-                    global.UPDATE.LocalPocVersion }}</span>
-                <el-button type="primary" :icon="Download" text @click="update.poc"
-                    v-if="global.UPDATE.PocStatus">立即下载</el-button>
+                <span>
+                    {{ $t('update.config') }} {{ $t('update.latest') }} {{ global.UPDATE.RemotePocVersion }} / {{ $t('update.current') }} {{ global.UPDATE.LocalPocVersion }}
+                </span>
+                <el-button type="primary" :icon="Download" text @click="update.poc" v-if="global.UPDATE.PocStatus">{{ $t('update.download') }}</el-button>
                 <span v-else>{{ global.UPDATE.PocContent }}</span>
             </div>
         </template>
@@ -193,10 +189,10 @@ function updateSuccess() {
     <el-card class="box-card" style="margin-top: 10px;">
         <template #header>
             <div class="card-header">
-                <span>客户端: 最新{{ global.UPDATE.RemoteClientVersion }}/当前{{
-                    global.LOCAL_VERSION }}</span>
-                <el-button type="primary" :icon="Download" text @click="update.client"
-                    v-if="global.UPDATE.ClientStatus">立即下载</el-button>
+                <span>
+                    {{ $t('update.client') }} {{ $t('update.latest') }} {{ global.UPDATE.RemoteClientVersion }} / {{ $t('update.current') }} {{ global.LOCAL_VERSION }}
+                </span>
+                <el-button type="primary" :icon="Download" text @click="update.client" v-if="global.UPDATE.ClientStatus">{{ $t('update.download') }}</el-button>
                 <span v-else>{{ global.UPDATE.ClientContent }}</span>
             </div>
         </template>

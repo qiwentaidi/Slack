@@ -1,21 +1,14 @@
 <script lang="ts" setup>
-import { Close, Minus, Back, Right, RefreshRight } from '@element-plus/icons-vue';
-import { Quit, WindowMinimise, WindowReload, WindowToggleMaximise } from "wailsjs/runtime/runtime";
+import { WindowToggleMaximise } from "wailsjs/runtime/runtime";
 import { IsMacOS } from "wailsjs/go/services/File";
 import global from "@/stores";
-import { useRoute } from "vue-router";
-import { ref, computed, onMounted } from "vue";
-import updateUI from "./Update.vue";
+import { ref, onMounted } from "vue";
 import runnerIcon from "@/assets/icon/apprunner.svg"
-import maxmizeIcon from "@/assets/icon/maximize.svg"
-import reductionIcon from "@/assets/icon/reduction.svg"
 import consoleIcon from "@/assets/icon/console.svg"
 import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/style';
-import router from '@/router';
+import { routerControl, windowsControl } from '@/stores/options';
 
 const showLogger = ref(false)
-const route = useRoute();
-const updateDialog = ref(false)
 
 onMounted(() => {
     IsMacOS().then(res => {
@@ -42,71 +35,6 @@ function setTitle(path: string) {
             return path.split('/').slice(-1)[0];
     }
 }
-
-const routerControl = [
-    {
-        label: "返回",
-        icon: Back,
-        action: () => {
-            window.history.back();
-        },
-    },
-    {
-        label: "前进",
-        icon: Right,
-        action: () => {
-            window.history.forward();
-        }
-    },
-    {
-        label: "刷新",
-        icon: RefreshRight,
-        action: () => {
-            WindowReload()
-        }
-    },
-]
-
-const appControl = [
-    {
-        label: "运行日志",
-        icon: consoleIcon,
-        action: () => {
-            showLogger.value = true
-        },
-    },
-    {
-        label: "应用启动器",
-        icon: runnerIcon,
-        action: () => {
-            router.push('/AppStarter')
-        },
-    },
-]
-
-const windowsControl = computed(() => [
-    {
-        icon: Minus,
-        action: () => {
-            WindowMinimise();
-        },
-    },
-    {
-        icon: global.temp.isMax ? reductionIcon : maxmizeIcon,
-        action: () => {
-            WindowToggleMaximise();
-        },
-    },
-    {
-        icon: Close,
-        action: () => {
-            Quit();
-        },
-        class: 'close',
-    },
-]);
-
-
 </script>
 
 <template>
@@ -114,7 +42,7 @@ const windowsControl = computed(() => [
         <div :style="macStyle">
             <el-divider direction="vertical" v-if="global.temp.isMacOS && !global.temp.isMax" />
             <el-button-group :style="leftStyle">
-                <el-tooltip v-for="item in routerControl" :content="item.label">
+                <el-tooltip v-for="item in routerControl" :content="$t(item.label)">
                     <el-button text class="custom-button" @click="item.action">
                         <el-icon :size="16">
                             <component :is="item.icon" />
@@ -124,15 +52,24 @@ const windowsControl = computed(() => [
             </el-button-group>
         </div>
         <div class="unoccupied" @dblclick="WindowToggleMaximise">
-            <span class="title">{{ setTitle(route.path) }}</span>
+            <span class="title">{{ setTitle($route.path) }}</span>
         </div>
         <div style="display: flex">
             <el-button-group :style="rightStyle">
-                <el-tooltip v-for="item in appControl" :content="item.label">
-                    <el-button class="custom-button" text @click="item.action">
+                <el-tooltip :content="$t('titlebar.yx_log')">
+                    <el-button class="custom-button" text @click="showLogger = true">
                         <template #icon>
                             <el-icon :size="16">
-                                <component :is="item.icon" />
+                                <consoleIcon />
+                            </el-icon>
+                        </template>
+                    </el-button>
+                </el-tooltip>
+                <el-tooltip :content="$t('titlebar.app_launcher')">
+                    <el-button class="custom-button" text @click="$router.push('/AppLauncher')">
+                        <template #icon>
+                            <el-icon :size="16">
+                                <runnerIcon />
                             </el-icon>
                         </template>
                     </el-button>
@@ -153,13 +90,9 @@ const windowsControl = computed(() => [
         </div>
     </div>
     <!-- running logs -->
-    <el-drawer v-model="showLogger" title="运行日志" direction="rtl" size="50%">
+    <el-drawer v-model="showLogger" :title="$t('titlebar.yx_log')" direction="rtl" size="50%">
         <div class="log-textarea" v-html="global.Logger.value"></div>
     </el-drawer>
-    <!-- update -->
-    <el-dialog v-model="updateDialog" title="更新通知" width="40%">
-        <updateUI></updateUI>
-    </el-dialog>
 </template>
 
 <style scoped>

@@ -58,8 +58,6 @@ function handlePaste(event: any) {
     if (pastedData.length > 100 * 1024) { // 检查输入内容是否大于100KB
         event.preventDefault(); // 阻止输入
         ElMessageBox.confirm('粘贴的内容过长，是已转换为临时文件存储？', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
             type: 'warning',
         }).then(async () => {
             let tempfile = await SaveToTempFile(pastedData)

@@ -127,8 +127,6 @@ const dingdingOption = ({
   },
   delUser: async function () {
     ElMessageBox.prompt('请输入添加用户时返回的UserId', "删除用户", {
-      confirmButtonText: '确认',
-      cancelButtonText: '取消',
       inputPattern: /.+/,
       inputErrorMessage: "UserId can't be empty",
     })

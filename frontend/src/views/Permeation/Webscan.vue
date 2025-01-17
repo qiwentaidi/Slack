@@ -708,8 +708,6 @@ const taskManager = {
             '确定删除该任务记录?',
             '警告',
             {
-                confirmButtonText: '确认',
-                cancelButtonText: '取消',
                 type: 'warning',
             }
         )
@@ -730,9 +728,7 @@ const taskManager = {
             })
     },
     renameTask: async function (taskId: string) {
-        ElMessageBox.prompt('重命名任务', '编辑', {
-            confirmButtonText: '确定',
-        })
+        ElMessageBox.prompt('重命名任务', '编辑', {})
             .then(async ({ value }) => {
                 let isSuccess = await RenameScanTask(taskId, value)
                 if (!isSuccess) {

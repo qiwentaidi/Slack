@@ -9,6 +9,13 @@ import dictmanagerIcon from "@/assets/icon/dict.svg"
 import layersIcon from "@/assets/icon/layers.svg"
 import aboutIcon from "@/assets/icon/about.svg"
 import scriptIcon from "@/assets/icon/script.svg"
+import maxmizeIcon from "@/assets/icon/maximize.svg"
+import reductionIcon from "@/assets/icon/reduction.svg"
+import pocIcon from '@/assets/icon/pocmanagement.svg'
+import { Back, Right, RefreshRight, Minus, Close, Refresh, Setting } from '@element-plus/icons-vue';
+import { WindowReload, WindowToggleMaximise,  Quit, WindowMinimise } from "wailsjs/runtime/runtime";
+import { computed } from "vue";
+import global from "./index";
 
 export const webscanInputOptions = [
     {
@@ -757,3 +764,69 @@ export const ApiDocsOptions = [
         link: "https://openplatform-portal.dg-work.cn/portal/#/helpdoc?apiType=serverapi&docKey=2674834"
     },
 ]
+
+export const routerControl = [
+    {
+        label: "titlebar.back",
+        icon: Back,
+        action: () => {
+            window.history.back();
+        },
+    },
+    {
+        label: "titlebar.forward",
+        icon: Right,
+        action: () => {
+            window.history.forward();
+        }
+    },
+    {
+        label: "titlebar.reload",
+        icon: RefreshRight,
+        action: () => {
+            WindowReload()
+        }
+    },
+]
+
+export const windowsControl = computed(() => [
+    {
+        icon: Minus,
+        action: () => {
+            WindowMinimise();
+        },
+    },
+    {
+        icon: global.temp.isMax ? reductionIcon : maxmizeIcon,
+        action: () => {
+            WindowToggleMaximise();
+        },
+    },
+    {
+        icon: Close,
+        action: () => {
+            Quit();
+        },
+        class: 'close',
+    },
+]);
+
+export const sidebarBottomControl = [
+    {
+      label: "aside.update",
+      icon: Refresh,
+      action: () => {
+        global.UPDATE.updateDialog = true
+      }
+    },
+    {
+      label: "aside.poc_manage",
+      icon: pocIcon,
+      path: "/PocManagement",
+    },
+    {
+      label: "aside.setting",
+      icon: Setting,
+      path: "/Settings"
+    },
+  ]

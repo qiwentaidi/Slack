@@ -14,25 +14,19 @@
     <el-main>
       <el-form :model="global.webscan" label-width="auto" v-show="currentDisplay == '0'">
         <h3>{{ $t(setupOptions[0].name) }}</h3>
-        <el-form-item label="网站指纹线程">
+        <el-form-item :label="$t('setting.webscan_thread')">
           <el-input-number v-model="global.webscan.web_thread" :min="1" :max="200" />
         </el-form-item>
-        <el-form-item label="暴破线程">
+        <el-form-item :label="$t('setting.crack_thread')">
           <el-input-number v-model="global.webscan.crack_thread" :min="1" :max="200" />
         </el-form-item>
-        <el-form-item label="端口扫描线程">
+        <el-form-item :label="$t('setting.portscan_thread')">
           <el-input-number v-model="global.webscan.port_thread" :min="1" :max="10000" />
         </el-form-item>
-        <el-form-item label="端口指纹超时(s)">
+        <el-form-item :label="$t('setting.portscan_timeout')">
           <el-input-number v-model="global.webscan.port_timeout" :min="1" :max="20" />
         </el-form-item>
-        <!-- <el-form-item label="端口扫描模式">
-            <el-select v-model="global.webscan.default_portscan_module">
-              <el-option v-for="item in portscanOptions" :key="item.value" :label="item.label" :value="item.value" />
-            </el-select>
-            <span class="form-item-tips">SYN需要以管理员模式运行 Mac - sudo /Applications/Slack.app/Contents/MacOS/Slack</span>
-        </el-form-item> -->
-        <el-form-item label="存活验证模式">
+        <el-form-item :label="$t('setting.survival')">
           <el-select v-model="global.webscan.default_alive_module">
             <el-option v-for="item in aliveGroupOptions" :key="item.value" :value="item.value">
               <span style="float: left">{{ item.value }}</span>
@@ -45,43 +39,42 @@
         <el-form-item :label="$t('setting.network_list')">
           <el-select v-model="global.webscan.default_network">
             <el-option v-for="item in global.temp.NetworkCardList" :value="item.IP">
-              <span v-if="item.Name ==''">{{ item.IP }}</span>
+              <span v-if="item.Name == ''">{{ item.IP }}</span>
               <span v-else>{{ item.Name + '(' + item.IP + ')' }}</span>
             </el-option>
           </el-select>
         </el-form-item>
         <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
       </el-form>
-      <el-form :model="global.proxy" label-width="auto"
-        v-show="currentDisplay == '1'">
+      <el-form :model="global.proxy" label-width="auto" v-show="currentDisplay == '1'">
         <h3>{{ $t(setupOptions[1].name) }}</h3>
         <el-form-item :label="$t('setting.enable')">
           <el-switch v-model="global.proxy.enabled" />
           <el-button type="primary" size="small" @click="TestProxyWithNotify" style="margin-left: 20px;"
             v-if="global.proxy.enabled">{{ $t('setting.test_agent') }}</el-button>
         </el-form-item>
-          <el-form-item :label="$t('setting.mode')">
-            <el-select v-model="global.proxy.mode">
-              <el-option label="HTTP" value="HTTP" />
-              <el-option label="SOCK5" value="SOCK5" />
-            </el-select>
-          </el-form-item>
-          <el-form-item :label="$t('setting.address')">
-            <el-input v-model="global.proxy.address" clearable></el-input>
-          </el-form-item>
-          <el-form-item :label="$t('setting.port')">
-            <el-input-number v-model.number="global.proxy.port" :min="1" :max="65535"></el-input-number>
-          </el-form-item>
-          <el-form-item :label="$t('setting.username')">
-            <el-input v-model="global.proxy.username" clearable></el-input>
-          </el-form-item>
-          <el-form-item :label="$t('setting.password')">
-            <el-input v-model="global.proxy.password" type="password" show-password></el-input>
-          </el-form-item>
+        <el-form-item :label="$t('setting.mode')">
+          <el-select v-model="global.proxy.mode">
+            <el-option label="HTTP" value="HTTP" />
+            <el-option label="SOCK5" value="SOCK5" />
+          </el-select>
+        </el-form-item>
+        <el-form-item :label="$t('setting.address')">
+          <el-input v-model="global.proxy.address" clearable></el-input>
+        </el-form-item>
+        <el-form-item :label="$t('setting.port')">
+          <el-input-number v-model.number="global.proxy.port" :min="1" :max="65535"></el-input-number>
+        </el-form-item>
+        <el-form-item :label="$t('setting.username')">
+          <el-input v-model="global.proxy.username" clearable></el-input>
+        </el-form-item>
+        <el-form-item :label="$t('setting.password')">
+          <el-input v-model="global.proxy.password" type="password" show-password></el-input>
+        </el-form-item>
         <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
       </el-form>
       <el-form :model="global.space" label-width="auto" v-show="currentDisplay == '2'">
-        <h3>{{ $t(setupOptions[2].name) }}<el-divider direction="vertical" />Ⓓ标识符API主要用于收集子域名信息</h3>
+        <h3>{{ $t(setupOptions[2].name) }}<el-divider direction="vertical" />{{ $t('setting.identifier') }}</h3>
         <el-form-item label="FOFA">
           <el-input v-model="global.space.fofaapi" placeholder="API address" clearable />
           <el-input v-model="global.space.fofaemail" placeholder="Email" clearable style="margin-top: 5px;" />
@@ -96,22 +89,24 @@
         <el-form-item label="ChaosⒹ">
           <el-input v-model="global.space.chaos">
             <template #suffix>
-              <el-button link type="primary" :icon="UserFilled" @click="BrowserOpenURL(chaosURL)">注册</el-button>
+              <el-button link type="primary" :icon="User" @click="BrowserOpenURL(chaosURL)">{{
+                $t('setting.register') }}</el-button>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item label="BevigilⒹ">
           <el-input v-model="global.space.bevigil" placeholder="API key">
             <template #suffix>
-              <el-button link type="primary" :icon="UserFilled" @click="BrowserOpenURL(bevigilURL)">注册</el-button>
+              <el-button link type="primary" :icon="User" @click="BrowserOpenURL(bevigilURL)">{{
+                $t('setting.register') }}</el-button>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item label="SecuritytrailsⒹ">
           <el-input v-model="global.space.securitytrails" placeholder="API key">
             <template #suffix>
-              <el-button link type="primary" :icon="UserFilled"
-                @click="BrowserOpenURL(securitytrailsURL)">注册</el-button>
+              <el-button link type="primary" :icon="User" @click="BrowserOpenURL(securitytrailsURL)">{{
+                $t('setting.register') }}</el-button>
             </template>
           </el-input>
         </el-form-item>
@@ -138,10 +133,10 @@
         </el-form-item>
       </el-form>
       <div v-show="currentDisplay == '4'">
-        <h3>{{ $t(setupOptions[4].name) }}<el-divider direction="vertical" />密码所有协议通用</h3>
+        <h3>{{ $t(setupOptions[4].name) }}<el-divider direction="vertical" />{{ $t('setting.password_tips') }}</h3>
         <el-table :data="crackDict.usernames" stripe style="width: 100%">
-          <el-table-column prop="name" label="服务名称" />
-          <el-table-column label="操作" width="250" align="center">
+          <el-table-column prop="name" label="Protocol" />
+          <el-table-column label="Operate" width="250" align="center">
             <template #default="scope">
               <el-button type="primary" link :icon="Edit"
                 @click="ctrl.innerDrawer = true; ctrl.currentPath = '/username/' + scope.row.name + '.txt'; ReadDict(ctrl.currentPath)">{{
@@ -153,7 +148,7 @@
           </el-table-column>
         </el-table>
       </div>
-      <div style="display: flex; justify-content: center; align-items: center;" v-show="currentDisplay == '5'">
+      <div class="position-center" v-show="currentDisplay == '5'">
         <about></about>
       </div>
     </el-main>
@@ -168,7 +163,7 @@
 import global from "@/stores"
 import { ElMessage, MenuItemRegistered } from 'element-plus';
 import { TestProxyWithNotify } from "@/util";
-import { Edit, Sunny, Moon, UserFilled } from '@element-plus/icons-vue';
+import { Edit, Sunny, Moon, User } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, WriteFile } from "wailsjs/go/services/File";
 import { useI18n } from "vue-i18n";

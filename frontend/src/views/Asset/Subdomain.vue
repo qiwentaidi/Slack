@@ -126,6 +126,7 @@ class Runner {
             return
         }
         config.runningStatus = true
+        pagination.initTable()
         if (currentRunner.value != 1 && config.subs.length == 0) {
             config.subs = (await ReadLine(global.PATH.homedir + "/slack/config/subdomain/dicc.txt"))!
         }

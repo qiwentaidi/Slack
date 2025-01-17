@@ -1,29 +1,8 @@
 <script setup lang="ts">
-import { Refresh, Setting } from "@element-plus/icons-vue";
 import updateUI from "./Update.vue";
 import global from "@/stores";
 import menus from "@/router/menu";
-import pocIcon from '@/assets/icon/pocmanagement.svg'
-
-const bottomControl = [
-  {
-    label: "aside.update",
-    icon: Refresh,
-    action: () => {
-      global.UPDATE.updateDialog = true
-    }
-  },
-  {
-    label: "aside.poc_manage",
-    icon: pocIcon,
-    path: "/PocManagement",
-  },
-  {
-    label: "aside.setting",
-    icon: Setting,
-    path: "/Settings"
-  },
-]
+import { sidebarBottomControl } from "@/stores/options";
 </script>
 
 <template>
@@ -50,7 +29,7 @@ const bottomControl = [
 
     <div style="flex-grow: 1;"></div>
 
-    <el-menu-item v-for="(item, index) in bottomControl" :index="item.path!" @click="item.action">
+    <el-menu-item v-for="(item, index) in sidebarBottomControl" :index="item.path!" @click="item.action">
       <el-icon size="24">
         <component :is="item.icon" />
       </el-icon>
@@ -60,7 +39,7 @@ const bottomControl = [
   </el-menu>
 
   <!-- update -->
-  <el-dialog v-model="global.UPDATE.updateDialog" title="更新通知" width="40%">
+  <el-dialog v-model="global.UPDATE.updateDialog" :title="$t('aside.update')" width="40%">
     <updateUI></updateUI>
   </el-dialog>
 </template>
