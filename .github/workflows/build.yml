@@ -42,8 +42,8 @@ jobs:
         run: wails build -platform darwin/${{ matrix.arch }}
 
       - name: Build Wails app on Windows
-        if: matrix.platform == 'windows-latest' && matrix.arch == 'amd64'
-        run: wails build -platform windows/amd64
+        if: matrix.platform == 'windows-latest'
+        run: wails build -platform windows/${{ matrix.arch }}
 
       - name: Upload Artifacts macOS
         if: matrix.platform == 'macos-latest'
@@ -53,10 +53,10 @@ jobs:
           path: build/bin/*
 
       - name: Upload Artifacts Windows
-        if: matrix.platform == 'windows-latest' && matrix.arch == 'amd64'
+        if: matrix.platform == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: Slack-windows-amd64
+          name: Slack-windows-${{ matrix.arch }}
           path: build/bin/*
 
       - name: Upload Artifacts Linux
