@@ -485,15 +485,6 @@ class Engine {
         if (!form.runnningStatus || form.scanStopped) {
             return
         }
-        if (!config.vulscan) {
-            updateActivities({
-                content: "Not enable vulscan",
-                type: "warning",
-                icon: Warning,
-            })
-            form.runnningStatus = false
-            return
-        }
         // 指纹扫描      
         let deepScan = false
         let callNuclei = false
