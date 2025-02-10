@@ -10,8 +10,6 @@ jobs:
         go-version: [1.22]
         arch: [amd64, arm64]
         exclude:
-          - platform: windows-latest
-            arch: arm64
           - platform: ubuntu-latest
             arch: arm64
     runs-on: ${{ matrix.platform }}
