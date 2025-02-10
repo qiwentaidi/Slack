@@ -1,298 +1,251 @@
 <script lang="ts" setup>
-import { reactive, ref, h } from 'vue';
-import { Copy, ProcessTextAreaInput } from '@/util';
-import { JSFind } from 'wailsjs/go/services/App';
-import { QuestionFilled, Search, DocumentCopy, ChromeFilled } from '@element-plus/icons-vue';
-import async from 'async';
+import { onMounted, reactive, ref } from 'vue';
+import { Copy, parseHeaders, ProcessTextAreaInput } from '@/util';
+import { AnalyzeAPI, ExtractAllJSLink, JSFind } from 'wailsjs/go/services/App';
+import { ArrowUpBold, ArrowDownBold, Delete, DocumentCopy } from '@element-plus/icons-vue';
 import global from "@/stores";
 import { ElNotification, ElMessage } from 'element-plus';
-import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
-import ContextMenu from '@imengyu/vue3-context-menu'
-import { defaultIconSize } from '@/stores/style';
+import CustomTextarea from '@/components/CustomTextarea.vue';
+import saveIcon from '@/assets/icon/save.svg'
+import usePagination from '@/usePagination';
+import { JSFindOptions } from '@/stores/options';
+import { JSFindData } from '@/stores/interface';
+import { EventsOff, EventsOn } from 'wailsjs/runtime/runtime';
+
+onMounted(() => {
+  EventsOn("jsfindlog", (msg: any) => {
+    config.consoleLog += msg + "\n";
+  });
+  EventsOn("jsfindvulcheck", (result: any) => {
+    if (result.IsUnauth) {
+      pagination.table.result.push({
+        Target: result.Target,
+        Method: result.Method,
+        Source: "",
+        VulType: "Unauth",
+        Param: result.Param,
+        Length: result.Length,
+        Filed: "",
+        Response: result.Response,
+      })
+    }
+  });
+  return () => {
+    EventsOff("jsfindlog");
+    EventsOff("webFingerScan");
+  };
+})
+
+const value = ref(0)
 
 const config = reactive({
   urls: "",
   loading: false,
   otherURL: false,
-  drawer: false,
-  perfixURL: '',
-  showContextMenu: false,
+  prefixURL: '',
+  headers: '',
+  consoleLog: '',
 })
 
-const typeOptions = [
-  'primary',
-  'success',
-  'info',
-  'warning',
-  'danger',
-]
-
-var dashboardItems = [
-  {
-    title: 'JS路径',
-    icon: 'InfoFilled',
-    tagType: ref(global.jsfind.defaultType[0]),
-    data: ref([] as LinkSource[]),
-  },
-  {
-    title: '敏感字段',
-    icon: 'WarningFilled',
-    tagType: ref(global.jsfind.defaultType[3]),
-    data: ref([] as LinkSource[]),
-  },
-  {
-    title: 'API接口',
-    icon: 'SuccessFilled',
-    tagType: ref(global.jsfind.defaultType[4]),
-    data: ref([] as LinkSource[]),
-  },
-  {
-    title: '手机号',
-    icon: 'WarningFilled',
-    tagType: ref(global.jsfind.defaultType[1]),
-    data: ref([] as LinkSource[]),
-  },
-  {
-    title: '身份证',
-    icon: 'WarningFilled',
-    tagType: ref(global.jsfind.defaultType[2]),
-    data: ref([] as LinkSource[]),
-  },
-  {
-    title: 'IP或URL',
-    icon: 'InfoFilled',
-    tagType: ref(global.jsfind.defaultType[5]),
-    data: ref([] as LinkSource[]),
-  },
-]
-
-interface dashboardItem {
-  title: string;
-  icon: string;
-  tagType: any;
-  data: any;
-  children?: any | undefined | null;
-}
-
-interface LinkSource {
-  Filed: string;
-  Source: string;
-}
+const pagination = usePagination<JSFindData>(20)
 
 async function JSFinder() {
+  let blackList = global.jsfind.whiteList.split("\n")
   let urls = ProcessTextAreaInput(config.urls)
   if (urls.length == 0) {
     ElMessage.warning("可用目标为空");
     return
   }
+  showForm.value = false
   config.loading = true
-  async.eachLimit(urls, 10, (url: string) => {
-    JSFind(url, config.perfixURL).then((result: any) => {
-      dashboardItems[0].data.value = result.JS
-      dashboardItems[2].data.value = result.APIRoute
-      dashboardItems[1].data.value = result.SensitiveField
-      dashboardItems[3].data.value = result.ChinesePhone
-      dashboardItems[4].data.value = result.ChineseIDCard
-      dashboardItems[5].data.value = result.IP_URL
-      if (config.otherURL) {
-        async.eachLimit(result.IP_URL, 10, (url2: string) => {
-          for (const whitedomain of global.jsfind.whiteList.split("\n")) {
-            if (!url2.includes(whitedomain)) {
-              JSFind(url, config.perfixURL).then((result: any) => {
-                dashboardItems[0].data.value.push(result.JS)
-                dashboardItems[2].data.value.push(result.APIRoute)
-                dashboardItems[1].data.value.push(result.SensitiveField)
-                dashboardItems[3].data.value.push(result.ChinesePhone)
-                dashboardItems[4].data.value.push(result.ChineseIDCard)
-                dashboardItems[5].data.value.push(result.IP_URL)
-              })
-            }
-          }
+  for (const url of urls) {
+    let apiRoute = [] as string[]
+    config.consoleLog += `[*] 正在提取${url}的JS链接...\n`
+    let jslinks = await ExtractAllJSLink(url)
+    config.consoleLog += `[+] 共提取到JS链接: ${getLength(jslinks)}个\n`
+    config.consoleLog += jslinks.join("\n")
+    config.consoleLog += "\n\n\n"
+    let somethings = await JSFind(url, jslinks)
+    config.consoleLog += `[+] 共提取到API: ${getLength(somethings.APIRoute)}个\n`
+    somethings.APIRoute.forEach(item => {
+      apiRoute.push(item.Filed)
+      config.consoleLog += `${item.Filed}\n`
+    })
+    config.consoleLog += "\n\n"
+    config.consoleLog += `[+] 共提取到身份证: ${getLength(somethings.IDCard)}个\n`
+    somethings.IDCard.forEach(item => {
+      config.consoleLog += `${item.Filed} [ Source:: ${item.Source} ]\n`
+      pagination.table.result.push({
+        Source: item.Source,
+        Method: "GET",
+        Filed: item.Filed,
+        VulType: "敏感信息泄露",
+        Length: 0,
+        Param: "",
+        Target: url,
+        Response: "",
+      })
+    })
+    config.consoleLog += "\n\n"
+    config.consoleLog += `[+] 共提取到手机号: ${getLength(somethings.Phone)}个\n`
+    somethings.Phone.forEach(item => {
+      config.consoleLog += `${item.Filed} [ Source:: ${item.Source} ]\n`
+      somethings.IDCard.forEach(item => {
+        config.consoleLog += `${item.Filed} [ Source:: ${item.Source} ]\n`
+        pagination.table.result.push({
+          Source: item.Source,
+          Method: "GET",
+          Filed: item.Filed,
+          VulType: "敏感信息泄露",
+          Length: 0,
+          Param: "",
+          Target: url,
+          Response: "",
         })
+      })
+    })
+    config.consoleLog += "\n\n"
+    config.consoleLog += `[+] 共提取到邮箱: ${getLength(somethings.Email)}个\n`
+    if (somethings.Email) {
+      const emails = somethings.Email.map(item => item.Filed)
+      config.consoleLog += emails.join("\n")
+    }
+    config.consoleLog += "\n\n"
+    if (somethings.Sensitive) {
+      config.consoleLog += `[+] 共提取到敏感字段: ${getLength(somethings.Sensitive)}个\n`
+      somethings.Sensitive.forEach(item => {
+        config.consoleLog += `${item.Filed} [ Source: ${item.Source} ]\n`
+      })
+    }
+    config.consoleLog += "\n\n"
+    if (somethings.IP_URL && somethings.IP_URL.length > 0) {
+      const filteredIPs = somethings.IP_URL
+        .filter(item => !blackList.some(black => item.Filed.includes(black))) // 过滤黑名单
+        .map(item => item.Filed); // 提取字段
+
+      if (filteredIPs.length > 0) {
+        config.consoleLog += `[+] 共提取到IP/URL: ${filteredIPs.length}个\n` + filteredIPs.join("\n") + "\n";
       }
-      ElNotification.success({
-        message: 'JSFind Finished!',
-        position: "bottom-right"
-      });
-      config.loading = false
-    });
+    } 
+    config.consoleLog += "\n\n"
+    config.consoleLog += "[*] 正在分析API漏洞中...\n"
+    let baseURL = ""
+
+    config.prefixURL != "" ? baseURL = config.prefixURL : baseURL = url
+
+    await AnalyzeAPI(url, baseURL, apiRoute, parseHeaders(config.headers))
   }
-  )
+  config.consoleLog += "[*] 任务运行结束\n"
+  config.loading = false
 }
 
-const saveConfig = () => {
+function getLength(arr: any) {
+  if (Array.isArray(arr)) {
+    return arr.length;
+  } else {
+    return 0;
+  }
+}
+
+const showForm = ref(true);
+
+function toggleFormVisibility() {
+  showForm.value = !showForm.value;
+}
+
+function saveConfig() {
   localStorage.setItem('jsfind', JSON.stringify(global.jsfind));
   ElNotification.success({
     message: 'Save successful',
     position: 'bottom-right'
   })
 }
-
-function changeType(item: dashboardItem) {
-  switch (item.title) {
-    case "JS路径":
-      global.jsfind.defaultType[0] = item.tagType.value
-      break
-    case "敏感字段":
-      global.jsfind.defaultType[3] = item.tagType.value
-      break
-    case "手机号":
-      global.jsfind.defaultType[1] = item.tagType.value
-      break
-    case "API接口":
-      global.jsfind.defaultType[4] = item.tagType.value
-      break
-    case "IP或URL":
-      global.jsfind.defaultType[5] = item.tagType.value
-      break
-    default:
-      global.jsfind.defaultType[2] = item.tagType.value
-  }
-}
-
-function getLength(arr: any) {
-  if (Array.isArray(arr)) {
-    return arr.length
-  } else {
-    return 0
-  }
-}
-
-function onContextMenu(e: MouseEvent, data: any) {
-  //prevent the browser's default menu
-  e.preventDefault();
-  //show our menu
-  ContextMenu.showContextMenu({
-    x: e.x,
-    y: e.y,
-    items: [
-      {
-        label: "复制",
-        icon: h(DocumentCopy, defaultIconSize),
-        onClick: () => {
-          Copy(data.Filed)
-        }
-      },
-      {
-        label: "复制来源",
-        icon: h(DocumentCopy, defaultIconSize),
-        divided: true,
-        onClick: () => {
-          Copy(data.Source)
-        }
-      },
-      {
-        label: "打开来源链接",
-        icon: h(ChromeFilled, defaultIconSize),
-        onClick: () => {
-          BrowserOpenURL(data.Source)
-        }
-      },
-    ]
-  });
-}
-
 </script>
+
 <template>
-  <el-form :model="config" label-width="auto">
-    <el-form-item>
-      <div class="head">
-        <el-input v-model="config.urls" style="margin-right: 5px;">
-          <template #prepend>
-            URL地址:
-            <el-tooltip placement="right-end">
-              <template #content>
-                爬取流程:<br />
-                1、对目标进行JS提取<br />
-                2、再将JS路径进行拼接访问<br />
-                3、提取JS中的敏感数据<br />
-                4、若开启URL爬取则会对获取到的URL进行1、2、3步重复
-              </template>
-              <el-icon>
-                <QuestionFilled size="24" />
-              </el-icon>
+  <el-divider>
+    <el-button round :icon="showForm ? ArrowUpBold : ArrowDownBold" @click="toggleFormVisibility">
+      {{ showForm ? '隐藏参数' : '展开参数' }}
+    </el-button>
+  </el-divider>
+  <el-collapse-transition>
+    <div style="display: flex; gap: 10px;" v-show="showForm">
+      <el-form :model="config" label-width="auto" style="width: 50%;">
+        <el-form-item label="目标地址:">
+          <CustomTextarea v-model="config.urls" :rows="5" />
+        </el-form-item>
+        <el-form-item label="路径前缀:">
+          <el-input v-model="config.prefixURL" placeholder="部分API无法准确拼接时，自定义路径前缀" />
+        </el-form-item>
+        <el-form-item label="请求头:">
+          <el-input v-model="config.headers" type="textarea" :rows="5"
+            :placeholder="$t('tips.customHeaders')"></el-input>
+        </el-form-item>
+      </el-form>
+      <el-form :model="config" label-width="auto" style="width: 50%;">
+        <el-form-item label="黑名单域名:">
+          <div class="textarea-container">
+            <el-input v-model="global.jsfind.whiteList" type="textarea" :rows="5"></el-input>
+            <el-tooltip content="保存">
+              <el-button class="action-area" :icon="saveIcon" link @click="saveConfig()"></el-button>
             </el-tooltip>
-          </template>
-        </el-input>
-        <el-button type="primary" :icon="Search" @click="JSFinder" v-if="!config.loading">开始检测</el-button>
-        <el-button type="primary" loading v-else>正在检测</el-button>
-        <el-button text bg style="margin-left: 5px" @click="config.drawer = true">参数设置</el-button>
-      </div>
-    </el-form-item>
-  </el-form>
-  <!-- content -->
-  <el-card style="height: 90%;">
-    <el-scrollbar style="height: 80vh">
-      <div v-for="item in dashboardItems">
-        <!-- HEADER -->
-        <div class="my-header">
-          <div>
-            <el-icon>
-              <component :is="item.icon" />
-            </el-icon>
-            <span style="font-weight: bold; margin-right: 5px;">{{ item.title }}: {{ getLength(item.data.value)
-              }}</span>
           </div>
-          <el-button round type="primary" size="small" @click="Copy((item.data.value.map(item => item.Filed).join('\n')))">Copy
-            ALL</el-button>
-        </div>
-        <!-- CONTENT -->
-        <div class="tag-container">
-          <el-tag v-for="data in item.data.value" :type="item.tagType.value"
-            @contextmenu.prevent="onContextMenu($event, data)">{{ data.Filed }}</el-tag>
+          <span class="form-item-tips">过滤IP/URL内容</span>
+        </el-form-item>
+        <el-form-item label=" ">
+          <el-button type="primary" @click="JSFinder">开始任务</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+  </el-collapse-transition>
+  <el-card shadow="never" style="margin-bottom: 10px;">
+    <template #header>
+      <div class="card-header">
+        <el-segmented v-model="value" :options="JSFindOptions">
+          <template #default="{ item }">
+            <el-space :size="3">
+              <el-icon>
+                <component :is="item.icon" />
+              </el-icon>
+              <div>{{ item.label }}</div>
+            </el-space>
+          </template>
+        </el-segmented>
+        <div v-show="value == 0">
+          <el-button :icon="DocumentCopy" link @click="Copy(config.consoleLog)" />
+          <el-button :icon="Delete" link @click="config.consoleLog = ''" />
         </div>
       </div>
-    </el-scrollbar>
-  </el-card>
-  <!-- adv -->
-  <el-drawer v-model="config.drawer" size="53%">
-    <template #header>
-      <h3>设置高级参数</h3>
     </template>
-    <el-form :model="config" label-width="auto">
-      <el-form-item>
-        <template #label>
-          <span>JS路径拼接前缀:</span>
-          <el-tooltip placement="left">
-            <template #content>示例: 比如你在爬取二级目录时<br />页面中获取的JS路径需要拼接一级目录访问</template>
-            <el-icon>
-              <QuestionFilled size="24" />
-            </el-icon>
-          </el-tooltip>
-        </template>
-        <el-input v-model="config.perfixURL" />
-      </el-form-item>
-      <el-form-item label="是否开启URL爬取:" class="el-margin">
-        <el-switch v-model="config.otherURL" inline-prompt active-text="关闭" inactive-text="开启"></el-switch>
-      </el-form-item>
-      <el-form-item label="白名单域名:" class="el-margin" v-show="config.otherURL">
-        <el-input v-model="global.jsfind.whiteList" type="textarea" :rows="5"></el-input>
-      </el-form-item>
-      <el-form-item label="标记颜色:">
-        <el-descriptions :column="1" border style="width: 100%;">
-          <el-descriptions-item v-for="(item, index) in dashboardItems" :key="index" :label="item.title">
-            <div class="flex-box" style="gap: 8px;">
-              <el-segmented v-model="item.tagType.value" :options="typeOptions" @click="changeType(item)" />
-              <el-tag :type="item.tagType.value" size="large">example</el-tag>
-            </div>
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-form-item>
-      <el-form-item class="align-right">
-        <el-button type="primary" @click="saveConfig">保存</el-button>
-      </el-form-item>
-    </el-form>
-  </el-drawer>
+    <pre class="pretty-response" style="margin-top: 0; margin-bottom: 0;" v-show="value == 0"><code>{{ config.consoleLog }}</code></pre>
+    <el-table :data="pagination.table.result" style="height: calc(100vh - 200px)" v-show="value == 1">
+      <el-table-column type="expand">
+          <template #default="props">
+              请求方法: {{ props.Method }}
+              参数: {{ props.Param }}
+              提取内容: {{ props.Filed }}
+              响应内容: 
+              {{ props.Response }}
+          </template>
+      </el-table-column>
+      <el-table-column prop="Target" label="Target"></el-table-column>
+      <el-table-column prop="Length" label="Length" width="120"></el-table-column>
+      <el-table-column prop="Source" label="Source"></el-table-column>
+      <el-table-column prop="VulType" label="Vulnerability"></el-table-column>
+      <template #empty>
+        <el-empty />
+      </template>
+    </el-table>
+    <div class="my-header" style="margin-top: 5px;" v-show="value == 1">
+      <div></div>
+      <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
+        @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
+        :current-page="pagination.table.currentPage" :page-sizes="[10, 20, 50, 100]"
+        :page-size="pagination.table.pageSize" layout="total, sizes, prev, pager, next"
+        :total="pagination.table.result.length">
+      </el-pagination>
+    </div>
+  </el-card>
 </template>
 
-<style>
-.tag-container {
-  margin-top: 5px;
-  margin-bottom: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  /* This allows the tags to wrap to a new line */
-  gap: 8px;
-  /* Adjust the gap between tags as needed */
-}
-</style>
+<style scoped></style>

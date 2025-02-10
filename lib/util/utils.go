@@ -1,9 +1,11 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"path"
 
 	"strings"
 	"time"
@@ -81,4 +83,23 @@ func GetBasicURL(rawURL string) string {
 		return rawURL
 	}
 	return u.Scheme + "://" + u.Host
+}
+
+// 获取基本路径
+func GetBasePath(inputURL string) (string, error) {
+	parsedURL, err := url.Parse(inputURL)
+	if err != nil {
+		return "", err
+	}
+
+	// 获取路径部分
+	dirPath := path.Dir(parsedURL.Path)
+	// 确保路径以 `/` 结尾
+	// if !strings.HasSuffix(dirPath, "/") {
+	// 	dirPath += "/"
+	// }
+
+	// 组合完整 URL
+	basePath := fmt.Sprintf("%s://%s%s", parsedURL.Scheme, parsedURL.Host, dirPath)
+	return basePath, nil
 }

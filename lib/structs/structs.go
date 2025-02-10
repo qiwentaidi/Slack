@@ -609,3 +609,27 @@ type NetwordCard struct {
 	Name string
 	IP   string
 }
+
+type InfoSource struct {
+	Filed  string
+	Source string
+}
+
+type FindSomething struct {
+	JS        []InfoSource
+	APIRoute  []InfoSource
+	IP_URL    []InfoSource
+	IDCard    []InfoSource
+	Phone     []InfoSource
+	Email     []InfoSource
+	Sensitive []InfoSource
+}
+
+type JSFindResult struct {
+	IsUnauth bool
+	URL      string
+	Method   string
+	Param    string
+	Response string
+	Length   int
+}

@@ -357,3 +357,18 @@ export async function UploadFileAndRead(target: Record<string, any>, property: s
 //   }
 //   return ""
 // }
+
+export function parseHeaders(headersText: string) {
+  const headers = {} as {
+      [key: string]: string
+  }
+  headersText.split("\n").forEach(line => {
+    const parts = line.split(":");
+    if (parts.length >= 2) {
+      const key = parts[0].trim();
+      const value = parts.slice(1).join(":").trim(); // 处理可能的冒号
+      headers[key] = value;
+    }
+  });
+  return headers;
+}

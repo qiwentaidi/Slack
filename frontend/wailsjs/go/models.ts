@@ -87,65 +87,6 @@ export namespace isic {
 
 }
 
-export namespace jsfind {
-	
-	export class InfoSource {
-	    Filed: string;
-	    Source: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new InfoSource(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Filed = source["Filed"];
-	        this.Source = source["Source"];
-	    }
-	}
-	export class FindSomething {
-	    JS: InfoSource[];
-	    APIRoute: InfoSource[];
-	    IP_URL: InfoSource[];
-	    ChineseIDCard: InfoSource[];
-	    ChinesePhone: InfoSource[];
-	    SensitiveField: InfoSource[];
-	
-	    static createFrom(source: any = {}) {
-	        return new FindSomething(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.JS = this.convertValues(source["JS"], InfoSource);
-	        this.APIRoute = this.convertValues(source["APIRoute"], InfoSource);
-	        this.IP_URL = this.convertValues(source["IP_URL"], InfoSource);
-	        this.ChineseIDCard = this.convertValues(source["ChineseIDCard"], InfoSource);
-	        this.ChinesePhone = this.convertValues(source["ChinesePhone"], InfoSource);
-	        this.SensitiveField = this.convertValues(source["SensitiveField"], InfoSource);
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
-
-}
-
 export namespace mongo {
 	
 	export class Client {
@@ -370,6 +311,62 @@ export namespace structs {
 	        this.Password = source["Password"];
 	        this.Notes = source["Notes"];
 	    }
+	}
+	export class InfoSource {
+	    Filed: string;
+	    Source: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new InfoSource(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Filed = source["Filed"];
+	        this.Source = source["Source"];
+	    }
+	}
+	export class FindSomething {
+	    JS: InfoSource[];
+	    APIRoute: InfoSource[];
+	    IP_URL: InfoSource[];
+	    IDCard: InfoSource[];
+	    Phone: InfoSource[];
+	    Email: InfoSource[];
+	    Sensitive: InfoSource[];
+	
+	    static createFrom(source: any = {}) {
+	        return new FindSomething(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.JS = this.convertValues(source["JS"], InfoSource);
+	        this.APIRoute = this.convertValues(source["APIRoute"], InfoSource);
+	        this.IP_URL = this.convertValues(source["IP_URL"], InfoSource);
+	        this.IDCard = this.convertValues(source["IDCard"], InfoSource);
+	        this.Phone = this.convertValues(source["Phone"], InfoSource);
+	        this.Email = this.convertValues(source["Email"], InfoSource);
+	        this.Sensitive = this.convertValues(source["Sensitive"], InfoSource);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class Results {
 	    URL: string;
@@ -718,6 +715,7 @@ export namespace structs {
 	        this.Screenshot = source["Screenshot"];
 	    }
 	}
+	
 	export class NacosNode {
 	    Auth: number;
 	    OSS: number;

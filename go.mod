@@ -23,6 +23,7 @@ require (
 	github.com/tomatome/grdp v0.1.0
 	github.com/twmb/murmur3 v1.1.8
 	github.com/wailsapp/wails/v2 v2.9.2
+	github.com/xuri/excelize/v2 v2.9.0
 	github.com/zmap/zcrypto v0.0.0-20240512203510-0fef58d9a9db
 	go.mongodb.org/mongo-driver v1.17.0
 	golang.org/x/crypto v0.31.0
@@ -226,6 +227,8 @@ require (
 	github.com/redis/go-redis/v9 v9.1.0 // indirect
 	github.com/refraction-networking/utls v1.6.7 // indirect
 	github.com/remeh/sizedwaitgroup v1.0.0 // indirect
+	github.com/richardlehane/mscfb v1.0.4 // indirect
+	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
 	github.com/sashabaranov/go-openai v1.15.3 // indirect
@@ -261,6 +264,8 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
+	github.com/xuri/efp v0.0.0-20240408161823-9ad904a10d6d // indirect
+	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect
 	github.com/yassinebenaid/godump v0.10.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	github.com/ysmood/fetchup v0.2.3 // indirect

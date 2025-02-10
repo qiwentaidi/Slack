@@ -394,8 +394,8 @@ function copyHistory(length: number) {
             <el-form-item label="排除状态码:">
                 <el-input v-model="from.statusFilter" placeholder="支持200,300 | 200-300,400-500"></el-input>
             </el-form-item>
-            <el-form-item label="自定义请求头:">
-                <el-input v-model="config.headers" placeholder="以键:值形式输入，多行请用换行分割" type="textarea" :rows="3"></el-input>
+            <el-form-item label="请求头:">
+                <el-input v-model="config.headers" :placeholder="$t('tips.customHeaders')" type="textarea" :rows="3"></el-input>
             </el-form-item>
             <el-form-item label="字典列表:">
                 <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip

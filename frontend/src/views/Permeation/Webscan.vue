@@ -5,7 +5,7 @@ import {
     Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Warning,
     Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, MoreFilled,
 } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, IPParse, SpaceGetPort, PortParse, HostAlive, NewTcpScanner, PortBrute, GetAllFinger } from 'wailsjs/go/services/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute, GetAllFinger } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
 import global from "@/stores"
@@ -17,14 +17,15 @@ import CustomTabs from '@/components/CustomTabs.vue';
 import { CheckFileStat, DirectoryDialog, FileDialog, List, ReadFile, SaveFileDialog } from 'wailsjs/go/services/File';
 import { isPrivateIP, validateIp, validateIpAndDomain } from '@/stores/validate';
 import { structs } from 'wailsjs/go/models';
-import { portGroupOptions, webReportOptions, webscanInputOptions, webscanOptions, crackDict } from '@/stores/options'
+import { portGroupOptions, webReportOptions, webscanOptions, crackDict } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
 import {
     RemovePocscanResult, RemoveScanTask, ExportWebReportWithHtml,
     ExportWebReportWithJson, RetrieveAllScanTasks, AddFingerscanResult,
     AddPocscanResult, AddScanTask, ReadWebReportWithJson, RenameScanTask,
     RetrieveFingerscanResults, RetrievePocscanResults, UpdateScanTaskWithResults,
-    RemoveFingerprintResult
+    RemoveFingerprintResult,
+    ExportWebReportWithExcel
 } from 'wailsjs/go/services/Database';
 import saveIcon from '@/assets/icon/save.svg'
 import githubIcon from '@/assets/icon/github.svg'
@@ -32,11 +33,14 @@ import dashboardIcon from '@/assets/icon/dashboard.svg'
 import activityIcon from '@/assets/icon/activity.svg'
 import bugIcon from "@/assets/icon/bug.svg";
 import fingerprintIcon from "@/assets/icon/fingerprint.svg";
+import hostIcon from "@/assets/icon/host.svg";
+import websiteIcon from "@/assets/icon/website.svg";
 import { SaveConfig } from '@/config';
 import throttle from 'lodash/throttle';
 import async from 'async'
 import { handleWebscanContextMenu } from '@/linkage/contextMenu';
 import CustomTextarea from '@/components/CustomTextarea.vue';
+import { IPParse, PortParse } from 'wailsjs/go/core/Tools';
 
 // 仪表盘内容
 const dashboard = reactive({
@@ -107,9 +111,9 @@ function updateActivities(newActivity: { content: string, type: string, icon: an
         type: newActivity.type,
         icon: newActivity.icon
     });
-    if (timelineContainer.value) {
-        timelineContainer.value.scrollTop = timelineContainer.value.scrollHeight; // 滚动到最底部
-    }
+    // if (timelineContainer.value) {
+    //     timelineContainer.value.scrollTop = timelineContainer.value.scrollHeight; // 滚动到最底部
+    // }
 }
 
 // webscan
@@ -117,7 +121,8 @@ function updateActivities(newActivity: { content: string, type: string, icon: an
 const form = reactive({
     input: '',
     tags: [] as string[],
-    newscanner: false,
+    newWebscanDrawer: false,
+    newHostscanDrawer: false,
     runnningStatus: false,
     scanStopped: false,
     taskName: '',
@@ -148,9 +153,9 @@ const config = reactive({
     webscanOption: 0,
     skipNucleiWithoutTags: false,
     generateLog4j2: false,
-    writeDB: false,
     crack: false, // 是否开启暴破
     customHeaders: '',
+    vulscan: false,
 })
 
 const detailDialog = ref(false)
@@ -204,7 +209,6 @@ onMounted(() => {
         dashboard.riskLevel[riskLevelKey]++;
         vp.table.result.push(result)
         vp.ctrl.watchResultChange(vp.table)
-        if (!config.writeDB) return
         AddPocscanResult(form.taskId, result)
         taskManager.updateTaskTable(form.taskId)
     });
@@ -227,7 +231,6 @@ onMounted(() => {
         }
         fp.table.result.push(result)
         throttleFingerscanUpdate()
-        if (!config.writeDB) return
         AddFingerscanResult(form.taskId, result)
         taskManager.updateTaskTable(form.taskId)
     });
@@ -272,8 +275,9 @@ onMounted(() => {
 async function startScan() {
     let engine = new Engine
     if (!await engine.checkOptions()) return
-    form.newscanner = false // 隐藏界面
+    param.inputType == 0 ? form.newWebscanDrawer = false : form.newHostscanDrawer = false
     activities.value = [] // 清空前面的任务进度
+    engine.clearDashboard()
     switch (param.inputType) {
         // 网站扫描
         case 0:
@@ -287,9 +291,8 @@ async function startScan() {
             ElMessage.warning("未知扫描类型")
             return
     }
-    engine.clearDashboard()
-    // 检查是否需要写入任务
-    if (config.writeDB && !(await taskManager.writeTask())) {
+    // 检查是否能写入任务
+    if (!(await taskManager.writeTask())) {
         form.runnningStatus = false
         return
     }
@@ -337,7 +340,7 @@ class Engine {
         }
 
         // 检查是否需要写入任务
-        if (config.writeDB && form.taskName == '') {
+        if (form.taskName == '') {
             ElMessage.warning({
                 message: "任务名称不能为空",
                 grouping: true,
@@ -399,6 +402,15 @@ class Engine {
             form.runnningStatus = true
             global.webscan.ping_check_alive = global.webscan.default_alive_module != 'ICMP'
             this.ips = await HostAlive(this.ips, global.webscan.ping_check_alive)
+            if (this.ips == null) {
+                updateActivities({
+                    content: "No alive host found, task end",
+                    type: "warning",
+                    icon: Warning
+                })
+                form.runnningStatus = false
+                return
+            }
             updateActivities({
                 content: "Host alive count: " + this.ips.length.toString(),
                 type: "info",
@@ -428,6 +440,15 @@ class Engine {
                 icon: MoreFilled,
             })
             await NewTcpScanner(this.specialTarget, this.ips, this.portsList, global.webscan.port_thread, global.webscan.port_timeout, getProxy())
+            if (!config.vulscan) {
+                updateActivities({
+                    content: "Only portscan, task is completed",
+                    type: "success",
+                    icon: CircleCheck,
+                })
+                form.runnningStatus = false
+                return
+            }
             this.inputLines = fp.table.result.filter(
                 (line) => line.Scheme === "http" || line.Scheme === "https"
             ).map(item => item.URL);
@@ -445,12 +466,33 @@ class Engine {
                     (line) => line.Scheme !== "http" && line.Scheme !== "https"
                 );
                 fp.ctrl.watchResultChange(fp.table)
-                if (config.writeDB) {
-                    RemoveFingerprintResult(form.taskId, this.inputLines)
-                }
+                RemoveFingerprintResult(form.taskId, this.inputLines)
             }
             // 设置后续的扫描类型
             config.webscanOption = 2
+        }
+        this.WebRunner()
+        this.CrackRunner()
+        updateActivities({
+            content: "All task completed",
+            type: "success",
+            icon: CircleCheck,
+        })
+        form.runnningStatus = false
+    }
+
+    public async WebRunner() {
+        if (!form.runnningStatus || form.scanStopped) {
+            return
+        }
+        if (!config.vulscan) {
+            updateActivities({
+                content: "Not enable vulscan",
+                type: "warning",
+                icon: Warning,
+            })
+            form.runnningStatus = false
+            return
         }
         // 指纹扫描      
         let deepScan = false
@@ -492,7 +534,6 @@ class Engine {
             icon: MoreFilled,
         })
         await NewWebScanner(options, getProxy())
-        this.CrackRunner()
     }
 
     public async CrackRunner() {
@@ -501,9 +542,9 @@ class Engine {
         }
         if (!config.crack) {
             updateActivities({
-                content: "Not enable crack, task completed",
-                type: "success",
-                icon: CircleCheck,
+                content: "Not enable crack",
+                type: "warning",
+                icon: Warning,
             })
             form.runnningStatus = false
             return
@@ -513,7 +554,7 @@ class Engine {
         ).map(item => item.URL);
         if (crackLinks.length == 0) {
             updateActivities({
-                content: "No protocol that can be crack detected, task completed",
+                content: "No protocol that can be crack detected",
                 type: "warning",
                 icon: Warning,
             })
@@ -555,12 +596,6 @@ class Engine {
             await PortBrute(target, userDict, passDict)
         }, (err: any) => {
             Callgologger("info", "Crack Finished")
-            updateActivities({
-                content: "All task completed",
-                type: "success",
-                icon: CircleCheck,
-            })
-            form.runnningStatus = false
         });
     }
 }
@@ -674,7 +709,6 @@ const taskManager = {
         form.input = row.Targets;
         form.taskName = row.TaskName;
         form.taskId = row.TaskId
-        config.writeDB = true
         const [fingerResult, nucleiResult] = await Promise.all([
             RetrieveFingerscanResults(row.TaskId),
             RetrievePocscanResults(row.TaskId)
@@ -787,28 +821,22 @@ const taskManager = {
         exportDialog.value = true
     },
     exportTask: async function () {
-        let filepath = ""
         let isSuccess = false
         let taskids = rp.table.selectRows.map(item => item.TaskId)
+        let filepath = await SaveFileDialog(reportName.value)
+        if (!filepath) {
+            return
+        }
         switch (reportOption.value) {
-            // v 1.7.5 弃用
-            // case "EXCEL":
-            //     ExportWebScanToXlsx(transformArrayFields(fingerResult), nucleiResult.map(({ ID, Name, Type, Severity, URL, Extract }) => ({
-            //         ID,
-            //         Name,
-            //         Type,
-            //         Severity,
-            //         URL,
-            //         Extract,
-            //     })))
-            //     break
+            case "EXCEL":
+                isSuccess = await ExportWebReportWithExcel(filepath + ".xlsx", rp.table.selectRows)
+                isSuccess ? ElMessage.success("导出成功") : ElMessage.error("导出失败")
+                break
             case "JSON":
-                filepath = await SaveFileDialog(reportName.value)
                 isSuccess = await ExportWebReportWithJson(filepath + ".json", rp.table.selectRows)
                 isSuccess ? ElMessage.success("导出成功") : ElMessage.error("导出失败")
                 break
             default:
-                filepath = await SaveFileDialog(reportName.value)
                 isSuccess = await ExportWebReportWithHtml(filepath + ".html", taskids)
                 isSuccess ? ElMessage.success("导出成功") : ElMessage.error("导出失败")
         }
@@ -913,14 +941,26 @@ function stopShodan() {
     });
 }
 
-function checkDictInput() {
-    if (param.username.length == 0) {
-        param.builtInUsername = true
-    }
-    if (param.password.length == 0) {
-        param.builtInPassword = true
-    }
-}
+
+const hostInputTips = `192.168.1.1
+192.168.1.1/24
+192.168.1.1-192.168.255.255
+192.168.1.1-255
+www.example.com
+
+扫描特定端口:
+192.168.0.1:6379
+
+排除IP或网段可以在可支持输入的IP格式前加!:
+!192.168.1.6/28`
+
+const webInputTips = `https://www.example.com`
+
+// 获取选中的 `icon`
+const getSelectedIcon = (selectedLabel: string) => {
+    const selectedItem = webReportOptions.find(item => item.label === selectedLabel);
+    return selectedItem ? selectedItem.icon : null;
+};
 </script>
 
 <template>
@@ -1003,8 +1043,17 @@ function checkDictInput() {
                         Process
                     </el-text>
                     <div>
-                        <el-button type="primary" :icon="Plus" @click="form.newscanner = true"
-                            v-if="!form.runnningStatus">新建任务</el-button>
+                        <el-popover placement="left-start" trigger="click" :width="244" v-if="!form.runnningStatus">
+                            <template #reference>
+                                <el-button type="primary" :icon="Plus">新建任务</el-button>
+                            </template>
+                            <el-space>
+                                <el-button :icon="websiteIcon"
+                                    @click="form.newWebscanDrawer = true; param.inputType = 0">网站扫描</el-button>
+                                <el-button :icon="hostIcon"
+                                    @click="form.newHostscanDrawer = true; param.inputType = 1">主机扫描</el-button>
+                            </el-space>
+                        </el-popover>
                         <el-button type="danger" :icon="VideoPause" @click="stopScan" v-else>停止任务</el-button>
                     </div>
                 </div>
@@ -1080,13 +1129,8 @@ function checkDictInput() {
                     @filter-change="vp.ctrl.filterChange">
                     <el-table-column prop="ID" label="Template" width="250px" />
                     <el-table-column prop="Type" label="Type" width="150px" />
-                    <el-table-column prop="Severity" width="150px" column-key="Severity" label="Severity" :filters="!form.runnningStatus ? [
-                        { text: 'INFO', value: 'INFO' },
-                        { text: 'LOW', value: 'LOW' },
-                        { text: 'MEDIUM', value: 'MEDIUM' },
-                        { text: 'HIGH', value: 'HIGH' },
-                        { text: 'CRITICAL', value: 'CRITICAL' },
-                    ] : []" sortable="custom">
+                    <el-table-column prop="Severity" width="150px" column-key="Severity" label="Severity"
+                        :filters="!form.runnningStatus ? vp.ctrl.getColumnFilters('Severity') : []" sortable="custom">
                         <template #filter-icon>
                             <Filter />
                         </template>
@@ -1129,24 +1173,9 @@ function checkDictInput() {
             <el-button :icon="Clock" @click="historyDialog = true">任务管理</el-button>
         </template>
     </CustomTabs>
-
-    <el-drawer v-model="form.newscanner" size="50%">
+    <el-drawer v-model="form.newHostscanDrawer" size="50%">
         <template #header>
-            <span class="drawer-title">新建扫描任务</span>
-            <el-button link @click="spaceEngineConfig.fofaDialog = true">
-                <template #icon>
-                    <img src="/app/fofa.ico">
-                </template>
-                FOFA
-            </el-button>
-            <el-divider direction="vertical" />
-            <el-button link @click="spaceEngineConfig.hunterDialog = true">
-                <template #icon>
-                    <img src="/app/hunter.ico" style="width: 16px; height: 16px;">
-                </template>
-                Hunter
-            </el-button>
-            <el-divider direction="vertical" />
+            <span class="drawer-title">新建主机扫描</span>
             <el-button link @click="shodanVisible = true">
                 <template #icon>
                     <img src="/shodan.png" style="width: 14px; height: 14px;">
@@ -1160,44 +1189,79 @@ function checkDictInput() {
             </div>
         </template>
         <el-form label-width="auto">
-            <el-form-item>
-                <template #label>目标:
-                    <el-tooltip placement="left">
-                        <template #content>
-                            目标仅支持换行分割，支持下面两种模式<br />
-                            主机扫描模式:<br />
-                            192.168.1.1<br />
-                            192.168.1.1/8<br />
-                            192.168.1.1/16<br />
-                            192.168.1.1/24<br />
-                            192.168.1.1-192.168.255.255<br />
-                            192.168.1.1-255<br /><br />
-                            扫描特定端口:<br />
-                            192.168.0.1:6379<br />
-                            <br />
-                            排除IP可以在可支持输入的IP格式前加!:<br />
-                            !192.168.1.6/28<br />
-                            <br />
-                            www.example.com<br /><br />
-                            网站扫描模式:<br />
-                            https://www.baidu.com<br />
-                        </template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-segmented v-model="param.inputType" :options="webscanInputOptions" block
-                    @change="param.inputType == 1 ? config.webscanOption = 0 : config.crack = false"
-                    style="width: 100%; margin-bottom: 2px;" />
-                <CustomTextarea v-model="form.input" :rows="6"></CustomTextarea>
+            <el-form-item label="任务名称:">
+                <el-input v-model="form.taskName" />
             </el-form-item>
-            <el-form-item label="端口:" v-show="param.inputType == 1">
+            <el-form-item label="目标地址:">
+                <CustomTextarea v-model="form.input" :rows="param.inputType == 0 ? 6 : 11"
+                    :placeholder="param.inputType == 0 ? webInputTips : hostInputTips"></CustomTextarea>
+            </el-form-item>
+            <el-form-item label="端口:">
                 <el-select v-model="param.portGroup" @change="updatePorts">
                     <el-option v-for="(item, index) in portGroupOptions" :label="item.text" :value="index" />
                 </el-select>
                 <el-input v-model="form.portlist" type="textarea" :rows="4" resize="none"
                     style="margin-top: 5px;"></el-input>
+            </el-form-item>
+            <el-form-item label="漏洞扫描:">
+                <el-switch v-model="config.vulscan" style="width: 100%;" />
+                <span class="form-item-tips">开启后端口扫描结束会进一步提取WEB应用指纹, 并调用指纹漏洞扫描模式扫描漏洞</span>
+            </el-form-item>
+            <el-form-item label="高级配置:" v-show="config.vulscan">
+                <el-tooltip content="启用后主动指纹只拼接根路径，否则会拼接输入的完整URL">
+                    <el-checkbox label="根路径扫描" v-model="config.rootPathScan" />
+                </el-tooltip>
+                <el-checkbox label="无指纹目标跳过漏扫" v-model="config.skipNucleiWithoutTags" />
+                <el-checkbox label="网站截图" v-model="config.screenhost" />
+            </el-form-item>
+            <el-form-item label="口令暴破:">
+                <el-switch v-model="config.crack" style="width: 100%;" />
+                <span class="form-item-tips" v-show="config.crack">默认字典可通过 设置->
+                    字典管理处修改, 由于RDP暴破可能存在闪退, 暂时不支持暴破</span>
+            </el-form-item>
+            <el-form-item label="用户字典:" v-show="config.crack">
+                <CustomTextarea v-model="param.username" :rows="5"
+                    @input="param.builtInUsername = param.username.length === 0"></CustomTextarea>
+                <el-checkbox v-model="param.builtInUsername"
+                    :disabled="param.username.length == 0">使用默认用户字典</el-checkbox>
+            </el-form-item>
+            <el-form-item label="密码字典:" v-show="config.crack">
+                <CustomTextarea v-model="param.password" :rows="5"
+                    @input="param.builtInPassword = param.password.length === 0"></CustomTextarea>
+                <el-checkbox v-model="param.builtInPassword"
+                    :disabled="param.password.length == 0">使用默认密码字典</el-checkbox>
+            </el-form-item>
+        </el-form>
+    </el-drawer>
+    <el-drawer v-model="form.newWebscanDrawer" size="50%">
+        <template #header>
+            <span class="drawer-title">新建网站扫描</span>
+            <el-button link @click="spaceEngineConfig.fofaDialog = true">
+                <template #icon>
+                    <img src="/app/fofa.ico">
+                </template>
+                FOFA
+            </el-button>
+            <el-divider direction="vertical" />
+            <el-button link @click="spaceEngineConfig.hunterDialog = true">
+                <template #icon>
+                    <img src="/app/hunter.ico" style="width: 16px; height: 16px;">
+                </template>
+                Hunter
+            </el-button>
+        </template>
+        <template #footer>
+            <div class="position-center">
+                <el-button type="primary" @click="startScan" style="bottom: 10px; position: absolute;">开始任务</el-button>
+            </div>
+        </template>
+        <el-form label-width="auto">
+            <el-form-item label="任务名称:">
+                <el-input v-model="form.taskName" />
+            </el-form-item>
+            <el-form-item label="目标地址:">
+                <CustomTextarea v-model="form.input" :rows="6"
+                    :placeholder="param.inputType == 0 ? webInputTips : hostInputTips"></CustomTextarea>
             </el-form-item>
             <el-form-item label="追加POC:">
                 <el-input v-model="global.webscan.append_pocfile">
@@ -1213,11 +1277,10 @@ function checkDictInput() {
                 </el-input>
                 <span class="form-item-tips">额外追加一个文件夹下的所有YAML POC文件，便于管理自添加POC</span>
             </el-form-item>
-            <el-form-item v-show="param.inputType == 0">
+            <el-form-item>
                 <template #label>模式:
                     <el-tooltip>
                         <template #content>
-                            下面规则仅针对URL类型，IP/域名类型会默认选择类型3<br />
                             1、指纹扫描: 只进行简单的指纹探测，不会探测敏感目录<br />
                             2、全指纹扫描: 会在指纹扫描基础上增加主动敏感目录探测，例如Nacos、报错页面信息判断指纹等<br />
                             3、指纹漏洞扫描: 指纹+主动敏感目录探测，扫描完成后扫描指纹对应POC，如果网站未识别到指纹会扫描全漏洞<br />
@@ -1228,22 +1291,21 @@ function checkDictInput() {
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-segmented v-model="config.webscanOption" :options="webscanOptions" block style="width: 100%;">
+                <el-segmented v-model="config.webscanOption" :options="webscanOptions" style="width: 100%;">
                     <template #default="{ item }">
-                        <div style="display: flex; align-items: center">
-                            <el-icon :size="16" style="margin-right: 3px;">
-                                <component :is="item.icon" />
+                        <el-space :size="3">
+                            <el-icon :size="18">
+                                <component :is="item.icon" :key="item.value" />
                             </el-icon>
-                            <span>{{ item.label }}</span>
-                        </div>
+                            <div>{{ item.label }}</div>
+                        </el-space>
                     </template>
                 </el-segmented>
             </el-form-item>
-            <div v-if="param.inputType == 0">
-                <el-form-item label="请求头:">
-                    <el-input v-model="config.customHeaders" :rows="3" type="textarea" placeholder="自定义请求头以键:值形式输入，多行请用换行分割"></el-input>
-                </el-form-item>
-            </div>
+            <el-form-item label="请求头:">
+                <el-input v-model="config.customHeaders" :rows="3" type="textarea"
+                    :placeholder="$t('tips.customHeaders')"></el-input>
+            </el-form-item>
             <div v-if="config.webscanOption == 3">
                 <el-form-item label="指定指纹:">
                     <el-select-v2 v-model="config.customTags" :options="param.allFingerprint" filterable multiple
@@ -1262,34 +1324,12 @@ function checkDictInput() {
                     <span class="form-item-tips">开启后会将所有目标添加Generate-Log4j2指纹</span>
                 </el-form-item>
             </div>
-            <el-form-item label="结果入库:">
-                <el-switch v-model="config.writeDB" />
-            </el-form-item>
-            <el-form-item label="任务名称:" v-if="config.writeDB">
-                <el-input v-model="form.taskName" />
-            </el-form-item>
-            <el-form-item label="其他配置:">
-                <el-checkbox label="蜜罐识别" v-model="config.honeypot" />
+            <el-form-item label="高级配置:">
                 <el-tooltip content="启用后主动指纹只拼接根路径，否则会拼接输入的完整URL">
                     <el-checkbox label="根路径扫描" v-model="config.rootPathScan" />
                 </el-tooltip>
                 <el-checkbox label="无指纹目标跳过漏扫" v-model="config.skipNucleiWithoutTags" />
                 <el-checkbox label="网站截图" v-model="config.screenhost" />
-            </el-form-item>
-            <el-form-item label="口令暴破:" v-show="param.inputType == 1">
-                <el-switch v-model="config.crack"></el-switch>
-                <span class="form-item-tips" v-show="config.crack" style="margin-left: 10px;">默认字典可通过 设置->
-                    字典管理处修改，由于RDP暴破可能存在闪退，暂时不支持暴破</span>
-            </el-form-item>
-            <el-form-item label="用户字典:" v-show="config.crack">
-                <CustomTextarea v-model="param.username" :rows="5" @input="checkDictInput"></CustomTextarea>
-                <el-checkbox v-model="param.builtInUsername"
-                    :disabled="param.username.length == 0">使用默认用户字典</el-checkbox>
-            </el-form-item>
-            <el-form-item label="密码字典:" v-show="config.crack">
-                <CustomTextarea v-model="param.password" :rows="5" @input="checkDictInput"></CustomTextarea>
-                <el-checkbox v-model="param.builtInPassword"
-                    :disabled="param.password.length == 0">使用默认密码字典</el-checkbox>
             </el-form-item>
         </el-form>
     </el-drawer>
@@ -1422,13 +1462,31 @@ function checkDictInput() {
             v-show="rp.table.selectRows.length >= 1" style="margin-bottom: 5px" />
         <el-form :model="form" label-width="auto">
             <el-form-item label="报告类型">
-                <el-radio-group v-model="reportOption">
-                    <el-radio v-for="item in webReportOptions" :key="item" :label="item" :value="item"></el-radio>
-                </el-radio-group>
+                <el-select v-model="reportOption" style="width: 240px;">
+                    <!-- 自定义选中项的显示 -->
+                    <template #label>
+                        <el-space :size="6">
+                            <el-icon :size="18">
+                                <component :is="getSelectedIcon(reportOption)" />
+                            </el-icon>
+                            <span style="font-weight: bold">{{ reportOption }}</span>
+                        </el-space>
+                    </template>
+
+                    <!-- 选项列表 -->
+                    <el-option v-for="item in webReportOptions" :key="item.label" :label="item.label"
+                        :value="item.label">
+                        <el-space :size="6">
+                            <el-icon :size="18">
+                                <component :is="item.icon" />
+                            </el-icon>
+                            <span>{{ item.label }}</span>
+                        </el-space>
+                    </el-option>
+                </el-select>
             </el-form-item>
             <el-form-item label="报告名称">
                 <el-input v-model="reportName"></el-input>
-                <span class="form-item-tips">多选任务可以合并导出</span>
             </el-form-item>
         </el-form>
         <template #footer>

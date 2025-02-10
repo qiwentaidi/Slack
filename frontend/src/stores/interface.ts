@@ -144,3 +144,14 @@ export interface DatabaseConnection {
     tablePanes: TablePane[]
     progress: number // 当前采集进度
 }
+
+export interface JSFindData {
+    Target: string
+    Method: string
+    Source: string
+    VulType: string
+    Param: string
+    Length: number
+    Filed: string
+    Response: string
+}

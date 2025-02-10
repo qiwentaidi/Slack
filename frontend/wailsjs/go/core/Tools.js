@@ -18,6 +18,10 @@ export function ExtractAlibabaDruidWebURI(arg1) {
   return window['go']['core']['Tools']['ExtractAlibabaDruidWebURI'](arg1);
 }
 
+export function ExtractIP(arg1) {
+  return window['go']['core']['Tools']['ExtractIP'](arg1);
+}
+
 export function ExtractURLs(arg1) {
   return window['go']['core']['Tools']['ExtractURLs'](arg1);
 }
@@ -26,10 +30,26 @@ export function FormatOutput(arg1) {
   return window['go']['core']['Tools']['FormatOutput'](arg1);
 }
 
+export function GOOS() {
+  return window['go']['core']['Tools']['GOOS']();
+}
+
 export function GetToken(arg1, arg2, arg3) {
   return window['go']['core']['Tools']['GetToken'](arg1, arg2, arg3);
 }
 
+export function IPParse(arg1) {
+  return window['go']['core']['Tools']['IPParse'](arg1);
+}
+
+export function IsRoot() {
+  return window['go']['core']['Tools']['IsRoot']();
+}
+
 export function PatchIdentify(arg1) {
   return window['go']['core']['Tools']['PatchIdentify'](arg1);
+}
+
+export function PortParse(arg1) {
+  return window['go']['core']['Tools']['PortParse'](arg1);
 }

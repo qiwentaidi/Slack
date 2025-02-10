@@ -22,6 +22,8 @@ export function DisconnectDatabase(arg1:string):Promise<boolean>;
 
 export function ExecSqlStatement(arg1:string,arg2:Array<any>):Promise<boolean>;
 
+export function ExportWebReportWithExcel(arg1:string,arg2:Array<structs.TaskResult>):Promise<boolean>;
+
 export function ExportWebReportWithHtml(arg1:string,arg2:Array<string>):Promise<boolean>;
 
 export function ExportWebReportWithJson(arg1:string,arg2:Array<structs.TaskResult>):Promise<boolean>;

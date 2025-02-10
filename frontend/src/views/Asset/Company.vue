@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { onMounted, reactive } from "vue";
-import { QuestionFilled, Plus, ChromeFilled } from '@element-plus/icons-vue';
+import { onMounted, reactive, ref } from "vue";
+import { QuestionFilled, ChromeFilled, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus'
 import { WechatOfficial, SubsidiariesAndDomains, TycCheckLogin, Callgologger } from "wailsjs/go/services/App";
 import { ExportAssetToXlsx } from '@/export'
@@ -61,7 +61,7 @@ async function Collect() {
             return
         }
     }
-    
+
     if (from.domain && from.machineStr == "") {
         ElMessage.warning('MachineStr为空，无法进行子域名查询，请先配置该内容')
         return
@@ -74,8 +74,9 @@ async function Collect() {
     }
     from.newTask = false
     from.runningStatus = true
+    showForm.value = false
     const lines = from.company.split(/[(\r\n)\r\n]+/);
-    let companys = lines.map(line => line.trim().replace(/\s+/g, ''));    
+    let companys = lines.map(line => line.trim().replace(/\s+/g, ''));
     pc.initTable()
     pw.initTable()
     let allCompany = [] as string[]
@@ -123,10 +124,11 @@ async function Collect() {
 
     // 4. 完成所有任务
     from.runningStatus = false
+    showForm.value = true
 }
 
 function recheckLinkSubdomain() {
-    if (!from.domain) { from.linkSubdomain = false}
+    if (!from.domain) { from.linkSubdomain = false }
 }
 
 const debouncedInput = debounce(() => {
@@ -140,55 +142,59 @@ function copyAllDomains() {
         .map(getRootDomain);
     Copy(allDomains.join('\n'));
 }
+
+const showForm = ref(true);
+
+function toggleFormVisibility() {
+    showForm.value = !showForm.value;
+}
 </script>
 
 
 <template>
-    <el-drawer v-model="from.newTask" direction="rtl" size="40%">
-        <template #header>
-            <span class="drawer-title">新建任务</span>
-        </template>
-        <el-form :model="from" label-width="auto">
-            <el-form-item label="公司名称:">
-                <el-input v-model="from.company" type="textarea" :rows="5"></el-input>
-            </el-form-item>
-            <el-form-item label="股权比例:">
-                <el-input-number v-model="from.defaultHold" :min="1" :max="100"></el-input-number>
-            </el-form-item>
-            <el-form-item label="子公司层级:">
-                <el-input-number v-model="from.subcompanyLevel" :min="1" :max="3"></el-input-number>
-            </el-form-item>
-            <el-form-item label="其他查询内容:">
-                <el-checkbox v-model="from.wechat" label="公众号" />
-                <el-checkbox v-model="from.domain" label="域名查询" @change="recheckLinkSubdomain" />
-                <!-- <el-checkbox v-model="from.linkSubdomain" label="联动子域名收集" :disabled="!from.domain"/> -->
-            </el-form-item>
-            <el-form-item label="Token:">
-                <el-input v-model="from.token" type="textarea" :rows="4" @input="debouncedInput"></el-input>
-                <span class="form-item-tips">填写TYC网页登录后Cookie头中auth_token字段</span>
-            </el-form-item>
-            <el-form-item>
-                <template #label>
-                    MachineStr:
-                    <el-tooltip>
-                        <template #content>由于https://www.beianx.cn/查域名存在校验机制，需要在此处填入Cookie头中<br />
-                            machine_str字段的值，如果没有的话先进行一次查询，可通过右侧按钮打开网站</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-input v-model="from.machineStr">
-                    <template #suffix>
-                        <el-button :icon="ChromeFilled" link @click="BrowserOpenURL('https://www.beianx.cn/')" />
-                    </template>
-                </el-input>
-            </el-form-item>
-            <el-form-item class="align-right">
-                <el-button type="primary" @click="Collect">开始查询</el-button>
-            </el-form-item>
-        </el-form>
-    </el-drawer>
+    <el-divider>
+        <el-button round :icon="showForm ? ArrowUpBold : ArrowDownBold" @click="toggleFormVisibility">
+            {{ showForm ? '隐藏参数' : '展开参数' }}
+        </el-button>
+    </el-divider>
+    <el-collapse-transition>
+        <div style="display: flex; gap: 10px;" v-show="showForm">
+            <el-form :model="from" label-width="auto" style="width: 50%;">
+                <el-form-item label="公司名称:">
+                    <el-input v-model="from.company" type="textarea" :rows="5"></el-input>
+                </el-form-item>
+                <el-form-item label="股权比例:">
+                    <el-input-number v-model="from.defaultHold" :min="1" :max="100"></el-input-number>
+                </el-form-item>
+                <el-form-item label="子公司层级:">
+                    <el-input-number v-model="from.subcompanyLevel" :min="1" :max="3"></el-input-number>
+                </el-form-item>
+                <el-form-item label="其他查询内容:">
+                    <el-checkbox v-model="from.wechat" label="公众号" />
+                    <el-checkbox v-model="from.domain" label="域名查询" @change="recheckLinkSubdomain" />
+                    <!-- <el-checkbox v-model="from.linkSubdomain" label="联动子域名收集" :disabled="!from.domain"/> -->
+                </el-form-item>
+                <el-form-item label="Token:">
+                    <el-input v-model="from.token" type="textarea" :rows="4" @input="debouncedInput"></el-input>
+                    <span class="form-item-tips">填写TYC网页登录后Cookie头中auth_token字段</span>
+                </el-form-item>
+                <el-form-item label="MachineStr:">
+                    <el-input v-model="from.machineStr">
+                        <template #suffix>
+                            <el-button :icon="ChromeFilled" link @click="BrowserOpenURL('https://www.beianx.cn/')" />
+                        </template>
+                    </el-input>
+                    <span class="form-item-tips">
+                        填写www.beianx.cn Cookie头中machine_str字段的值, 如果没有的话先进行一次查询
+                    </span>
+                </el-form-item>
+                <el-form-item class="align-right">
+                    <el-button type="primary" @click="Collect" v-if="!from.runningStatus">开始任务</el-button>
+                    <el-button loading v-else>正在查询</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </el-collapse-transition>
     <CustomTabs>
         <el-tabs v-model="from.activeName" type="border-card">
             <el-tab-pane label="控股企业" name="subcompany">
@@ -234,7 +240,8 @@ function copyAllDomains() {
                 </div>
             </el-tab-pane>
             <el-tab-pane label="公众号" name="wechat">
-                <el-table :data="pw.table.pageContent" style="height: calc(100vh - 175px);" :cell-style="{ height: '23px' }">
+                <el-table :data="pw.table.pageContent" style="height: calc(100vh - 175px);"
+                    :cell-style="{ height: '23px' }">
                     <el-table-column type="index" label="#" width="60px" />
                     <el-table-column prop="CompanyName" label="公司名称" width="180px" />
                     <el-table-column prop="WechatName" label="公众号名称">
@@ -274,8 +281,6 @@ function copyAllDomains() {
             </el-tab-pane>
         </el-tabs>
         <template #ctrl>
-            <el-button type="primary" :icon="Plus" @click="from.newTask = true" v-if="!from.runningStatus">新建任务</el-button>
-            <el-button loading v-else>正在查询</el-button>
             <el-button :icon="exportIcon" style="margin-left: 5px;"
                 @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">
                 结果导出

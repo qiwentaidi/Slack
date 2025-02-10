@@ -5,11 +5,11 @@ import {context} from '../models';
 
 export function CVE_2017_7921(arg1:string,arg2:clients.Proxy):Promise<string>;
 
-export function CVE_2021_29441_AddUser(arg1:string,arg2:string,arg3:string,arg4:clients.Proxy):Promise<string>;
+export function CVE_2021_29441_AddUser(arg1:string,arg2:{[key: string]: string},arg3:string,arg4:string,arg5:clients.Proxy):Promise<string>;
 
-export function CVE_2021_29441_DelUser(arg1:string,arg2:string,arg3:clients.Proxy):Promise<string>;
+export function CVE_2021_29441_DelUser(arg1:string,arg2:{[key: string]: string},arg3:string,arg4:clients.Proxy):Promise<string>;
 
-export function CVE_2021_29442(arg1:string,arg2:clients.Proxy):Promise<string>;
+export function CVE_2021_29442(arg1:string,arg2:{[key: string]: string},arg3:clients.Proxy):Promise<string>;
 
 export function CVE_2021_36260(arg1:string,arg2:string,arg3:clients.Proxy):Promise<string>;
 

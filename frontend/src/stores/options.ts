@@ -12,21 +12,14 @@ import scriptIcon from "@/assets/icon/script.svg"
 import maxmizeIcon from "@/assets/icon/maximize.svg"
 import reductionIcon from "@/assets/icon/reduction.svg"
 import pocIcon from '@/assets/icon/pocmanagement.svg'
-import { Back, Right, RefreshRight, Minus, Close, Refresh, Setting } from '@element-plus/icons-vue';
-import { WindowReload, WindowToggleMaximise,  Quit, WindowMinimise } from "wailsjs/runtime/runtime";
+import consoleIcon from '@/assets/icon/console.svg'
+import htmlIcon from '@/assets/icon/html.svg'
+import jsonIcon from '@/assets/icon/json.svg'
+import excleIcon from '@/assets/icon/excle.svg'
+import { Back, Right, RefreshRight, Minus, Close, Refresh, Setting, DataBoard } from '@element-plus/icons-vue';
+import { WindowReload, WindowToggleMaximise, Quit, WindowMinimise } from "wailsjs/runtime/runtime";
 import { computed } from "vue";
 import global from "./index";
-
-export const webscanInputOptions = [
-    {
-        label: '网站扫描',
-        value: 0,
-    },
-    {
-        label: '主机扫描',
-        value: 1,
-    }
-]
 
 export const webscanOptions = [
     {
@@ -51,20 +44,22 @@ export const webscanOptions = [
     },
 ]
 
-export const webReportOptions = ["HTML", "JSON"]
+export const webReportOptions = [
+    {
+        label: "HTML",
+        icon: htmlIcon,
+    },
+    {
+        label: "EXCEL",
+        icon: excleIcon,
+    },
+    {
+        label: "JSON",
+        icon: jsonIcon,
+    }
+]
 
 export const sortSeverityOptions = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
-
-// export const portscanOptions = [
-//     {
-//         label: "SYN",
-//         value: 0,
-//     },
-//     {
-//         label: "全连接",
-//         value: 1,
-//     },
-// ]
 
 export const quakeSyntaxOptions = [
     {
@@ -499,11 +494,11 @@ export const setupOptions = [
         icon: layersIcon,
     },
     {
-        name: 'aside.display',
+        name: 'setting.display',
         icon: themeIcon,
     },
     {
-        name: 'aside.dict',
+        name: 'setting.dict',
         icon: dictmanagerIcon,
     },
     // {
@@ -511,7 +506,7 @@ export const setupOptions = [
     //   icon: scriptIcon,
     // },
     {
-        name: 'aside.about',
+        name: 'setting.about',
         icon: aboutIcon,
     },
 ]
@@ -607,6 +602,7 @@ export const subdomainRunnerOptions = [
     {
         label: "枚举模式",
         value: 0,
+        tips: "不推荐使用"
     },
     {
         label: "查询模式",
@@ -813,20 +809,34 @@ export const windowsControl = computed(() => [
 
 export const sidebarBottomControl = [
     {
-      label: "aside.update",
-      icon: Refresh,
-      action: () => {
-        global.UPDATE.updateDialog = true
-      }
+        label: "aside.update",
+        icon: Refresh,
+        action: () => {
+            global.UPDATE.updateDialog = true
+        }
     },
     {
-      label: "aside.poc_manage",
-      icon: pocIcon,
-      path: "/PocManagement",
+        label: "aside.poc_manage",
+        icon: pocIcon,
+        path: "/PocManagement",
     },
     {
-      label: "aside.setting",
-      icon: Setting,
-      path: "/Settings"
+        label: "aside.setting",
+        icon: Setting,
+        path: "/Settings"
     },
-  ]
+]
+
+
+export const JSFindOptions = [
+    {
+        label: "运行日志",
+        value: 0,
+        icon: consoleIcon,
+    },
+    {
+        label: "数据展示",
+        value: 1,
+        icon: DataBoard
+    }
+]

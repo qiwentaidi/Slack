@@ -72,17 +72,15 @@ async function loadLocal() {
 
 <template>
     <div class="container" v-if="!showIframe">
-        <div>
-            <el-result title="本地加载" sub-title="需要下载解密模块，后续会在本机8731端口部署CyberChef服务，适用部分内网环境，一次下载后续优先使用">
-                <template #icon>
-                    <fishIcon />
-                </template>
-                <template #extra>
-                    <el-button type="primary" @click="startDownload()" v-if="!config.LocalENV">开始下载</el-button>
-                    <el-button type="primary" @click="loadLocal()" v-if="config.LocalENV">选择</el-button>
-                </template>
-            </el-result>
-        </div>
+        <el-result title="本地加载" sub-title="需要下载解密模块，后续会在本机8731端口部署CyberChef服务，适用部分内网环境，一次下载后续优先使用">
+            <template #icon>
+                <fishIcon />
+            </template>
+            <template #extra>
+                <el-button type="primary" @click="startDownload()" v-if="!config.LocalENV">开始下载</el-button>
+                <el-button type="primary" @click="loadLocal()" v-if="config.LocalENV">选择</el-button>
+            </template>
+        </el-result>
         <el-result title="远程加载" sub-title="远程内嵌官网站点，网络不好可能会加载失败，但不用下载环境">
             <template #icon>
                 <bearIcon />

@@ -49,6 +49,7 @@
                         { text: 'redis', value: 'redis' },
                         { text: 'mongodb', value: 'mongodb' },
                         { text: 'memcached', value: 'memcached' },
+                        { text: 'smb', value: 'smb' },
                     ]" :filter-method="filter.weakpass">
                         <template #filter-icon>
                             <Filter />
@@ -58,7 +59,7 @@
                     <el-table-column prop="port" label="Port" width="80" />
                     <el-table-column prop="username" label="Username" />
                     <el-table-column prop="password" label="Password" />
-                    <el-table-column label="Operations" align="center">
+                    <el-table-column label="Operate" align="center">
                         <template #default="props">
                             <el-button :icon="consoleIcon" @click="connectAndExecute(props.row)">Command</el-button>
                         </template>
@@ -199,6 +200,7 @@ import { ConnectAndExecute, FormatOutput } from "wailsjs/go/core/Tools";
 import { ElMessage } from "element-plus";
 
 const fscan = reactive({
+    currentMode: 0,
     showType: "default",
     input: "",
     result: "",
@@ -210,7 +212,7 @@ const fscan = reactive({
 
 const wip = usePagination<{ url: string, code: string, title: string, length: string, redirect: string }>(20)
 
-const weekProtocol = ["ftp", "ssh", "telnet", "mysql", "oracle", "mssql", "postgres", "rdp", "mongodb", "redis"]
+const weekProtocol = ["ftp", "ssh", "telnet", "mysql", "oracle", "mssql", "postgres", "rdp", "mongodb", "redis", "smb"]
 async function fscanParse() {
     if (!fscan.input) {
         ElMessage.warning("请输入文件路径")

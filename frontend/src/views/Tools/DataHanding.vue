@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { h, reactive } from "vue";
-import { ExtractIP, IpLocation } from "wailsjs/go/services/App";
-import { UserFilled, Location, Cellphone, Postcard, Upload, CloseBold, Unlock } from "@element-plus/icons-vue";
+import { IpLocation } from "wailsjs/go/services/App";
+import { User, Location, Cellphone, Postcard, Upload, CloseBold, Unlock } from "@element-plus/icons-vue";
 import alibabaIcon from "@/assets/icon/alibaba.svg";
 import onlineIcon from "@/assets/icon/online.svg";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -9,7 +9,7 @@ import { regexpIdCard, regexpPhone, validateSingleIP } from "@/stores/validate";
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { defaultIconSize } from "@/stores/style";
 import { CheckFileStat, FileDialog, ReadFile, SaveToTempFile } from "wailsjs/go/services/File";
-import { ExtractAlibabaDruidWebSession, ExtractAlibabaDruidWebURI, ExtractURLs } from "wailsjs/go/core/Tools";
+import { ExtractAlibabaDruidWebSession, ExtractAlibabaDruidWebURI, ExtractIP, ExtractURLs } from "wailsjs/go/core/Tools";
 import CustomTextarea from "@/components/CustomTextarea.vue";
 import { ProcessTextAreaInput } from "@/util";
 import async from "async";
@@ -72,7 +72,7 @@ function deduplication(input: string) {
             return
         }
         let lines = [] as string[];
-        if (input == "") {
+        if (input == null) {
             lines = content.split(/[(\r\n)\r\n]+/); // 根据换行或者回车进行识别
         } else {
             lines = content.split(form.dedupSplit);
@@ -425,7 +425,7 @@ function handleContextMenu(e: MouseEvent) {
             },
             {
                 label: "个人敏感信息",
-                icon: h(UserFilled, defaultIconSize),
+                icon: h(User, defaultIconSize),
                 children: [
                     {
                         label: "提取手机号",

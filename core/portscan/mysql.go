@@ -40,17 +40,21 @@ func MysqlScan(ctx context.Context, host string, usernames, passwords []string) 
 
 func MysqlConn(host, user, pass string) (flag bool, err error) {
 	flag = false
-	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v)/mysql?charset=utf8&timeout=%v", user, pass, host, 10*time.Second)
-	db, err := sql.Open("mysql", dataSourceName)
-	if err == nil {
-		db.SetConnMaxLifetime(10 * time.Second)
-		db.SetConnMaxIdleTime(10 * time.Second)
-		db.SetMaxIdleConns(0)
-		defer db.Close()
-		err = db.Ping()
+	for _, database := range []string{"mysql", "information_schema"} {
+		dataSourceName := fmt.Sprintf("%v:%v@tcp(%v)/%v?charset=utf8&timeout=%v", user, pass, host, database, 10*time.Second)
+		db, err := sql.Open("mysql", dataSourceName)
 		if err == nil {
-			flag = true
+			db.SetConnMaxLifetime(10 * time.Second)
+			db.SetConnMaxIdleTime(10 * time.Second)
+			db.SetMaxIdleConns(0)
+			err = db.Ping()
+			if err == nil {
+				flag = true
+				db.Close()
+				break
+			}
 		}
+		db.Close()
 	}
 	return flag, err
 }

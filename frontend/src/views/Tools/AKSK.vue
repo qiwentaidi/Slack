@@ -297,10 +297,10 @@ function CopyResult() {
       <el-form-item label="姓名" prop="name">
         <el-input v-model="dingtalk.name" />
       </el-form-item>
-      <el-form-item style="float: right;">
-        <el-button>取消</el-button>
-        <el-button type="primary" @click="dingdingOption.addUser" style="float: right;">添加</el-button>
-      </el-form-item>
     </el-form>
+    <template #footer>
+      <el-button>取消</el-button>
+      <el-button type="primary" @click="dingdingOption.addUser">添加</el-button>
+    </template>
   </el-dialog>
 </template>

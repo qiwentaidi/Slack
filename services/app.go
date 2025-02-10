@@ -12,8 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
-	rt "runtime"
 	"slack-wails/core/dirsearch"
 	"slack-wails/core/dumpall"
 	"slack-wails/core/exp/nacos"
@@ -102,19 +100,6 @@ func (a *App) Callgologger(level, msg string) {
 	}
 }
 
-func (a *App) IsRoot() bool {
-	if rt.GOOS == "windows" {
-		_, err := os.Open("\\\\.\\PHYSICALDRIVE0")
-		return err == nil
-	} else {
-		return os.Getuid() == 0
-	}
-}
-
-func (a *App) GOOS() string {
-	return rt.GOOS
-}
-
 func (a *App) GoFetch(method, target string, body interface{}, headers map[string]string, timeout int, proxy clients.Proxy) *structs.Response {
 	if _, err := url.Parse(target); err != nil {
 		return &structs.Response{
@@ -168,22 +153,6 @@ func (a *App) CyberChefLocalServer() {
 			}
 		}()
 	})
-}
-
-func (a *App) ExtractIP(text string) string {
-	var result string
-	var IP_analysis = make(map[string]int)
-	result += "---提取IP资产---\n"
-	for _, ip := range util.RemoveDuplicates(util.RegIP.FindAllString(text, -1)) {
-		result += ip + "\n"
-		ip = ip[:len(ip)-len(path.Ext(ip))]
-		IP_analysis[ip+".0"]++
-	}
-	result += "\n\n\n---提取C段资产---\n"
-	for _, p := range util.SortMap(IP_analysis) {
-		result += fmt.Sprintf("%v/24(%v)\n", p.Key, p.Value)
-	}
-	return result
 }
 
 func (a *App) ICPInfo(domain string) string {
@@ -338,14 +307,6 @@ func (a *App) DirScan(options dirsearch.Options) {
 }
 
 // portscan
-
-func (a *App) IPParse(ipList []string) []string {
-	return util.ParseIPs(ipList)
-}
-
-func (a *App) PortParse(text string) []int {
-	return util.ParsePort(text)
-}
 
 func (a *App) HostAlive(targets []string, Ping bool) []string {
 	return portscan.CheckLive(a.ctx, targets, Ping)
@@ -538,49 +499,16 @@ func (a *App) QuakeSearch(ipList []string, query string, pageNum, pageSize int, 
 	return qk
 }
 
-func (a *App) JSFind(target, customPrefix string) (fs *jsfind.FindSomething) {
-	jsLinks := jsfind.ExtractJS(a.ctx, target)
-	var wg sync.WaitGroup
-	limiter := make(chan bool, 100)
-	wg.Add(1)
-	limiter <- true
-	go func() {
-		fs = jsfind.FindInfo(a.ctx, target, limiter, &wg)
-	}()
-	wg.Wait()
-	u, _ := url.Parse(target)
-	fs.JS = *jsfind.AppendSource(target, jsLinks)
-	host := ""
-	if customPrefix != "" {
-		host = customPrefix
-	} else {
-		host = u.Scheme + "://" + u.Host
-	}
-	for _, jslink := range jsLinks {
-		wg.Add(1)
-		limiter <- true
-		go func(js string) {
-			var newURL string
-			if strings.HasPrefix(js, "http") {
-				newURL = js
-			} else {
-				newURL = host + "/" + js
-			}
-			fs2 := jsfind.FindInfo(a.ctx, newURL, limiter, &wg)
-			fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
-			fs.ChineseIDCard = append(fs.ChineseIDCard, fs2.ChineseIDCard...)
-			fs.ChinesePhone = append(fs.ChinesePhone, fs2.ChinesePhone...)
-			fs.SensitiveField = append(fs.SensitiveField, fs2.SensitiveField...)
-			fs.APIRoute = append(fs.APIRoute, fs2.APIRoute...)
-		}(jslink)
-	}
-	wg.Wait()
-	fs.APIRoute = jsfind.RemoveDuplicatesInfoSource(fs.APIRoute)
-	fs.ChineseIDCard = jsfind.RemoveDuplicatesInfoSource(fs.ChineseIDCard)
-	fs.ChinesePhone = jsfind.RemoveDuplicatesInfoSource(fs.ChinesePhone)
-	fs.SensitiveField = jsfind.RemoveDuplicatesInfoSource(fs.SensitiveField)
-	fs.IP_URL = jsfind.FilterExt(jsfind.RemoveDuplicatesInfoSource(fs.IP_URL))
-	return fs
+func (a *App) ExtractAllJSLink(url string) []string {
+	return jsfind.ExtractJS(a.ctx, url)
+}
+
+func (a *App) JSFind(target string, jsLinks []string) (fs *structs.FindSomething) {
+	return jsfind.MultiThreadJSFind(a.ctx, target, jsLinks)
+}
+
+func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers map[string]string) {
+	jsfind.AnalyzeAPI(a.ctx, homeURL, baseURL, apiList, headers)
 }
 
 // 允许目标传入文件或者目标favicon地址

@@ -19,13 +19,11 @@ export default {
         'systeminfo': 'AV/Patch Detection',
         'data_handing': 'Data Handing',
         'memorandum': 'Memorandum',
-        'associate_dictionary_generator': 'Dictionary Generator',
         'aksk': 'Wechat/DingDing',
         'update': 'Update',
         'setting': 'Settings',
         'more': 'More',
         'language': 'Language',
-        'about': 'About',
         'jsfinder': 'JSFinder',
         'fofa': 'FOFA',
         'exp': 'Vulnerability Exploitation',
@@ -33,9 +31,7 @@ export default {
         'crack': 'Crack',
         'guard': 'Guard',
         'guarantee': 'Important Period Guarantee',
-        'dict': 'Dictionary',
         'polymerization': 'Polymerization',
-        'display': 'Display',
         'theme': 'Theme',
         'workflow': 'Workflow',
         'isic': 'Internet Info Collection',
@@ -83,6 +79,9 @@ export default {
         'source_code': 'Source Code',
         'update_log': 'Update Log',
         'issue': 'New Issue',
+        'about': 'About',
+        'dict': 'Dictionary',
+        'display': 'Display',
     },
     update: {
         'latest': 'Lastest',
@@ -97,5 +96,8 @@ export default {
         'reload': 'Reload',
         'yx_log': 'Console Logs',
         'app_launcher': 'App Launcher',
+    },
+    tips: {
+        customHeaders: 'Custom request header input in the form of key: value, please use line breaks to separate multiple lines',
     }
 }

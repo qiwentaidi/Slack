@@ -19,13 +19,11 @@ export default {
         'systeminfo': '杀软识别/提权补丁',
         'data_handing': '数据处理',
         'memorandum': '备忘录',
-        'associate_dictionary_generator': '联想字典生成器',
         'aksk': '微信/钉钉',
         'update': '更新',
         'setting': '设置',
         'more': '更多',
         'language': '语言',
-        'about': '关于',
         'jsfinder': 'JSFinder',
         'fofa': 'FOFA',
         'exp': '漏洞利用',
@@ -33,9 +31,7 @@ export default {
         'crack': '暴破与未授权检测',
         'guard': '重保值守',
         'guarantee': '重保专区',
-        'dict': '字典管理',
         'polymerization': '聚合搜索',
-        'display': '显示设置',
         'theme': '主题',
         'workflow': '工作流',
         'isic': '互联网敏感信息采集',
@@ -88,6 +84,9 @@ export default {
         'source_code': '源码地址',
         'update_log': '更新日志',
         'issue': '提出问题',
+        'about': '关于',
+        'dict': '字典管理',
+        'display': '显示设置',
     },
     update: {
         'latest': '最新',
@@ -102,5 +101,8 @@ export default {
         'reload': '刷新',
         'yx_log': '运行日志',
         'app_launcher': '应用启动器',
+    },
+    tips: {
+        customHeaders: '自定义请求头以键:值形式输入，多行请用换行分割',
     }
 }

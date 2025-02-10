@@ -6,16 +6,16 @@ export function CVE_2017_7921(arg1, arg2) {
   return window['go']['services']['Exp']['CVE_2017_7921'](arg1, arg2);
 }
 
-export function CVE_2021_29441_AddUser(arg1, arg2, arg3, arg4) {
-  return window['go']['services']['Exp']['CVE_2021_29441_AddUser'](arg1, arg2, arg3, arg4);
+export function CVE_2021_29441_AddUser(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['services']['Exp']['CVE_2021_29441_AddUser'](arg1, arg2, arg3, arg4, arg5);
 }
 
-export function CVE_2021_29441_DelUser(arg1, arg2, arg3) {
-  return window['go']['services']['Exp']['CVE_2021_29441_DelUser'](arg1, arg2, arg3);
+export function CVE_2021_29441_DelUser(arg1, arg2, arg3, arg4) {
+  return window['go']['services']['Exp']['CVE_2021_29441_DelUser'](arg1, arg2, arg3, arg4);
 }
 
-export function CVE_2021_29442(arg1, arg2) {
-  return window['go']['services']['Exp']['CVE_2021_29442'](arg1, arg2);
+export function CVE_2021_29442(arg1, arg2, arg3) {
+  return window['go']['services']['Exp']['CVE_2021_29442'](arg1, arg2, arg3);
 }
 
 export function CVE_2021_36260(arg1, arg2, arg3) {

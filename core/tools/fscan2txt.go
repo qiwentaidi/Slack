@@ -18,8 +18,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type Tools struct{}
-
 var (
 	FscanRegs = map[string][]string{
 		"FTP":       {"[+] ftp"},
@@ -33,6 +31,7 @@ var (
 		"Mongodb":   {"[+] Mongodb"},
 		"Memcached": {"[+] Memcached"},
 		"MS17-010":  {"[+] MS17-010"},
+		"SMB":       {"[+] SMB"},
 		"DC INFO":   {"[+]DC"},
 		"POC":       {"poc"},
 		// 其他信息

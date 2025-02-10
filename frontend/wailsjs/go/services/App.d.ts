@@ -4,9 +4,10 @@ import {dirsearch} from '../models';
 import {structs} from '../models';
 import {isic} from '../models';
 import {clients} from '../models';
-import {jsfind} from '../models';
 import {context} from '../models';
 import {space} from '../models';
+
+export function AnalyzeAPI(arg1:string,arg2:string,arg3:Array<string>,arg4:{[key: string]: string}):Promise<void>;
 
 export function Callgologger(arg1:string,arg2:string):Promise<void>;
 
@@ -20,7 +21,7 @@ export function DownloadCyberChef(arg1:string):Promise<void>;
 
 export function ExitScanner(arg1:string):Promise<void>;
 
-export function ExtractIP(arg1:string):Promise<string>;
+export function ExtractAllJSLink(arg1:string):Promise<Array<string>>;
 
 export function FaviconMd5(arg1:string):Promise<string>;
 
@@ -29,8 +30,6 @@ export function FingerprintList():Promise<Array<string>>;
 export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean):Promise<structs.FofaSearchResult>;
 
 export function FofaTips(arg1:string):Promise<structs.TipsResult>;
-
-export function GOOS():Promise<string>;
 
 export function GetAllFinger():Promise<Array<string>>;
 
@@ -48,8 +47,6 @@ export function HunterTips(arg1:string):Promise<structs.HunterTips>;
 
 export function ICPInfo(arg1:string):Promise<string>;
 
-export function IPParse(arg1:Array<string>):Promise<Array<string>>;
-
 export function IconHash(arg1:string):Promise<string>;
 
 export function InitRule(arg1:string):Promise<boolean>;
@@ -60,9 +57,7 @@ export function Ip138Subdomain(arg1:string):Promise<string>;
 
 export function IpLocation(arg1:string):Promise<string>;
 
-export function IsRoot():Promise<boolean>;
-
-export function JSFind(arg1:string,arg2:string):Promise<jsfind.FindSomething>;
+export function JSFind(arg1:string,arg2:Array<string>):Promise<structs.FindSomething>;
 
 export function LoadDirsearchDict(arg1:Array<string>,arg2:Array<string>):Promise<Array<string>>;
 
@@ -77,8 +72,6 @@ export function NewTcpScanner(arg1:Array<string>,arg2:Array<string>,arg3:Array<n
 export function NewWebScanner(arg1:structs.WebscanOptions,arg2:clients.Proxy):Promise<void>;
 
 export function PortBrute(arg1:string,arg2:Array<string>,arg3:Array<string>):Promise<void>;
-
-export function PortParse(arg1:string):Promise<Array<number>>;
 
 export function QuakeSearch(arg1:Array<string>,arg2:string,arg3:number,arg4:number,arg5:boolean,arg6:boolean,arg7:boolean,arg8:boolean,arg9:string,arg10:string):Promise<structs.QuakeResult>;
 

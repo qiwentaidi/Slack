@@ -38,6 +38,10 @@ export function ExecSqlStatement(arg1, arg2) {
   return window['go']['services']['Database']['ExecSqlStatement'](arg1, arg2);
 }
 
+export function ExportWebReportWithExcel(arg1, arg2) {
+  return window['go']['services']['Database']['ExportWebReportWithExcel'](arg1, arg2);
+}
+
 export function ExportWebReportWithHtml(arg1, arg2) {
   return window['go']['services']['Database']['ExportWebReportWithHtml'](arg1, arg2);
 }

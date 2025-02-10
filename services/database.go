@@ -3,6 +3,9 @@ package services
 import (
 	"context"
 	"database/sql"
+
+	"github.com/xuri/excelize/v2"
+
 	"encoding/json"
 	"fmt"
 	"os"
@@ -1084,4 +1087,81 @@ func (d *Database) ExportWebReportWithHtml(reportpath string, taskids []string) 
 		pocsResults = append(pocsResults, pocsResult...)
 	}
 	return os.WriteFile(reportpath, []byte(report.GenerateReport(fingerprintsResults, pocsResults)), 0644) == nil
+}
+
+// 导出EXCEL报告
+
+func (d *Database) ExportWebReportWithExcel(reportpath string, tasks []structs.TaskResult) bool {
+	var fingerprintsResults []structs.InfoResult
+	var pocsResults []structs.VulnerabilityInfo
+	var targets []string
+
+	// 汇总任务数据
+	for _, task := range tasks {
+		fingerprintsResult := d.RetrieveFingerscanResults(task.TaskId)
+		pocsResult := d.RetrievePocscanResults(task.TaskId)
+		fingerprintsResults = append(fingerprintsResults, fingerprintsResult...)
+		pocsResults = append(pocsResults, pocsResult...)
+		targets = append(targets, task.Targets)
+	}
+	// 创建Excel文件
+	f := excelize.NewFile()
+	// 添加"Targets"工作表
+	targetsSheet := "Sheet1"
+	f.NewSheet(targetsSheet)
+	f.SetCellValue(targetsSheet, "A1", "Targets")
+	for i, target := range targets {
+		f.SetCellValue(targetsSheet, fmt.Sprintf("A%d", i+2), target)
+	}
+
+	// 添加"Fingerprints"工作表
+	fingerprintsSheet := "Fingerprints"
+	f.NewSheet(fingerprintsSheet)
+	fingerprintsHeader := []string{"URL", "Scheme", "Host", "Port", "StatusCode", "Length", "Title", "Fingerprints", "IsWAF", "WAF", "Detect", "Screenshot"}
+	for i, header := range fingerprintsHeader {
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("%s1", string(rune('A'+i))), header)
+	}
+	for i, result := range fingerprintsResults {
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("A%d", i+2), result.URL)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("B%d", i+2), result.Scheme)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("C%d", i+2), result.Host)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("D%d", i+2), result.Port)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("E%d", i+2), result.StatusCode)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("F%d", i+2), result.Length)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("G%d", i+2), result.Title)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("H%d", i+2), strings.Join(result.Fingerprints, ","))
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("I%d", i+2), result.IsWAF)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("J%d", i+2), result.WAF)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("K%d", i+2), result.Detect)
+		f.SetCellValue(fingerprintsSheet, fmt.Sprintf("L%d", i+2), result.Screenshot)
+	}
+
+	// 添加"POCs"工作表
+	pocsSheet := "POCs"
+	f.NewSheet(pocsSheet)
+	pocsHeader := []string{"ID", "Name", "Description", "Reference", "Type", "Severity", "URL", "Request", "Response", "ResponseTime", "Extract"}
+	for i, header := range pocsHeader {
+		f.SetCellValue(pocsSheet, fmt.Sprintf("%s1", string(rune('A'+i))), header)
+	}
+	for i, result := range pocsResults {
+		f.SetCellValue(pocsSheet, fmt.Sprintf("A%d", i+2), result.ID)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("B%d", i+2), result.Name)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("C%d", i+2), result.Description)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("D%d", i+2), result.Reference)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("E%d", i+2), result.Type)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("F%d", i+2), result.Severity)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("G%d", i+2), result.URL)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("H%d", i+2), result.Request)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("I%d", i+2), result.Response)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("J%d", i+2), result.ResponseTime)
+		f.SetCellValue(pocsSheet, fmt.Sprintf("K%d", i+2), result.Extract)
+	}
+
+	// 保存Excel文件
+	if err := f.SaveAs(reportpath); err != nil {
+		gologger.Error(d.ctx, "Failed to save Excel file")
+		return false
+	}
+
+	return true
 }

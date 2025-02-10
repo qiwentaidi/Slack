@@ -11,9 +11,9 @@ import { useDark } from '@vueuse/core'
 import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/services/File";
 import { InitConfigFile } from "./config";
 import { check } from "@/util";
-import { GOOS } from "wailsjs/go/services/App";
 import CyberChef from "./views/Tools/CyberChef.vue";
 import { ElMessage } from "element-plus";
+import { GOOS } from "wailsjs/go/core/Tools";
 
 const levelClassMap: { [key: string]: string } = {
   "[INF]": "log-info",
