@@ -263,6 +263,15 @@ func (d *Database) GetAllPathsAndTimes() []structs.PathTimes {
 	return results
 }
 
+func (d *Database) DeleteRecordByPath(path string) bool {
+	return d.ExecSqlStatement("DELETE FROM dirsearch WHERE path = ?", path)
+}
+
+// 执行 SQL 删除语句，删除 times 为 1 的记录
+func (d *Database) DeleteRecordsWithTimesEqualOne() bool {
+	return d.ExecSqlStatement("DELETE FROM dirsearch WHERE times = 1")
+}
+
 func (d *Database) GetAllDatabaseConnections() (dcs []structs.DatabaseConnection) {
 	rows, err := d.DB.Query(`SELECT * FROM dbManager;`)
 	if err != nil {

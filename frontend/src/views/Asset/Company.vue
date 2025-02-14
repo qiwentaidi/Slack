@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from "vue";
-import { QuestionFilled, ChromeFilled, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus'
+import { ChromeFilled, ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { WechatOfficial, SubsidiariesAndDomains, TycCheckLogin, Callgologger } from "wailsjs/go/services/App";
 import { ExportAssetToXlsx } from '@/export'
 import usePagination from "@/usePagination";
@@ -45,86 +45,134 @@ const from = reactive({
 let pc = usePagination<structs.CompanyInfo>(20) // paginationCompany
 let pw = usePagination<structs.WechatReulst>(20) // paginationWehcat
 
-async function Collect() {
-    if (from.company == "") {
-        ElMessage.warning('查询目标不能为空')
-        return
-    }
-    if (from.token == "") {
-        ElMessage.warning('天眼查Token为空，大概率会影响爬取结果，请先填写Token信息')
-        return
-    } else {
-        from.token = from.token.replace(/[\r\n\s]/g, '')
-        let isLogin = await TycCheckLogin(from.token)
-        if (!isLogin) {
-            ElMessage.warning('天眼查Token已失效')
+function NewRunner() {
+   let collect = new Collect()
+   collect.Runner()
+}
+
+class Collect {
+    allCompany: string[] = []
+    allSubdomain: string[] = []
+    public async Runner() {
+
+        if (from.company == "") {
+            ElMessage.warning('查询目标不能为空')
             return
         }
+        if (from.token == "") {
+            ElMessage.warning('天眼查Token为空，大概率会影响爬取结果，请先填写Token信息')
+            return
+        } else {
+            from.token = from.token.replace(/[\r\n\s]/g, '')
+            let isLogin = await TycCheckLogin(from.token)
+            if (!isLogin) {
+                ElMessage.warning('天眼查Token已失效')
+                return
+            }
+        }
+
+        if (from.domain && from.machineStr == "") {
+            ElMessage.warning('MachineStr为空，无法进行子域名查询，请先配置该内容')
+            return
+        } else {
+            from.machineStr = from.machineStr.replace(/[\r\n\s]/g, '')
+        }
+        if (from.linkSubdomain && global.space.bevigil == "" && global.space.chaos == "" && global.space.zoomeye == "" && global.space.securitytrails == "" && global.space.github == "") {
+            ElMessage.warning('未配置任何域名收集模块API，请在设置中至少配置一个')
+            return
+        }
+        from.newTask = false
+        from.runningStatus = true
+        showForm.value = false
+        const lines = from.company.split(/[(\r\n)\r\n]+/);
+        this.allCompany = lines.map(line => line.trim().replace(/\s+/g, ''));
+        pc.initTable()
+        pw.initTable()
+        // 1. 收集子公司信息
+        for (const companyName of this.allCompany) {
+            await this.collectSubCompanies(companyName);
+        }
+
+        Callgologger("info", "已完成子公司查询任务")
+
+        // 2. 处理子域名链接
+        if (this.allSubdomain.length != 0) {
+            await LinkSubdomain(this.allSubdomain)
+        }
+
+        // 3. 收集微信公众号信息
+        if (from.wechat) {
+            for (const companyName of this.allCompany) {
+                if (companyName == "") return
+                Callgologger("info", `正在收集${companyName}的微信公众号资产`)
+                if (typeof companyName === 'string') {
+                    const result = await WechatOfficial(companyName);
+                    if (Array.isArray(result) && result.length > 0) {
+                        pw.table.result.push(...result);
+                        pw.ctrl.watchResultChange(pw.table)
+                    }
+                }
+            }
+            Callgologger("info", "已完成微信公众查询任务")
+        }
+        this.finishTask()
     }
 
-    if (from.domain && from.machineStr == "") {
-        ElMessage.warning('MachineStr为空，无法进行子域名查询，请先配置该内容')
-        return
-    } else {
-        from.machineStr = from.machineStr.replace(/[\r\n\s]/g, '')
-    }
-    if (from.linkSubdomain && global.space.bevigil == "" && global.space.chaos == "" && global.space.zoomeye == "" && global.space.securitytrails == "" && global.space.github == "") {
-        ElMessage.warning('未配置任何域名收集模块API，请在设置中至少配置一个')
-        return
-    }
-    from.newTask = false
-    from.runningStatus = true
-    showForm.value = false
-    const lines = from.company.split(/[(\r\n)\r\n]+/);
-    let companys = lines.map(line => line.trim().replace(/\s+/g, ''));
-    pc.initTable()
-    pw.initTable()
-    let allCompany = [] as string[]
-    let allSubdomain = [] as string[]
-    // 1. 收集子公司信息
-    for (const companyName of companys) {
+    public async collectSubCompanies(companyName: string) {
         Callgologger("info", `正在收集${companyName}的子公司信息`);
+
         if (typeof companyName === 'string') {
             const result = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain, from.machineStr);
+
             if (result.length > 0) {
+                const hasError = result.some(item => item.Investment === "error");
+                if (hasError) {
+                    const confirm = await showConfirm(companyName);
+                    if (!confirm) {
+                        this.finishTask();
+                        return;
+                    }
+                    // 如果确认继续，递归重试
+                    await this.collectSubCompanies(companyName);
+                    return;
+                }
                 pc.table.result.push(...result);
                 throttleUpdate();
                 for (const item of result) {
-                    allCompany.push(item.CompanyName!);
+                    this.allCompany.push(item.CompanyName!);
                     if (from.linkSubdomain && item.Domains!.length > 0) {
-                        allSubdomain.push(...item.Domains!);
+                        this.allSubdomain.push(...item.Domains!);
                     }
                 }
             }
         }
     }
-
-    Callgologger("info", "已完成子公司查询任务")
-
-    // 2. 处理子域名链接
-    if (allSubdomain.length != 0) {
-        await LinkSubdomain(allSubdomain)
+    private finishTask() {
+        from.runningStatus = false
+        showForm.value = true
     }
+}
 
-    // 3. 收集微信公众号信息
-    if (from.wechat) {
-        for (const companyName of allCompany) {
-            if (companyName == "") return
-            Callgologger("info", `正在收集${companyName}的微信公众号资产`)
-            if (typeof companyName === 'string') {
-                const result = await WechatOfficial(companyName);
-                if (Array.isArray(result) && result.length > 0) {
-                    pw.table.result.push(...result);
-                    pw.ctrl.watchResultChange(pw.table)
-                }
-            }
+async function showConfirm(companyName: string) {
+    return ElMessageBox.confirm(
+        `检测到 ${companyName} 查询数据异常, 疑似触发天眼查人机校验, 请打开网站手动校验! 确认校验通过后点击确定按钮继续任务. 点击取消按钮则会退出任务.`,
+        '警告',
+        {
+            type: 'warning',
+            closeOnClickModal: false,
+            closeOnPressEscape: false,
         }
-        Callgologger("info", "已完成微信公众查询任务")
-    }
-
-    // 4. 完成所有任务
-    from.runningStatus = false
-    showForm.value = true
+    )
+        .then(() => {
+            return true; // 返回 true，表示确认
+        })
+        .catch(() => {
+            ElMessage({
+                type: 'error',
+                message: '用户已取消, 人机校验未通过, 任务已退出.',
+            })
+            return false; // 返回 false，表示取消
+        })
 }
 
 function recheckLinkSubdomain() {
@@ -189,7 +237,7 @@ function toggleFormVisibility() {
                     </span>
                 </el-form-item>
                 <el-form-item class="align-right">
-                    <el-button type="primary" @click="Collect" v-if="!from.runningStatus">开始任务</el-button>
+                    <el-button type="primary" @click="NewRunner()" v-if="!from.runningStatus">开始任务</el-button>
                     <el-button loading v-else>正在查询</el-button>
                 </el-form-item>
             </el-form>

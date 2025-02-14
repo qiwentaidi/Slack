@@ -15,4 +15,6 @@ export function CVE_2021_36260(arg1:string,arg2:string,arg3:clients.Proxy):Promi
 
 export function CameraCrackPassword(arg1:string,arg2:string,arg3:Array<string>):Promise<string>;
 
+export function FineReportChannelDeserialize(arg1:string,arg2:string,arg3:clients.Proxy):Promise<string>;
+
 export function Startup(arg1:context.Context):Promise<void>;

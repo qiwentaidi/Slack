@@ -4,6 +4,8 @@ import {structs} from '../models';
 import {services} from '../models';
 import {context} from '../models';
 
+export function AutoGenerateFavicon(arg1:string):Promise<string>;
+
 export function CheckFileStat(arg1:string):Promise<boolean>;
 
 export function DirectoryDialog():Promise<string>;

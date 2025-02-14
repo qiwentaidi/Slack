@@ -31,7 +31,7 @@ html {
 }
 
 .el-divider__text {
-  background-color: var(--el-fill-color-blank);
+  background-color: var(--el-divider-text);
 }
 
 .el-textarea__inner {

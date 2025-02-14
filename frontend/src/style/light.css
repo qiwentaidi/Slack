@@ -5,6 +5,7 @@ html.light {
     --response-bg-color: #f6f6f6;
     --list-item-hover-color: #EDEDED;
     --list-item-selected-color: #E6E6E6;
+    --el-divider-text: #ffffff;
 
     .el-tag.el-tag--critical {
         background-color: #FFE6E6;
@@ -15,6 +16,26 @@ html.light {
     .el-result:hover {
         cursor: pointer;
         background-color: #f5f7fa;
+    }
+
+    .note-info {
+        border-left-color: #3498db;
+        background: #eaf6ff;
+    }
+    
+    .note-warning {
+        border-left-color: #f39c12;
+        background: #fff4e5;
+    }
+    
+    .note-error {
+        border-left-color: #e74c3c;
+        background: #ffecec;
+    }
+    
+    .note-success {
+        border-left-color: #2ecc71;
+        background: #e6f9ea;
     }
 
     pre code.hljs {

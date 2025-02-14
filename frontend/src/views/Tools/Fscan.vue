@@ -173,15 +173,11 @@
     </div>
     <div id="main" v-show="fscan.showType == 'graph'" style="width: 100%; height: 100vh;"></div>
     <el-dialog v-model="fscan.tipsDialog" title="模块介绍" width="50%">
-        <el-descriptions :column="1" border>
-            <template #extra>
-                <el-tag type="warning">其他魔改过输出内容的版本，其他模块无法适配</el-tag>
-            </template>
-            <el-descriptions-item label="Raw:">按行匹配筛选规则</el-descriptions-item>
-            <el-descriptions-item label="其他模块:">
-                只有在使用官网项目 <strong>https://github.com/shadow1ng/fscan</strong> 时才能正常使用
-            </el-descriptions-item>
-        </el-descriptions>
+        <Note type="info">
+            Raw: 按行匹配筛选规则<br /><br />
+            其他模块: 只有在使用官网项目 <strong>https://github.com/shadow1ng/fscan</strong> 时才能正常使用<br /><br />
+            <el-tag type="warning">其他魔改过输出内容的版本，其他模块无法适配</el-tag>
+        </Note>
     </el-dialog>
 </template>
 
@@ -198,6 +194,7 @@ import usePagination from "@/usePagination";
 import { ReadFile } from "wailsjs/go/services/File";
 import { ConnectAndExecute, FormatOutput } from "wailsjs/go/core/Tools";
 import { ElMessage } from "element-plus";
+import Note from "@/components/Note.vue";
 
 const fscan = reactive({
     currentMode: 0,

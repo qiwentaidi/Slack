@@ -18,6 +18,10 @@ export function ConnectMongodb(arg1:string,arg2:string,arg3:string):Promise<mong
 
 export function CreateTable():Promise<boolean>;
 
+export function DeleteRecordByPath(arg1:string):Promise<boolean>;
+
+export function DeleteRecordsWithTimesEqualOne():Promise<boolean>;
+
 export function DisconnectDatabase(arg1:string):Promise<boolean>;
 
 export function ExecSqlStatement(arg1:string,arg2:Array<any>):Promise<boolean>;

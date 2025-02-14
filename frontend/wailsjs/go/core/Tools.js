@@ -46,6 +46,10 @@ export function IsRoot() {
   return window['go']['core']['Tools']['IsRoot']();
 }
 
+export function NacosCategoriesExtract(arg1) {
+  return window['go']['core']['Tools']['NacosCategoriesExtract'](arg1);
+}
+
 export function PatchIdentify(arg1) {
   return window['go']['core']['Tools']['PatchIdentify'](arg1);
 }

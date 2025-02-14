@@ -30,6 +30,14 @@ export function CreateTable() {
   return window['go']['services']['Database']['CreateTable']();
 }
 
+export function DeleteRecordByPath(arg1) {
+  return window['go']['services']['Database']['DeleteRecordByPath'](arg1);
+}
+
+export function DeleteRecordsWithTimesEqualOne() {
+  return window['go']['services']['Database']['DeleteRecordsWithTimesEqualOne']();
+}
+
 export function DisconnectDatabase(arg1) {
   return window['go']['services']['Database']['DisconnectDatabase'](arg1);
 }

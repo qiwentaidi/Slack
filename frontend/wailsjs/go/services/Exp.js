@@ -26,6 +26,10 @@ export function CameraCrackPassword(arg1, arg2, arg3) {
   return window['go']['services']['Exp']['CameraCrackPassword'](arg1, arg2, arg3);
 }
 
+export function FineReportChannelDeserialize(arg1, arg2, arg3) {
+  return window['go']['services']['Exp']['FineReportChannelDeserialize'](arg1, arg2, arg3);
+}
+
 export function Startup(arg1) {
   return window['go']['services']['Exp']['Startup'](arg1);
 }

@@ -25,14 +25,6 @@ func main() {
 	file := services.NewFile()
 	db := services.NewDatabase()
 	exp := services.NewExp()
-	// Create application with options
-	winDropOptions := &options.DragAndDrop{
-		EnableFileDrop:     true,
-		DisableWebViewDrop: true,
-	}
-	macDropOptions := &options.DragAndDrop{
-		EnableFileDrop: true,
-	}
 	err := wails.Run(&options.App{
 		Title:  "Slack",
 		Width:  1280,
@@ -48,13 +40,7 @@ func main() {
 			exp.Startup(ctx)
 		},
 		OnBeforeClose: app.BeforeClose,
-		DragAndDrop: func() *options.DragAndDrop {
-			if rt.GOOS == "windows" {
-				return winDropOptions
-			} else {
-				return macDropOptions
-			}
-		}(),
+		DragAndDrop:   DragAndDropOptions(),
 		OnDomReady: func(ctx context.Context) {
 			runtime.OnFileDrop(ctx, func(x, y int, paths []string) {
 
@@ -80,5 +66,19 @@ func main() {
 	})
 	if err != nil {
 		println("Error:", err.Error())
+	}
+}
+
+// Choose the appropriate one options.DragAndDrop
+func DragAndDropOptions() *options.DragAndDrop {
+	if rt.GOOS == "windows" {
+		return &options.DragAndDrop{
+			EnableFileDrop:     true,
+			DisableWebViewDrop: true,
+		}
+	} else {
+		return &options.DragAndDrop{
+			EnableFileDrop: true,
+		}
 	}
 }

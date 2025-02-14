@@ -1,4 +1,4 @@
-package nacos
+package core
 
 import (
 	"bufio"
@@ -68,7 +68,7 @@ func countKeywordsInFile(filePath string) (structs.NacosNode, error) {
 }
 
 // 遍历目录并统计每个文件的关键词出现次数，返回结果数组
-func ProcessDirectory(dir string) []structs.NacosConfig {
+func (t *Tools) NacosCategoriesExtract(dir string) []structs.NacosConfig {
 	var results []structs.NacosConfig
 	hashSet := make(map[string]bool) // 用于存储文件哈希值，防止重复
 

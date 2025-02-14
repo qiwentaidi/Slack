@@ -2,16 +2,16 @@
 import { reactive } from 'vue';
 import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/services/App";
 import { ProcessTextAreaInput, Copy, ReadLine, selectFileAndAssign } from '@/util'
-import { ElMessage, ElNotification } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
-import { QuestionFilled, RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting } from '@element-plus/icons-vue';
+import { QuestionFilled, RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting, Delete, WarnTriangleFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '@/stores';
-import { CheckFileStat, FileDialog, List, OpenFolder } from 'wailsjs/go/services/File';
+import { CheckFileStat, List, OpenFolder } from 'wailsjs/go/services/File';
 import { Dir } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import redirectIcon from '@/assets/icon/redirect.svg'
-import { GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/services/Database';
+import { DeleteRecordByPath, DeleteRecordsWithTimesEqualOne, GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/services/Database';
 import { dirsearch } from 'wailsjs/go/models';
 import throttle from 'lodash/throttle';
 
@@ -159,7 +159,7 @@ class Dirsearch {
 
     public async scanner() {
         await this.init()
-        let statuscodeFilter = control.psc()
+        let statuscodeFilter = processStatusCode()
         if (await CheckFileStat(from.input)) {
             let lines = await ReadLine(from.input)
             if (!lines) {
@@ -199,25 +199,23 @@ class Dirsearch {
     }
 }
 
-const control = ({
-    // Processing status codes
-    psc: function (): number[] {
-        let temp: number[] = []
-        if (from.statusFilter) {
-            for (const block of from.statusFilter.split(",")) {
-                if (block.indexOf("-") !== -1) {
-                    let c = block.split("-")
-                    for (var i = Number(c[0]); i <= Number(c[1]); i++) {
-                        temp.push(Number(i))
-                    }
-                } else {
-                    temp.push(Number(block))
+
+function processStatusCode(): number[] {
+    let temp: number[] = []
+    if (from.statusFilter) {
+        for (const block of from.statusFilter.split(",")) {
+            if (block.indexOf("-") !== -1) {
+                let c = block.split("-")
+                for (var i = Number(c[0]); i <= Number(c[1]); i++) {
+                    temp.push(Number(i))
                 }
+            } else {
+                temp.push(Number(block))
             }
         }
-        return temp
     }
-})
+    return temp
+}
 
 function DispalyResponse(response: string) {
     from.respDialog = true
@@ -252,6 +250,46 @@ function copyHistory(length: number) {
     // 提取 path 值
     const topPaths = topItems.map(item => item.path);
     config.customDict = topPaths.join("\n")
+}
+
+async function deleteRecordFormPath(path: string) {
+    let isSuccess = await DeleteRecordByPath(path)
+    if (isSuccess) {
+        pathTimes.table.result = pathTimes.table.result.filter(item => item.path != path)
+        pathTimes.ctrl.watchResultChange(pathTimes.table)
+        ElMessage.success({
+            message: "删除成功",
+            grouping: true
+        })
+        return
+    }
+    ElMessage.error({
+        message: "删除失败",
+        grouping: true
+    })
+}
+
+function deleteRecordsWithTimesEqualOne() {
+    ElMessageBox.confirm('确定要删除所有次数为1的记录吗？', '警告', {
+        type: 'warning'
+    }).then(async () => {
+        let isSuccess = await DeleteRecordsWithTimesEqualOne()
+        if (isSuccess) {
+            pathTimes.table.result = pathTimes.table.result.filter(item => item.times != 1)
+            pathTimes.ctrl.watchResultChange(pathTimes.table)
+            ElMessage.success({
+                message: "删除成功",
+                grouping: true
+            })
+            return
+        }
+        ElMessage.error({
+            message: "删除失败",
+            grouping: true
+        })
+    }).catch(() => {
+
+    })
 }
 </script>
 
@@ -399,7 +437,7 @@ function copyHistory(length: number) {
             </el-form-item>
             <el-form-item label="字典列表:">
                 <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip
-                    placeholder="不选择默认加载dicc字典" :max-collapse-tags="1">
+                    placeholder="不选择默认加载dicc字典" :max-collapse-tags="1" style="margin-bottom: 5px;">
                     <template #prefix>
                         <el-button-group>
                             <el-tooltip content="加载自定义字典">
@@ -418,9 +456,10 @@ function copyHistory(length: number) {
                 <el-input v-model="config.customDict" type="textarea" :rows="8" placeholder="若该文本框中存在内容，则加载其内容目录为字典，不使用选中字典"></el-input>
             </el-form-item>
             <el-form-item label="扫描记录:" class="align-right">
-                <el-alert title="记录响应码为200、500路径出现次数，数据非实时，每次启动/刷新应用时会刷新" type="info" show-icon :closable="false"></el-alert>
+                <el-alert title="记录响应码为200、500路径出现次数, 数据非实时, 每次启动/刷新应用时会更新" type="info" show-icon :closable="false"></el-alert>
+                <el-button type="danger" plain :icon="WarnTriangleFilled" @click="deleteRecordsWithTimesEqualOne" style="width: 100%; margin-block: 5px;">删除次数为1的记录</el-button>
                 <el-table :data="pathTimes.table.pageContent" border 
-                @sort-change="pathTimes.ctrl.sortChange" style="width: 100%; height: 50vh; margin-top: 5px;">
+                @sort-change="pathTimes.ctrl.sortChange" style="width: 100%; height: 50vh;">
                     <el-table-column prop="path">
                         <template #header>
                             <el-text><span>Path</span>
@@ -433,6 +472,11 @@ function copyHistory(length: number) {
                     </el-table-column>
                     <el-table-column prop="times" label="Occurrences" width="200"
                         sortable="custom">
+                    </el-table-column>
+                    <el-table-column label="Operate" width="100" align="center">
+                        <template #default="scope">
+                            <el-button :icon="Delete" size="small" plain @click="deleteRecordFormPath(scope.row.path)">删除</el-button>
+                        </template>
                     </el-table-column>
                     <template #empty>
                         <el-empty />

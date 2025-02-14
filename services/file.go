@@ -27,6 +27,8 @@ import (
 
 	"github.com/mat/besticon/v3/ico"
 	"github.com/nfnt/resize"
+	"github.com/orcastor/fico"
+	lnk "github.com/parsiya/golnk"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -559,9 +561,6 @@ func (f *File) RunApp(types, file, target string) {
 		switch filepath.Ext(file) {
 		case ".exe":
 			cmd = exec.Command(name)
-		case ".url":
-			runtime.BrowserOpenURL(f.ctx, name)
-			return
 		default:
 			cmd = exec.Command("cmd", "/c", "start", name)
 		}
@@ -641,6 +640,27 @@ func (f *File) GenerateFaviconBase64(filePath string) string {
 	return compressPictures(filePath, data)
 }
 
+func (f *File) AutoGenerateFavicon(filePath string) string {
+	if strings.HasSuffix(filePath, ".lnk") {
+		Lnk, err := lnk.File(filePath)
+		if err != nil {
+			return ""
+		}
+		filePath = Lnk.LinkInfo.LocalBasePath
+	}
+	// 创建一个 Buffer 来存储图标数据
+	var buf bytes.Buffer
+
+	// 提取图标并写入到 Buffer
+	err := fico.F2ICO(&buf, filePath, fico.Config{Format: "ico", Width: 128, Height: 128})
+	if err != nil {
+		gologger.Debug(f.ctx, "[AppLauncher] 读取应用图标失败 "+err.Error())
+		return ""
+	}
+	// 将图标的字节数据进行 Base64 编码
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
+}
+
 // path可以是文件路径也可以是url,主要用来判断文件格式
 func compressPictures(path string, data []byte) string {
 	// 如果是svg图标，则直接返回base64，因为svg图标文件比较小
@@ -662,8 +682,8 @@ func compressPictures(path string, data []byte) string {
 	if err != nil {
 		return ""
 	}
-	// 将图像缩放为40x40
-	resizedImg := resize.Resize(40, 40, img, resize.Lanczos3)
+	// 将图像缩放为64x64
+	resizedImg := resize.Resize(64, 64, img, resize.Lanczos3)
 	// 将缩放后的图像编码为Base64
 	var buf bytes.Buffer
 	err = png.Encode(&buf, resizedImg)

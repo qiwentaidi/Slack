@@ -14,7 +14,6 @@ import (
 	"os"
 	"slack-wails/core/dirsearch"
 	"slack-wails/core/dumpall"
-	"slack-wails/core/exp/nacos"
 	"slack-wails/core/info"
 	"slack-wails/core/isic"
 	"slack-wails/core/jsfind"
@@ -399,6 +398,49 @@ func (a *App) FingerprintList() []string {
 	return fingers
 }
 
+// func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy) {
+// 	webscan.ExitFunc = false
+// 	webscan.IsRunning = true
+// 	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
+// 	gologger.Info(a.ctx, "Fingerscan is running ...")
+// 	engine := webscan.NewFingerScanner(a.ctx, proxy, options)
+// 	if engine == nil {
+// 		gologger.Error(a.ctx, "Init fingerscan engine failed")
+// 		webscan.IsRunning = false
+// 		return
+// 	}
+// 	engine.NewFingerScan()
+// 	if options.DeepScan && !webscan.ExitFunc {
+// 		engine.NewActiveFingerScan()
+// 	}
+// 	if options.CallNuclei && !webscan.ExitFunc {
+// 		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
+// 		// var id = 0
+// 		var allTemplateFolders = []string{a.templateDir}
+// 		if options.AppendTemplateFolder != "" {
+// 			allTemplateFolders = append(allTemplateFolders, options.AppendTemplateFolder)
+// 		}
+// 		fpm := engine.URLWithFingerprintMap()
+// 		allOptions := []structs.NucleiOption{}
+// 		for target, tags := range fpm {
+// 			option := structs.NucleiOption{
+// 				URL:                   target,
+// 				Tags:                  util.RemoveDuplicates(tags),
+// 				TemplateFile:          options.TemplateFiles,
+// 				SkipNucleiWithoutTags: options.SkipNucleiWithoutTags,
+// 				TemplateFolders:       allTemplateFolders,
+// 				CustomTags:            options.Tags,
+// 				CustomHeaders:         options.CustomHeaders,
+// 				Proxy:                 clients.GetRawProxy(proxy),
+// 			}
+// 			allOptions = append(allOptions, option)
+// 		}
+// 		webscan.NewThreadSafeNucleiEngine(a.ctx, allOptions)
+// 		gologger.Info(a.ctx, "Vulnerability scan has ended")
+// 	}
+// 	webscan.IsRunning = false
+// }
+
 func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy) {
 	webscan.ExitFunc = false
 	webscan.IsRunning = true
@@ -416,15 +458,24 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 	}
 	if options.CallNuclei && !webscan.ExitFunc {
 		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
-		// var id = 0
+		var id = 0
 		var allTemplateFolders = []string{a.templateDir}
 		if options.AppendTemplateFolder != "" {
 			allTemplateFolders = append(allTemplateFolders, options.AppendTemplateFolder)
 		}
 		fpm := engine.URLWithFingerprintMap()
-		allOptions := []structs.NucleiOption{}
+		count := len(fpm)
+		runtime.EventsEmit(a.ctx, "NucleiCounts", count)
+
 		for target, tags := range fpm {
-			option := structs.NucleiOption{
+			if webscan.ExitFunc {
+				gologger.Warning(a.ctx, "User exits vulnerability scanning")
+				webscan.IsRunning = false
+				return
+			}
+			id++
+			gologger.Info(a.ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
+			webscan.NewNucleiEngine(a.ctx, structs.NucleiOption{
 				URL:                   target,
 				Tags:                  util.RemoveDuplicates(tags),
 				TemplateFile:          options.TemplateFiles,
@@ -433,10 +484,9 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy)
 				CustomTags:            options.Tags,
 				CustomHeaders:         options.CustomHeaders,
 				Proxy:                 clients.GetRawProxy(proxy),
-			}
-			allOptions = append(allOptions, option)
+			})
+			runtime.EventsEmit(a.ctx, "NucleiProgressID", id)
 		}
-		webscan.NewThreadSafeNucleiEngine(a.ctx, allOptions)
 		gologger.Info(a.ctx, "Vulnerability scan has ended")
 	}
 	webscan.IsRunning = false
@@ -529,10 +579,6 @@ func (a *App) FaviconMd5(target string) string {
 	}
 	sum := hasher.Sum(nil)
 	return hex.EncodeToString(sum)
-}
-
-func (a *App) NacosCategoriesExtract(filePath string) []structs.NacosConfig {
-	return nacos.ProcessDirectory(filePath)
 }
 
 func (a *App) UncoverSearch(query, types string, option structs.SpaceOption) []space.Result {

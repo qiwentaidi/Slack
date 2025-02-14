@@ -110,10 +110,6 @@ export function LoadDirsearchDict(arg1, arg2) {
   return window['go']['services']['App']['LoadDirsearchDict'](arg1, arg2);
 }
 
-export function NacosCategoriesExtract(arg1) {
-  return window['go']['services']['App']['NacosCategoriesExtract'](arg1);
-}
-
 export function NetDial(arg1) {
   return window['go']['services']['App']['NetDial'](arg1);
 }

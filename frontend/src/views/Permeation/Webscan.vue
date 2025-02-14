@@ -471,8 +471,10 @@ class Engine {
             // 设置后续的扫描类型
             config.webscanOption = 2
         }
-        this.WebRunner()
-        this.CrackRunner()
+        await this.WebRunner()
+        if (config.crack) {
+            await this.CrackRunner()
+        }
         updateActivities({
             content: "All task completed",
             type: "success",
@@ -529,15 +531,6 @@ class Engine {
 
     public async CrackRunner() {
         if (!form.runnningStatus || form.scanStopped) {
-            return
-        }
-        if (!config.crack) {
-            updateActivities({
-                content: "Not enable crack",
-                type: "warning",
-                icon: Warning,
-            })
-            form.runnningStatus = false
             return
         }
         let crackLinks = fp.table.result.filter(

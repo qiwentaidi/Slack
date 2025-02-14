@@ -2,8 +2,8 @@
 import { Document, DataAnalysis, Reading, InfoFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { reactive } from 'vue';
+import { NacosCategoriesExtract } from 'wailsjs/go/core/Tools';
 import { structs } from 'wailsjs/go/models';
-import { NacosCategoriesExtract } from 'wailsjs/go/services/App';
 import { CheckFileStat, DirectoryDialog, ReadFile } from 'wailsjs/go/services/File';
 
 const config = reactive({

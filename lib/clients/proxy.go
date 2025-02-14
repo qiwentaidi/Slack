@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"time"
 
@@ -63,7 +64,10 @@ func SelectProxy(pr *Proxy, client *http.Client) (*http.Client, error) {
 
 func GetRawProxy(proxy Proxy) string {
 	if proxy.Enabled {
-		return fmt.Sprintf("%s://%s:%s@%s:%d", proxy.Mode, proxy.Username, proxy.Password, proxy.Address, proxy.Port)
+		if proxy.Username != "" || proxy.Password != "" {
+			return fmt.Sprintf("%s://%s:%s@%s:%d", strings.ToLower(proxy.Mode), proxy.Username, proxy.Password, proxy.Address, proxy.Port)
+		}
+		return fmt.Sprintf("%s://%s:%d", strings.ToLower(proxy.Mode), proxy.Address, proxy.Port)
 	}
 	return ""
 }

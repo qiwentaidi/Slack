@@ -4,7 +4,7 @@ import { reactive, ref, h, computed } from "vue";
 import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled, Guide, PictureRounded } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
-import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal, GenerateFaviconBase64WithOnline, GenerateFaviconBase64 } from "wailsjs/go/services/File";
+import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal, GenerateFaviconBase64WithOnline, GenerateFaviconBase64, AutoGenerateFavicon } from "wailsjs/go/services/File";
 import ContextMenu from '@imengyu/vue3-context-menu'
 import groupIcon from "@/assets/icon/tag-group.svg"
 import tagIcon from "@/assets/icon/tag.svg"
@@ -18,29 +18,33 @@ import buttonIcon from '@/assets/icon/button.svg'
 import gridIcon from '@/assets/icon/grid.svg'
 import global from "@/stores";
 import { structs } from "wailsjs/go/models";
+import Note from "@/components/Note.vue";
 
 
 onMounted(async () => {
     OnFileDrop((x, y, paths) => {
         let card = localGroup.options.value.find(item => item.Name === config.mouseOnGroupName)
         paths.forEach(async p => {
+            if (!p) {
+                return
+            }
             let pathinfo: any = await Path(p)
-            if (pathinfo.Ext != "url")
-                if (card) {
-                    let c = {
-                        Name: pathinfo.Name,
-                        Type: localGroup.getExtType(pathinfo.Ext),
-                        Path: p,
-                        Target: "",
-                        Favicon: "",
-                    }
-                    if (!card.Children) {
-                        card.Children = [c];
-                    } else {
-                        card.Children.push(c)
-                    }
-                    InsetItemNavigation(config.mouseOnGroupName, c)
+            if (card) {
+                let base64Icon = await AutoGenerateFavicon(p)
+                let c = {
+                    Name: pathinfo.Name,
+                    Type: localGroup.getExtType(pathinfo.Ext),
+                    Path: p,
+                    Target: "",
+                    Favicon: base64Icon,
                 }
+                if (!card.Children) {
+                    card.Children = [c];
+                } else {
+                    card.Children.push(c)
+                }
+                InsetItemNavigation(config.mouseOnGroupName, c)
+            }
         })
     }, true)
     GetLocalNaConfig().then(async (groups: structs.Navigation[]) => {
@@ -111,7 +115,7 @@ const localGroup = ({
     getExtType: function (type: string) {
         if (type == "JAR") {
             return type
-        } else if (type == "LNK" || type == "EXE" || type == "URL" || type == "BAT") {
+        } else if (type == "LNK" || type == "EXE" || type == "BAT") {
             return "APP"
         }
         return "CMD"
@@ -147,6 +151,7 @@ const localGroup = ({
                 ElMessage("正在加载图标资源，加载完毕后会自动关闭窗口...")
                 config.favicon = await GenerateFaviconBase64WithOnline(config.path)
             }
+            config.favicon = await AutoGenerateFavicon(config.path)
             let child = {
                 Name: config.name,
                 Type: config.defaultType,
@@ -444,7 +449,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         <el-button :icon="PictureRounded" link @click="localGroup.selctFaviconFile" />
                     </template>
                 </el-input>
-                <span class="form-item-tips">类型为Link时，点击保存会自动生成网页Logo信息</span>
+                <span class="form-item-tips">Link类型、App中的EXE、LNK应用可以自动获取图标</span>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -482,7 +487,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         <el-button :icon="PictureRounded" link @click="localGroup.editFaviconFile" />
                     </template>
                 </el-input>
-                <span class="form-item-tips">类型为Link时，点击保存会自动生成网页Logo信息</span>
+                <span class="form-item-tips">Link类型、App中的EXE、LNK应用可以自动获取图标</span>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -492,16 +497,16 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
         </template>
     </el-dialog>
     <el-dialog v-model="config.tipsDialog" title="使用须知" width="900px">
-        <div class="tip custom-block">
-            1、jar应用在默认点击启动时，会使用以java -jar启动应用<br /><br />
-            2、如果默认配置无法满足使用，可以通过填写目标自定义启动命令<strong>(类型必须为CMD)</strong>，%path%关键词可以自动替换为应用路径<br />
+        <Note type="info">
+            1、jar应用在默认点击启动时, 会使用以java -jar启动应用<br /><br />
+            2、如果默认配置无法满足使用, 可以通过填写目标自定义启动命令<strong>(类型必须为CMD)</strong>, %path%关键词可以自动替换为应用路径<br />
             e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为:
             <code>java -javaagent:%path% -jar %path%</code><br /><br />
             3、拖入应用到分组中会自动按类型添加元素<br /><br />
             4、每个面板右键都有独立的功能!!!<br /><br />
-            5、Link类型可以在路径处填写网址链接，作为书签使用<br /><br />
-            6、应用默认添加时只有Link类型会自动获取图标信息(图标参数为空会使用默认图标)，对于20kb以上图标会进行压缩存储，其余类型需要自定义
-        </div>
+            5、Link类型可以在路径处填写网址链接, 作为书签使用<br /><br />
+            6、应用默认添加时Link类型以及EXE、LNK应用会自动获取图标信息(图标参数为空会使用默认图标, 部分应用可能无法正常显示需要自行设置), 对于20kb以上图标会进行压缩存储
+        </Note>
     </el-dialog>
 </template>
 
@@ -541,13 +546,5 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
 
 .drop-enable {
     --wails-drop-target: drop;
-}
-
-.custom-block.tip {
-    padding: 0px 16px;
-    background-color: var(--block-tip-bg-color);
-    border-radius: 4px;
-    border-left: 5px solid var(--el-color-primary);
-    margin-bottom: 10px;
 }
 </style>

@@ -61,8 +61,6 @@ export function JSFind(arg1:string,arg2:Array<string>):Promise<structs.FindSomet
 
 export function LoadDirsearchDict(arg1:Array<string>,arg2:Array<string>):Promise<Array<string>>;
 
-export function NacosCategoriesExtract(arg1:string):Promise<Array<structs.NacosConfig>>;
-
 export function NetDial(arg1:string):Promise<boolean>;
 
 export function NewDSStoreEngine(arg1:string):Promise<Array<string>>;

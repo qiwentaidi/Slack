@@ -58,6 +58,7 @@ async function JSFinder() {
   }
   showForm.value = false
   config.loading = true
+  pagination.initTable()
   for (const url of urls) {
     let apiRoute = [] as string[]
     config.consoleLog += `[*] 正在提取${url}的JS链接...\n`
@@ -79,7 +80,7 @@ async function JSFinder() {
         Source: item.Source,
         Method: "GET",
         Filed: item.Filed,
-        VulType: "敏感信息泄露",
+        VulType: "身份证号信息泄露",
         Length: 0,
         Param: "",
         Target: url,
@@ -96,7 +97,7 @@ async function JSFinder() {
           Source: item.Source,
           Method: "GET",
           Filed: item.Filed,
-          VulType: "敏感信息泄露",
+          VulType: "手机号信息泄露",
           Length: 0,
           Param: "",
           Target: url,
@@ -114,6 +115,16 @@ async function JSFinder() {
     if (somethings.Sensitive) {
       config.consoleLog += `[+] 共提取到敏感字段: ${getLength(somethings.Sensitive)}个\n`
       somethings.Sensitive.forEach(item => {
+        pagination.table.result.push({
+          Source: item.Source,
+          Method: "GET",
+          Filed: item.Filed,
+          VulType: "敏感字段泄露",
+          Length: 0,
+          Param: "",
+          Target: url,
+          Response: "",
+        })
         config.consoleLog += `${item.Filed} [ Source: ${item.Source} ]\n`
       })
     }

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"slack-wails/core/exp/finereport"
 	"slack-wails/core/exp/hikvision"
 	"slack-wails/core/exp/nacos"
 	"slack-wails/lib/clients"
@@ -59,4 +60,8 @@ func (e *Exp) CVE_2021_36260(url, cmd string, proxy clients.Proxy) string {
 
 func (e *Exp) CameraCrackPassword(url, username string, passwordList []string) string {
 	return hikvision.CameraHandlessLogin(e.ctx, url, username, passwordList)
+}
+
+func (e *Exp) FineReportChannelDeserialize(url, cmd string, proxy clients.Proxy) string {
+	return finereport.ChannelDeserialize(url, cmd, clients.NewHttpClientWithProxy(nil, true, proxy))
 }

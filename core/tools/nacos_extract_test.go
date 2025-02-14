@@ -1,4 +1,4 @@
-package nacos
+package core
 
 import (
 	"fmt"
@@ -8,9 +8,9 @@ import (
 func TestExtract(t *testing.T) {
 	// 设置目标目录
 	dir := "./configs" // 替换为实际的配置文件目录路径
-
+	tools := &Tools{}
 	// 获取所有文件的统计结果
-	results := ProcessDirectory(dir)
+	results := tools.NacosCategoriesExtract(dir)
 
 	// 输出总结果
 	fmt.Println("Final Results:")

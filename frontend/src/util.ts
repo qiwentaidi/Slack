@@ -2,7 +2,7 @@ import { ElMessage, ElNotification } from "element-plus";
 import global from "./stores";
 import { Callgologger, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/services/App";
 import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/services/File";
-import Loading from "./components/Loading.vue";
+import { Loading } from '@element-plus/icons-vue';
 import { ProxyOptions } from "./stores/interface";
 import { ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
