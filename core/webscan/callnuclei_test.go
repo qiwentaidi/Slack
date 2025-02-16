@@ -44,15 +44,12 @@ func TestNucleiCaller(t *testing.T) {
 func TestThreadNucleiCaller(t *testing.T) {
 	option1 := structs.NucleiOption{
 		SkipNucleiWithoutTags: false,
-		URL:                   "https://www.example.com",
+		URL:                   "http://www.example.com",
 		TemplateFile:          []string{util.HomeDir() + "/slack/config/pocs/74cms-sqli.yaml"},
-		TemplateFolders:       []string{util.HomeDir() + "/slack/config/pocs"},
-		Proxy:                 "http://127.0.0.1:8080",
 	}
 	option2 := structs.NucleiOption{
 		URL:          "http://vpn.sanhuagroup.com:9090/",
 		TemplateFile: []string{util.HomeDir() + "/slack/config/pocs/iis-shortname.yaml"},
-		Proxy:        "http://127.0.0.1:8080",
 	}
 	NewThreadSafeNucleiEngine(context.Background(), []structs.NucleiOption{option1, option2})
 }

@@ -37,17 +37,17 @@ func NewNucleiEngine(ctx context.Context, o structs.NucleiOption) {
 			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
 		}
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
-			ID:          event.TemplateID,
-			Name:        event.Info.Name,
-			Description: event.Info.Description,
-			Reference:   reference,
-			URL:         showMatched(event),
-			Request:     showRequest(event),
-			Response:    showResponse(event),
-			// ResponseTime: limitDecimalPlaces(event.ResponseTime),
-			Extract:  strings.Join(event.ExtractedResults, " | "),
-			Type:     strings.ToUpper(event.Type),
-			Severity: strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
+			ID:           event.TemplateID,
+			Name:         event.Info.Name,
+			Description:  event.Info.Description,
+			Reference:    reference,
+			URL:          showMatched(event),
+			Request:      showRequest(event),
+			Response:     showResponse(event),
+			ResponseTime: limitDecimalPlaces(event.ResponseTime),
+			Extract:      strings.Join(event.ExtractedResults, " | "),
+			Type:         strings.ToUpper(event.Type),
+			Severity:     strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
 		})
 	})
 	if err != nil {
@@ -63,62 +63,60 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 		gologger.Warning(ctx, "nuclei scan no targets")
 		return
 	}
-	// runtime.EventsEmit(ctx, "NucleiCounts", count)
+	runtime.EventsEmit(ctx, "NucleiCounts", count)
 	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(context.Background())
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		// gologger.Error(ctx, fmt.Sprintf("nuclei init engine err: %v", err))
+		gologger.Error(ctx, fmt.Sprintf("nuclei init engine err: %v", err))
 		return
 	}
 	var id int32
 	sg, err := syncutil.New(syncutil.WithSize(5))
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		// gologger.Error(ctx, fmt.Sprintf("nuclei init sync group err: %v", err))
+		gologger.Error(ctx, fmt.Sprintf("nuclei init sync group err: %v", err))
 		return
 	}
 	ne.GlobalResultCallback(func(event *output.ResultEvent) {
 		// fmt.Printf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched)
 		gologger.Success(ctx, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
-		// var reference string
-		// if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
-		// 	reference = strings.Join(event.Info.Reference.ToSlice(), ",")
-		// }
-		// runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
-		// 	ID:           event.TemplateID,
-		// 	Name:         event.Info.Name,
-		// 	Description:  event.Info.Description,
-		// 	Reference:    reference,
-		// 	URL:          showMatched(event),
-		// 	Request:      showRequest(event),
-		// 	Response:     showResponse(event),
-		// 	ResponseTime: limitDecimalPlaces(event.ResponseTime),
-		// 	Extract:      strings.Join(event.ExtractedResults, " | "),
-		// 	Type:         strings.ToUpper(event.Type),
-		// 	Severity:     strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
-		// })
+		var reference string
+		if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
+			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
+		}
+		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			ID:           event.TemplateID,
+			Name:         event.Info.Name,
+			Description:  event.Info.Description,
+			Reference:    reference,
+			URL:          showMatched(event),
+			Request:      showRequest(event),
+			Response:     showResponse(event),
+			ResponseTime: limitDecimalPlaces(event.ResponseTime),
+			Extract:      strings.Join(event.ExtractedResults, " | "),
+			Type:         strings.ToUpper(event.Type),
+			Severity:     strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
+		})
 	})
 
 	// 提交扫描任务
 	for _, option := range allOptions {
-		// if ExitFunc {
-		// 	return
-		// }
+		if ExitFunc {
+			return
+		}
 		sg.Add()
 		atomic.AddInt32(&id, 1)
-		// runtime.EventsEmit(ctx, "NucleiProgressID", id)
-		// gologger.Info(ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
+		runtime.EventsEmit(ctx, "NucleiProgressID", id)
+		gologger.Info(ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
 		go func() {
 			defer sg.Done()
 			if option.SkipNucleiWithoutTags && len(option.Tags) == 0 {
-				fmt.Println("[nuclei]", fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
-				// gologger.Info(ctx, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
+				// fmt.Println("[nuclei]", fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
+				gologger.Info(ctx, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
 				return
 			}
 			options := NewNucleiSDKOptions(option)
 			// load targets and optionally probe non http/https targets
-			fmt.Printf("[nuclei] check vuln: %s\n", option.URL)
-			// gologger.Info(ctx, fmt.Sprintf("[nuclei] check vuln: %s", o.URL))
+			// fmt.Printf("[nuclei] check vuln: %s\n", option.URL)
+			gologger.Info(ctx, fmt.Sprintf("[nuclei] check vuln: %s", option.URL))
 			ne.ExecuteNucleiWithOpts([]string{option.URL}, options...)
 		}()
 	}

@@ -122,6 +122,10 @@ export function NewTcpScanner(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['services']['App']['NewTcpScanner'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
+export function NewThreadSafeWebScanner(arg1, arg2) {
+  return window['go']['services']['App']['NewThreadSafeWebScanner'](arg1, arg2);
+}
+
 export function NewWebScanner(arg1, arg2) {
   return window['go']['services']['App']['NewWebScanner'](arg1, arg2);
 }

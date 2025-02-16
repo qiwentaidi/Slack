@@ -398,48 +398,47 @@ func (a *App) FingerprintList() []string {
 	return fingers
 }
 
-// func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy) {
-// 	webscan.ExitFunc = false
-// 	webscan.IsRunning = true
-// 	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
-// 	gologger.Info(a.ctx, "Fingerscan is running ...")
-// 	engine := webscan.NewFingerScanner(a.ctx, proxy, options)
-// 	if engine == nil {
-// 		gologger.Error(a.ctx, "Init fingerscan engine failed")
-// 		webscan.IsRunning = false
-// 		return
-// 	}
-// 	engine.NewFingerScan()
-// 	if options.DeepScan && !webscan.ExitFunc {
-// 		engine.NewActiveFingerScan()
-// 	}
-// 	if options.CallNuclei && !webscan.ExitFunc {
-// 		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
-// 		// var id = 0
-// 		var allTemplateFolders = []string{a.templateDir}
-// 		if options.AppendTemplateFolder != "" {
-// 			allTemplateFolders = append(allTemplateFolders, options.AppendTemplateFolder)
-// 		}
-// 		fpm := engine.URLWithFingerprintMap()
-// 		allOptions := []structs.NucleiOption{}
-// 		for target, tags := range fpm {
-// 			option := structs.NucleiOption{
-// 				URL:                   target,
-// 				Tags:                  util.RemoveDuplicates(tags),
-// 				TemplateFile:          options.TemplateFiles,
-// 				SkipNucleiWithoutTags: options.SkipNucleiWithoutTags,
-// 				TemplateFolders:       allTemplateFolders,
-// 				CustomTags:            options.Tags,
-// 				CustomHeaders:         options.CustomHeaders,
-// 				Proxy:                 clients.GetRawProxy(proxy),
-// 			}
-// 			allOptions = append(allOptions, option)
-// 		}
-// 		webscan.NewThreadSafeNucleiEngine(a.ctx, allOptions)
-// 		gologger.Info(a.ctx, "Vulnerability scan has ended")
-// 	}
-// 	webscan.IsRunning = false
-// }
+// 多线程 Nuclei 扫描，由于Nucli的设计问题，多线程无法调用代理，否则会导致扫描失败
+func (a *App) NewThreadSafeWebScanner(options structs.WebscanOptions, proxy clients.Proxy) {
+	webscan.ExitFunc = false
+	webscan.IsRunning = true
+	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
+	gologger.Info(a.ctx, "Fingerscan is running ...")
+	engine := webscan.NewFingerScanner(a.ctx, proxy, options)
+	if engine == nil {
+		gologger.Error(a.ctx, "Init fingerscan engine failed")
+		webscan.IsRunning = false
+		return
+	}
+	engine.NewFingerScan()
+	if options.DeepScan && !webscan.ExitFunc {
+		engine.NewActiveFingerScan()
+	}
+	if options.CallNuclei && !webscan.ExitFunc {
+		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
+		var allTemplateFolders = []string{a.templateDir}
+		if options.AppendTemplateFolder != "" {
+			allTemplateFolders = append(allTemplateFolders, options.AppendTemplateFolder)
+		}
+		fpm := engine.URLWithFingerprintMap()
+		allOptions := []structs.NucleiOption{}
+		for target, tags := range fpm {
+			option := structs.NucleiOption{
+				URL:                   target,
+				Tags:                  util.RemoveDuplicates(tags),
+				TemplateFile:          options.TemplateFiles,
+				SkipNucleiWithoutTags: options.SkipNucleiWithoutTags,
+				TemplateFolders:       allTemplateFolders,
+				CustomTags:            options.Tags,
+				CustomHeaders:         options.CustomHeaders,
+			}
+			allOptions = append(allOptions, option)
+		}
+		webscan.NewThreadSafeNucleiEngine(a.ctx, allOptions)
+		gologger.Info(a.ctx, "Vulnerability scan has ended")
+	}
+	webscan.IsRunning = false
+}
 
 func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy) {
 	webscan.ExitFunc = false

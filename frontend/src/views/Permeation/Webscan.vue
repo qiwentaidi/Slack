@@ -5,7 +5,7 @@ import {
     Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Warning,
     Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, MoreFilled,
 } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute, GetAllFinger } from 'wailsjs/go/services/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute, GetAllFinger, NewThreadSafeWebScanner } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
 import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
 import global from "@/stores"
@@ -111,9 +111,9 @@ function updateActivities(newActivity: { content: string, type: string, icon: an
         type: newActivity.type,
         icon: newActivity.icon
     });
-    // if (timelineContainer.value) {
-    //     timelineContainer.value.scrollTop = timelineContainer.value.scrollHeight; // 滚动到最底部
-    // }
+    if (timelineContainer.value) {
+        timelineContainer.value.scrollTop = timelineContainer.value.scrollHeight; // 滚动到最底部
+    }
 }
 
 // webscan
@@ -314,7 +314,7 @@ function stopScan() {
             form.runnningStatus = false
             form.scanStopped = false; // 重置标志，以便下次可以再次调用stopScan
             updateActivities({
-                content: "The user has canceled the scanning task",
+                content: "用户已退出扫描任务",
                 type: "danger",
                 icon: CloseBold
             })
@@ -395,7 +395,7 @@ class Engine {
         // 判断是否进行存活探测
         if (global.webscan.default_alive_module != "None") {
             updateActivities({
-                content: "Loading host alive scan engine, for more info check console",
+                content: "正在加载主机探活引擎, 更多信息请查看日志",
                 type: "primary",
                 icon: MoreFilled,
             })
@@ -404,7 +404,7 @@ class Engine {
             this.ips = await HostAlive(this.ips, global.webscan.ping_check_alive)
             if (this.ips == null) {
                 updateActivities({
-                    content: "No alive host found, task end",
+                    content: "未发现存活主机, 任务已结束",
                     type: "warning",
                     icon: Warning
                 })
@@ -412,7 +412,7 @@ class Engine {
                 return
             }
             updateActivities({
-                content: "Host alive count: " + this.ips.length.toString(),
+                content: "主机存活目标数量: " + this.ips.length.toString(),
                 type: "info",
                 icon: Notification
             })
@@ -435,14 +435,14 @@ class Engine {
         // 先扫端口
         if (param.inputType == 1) {
             updateActivities({
-                content: "Loading portscan engine, count: " + dashboard.portscanCount.toString(),
+                content: "正在加载端口扫描引擎, 目标数量: " + dashboard.portscanCount.toString(),
                 type: "primary",
                 icon: MoreFilled,
             })
             await NewTcpScanner(this.specialTarget, this.ips, this.portsList, global.webscan.port_thread, global.webscan.port_timeout, getProxy())
             if (!config.vulscan) {
                 updateActivities({
-                    content: "Only portscan, task is completed",
+                    content: "只需要进行端口扫描, 任务已结束",
                     type: "success",
                     icon: CircleCheck,
                 })
@@ -458,7 +458,7 @@ class Engine {
             // 对web服务先去提取再去除，之后扫描
             if (this.inputLines.length != 0) {
                 updateActivities({
-                    content: "Extracting and removing webpage activity detection information, totaling: " + this.inputLines.length.toString() + ", followed by fingerprint detection",
+                    content: "提取并移除需要深度探测网站指纹目标, 目标数量: " + this.inputLines.length.toString() + ", 正在进行网站指纹检测",
                     type: "primary",
                     icon: MoreFilled
                 })
@@ -476,7 +476,7 @@ class Engine {
             await this.CrackRunner()
         }
         updateActivities({
-            content: "All task completed",
+            content: "任务已结束",
             type: "success",
             icon: CircleCheck,
         })
@@ -522,11 +522,20 @@ class Engine {
             CustomHeaders: config.customHeaders,
         }
         updateActivities({
-            content: "Loading webscan engine, current mode: " + config.webscanOption.toString(),
+            content: "正在加载网站扫描引擎, 当前模式: " + webscanOptions.find(item => item.value == config.webscanOption).label,
             type: "primary",
             icon: MoreFilled,
         })
-        await NewWebScanner(options, getProxy())
+        if (global.proxy.enabled) {
+            updateActivities({
+                content: "代理已启用, Nuclei改为单线程执行",
+                type: "primary",
+                icon: MoreFilled,
+            })
+            await NewWebScanner(options, getProxy())
+        } else {
+            await NewThreadSafeWebScanner(options, getProxy())
+        }
     }
 
     public async CrackRunner() {
@@ -538,7 +547,7 @@ class Engine {
         ).map(item => item.URL);
         if (crackLinks.length == 0) {
             updateActivities({
-                content: "No protocol that can be crack detected",
+                content: "未发现可被暴破的目标",
                 type: "warning",
                 icon: Warning,
             })
@@ -566,7 +575,7 @@ class Engine {
             passDict.push(...pass)
         }
         updateActivities({
-            content: "Loading crack engine, target count:" + crackLinks.length.toString(),
+            content: "正在加载暴破引擎, 当前目标数量:" + crackLinks.length.toString(),
             type: "primary",
             icon: MoreFilled,
         })
