@@ -103,11 +103,13 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 			return
 		}
 		sg.Add()
-		atomic.AddInt32(&id, 1)
-		runtime.EventsEmit(ctx, "NucleiProgressID", id)
 		gologger.Info(ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
 		go func() {
 			defer sg.Done()
+			defer func() {
+				atomic.AddInt32(&id, 1)
+				runtime.EventsEmit(ctx, "NucleiProgressID", id)
+			}()
 			if option.SkipNucleiWithoutTags && len(option.Tags) == 0 {
 				// fmt.Println("[nuclei]", fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
 				gologger.Info(ctx, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))

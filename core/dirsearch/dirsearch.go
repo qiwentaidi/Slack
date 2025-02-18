@@ -18,7 +18,7 @@ import (
 
 var (
 	ExitFunc      = false
-	bodyLengthMap map[string]int
+	bodyLengthMap map[int]int
 	mutex         = sync.Mutex{}
 )
 
@@ -49,7 +49,7 @@ type Options struct {
 // method 请求类型
 func NewScanner(ctx context.Context, o Options) {
 	runtime.EventsEmit(ctx, "dirsearchCounts", len(o.URLs)*len(o.Paths))
-	bodyLengthMap = make(map[string]int)
+	bodyLengthMap = make(map[int]int)
 	// 初始化请求信息
 	if o.Timeout == 0 {
 		o.Timeout = 8
@@ -126,8 +126,8 @@ func Scan(ctx context.Context, url string, header map[string]string, o Options, 
 	result.Length = len(body)
 	// 记录同一状态码下长度出现次数，当次数超过o.BodyLengthExcludeTimes时，将状态码设置为1，过滤显示
 	mutex.Lock()
-	bodyLengthMap[resp.Status]++
-	if bodyLengthMap[resp.Status] > o.BodyLengthExcludeTimes {
+	bodyLengthMap[result.Length]++
+	if bodyLengthMap[result.Length] > o.BodyLengthExcludeTimes {
 		result.Status = 1
 	}
 	mutex.Unlock()
