@@ -24,7 +24,7 @@ jobs:
           node-version: 18
 
       - name: Get Wails
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.9.2
 
       - name: Build Wails app on macOS
         run: wails build -debug -devtools -platform darwin/${{ matrix.arch }}
