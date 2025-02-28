@@ -1,6 +1,7 @@
 import homeIcon from "@/assets/icon/home.svg"
 import toolsIcon from "@/assets/icon/tools.svg"
 import mappingIcon from "@/assets/icon/mapping.svg"
+import path from "path"
 
 const MenuList = [
     {
@@ -120,11 +121,6 @@ const MenuList = [
           icon: "/app/data.png"
         },
         {
-          name: "aside.memorandum",
-          path: "/Memo",
-          icon: "/app/memo.png"
-        },
-        {
           name: "aside.fscan",
           path: "/Fscan",
           icon: "/app/skull.png"
@@ -143,6 +139,16 @@ const MenuList = [
           name: "aside.nacos_config_analysis",
           path: "/NacosConfigAnalysis",
           icon: "/app/analysis.png"
+        },
+        {
+          name: "aside.fileinfo",
+          path: "/FileContentRetrieval",
+          icon: "/app/searchfile.png"
+        },
+        {
+          name: "aside.memorandum",
+          path: "/Memo",
+          icon: "/app/memo.png"
         },
         {
           name: "aside.timestamp",

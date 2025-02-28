@@ -626,8 +626,7 @@ type FindSomething struct {
 }
 
 type JSFindResult struct {
-	IsUnauth bool
-	URL      string
+	Source   string
 	Method   string
 	Param    string
 	Response string

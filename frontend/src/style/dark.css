@@ -6,6 +6,7 @@ html.dark {
     --list-item-hover-color: #303030;
     --list-item-selected-color: #3B3B3B;
     --el-divider-text: #1E1E1E;
+    --split-color: #262626;
 
     .el-tag.el-tag--critical {
         background-color: #2F141A;
@@ -40,22 +41,6 @@ html.dark {
     .note-success {
         border-left-color: #2ecc71;
         background: #2d865c; /* 深绿色背景 */
-    }
-
-    pre code.hljs {
-        display: block;
-        overflow-x: auto;
-        padding: 1em;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        word-break: break-all;
-        border-radius: 5px;
-        /* border: 1px solid #ccc; */
-        max-height: 80vh;
-    }
-
-    code.hljs {
-        padding: 3px 5px
     }
 
     /*!

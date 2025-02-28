@@ -8,9 +8,6 @@ import (
 	"unicode"
 )
 
-// 一些提示需要鉴权时的返回信息
-var authentication = []string{"token不能为空", "令牌不能为空", "令牌已过期", "Unauthorized", "Access Denied"}
-
 // APIRequest 结构体表示 API 请求信息
 type APIRequest struct {
 	URL     string            `json:"url"`
@@ -20,7 +17,7 @@ type APIRequest struct {
 }
 
 // 发送请求测试未授权访问
-func testUnauthorizedAccess(homeBody string, apiReq APIRequest) (bool, []byte, error) {
+func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication []string) (bool, []byte, error) {
 	var requestURL string
 	var requestBody *strings.Reader
 

@@ -113,10 +113,13 @@ func FindInfo(ctx context.Context, url string) *structs.FindSomething {
 }
 
 // MultiThreadJSFind 使用 ants 线程池进行多线程处理
-func MultiThreadJSFind(ctx context.Context, target string, jsLinks []string) *structs.FindSomething {
-	var fs = &structs.FindSomething{}
+func MultiThreadJSFind(ctx context.Context, target, prefixJsURL string, jsLinks []string) structs.FindSomething {
+	var fs = structs.FindSomething{}
 	var mu sync.Mutex // 用于保护 fs 的并发写操作
 	var wg sync.WaitGroup
+	if prefixJsURL != "" {
+		target = prefixJsURL
+	}
 	// 创建线程池
 	pool, _ := ants.NewPoolWithFunc(10, func(data interface{}) {
 		defer wg.Done()
@@ -250,7 +253,7 @@ func FilterExt(iss []structs.InfoSource) (news []structs.InfoSource) {
 }
 
 // 处理 API 逻辑
-func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, headers map[string]string) {
+func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, headers map[string]string, authentication []string) {
 	resp, body, err := clients.NewSimpleGetRequest(homeURL, clients.NewHttpClient(nil, true))
 	if err != nil || resp == nil {
 		gologger.Error(ctx, fmt.Sprintf("[AnalyzeAPI] %s, error: %v", homeURL, err))
@@ -272,7 +275,7 @@ func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, 
 
 		param := completeParameters(method, fullURL, url.Values{})
 		if param != nil {
-			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("%s 已补全参数 %s", fullURL, param.Encode()))
+			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[+] %s 已补全参数 %s", fullURL, param.Encode()))
 		}
 
 		apiReq := APIRequest{
@@ -283,17 +286,16 @@ func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, 
 		}
 
 		// 测试未授权访问
-		vulnerable, body, err := testUnauthorizedAccess(homeBody, apiReq)
+		vulnerable, body, err := testUnauthorizedAccess(homeBody, apiReq, authentication)
 		if err != nil || !vulnerable {
 			runtime.EventsEmit(ctx, "jsfindlog", "[-] "+fullURL+" 不存在未授权")
 			return
 		}
-
+		runtime.EventsEmit(ctx, "jsfindlog", "[+] "+fullURL+" 存在未授权")
 		runtime.EventsEmit(ctx, "jsfindvulcheck", structs.JSFindResult{
-			IsUnauth: true,
 			Method:   method,
 			Param:    param.Encode(),
-			URL:      fullURL,
+			Source:   fullURL,
 			Response: string(body),
 			Length:   len(body),
 		})

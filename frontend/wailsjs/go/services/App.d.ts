@@ -7,7 +7,7 @@ import {clients} from '../models';
 import {context} from '../models';
 import {space} from '../models';
 
-export function AnalyzeAPI(arg1:string,arg2:string,arg3:Array<string>,arg4:{[key: string]: string}):Promise<void>;
+export function AnalyzeAPI(arg1:string,arg2:string,arg3:Array<string>,arg4:{[key: string]: string},arg5:Array<string>):Promise<void>;
 
 export function Callgologger(arg1:string,arg2:string):Promise<void>;
 
@@ -57,7 +57,7 @@ export function Ip138Subdomain(arg1:string):Promise<string>;
 
 export function IpLocation(arg1:string):Promise<string>;
 
-export function JSFind(arg1:string,arg2:Array<string>):Promise<structs.FindSomething>;
+export function JSFind(arg1:string,arg2:string,arg3:Array<string>):Promise<structs.FindSomething>;
 
 export function LoadDirsearchDict(arg1:Array<string>,arg2:Array<string>):Promise<Array<string>>;
 

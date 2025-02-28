@@ -1,4 +1,6 @@
+import { ComponentPublicInstance, Ref } from "vue";
 import { structs } from "wailsjs/go/models";
+import { ElTreeV2 } from 'element-plus'
 
 export interface TableTabs {
     title: string;
@@ -150,8 +152,25 @@ export interface JSFindData {
     Method: string
     Source: string
     VulType: string
+    Severity: string
     Param: string
     Length: number
     Filed: string
     Response: string
+}
+
+export interface TreeNode {
+    id: string;
+    label: string;
+    isDir: boolean;
+    children?: TreeNode[];
+}
+
+export interface DirectoryTab {
+    name: string;
+    title: string;
+    path: string;
+    status: 'select' | 'tree';
+    treeData: TreeNode[];
+    isCollapse: boolean;
 }

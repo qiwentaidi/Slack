@@ -6,6 +6,7 @@ html.light {
     --list-item-hover-color: #EDEDED;
     --list-item-selected-color: #E6E6E6;
     --el-divider-text: #ffffff;
+    --split-color: #F5F5F5;
 
     .el-tag.el-tag--critical {
         background-color: #FFE6E6;
@@ -36,22 +37,6 @@ html.light {
     .note-success {
         border-left-color: #2ecc71;
         background: #e6f9ea;
-    }
-
-    pre code.hljs {
-        display: block;
-        overflow-x: auto;
-        padding: 1em;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        word-break: break-all;
-        border-radius: 5px;
-        /* border: 1px solid #ccc; */
-        max-height: 80vh;
-    }
-
-    code.hljs {
-        padding: 3px 5px
     }
 
     /*!

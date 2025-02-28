@@ -26,28 +26,6 @@ import ContextMenu from '@imengyu/vue3-context-menu'
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("yaml", yaml);
 hljs.registerLanguage("http", http);
-hljs.registerLanguage("customlog", function () {
-  return {
-    contains: [
-      {
-        // 匹配提示符（如 [+], [x] 等）
-        className: "symbol",
-        begin: /\[\+\]|\[\*\]|\[\\x\]/,
-        relevance: 10, // 提高优先级
-      },
-      {
-        // 匹配文件大小或其他数字
-        className: "number",
-        begin: /\b\d+\b/, // 任意数字
-      },
-      {
-        // 匹配状态码
-        className: "addition",
-        begin: /\[\d+\]/, // 任意数字
-      },
-    ],
-  };
-});
 
 let theme = localStorage.getItem('theme') || "light"
 

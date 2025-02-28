@@ -196,6 +196,10 @@ class Dirsearch {
             await DirScan(option)
         }
         config.runningStatus = false
+        ElNotification.success({
+            message: "目录扫描已完成",
+            position: 'bottom-right',
+        });
     }
 }
 

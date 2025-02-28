@@ -169,10 +169,25 @@ func (f *File) List(folders []string) []FileListInfo {
 		if folder == "" {
 			continue
 		}
-		if _, err := os.Stat(folder); os.IsNotExist(err) {
+		fileinfo, err := os.Stat(folder)
+		if os.IsNotExist(err) {
 			gologger.Error(f.ctx, fmt.Sprintf("path %s not exist", folder))
 			continue
 		}
+
+		if !fileinfo.IsDir() {
+			filename := filepath.Base(folder)
+			baseName := strings.TrimSuffix(filename, filepath.Ext(filename))
+			files = append(files, FileListInfo{
+				Path:     folder,
+				Name:     filename,
+				BaseName: baseName,
+				ModTime:  fileinfo.ModTime().Format("2006-01-02 15:04:05"),
+				Size:     fileinfo.Size(),
+			})
+			continue
+		}
+
 		filepath.Walk(folder, func(p string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -194,6 +209,25 @@ func (f *File) List(folders []string) []FileListInfo {
 		})
 	}
 	return files
+}
+
+func (f *File) ListDir(folder string) []string {
+	var dirs []string
+	_, err := os.Stat(folder)
+	if os.IsNotExist(err) {
+		gologger.Error(f.ctx, fmt.Sprintf("path %s not exist", folder))
+		return nil
+	}
+	filepath.Walk(folder, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			dirs = append(dirs, p)
+		}
+		return nil
+	})
+	return dirs
 }
 
 func (f *File) CheckFileStat(path string) bool {
@@ -737,4 +771,80 @@ func (f *File) NetworkCardInfo() (networks []structs.NetwordCard) {
 		}
 	}
 	return
+}
+
+type Tree struct {
+	ID       string         `json:"id"`
+	Label    string         `json:"label"`
+	IsDir    bool           `json:"isDir"`
+	Hits     map[string]int `json:"hits,omitempty"` // 记录命中次数
+	Children []Tree         `json:"children,omitempty"`
+}
+
+func (f *File) BuildTree(root string, keywords, blackList []string) Tree {
+	info, err := os.Stat(root)
+	if err != nil {
+		return Tree{}
+	}
+
+	rootNode := Tree{
+		ID:    root,
+		Label: info.Name(),
+		IsDir: info.IsDir(),
+	}
+
+	// 不是文件夹就进行敏感词检测
+	if !info.IsDir() {
+		// 检测是否在黑名单中
+		for _, black := range blackList {
+			if strings.HasSuffix(root, black) {
+				return rootNode
+			}
+		}
+		rootNode.Hits = scanFileForKeywords(root, keywords)
+		return rootNode
+	}
+
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return rootNode
+	}
+
+	for _, entry := range entries {
+		childPath := filepath.Join(root, entry.Name())
+		_, err := os.Stat(childPath)
+		if err != nil {
+			continue
+		}
+
+		childNode := f.BuildTree(childPath, keywords, blackList)
+		rootNode.Children = append(rootNode.Children, childNode)
+	}
+
+	return rootNode
+}
+
+func scanFileForKeywords(filePath string, keywords []string) map[string]int {
+	hitCounts := make(map[string]int)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return hitCounts // 读取失败直接返回
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		for _, keyword := range keywords {
+			if strings.Contains(line, keyword) {
+				hitCounts[keyword]++
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("扫描文件错误:", err)
+	}
+
+	return hitCounts
 }

@@ -276,8 +276,6 @@ async function startScan() {
     let engine = new Engine
     if (!await engine.checkOptions()) return
     param.inputType == 0 ? form.newWebscanDrawer = false : form.newHostscanDrawer = false
-    activities.value = [] // 清空前面的任务进度
-    engine.clearDashboard()
     switch (param.inputType) {
         // 网站扫描
         case 0:
@@ -296,6 +294,7 @@ async function startScan() {
         form.runnningStatus = false
         return
     }
+    engine.clearDashboard()
     form.runnningStatus = true
     await engine.Runner()
 }
@@ -339,18 +338,13 @@ class Engine {
             return
         }
 
-        // 检查是否需要写入任务
-        if (form.taskName == '') {
-            ElMessage.warning({
-                message: "任务名称不能为空",
-                grouping: true,
-            });
-            return
-        }
-
         // 检测代理连通性
         if (!await TestProxy()) {
             return
+        }
+
+        if (form.taskName == '') {
+            form.taskName = generateRandomString(8)
         }
 
         this.inputLines = ProcessTextAreaInput(form.input)
@@ -422,6 +416,7 @@ class Engine {
 
     // 清空仪表盘以及表格数据
     public clearDashboard() {
+        activities.value = [] // 清空前面的任务进度
         fp.initTable()
         vp.initTable()
         Object.keys(dashboard.riskLevel).forEach(key => {
@@ -681,6 +676,10 @@ const exportDialog = ref(false)
 // 任务管理
 const taskManager = {
     writeTask: async function () {
+        if (rp.table.result.some(item => item.TaskName === form.taskName)) {
+            ElMessage.warning("任务已存在, 请修改任务名称")
+            return false
+        }
         form.taskId = nano()
         let isSuccess = await AddScanTask(form.taskId, form.taskName, form.input, 0, 0)
         if (!isSuccess) {
@@ -844,43 +843,6 @@ const taskManager = {
             rp.table.result[taskIndex].Vulnerability = vulcount;
             rp.ctrl.watchResultChange(rp.table);
         }
-    },
-    appendTaskToDatabase: async function () {
-        if (vp.table.result.length == 0 && fp.table.result.length == 0) {
-            ElMessage.warning('请先添加扫描任务')
-            return
-        }
-        form.taskId = nano()
-        form.taskName = generateRandomString(10)
-        let isSuccess = await AddScanTask(form.taskId, form.taskName, form.input, 0, 0)
-        if (!isSuccess) {
-            ElMessage.error('添加任务失败')
-            return
-        }
-        rp.table.result.push({
-            TaskId: form.taskId,
-            TaskName: form.taskName,
-            Targets: form.input,
-            Failed: 0,
-            Vulnerability: 0,
-        })
-        rp.ctrl.watchResultChange(rp.table)
-        for (const item of fp.table.result) {
-            let isSuccess = await AddFingerscanResult(form.taskId, item)
-            if (!isSuccess) {
-                ElMessage.error('添加指纹识别结果失败')
-                return
-            }
-        }
-        for (const item of vp.table.result) {
-            let isSuccess = await AddPocscanResult(form.taskId, item)
-            if (!isSuccess) {
-                ElMessage.error('添加漏洞扫描结果失败')
-                return
-            }
-        }
-        taskManager.updateTaskTable(form.taskId)
-        ElNotification.success("添加成功")
     },
 }
 
@@ -1436,9 +1398,6 @@ const getSelectedIcon = (selectedLabel: string) => {
         </el-table>
         <div class="my-header" style="margin-top: 5px;">
             <el-space>
-                <el-tooltip content="存储当前结果数据">
-                    <el-button :icon="saveIcon" size="small" @click="taskManager.appendTaskToDatabase">临时入库</el-button>
-                </el-tooltip>
                 <el-button :icon="UploadFilled" size="small" @click="taskManager.importTask()">导入任务</el-button>
                 <el-button :icon="Share" size="small" @click="taskManager.showExportDialog"
                     :disabled="rp.table.selectRows.length < 1">导出报告</el-button>

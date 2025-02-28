@@ -74,7 +74,17 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 		return
 	}
 	var qr structs.TycResult
-	json.Unmarshal(b, &qr)
+	err = json.Unmarshal(b, &qr)
+	if err != nil {
+		gologger.Error(ctx, fmt.Sprintf("[tianyancha] company: %s request interface err: %v", companyName, err))
+		return
+	}
+
+	if qr.State == "error" {
+		gomessage.Warning(ctx, qr.Message)
+		gologger.Warning(ctx, fmt.Sprintf("[tianyancha] company: %s request interface err: %v", companyName, qr.Message))
+		return
+	}
 	// 获取到本公司对应的域名，若是二次查询跳过
 	if !isSecond {
 		var domains []string

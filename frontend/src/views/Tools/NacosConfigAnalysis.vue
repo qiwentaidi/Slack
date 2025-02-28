@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Document, DataAnalysis, Reading, InfoFilled } from '@element-plus/icons-vue';
+import { FolderOpened, DataAnalysis, Reading, InfoFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { reactive } from 'vue';
 import { NacosCategoriesExtract } from 'wailsjs/go/core/Tools';
@@ -54,7 +54,7 @@ const code = `var categories = map[string][]string{
         <el-button :icon="InfoFilled" @click="config.tipsDialog = true">模块介绍</el-button>
         <el-input v-model="config.filePath" placeholder="请输入解压后的文件夹路径" style="margin-inline: 5px;">
             <template #suffix>
-                <el-button :icon="Document" link @click="selectDirectory"></el-button>
+                <el-button :icon="FolderOpened" link @click="selectDirectory"></el-button>
             </template>
         </el-input>
         <el-button type="primary" plain :icon="DataAnalysis" @click="startAnalysis">分析</el-button>
@@ -110,6 +110,6 @@ const code = `var categories = map[string][]string{
             /nacos/v1/cs/configs?export=true&group=&tenant=&appName=&ids=&dataId=<br/>
             应用会统计每个文件中关键次的出现次数
         </span>
-        <highlightjs :code="code"></highlightjs>
+        <highlightjs language="yaml" :code="code"></highlightjs>
     </el-dialog>
 </template>

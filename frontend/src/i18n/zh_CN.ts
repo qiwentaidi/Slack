@@ -7,7 +7,7 @@ export default {
         'dirscan': '目录扫描',
         'pocdetail': '漏洞详情',
         'asset_collection': '信息收集',
-        'asset_from_company': '从公司名收集资产',
+        'asset_from_company': '企业名信息查询',
         'subdomain_brute_force': '子域名收集',
         'search_domain_info': '域名信息查询',
         'space_engine': '空间测绘',
@@ -42,6 +42,7 @@ export default {
         'timestamp': '时间戳转换',
         'dumpall': 'Dumpall',
         'nacos_config_analysis': 'Nacos配置文件解析',
+        'fileinfo': '文件信息检索',
     },
     navigator: {
         'enterprise': '企业及备案信息查询',

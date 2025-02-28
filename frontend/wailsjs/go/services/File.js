@@ -6,6 +6,10 @@ export function AutoGenerateFavicon(arg1) {
   return window['go']['services']['File']['AutoGenerateFavicon'](arg1);
 }
 
+export function BuildTree(arg1, arg2, arg3) {
+  return window['go']['services']['File']['BuildTree'](arg1, arg2, arg3);
+}
+
 export function CheckFileStat(arg1) {
   return window['go']['services']['File']['CheckFileStat'](arg1);
 }
@@ -56,6 +60,10 @@ export function IsMacOS() {
 
 export function List(arg1) {
   return window['go']['services']['File']['List'](arg1);
+}
+
+export function ListDir(arg1) {
+  return window['go']['services']['File']['ListDir'](arg1);
 }
 
 export function NetworkCardInfo() {

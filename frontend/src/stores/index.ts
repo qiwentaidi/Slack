@@ -58,7 +58,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "2.0.4"
+const LOCAL_VERSION = "2.0.5"
 
 const Language = ref("zh")
 const Theme = ref(false)
@@ -83,7 +83,12 @@ var UPDATE = reactive({
 
 var jsfind = reactive({
     whiteList: "github.com\ngoogle.com\namazon.com\ngitee.com\nw3.org\nqq.com",
-    defaultType: ["info", "warning", "danger", "primary", "success", "info"]
+    authFiled: "token不能为空,令牌不能为空,令牌已过期,Unauthorized,Access Denied,认证失败"
+})
+
+var fileRetrieval = reactive({
+    keywords: 'password,username,jdbc,accesskey,secret,jwt',
+    blackList: '.exe,.dll,.so',
 })
 
 var syntaxRules = reactive<FormRules<structs.SpaceEngineSyntax>>({
@@ -113,4 +118,5 @@ export default {
     Theme,
     database,
     syntaxRules,
+    fileRetrieval
 };

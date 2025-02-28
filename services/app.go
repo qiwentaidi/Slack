@@ -250,6 +250,9 @@ func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDo
 	tkm := info.CheckKeyMap(a.ctx, query)
 	time.Sleep(util.SleepRandTime(1))
 	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false, searchDomain, machine)
+	if result == nil {
+		return nil
+	}
 	var secondCompanyNames []string
 	if subLevel >= 2 {
 		for _, r := range result {
@@ -552,12 +555,12 @@ func (a *App) ExtractAllJSLink(url string) []string {
 	return jsfind.ExtractJS(a.ctx, url)
 }
 
-func (a *App) JSFind(target string, jsLinks []string) (fs *structs.FindSomething) {
-	return jsfind.MultiThreadJSFind(a.ctx, target, jsLinks)
+func (a *App) JSFind(target, prefixJsURL string, jsLinks []string) structs.FindSomething {
+	return jsfind.MultiThreadJSFind(a.ctx, target, prefixJsURL, jsLinks)
 }
 
-func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers map[string]string) {
-	jsfind.AnalyzeAPI(a.ctx, homeURL, baseURL, apiList, headers)
+func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers map[string]string, authentication []string) {
+	jsfind.AnalyzeAPI(a.ctx, homeURL, baseURL, apiList, headers, authentication)
 }
 
 // 允许目标传入文件或者目标favicon地址
