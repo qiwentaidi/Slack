@@ -1271,7 +1271,7 @@ const getSelectedIcon = (selectedLabel: string) => {
             </div>
             <div v-if="config.webscanOption == 3">
                 <el-form-item label="指定漏洞:">
-                    <el-select-v2 v-model="config.customTemplate" :options="param.allTemplate" placeholder="可选择1-10个漏洞"
+                    <el-select-v2 v-model="config.customTemplate" :options="param.allTemplate"
                         filterable multiple clearable />
                 </el-form-item>
             </div>
