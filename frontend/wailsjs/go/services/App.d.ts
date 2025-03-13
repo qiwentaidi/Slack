@@ -77,7 +77,7 @@ export function QuakeSearch(arg1:Array<string>,arg2:string,arg3:number,arg4:numb
 
 export function QuakeTips(arg1:string):Promise<structs.QuakeTipsResult>;
 
-export function Socks5Conn(arg1:string,arg2:number,arg3:number,arg4:string,arg5:string):Promise<boolean>;
+export function Socks5Conn(arg1:string,arg2:number,arg3:number,arg4:string,arg5:string,arg6:string):Promise<boolean>;
 
 export function SpaceGetPort(arg1:string):Promise<Array<number>>;
 

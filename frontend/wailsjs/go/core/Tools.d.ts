@@ -24,8 +24,6 @@ export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 
 export function IsRoot():Promise<boolean>;
 
-export function NacosCategoriesExtract(arg1:string):Promise<Array<structs.NacosConfig>>;
-
 export function PatchIdentify(arg1:string):Promise<Array<structs.AuthPatch>>;
 
 export function PortParse(arg1:string):Promise<Array<number>>;

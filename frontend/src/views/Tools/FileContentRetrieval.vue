@@ -80,6 +80,12 @@
       <el-form-item label="检索关键词:">
         <el-input v-model="global.fileRetrieval.keywords" type="textarea" :rows="5"></el-input>
         <span class="form-item-tips">以,分割关键词</span>
+        <el-tooltip placement="bottom-end" :width="600">
+            <el-button type="primary" link @click="handleSetting">更改为Nacos配置文件文件分析</el-button>
+            <template #content>当Nacos处于<strong>未授权或者已鉴权登录状态时</strong>，可访问下面路径下载所有配置的zip文件<br/>
+                /nacos/v1/cs/configs?export=true&group=&tenant=&appName=&ids=&dataId=<br/>
+                然后通过选择Nacos的配置文件夹进行信息快速检索</template>
+          </el-tooltip>
       </el-form-item>
       <el-form-item label="文件后缀黑名单:">
         <el-input v-model="global.fileRetrieval.blackList" type="textarea" :rows="5"></el-input>
@@ -225,6 +231,10 @@ async function changeNodeAll(tab: DirectoryTab) {
 }
 
 const settingDialog = ref(false);
+
+function handleSetting() {
+  global.fileRetrieval.keywords = 'username,password,accesskey,secret,jdbc,redis,elasticsearch,database,mongo,mssql,mysql,oracle,postgres,sqlserver'
+}
 </script>
 
 <style scoped>

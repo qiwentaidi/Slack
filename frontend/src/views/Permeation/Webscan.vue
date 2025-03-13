@@ -166,7 +166,7 @@ const selectedRow = ref();
 
 let fp = usePagination<structs.InfoResult>(50)
 let vp = usePagination<structs.VulnerabilityInfo>(50)
-let rp = usePagination<structs.TaskResult>(10)
+let rp = usePagination<structs.TaskResult>(20)
 
 // 初始化时调用
 async function initialize() {
@@ -746,8 +746,6 @@ const taskManager = {
                 ElMessage.success("删除成功")
                 rp.table.result = rp.table.result.filter(item => item.TaskId != taskId)
                 rp.ctrl.watchResultChange(rp.table)
-                fp.initTable()
-                vp.initTable()
             })
             .catch(() => {
                 Callgologger("error", "[webscan] delete task failed")
@@ -770,6 +768,9 @@ const taskManager = {
     },
     importTask: async function () {
         const filepath = await FileDialog("*.json")
+        if (!filepath) {
+            return
+        }
         const result = await ReadWebReportWithJson(filepath)
         if (result) {
             const id = nano()
@@ -802,6 +803,7 @@ const taskManager = {
                 })
             }
             rp.ctrl.watchResultChange(rp.table)
+            ElMessage.success("添加成功")
         }
     },
     showExportDialog: function () {
@@ -1193,7 +1195,7 @@ const getSelectedIcon = (selectedLabel: string) => {
             <span class="drawer-title">新建网站扫描</span>
             <el-button link @click="spaceEngineConfig.fofaDialog = true">
                 <template #icon>
-                    <img src="/app/fofa.ico">
+                    <img src="/app/fofa.png" style="width: 16px; height: 16px;">
                 </template>
                 FOFA
             </el-button>
@@ -1270,7 +1272,7 @@ const getSelectedIcon = (selectedLabel: string) => {
             <div v-if="config.webscanOption == 3">
                 <el-form-item label="指定漏洞:">
                     <el-select-v2 v-model="config.customTemplate" :options="param.allTemplate" placeholder="可选择1-10个漏洞"
-                        filterable multiple clearable :multiple-limit="10" />
+                        filterable multiple clearable />
                 </el-form-item>
             </div>
             <div v-if="config.webscanOption == 2">
@@ -1404,7 +1406,7 @@ const getSelectedIcon = (selectedLabel: string) => {
             </el-space>
             <el-pagination size="small" background @size-change="rp.ctrl.handleSizeChange"
                 @current-change="rp.ctrl.handleCurrentChange" :pager-count="5" :current-page="rp.table.currentPage"
-                :page-sizes="[10, 20]" :page-size="rp.table.pageSize" layout="total, sizes, prev, pager, next"
+                :page-sizes="[20, 50, 100]" :page-size="rp.table.pageSize" layout="total, sizes, prev, pager, next"
                 :total="rp.table.result.length">
             </el-pagination>
         </div>
@@ -1456,7 +1458,7 @@ const getSelectedIcon = (selectedLabel: string) => {
     <!-- 联动模块 dialog -->
     <el-dialog v-model="spaceEngineConfig.fofaDialog">
         <template #header>
-            <span class="drawer-title"><img src="/app/fofa.ico">导入FOFA目标</span>
+            <span class="drawer-title"><img src="/app/fofa.png">导入FOFA目标</span>
         </template>
         <el-form :model="form" label-width="auto">
             <el-form-item label="查询条件">

@@ -18,6 +18,10 @@ export function ConnectMongodb(arg1:string,arg2:string,arg3:string):Promise<mong
 
 export function CreateTable():Promise<boolean>;
 
+export function DeleteAgentPool(arg1:string):Promise<boolean>;
+
+export function DeleteAllAgentPool():Promise<boolean>;
+
 export function DeleteRecordByPath(arg1:string):Promise<boolean>;
 
 export function DeleteRecordsWithTimesEqualOne():Promise<boolean>;
@@ -54,6 +58,8 @@ export function GetAllDatabaseConnections():Promise<Array<structs.DatabaseConnec
 
 export function GetAllPathsAndTimes():Promise<Array<structs.PathTimes>>;
 
+export function InsertAgentPool(arg1:string):Promise<boolean>;
+
 export function InsertFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;
 
 export function ReadWebReportWithJson(arg1:string):Promise<structs.WebReport>;
@@ -76,7 +82,7 @@ export function RetrieveFingerscanResults(arg1:string):Promise<Array<structs.Inf
 
 export function RetrievePocscanResults(arg1:string):Promise<Array<structs.VulnerabilityInfo>>;
 
-export function SearchAgentPool():Promise<Array<string>>;
+export function SelectAllAgentPool():Promise<Array<string>>;
 
 export function SelectAllSyntax(arg1:string):Promise<Array<structs.SpaceEngineSyntax>>;
 

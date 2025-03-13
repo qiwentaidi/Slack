@@ -58,18 +58,6 @@ func NewDatabase() *Database {
 		DB: db,
 	}
 }
-func (d *Database) SearchAgentPool() (hosts []string) {
-	var host string
-	rows, err := d.DB.Query("SELECT hosts FROM agent_pool")
-	if err != nil {
-		return hosts
-	}
-	for rows.Next() {
-		rows.Scan(&host)
-		hosts = append(hosts, host)
-	}
-	return hosts
-}
 
 // SQLite 检查字段是否已存在
 func columnExists(db *sql.DB, tableName, columnName string) bool {
@@ -151,6 +139,34 @@ func (d *Database) ExecSqlStatement(query string, args ...interface{}) bool {
 	}
 	err = tx.Commit()
 	return err == nil
+}
+
+func (d *Database) SelectAllAgentPool() (hosts []string) {
+	var host string
+	rows, err := d.DB.Query("SELECT hosts FROM agent_pool")
+	if err != nil {
+		return hosts
+	}
+	for rows.Next() {
+		rows.Scan(&host)
+		hosts = append(hosts, host)
+	}
+	return hosts
+}
+
+func (d *Database) InsertAgentPool(host string) bool {
+	insertStmt := "INSERT INTO agent_pool(hosts) VALUES(?)"
+	return d.ExecSqlStatement(insertStmt, host)
+}
+
+func (d *Database) DeleteAgentPool(host string) bool {
+	deleteStmt := "DELETE FROM agent_pool WHERE hosts = ?"
+	return d.ExecSqlStatement(deleteStmt, host)
+}
+
+func (d *Database) DeleteAllAgentPool() bool {
+	deleteStmt := "DELETE FROM agent_pool"
+	return d.ExecSqlStatement(deleteStmt)
 }
 
 func (d *Database) SelectAllSyntax(module string) (data []structs.SpaceEngineSyntax) {

@@ -120,6 +120,7 @@ export async function ReadLine(filepath: string) {
   return Array.from(result.split("\n"));
 }
 
+const defaultAliveURL = "https://www.baidu.com";
 export async function TestProxyWithNotify() {
   if (!global.proxy.enabled) {
     return true;
@@ -137,7 +138,7 @@ export async function TestProxyWithNotify() {
       message: "Connecting to http://www.baidu.com",
       icon: Loading,
     });
-    let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password);
+    let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password, defaultAliveURL);
     if (!error) {
       ElNotification.closeAll();
       ElNotification.error("The socks5 proxy is unreachable");
@@ -159,7 +160,7 @@ export async function TestProxy() {
       return false;
     }
   } else {
-    let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password);
+    let error = await Socks5Conn(global.proxy.address, global.proxy.port, 10, global.proxy.username, global.proxy.password, defaultAliveURL);
     if (!error) {
       ElNotification.closeAll();
       ElNotification.error("The socks5 proxy is unreachable");

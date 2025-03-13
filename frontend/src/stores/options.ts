@@ -16,7 +16,7 @@ import consoleIcon from '@/assets/icon/console.svg'
 import htmlIcon from '@/assets/icon/html.svg'
 import jsonIcon from '@/assets/icon/json.svg'
 import excleIcon from '@/assets/icon/excle.svg'
-import { Back, Right, RefreshRight, Minus, Close, Refresh, Setting, DataBoard } from '@element-plus/icons-vue';
+import { Back, Right, RefreshRight, Minus, Close, Refresh, Setting, DataBoard, Coin } from '@element-plus/icons-vue';
 import { WindowReload, WindowToggleMaximise, Quit, WindowMinimise } from "wailsjs/runtime/runtime";
 import { computed } from "vue";
 import global from "./index";
@@ -60,6 +60,28 @@ export const webReportOptions = [
 ]
 
 export const sortSeverityOptions = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
+
+
+export const dslOptions = [
+    {
+        text: 'contains',
+        value: 'contains(body,"content")',
+    },
+    {
+        text: 'contains_all',
+        value: 'contains_all(body,"content_1","content_2")',
+    },
+    {
+        text: 'status_code',
+        value: 'status_code="200"',
+    },
+    {
+        text: 'duration',
+        value: 'duration >= 5',
+    },
+]
+
+export const metadataOptions = ['verified', 'fofa-query', 'google-query', 'shodan-query', 'hunter-query', 'max-request', 'vendor', 'product'];
 
 export const quakeSyntaxOptions = [
     {
@@ -148,14 +170,17 @@ export const hunterOptions = ({
         {
             value: '0',
             label: '最近一个月',
+            tips: '免费积分',
         },
         {
             value: '1',
             label: '最近半年',
+            tips: '权益积分',
         },
         {
             value: '2',
             label: '最近一年',
+            tips: '权益积分',
         },
     ],
     Syntax: [
@@ -838,5 +863,18 @@ export const JSFindOptions = [
         label: "数据展示",
         value: 1,
         icon: DataBoard
+    }
+]
+
+export const AgentPoolOptions = [
+    {
+        label: "运行日志",
+        value: 0,
+        icon: consoleIcon,
+    },
+    {
+        label: "数据库",
+        value: 1,
+        icon: Coin
     }
 ]

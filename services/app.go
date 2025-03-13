@@ -372,8 +372,8 @@ func (a *App) FofaSearch(query, pageSzie, pageNum, address, email, key string, f
 	return config.FofaApiSearch(a.ctx, query, pageSzie, pageNum, fraud, cert)
 }
 
-func (a *App) Socks5Conn(ip string, port, timeout int, username, password string) bool {
-	return portscan.Socks5Conn(ip, port, timeout, username, password)
+func (a *App) Socks5Conn(ip string, port, timeout int, username, password, aliveURL string) bool {
+	return portscan.Socks5Conn(ip, port, timeout, username, password, aliveURL)
 }
 
 func (a *App) IconHash(target string) string {

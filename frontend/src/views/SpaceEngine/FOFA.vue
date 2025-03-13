@@ -236,12 +236,13 @@ function batchSearch() {
         })
 }
 
+const reportTitle = ["URL", "Host", "标题", "IP", "端口", "域名", "协议", "地区", "备案号", "组件"]
 // mode = 0 导出当前查询数据 
 async function SaveData(mode: number) {
     if (table.editableTabs.length != 0) {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         if (mode == 0) {
-            ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", tab.content!)
+            ExportToXlsx(reportTitle, "asset", "fofa_asset", tab.content!)
         } else {
             let temp = [] as Results[]
             ElMessage("正在进行全数据导出，API每页最大查询限度10000，请稍后...");
@@ -257,7 +258,7 @@ async function SaveData(mode: number) {
                 }
                 temp.push(...result.Results!)
             }
-            ExportToXlsx(["URL", "标签", "IP", "端口", "域名", "协议", "组件", "国家", "省份", "城市", "备案号"], "asset", "fofa_asset", temp)
+            ExportToXlsx(reportTitle, "asset", "fofa_asset", temp)
             temp = []
         }
     }

@@ -30,6 +30,14 @@ export function CreateTable() {
   return window['go']['services']['Database']['CreateTable']();
 }
 
+export function DeleteAgentPool(arg1) {
+  return window['go']['services']['Database']['DeleteAgentPool'](arg1);
+}
+
+export function DeleteAllAgentPool() {
+  return window['go']['services']['Database']['DeleteAllAgentPool']();
+}
+
 export function DeleteRecordByPath(arg1) {
   return window['go']['services']['Database']['DeleteRecordByPath'](arg1);
 }
@@ -102,6 +110,10 @@ export function GetAllPathsAndTimes() {
   return window['go']['services']['Database']['GetAllPathsAndTimes']();
 }
 
+export function InsertAgentPool(arg1) {
+  return window['go']['services']['Database']['InsertAgentPool'](arg1);
+}
+
 export function InsertFavGrammarFiled(arg1, arg2, arg3) {
   return window['go']['services']['Database']['InsertFavGrammarFiled'](arg1, arg2, arg3);
 }
@@ -146,8 +158,8 @@ export function RetrievePocscanResults(arg1) {
   return window['go']['services']['Database']['RetrievePocscanResults'](arg1);
 }
 
-export function SearchAgentPool() {
-  return window['go']['services']['Database']['SearchAgentPool']();
+export function SelectAllAgentPool() {
+  return window['go']['services']['Database']['SelectAllAgentPool']();
 }
 
 export function SelectAllSyntax(arg1) {

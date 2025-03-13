@@ -174,3 +174,35 @@ export interface DirectoryTab {
     treeData: TreeNode[];
     isCollapse: boolean;
 }
+
+
+export interface Matcher {
+    type: string;
+    part?: string;
+    words: string[];
+    condition?: string;
+    wordsText?: string;
+}
+
+export interface Metadata {
+    verified?: boolean;
+    fofa?: string;
+    google?: string;
+    shodan?: string;
+    hunter?: string;
+    max_requests?: number;
+}
+
+export interface FormData {
+    id: string;
+    name: string;
+    author: string;
+    severity: string;
+    description: string;
+    reference?: string;
+    tags?: string[];
+    body: string;
+    metadata?: Metadata,
+    matchers: Matcher[];
+    matchersCondition: string;
+}

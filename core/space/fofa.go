@@ -93,12 +93,19 @@ func (f *FofaClient) FofaApiSearch(ctx context.Context, search, pageSize, pageNu
 	json.Unmarshal(b, &fr)
 	fs.Size = fr.Size
 	fs.Error = fr.Error
-	fs.Message = fr.Errmsg
+	if fr.Errmsg == "[820001] 没有权限搜索product字段" {
+		user := f.FofaApiSearchByUserInfo(ctx)
+		if user.Error || !user.Isvip {
+			fs.Message = "[FOFA] 当前用户非VIP权限, 无法使用API查询"
+		}
+	} else {
+		fs.Message = fr.Errmsg
+	}
 	if !fs.Error {
 		if fs.Size == 0 {
 			fs.Message = "未查询到数据"
 		} else {
-			for i := 0; i < len(fr.Results); i++ {
+			for i := range fr.Results {
 				fs.Results = append(fs.Results, structs.Results{
 					URL:      fr.Results[i][10],
 					Host:     fr.Results[i][0],
@@ -121,4 +128,15 @@ func (f *FofaClient) FofaApiSearch(ctx context.Context, search, pageSize, pageNu
 	}
 	time.Sleep(time.Second)
 	return &fs
+}
+
+func (f *FofaClient) FofaApiSearchByUserInfo(ctx context.Context) *structs.FofaUserInfo {
+	var user structs.FofaUserInfo
+	_, body, err := clients.NewSimpleGetRequest("https://fofa.info/api/v1/info/my?key="+f.Auth.Key, http.DefaultClient)
+	if err != nil {
+		user.Error = true
+		return &user
+	}
+	json.Unmarshal(body, &user)
+	return &user
 }

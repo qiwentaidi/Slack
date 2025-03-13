@@ -421,7 +421,6 @@ func DumpResponseHeadersAndRaw(resp *http.Response) (headers, fullresp []byte, e
 func (s *FingerScanner) FingerScan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
 	var fingerPrintResults []string
 
-	workers := rt.NumCPU() * 2
 	inputChan := make(chan FingerPEntity, len(targetDB))
 	defer close(inputChan)
 	results := make(chan string, len(targetDB))
@@ -439,7 +438,7 @@ func (s *FingerScanner) FingerScan(ctx context.Context, web *WebInfo, targetDB [
 		}
 	}()
 	//多指纹同时扫描
-	for i := 0; i < workers; i++ {
+	for i := 0; i < rt.NumCPU(); i++ {
 		go func() {
 			for finger := range inputChan {
 				expr := finger.AllString

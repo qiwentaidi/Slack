@@ -1,19 +1,22 @@
 <script lang="ts" setup>
-import { watch, onMounted, onUnmounted, ref, nextTick, toRaw } from 'vue';
-import { Search, CirclePlusFilled, Delete, DocumentCopy, Reading, Edit } from "@element-plus/icons-vue";
-import { CheckFileStat, ReadFile, RemoveFile, WriteFile } from 'wailsjs/go/services/File';
+import { watch, onMounted, onUnmounted, ref, nextTick, toRaw, computed } from 'vue';
+import { Search, CirclePlusFilled, Delete, DocumentCopy, Reading, Minus, EditPen, CollectionTag } from "@element-plus/icons-vue";
+import { CheckFileStat, ReadFile, RemoveFile, SaveFileDialog, WriteFile } from 'wailsjs/go/services/File';
 import global from '@/stores';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/services/App';
 import { Copy } from '@/util';
-import { PocDetail } from '@/stores/interface';
+import { Matcher, PocDetail } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import CustomTabs from '@/components/CustomTabs.vue';
 import saveIcon from '@/assets/icon/save.svg'
+import aiIcon from '@/assets/icon/ai.svg'
 import { SaveConfig } from '@/config';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution";
-import { pocdetailFilterOptions } from '@/stores/options';
+import { dslOptions, metadataOptions, pocdetailFilterOptions, sortSeverityOptions } from '@/stores/options';
+import { FormData } from '@/stores/interface';
+import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 
 onMounted(async () => {
     const pocMap = await GetFingerPocMap();
@@ -116,6 +119,7 @@ function addFingerprint(fingerprints: string[]) {
     }
     ElMessage.success("添加成功")
     global.webscan.highlight_fingerprints.push(...fingerprints)
+    SaveConfig()
 }
 function deleteFingerprint(fingerprint: string) {
     ElMessage.success("删除成功")
@@ -249,24 +253,247 @@ watch(detailDialog, (newValue) => {
 onUnmounted(() => {
     disposeEditor();
 });
+
+// step 1 add poc, hide poclist
+const step = ref(0)
+
+const metadataTemp = ref({}); // 临时存储 key
+
+const formData = ref<FormData>({
+    id: '',
+    name: '',
+    author: '',
+    description: '',
+    severity: 'medium',
+    body: '',
+    matchers: [] as Matcher[],
+    matchersCondition: 'and'
+});
+// 控制缩进函数
+const indent = (level: number, content: string) => ' '.repeat(level * 2) + content;
+
+const generatedPoc = computed(() => {
+
+    const matchers = formData.value.matchers.map(matcher => {
+        let matcherConfig = [indent(3, `- type: ${matcher.type}`)];
+
+        // 处理需要 part 属性的类型
+        if (["word", "regex"].includes(matcher.type) && matcher.part !== "all") {
+            matcherConfig.push(indent(4, `part: ${matcher.part || "body"}`));
+        }
+
+        // 处理不同类型的字段
+        const fieldType = matcher.type === "regex" ? "regex" : matcher.type === "word" ? "words" : matcher.type;
+        matcherConfig.push(indent(4, `${fieldType}:`));
+
+        // 处理匹配值
+        const wrapWithQuotes = !(["size", "status", "binary"].includes(matcher.type));
+        matcherConfig.push(
+            matcher.words
+                .map(word => indent(5, `- ${wrapWithQuotes ? `'${word}'` : word}`))
+                .join("\n")
+        );
+
+        // 处理 condition
+        if (matcher.words.length > 1) {
+            matcherConfig.push(indent(4, `condition: ${matcher.condition}`));
+        }
+
+        return matcherConfig.join("\n");
+    }).join("\n");
+
+    const pocConfig = [
+        `id: ${formData.value.id}\n`,
+        'info:',
+        indent(1, `name: ${formData.value.name}`),
+        indent(1, `author: ${formData.value.author}`),
+        indent(1, `severity: ${formData.value.severity}`),
+        indent(1, `description: |`),
+        indent(2, formData.value.description),
+    ];
+
+    if (formData.value.reference && Object.keys(formData.value.reference).length > 0) {
+        const referenceArray = formData.value.reference.split('\n').filter(ref => ref.trim() !== '');
+        if (referenceArray.length > 0) {
+            pocConfig.push(indent(1, 'reference:'));
+            referenceArray.forEach(ref => {
+                pocConfig.push(indent(2, `- ${ref.trim()}`));
+            });
+        }
+    }
+
+    if (formData.value.tags && Object.keys(formData.value.tags).length > 0) {
+        pocConfig.push(indent(1, `tags: ${formData.value.tags.join(',')}`))
+    }
+
+    // 处理 metadata 部分
+    if (formData.value.metadata && Object.keys(formData.value.metadata).length > 0) {
+        pocConfig.push(indent(1, 'metadata:'));
+        Object.entries(formData.value.metadata).forEach(([key, value]) => {
+            if (value) {
+                pocConfig.push(indent(2, `${key}: ${value}`));
+            }
+        });
+    }
+
+    pocConfig.push(
+        '\nhttp:',
+        indent(1, '- raw:'),
+        indent(3, '- |'),
+    );
+
+    if (formData.value.body && Object.keys(formData.value.body).length > 0) {
+        const bodyArray = formData.value.body.split('\n');
+        if (bodyArray.length > 0) {
+            bodyArray.forEach(ref => {
+                pocConfig.push(indent(4, ref.trim()));
+            });
+        }
+    }
+
+    pocConfig.push('\n')
+
+    if (formData.value.matchers.length > 1) {
+        pocConfig.push(indent(2, `matchers-condition: ${formData.value.matchersCondition}`));
+    }
+
+    pocConfig.push(indent(2, 'matchers:'));
+    pocConfig.push(matchers);
+
+    return pocConfig.join('\n');
+});
+
+const editorDialog = ref(false);
+
+function openEditor() {
+    editorDialog.value = true
+    content.value = generatedPoc.value
+    isEditable.value = true
+    nextTick(() => {
+        if (editorDialog.value) {
+            initEditor();
+        }
+    });
+}
+
+watch(editorDialog, (newValue) => {
+    if (!newValue) {
+        disposeEditor(); // 在关闭时销毁实例
+    }
+});
+
+const nuclei = ({
+    fetchMetatedataSuggestions: function (query: string, cb: Function) {
+        cb(metadataOptions.filter(k => k.includes(query)).map(k => ({ value: k })))
+    },
+    updateMetadataKey: function (oldKey: string, newKey: string) {
+        if (newKey && oldKey !== newKey && !formData.value.metadata[newKey]) {
+            formData.value.metadata[newKey] = formData.value.metadata[oldKey];
+            delete formData.value.metadata[oldKey];
+            metadataTemp.value[newKey] = newKey;
+            delete metadataTemp.value[oldKey];
+        }
+    },
+    addMetadata: function () {
+        if (!formData.value.metadata) {
+            formData.value.metadata = {};
+        }
+        const newKey = ''; // 默认空 key
+        formData.value.metadata[newKey] = '';
+        metadataTemp.value[newKey] = newKey;
+    },
+    removeMetadata: function (key: string) {
+        if (formData.value.metadata) {
+            delete formData.value.metadata[key];
+            delete metadataTemp.value[key]; // 同步删除临时 key
+        }
+    },
+    fetchDslSuggestions: function (query: string, cb: Function) {
+        cb(dslOptions.filter(k => k.text.includes(query)))
+    },
+    updateMatcherWords: function (index: number) {
+        nextTick(() => {
+            const matcher = formData.value.matchers[index];
+            if (matcher.wordsText) {
+                matcher.words = matcher.wordsText.split('\n').filter(word => word.trim());
+            } else {
+                matcher.words = [];
+            }
+        })
+    },
+    addMatcher: function () {
+        formData.value.matchers.push({
+            type: 'word',
+            part: 'all',
+            words: [],
+            condition: 'and',
+            wordsText: '',
+        });
+    },
+    removeMatcher: function (index: number) {
+        formData.value.matchers.splice(index, 1);
+    },
+    replaceHostAll: function () {
+        formData.value.body = formData.value.body.replace(/(Host:\s*)([^\n]+)/g, '{{Hostname}}');
+    },
+})
+
+async function savePoc() {
+    if (formData.value.id === "") {
+        ElMessage.warning("请输入POC ID!")
+        return;
+    }
+    const path = await SaveFileDialog(formData.value.id + ".yaml");
+    if (!path) {
+        return;
+    }
+    const result = await WriteFile("yaml", path, content.value);
+    result ? ElMessage.success("保存成功!") : ElMessage.error("保存失败!");
+}
+
+const variables = `variables:
+  num: "999999999"
+  filename: "{{rand_base(8)}}"
+  s1: "{{rand_int(40000, 44800)}}"`
+
+const func = `随机整数: {{rand_int(40000, 44800)}}
+随机字符串: {{rand_base(8)}} || {{randstr}}
+转小写: {{to_lower(rand_text_alpha(5))}}
+转大写: {{to_upper(rand_base(12))}}`
+
+const path = `http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/libs/granite/offloading/content/view.html"`
+
+const uploads = `aspx:
+  <%@Page Language="C#" %>
+        <% Response.Write({{s1}}*{{s2}}); System.IO.File.Delete(Request.PhysicalPath); %>
+
+jsp:
+  <%out.print({{s1}}*{{s2}});new java.io.File(application.getRealPath(request.getServletPath())).delete();%>
+  
+php:
+  <?php print('{{randstr}}');unlink(__FILE__);?>`
 </script>
 
 <template>
-    <CustomTabs>
+    <CustomTabs v-show="step == 0">
         <el-tabs v-model="activeTabs" type="card" class="demo-tabs">
             <el-tab-pane name="poc" label="POC管理">
                 <el-card>
-                    <div style="margin-bottom: 10px;">
+                    <div class="my-header" style="margin-bottom: 10px;">
                         <el-input :suffix-icon="Search" v-model="filter" @input="filterPocList()"
                             placeholder="根据规则过滤POC" style="width: 50%;">
                             <template #prepend>
                                 <el-select v-model="defaultFilter" style="width: 150px;">
-                                    <el-option v-for="item in pocdetailFilterOptions" :key="item.value" :label="item.label"
-                                        :value="item.value">
+                                    <el-option v-for="item in pocdetailFilterOptions" :key="item.value"
+                                        :label="item.label" :value="item.value">
                                     </el-option>
                                 </el-select>
                             </template>
                         </el-input>
+                        <el-button type="primary" :icon="CirclePlusFilled" @click="step = 1">添加POC</el-button>
                     </div>
                     <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 225px);">
                         <el-table-column prop="Name" label="名称" />
@@ -305,11 +532,8 @@ onUnmounted(() => {
                     <div class="my-header" style="margin-bottom: 10px;">
                         <el-select-v2 v-model="selectHighlightFinger" placeholder="请选择需要高亮的指纹" filterable
                             :options="highlightFingerOptions" multiple clearable />
-                        <el-space style="margin-left: 10px">
-                            <el-button :icon="CirclePlusFilled" type="primary"
-                                @click="addFingerprint(selectHighlightFinger)">添加</el-button>
-                            <el-button :icon="saveIcon" type="primary" @click="SaveConfig">保存</el-button>
-                        </el-space>
+                        <el-button :icon="CirclePlusFilled" type="primary"
+                            @click="addFingerprint(selectHighlightFinger)" style="margin-left: 10px;">添加</el-button>
                     </div>
                     <el-table :data="global.webscan.highlight_fingerprints" style="height: calc(100vh - 195px);">
                         <el-table-column type="index" width="50" />
@@ -328,25 +552,196 @@ onUnmounted(() => {
                 </el-card>
             </el-tab-pane>
         </el-tabs>
-        <template #ctrl>
-            <el-tag :hit="true" v-show="activeTabs == 'finger'">指纹添加或删除成功后记得保存</el-tag>
-        </template>
     </CustomTabs>
-    <el-drawer v-model="detailDialog" title="漏洞详情" size="70%" :before-close="handleBeforeClose">
+    <div v-show="step == 1">
+        <el-page-header @back="step = 0">
+            <template #content>
+                <span style="font-weight: bold; margin-right: 5px;">Nuclei PoC 生成器</span>
+                <el-tag>填写完基础信息后, 通过编辑器模式进行调整/保存</el-tag>
+            </template>
+            <template #extra>
+                <el-button circle @click="BrowserOpenURL('https://cloud.projectdiscovery.io/templates')">
+                    <template #icon>
+                        <el-icon size="24">
+                            <aiIcon />
+                        </el-icon>
+                    </template>
+                </el-button>
+                <el-button round :icon="EditPen" @click="openEditor">编辑器模式</el-button>
+            </template>
+        </el-page-header>
+        <el-divider />
+        <div style="display: flex; gap: 10px;">
+            <el-form :model="formData" label-width="auto" class="fill-width">
+                <el-form-item label="漏洞ID">
+                    <el-input v-model="formData.id"></el-input>
+                </el-form-item>
+                <el-form-item label="漏洞名称">
+                    <el-input v-model="formData.name"></el-input>
+                </el-form-item>
+                <el-form-item label="作者">
+                    <el-input v-model="formData.author"></el-input>
+                </el-form-item>
+                <el-form-item label="风险等级">
+                    <el-select v-model="formData.severity">
+                        <el-option v-for="severity in sortSeverityOptions" :key="severity" :label="severity"
+                            :value="severity.toLowerCase()" />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="漏洞描述">
+                    <el-input v-model="formData.description" type="textarea" :rows="3"></el-input>
+                </el-form-item>
+                <el-form-item label="漏洞来源">
+                    <el-input v-model="formData.reference" type="textarea" :rows="3"></el-input>
+                </el-form-item>
+                <el-form-item label="Matedata">
+                    <el-button type="primary" size="small" @click="nuclei.addMetadata">添加 Matedata</el-button>
+                    <div v-if="formData.metadata">
+                        <div v-for="(value, key) in formData.metadata" :key="key"
+                            style="display: flex; align-items: center; margin-bottom: 8px; width: 100%;">
+                            <!-- 这里用 el-autocomplete 提供建议 -->
+                            <el-autocomplete v-model="metadataTemp[key]"
+                                @select="nuclei.updateMetadataKey(key, $event.value)"
+                                :fetch-suggestions="nuclei.fetchMetatedataSuggestions" placeholder="请输入 Key"
+                                style="flex: 1; margin-right: 8px;"
+                                @change="nuclei.updateMetadataKey(key, metadataTemp[key])" />
+                            <el-input v-model="formData.metadata[key]" placeholder="请输入 Value"
+                                style="flex: 1; margin-right: 8px;" />
+                            <el-button :icon="Minus" size="small" circle @click="nuclei.removeMetadata(key)" />
+                        </div>
+                    </div>
+                </el-form-item>
+                <el-form-item label="关联指纹">
+                    <el-select-v2 v-model="formData.tags" :options="fingerOptions" filterable multiple clearable />
+                </el-form-item>
+                <el-form-item label="Raw数据包">
+                    <el-input v-model="formData.body" type="textarea" :rows="8" placeholder="请输入请求体内容" />
+                </el-form-item>
+            </el-form>
+            <!-- 右侧预览区域 -->
+            <el-form :model="formData" label-width="auto" class="fill-width">
+                <el-form-item label="匹配规则">
+                    <el-select v-model="formData.matchersCondition" class="fill-width">
+                        <el-option label="AND" value="and" />
+                        <el-option label="OR" value="or" />
+                    </el-select>
+                    <div style="width: 100%; margin-top: 5px;">
+                        <el-card v-for="(matcher, index) in formData.matchers" :key="index" style="margin-bottom: 5px;">
+                            <template #header>
+                                <div class="card-header">
+                                    <span>规则 #{{ index + 1 }}</span>
+                                    <el-button size="small" type="danger" :icon="Delete"
+                                        @click="nuclei.removeMatcher(index)">
+                                    </el-button>
+                                </div>
+                            </template>
+
+                            <el-form label-position="top">
+                                <el-form-item label="类型">
+                                    <el-select v-model="matcher.type">
+                                        <el-option label="word" value="word" />
+                                        <el-option label="status" value="status" />
+                                        <el-option label="regex" value="regex" />
+                                        <el-option label="dsl" value="dsl" />
+                                        <el-option label="size" value="size" />
+                                        <el-option label="binary" value="binary" />
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item label="匹配部分" v-if="matcher.type === 'word' || matcher.type === 'regex'">
+                                    <el-select v-model="matcher.part">
+                                        <el-option label="响应体" value="body" />
+                                        <el-option label="响应头" value="header" />
+                                        <el-option label="全部" value="all" />
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item label="词条">
+                                    <el-autocomplete v-model="matcher.wordsText" type="textarea" :rows="3"
+                                        :fetch-suggestions="matcher.type === 'dsl' ? nuclei.fetchDslSuggestions : () => []"
+                                        placeholder="请输入词条, 每行一个" @input="nuclei.updateMatcherWords(index)">
+                                        <template #default="{ item }">
+                                            <div>
+                                                <span style="color: #559FF8;">{{ item.text }}</span>
+                                                <el-divider direction="vertical" />
+                                                <span>{{ item.value }}</span>
+                                            </div>
+                                        </template>
+                                    </el-autocomplete>
+                                </el-form-item>
+
+                                <el-form-item label="词条匹配条件">
+                                    <el-radio-group v-model="matcher.condition">
+                                        <el-radio value="and">AND</el-radio>
+                                        <el-radio value="or">OR</el-radio>
+                                    </el-radio-group>
+                                </el-form-item>
+                            </el-form>
+                        </el-card>
+                        <el-button type="primary" size="small" @click="nuclei.addMatcher">
+                            添加匹配规则
+                        </el-button>
+                    </div>
+                </el-form-item>
+            </el-form>
+        </div>
+    </div>
+    <el-drawer v-model="detailDialog" size="70%" :before-close="handleBeforeClose">
+        <template #header>
+            <span class="drawer-title">漏洞详情</span>
+        </template>
         <div class="editor-container">
             <!-- 操作区 -->
             <div class="editor-toolbar">
                 <el-space>
                     <el-tooltip content="点击切换状态">
-                        <el-button :icon="isEditable ? Edit : Reading" size="small" @click="toggleEditable">
+                        <el-button link color="#000" :icon="isEditable ? EditPen : Reading" @click="toggleEditable">
                             {{ isEditable ? '当前状态: 编辑' : '当前状态: 只读' }}
                         </el-button>
                     </el-tooltip>
                     <el-tag type="warning" v-show="hasUnsavedChanges">未保存</el-tag>
                 </el-space>
                 <el-space>
-                    <el-button :icon="DocumentCopy" size="small" @click="Copy(content)">复制</el-button>
-                    <el-button :icon="saveIcon" size="small" @click="saveContent">保存</el-button>
+                    <el-button link color="#000" :icon="DocumentCopy" @click="Copy(content)">复制</el-button>
+                    <el-button link color="#000" :icon="saveIcon" @click="saveContent">保存</el-button>
+                </el-space>
+            </div>
+            <!-- Monaco 编辑器容器 -->
+            <div ref="editorContainer" class="monaco-editor"></div>
+        </div>
+    </el-drawer>
+    <el-drawer v-model="editorDialog" size="70%">
+        <template #header>
+            <span class="drawer-title">编辑漏洞</span>
+        </template>
+        <div class="editor-container">
+            <!-- 操作区 -->
+            <div class="editor-toolbar">
+                <el-popover placement="bottom-start" :width="800" trigger="click">
+                    <template #reference>
+                        <el-button link color="#000" :icon="CollectionTag">常用语法</el-button>
+                    </template>
+                    <el-scrollbar height="600px">
+                        <el-descriptions :column="1" border>
+                            <el-descriptions-item label="声明变量">
+                                <highlightjs language="yaml" :code='variables'></highlightjs>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="常用函数">
+                                <highlightjs language="yaml" :code='func'></highlightjs>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="路径匹配">
+                                <highlightjs language="yaml" :code='path'></highlightjs>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="匹配成功立即停止">
+                                <highlightjs language="yaml" code='stop-at-first-match'></highlightjs>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="无害化上传">
+                                <highlightjs language="yaml" :code='uploads'></highlightjs>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                    </el-scrollbar>
+                </el-popover>
+                <el-space>
+                    <el-button link color="#000" :icon="DocumentCopy" @click="Copy(content)">复制</el-button>
+                    <el-button link color="#000" :icon="saveIcon" @click="savePoc">保存</el-button>
                 </el-space>
             </div>
             <!-- Monaco 编辑器容器 -->
@@ -368,12 +763,16 @@ onUnmounted(() => {
     justify-content: space-between;
     padding: 8px;
     background-color: #2D2D2D;
-    border-bottom: 1px solid #0E1116;
+    border-bottom: 1px solid #181818;
 }
 
 .monaco-editor {
     flex-grow: 1;
     height: calc(100% - 60px);
     /* Adjust based on toolbar height */
+}
+
+.fill-width {
+    width: 100%;
 }
 </style>

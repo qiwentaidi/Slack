@@ -421,6 +421,26 @@ type Results struct {
 	Product  string
 }
 
+type FofaUserInfo struct {
+	Error           bool   `json:"error"`
+	Email           string `json:"email"`
+	Username        string `json:"username"`
+	Category        string `json:"category"`
+	Fcoin           int    `json:"fcoin"`
+	FofaPoint       int    `json:"fofa_point"`
+	RemainFreePoint int    `json:"remain_free_point"`
+	RemainAPIQuery  int    `json:"remain_api_query"`
+	RemainAPIData   int    `json:"remain_api_data"`
+	Isvip           bool   `json:"isvip"`
+	VipLevel        int    `json:"vip_level"`
+	IsVerified      bool   `json:"is_verified"`
+	Avatar          string `json:"avatar"`
+	Message         string `json:"message"`
+	FofacliVer      string `json:"fofacli_ver"`
+	FofaServer      bool   `json:"fofa_server"`
+	Expiration      string `json:"expiration"`
+}
+
 type VulnerabilityInfo struct {
 	ID           string
 	Name         string

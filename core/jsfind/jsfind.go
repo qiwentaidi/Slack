@@ -23,7 +23,7 @@ var (
 		"[\"'‘“`]\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 		"=\\s{0,6}[\",',’,”]{0,1}\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 	}
-	Filter = []string{".vue", ".jpeg", ".png", ".jpg", ".gif", ".css", ".svg", ".scss", ".eot", ".ttf", ".woff", ".js", ".ts", ".tsx"}
+	Filter = []string{".vue", ".jpeg", ".png", ".jpg", ".gif", ".css", ".svg", ".scss", ".eot", ".ttf", ".woff", ".js", ".ts", ".tsx", ".ico"}
 	// 因为在提取API时经常会有无用的类似数据，所以需要过滤
 	apiFilter = []string{
 		"text/xml",
@@ -57,12 +57,28 @@ var (
 		"403",
 		"500",
 	}
-	Sensitive = regexp.MustCompile("(access.{0,1}key|access.{0,1}Key|access.{0,1}Id|access.{0,1}id|.{0,5}密码|.{0,5}账号|默认.{0,5}|加密|解密|password:.{0,10}|username:.{0,10})")
-	Phone     = regexp.MustCompile(`(^|[^0-9a-zA-Z])(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}([^0-9a-zA-Z]|$)`)
-	IDCard    = regexp.MustCompile(`(^|[^0-9a-zA-Z])((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))([^0-9a-zA-Z]|$)`)
-	Email     = regexp.MustCompile(`\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*`)
-	Link      = regexp.MustCompile(`(?:"|')(((?:[a-zA-Z]{1,10}://|//)[^"'/]{1,}\.[a-zA-Z]{2,}[^"']{0,})|((?:/|\.\./|\./)[^"'><,;|*()(%%$^/\\\[\]][^"'><,;|()]{1,})|([a-zA-Z0-9_\-/]{1,}/[a-zA-Z0-9_\-/]{1,}\.(?:[a-zA-Z]{1,4}|action)(?:[\?|#][^"|']{0,}|))|([a-zA-Z0-9_\-/]{1,}/[a-zA-Z0-9_\-/]{3,}(?:[\?|#][^"|']{0,}|))|([a-zA-Z0-9_\-]{1,}\.(?:\w)(?:[\?|#][^"|']{0,}|)))(?:"|')`)
-	IP_PORT   = regexp.MustCompile(`((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}`)
+	Sensitive      = regexp.MustCompile("(access.{0,1}key|access.{0,1}Key|access.{0,1}Id|access.{0,1}id|.{0,5}密码|.{0,5}账号|默认.{0,5}|加密|解密|password:.{0,10}|username:.{0,10})")
+	Phone          = regexp.MustCompile(`(^|[^0-9a-zA-Z])(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}([^0-9a-zA-Z]|$)`)
+	IDCard         = regexp.MustCompile(`(^|[^0-9a-zA-Z])((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))([^0-9a-zA-Z]|$)`)
+	Email          = regexp.MustCompile(`\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*`)
+	Link           = regexp.MustCompile(`(?:"|')(((?:[a-zA-Z]{1,10}://|//)[^"'/]{1,}\.[a-zA-Z]{2,}[^"']{0,})|((?:/|\.\./|\./)[^"'><,;|*()(%%$^/\\\[\]][^"'><,;|()]{1,})|([a-zA-Z0-9_\-/]{1,}/[a-zA-Z0-9_\-/]{1,}\.(?:[a-zA-Z]{1,4}|action)(?:[\?|#][^"|']{0,}|))|([a-zA-Z0-9_\-/]{1,}/[a-zA-Z0-9_\-/]{3,}(?:[\?|#][^"|']{0,}|))|([a-zA-Z0-9_\-]{1,}\.(?:\w)(?:[\?|#][^"|']{0,}|)))(?:"|')`)
+	IP_PORT        = regexp.MustCompile(`((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}`)
+	HighRiskRouter = []string{
+		"logout",
+		"loginout",
+		"insert",
+		"update",
+		"remove",
+		"add",
+		"change",
+		"save",
+		"import",
+		"create",
+		"enable",
+		"del",
+		"disable",
+		"detail",
+	}
 )
 
 func init() {
@@ -222,7 +238,8 @@ func urlInfoSeparate(links []string) (urls, apis []string) {
 
 		// 如果 link 包含 apiFilter 中的任何字符串，则跳过，不添加到 apis
 		isFiltered := false
-		for _, filter := range apiFilter {
+		filters := append(apiFilter, Filter...)
+		for _, filter := range filters {
 			if strings.Contains(link, filter) {
 				isFiltered = true
 				break
@@ -284,7 +301,12 @@ func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, 
 			Headers: headers,
 			Params:  param,
 		}
-
+		for _, router := range HighRiskRouter {
+			if strings.Contains(apiReq.URL, router) {
+				runtime.EventsEmit(ctx, "jsfindlog", "[!!] "+fullURL+" 高风险API已跳过测试, 相关敏感词: "+router)
+				return
+			}
+		}
 		// 测试未授权访问
 		vulnerable, body, err := testUnauthorizedAccess(homeBody, apiReq, authentication)
 		if err != nil || !vulnerable {

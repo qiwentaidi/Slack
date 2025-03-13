@@ -30,10 +30,6 @@ html {
   height: 30px;
 }
 
-.el-divider__text {
-  background-color: var(--el-divider-text);
-}
-
 .el-textarea__inner {
   height: 100%;
 }

@@ -195,7 +195,12 @@ function openDialog(row: any) {
   detail.Severity = row.Severity;
   detail.Param = row.Param;
   detail.Filed = row.Filed;
-  detail.Response = row.Response;
+  // 超过50kb不显示
+  if (row.Response && row.Response.length >= 500 * 1024) {
+    detail.Response = 'Response too large, please manually open the link to view.';
+  } else {
+    detail.Response = row.Response;
+  }
 }
 </script>
 

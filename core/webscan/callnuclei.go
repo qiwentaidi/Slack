@@ -3,9 +3,12 @@ package webscan
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
+	"slack-wails/lib/util"
 	"strings"
 	"sync/atomic"
 
@@ -136,12 +139,17 @@ func NewNucleiSDKOptions(o structs.NucleiOption) []nuclei.NucleiSDKOptions {
 	}
 	// 判断是使用指定poc文件还是根据标签
 	if len(o.TemplateFile) == 0 {
-		options = append(options, nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
-			Templates: o.TemplateFolders,
-		}))
+		// fix 2.0.6: https://github.com/qiwentaidi/Slack/issues/45
+		// options = append(options, nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
+		// 	Templates: o.TemplateFolders,
+		// }))
+
 		// 如果自定义标签不为空则使用
-		options = append(options, nuclei.WithTemplateFilters(nuclei.TemplateFilters{
-			Tags: finalTags(o.Tags, o.CustomTags),
+		// options = append(options, nuclei.WithTemplateFilters(nuclei.TemplateFilters{
+		// 	Tags: finalTags(o.Tags, o.CustomTags),
+		// }))
+		options = append(options, nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
+			Templates: findTagsFile(finalTags(o.Tags, o.CustomTags), o.TemplateFolders),
 		}))
 	} else {
 		// 指定poc文件的时候就要删除tags标签
@@ -153,6 +161,28 @@ func NewNucleiSDKOptions(o structs.NucleiOption) []nuclei.NucleiSDKOptions {
 		options = append(options, nuclei.WithProxy([]string{o.Proxy}, false)) // -proxy
 	}
 	return options
+}
+
+func findTagsFile(inputTags, templateDirs []string) []string {
+	var fileList []string
+	var tempFileList []string
+	for _, inputTag := range inputTags {
+		for pocName, pocTags := range WorkFlowDB {
+			if util.ArrayContains(inputTag, pocTags) {
+				tempFileList = append(tempFileList, pocName)
+			}
+		}
+	}
+	for _, temp := range tempFileList {
+		for _, dir := range templateDirs {
+			filepath := path.Join(dir, temp+".yaml")
+			if _, err := os.Stat(filepath); err == nil {
+				fileList = append(fileList, filepath)
+				break
+			}
+		}
+	}
+	return util.RemoveDuplicates(fileList)
 }
 
 func finalTags(detectTags, customTags []string) []string {

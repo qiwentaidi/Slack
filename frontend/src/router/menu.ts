@@ -1,7 +1,6 @@
 import homeIcon from "@/assets/icon/home.svg"
 import toolsIcon from "@/assets/icon/tools.svg"
 import mappingIcon from "@/assets/icon/mapping.svg"
-import path from "path"
 
 const MenuList = [
     {
@@ -54,7 +53,7 @@ const MenuList = [
         {
           name: "aside.subdomain_brute_force",
           path: "/Subdomain",
-          icon: "/app/bomb.png"
+          icon: "/app/www.png"
         },
         {
           name: "aside.search_domain_info",
@@ -76,7 +75,7 @@ const MenuList = [
         {
           name: "aside.fofa",
           path: "/FOFA",
-          icon: "/app/fofa.ico"
+          icon: "/app/fofa.png"
         },
         {
           name: "aside.hunter",
@@ -134,11 +133,6 @@ const MenuList = [
           name: "aside.extract_database_info",
           path: "/ExtractDbInfo",
           icon: "/app/database.png"
-        },
-        {
-          name: "aside.nacos_config_analysis",
-          path: "/NacosConfigAnalysis",
-          icon: "/app/analysis.png"
         },
         {
           name: "aside.fileinfo",

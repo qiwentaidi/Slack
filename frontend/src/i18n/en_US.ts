@@ -41,7 +41,6 @@ export default {
         'fscan': 'Fscan',
         'timestamp': 'Timestamp',
         'dumpall': 'Dumpall',
-        'nacos_config_analysis': 'Nacos Config Analysis',
         'fileinfo': 'File Info Retrieval',
     },
     navigator: {

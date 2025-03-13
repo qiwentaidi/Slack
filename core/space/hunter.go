@@ -36,24 +36,24 @@ func HunterApiSearch(api, query, pageSize, page, startTime, asset string, dedupl
 }
 
 // 暂时不用
-func SearchTotal(api, search string) (total int64, message string) {
-	currentTime := time.Now().Format("2006-01-02")
-	beforeTime := time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
-	addr := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(search) +
-		"&page=1&page_size=1&is_web=3&port_filter=false&start_time=" + beforeTime + "&end_time=" + currentTime
-	_, b, err := clients.NewSimpleGetRequest(addr, clients.NewHttpClient(nil, true))
-	if err != nil {
-		logger.NewDefaultLogger().Debug(err.Error())
-		return
-	}
-	var hr structs.HunterResult
-	json.Unmarshal(b, &hr)
-	if hr.Code == 200 {
-		total = hr.Data.Total
-		message = hr.Data.RestQuota
-	}
-	return total, message
-}
+// func SearchTotal(api, search string) (total int64, message string) {
+// 	currentTime := time.Now().Format("2006-01-02")
+// 	beforeTime := time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
+// 	addr := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(search) +
+// 		"&page=1&page_size=1&is_web=3&port_filter=false&start_time=" + beforeTime + "&end_time=" + currentTime
+// 	_, b, err := clients.NewSimpleGetRequest(addr, clients.NewHttpClient(nil, true))
+// 	if err != nil {
+// 		logger.NewDefaultLogger().Debug(err.Error())
+// 		return
+// 	}
+// 	var hr structs.HunterResult
+// 	json.Unmarshal(b, &hr)
+// 	if hr.Code == 200 {
+// 		total = hr.Data.Total
+// 		message = hr.Data.RestQuota
+// 	}
+// 	return total, message
+// }
 
 // hunter base64加密接口
 func HunterBaseEncode(str string) string {

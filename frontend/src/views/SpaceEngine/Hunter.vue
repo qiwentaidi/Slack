@@ -57,7 +57,7 @@ const syntax = ({
 
 const form = reactive({
     query: '',
-    defaultTime: '2',
+    defaultTime: '0',
     defaultSever: '3',
     keywordActive: "IP",
     deduplication: false,
@@ -457,11 +457,17 @@ function searchCsegmentIpv4(ip: string) {
         </el-form-item>
         <el-form-item>
             <el-space>
-                <el-select v-model="form.defaultTime" style="width: 120px;">
+                <el-select v-model="form.defaultTime" style="width: 200px;">
                     <el-option v-for="item in hunterOptions.Time" :key="item.value" :label="item.label"
-                        :value="item.value" style="text-align: center;" />
+                        :value="item.value"
+                        >
+                        <span style="float: left">{{ item.label }}</span>
+                        <span style="float: right">
+                            {{ item.tips }}
+                        </span>
+                    </el-option>
                 </el-select>
-                <el-select v-model="form.defaultSever" style="width: 160px;">
+                <el-select v-model="form.defaultSever" style="width: 200px;">
                     <el-option v-for="item in hunterOptions.Server" :key="item.value" :label="item.label"
                         :value="item.value" style="text-align: center;" />
                 </el-select>
@@ -495,7 +501,7 @@ function searchCsegmentIpv4(ip: string) {
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" :min-width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" fixed label="IP" width="150" :show-overflow-tooltip="true" />
-                <el-table-column prop="Port" fixed label="端口/服务" width="120">
+                <el-table-column prop="Port" fixed label="端口/服务" width="150">
                     <template #default="scope">
                         {{ scope.row.Port }}
                         <el-tag type="info">{{ scope.row.Protocol }}</el-tag>

@@ -41,8 +41,7 @@ export default {
         'fscan': 'Fscan专区',
         'timestamp': '时间戳转换',
         'dumpall': 'Dumpall',
-        'nacos_config_analysis': 'Nacos配置文件解析',
-        'fileinfo': '文件信息检索',
+        'fileinfo': '文件夹信息检索',
     },
     navigator: {
         'enterprise': '企业及备案信息查询',
