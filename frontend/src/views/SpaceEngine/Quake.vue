@@ -44,7 +44,8 @@
                             </template>
                             <div class="batch-search">
                                 <el-alert type="info" :closable="false" title="上传包含IP/域名的.txt文件，数量不超过1000个" show-icon />
-                                <el-button class="upload" :icon="UploadFilled" @click="UploadFileAndRead(quake, 'batchIps')">上传文件</el-button>
+                                <el-button class="upload" :icon="UploadFilled"
+                                    @click="UploadFileAndRead(quake, 'batchIps')">上传文件</el-button>
                                 <el-input v-model="quake.batchIps" type="textarea" :rows="5"
                                     placeholder="请输入IP/域名，每行一个，多个请换行输入"></el-input>
                                 <div class="my-header">
@@ -150,7 +151,8 @@
                     </el-text>
                 </template>
                 <template #suffix>
-                    <el-button :icon="ChromeFilled" link @click="BrowserOpenURL('https://quake.360.net/quake/#/index')" />
+                    <el-button :icon="ChromeFilled" link
+                        @click="BrowserOpenURL('https://quake.360.net/quake/#/index')" />
                 </template>
             </el-input>
             <div style="flex-grow: 1;"></div>
@@ -535,38 +537,42 @@ async function CopyURL() {
 }
 
 async function exportData() {
-    if (table.editableTabs.length != 0) {
-        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        if (tab.total > 500) {
-            ElNotification.info({
-                title: "提示",
-                message: "正在进行全数据导出，API每页最大查询限度500，请稍后。",
-            });
-        }
-        let ipList = [] as string[]
-        let temp = [] as structs.QuakeData[]
-        if (tab.isBatch) {
-            ipList = await tableCtrl.getIpList()
-        }
-        let index = 0
-        let numbs = splitInt(tab.total, 500)
-        for (const num of numbs) {
-            index += 1
-            if (numbs.length != 1) {
-                ElMessage("正在导出第" + index.toString() + "页");
-            }
-            let result = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
-            if (result.Code != 0) {
-                ElMessage.error(result.Message + " 已退出导出!")
-                Callgologger("error", `[quake] ${tab.title} export data error: ${result.Message}`)
-                table.loading = false
-                return
-            }
-            temp.push(...result.Data)
-        }
-        ExportToXlsx(["URL", "应用/组件", "端口", "协议", "域名", "标题", "单位名称", "备案号", "IP", "运营商", "地理位置"], "asset", "quake_asset", transformArrayFields(temp))
-        temp = []
+    if (table.editableTabs.length == 0) {
+        ElNotification.warning({
+            title: "Quake Tips",
+            message: "请先进行数据查询",
+        })
+        return
     }
+    const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+    if (tab.total > 500) {
+        ElNotification.info({
+            title: "Quake Tips",
+            message: "正在进行全数据导出, API每页最大查询限度500, 请稍后。",
+        });
+    }
+    let ipList = [] as string[]
+    let temp = [] as structs.QuakeData[]
+    if (tab.isBatch) {
+        ipList = await tableCtrl.getIpList()
+    }
+    let index = 0
+    for (const num of splitInt(tab.total, 500)) {
+        index += 1
+        ElMessage("正在查询第" + index.toString() + "页");
+        let result = await QuakeSearch(ipList, tab.title, index, num, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
+        if (result.Code != 0) {
+            ElNotification.error({
+                title: "Quake Tips",
+                message: `${tab.title} 导出数据时遇到错误: ${result.Message}, 当前查询到第${index}页`,
+            })
+            table.loading = false
+            break
+        }
+        temp.push(...result.Data)
+    }
+    ExportToXlsx(["URL", "应用/组件", "端口", "协议", "域名", "标题", "单位名称", "备案号", "IP", "运营商", "地理位置"], "asset", "quake_asset", transformArrayFields(temp))
+    temp = []
 }
 </script>
 

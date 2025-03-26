@@ -559,8 +559,16 @@ func (a *App) JSFind(target, prefixJsURL string, jsLinks []string) structs.FindS
 	return jsfind.MultiThreadJSFind(a.ctx, target, prefixJsURL, jsLinks)
 }
 
-func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers map[string]string, authentication []string) {
-	jsfind.AnalyzeAPI(a.ctx, homeURL, baseURL, apiList, headers, authentication)
+func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers map[string]string, authentication []string, highRiskRouter []string) {
+	options := structs.JSFindOptions{
+		HomeURL:        homeURL,
+		BaseURL:        baseURL,
+		ApiList:        apiList,
+		Headers:        headers,
+		Authentication: authentication,
+		HighRiskRouter: highRiskRouter,
+	}
+	jsfind.AnalyzeAPI(a.ctx, options)
 }
 
 // 允许目标传入文件或者目标favicon地址

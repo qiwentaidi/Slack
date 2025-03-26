@@ -185,7 +185,7 @@ const tableCtrl = ({
         table.acvtiveNames = activeName
         table.editableTabs = tabs.filter((tab) => tab.name !== targetName)
     },
-    handleSizeChange: async(val: any) => {
+    handleSizeChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
         let result = await HunterSearch(global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication)
@@ -216,7 +216,7 @@ const tableCtrl = ({
         tab.total = result.data.total
         table.loading = false
     },
-    handleCurrentChange: async(val: any) => {
+    handleCurrentChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
@@ -267,48 +267,86 @@ const tableCtrl = ({
     }
 })
 
-async function SaveData(mode: number) {
-    if (table.editableTabs.length != 0) {
-        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        if (tab.content.length == 0) {
-            return
-        }
-        if (mode == 0) {
-            ExportToXlsx(["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"], "asset", "hunter_asset", tab.content!)
-        } else {
-            ElNotification.info({
-                title: "提示",
-                message: "正在进行全数据导出，API每页最大查询限度100，请稍后。",
-            });
-            let temp = [{}]
-            temp.pop()
-            let index = 0
-            for (const num of splitInt(tab.total, 100)) {
-                index += 1
-                ElMessage("正在导出第" + index.toString() + "页");
-                let result = await HunterSearch(global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication)
-                if (isError(result.code, result.message)) {
-                    return
-                }
-                result.data.arr.forEach((item: any) => {
-                    temp.push({
-                        URL: item.url,
-                        IP: item.ip,
-                        Port: item.port,
-                        Protocol: item.protocol,
-                        Domain: item.domain,
-                        Component: item.component,
-                        Title: item.web_title,
-                        Status: item.status_code,
-                        ICP: item.company,
-                        ISP: item.isp,
-                        Position: item.country + "/" + item.province,
-                        UpdateTime: item.updated_at,
-                    })
-                });
+async function exportData(mode: number) {
+    if (table.editableTabs.length == 0) {
+        ElNotification.warning({
+            title: "Hunter Tips",
+            message: "请先进行数据查询",
+        })
+        return
+    }
+
+    const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+    if (tab.content.length === 0) {
+        ElNotification.warning({
+            title: "Hunter Tips",
+            message: "当前查询条件并没有数据可导出",
+        })
+        return;
+    }
+    // 如果已经查询总数小于当前单页长度，直接导出表格即可
+    if (tab.total <= tab.pageSize) {
+        mode = 0
+    }
+    
+    if (mode === 0) {
+        ExportToXlsx(
+            ["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"],
+            "asset",
+            "hunter_asset",
+            tab.content!
+        );
+    } else {
+        ElNotification.info({
+            title: "Hunter Tips",
+            message: "正在进行全数据导出, API每页最大查询限度100, 请稍后。",
+        });
+
+        let temp: any[] = [];
+        let index = 0;
+
+        for (const num of splitInt(tab.total, 100)) {
+            index += 1;
+            ElMessage(`正在查询第 ${index} 页`);
+
+            let result = await HunterSearch(global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication);
+
+            if (isError(result.code, result.message)) {
+                ElNotification.error({
+                    title: "Hunter Tips",
+                    message: `${tab.title} 导出数据时遇到错误: ${result.message}, 当前查询到第${index}页`,
+                })
+                break; // 遇到错误时停止后续查询
             }
-            ExportToXlsx(["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"], "asset", "hunter_asset", temp)
-            temp = []
+
+            result.data.arr.forEach((item: any) => {
+                temp.push({
+                    URL: item.url,
+                    IP: item.ip,
+                    Port: item.port,
+                    Protocol: item.protocol,
+                    Domain: item.domain,
+                    Component: item.component,
+                    Title: item.web_title,
+                    Status: item.status_code,
+                    ICP: item.company,
+                    ISP: item.isp,
+                    Position: `${item.country}/${item.province}`,
+                    UpdateTime: item.updated_at,
+                });
+            });
+        }
+
+        if (temp.length > 0) {
+            ExportToXlsx(
+                ["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"],
+                "asset",
+                "hunter_asset",
+                temp
+            );
+            ElMessage.success(`已成功导出 ${temp.length} 条数据`);
+        } else {
+            ElMessage.warning("没有数据可导出");
         }
     }
 }
@@ -459,8 +497,7 @@ function searchCsegmentIpv4(ip: string) {
             <el-space>
                 <el-select v-model="form.defaultTime" style="width: 200px;">
                     <el-option v-for="item in hunterOptions.Time" :key="item.value" :label="item.label"
-                        :value="item.value"
-                        >
+                        :value="item.value">
                         <span style="float: left">{{ item.label }}</span>
                         <span style="float: right">
                             {{ item.tips }}
@@ -484,8 +521,8 @@ function searchCsegmentIpv4(ip: string) {
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="exportIcon" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="exportIcon" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="exportData(1)">导出全部数据</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
                     </el-dropdown-menu>

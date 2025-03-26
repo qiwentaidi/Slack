@@ -37,8 +37,8 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 		return false, nil, err
 	}
 
-	// 判断是否为未授权访问
-	if resp.StatusCode == 401 {
+	// 判断是否为未授权访问, 验证码接口不用判断
+	if resp.StatusCode == 401 || resp.StatusCode == 403 || strings.Contains(apiReq.URL, "captcha") {
 		return false, nil, nil
 	}
 	if homeBody == string(body) {

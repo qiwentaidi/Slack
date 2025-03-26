@@ -7,7 +7,7 @@ import {clients} from '../models';
 import {context} from '../models';
 import {space} from '../models';
 
-export function AnalyzeAPI(arg1:string,arg2:string,arg3:Array<string>,arg4:{[key: string]: string},arg5:Array<string>):Promise<void>;
+export function AnalyzeAPI(arg1:string,arg2:string,arg3:Array<string>,arg4:{[key: string]: string},arg5:Array<string>,arg6:Array<string>):Promise<void>;
 
 export function Callgologger(arg1:string,arg2:string):Promise<void>;
 

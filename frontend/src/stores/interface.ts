@@ -1,6 +1,4 @@
-import { ComponentPublicInstance, Ref } from "vue";
 import { structs } from "wailsjs/go/models";
-import { ElTreeV2 } from 'element-plus'
 
 export interface TableTabs {
     title: string;

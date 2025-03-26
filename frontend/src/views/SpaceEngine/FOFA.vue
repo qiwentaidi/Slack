@@ -6,7 +6,7 @@ import { TableTabs, Results } from "@/stores/interface"
 import { ExportToXlsx } from '@/export'
 import { FofaTips, FofaSearch, IconHash, Callgologger } from 'wailsjs/go/services/App'
 import { BrowserOpenURL } from 'wailsjs/runtime'
-import { ElMessage, ElMessageBox, FormInstance } from 'element-plus';
+import { ElMessage, ElMessageBox, ElNotification, FormInstance } from 'element-plus';
 import global from "@/stores"
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
@@ -238,29 +238,42 @@ function batchSearch() {
 
 const reportTitle = ["URL", "Host", "标题", "IP", "端口", "域名", "协议", "地区", "备案号", "组件"]
 // mode = 0 导出当前查询数据 
-async function SaveData(mode: number) {
-    if (table.editableTabs.length != 0) {
-        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        if (mode == 0) {
-            ExportToXlsx(reportTitle, "asset", "fofa_asset", tab.content!)
-        } else {
-            let temp = [] as Results[]
-            ElMessage("正在进行全数据导出，API每页最大查询限度10000，请稍后...");
-            let index = 0
-            for (const num of splitInt(tab.total, 10000)) {
-                index += 1
-                ElMessage("正在导出第" + index.toString() + "页");
-                let result = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
-                if (result.Error) {
-                    Callgologger("error",`[fofa] ${tab.title} page ${index} search error: ` + result.Error);
-                    ElMessage.error("查询异常，已退出导出")
-                    continue
-                }
-                temp.push(...result.Results!)
+async function exportData(mode: number) {
+    if (table.editableTabs.length == 0) {
+        ElNotification.warning({
+            title: "FOFA Tips",
+            message: "请先进行数据查询",
+        })
+        return
+    }
+    const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+    if (tab.total <= tab.pageSize) {
+        mode = 0
+    }
+    if (mode == 0) {
+        ExportToXlsx(reportTitle, "asset", "fofa_asset", tab.content!)
+    } else {
+        let temp = [] as Results[]
+        ElNotification.info({
+            title: "FOFA Tips",
+            message: "正在进行全数据导出, API每页最大查询限度10000, 请稍后...",
+        });
+        let index = 0
+        for (const num of splitInt(tab.total, 10000)) {
+            index += 1
+            ElMessage("正在查询第" + index.toString() + "页");
+            let result = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+            if (result.Error) {
+                ElNotification.error({
+                    title: "FOFA Tips",
+                    message: `${tab.title} 导出数据时遇到错误: ${result.Message}, 当前查询到第${index}页`,
+                })
+                break
             }
-            ExportToXlsx(reportTitle, "asset", "fofa_asset", temp)
-            temp = []
+            temp.push(...result.Results!)
         }
+        ExportToXlsx(reportTitle, "asset", "fofa_asset", temp)
+        temp = []
     }
 }
 
@@ -439,8 +452,8 @@ function searchCsegmentIpv4(ip: string) {
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="exportIcon" @click="SaveData(0)">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="exportIcon" @click="SaveData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="exportData(1)">导出全部数据</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURL" divided>复制当前页URL</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy"
                             @click="copyDeduplicationURL">去重复制前1w条URL</el-dropdown-item>

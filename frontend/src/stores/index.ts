@@ -58,7 +58,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "2.0.6"
+const LOCAL_VERSION = "2.0.7"
 
 const Language = ref("zh")
 const Theme = ref(false)
@@ -83,7 +83,8 @@ var UPDATE = reactive({
 
 var jsfind = reactive({
     whiteList: "github.com\ngoogle.com\namazon.com\ngitee.com\nw3.org\nqq.com",
-    authFiled: "token不能为空,令牌不能为空,令牌已过期,Unauthorized,Access Denied,认证失败"
+    authFiled: "token不能为空,令牌不能为空,令牌已过期,Unauthorized,Access Denied,认证失败",
+    highRiskRouter: "logout,loginout,insert,update,remove,add,change,save,import,create,enable,del,disable,detail",
 })
 
 var fileRetrieval = reactive({

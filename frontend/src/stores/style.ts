@@ -91,3 +91,13 @@ export function getBadgeClass(level: string) {
             return 'risk-badge-gray'
     }
 }
+
+export function highlightFingerprints(fingerprint: string) {
+    if (fingerprint == "疑似蜜罐") {
+        return "warning"
+    }
+    if (global.webscan.highlight_fingerprints.includes(fingerprint)) {
+        return "danger"
+    }
+    return "primary"
+}

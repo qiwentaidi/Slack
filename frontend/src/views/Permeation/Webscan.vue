@@ -12,7 +12,7 @@ import global from "@/stores"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import usePagination from '@/usePagination';
 import { LinkFOFA, LinkHunter } from '@/linkage';
-import { getBadgeClass, getTagTypeBySeverity } from '@/stores/style';
+import { getBadgeClass, getTagTypeBySeverity, highlightFingerprints } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
 import { CheckFileStat, DirectoryDialog, FileDialog, List, ReadFile, SaveFileDialog } from 'wailsjs/go/services/File';
 import { isPrivateIP, validateIp, validateIpAndDomain } from '@/stores/validate';
@@ -308,15 +308,15 @@ function stopScan() {
     // 新增一个标志变量来确保setTimeout只执行一次
     if (!form.scanStopped) {
         form.scanStopped = true; // 设置标志为true，表示扫描已停止
+        updateActivities({
+            content: "用户已退出扫描任务",
+            type: "danger",
+            icon: CloseBold
+        })
         // 增加10s的暂停时间，先立即退出扫描，等10s之后再将扫描状态停止，以应对一些数据依旧在增加等问题
         setTimeout(() => {
             form.runnningStatus = false
             form.scanStopped = false; // 重置标志，以便下次可以再次调用stopScan
-            updateActivities({
-                content: "用户已退出扫描任务",
-                type: "danger",
-                icon: CloseBold
-            })
         }, 10000);
     }
 }
@@ -574,16 +574,33 @@ class Engine {
             type: "primary",
             icon: MoreFilled,
         })
-        async.eachLimit(crackLinks, global.webscan.crack_thread, async (target: string, callback: () => void) => {
-            if (!form.runnningStatus || form.scanStopped) {
-                return
-            }
-            let protocol = target.split("://")[0]
-            userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!
-            Callgologger("info", target + " is start weak password cracking")
-            await PortBrute(target, userDict, passDict)
-        }, (err: any) => {
-            Callgologger("info", "Crack Finished")
+        // **使用 Promise 包装 async.eachLimit，确保 CrackRunner() 被 await**
+        await new Promise((resolve, reject) => {
+            async.eachLimit(
+                crackLinks,
+                global.webscan.crack_thread,
+                async (target: string, callback: (err?: any) => void) => {
+                    if (!form.runnningStatus || form.scanStopped) {
+                        return callback();  // 结束当前任务
+                    }
+
+                    let protocol = target.split("://")[0];
+                    userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!;
+
+                    Callgologger("info", target + " is start weak password cracking");
+                    await PortBrute(target, userDict, passDict);
+
+                    callback();  // 任务完成后调用 callback
+                },
+                (err: any) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        Callgologger("info", "Crack Finished");
+                        resolve(null); // 任务全部完成
+                    }
+                }
+            );
         });
     }
 }
@@ -645,16 +662,6 @@ const uncover = {
             shodanVisible.value = false
         })
     }
-}
-
-function highlightFingerprints(fingerprint: string) {
-    if (fingerprint == "疑似蜜罐") {
-        return "warning"
-    }
-    if (global.webscan.highlight_fingerprints.includes(fingerprint)) {
-        return "danger"
-    }
-    return "primary"
 }
 
 async function selectFolder() {
@@ -729,22 +736,24 @@ const taskManager = {
             vp.ctrl.watchResultChange(vp.table);
         }
     },
-    deleteTask: function (taskId: string) {
+    deleteTask: function (alltaskids: string[]) {
         ElMessageBox.confirm(
-            '确定删除该任务记录?',
+            "确定删除所选中的任务记录",
             '警告',
             {
                 type: 'warning',
             }
         )
             .then(async () => {
-                let isSuccess = await RemoveScanTask(taskId)
-                if (!isSuccess) {
-                    ElMessage.error("删除失败")
-                    return
+                for (const taskid of alltaskids) {
+                    let isSuccess = await RemoveScanTask(taskid)
+                    if (!isSuccess) {
+                        ElMessage.error(`任务ID: ${taskid}, 删除失败`)
+                        return
+                    }
+                    rp.table.result = rp.table.result.filter(item => item.TaskId != taskid)
                 }
                 ElMessage.success("删除成功")
-                rp.table.result = rp.table.result.filter(item => item.TaskId != taskId)
                 rp.ctrl.watchResultChange(rp.table)
             })
             .catch(() => {
@@ -1038,7 +1047,7 @@ const getSelectedIcon = (selectedLabel: string) => {
                         <template #default="scope">
                             <el-tag type="primary" round effect="plain">{{ scope.row.Port }}</el-tag>
                             <el-tag type="primary" round effect="plain" style="margin-left: 5px;">{{ scope.row.Scheme
-                                }}</el-tag>
+                            }}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="StatusCode" width="100px" label="Code" sortable="custom"
@@ -1267,12 +1276,13 @@ const getSelectedIcon = (selectedLabel: string) => {
                 <el-form-item label="指定指纹:">
                     <el-select-v2 v-model="config.customTags" :options="param.allFingerprint" filterable multiple
                         clearable />
+                    <span class="form-item-tips">类似Jeecg-Boot指纹漏洞都在API路径下, 可通过填写API地址并指定指纹来进行扫描(POC 需要进行适配)</span>
                 </el-form-item>
             </div>
             <div v-if="config.webscanOption == 3">
                 <el-form-item label="指定漏洞:">
-                    <el-select-v2 v-model="config.customTemplate" :options="param.allTemplate"
-                        filterable multiple clearable />
+                    <el-select-v2 v-model="config.customTemplate" :options="param.allTemplate" filterable multiple
+                        clearable />
                 </el-form-item>
             </div>
             <div v-if="config.webscanOption == 2">
@@ -1370,7 +1380,7 @@ const getSelectedIcon = (selectedLabel: string) => {
                 <template #default="scope">
                     <el-link @click="taskManager.viewTask(scope.row)">{{ scope.row.Targets.includes('\n') ?
                         scope.row.Targets.split('\n')[0] : scope.row.Targets
-                        }}</el-link>
+                    }}</el-link>
                 </template>
             </el-table-column>
             <el-table-column label="资产" width="100px">
@@ -1385,11 +1395,11 @@ const getSelectedIcon = (selectedLabel: string) => {
                         <el-tooltip content="查看">
                             <el-button :icon="View" link @click="taskManager.viewTask(scope.row)" />
                         </el-tooltip>
-                        <el-tooltip content="编辑">
+                        <el-tooltip content="重命名">
                             <el-button :icon="Edit" link @click="taskManager.renameTask(scope.row.TaskId)" />
                         </el-tooltip>
                         <el-tooltip content="删除">
-                            <el-button :icon="Delete" link @click="taskManager.deleteTask(scope.row.TaskId)" />
+                            <el-button :icon="Delete" link @click="taskManager.deleteTask([scope.row.TaskId])" />
                         </el-tooltip>
                     </el-button-group>
                 </template>
@@ -1403,6 +1413,9 @@ const getSelectedIcon = (selectedLabel: string) => {
                 <el-button :icon="UploadFilled" size="small" @click="taskManager.importTask()">导入任务</el-button>
                 <el-button :icon="Share" size="small" @click="taskManager.showExportDialog"
                     :disabled="rp.table.selectRows.length < 1">导出报告</el-button>
+                <el-button :icon="Delete" size="small"
+                    @click="taskManager.deleteTask(rp.table.selectRows.map(item => item.TaskId))"
+                    :disabled="rp.table.selectRows.length < 1">批量删除</el-button>
             </el-space>
             <el-pagination size="small" background @size-change="rp.ctrl.handleSizeChange"
                 @current-change="rp.ctrl.handleCurrentChange" :pager-count="5" :current-page="rp.table.currentPage"

@@ -7,7 +7,6 @@ import { ExportAssetToXlsx } from '@/export'
 import usePagination from "@/usePagination";
 import { Copy, getRootDomain, transformArrayFields } from "@/util";
 import exportIcon from '@/assets/icon/doucment-export.svg'
-import global from "@/stores";
 import throttle from 'lodash/throttle';
 import CustomTabs from "@/components/CustomTabs.vue";
 import wechatIcon from "@/assets/icon/wechatOfficialAccount.svg"
@@ -31,7 +30,6 @@ const from = reactive({
     newTask: false,
     wechat: true,
     domain: false,
-    linkSubdomain: false,
     company: '',
     defaultHold: 100,
     subcompanyLevel: 1,
@@ -68,10 +66,7 @@ async function Collect() {
     } else {
         from.machineStr = from.machineStr.replace(/[\r\n\s]/g, '')
     }
-    if (from.linkSubdomain && global.space.bevigil == "" && global.space.chaos == "" && global.space.zoomeye == "" && global.space.securitytrails == "" && global.space.github == "") {
-        ElMessage.warning('未配置任何域名收集模块API, 请在设置中至少配置一个')
-        return
-    }
+
     from.newTask = false
     from.runningStatus = true
     showForm.value = false
@@ -81,7 +76,6 @@ async function Collect() {
     pw.initTable()
     from.errorCompanies = []
     let allCompany = [] as string[]
-    let allSubdomain = [] as string[]
     // 1. 收集子公司信息
     for (let i = 0; i < companys.length; i++) {
         const companyName = companys[i];
@@ -108,9 +102,6 @@ async function Collect() {
                 throttleUpdate();
                 for (const item of result) {
                     allCompany.push(item.CompanyName!);
-                    if (from.linkSubdomain && item.Domains!.length > 0) {
-                        allSubdomain.push(...item.Domains!);
-                    }
                 }
             }
         }
@@ -139,10 +130,6 @@ async function Collect() {
     showForm.value = true
 }
 
-function recheckLinkSubdomain() {
-    if (!from.domain) { from.linkSubdomain = false }
-}
-
 const debouncedInput = debounce(() => {
     // 2秒后将数据存储到localStorage
     localStorage.setItem('tyc-token', from.token);
@@ -165,9 +152,11 @@ function toggleFormVisibility() {
 
 <template>
     <el-divider>
-        <el-button round :icon="showForm ? ArrowUpBold : ArrowDownBold" @click="toggleFormVisibility">
+        <el-button round :icon="showForm ? ArrowUpBold : ArrowDownBold" @click="toggleFormVisibility"
+            v-if="!from.runningStatus">
             {{ showForm ? '隐藏参数' : '展开参数' }}
         </el-button>
+        <el-button round loading v-else>正在运行</el-button>
     </el-divider>
     <el-collapse-transition>
         <div style="display: flex; gap: 10px;" v-show="showForm">
@@ -183,8 +172,7 @@ function toggleFormVisibility() {
                 </el-form-item>
                 <el-form-item label="其他查询内容:">
                     <el-checkbox v-model="from.wechat" label="公众号" />
-                    <el-checkbox v-model="from.domain" label="域名查询" @change="recheckLinkSubdomain" />
-                    <!-- <el-checkbox v-model="from.linkSubdomain" label="联动子域名收集" :disabled="!from.domain"/> -->
+                    <el-checkbox v-model="from.domain" label="域名查询" />
                 </el-form-item>
                 <el-form-item label="Token:">
                     <el-input v-model="from.token" type="textarea" :rows="4" @input="debouncedInput"></el-input>
@@ -201,8 +189,7 @@ function toggleFormVisibility() {
                     </span>
                 </el-form-item>
                 <el-form-item class="align-right">
-                    <el-button type="primary" @click="Collect" v-if="!from.runningStatus">开始任务</el-button>
-                    <el-button loading v-else>正在查询</el-button>
+                    <el-button type="primary" @click="Collect">开始任务</el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -221,7 +208,7 @@ function toggleFormVisibility() {
                                 type="success">{{ scope.row.RegStatus
                                 }}</el-tag>
                             <el-tag v-else type="danger">{{ scope.row.RegStatus
-                            }}</el-tag>
+                                }}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="Domains">
@@ -234,7 +221,7 @@ function toggleFormVisibility() {
                         <template #default="scope">
                             <div class="finger-container" v-if="scope.row.Domains.length > 0">
                                 <el-tag v-for="domain in scope.row.Domains" :key="domain">{{ domain
-                                }}</el-tag>
+                                    }}</el-tag>
                             </div>
                         </template>
                     </el-table-column>

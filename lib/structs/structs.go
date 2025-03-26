@@ -652,3 +652,12 @@ type JSFindResult struct {
 	Response string
 	Length   int
 }
+
+type JSFindOptions struct {
+	HomeURL        string
+	BaseURL        string
+	ApiList        []string
+	Authentication []string
+	HighRiskRouter []string
+	Headers        map[string]string
+}

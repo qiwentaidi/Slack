@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/util"
 	"strings"
 	"unicode/utf16"
 	"unicode/utf8"
@@ -413,5 +414,5 @@ func ExtractDSStore(url string) ([]string, error) {
 	for _, f := range filenames {
 		result = append(result, urlRoot+f)
 	}
-	return result, nil
+	return util.RemoveDuplicates(result), nil
 }

@@ -58,7 +58,7 @@ async function Start() {
         <el-button type="primary" :icon="Search" @click="Start" v-if="!isRunning">开始任务</el-button>
         <el-button type="primary" loading v-else>正在检测</el-button>
     </div>
-    <highlightjs language="customlog" :code="log"></highlightjs>
+    <highlightjs :code="log"></highlightjs>
     <el-dialog v-model="introduceDialog" title="模块介绍" width="60%">
         <el-descriptions :column="1" border>
             <el-descriptions-item label="描述">

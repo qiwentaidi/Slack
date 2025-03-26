@@ -23,7 +23,7 @@ var (
 		"[\"'‘“`]\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 		"=\\s{0,6}[\",',’,”]{0,1}\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
 	}
-	Filter = []string{".vue", ".jpeg", ".png", ".jpg", ".gif", ".css", ".svg", ".scss", ".eot", ".ttf", ".woff", ".js", ".ts", ".tsx", ".ico"}
+	Filter = []string{".vue", ".jpeg", ".png", ".jpg", ".gif", ".css", ".svg", ".scss", ".eot", ".ttf", ".woff", ".js", ".ts", ".tsx", ".ico", ".less"}
 	// 因为在提取API时经常会有无用的类似数据，所以需要过滤
 	apiFilter = []string{
 		"text/xml",
@@ -56,29 +56,15 @@ var (
 		"404",
 		"403",
 		"500",
+		"M/D/yy",
+		"text/csv",
 	}
-	Sensitive      = regexp.MustCompile("(access.{0,1}key|access.{0,1}Key|access.{0,1}Id|access.{0,1}id|.{0,5}密码|.{0,5}账号|默认.{0,5}|加密|解密|password:.{0,10}|username:.{0,10})")
-	Phone          = regexp.MustCompile(`(^|[^0-9a-zA-Z])(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}([^0-9a-zA-Z]|$)`)
-	IDCard         = regexp.MustCompile(`(^|[^0-9a-zA-Z])((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))([^0-9a-zA-Z]|$)`)
-	Email          = regexp.MustCompile(`\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*`)
-	Link           = regexp.MustCompile(`(?:"|')(((?:[a-zA-Z]{1,10}://|//)[^"'/]{1,}\.[a-zA-Z]{2,}[^"']{0,})|((?:/|\.\./|\./)[^"'><,;|*()(%%$^/\\\[\]][^"'><,;|()]{1,})|([a-zA-Z0-9_\-/]{1,}/[a-zA-Z0-9_\-/]{1,}\.(?:[a-zA-Z]{1,4}|action)(?:[\?|#][^"|']{0,}|))|([a-zA-Z0-9_\-/]{1,}/[a-zA-Z0-9_\-/]{3,}(?:[\?|#][^"|']{0,}|))|([a-zA-Z0-9_\-]{1,}\.(?:\w)(?:[\?|#][^"|']{0,}|)))(?:"|')`)
-	IP_PORT        = regexp.MustCompile(`((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}`)
-	HighRiskRouter = []string{
-		"logout",
-		"loginout",
-		"insert",
-		"update",
-		"remove",
-		"add",
-		"change",
-		"save",
-		"import",
-		"create",
-		"enable",
-		"del",
-		"disable",
-		"detail",
-	}
+	Sensitive = regexp.MustCompile(`\b(access.{0,3}key|access.{0,3}Key|access.{0,3}Id|access.{0,3}id|access.{0,3}Secret|access.{0,3}secret|bucket|Bucket|endpoint|Endpoint|.{0,5}密码|.{0,5}账号|默认.{0,5}密码|password|username)\s*[:=]\s*["']([^"']+)["']`)
+	Phone     = regexp.MustCompile(`(^|[^0-9a-zA-Z])(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}([^0-9a-zA-Z]|$)`)
+	IDCard    = regexp.MustCompile(`(^|[^0-9a-zA-Z])((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))([^0-9a-zA-Z]|$)`)
+	Email     = regexp.MustCompile(`\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*`)
+	Link      = regexp.MustCompile(`(?:"|')(((?:[a-zA-Z]{1,10}://|//)[^"'/]{1,}\.[a-zA-Z]{2,}[^"']{0,})|((?:/|\.\./|\./)[^"'><,;|*()(%%$^/\\\[\]][^"'><,;|()]{1,})|([a-zA-Z0-9_\-/]{1,}/[a-zA-Z0-9_\-/]{1,}\.(?:[a-zA-Z]{1,4}|action)(?:[\?|#][^"|']{0,}|))|([a-zA-Z0-9_\-/]{1,}/[a-zA-Z0-9_\-/]{3,}(?:[\?|#][^"|']{0,}|))|([a-zA-Z0-9_\-]{1,}\.(?:\w)(?:[\?|#][^"|']{0,}|)))(?:"|')`)
+	IP_PORT   = regexp.MustCompile(`((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}`)
 )
 
 func init() {
@@ -270,10 +256,10 @@ func FilterExt(iss []structs.InfoSource) (news []structs.InfoSource) {
 }
 
 // 处理 API 逻辑
-func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, headers map[string]string, authentication []string) {
-	resp, body, err := clients.NewSimpleGetRequest(homeURL, clients.NewHttpClient(nil, true))
+func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
+	resp, body, err := clients.NewSimpleGetRequest(o.HomeURL, clients.NewHttpClient(nil, true))
 	if err != nil || resp == nil {
-		gologger.Error(ctx, fmt.Sprintf("[AnalyzeAPI] %s, error: %v", homeURL, err))
+		gologger.Error(ctx, fmt.Sprintf("[AnalyzeAPI] %s, error: %v", o.HomeURL, err))
 		return
 	}
 	homeBody := string(body)
@@ -283,8 +269,8 @@ func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, 
 		defer wg.Done()
 		api := data.(string)
 
-		fullURL := strings.TrimRight(baseURL, "/") + "/" + strings.TrimLeft(api, "/")
-		method, err := detectMethod(fullURL, headers)
+		fullURL := strings.TrimRight(o.BaseURL, "/") + "/" + strings.TrimLeft(api, "/")
+		method, err := detectMethod(fullURL, o.Headers)
 		if err != nil {
 			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[!] %s : %v", fullURL, err))
 			return
@@ -298,17 +284,17 @@ func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, 
 		apiReq := APIRequest{
 			URL:     fullURL,
 			Method:  method,
-			Headers: headers,
+			Headers: o.Headers,
 			Params:  param,
 		}
-		for _, router := range HighRiskRouter {
+		for _, router := range o.HighRiskRouter {
 			if strings.Contains(apiReq.URL, router) {
 				runtime.EventsEmit(ctx, "jsfindlog", "[!!] "+fullURL+" 高风险API已跳过测试, 相关敏感词: "+router)
 				return
 			}
 		}
 		// 测试未授权访问
-		vulnerable, body, err := testUnauthorizedAccess(homeBody, apiReq, authentication)
+		vulnerable, body, err := testUnauthorizedAccess(homeBody, apiReq, o.Authentication)
 		if err != nil || !vulnerable {
 			runtime.EventsEmit(ctx, "jsfindlog", "[-] "+fullURL+" 不存在未授权")
 			return
@@ -325,7 +311,7 @@ func AnalyzeAPI(ctx context.Context, homeURL, baseURL string, apiList []string, 
 	defer pool.Release()
 
 	// 提交 API 任务到线程池
-	for _, api := range apiList {
+	for _, api := range o.ApiList {
 		wg.Add(1)
 		pool.Invoke(api)
 	}

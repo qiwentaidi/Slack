@@ -313,7 +313,8 @@ func (s *FingerScanner) NewActiveFingerScan() {
 			StatusCode:    resp.StatusCode,
 		}
 		result := s.FingerScan(s.ctx, ti, fp.Fpe)
-		if len(result) > 0 && ti.StatusCode != 404 {
+
+		if (len(result) > 0 && ti.StatusCode != 404) || util.ArrayContains("ThinkPHP", result) {
 			s.mutex.Lock()
 			s.basicURLWithFingerprint[fp.URL.String()] = append(s.basicURLWithFingerprint[fp.URL.String()], result...)
 			s.mutex.Unlock()

@@ -30,26 +30,26 @@ hljs.registerLanguage("http", http);
 let theme = localStorage.getItem('theme') || "light"
 
 if (theme === 'auto') {
-  // 检查系统主题
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  theme = prefersDark ? 'dark' : 'light'; // 根据系统主题设置
+    // 检查系统主题
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    theme = prefersDark ? 'dark' : 'light'; // 根据系统主题设置
 }
 
 global.Theme.value = theme == "dark" ? true : false
 
 export default (app: App<Element>) => {
-  // 全局配置
-  app.config.globalProperties.$ELEMENT = {};
-  app.use(ElMessage);
-  app.use(ElMessageBox);
-  app.use(ElNotification);
+    // 全局配置
+    app.config.globalProperties.$ELEMENT = {};
+    app.use(ElMessage);
+    app.use(ElMessageBox);
+    app.use(ElNotification);
 };
 
 const app = createApp(AppComponent)
 
 // 使得comonent 可以正确渲染el-icon
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
+    app.component(key, component)
 }
 
 app.use(router).use(i18n).use(hljsVuePlugin).use(ContextMenu).mount("#app");
