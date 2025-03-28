@@ -45,7 +45,7 @@ var temp = reactive({
     dirsearchPathConut: 0,
     dirsearchConut: 0,
     dirsearchStartTime: 0,
-    NetworkCardList: <structs.NetwordCard[]>[{Name: "", IP: "Auto"}],
+    NetworkCardList: <structs.NetwordCard[]>[{ Name: "", IP: "Auto" }],
     nucleiEnabled: false,
     isMacOS: false,
     isMax: false,
@@ -81,10 +81,10 @@ var UPDATE = reactive({
 })
 
 
-var jsfind = reactive({
-    whiteList: "github.com\ngoogle.com\namazon.com\ngitee.com\nw3.org\nqq.com",
-    authFiled: "token不能为空,令牌不能为空,令牌已过期,Unauthorized,Access Denied,认证失败",
-    highRiskRouter: "logout,loginout,insert,update,remove,add,change,save,import,create,enable,del,disable,detail",
+var jsfinder = reactive({
+    whiteList: ["github.com", "google.com", "amazon.com", "gitee.com", "w3.org", "qq.com"],
+    authFiled: ["token不能为空", "令牌不能为空", "令牌已过期", "Unauthorized", "Access Denied", "认证失败", "\"code\":\"401", "\"code\":401", "\"code\":\"403", "\"code\":403", "\"code\":\"404", "\"code\":404"],
+    highRiskRouter: ["logout", "loginout", "insert", "update", "remove", "add", "change", "save", "import", "create", "enable", "del", "disable"],
 })
 
 var fileRetrieval = reactive({
@@ -112,7 +112,7 @@ export default {
     LOCAL_VERSION,
     PATH,
     UPDATE,
-    jsfind,
+    jsfinder,
     webscan,
     temp,
     Language,

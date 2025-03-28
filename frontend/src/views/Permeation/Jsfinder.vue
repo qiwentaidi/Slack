@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
 import { Copy, parseHeaders, ProcessTextAreaInput } from '@/util';
-import { AnalyzeAPI, ExtractAllJSLink, JSFind } from 'wailsjs/go/services/App';
+import { AnalyzeAPI, ExtractAllJSLink, GoFetch, JSFind } from 'wailsjs/go/services/App';
 import { ArrowUpBold, ArrowDownBold, Delete, DocumentCopy } from '@element-plus/icons-vue';
 import global from "@/stores";
 import { ElNotification, ElMessage } from 'element-plus';
@@ -15,6 +15,11 @@ import { getTagTypeBySeverity } from '@/stores/style';
 import { SaveConfig } from '@/config';
 
 onMounted(() => {
+    // 初始化参数
+    config.blackList = global.jsfinder.whiteList.join("\n");
+    config.authFiled = global.jsfinder.authFiled.join("\n");
+    config.highRiskRouter = global.jsfinder.highRiskRouter.join("\n");
+
     EventsOn("jsfindlog", (msg: any) => {
         config.consoleLog += msg + "\n";
     });
@@ -48,12 +53,14 @@ const config = reactive({
     prefixJsURL: '',
     headers: '',
     consoleLog: '',
+    authFiled: '',
+    highRiskRouter: '',
+    blackList: '',
 })
 
 const pagination = usePagination<JSFindData>(20)
 
 async function JSFinder() {
-    let blackList = global.jsfind.whiteList.split("\n")
     let urls = ProcessTextAreaInput(config.urls)
     if (urls.length == 0) {
         ElMessage.warning("可用目标为空");
@@ -138,7 +145,7 @@ async function JSFinder() {
         config.consoleLog += "\n\n"
         if (somethings.IP_URL && somethings.IP_URL.length > 0) {
             const filteredIPs = somethings.IP_URL
-                .filter(item => !blackList.some(black => item.Filed.includes(black))) // 过滤黑名单
+                .filter(item => !global.jsfinder.whiteList.some(black => item.Filed.includes(black))) // 过滤黑名单
                 .map(item => item.Filed); // 提取字段
 
             if (filteredIPs.length > 0) {
@@ -151,7 +158,7 @@ async function JSFinder() {
 
         config.prefixApiURL != "" ? baseURL = config.prefixApiURL : baseURL = url
 
-        await AnalyzeAPI(url, baseURL, apiRoute, parseHeaders(config.headers), global.jsfind.authFiled.split(","), global.jsfind.highRiskRouter.split(","))
+        await AnalyzeAPI(url, baseURL, apiRoute, parseHeaders(config.headers), global.jsfinder.authFiled, global.jsfinder.highRiskRouter)
     }
     config.consoleLog += "[*] 任务运行结束\n"
     config.loading = false
@@ -202,6 +209,36 @@ function openDialog(row: any) {
         detail.Response = row.Response;
     }
 }
+
+const authURL = "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/jsfinder-auth"
+async function FetchDiffrerentAuth() {
+    let response = await GoFetch("GET", authURL, "", null, 10, null)
+    if (response.Error) {
+        ElMessage.error("远程拉取失败")
+        return
+    }
+    let remoteAuth = ProcessTextAreaInput(response.Body)
+    let diffAuth = findMissingElements(global.jsfinder.authFiled, remoteAuth)
+    if (diffAuth.length == 0) {
+        ElMessage.info("已是最新配置, 无需同步")
+        return
+    }
+    let mergedAuth = Array.from(new Set([...global.jsfinder.authFiled, ...remoteAuth]));
+    config.authFiled = mergedAuth.join("\n")
+    ElMessage.success("差异化同步成功")
+}
+
+function saveConfig() {
+    global.jsfinder.authFiled = ProcessTextAreaInput(config.authFiled)
+    global.jsfinder.highRiskRouter = ProcessTextAreaInput(config.highRiskRouter)
+    global.jsfinder.whiteList = ProcessTextAreaInput(config.blackList)
+    SaveConfig()
+}
+
+function findMissingElements(A: string[], B: string[]) {
+    let setA = new Set(A);
+    return B.filter(item => !setA.has(item));
+}
 </script>
 
 <template>
@@ -234,20 +271,20 @@ function openDialog(row: any) {
             </el-form>
             <el-form :model="config" label-width="auto" style="width: 50%;">
                 <el-form-item label="鉴权字段:">
-                    <el-input v-model="global.jsfind.authFiled" type="textarea" :rows="5"></el-input>
-                    <span class="form-item-tips">判断内容响应体是否需要鉴权, 以逗号分隔</span>
+                    <el-input v-model="config.authFiled" type="textarea" :rows="5"></el-input>
+                    <span class="form-item-tips">判断内容响应体是否需要鉴权</span>
+                    <el-button type="primary" link size="small" @click="FetchDiffrerentAuth()">远程拉取, 差异化同步</el-button>
                 </el-form-item>
                 <el-form-item label="高危路由:">
-                    <el-input v-model="global.jsfind.highRiskRouter" type="textarea" :rows="5"></el-input>
-                    <span class="form-item-tips">以逗号分隔</span>
+                    <el-input v-model="config.highRiskRouter" type="textarea" :rows="5"></el-input>
                 </el-form-item>
                 <el-form-item label="黑名单域名:">
-                    <el-input v-model="global.jsfind.whiteList" type="textarea" :rows="5"></el-input>
-                    <span class="form-item-tips">过滤IP/URL内容, 以换行分隔</span>
+                    <el-input v-model="config.blackList" type="textarea" :rows="5"></el-input>
+                    <span class="form-item-tips">过滤IP/URL内容</span>
                 </el-form-item>
                 <el-form-item label=" ">
                     <el-button type="primary" @click="JSFinder">开始任务</el-button>
-                    <el-button :icon="saveIcon" @click="SaveConfig()">保存配置</el-button>
+                    <el-button :icon="saveIcon" @click="saveConfig()">保存配置</el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -265,6 +302,7 @@ function openDialog(row: any) {
                         </el-space>
                     </template>
                 </el-segmented>
+                <span>发现风险数: {{ pagination.table.result.length }}</span>
                 <div v-show="value == 0">
                     <el-button :icon="DocumentCopy" link @click="Copy(config.consoleLog)" />
                     <el-button :icon="Delete" link @click="config.consoleLog = ''" />

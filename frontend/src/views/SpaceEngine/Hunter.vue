@@ -540,8 +540,10 @@ function searchCsegmentIpv4(ip: string) {
                 <el-table-column prop="IP" fixed label="IP" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Port" fixed label="端口/服务" width="150">
                     <template #default="scope">
-                        {{ scope.row.Port }}
-                        <el-tag type="info">{{ scope.row.Protocol }}</el-tag>
+                        <el-space :size="3">
+                            <span>{{ scope.row.Port }}</span>
+                            <el-tag type=info round>{{ scope.row.Protocol }}</el-tag>
+                        </el-space>
                     </template>
                 </el-table-column>
                 <el-table-column prop="Domain" label="域名" width="150" :show-overflow-tooltip="true" />

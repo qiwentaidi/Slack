@@ -182,7 +182,10 @@
                 <el-table-column prop="IP" fixed label="IP" width="150" />
                 <el-table-column prop="Port" label="端口/协议" width="130">
                     <template #default="scope">
-                        {{ scope.row.Port }}<el-tag type=info>{{ scope.row.Protocol }}</el-tag>
+                        <el-space :size="3">
+                            <span>{{ scope.row.Port }}</span>
+                            <el-tag type=info round>{{ scope.row.Protocol }}</el-tag>
+                        </el-space>
                     </template>
                 </el-table-column>
                 <el-table-column prop="Host" label="域名" width="150" :show-overflow-tooltip="true">
