@@ -878,3 +878,17 @@ export const AgentPoolOptions = [
         icon: Coin
     }
 ]
+
+export const HostInputTips = `192.168.1.1
+192.168.1.1/24
+192.168.1.1-192.168.255.255
+192.168.1.1-255
+www.example.com
+
+扫描特定端口:
+192.168.0.1:6379
+
+排除IP或网段可以在可支持输入的IP格式前加!:
+!192.168.1.6/28`
+
+export const WebsiteInputTips = `https://www.example.com`

@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 import global from '@/stores';
+import { webReportOptions } from './options';
 
 export const titlebarStyle = computed(() => {
     return global.Theme.value ? {
@@ -39,25 +40,6 @@ export const appStartStyle = computed(() => {
         gap: '10px'
     };
 })
-
-export const eldividerStyle = computed(() => {
-    if (global.Theme.value) {
-        switch (global.temp.goos) {
-            case "windows":
-                return {
-                    backgroundColor: '#121212',
-                }
-            case "darwin":
-                return {
-                    backgroundColor: '#1E1E1E',
-                }
-            case "linux":
-                return {
-                    backgroundColor: '#1D1E1F',
-                }
-        }
-    }
-});
 
 // v1.7.3 更新漏洞风险等级显示样式
 export function getTagTypeBySeverity(severity: string) {
@@ -101,3 +83,9 @@ export function highlightFingerprints(fingerprint: string) {
     }
     return "primary"
 }
+
+// 获取选中的 `icon`
+export function getSelectedIcon(selectedLabel: string) {
+    const selectedItem = webReportOptions.find(item => item.label === selectedLabel);
+    return selectedItem ? selectedItem.icon : null;
+};

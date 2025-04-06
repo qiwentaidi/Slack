@@ -1,23 +1,23 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref, nextTick } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import {
     VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled, CircleCheck, Notification,
-    Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Warning,
+    Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Warning, Picture,
     Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, MoreFilled,
 } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, ViewPictrue, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute, GetAllFinger, NewThreadSafeWebScanner } from 'wailsjs/go/services/App'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute, NewThreadSafeWebScanner } from 'wailsjs/go/services/App'
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
 import global from "@/stores"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import usePagination from '@/usePagination';
 import { LinkFOFA, LinkHunter } from '@/linkage';
-import { getBadgeClass, getTagTypeBySeverity, highlightFingerprints } from '@/stores/style';
+import { getBadgeClass, getSelectedIcon, getTagTypeBySeverity, highlightFingerprints } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
 import { CheckFileStat, DirectoryDialog, FileDialog, List, ReadFile, SaveFileDialog } from 'wailsjs/go/services/File';
 import { isPrivateIP, validateIp, validateIpAndDomain } from '@/stores/validate';
 import { structs } from 'wailsjs/go/models';
-import { portGroupOptions, webReportOptions, webscanOptions, crackDict } from '@/stores/options'
+import { portGroupOptions, webReportOptions, webscanOptions, crackDict, WebsiteInputTips, HostInputTips } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
 import {
     RemovePocscanResult, RemoveScanTask, ExportWebReportWithHtml,
@@ -41,6 +41,16 @@ import async from 'async'
 import { handleWebscanContextMenu } from '@/linkage/contextMenu';
 import CustomTextarea from '@/components/CustomTextarea.vue';
 import { IPParse, PortParse } from 'wailsjs/go/core/Tools';
+
+// 增加较快的数据需要节流刷新
+const throttleFingerscanUpdate = throttle(() => {
+    fp.ctrl.watchResultChange(fp.table)
+}, 1000);
+
+// 热加载节流触发，防止反序列化过于频繁导致闪退
+const throttleInitialize = throttle(() => {
+    initialize()
+}, 2000);
 
 // 仪表盘内容
 const dashboard = reactive({
@@ -88,17 +98,6 @@ function updatePorts(index: number) {
         form.portlist = portGroupOptions[index].value;
     }
 }
-
-// 增加较快的数据需要节流刷新
-const throttleFingerscanUpdate = throttle(() => {
-    fp.ctrl.watchResultChange(fp.table)
-}, 1000);
-
-// 热加载节流触发，防止反序列化过于频繁导致闪退
-const throttleInitialize = throttle(() => {
-    initialize()
-}, 2000);
-
 
 const activities = ref<{ content: string, type: string, timestamp: string, icon: any }[]>([])
 
@@ -159,7 +158,6 @@ const config = reactive({
 })
 
 const detailDialog = ref(false)
-const screenDialog = ref(false)
 const historyDialog = ref(false)
 
 const selectedRow = ref();
@@ -178,13 +176,13 @@ async function initialize() {
         });
         return;
     }
-    let list = await FingerprintList();
-    dashboard.fingerLength = list?.length || 0; // 使用可选链
+    let FingperintDBList = await FingerprintList();
+    dashboard.fingerLength = FingperintDBList?.length || 0;
+    param.allFingerprint = Array.from(new Set(FingperintDBList)).map(item => ({ label: item, value: item }))
 
     // 获取POC数量
     let pocMap = await GetFingerPocMap();
-    dashboard.pocLength = pocMap ? Object.keys(pocMap).length : 0; // 使用可选链
-    param.allFingerprint = (await GetAllFinger()).map(item => ({ label: item, value: item }))
+    dashboard.pocLength = pocMap ? Object.keys(pocMap).length : 0;
 
     // 遍历模板
     let files = await List([global.PATH.homedir + "/slack/config/pocs", global.webscan.append_pocfile]);
@@ -668,12 +666,11 @@ async function selectFolder() {
     global.webscan.append_pocfile = await DirectoryDialog()
 }
 
-async function ShowWebPictrue(filepath: string) {
-    let bs64 = await ViewPictrue(filepath)
-    if (bs64 == '') return
-    screenDialog.value = true
-    await nextTick()
-    document.getElementById('webscan-img')!.setAttribute('src', bs64)
+function pictrueSRC(filepath: string): string {
+    if (filepath == '') return ''
+    const filename = filepath.split(/[/\\]/).pop(); // 适配 Windows 和 Linux 路径
+    const fp = `http://127.0.0.1:8732/screenhost/${filename}`
+    return fp;
 }
 
 const reportOption = ref('HTML')
@@ -898,35 +895,6 @@ const shodanPercentage = ref(0)
 const shodanThread = ref(2)
 const shodanRunningstatus = ref(false)
 
-
-function stopShodan() {
-    shodanRunningstatus.value = false
-    ElNotification.error({
-        message: "用户已终止扫描任务",
-        position: 'bottom-right',
-    });
-}
-
-
-const hostInputTips = `192.168.1.1
-192.168.1.1/24
-192.168.1.1-192.168.255.255
-192.168.1.1-255
-www.example.com
-
-扫描特定端口:
-192.168.0.1:6379
-
-排除IP或网段可以在可支持输入的IP格式前加!:
-!192.168.1.6/28`
-
-const webInputTips = `https://www.example.com`
-
-// 获取选中的 `icon`
-const getSelectedIcon = (selectedLabel: string) => {
-    const selectedItem = webReportOptions.find(item => item.label === selectedLabel);
-    return selectedItem ? selectedItem.icon : null;
-};
 </script>
 
 <template>
@@ -1042,20 +1010,18 @@ const getSelectedIcon = (selectedLabel: string) => {
                 <el-table :data="fp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleWebscanContextMenu"
                     @sort-change="fp.ctrl.sortChange">
-                    <el-table-column fixed prop="URL" label="Link" width="300px" />
-                    <el-table-column width="150px" label="Port/Protocol" :show-overflow-tooltip="true">
+                    <el-table-column fixed prop="URL" label="Link" width="350px" />
+                    <el-table-column width="150px" label="Port & Protocol" :show-overflow-tooltip="true">
                         <template #default="scope">
                             <el-tag type="primary" round effect="plain">{{ scope.row.Port }}</el-tag>
                             <el-tag type="primary" round effect="plain" style="margin-left: 5px;">{{ scope.row.Scheme
                             }}</el-tag>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="StatusCode" width="100px" label="Code" sortable="custom"
-                        :show-overflow-tooltip="true" />
-                    <el-table-column prop="Length" width="100px" label="Length" sortable="custom"
-                        :show-overflow-tooltip="true" />
+                    <el-table-column prop="StatusCode" width="100px" label="Code" sortable="custom" />
+                    <el-table-column prop="Length" width="100px" label="Length" sortable="custom" />
                     <el-table-column prop="Title" label="Title" width="220px" />
-                    <el-table-column prop="Fingerprints" label="Fingerprint" :min-width="350">
+                    <el-table-column prop="Fingerprints" label="Technologies" :min-width="300">
                         <template #default="scope">
                             <div class="finger-container">
                                 <el-tag v-for="finger in scope.row.Fingerprints" :key="finger"
@@ -1066,11 +1032,19 @@ const getSelectedIcon = (selectedLabel: string) => {
                             </div>
                         </template>
                     </el-table-column>
-
-                    <el-table-column label="Screen" width="80">
+                    <el-table-column label="Screen" width="150">
                         <template #default="scope">
-                            <el-button :icon="View" link @click="ShowWebPictrue(scope.row.Screenshot)"
-                                v-if="scope.row.Screenshot != ''" />
+                            <el-image :src="pictrueSRC(scope.row.Screenshot)"
+                                :preview-src-list="[pictrueSRC(scope.row.Screenshot)]" :initial-index="0"
+                                preview-teleported :max-scale="1" v-if="scope.row.Screenshot != ''">
+                                <template #error>
+                                    <div class="image-slot">
+                                        <el-icon :size="16">
+                                            <Picture />
+                                        </el-icon>
+                                    </div>
+                                </template>
+                            </el-image>
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
@@ -1160,7 +1134,7 @@ const getSelectedIcon = (selectedLabel: string) => {
             </el-form-item>
             <el-form-item label="目标地址:">
                 <CustomTextarea v-model="form.input" :rows="param.inputType == 0 ? 6 : 11"
-                    :placeholder="param.inputType == 0 ? webInputTips : hostInputTips"></CustomTextarea>
+                    :placeholder="param.inputType == 0 ? WebsiteInputTips : HostInputTips"></CustomTextarea>
             </el-form-item>
             <el-form-item label="端口:">
                 <el-select v-model="param.portGroup" @change="updatePorts">
@@ -1180,7 +1154,7 @@ const getSelectedIcon = (selectedLabel: string) => {
                 <el-checkbox label="无指纹目标跳过漏扫" v-model="config.skipNucleiWithoutTags" />
                 <el-checkbox label="网站截图" v-model="config.screenhost" />
             </el-form-item>
-            <el-form-item label="口令暴破:">
+            <el-form-item label="口令暴破:" v-show="config.vulscan">
                 <el-switch v-model="config.crack" style="width: 100%;" />
                 <span class="form-item-tips" v-show="config.crack">默认字典可通过 设置->
                     字典管理处修改, 由于RDP暴破可能存在闪退, 暂时不支持暴破</span>
@@ -1227,7 +1201,7 @@ const getSelectedIcon = (selectedLabel: string) => {
             </el-form-item>
             <el-form-item label="目标地址:">
                 <CustomTextarea v-model="form.input" :rows="6"
-                    :placeholder="param.inputType == 0 ? webInputTips : hostInputTips"></CustomTextarea>
+                    :placeholder="param.inputType == 0 ? WebsiteInputTips : HostInputTips"></CustomTextarea>
             </el-form-item>
             <el-form-item label="追加POC:">
                 <el-input v-model="global.webscan.append_pocfile">
@@ -1361,10 +1335,6 @@ const getSelectedIcon = (selectedLabel: string) => {
         </div>
     </el-drawer>
 
-    <el-dialog v-model="screenDialog" width="50%" title="网站截图">
-        <img id="webscan-img" src="" style="width: 100%; height: 400px;">
-    </el-dialog>
-
     <el-drawer v-model="historyDialog" size="70%">
         <template #header>
             <el-text style="font-weight: bold; font-size: 16px;"><el-icon :size="18" style="margin-right: 5px;">
@@ -1426,7 +1396,7 @@ const getSelectedIcon = (selectedLabel: string) => {
     </el-drawer>
     <el-dialog title="导出报告" v-model="exportDialog">
         <el-alert :title="'已选择' + rp.table.selectRows.length + '个任务'" type="info" show-icon :closable="false"
-            v-show="rp.table.selectRows.length >= 1" style="margin-bottom: 5px" />
+            style="margin-bottom: 5px" />
         <el-form :model="form" label-width="auto">
             <el-form-item label="报告类型">
                 <el-select v-model="reportOption" style="width: 240px;">
@@ -1522,16 +1492,30 @@ const getSelectedIcon = (selectedLabel: string) => {
             <div class="my-header">
                 <el-progress :text-inside="true" :stroke-width="18" :percentage="shodanPercentage"
                     style="width: 300px;" />
-                <div>
-                    <el-button size="small" type="danger" @click="stopShodan"
-                        v-if="shodanRunningstatus">终止探测</el-button>
-                    <el-button size="small" type="primary" @click="uncover.shodan" v-else>
-                        开始收集
-                    </el-button>
-                </div>
+                <el-button size="small" type="danger" @click="shodanRunningstatus = false"
+                    v-if="shodanRunningstatus">终止探测</el-button>
+                <el-button size="small" type="primary" @click="uncover.shodan" v-else>
+                    开始收集
+                </el-button>
             </div>
         </template>
     </el-dialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+.demo-image__error .el-image {
+    width: 140px;
+    height: 80px;
+}
+
+.demo-image__error .image-slot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: var(--el-fill-color-dark);
+    color: var(--el-text-color-secondary);
+    font-size: 30px;
+}
+</style>

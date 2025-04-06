@@ -60,6 +60,13 @@ html {
   width: 100% !important;
 }
 
+/* 全局调整图片预览组件样式 */
+.el-image-viewer__canvas {
+  .el-image-viewer__img {
+    max-height: calc(100% - 200px) !important;
+  }
+}
+
 .iframe {
   width: 100%;
   height: 100%;
@@ -296,6 +303,11 @@ html {
   float: right;
   color: var(--el-text-color-secondary);
   font-size: 13px;
+}
+
+.form-item-not-fill {
+  flex-direction: column;
+  display: flex;
 }
 
 .form-item-tips {

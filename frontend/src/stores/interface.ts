@@ -22,7 +22,7 @@ export interface QuakeTableTabs {
     message: string;
 }
 
-export interface Dir {
+export interface DirseearchResult {
     Status: number;
     URL: string;
     Location: string;

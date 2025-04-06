@@ -50,10 +50,6 @@ export function FofaTips(arg1) {
   return window['go']['services']['App']['FofaTips'](arg1);
 }
 
-export function GetAllFinger() {
-  return window['go']['services']['App']['GetAllFinger']();
-}
-
 export function GetFingerPocMap() {
   return window['go']['services']['App']['GetFingerPocMap']();
 }
@@ -168,10 +164,6 @@ export function TycCheckLogin(arg1) {
 
 export function UncoverSearch(arg1, arg2, arg3) {
   return window['go']['services']['App']['UncoverSearch'](arg1, arg2, arg3);
-}
-
-export function ViewPictrue(arg1) {
-  return window['go']['services']['App']['ViewPictrue'](arg1);
 }
 
 export function WechatOfficial(arg1) {

@@ -164,7 +164,9 @@ func (s *FingerScanner) NewFingerScan() {
 		// 跟随JS重定向，并替换成重定向后的数据
 		redirectBody := s.GetJSRedirectResponse(u, string(body))
 		if redirectBody != nil {
-			body = redirectBody
+			// JS重定向后，body数据不应该直接覆盖 fix in 2.0.8
+			body = append(body, redirectBody...)
+			// body = redirectBody
 		}
 		// 网站正常响应
 		title := clients.GetTitle(body)
@@ -208,7 +210,8 @@ func (s *FingerScanner) NewFingerScan() {
 
 		// 截屏
 		var screenshotPath string
-		if s.screenshot {
+		// 截屏条件要满足协议, fix in v2.0.8
+		if s.screenshot && (u.Scheme == "https" || u.Scheme == "http") {
 			if screenshotPath, err = GetScreenshot(u.String()); err != nil {
 				gologger.Debug(s.ctx, err)
 			}

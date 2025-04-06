@@ -2,7 +2,6 @@ package jsfind
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"slack-wails/lib/clients"
 	"strings"
@@ -10,9 +9,14 @@ import (
 
 func detectMethod(fullURL string, headers map[string]string) (string, error) {
 	resp, body, err := clients.NewRequest("GET", fullURL, headers, nil, 5, false, http.DefaultClient)
-	if err != nil || resp == nil {
-		fmt.Printf("err: %v\n", err)
-		return "", errors.New("请求失败")
+	if err != nil {
+		if strings.Contains(err.Error(), "doesn't contain any IP SANs") {
+			return "", errors.New("证书中不包含使用的域名/IP, 请求失败")
+		}
+		return "", err
+	}
+	if resp == nil {
+		return "", errors.New("响应内容为空")
 	}
 	// 模式错误情况 1
 	if (strings.Contains(string(body), "not supported") && strings.Contains(string(body), "Request method")) || resp.StatusCode == 405 {

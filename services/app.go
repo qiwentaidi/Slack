@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -12,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"slack-wails/core/dirsearch"
 	"slack-wails/core/dumpall"
 	"slack-wails/core/info"
@@ -32,7 +32,6 @@ import (
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"gopkg.in/yaml.v2"
 )
 
 // App struct
@@ -44,6 +43,7 @@ type App struct {
 	qqwryFile        string
 	templateDir      string
 	defaultPath      string
+	cyberCherDir     string
 }
 
 // NewApp creates a new App application struct
@@ -56,6 +56,7 @@ func NewApp() *App {
 		qqwryFile:        home + "/slack/config/qqwry.dat",
 		templateDir:      home + "/slack/config/pocs",
 		defaultPath:      home + "/slack/",
+		cyberCherDir:     filepath.Join(home, "slack", "CyberChef"),
 	}
 }
 
@@ -139,14 +140,13 @@ func (a *App) CyberChefLocalServer() {
 	CyberChefLoader.Do(func() {
 		go func() {
 			// 定义要服务的目录
-			dir := util.HomeDir() + "/slack/CyberChef/"
 			// 创建文件服务器
-			fs := http.FileServer(http.Dir(dir))
+			fs := http.FileServer(http.Dir(a.cyberCherDir))
+			// 创建独立的 ServeMux
+			mux := http.NewServeMux()
+			mux.Handle("/", fs)
 
-			// 设置路由，将所有请求重定向到文件服务器
-			http.Handle("/", fs)
-			// 指定一个随机端口, 启动HTTP服务器
-			err := http.ListenAndServe(fmt.Sprintf(":%d", 8731), nil)
+			err := http.ListenAndServe(fmt.Sprintf(":%d", 8731), mux)
 			if err != nil {
 				return
 			}
@@ -498,22 +498,22 @@ func (a *App) GetFingerPocMap() map[string][]string {
 	return webscan.WorkFlowDB
 }
 
-func (a *App) GetAllFinger() []string {
-	data, err := os.ReadFile(a.webfingerFile)
-	if err != nil {
-		return []string{}
-	}
+// func (a *App) GetAllFinger() []string {
+// 	data, err := os.ReadFile(a.webfingerFile)
+// 	if err != nil {
+// 		return []string{}
+// 	}
 
-	fps := make(map[string]interface{})
-	if err := yaml.Unmarshal(data, &fps); err != nil {
-		return []string{}
-	}
-	var fingerprints []string
-	for fingerprint := range fps {
-		fingerprints = append(fingerprints, fingerprint)
-	}
-	return util.RemoveDuplicates(fingerprints)
-}
+// 	fps := make(map[string]interface{})
+// 	if err := yaml.Unmarshal(data, &fps); err != nil {
+// 		return []string{}
+// 	}
+// 	var fingerprints []string
+// 	for fingerprint := range fps {
+// 		fingerprints = append(fingerprints, fingerprint)
+// 	}
+// 	return util.RemoveDuplicates(fingerprints)
+// }
 
 // hunter
 
@@ -597,15 +597,6 @@ func (a *App) UncoverSearch(query, types string, option structs.SpaceOption) []s
 
 func (a *App) GitDorks(target, dork, apikey string) *isic.GithubResult {
 	return isic.GithubApiQuery(a.ctx, fmt.Sprintf("%s %s", target, dork), apikey)
-}
-
-func (a *App) ViewPictrue(file string) string {
-	b, err := os.ReadFile(file)
-	if err != nil {
-		gologger.Debug(a.ctx, err)
-		return ""
-	}
-	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(b)
 }
 
 func (a *App) NetDial(host string) bool {

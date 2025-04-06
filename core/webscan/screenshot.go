@@ -3,6 +3,7 @@ package webscan
 import (
 	"context"
 	"errors"
+	"net/http"
 	"os"
 	"path/filepath"
 	"slack-wails/lib/util"
@@ -13,6 +14,23 @@ import (
 )
 
 var dir = filepath.Join(util.HomeDir(), "slack", "screenshot")
+
+func init() {
+	// 创建截屏文件服务器
+	go func() {
+		fs := http.FileServer(http.Dir(dir))
+
+		// 创建独立的 ServeMux
+		mux := http.NewServeMux()
+		mux.Handle("/screenhost/", http.StripPrefix("/screenhost", fs))
+
+		// 启动 HTTP 服务器
+		err := http.ListenAndServe(":8732", mux)
+		if err != nil {
+			return
+		}
+	}()
+}
 
 // GetScreenshot 获取指定URL的屏幕截图，并保存到本地文件。
 // 返回文件路径和错误，如果错误不为nil，则文件路径为空。
@@ -37,7 +55,7 @@ func GetScreenshot(url string) (string, error) {
 	}
 
 	// 定义保存路径
-	fp := filepath.Join(dir, renameOutput(url))
+	fp := filepath.Join(dir, renameOutput(url)+".png")
 
 	// 确保目标目录存在
 	if err := os.MkdirAll(dir, 0755); err != nil {

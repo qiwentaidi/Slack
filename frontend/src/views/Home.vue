@@ -1,37 +1,41 @@
 <script setup lang="ts">
 import MenuList from "@/router/menu";
-import { eldividerStyle } from "@/stores/style";
+import { ref } from "vue";
+const activeNames = ref(['1', '2', '3', '4'])
 </script>
 
 <template>
-    <div v-for="groups in MenuList">
-        <div v-if="groups.children">
-            <el-divider>
-                <div class="custom-header" :style="eldividerStyle">
-                    <el-icon :size="24">
-                        <component :is=groups.icon />
-                    </el-icon>
-                    <span>{{ $t(groups.name) }}</span>
-                </div>
-            </el-divider>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 5px;">
-                <el-card shadow="hover" class="card" v-for="item in groups.children"
-                    @click="$router.push(groups.path + item.path)">
-                    <div style="display: flex;">
-                        <div class="card-content">
-                            <!-- 左侧图片 -->
-                            <el-image :src="item.icon" style="width: 24px;" />
-                            <!-- 右侧内容 -->
-                            <span>{{ $t(item.name) }}</span>
-                        </div>
-                        <el-icon :size="30" class="location-icon">
-                            <DArrowRight />
+    <el-collapse v-model="activeNames">
+        <template v-for="(groups, index) in MenuList">
+            <el-collapse-item v-if="groups.children" :name="index.toString()">
+                <template #title>
+                    <div class="custom-header">
+                        <el-icon :size="24">
+                            <component :is="groups.icon" />
                         </el-icon>
+                        <span>{{ $t(groups.name) }}</span>
                     </div>
-                </el-card>
-            </div>
-        </div>
-    </div>
+                </template>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 5px;">
+                    <el-card shadow="hover" class="card" v-for="item in groups.children" :key="item.path"
+                        @click="$router.push(groups.path + item.path)">
+                        <div style="display: flex;">
+                            <div class="card-content">
+                                <!-- 左侧图片 -->
+                                <el-image :src="item.icon" style="width: 24px;" />
+                                <!-- 右侧内容 -->
+                                <span>{{ $t(item.name) }}</span>
+                            </div>
+                            <el-icon :size="30" class="location-icon">
+                                <DArrowRight />
+                            </el-icon>
+                        </div>
+                    </el-card>
+                </div>
+            </el-collapse-item>
+        </template>
+    </el-collapse>
 </template>
 
 <style scoped>
@@ -61,6 +65,7 @@ import { eldividerStyle } from "@/stores/style";
     span {
         margin-left: 5px;
         font-weight: bold;
+        font-size: 15px;
     }
 
 }

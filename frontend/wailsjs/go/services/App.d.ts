@@ -31,8 +31,6 @@ export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:
 
 export function FofaTips(arg1:string):Promise<structs.TipsResult>;
 
-export function GetAllFinger():Promise<Array<string>>;
-
 export function GetFingerPocMap():Promise<{[key: string]: Array<string>}>;
 
 export function GitDorks(arg1:string,arg2:string,arg3:string):Promise<isic.GithubResult>;
@@ -90,7 +88,5 @@ export function SubsidiariesAndDomains(arg1:string,arg2:number,arg3:number,arg4:
 export function TycCheckLogin(arg1:string):Promise<boolean>;
 
 export function UncoverSearch(arg1:string,arg2:string,arg3:structs.SpaceOption):Promise<Array<space.Result>>;
-
-export function ViewPictrue(arg1:string):Promise<string>;
 
 export function WechatOfficial(arg1:string):Promise<Array<structs.WechatReulst>>;

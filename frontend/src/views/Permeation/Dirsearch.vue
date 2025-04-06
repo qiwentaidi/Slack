@@ -4,20 +4,20 @@ import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/services/App
 import { ProcessTextAreaInput, Copy, ReadLine, selectFileAndAssign } from '@/util'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
-import { QuestionFilled, RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting, Delete, WarnTriangleFilled } from '@element-plus/icons-vue';
+import { RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting, Delete, WarnTriangleFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '@/stores';
 import { CheckFileStat, List, OpenFolder } from 'wailsjs/go/services/File';
-import { Dir } from '@/stores/interface';
+import { DirseearchResult } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import redirectIcon from '@/assets/icon/redirect.svg'
 import { DeleteRecordByPath, DeleteRecordsWithTimesEqualOne, GetAllPathsAndTimes, UpdateOrInsertPath } from 'wailsjs/go/services/Database';
 import { dirsearch } from 'wailsjs/go/models';
 import throttle from 'lodash/throttle';
 
-// 因为目录扫描的进度条更新比较快，使用节流函数每隔1s更新一次
+// 因为目录扫描的进度条更新比较快，使用节流函数每隔1s更新一次, 避免频繁更新导致卡顿
 const updatePercentageThrottled = throttle((id: number) => {
-    from.percentage = Number(((id / global.temp.dirsearchConut) * 100).toFixed(2));
+    from.percentage = Number(((id / from.total) * 100).toFixed(2));
 }, 1000);
 
 onMounted(() => {
@@ -59,7 +59,7 @@ onMounted(() => {
         updatePercentageThrottled(id);
     });
     EventsOn("dirsearchCounts", (count: number) => {
-        global.temp.dirsearchConut = count
+        from.total = count
     });
     EventsOn("dirsearchComplete", () => {
         config.runningStatus = false
@@ -89,15 +89,17 @@ const from = reactive({
     selectDict: [] as string[],
     checkAll: false,
     indeterminate: false,
+    // 待扫描的路径总数: 目标*字段数
+    total: 0,
 })
 
-let pagination = usePagination<Dir>(50)
+let pagination = usePagination<DirseearchResult>(50)
 let pathTimes = usePagination<{ path: string, times: number }>(50)
 async function getDictList() {
     from.selectDict = []
     from.configPath = global.PATH.homedir + "/slack/config/dirsearch"
     let files = await List([from.configPath])
-    from.dictList = files.map((item: any) => item.Path)
+    from.dictList = files.filter(item => item.Path.endsWith(".txt")).map(item => item.Path);
 }
 
 async function dirscan() {
@@ -147,14 +149,10 @@ class Dirsearch {
             if (from.selectDict.length == 0) {
                 from.selectDict = [from.configPath + "/dicc.txt"]
             }
-            await LoadDirsearchDict(from.selectDict, from.exts.split(',')).then(result => {
-                from.paths = result;
-            });
+            from.paths = await LoadDirsearchDict(from.selectDict, from.exts.split(','))
         }
-        global.temp.dirsearchPathConut = from.paths.length
         from.errorCounts = 0
         pagination.initTable()
-        global.temp.dirsearchStartTime = Date.now();
     }
 
     public async scanner() {
@@ -217,11 +215,15 @@ function processStatusCode(): number[] {
                 temp.push(Number(block))
             }
         }
+        if (temp.length == 0) {
+            ElMessage.warning("状态码过滤格式错误, 已忽略")
+            return []
+        }
     }
     return temp
 }
 
-function DispalyResponse(response: string) {
+function dispalyResponse(response: string) {
     from.respDialog = true
     try {
         const parsedContent = JSON.parse(response);
@@ -318,7 +320,7 @@ function deleteRecordsWithTimesEqualOne() {
         <div class="my-header" style="margin-bottom: 5px;">
             <el-space>
                 <el-tag>递归层级:{{ config.recursion }}</el-tag>
-                <el-tag>字典大小:{{ global.temp.dirsearchPathConut }}</el-tag>
+                <el-tag>字典大小:{{ from.paths.length }}</el-tag>
                 <el-tooltip placement="bottom" content="请求失败数量">
                     <el-tag type="danger">ERROR:{{ from.errorCounts }}</el-tag>
                 </el-tooltip>
@@ -350,7 +352,7 @@ function deleteRecordsWithTimesEqualOne() {
             <el-table-column label="Operate" width="120px" align="center">
                 <template #default="scope">
                     <el-tooltip content="查看响应包">
-                        <el-button :icon="Reading" link @click.prevent="DispalyResponse(scope.row.Body)"></el-button>
+                        <el-button :icon="Reading" link @click.prevent="dispalyResponse(scope.row.Body)"></el-button>
                     </el-tooltip>
                     <el-tooltip content="打开链接">
                         <el-button :icon="ChromeFilled" link @click.prevent="BrowserOpenURL(scope.row.URL)"></el-button>
@@ -394,41 +396,21 @@ function deleteRecordsWithTimesEqualOne() {
             <el-form-item label="请求间隔(s):">
                 <el-input-number v-model="config.interval" :min="0" :max="60" />
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    <span>递归层级</span>
-                    <el-tooltip placement="left">
-                        <template #content>对响应码为200的路径继续进行扫描</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-input-number v-model="config.recursion" :min="0" :max="5" />
+            <el-form-item label="递归层级:">
+                <div class="form-item-not-fill">
+                    <el-input-number v-model="config.recursion" :min="0" :max="5" />
+                    <span class="form-item-tips">对响应码为200的路径继续进行扫描</span>
+                </div>
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    <span>过滤长度次数:</span>
-                    <el-tooltip placement="left">
-                        <template #content>响应长度显示超过n次时不再显示，值为0时不过滤数据</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
-                <el-input-number v-model="config.times" :min="1" :max="10000" />
+            <el-form-item label="过滤长度次数:">
+                <div class="form-item-not-fill">
+                    <el-input-number v-model="config.times" :min="1" :max="10000" />
+                    <span class="form-item-tips">响应长度显示超过n次时不再显示, 值为0时不过滤数据</span>
+                </div>
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    <span>扩展名:</span>
-                    <el-tooltip placement="left">
-                        <template #content>会将字典中%EXT%字段替换，不指定则去除有关%EXT%字段</template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
+            <el-form-item label="扩展名:">
                 <el-input v-model="from.exts"></el-input>
+                <span class="form-item-tips">会将字典中%EXT%字段替换，不指定则去除有关%EXT%字段</span>
             </el-form-item>
             <el-form-item label="过滤响应体内容:">
                 <el-input v-model="config.exclude"></el-input>
@@ -474,9 +456,7 @@ function deleteRecordsWithTimesEqualOne() {
                             </el-text>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="times" label="Occurrences" width="200"
-                        sortable="custom">
-                    </el-table-column>
+                    <el-table-column prop="times" label="Occurrences" width="150" sortable="custom" />
                     <el-table-column label="Operate" width="100" align="center">
                         <template #default="scope">
                             <el-button :icon="Delete" size="small" plain @click="deleteRecordFormPath(scope.row.path)">删除</el-button>
