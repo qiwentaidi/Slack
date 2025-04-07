@@ -5,7 +5,7 @@ import {
     Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Warning, Picture,
     Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, MoreFilled,
 } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute, NewThreadSafeWebScanner } from 'wailsjs/go/services/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
 import global from "@/stores"
@@ -525,9 +525,9 @@ class Engine {
                 type: "primary",
                 icon: MoreFilled,
             })
-            await NewWebScanner(options, getProxy())
+            await NewWebScanner(options, getProxy(), false)
         } else {
-            await NewThreadSafeWebScanner(options, getProxy())
+            await NewWebScanner(options, getProxy(), true)
         }
     }
 

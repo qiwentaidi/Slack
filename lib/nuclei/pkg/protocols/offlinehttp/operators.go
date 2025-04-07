@@ -110,6 +110,7 @@ func (request *Request) responseToDSLMap(resp *http.Response, host, matched, raw
 		k = strings.ToLower(strings.TrimSpace(k))
 		data[k] = strings.Join(v, " ")
 	}
+
 	data["path"] = host
 	data["matched"] = matched
 	data["request"] = rawReq

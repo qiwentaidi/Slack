@@ -2,14 +2,12 @@ package sdk_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
 
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
-	"github.com/projectdiscovery/nuclei/v3/pkg/output"
 	"github.com/projectdiscovery/utils/env"
 	"github.com/stretchr/testify/require"
 	"github.com/tarunKoyalwar/goleak"
@@ -146,6 +144,7 @@ func TestWithVarsNuclei(t *testing.T) {
 		}()
 		ne, err := nuclei.NewNucleiEngineCtx(
 			context.TODO(),
+			nuclei.EnableSelfContainedTemplates(),
 			nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{Templates: []string{"http/token-spray/api-1forge.yaml"}}),
 			nuclei.WithVars([]string{"token=foobar"}),
 			nuclei.WithVerbosity(nuclei.VerbosityOptions{Debug: true}),
@@ -167,29 +166,4 @@ func TestWithVarsNuclei(t *testing.T) {
 	} else {
 		fn()
 	}
-}
-
-func TestWithCustomHeadersNuclei(t *testing.T) {
-	options := []nuclei.NucleiSDKOptions{
-		nuclei.EnableStatsWithOpts(nuclei.StatsOptions{MetricServerPort: 6064}), // optionally enable metrics server for better observability
-		nuclei.DisableUpdateCheck(), // -duc
-		nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
-			Templates: []string{},
-		}),
-	}
-	ne, err := nuclei.NewNucleiEngineCtx(context.Background(), options...)
-	if err != nil {
-		fmt.Printf("nuclei init engine err: %v\n", err)
-		return
-	}
-	ne.LoadTargets([]string{}, false)
-	err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
-		fmt.Printf("event.TemplateID: %v\n", event.TemplateID)
-		fmt.Printf("event.ResponseTime: %v\n", event.ResponseTime)
-	})
-	if err != nil {
-		fmt.Printf("nuclei execute callback err:: %v\n", err)
-		return
-	}
-	defer ne.Close()
 }

@@ -1,7 +1,6 @@
 package fuzz
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
@@ -10,10 +9,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/nuclei/v3/pkg/fuzz/component"
+	fuzzStats "github.com/projectdiscovery/nuclei/v3/pkg/fuzz/stats"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/contextargs"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/expressions"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/generators"
+	"github.com/projectdiscovery/nuclei/v3/pkg/utils/json"
 	"github.com/projectdiscovery/retryablehttp-go"
 	errorutil "github.com/projectdiscovery/utils/errors"
 	mapsutil "github.com/projectdiscovery/utils/maps"
@@ -50,6 +51,11 @@ type ExecuteRuleInput struct {
 	BaseRequest *retryablehttp.Request
 	// DisplayFuzzPoints is a flag to display fuzz points
 	DisplayFuzzPoints bool
+
+	// ApplyPayloadInitialTransformation is an optional function
+	// to transform the payload initially based on analyzer rules
+	ApplyPayloadInitialTransformation func(string, map[string]interface{}) string
+	AnalyzerParams                    map[string]interface{}
 }
 
 // GeneratedRequest is a single generated request for rule
@@ -64,6 +70,15 @@ type GeneratedRequest struct {
 	Component component.Component
 	// Parameter being fuzzed
 	Parameter string
+
+	// Key is the key for the request
+	Key string
+	// Value is the value for the request
+	Value string
+	// OriginalValue is the original value for the request
+	OriginalValue string
+	// OriginalPayload is the original payload for the request
+	OriginalPayload string
 }
 
 // Execute executes a fuzzing rule accepting a callback on which
@@ -108,6 +123,18 @@ func (rule *Rule) Execute(input *ExecuteRuleInput) (err error) {
 				return nil
 			})
 		}
+
+		if rule.options.FuzzStatsDB != nil {
+			_ = component.Iterate(func(key string, value interface{}) error {
+				rule.options.FuzzStatsDB.RecordComponentEvent(fuzzStats.ComponentEvent{
+					URL:           input.Input.MetaInput.Target(),
+					ComponentType: componentName,
+					ComponentName: fmt.Sprintf("%v", value),
+				})
+				return nil
+			})
+		}
+
 		finalComponentList = append(finalComponentList, component)
 	}
 	if len(displayDebugFuzzPoints) > 0 {
@@ -216,7 +243,9 @@ func (rule *Rule) executeRuleValues(input *ExecuteRuleInput, ruleComponent compo
 	// if we are only fuzzing values
 	if len(rule.Fuzz.Value) > 0 {
 		for _, value := range rule.Fuzz.Value {
-			if err := rule.executePartRule(input, ValueOrKeyValue{Value: value}, ruleComponent); err != nil {
+			originalPayload := value
+
+			if err := rule.executePartRule(input, ValueOrKeyValue{Value: value, OriginalPayload: originalPayload}, ruleComponent); err != nil {
 				if component.IsErrSetValue(err) {
 					// this are errors due to format restrictions
 					// ex: fuzzing string value in a json int field
@@ -257,7 +286,7 @@ func (rule *Rule) executeRuleValues(input *ExecuteRuleInput, ruleComponent compo
 			if err != nil {
 				return err
 			}
-			if gotErr := rule.execWithInput(input, req, input.InteractURLs, ruleComponent, "", ""); gotErr != nil {
+			if gotErr := rule.execWithInput(input, req, input.InteractURLs, ruleComponent, "", "", "", "", "", ""); gotErr != nil {
 				return gotErr
 			}
 		}

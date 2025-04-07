@@ -3,13 +3,14 @@ package webscan
 import (
 	"context"
 	"fmt"
-	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
 	"strings"
 	"testing"
 
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
+	"github.com/projectdiscovery/nuclei/v3/pkg/installer"
 	"github.com/projectdiscovery/nuclei/v3/pkg/output"
+	syncutil "github.com/projectdiscovery/utils/sync"
 )
 
 func TestNucleiCaller(t *testing.T) {
@@ -18,8 +19,6 @@ func TestNucleiCaller(t *testing.T) {
 		nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
 			Templates: []string{util.HomeDir() + "/slack/config/pocs"},
 		}), // -t
-		nuclei.WithTemplateFilters(nuclei.TemplateFilters{Tags: []string{}}),    // 过滤 poc
-		nuclei.EnableStatsWithOpts(nuclei.StatsOptions{MetricServerPort: 6064}), // optionally enable metrics server for better observability
 		nuclei.DisableUpdateCheck(), // -duc
 		// nuclei.WithProxy(proxys, false), // -proxy
 	)
@@ -41,15 +40,56 @@ func TestNucleiCaller(t *testing.T) {
 	defer ne.Close()
 }
 
-func TestThreadNucleiCaller(t *testing.T) {
-	option1 := structs.NucleiOption{
-		SkipNucleiWithoutTags: false,
-		URL:                   "http://www.example.com",
-		TemplateFile:          []string{util.HomeDir() + "/slack/config/pocs/74cms-sqli.yaml"},
+func TestThreadSafeNucleiCaller(t *testing.T) {
+	ctx := context.Background()
+	// when running nuclei in parallel for first time it is a good practice to make sure
+	// templates exists first
+	tm := installer.TemplateManager{}
+	if err := tm.FreshInstallIfNotExists(); err != nil {
+		panic(err)
 	}
-	option2 := structs.NucleiOption{
-		URL:          "http://vpn.sanhuagroup.com:9090/",
-		TemplateFile: []string{util.HomeDir() + "/slack/config/pocs/iis-shortname.yaml"},
+
+	// create nuclei engine with options
+	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(ctx)
+	if err != nil {
+		panic(err)
 	}
-	NewThreadSafeNucleiEngine(context.Background(), []structs.NucleiOption{option1, option2})
+	// setup sizedWaitgroup to handle concurrency
+	sg, err := syncutil.New(syncutil.WithSize(10))
+	if err != nil {
+		panic(err)
+	}
+
+	// scan 1 = run dns templates on scanme.sh
+	sg.Add()
+	go func() {
+		defer sg.Done()
+		err = ne.ExecuteNucleiWithOpts([]string{"scanme.sh"},
+			nuclei.WithTemplateFilters(nuclei.TemplateFilters{ProtocolTypes: "dns"}),
+			nuclei.WithHeaders([]string{"X-Bug-Bounty: pdteam"}),
+			nuclei.EnablePassiveMode(),
+		)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	// scan 2 = run templates with oast tags on honey.scanme.sh
+	sg.Add()
+	go func() {
+		defer sg.Done()
+		err = ne.ExecuteNucleiWithOpts([]string{"https://202.88.229.90/"}, nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{Templates: []string{"/Users/qwtd/slack/config/pocs/dss-download-fileread.yaml"}}))
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	// wait for all scans to finish
+	sg.Wait()
+	defer ne.Close()
+
+	// Output:
+	// [dns-saas-service-detection] scanme.sh
+	// [nameserver-fingerprint] scanme.sh
+	// [dns-saas-service-detection] honey.scanme.sh
 }

@@ -170,6 +170,10 @@ func (request *Request) MakeResultEventItem(wrapped *output.InternalWrappedEvent
 	if value, ok := wrapped.InternalEvent["global-matchers"]; ok {
 		isGlobalMatchers = value.(bool)
 	}
+	var analyzerDetails string
+	if value, ok := wrapped.InternalEvent["analyzer_details"]; ok {
+		analyzerDetails = value.(string)
+	}
 	data := &output.ResultEvent{
 		TemplateID:       types.ToString(wrapped.InternalEvent["template-id"]),
 		TemplatePath:     types.ToString(wrapped.InternalEvent["template-path"]),
@@ -185,15 +189,16 @@ func (request *Request) MakeResultEventItem(wrapped *output.InternalWrappedEvent
 		Metadata:         wrapped.OperatorsResult.PayloadValues,
 		ExtractedResults: wrapped.OperatorsResult.OutputExtracts,
 		Timestamp:        time.Now(),
-		ResponseTime:     types.ToString(wrapped.InternalEvent["duration"]), // 新增 测试1。
 		MatcherStatus:    true,
 		IP:               fields.Ip,
 		GlobalMatchers:   isGlobalMatchers,
 		Request:          types.ToString(wrapped.InternalEvent["request"]),
 		Response:         request.truncateResponse(wrapped.InternalEvent["response"]),
+		ResponseTime:     types.ToString(wrapped.InternalEvent["duration"]), // 新增 测试1。
 		CURLCommand:      types.ToString(wrapped.InternalEvent["curl-command"]),
 		TemplateEncoded:  request.options.EncodeTemplate(),
 		Error:            types.ToString(wrapped.InternalEvent["error"]),
+		AnalyzerDetails:  analyzerDetails,
 	}
 	return data
 }

@@ -3,6 +3,7 @@ package jira
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -29,7 +30,8 @@ func (jiraFormatter *Formatter) MakeBold(text string) string {
 }
 
 func (jiraFormatter *Formatter) CreateCodeBlock(title string, content string, _ string) string {
-	return fmt.Sprintf("\n%s\n{code}\n%s\n{code}\n", jiraFormatter.MakeBold(title), content)
+	escapedContent := strings.ReplaceAll(content, "{code}", "")
+	return fmt.Sprintf("\n%s\n{code}\n%s\n{code}\n", jiraFormatter.MakeBold(title), escapedContent)
 }
 
 func (jiraFormatter *Formatter) CreateTable(headers []string, rows [][]string) (string, error) {
@@ -67,9 +69,12 @@ type Options struct {
 	// AccountID is the accountID of the jira user.
 	AccountID string `yaml:"account-id" json:"account_id" validate:"required"`
 	// Email is the email of the user for jira instance
-	Email string `yaml:"email" json:"email" validate:"required,email"`
+	Email string `yaml:"email" json:"email"`
+	// PersonalAccessToken is the personal access token for jira instance.
+	// If this is set, Bearer Auth is used instead of Basic Auth.
+	PersonalAccessToken string `yaml:"personal-access-token" json:"personal_access_token"`
 	// Token is the token for jira instance.
-	Token string `yaml:"token" json:"token" validate:"required"`
+	Token string `yaml:"token" json:"token"`
 	// ProjectName is the name of the project.
 	ProjectName string `yaml:"project-name" json:"project_name"`
 	// ProjectID is the ID of the project (optional)
@@ -102,14 +107,28 @@ func New(options *Options) (*Integration, error) {
 	if !options.Cloud {
 		username = options.AccountID
 	}
-	tp := jira.BasicAuthTransport{
-		Username: username,
-		Password: options.Token,
+
+	var httpclient *http.Client
+	if options.PersonalAccessToken != "" {
+		bearerTp := jira.BearerAuthTransport{
+			Token: options.PersonalAccessToken,
+		}
+		if options.HttpClient != nil {
+			bearerTp.Transport = options.HttpClient.HTTPClient.Transport
+		}
+		httpclient = bearerTp.Client()
+	} else {
+		basicTp := jira.BasicAuthTransport{
+			Username: username,
+			Password: options.Token,
+		}
+		if options.HttpClient != nil {
+			basicTp.Transport = options.HttpClient.HTTPClient.Transport
+		}
+		httpclient = basicTp.Client()
 	}
-	if options.HttpClient != nil {
-		tp.Transport = options.HttpClient.HTTPClient.Transport
-	}
-	jiraClient, err := jira.NewClient(tp.Client(), options.URL)
+
+	jiraClient, err := jira.NewClient(httpclient, options.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +259,7 @@ func getIssueResponseFromJira(issue *jira.Issue) (*filters.CreateIssueResponse, 
 // CreateIssue creates an issue in the tracker or updates the existing one
 func (i *Integration) CreateIssue(event *output.ResultEvent) (*filters.CreateIssueResponse, error) {
 	if i.options.UpdateExisting {
-		issue, err := i.FindExistingIssue(event)
+		issue, err := i.FindExistingIssue(event, true)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not find existing issue")
 		} else if issue.ID != "" {
@@ -265,7 +284,7 @@ func (i *Integration) CloseIssue(event *output.ResultEvent) error {
 		return nil
 	}
 
-	issue, err := i.FindExistingIssue(event)
+	issue, err := i.FindExistingIssue(event, false)
 	if err != nil {
 		return err
 	} else if issue.ID != "" {
@@ -300,13 +319,16 @@ func (i *Integration) CloseIssue(event *output.ResultEvent) error {
 }
 
 // FindExistingIssue checks if the issue already exists and returns its ID
-func (i *Integration) FindExistingIssue(event *output.ResultEvent) (jira.Issue, error) {
+func (i *Integration) FindExistingIssue(event *output.ResultEvent, useStatus bool) (jira.Issue, error) {
 	template := format.GetMatchedTemplateName(event)
 	project := i.options.ProjectName
 	if i.options.ProjectID != "" {
 		project = i.options.ProjectID
 	}
-	jql := fmt.Sprintf("summary ~ \"%s\" AND summary ~ \"%s\" AND status != \"%s\" AND project = \"%s\"", template, event.Host, i.options.StatusNot, project)
+	jql := fmt.Sprintf("summary ~ \"%s\" AND summary ~ \"%s\" AND project = \"%s\"", template, event.Host, project)
+	if useStatus {
+		jql = fmt.Sprintf("%s AND status != \"%s\"", jql, i.options.StatusNot)
+	}
 
 	searchOptions := &jira.SearchOptions{
 		MaxResults: 1, // if any issue exists, then we won't create a new one
