@@ -3,6 +3,7 @@ package jsfind
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"regexp"
 	"slack-wails/lib/clients"
@@ -274,6 +275,13 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 		if err != nil {
 			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[!] %s : %v", fullURL, err))
 			return
+		}
+
+		if method == http.MethodPost {
+			contentType := detectContentType(fullURL, o.Headers)
+			if contentType != "" {
+				o.Headers["Content-Type"] = contentType
+			}
 		}
 
 		param := completeParameters(method, fullURL, url.Values{})

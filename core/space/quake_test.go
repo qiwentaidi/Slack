@@ -1,14 +1,15 @@
 package space
 
 import (
-	"context"
-	"fmt"
+	"slack-wails/lib/structs"
 	"testing"
 )
 
 func TestQuake(t *testing.T) {
-	ports := GetShodanAllPort(context.Background(), "1.1.1.1")
-	fmt.Printf("ports: %v\n", ports)
-	// qr := SearchQuakeTips("jeecg")
-	// fmt.Printf("qr: %v\n", qr)
+	QuakeApiSearch(&structs.QuakeRequestOptions{
+		Query:    ``,
+		PageNum:  1,
+		PageSize: 2,
+		Token:    "",
+	})
 }

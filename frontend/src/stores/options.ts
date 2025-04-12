@@ -83,7 +83,7 @@ export const dslOptions = [
 
 export const metadataOptions = ['verified', 'fofa-query', 'google-query', 'shodan-query', 'hunter-query', 'max-request', 'vendor', 'product'];
 
-export const quakeSyntaxOptions = [
+export const quakeOptions = [
     {
         title: "基本信息",
         data: [
@@ -128,7 +128,7 @@ export const quakeSyntaxOptions = [
         title: "网页深度识别",
         data: [
             { key: 'icp:京ICP备08010314号', description: '查询ICP备案号', isVip: true },
-            { key: 'icp_nature:企业', description: '查询备案主体性质' },
+            { key: 'icp_nature:企业', description: '查询备案主体性质', isVip: true },
             { key: 'icp_keywords:奇虎', description: '查询备案网站中的关键词或域名', isVip: true },
             { key: 'link_url:/login', description: '查询网页url中包含"/login"的资产', isVip: true },
             { key: 'script_variable:csrfToken', description: '查询script标签变量中包含"csrfToken"的资产', isVip: true },

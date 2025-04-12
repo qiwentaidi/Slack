@@ -4,7 +4,7 @@ import { Callgologger, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/services/
 import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/services/File";
 import { Loading } from '@element-plus/icons-vue';
 import { ProxyOptions } from "./stores/interface";
-import { ClipboardSetText } from "wailsjs/runtime/runtime";
+import { BrowserOpenURL, ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
 import { clients } from "wailsjs/go/models";
 
@@ -372,4 +372,19 @@ export function parseHeaders(headersText: string) {
         }
     });
     return headers;
+}
+
+export function convertHttpToHttps(url: string): string {
+    // 检查 URL 是否以 http:// 开头
+    if (url.startsWith('http://')) {
+        return 'https://' + url.slice(7);  // 将 http:// 替换为 https://
+    }
+    return url;  // 如果不是 http 开头，原样返回
+}
+
+export function openURL(url: string) {
+    if (!url) {
+        return
+    }
+    BrowserOpenURL(url)
 }

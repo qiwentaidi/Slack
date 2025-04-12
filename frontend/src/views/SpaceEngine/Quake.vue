@@ -17,7 +17,7 @@
                                 </div>
                             </template>
                             <el-tabs v-model="options.keywordActive" class="quake">
-                                <el-tab-pane v-for="item in quakeSyntaxOptions" :name="item.title" :label="item.title">
+                                <el-tab-pane v-for="item in quakeOptions" :name="item.title" :label="item.title">
                                     <el-table :data="item.data" class="keyword-search" @row-click="syntax.rowClick">
                                         <el-table-column width="300" property="key" label="例句">
                                             <template #default="scope">
@@ -151,8 +151,7 @@
                     </el-text>
                 </template>
                 <template #suffix>
-                    <el-button :icon="ChromeFilled" link
-                        @click="BrowserOpenURL('https://quake.360.net/quake/#/index')" />
+                    <el-button :icon="ChromeFilled" link @click="openURL('https://quake.360.net/quake/#/index')" />
                 </template>
             </el-input>
             <div style="flex-grow: 1;"></div>
@@ -164,9 +163,12 @@
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="exportIcon" @click="exportData">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="exportIcon" @click="exportData">导出全部数据</el-dropdown-item>
-                        <el-dropdown-item :icon="DocumentCopy" @click="CopyURL" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="exportIcon" @click="exportData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', false)" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top500', false)">复制前500条URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', true)" divided>去重复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top500', true)">去重复制前500条URL</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -194,7 +196,22 @@
                         <span v-else>--</span>
                     </template>
                 </el-table-column>
-                <el-table-column prop="Title" label="标题" width="200" :show-overflow-tooltip="true" />
+                <el-table-column label="网站图标 | 标题" width="250" :show-overflow-tooltip="true">
+                    <template #default="scope">
+                        <el-space>
+                            <el-image :src="convertHttpToHttps(scope.row.FaviconURL)"
+                                @click="tableCtrl.searchFaviconMd5(scope.row.FaviconURL)"
+                                style="width: 16px; height: 16px;">
+                                <template #error>
+                                    <el-icon>
+                                        <Picture />
+                                    </el-icon>
+                                </template>
+                            </el-image>
+                            <span>{{ scope.row.Title }}</span>
+                        </el-space>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="Component" label="产品应用/版本" width="260">
                     <template #default="scope">
                         <el-button type="success" plain size="small"
@@ -219,12 +236,17 @@
                 </el-table-column>
                 <el-table-column prop="IcpName" label="备案名称" width="160" :show-overflow-tooltip="true" />
                 <el-table-column prop="IcpNumber" label="备案号" width="160" :show-overflow-tooltip="true" />
+                <el-table-column prop="CertName" label="证书申请单位" width="160" :show-overflow-tooltip="true">
+                    <template #default="scope">
+                        <el-text @click="tableCtrl.searchCert">{{ scope.row.CertName }}</el-text>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="Isp" label="运营商" width="100" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="200" :show-overflow-tooltip="true" />
                 <el-table-column fixed="right" label="操作" width="100" align="center">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="top">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" />
+                            <el-button link :icon="ChromeFilled" @click="openURL(scope.row.URL)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">
@@ -266,13 +288,12 @@
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowDown, DocumentCopy, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled } from '@element-plus/icons-vue';
+import { Search, ArrowDown, DocumentCopy, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled, Picture } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
-import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, UploadFileAndRead } from '@/util';
+import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, UploadFileAndRead, convertHttpToHttps, openURL } from '@/util';
 import { ExportToXlsx } from '@/export';
 import { QuakeTableTabs, QuakeTipsData } from '@/stores/interface';
-import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
-import { Callgologger, FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/services/App';
+import { FaviconMd5, QuakeSearch, QuakeTips } from 'wailsjs/go/services/App';
 import global from '@/stores';
 import { ElMessage, ElMessageBox, ElNotification, FormInstance } from 'element-plus';
 import { FileDialog } from 'wailsjs/go/services/File';
@@ -280,7 +301,7 @@ import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'w
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { structs } from 'wailsjs/go/models';
-import { quakeSyntaxOptions } from '@/stores/options';
+import { quakeOptions } from '@/stores/options';
 
 const options = ({
     keywordActive: "基本信息",
@@ -510,6 +531,19 @@ const tableCtrl = ({
             }).catch(() => {
             })
     },
+    searchCert: function (certName: string) {
+        if (certName == "") {
+            return
+        }
+        tableCtrl.addTab("cert: " + certName, false)
+    },
+    searchFaviconMd5: async function (url: string) {
+        if (url == "") {
+            return
+        }
+        let md5 = getLastPathSegment(url)
+        tableCtrl.addTab("favicon:" + md5, false)
+    },
     // type 0 choose txt , type 1 choose img
     handleFileupload: async function (type: number) {
         if (type == 0) {
@@ -529,17 +563,7 @@ const tableCtrl = ({
     },
 })
 
-async function CopyURL() {
-    if (table.editableTabs.length != 0) {
-        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        const temp = tab.content.map(item => {
-            if (item.URL != "") return item.URL
-        })
-        Copy(temp.join("\n"))
-    }
-}
-
-async function exportData() {
+async function copyURLs(type: 'current' | 'top500', dedup: boolean = false) {
     if (table.editableTabs.length == 0) {
         ElNotification.warning({
             title: "Quake Tips",
@@ -548,6 +572,67 @@ async function exportData() {
         return
     }
     const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+    let urls: string[] = [];
+    if (type === 'current') {
+        let data = tab.content!;
+        if (dedup) {
+            const seen = new Set();
+            data = data.filter(item => {
+                const key = `${item.IP}_${item.Title}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+        urls = data.map(item => item.URL);
+    } else {
+        let result = await QuakeSearch(tab.ipList, tab.title, 1, 500, options.switch.latest, options.switch.invalid, options.switch.honeypot, options.switch.cdn, global.space.quakekey, quake.certcommon)
+        if (result.Code != 0) {
+            ElNotification.error({
+                title: "Quake Tips",
+                message: `${tab.title} 在查询数据时遇到错误: ${result.Message}`,
+            })
+            return
+        }
+        let data = result.Data;
+        if (dedup) {
+            const seen = new Set();
+            data = data.filter(item => {
+                const key = `${item.IP}_${item.Title}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        urls = data.map(item => item.URL);
+    }
+
+    Copy(urls.join("\n"));
+}
+
+function getLastPathSegment(url: string): string | null {
+    const urlObj = new URL(url);  // 创建 URL 对象
+    const pathSegments = urlObj.pathname.split('/');  // 按斜杠分割路径
+    return pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : null;  // 返回最后一个部分
+}
+
+const excelHeaders = ["URL", "应用/组件", "端口", "协议", "域名", "标题", "单位名称", "备案号", "证书申请单位", "Logo", "IP", "运营商", "地理位置"]
+async function exportData(mode: number) {
+    if (table.editableTabs.length == 0) {
+        ElNotification.warning({
+            title: "Quake Tips",
+            message: "请先进行数据查询",
+        })
+        return
+    }
+    const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+
+    if (mode == 0 || tab.total <= tab.pageSize) {
+        ExportToXlsx(excelHeaders, "asset", "quake_asset", transformArrayFields(tab.content))
+        return
+    }
+
     if (tab.total > 500) {
         ElNotification.info({
             title: "Quake Tips",
@@ -574,12 +659,20 @@ async function exportData() {
         }
         temp.push(...result.Data)
     }
-    ExportToXlsx(["URL", "应用/组件", "端口", "协议", "域名", "标题", "单位名称", "备案号", "IP", "运营商", "地理位置"], "asset", "quake_asset", transformArrayFields(temp))
+    ExportToXlsx(excelHeaders, "asset", "quake_asset", transformArrayFields(temp))
     temp = []
 }
 </script>
 
 <style scoped>
+.el-image:hover {
+    cursor: pointer;
+}
+
+.el-text:hover {
+    cursor: pointer;
+}
+
 .keyword-search :deep(.el-table__row:hover) {
     color: #4CA87D;
     cursor: pointer;

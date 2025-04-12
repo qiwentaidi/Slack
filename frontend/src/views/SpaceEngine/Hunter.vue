@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ExportToXlsx } from '@/export'
 import { reactive, ref } from 'vue';
-import { ElNotification, ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
+import { ElNotification, ElMessage, ElMessageBox, FormInstance } from "element-plus";
 import { Search, ChromeFilled, DocumentCopy, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
-import { splitInt, Copy, CsegmentIpv4 } from '@/util'
+import { splitInt, Copy, CsegmentIpv4, openURL } from '@/util'
 import { TableTabs, HunterEntryTips } from "@/stores/interface"
 import global from "@/stores"
 import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/services/App'
 import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/services/Database'
-import { BrowserOpenURL } from 'wailsjs/runtime'
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { hunterOptions } from '@/stores/options';
@@ -267,6 +266,8 @@ const tableCtrl = ({
     }
 })
 
+const excelHeaders = ["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"]
+
 async function exportData(mode: number) {
     if (table.editableTabs.length == 0) {
         ElNotification.warning({
@@ -284,70 +285,56 @@ async function exportData(mode: number) {
         })
         return;
     }
-    // 如果已经查询总数小于当前单页长度，直接导出表格即可
-    if (tab.total <= tab.pageSize) {
-        mode = 0
+
+    if (mode == 0 || tab.total <= tab.pageSize) {
+        ExportToXlsx(excelHeaders, "asset", "hunter_asset", tab.content!);
+        return
     }
-    
-    if (mode === 0) {
-        ExportToXlsx(
-            ["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"],
-            "asset",
-            "hunter_asset",
-            tab.content!
-        );
-    } else {
-        ElNotification.info({
-            title: "Hunter Tips",
-            message: "正在进行全数据导出, API每页最大查询限度100, 请稍后。",
-        });
+    ElNotification.info({
+        title: "Hunter Tips",
+        message: "正在进行全数据导出, API每页最大查询限度100, 请稍后。",
+    });
 
-        let temp: any[] = [];
-        let index = 0;
+    let temp: any[] = [];
+    let index = 0;
 
-        for (const num of splitInt(tab.total, 100)) {
-            index += 1;
-            ElMessage(`正在查询第 ${index} 页`);
+    for (const num of splitInt(tab.total, 100)) {
+        index += 1;
+        ElMessage(`正在查询第 ${index} 页`);
 
-            let result = await HunterSearch(global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication);
+        let result = await HunterSearch(global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication);
 
-            if (isError(result.code, result.message)) {
-                ElNotification.error({
-                    title: "Hunter Tips",
-                    message: `${tab.title} 导出数据时遇到错误: ${result.message}, 当前查询到第${index}页`,
-                })
-                break; // 遇到错误时停止后续查询
-            }
+        if (isError(result.code, result.message)) {
+            ElNotification.error({
+                title: "Hunter Tips",
+                message: `${tab.title} 导出数据时遇到错误: ${result.message}, 当前查询到第${index}页`,
+            })
+            break; // 遇到错误时停止后续查询
+        }
 
-            result.data.arr.forEach((item: any) => {
-                temp.push({
-                    URL: item.url,
-                    IP: item.ip,
-                    Port: item.port,
-                    Protocol: item.protocol,
-                    Domain: item.domain,
-                    Component: item.component,
-                    Title: item.web_title,
-                    Status: item.status_code,
-                    ICP: item.company,
-                    ISP: item.isp,
-                    Position: `${item.country}/${item.province}`,
-                    UpdateTime: item.updated_at,
-                });
+        result.data.arr.forEach((item: any) => {
+            temp.push({
+                URL: item.url,
+                IP: item.ip,
+                Port: item.port,
+                Protocol: item.protocol,
+                Domain: item.domain,
+                Component: item.component,
+                Title: item.web_title,
+                Status: item.status_code,
+                ICP: item.company,
+                ISP: item.isp,
+                Position: `${item.country}/${item.province}`,
+                UpdateTime: item.updated_at,
             });
-        }
+        });
+    }
 
-        if (temp.length > 0) {
-            ExportToXlsx(
-                ["URL", "IP", "端口", "协议", "域名", "应用/组件", "标题", "状态码", "备案号", "运营商", "地理位置", "更新时间"],
-                "asset",
-                "hunter_asset",
-                temp
-            );
-            ElMessage.success(`已成功导出 ${temp.length} 条数据`);
-        } else {
-            ElMessage.warning("没有数据可导出");
-        }
+    if (temp.length > 0) {
+        ExportToXlsx(excelHeaders, "asset", "hunter_asset", temp);
+        ElMessage.success(`已成功导出 ${temp.length} 条数据`);
+    } else {
+        ElMessage.warning("没有数据可导出");
     }
 }
 
@@ -373,27 +360,50 @@ function isError(code: number, message: string) {
     return false
 }
 
-// 0 当前页 1 100条
-async function CopyURL(mode: number) {
-    if (table.editableTabs.length != 0) {
-        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        var temp = [];
-        if (mode == 0) {
-            for (const line of tab.content!) {
-                temp.push((line as any)["URL"])
-            }
-        } else {
-            await HunterSearch(global.space.hunterkey, tab.title, "100", "1", form.defaultTime, form.defaultSever, form.deduplication).then(result => {
-                result.data.arr.forEach((item: any) => {
-                    temp.push(item.url)
-                })
-            })
-        }
-        Copy(temp.join("\n"))
-        temp = []
+async function copyURLs(type: 'current' | 'top100', dedup: boolean = false) {
+    if (table.editableTabs.length == 0) {
+        ElNotification.warning({
+            title: "Hunter Tips",
+            message: "请先进行数据查询",
+        });
+        return;
     }
-}
 
+    const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+
+    let urls: string[] = [];
+
+    if (type === 'current') {
+        let data = tab.content!;
+        if (dedup) {
+            const seen = new Set();
+            data = data.filter(item => {
+                const key = `${item.ip}_${item.web_title}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+        urls = data.map(item => item.URL);
+    } else {
+        const result = await HunterSearch(global.space.hunterkey, tab.title, "100", "1", form.defaultTime, form.defaultSever, form.deduplication)
+
+        let data = result.data.arr;
+        if (dedup) {
+            const seen = new Set();
+            data = data.filter(item => {
+                const key = `${item.ip}_${item.web_title}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        urls = data.map(item => item.url);
+    }
+
+    Copy(urls.join("\n"));
+}
 function searchCsegmentIpv4(ip: string) {
     let ipv4 = CsegmentIpv4(ip)
     tableCtrl.addTab(`ip="${ipv4}"`)
@@ -523,8 +533,10 @@ function searchCsegmentIpv4(ip: string) {
                     <el-dropdown-menu>
                         <el-dropdown-item :icon="exportIcon" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
                         <el-dropdown-item :icon="exportIcon" @click="exportData(1)">导出全部数据</el-dropdown-item>
-                        <el-dropdown-item :icon="DocumentCopy" @click="CopyURL(0)" divided>复制当前页URL</el-dropdown-item>
-                        <el-dropdown-item :icon="DocumentCopy" @click="CopyURL(1)">复制前100条URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', false)" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top100', false)">复制前100条URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', true)" divided>去重复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top100', true)">去重复制前100条URL</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -578,7 +590,7 @@ function searchCsegmentIpv4(ip: string) {
                 <el-table-column fixed="right" label="操作" width="100" align="center">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="top">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" />
+                            <el-button link :icon="ChromeFilled" @click.prevent="openURL(scope.row.URL)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">

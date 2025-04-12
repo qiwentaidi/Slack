@@ -89,7 +89,7 @@
 
 如果有问题或者好的提议可以Issue提问或者加我联系方式（请备注来意 进群或者问题交流）
 
-<img src="assets/image-20231006124944803.png" alt="image-20231006124944803" style="zoom:50%;" />
+<img src="assets/image-20231006124944803.png" alt="image-20231006124944803" style="width: 200px;" />
 
 ## POC贡献者
 

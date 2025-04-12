@@ -823,6 +823,8 @@ export namespace structs {
 	    Title: string;
 	    IcpName: string;
 	    IcpNumber: string;
+	    CertName: string;
+	    FaviconURL: string;
 	    IP: string;
 	    Isp: string;
 	    Position: string;
@@ -841,6 +843,8 @@ export namespace structs {
 	        this.Title = source["Title"];
 	        this.IcpName = source["IcpName"];
 	        this.IcpNumber = source["IcpNumber"];
+	        this.CertName = source["CertName"];
+	        this.FaviconURL = source["FaviconURL"];
 	        this.IP = source["IP"];
 	        this.Isp = source["Isp"];
 	        this.Position = source["Position"];

@@ -2,6 +2,7 @@ package jsfind
 
 import (
 	"errors"
+	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
 	"strings"
@@ -21,7 +22,7 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 	var requestURL string
 	var requestBody *strings.Reader
 
-	if apiReq.Method == "GET" {
+	if apiReq.Method == http.MethodGet {
 		// 将参数附加到 URL 查询字符串
 		requestURL = apiReq.URL + "?" + apiReq.Params.Encode()
 		requestBody = strings.NewReader("")
@@ -29,6 +30,9 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 		// 其他请求方式（POST/PUT 等），参数作为请求体
 		requestURL = apiReq.URL
 		requestBody = strings.NewReader(apiReq.Params.Encode())
+		if strings.Contains(apiReq.Headers["Content-Type"], "application/json") {
+			requestBody = strings.NewReader("{}")
+		}
 	}
 
 	// 发送请求

@@ -75,7 +75,9 @@ async function JSFinder() {
         config.consoleLog += `[*] 正在提取${url}的JS链接...\n`
         let jslinks = await ExtractAllJSLink(url)
         config.consoleLog += `[+] 共提取到JS链接: ${getLength(jslinks)}个\n`
-        config.consoleLog += jslinks.join("\n")
+        if (jslinks != null) {
+            config.consoleLog += jslinks.join("\n")
+        }
         config.consoleLog += "\n\n[*] 正在提取JS信息中...\n"
         let somethings = await JSFind(url, config.prefixJsURL, jslinks)
         config.consoleLog += `[+] 共提取到API: ${getLength(somethings.APIRoute)}个\n`
@@ -254,7 +256,7 @@ function findMissingElements(A: string[], B: string[]) {
             <el-form :model="config" label-width="auto" style="width: 50%;">
                 <el-form-item label="目标地址:">
                     <CustomTextarea v-model="config.urls" :rows="5" />
-                    <span class="form-item-tips">目前功能还在测试阶段, 尽量只使用单目标查询, 且需要输入目录根路径</span>
+                    <span class="form-item-tips">需要输入应用目录根路径</span>
                 </el-form-item>
                 <el-form-item label="JS前缀:">
                     <el-input v-model="config.prefixJsURL" />

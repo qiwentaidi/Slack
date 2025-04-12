@@ -1,11 +1,10 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { Search, ChromeFilled, DocumentCopy, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
-import { ProcessTextAreaInput, splitInt, Copy, CsegmentIpv4 } from '@/util'
+import { ProcessTextAreaInput, splitInt, Copy, CsegmentIpv4, openURL } from '@/util'
 import { TableTabs, Results } from "@/stores/interface"
 import { ExportToXlsx } from '@/export'
-import { FofaTips, FofaSearch, IconHash, Callgologger } from 'wailsjs/go/services/App'
-import { BrowserOpenURL } from 'wailsjs/runtime'
+import { FofaTips, FofaSearch, IconHash } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification, FormInstance } from 'element-plus';
 import global from "@/stores"
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
@@ -90,7 +89,7 @@ const entry = ({
         cb(tips);
     },
     getTips: async function (queryString: string) {
-        let tips = <{text: string, value: string}[]>[]
+        let tips = <{ text: string, value: string }[]>[]
         let result: any = await FofaTips(queryString)
         if (result.code == 0) {
             for (const item of result.data) {
@@ -236,7 +235,7 @@ function batchSearch() {
         })
 }
 
-const reportTitle = ["URL", "Host", "标题", "IP", "端口", "域名", "协议", "地区", "备案号", "组件"]
+const excelHeaders = ["URL", "Host", "标题", "IP", "端口", "域名", "协议", "地区", "备案号", "组件"]
 // mode = 0 导出当前查询数据 
 async function exportData(mode: number) {
     if (table.editableTabs.length == 0) {
@@ -247,34 +246,32 @@ async function exportData(mode: number) {
         return
     }
     const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-    if (tab.total <= tab.pageSize) {
-        mode = 0
+
+    if (mode == 0 || tab.total <= tab.pageSize) {
+        ExportToXlsx(excelHeaders, "asset", "fofa_asset", tab.content!)
+        return
     }
-    if (mode == 0) {
-        ExportToXlsx(reportTitle, "asset", "fofa_asset", tab.content!)
-    } else {
-        let temp = [] as Results[]
-        ElNotification.info({
-            title: "FOFA Tips",
-            message: "正在进行全数据导出, API每页最大查询限度10000, 请稍后...",
-        });
-        let index = 0
-        for (const num of splitInt(tab.total, 10000)) {
-            index += 1
-            ElMessage("正在查询第" + index.toString() + "页");
-            let result = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
-            if (result.Error) {
-                ElNotification.error({
-                    title: "FOFA Tips",
-                    message: `${tab.title} 导出数据时遇到错误: ${result.Message}, 当前查询到第${index}页`,
-                })
-                break
-            }
-            temp.push(...result.Results!)
+    let temp = [] as Results[]
+    ElNotification.info({
+        title: "FOFA Tips",
+        message: "正在进行全数据导出, API每页最大查询限度10000, 请稍后...",
+    });
+    let index = 0
+    for (const num of splitInt(tab.total, 10000)) {
+        index += 1
+        ElMessage("正在查询第" + index.toString() + "页");
+        let result = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        if (result.Error) {
+            ElNotification.error({
+                title: "FOFA Tips",
+                message: `${tab.title} 导出数据时遇到错误: ${result.Message}, 当前查询到第${index}页`,
+            })
+            break
         }
-        ExportToXlsx(reportTitle, "asset", "fofa_asset", temp)
-        temp = []
+        temp.push(...result.Results!)
     }
+    ExportToXlsx(excelHeaders, "asset", "fofa_asset", temp)
+    temp = []
 }
 
 function getColumnData(prop: string): any[] {
@@ -287,40 +284,49 @@ function getColumnData(prop: string): any[] {
     return newArray
 }
 
-async function copyURL() {
-    if (table.editableTabs.length != 0) {
-        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-        var temp = [];
-        for (const line of tab.content!) {
-            temp.push((line as any)["URL"])
-        }
-        Copy(temp.join("\n"))
-        temp = []
-    }
-}
-
-async function copyDeduplicationURL() {
-    let result = await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
-    if (result.Error) {
-        ElMessage.warning("查询失败")
+async function copyURLs(type: 'current' | 'top10000', dedup: boolean = false) {
+    if (table.editableTabs.length == 0) {
+        ElNotification.warning({
+            title: "FOFA Tips",
+            message: "请先进行数据查询",
+        });
         return
     }
-    var temp = [];
-    let content = result.Results
-    let seen = new Set(); // 用于存储已处理过的 IP:Port 组合
-    if (Array.isArray(content)) {
-        for (const line of content) {
-            let ip = (line as any)["IP"];
-            let port = (line as any)["Port"];
-            let ipPort = `${ip}:${port}`;
-            if (!seen.has(ipPort)) {
-                seen.add(ipPort); // 将新的 IP:Port 组合加入到 set 中
-                temp.push(line["URL"]); // 添加 URL 到 temp 数组中
-            }
+    const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+    let urls: string[] = [];
+    if (type === 'current') {
+        let data = tab.content!;
+        if (dedup) {
+            const seen = new Set();
+            data = data.filter(item => {
+                const key = `${item.ip}_${item.web_title}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
         }
+        urls = data.map(item => item.URL);
+    } else {
+        let result = await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        if (result.Error) {
+            ElMessage.warning(result.Message)
+            return
+        }
+        let data = result.Results;
+        if (dedup) {
+            const seen = new Set();
+            data = data.filter(item => {
+                const key = `${item.IP}_${item.Title}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        urls = data.map(item => item.URL);
     }
-    Copy(temp.join("\n"))
-    temp = []
+
+    Copy(urls.join("\n"));
 }
 
 function formatProduct(raw: string): string[] {
@@ -352,8 +358,7 @@ function searchCsegmentIpv4(ip: string) {
                                 </div>
                             </template>
                             <el-tabs v-model="syntax.keywordActive">
-                                <el-tab-pane v-for="item in fofaOptions.Syntax" :name="item.title"
-                                    :label="item.title">
+                                <el-tab-pane v-for="item in fofaOptions.Syntax" :name="item.title" :label="item.title">
                                     <el-table :data="item.data" stripe class="keyword-search"
                                         @row-click="syntax.rowClick">
                                         <el-table-column label="例句" width="300" property="key" />
@@ -414,8 +419,7 @@ function searchCsegmentIpv4(ip: string) {
                                     </el-tooltip>
                                 </div>
                             </template>
-                            <el-table :data="form.syntaxData" @row-click="syntax.rowClick2"
-                                class="keyword-search">
+                            <el-table :data="form.syntaxData" @row-click="syntax.rowClick2" class="keyword-search">
                                 <el-table-column width="150" prop="Name" label="语法名称" />
                                 <el-table-column prop="Content" label="语法内容" />
                                 <el-table-column label="操作" width="100" align="center">
@@ -454,9 +458,10 @@ function searchCsegmentIpv4(ip: string) {
                     <el-dropdown-menu>
                         <el-dropdown-item :icon="exportIcon" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
                         <el-dropdown-item :icon="exportIcon" @click="exportData(1)">导出全部数据</el-dropdown-item>
-                        <el-dropdown-item :icon="DocumentCopy" @click="copyURL" divided>复制当前页URL</el-dropdown-item>
-                        <el-dropdown-item :icon="DocumentCopy"
-                            @click="copyDeduplicationURL">去重复制前1w条URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', false)" divided>复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top10000', false)">复制前1w条URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', true)" divided>去重复制当前页URL</el-dropdown-item>
+                        <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top10000', true)">去重复制前1w条URL</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -497,8 +502,9 @@ function searchCsegmentIpv4(ip: string) {
                                         </el-icon>
                                     </template>
                                     <el-space direction="vertical">
-                                        <el-tag round type="primary" v-for="component in formatProduct(scope.row.Product)"
-                                        style="width: 320px;">{{ component }}</el-tag>
+                                        <el-tag round type="primary"
+                                            v-for="component in formatProduct(scope.row.Product)"
+                                            style="width: 320px;">{{ component }}</el-tag>
                                     </el-space>
                                 </el-popover>
                             </template>
@@ -511,12 +517,11 @@ function searchCsegmentIpv4(ip: string) {
                 <el-table-column fixed="right" label="操作" width="100" align="center">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="top">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" />
+                            <el-button link :icon="ChromeFilled" @click.prevent="openURL(scope.row.URL)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询" placement="top">
-                            <el-button link :icon="csegmentIcon"
-                                @click.prevent="searchCsegmentIpv4(scope.row.IP)">
+                            <el-button link :icon="csegmentIcon" @click.prevent="searchCsegmentIpv4(scope.row.IP)">
                             </el-button>
                         </el-tooltip>
                     </template>
@@ -551,6 +556,4 @@ function searchCsegmentIpv4(ip: string) {
     </el-dialog>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

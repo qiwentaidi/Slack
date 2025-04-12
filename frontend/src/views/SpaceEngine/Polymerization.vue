@@ -64,7 +64,7 @@
                 <el-table-column fixed="right" width="100" label="操作" align="center">
                     <template #default="scope">
                         <el-tooltip content="打开链接">
-                            <el-button link :icon="ChromeFilled" @click.prevent="BrowserOpenURL(scope.row.URL)" />
+                            <el-button link :icon="ChromeFilled" @click.prevent="openURL(scope.row.URL)" />
                         </el-tooltip>
                         <el-divider direction="vertical" />
                         <el-tooltip content="C段查询">
@@ -91,8 +91,7 @@ import { Search, WarningFilled, ChromeFilled, Grid } from '@element-plus/icons-v
 import { Uncover } from '@/stores/interface';
 import { UncoverSearch } from 'wailsjs/go/services/App';
 import global from '@/stores';
-import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
-import { CsegmentIpv4 } from '@/util';
+import { CsegmentIpv4, openURL } from '@/util';
 import { ExportToXlsx } from '@/export';
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { structs } from 'wailsjs/go/models';
@@ -162,5 +161,4 @@ function handleComponents(info: string) {
         return 0
     }
 }
-
 </script>

@@ -606,21 +606,15 @@ class Engine {
 // 联动空间引擎
 
 const uncover = {
-    fofa: function () {
+    fofa: async function () {
         spaceEngineConfig.fofaDialog = false
-        LinkFOFA(spaceEngineConfig.fofaQuery, spaceEngineConfig.fofaPageSize).then(urls => {
-            if (urls) {
-                form.input = urls.join("\n")
-            }
-        })
+        let urls = await LinkFOFA(spaceEngineConfig.fofaQuery, spaceEngineConfig.fofaPageSize)
+        if (urls) form.input = urls.join("\n")
     },
-    hunter: function () {
+    hunter: async function () {
         spaceEngineConfig.hunterDialog = false
-        LinkHunter(spaceEngineConfig.hunterQuery, spaceEngineConfig.hunterPageSize).then(urls => {
-            if (urls) {
-                form.input = urls.join("\n")
-            }
-        })
+        let urls = await LinkHunter(spaceEngineConfig.hunterQuery, spaceEngineConfig.hunterPageSize)
+        if (urls) form.input = urls.join("\n")
     },
     shodan: async function () {
         if (!validateIp(shodanIp.value)) {
@@ -650,10 +644,8 @@ const uncover = {
             }
             Callgologger("info", "[shodan] " + ip + " port: " + ports.join())
             shodanPercentage.value = Number(((id / ips.length) * 100).toFixed(2));
-            if (ports.length > 0) {
-                for (const port of ports) {
-                    form.input += ip + ":" + port.toString() + "\n"
-                }
+            for (const port of ports) {
+                form.input += ip + ":" + port.toString() + "\n"
             }
         }, (err: any) => {
             shodanRunningstatus.value = false
@@ -669,8 +661,7 @@ async function selectFolder() {
 function pictrueSRC(filepath: string): string {
     if (filepath == '') return ''
     const filename = filepath.split(/[/\\]/).pop(); // 适配 Windows 和 Linux 路径
-    const fp = `http://127.0.0.1:8732/screenhost/${filename}`
-    return fp;
+    return `http://127.0.0.1:8732/screenhost/${filename}`;
 }
 
 const reportOption = ref('HTML')
@@ -679,20 +670,26 @@ const exportDialog = ref(false)
 
 // 任务管理
 const taskManager = {
-    writeTask: async function () {
-        if (rp.table.result.some(item => item.TaskName === form.taskName)) {
-            ElMessage.warning("任务已存在, 请修改任务名称")
-            return false
+    generateUniqueTaskName: (baseName: string): string => {
+        let name = baseName.trim()
+        let counter = 1
+        while (rp.table.result.some(item => item.TaskName === name)) {
+            name = `${baseName}-${counter}`
+            counter++
         }
+        return name
+    },
+    writeTask: async function () {
+        const uniqueName = taskManager.generateUniqueTaskName(form.taskName)
         form.taskId = nano()
-        let isSuccess = await AddScanTask(form.taskId, form.taskName, form.input, 0, 0)
+        let isSuccess = await AddScanTask(form.taskId, uniqueName, form.input, 0, 0)
         if (!isSuccess) {
             ElMessage.error("添加任务失败")
             return false
         }
         rp.table.result.push({
             TaskId: form.taskId,
-            TaskName: form.taskName,
+            TaskName: uniqueName,
             Targets: form.input,
             Failed: 0,
             Vulnerability: 0,

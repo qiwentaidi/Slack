@@ -173,6 +173,7 @@ func findTagsFile(inputTags, templateDirs []string) []string {
 			}
 		}
 	}
+
 	for _, temp := range tempFileList {
 		for _, dir := range templateDirs {
 			filepath := path.Join(dir, temp+".yaml")
@@ -182,6 +183,11 @@ func findTagsFile(inputTags, templateDirs []string) []string {
 			}
 		}
 	}
+	// 如果没有找到文件，则使用指定的模板文件夹，避免使用Nuclei自带的模板文件夹
+	if len(fileList) == 0 {
+		return templateDirs
+	}
+
 	return util.RemoveDuplicates(fileList)
 }
 

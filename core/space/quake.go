@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/util"
@@ -74,10 +75,10 @@ func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
 		var components []string
 		var protocol string
 		for _, v := range item.Components {
-			if v.ProductNameEn == "" {
-				components = append(components, util.MergeNonEmpty([]string{v.ProductNameCn, v.Version}, "/"))
+			if v.ProductNameEN == "" {
+				components = append(components, util.MergeNonEmpty([]string{v.ProductNameCN, v.Version}, "/"))
 			} else {
-				components = append(components, util.MergeNonEmpty([]string{v.ProductNameEn, v.Version}, "/"))
+				components = append(components, util.MergeNonEmpty([]string{v.ProductNameEN, v.Version}, "/"))
 			}
 		}
 		if item.Service.Name == "http/ssl" {
@@ -92,14 +93,16 @@ func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
 			Protocol:   protocol,
 			Host:       item.Service.HTTP.Host,
 			Title:      item.Service.HTTP.Title,
-			IcpName:    item.Service.HTTP.Icp.Main_licence.Unit,
-			IcpNumber:  item.Service.HTTP.Icp.Main_licence.Licence,
+			IcpName:    item.Service.HTTP.ICP.Main_licence.Unit,
+			IcpNumber:  item.Service.HTTP.ICP.Main_licence.Licence,
+			CertName:   extractOrg(item.Service.Cert),
 			IP:         item.IP,
-			Isp:        item.Location.Isp,
+			Isp:        item.Location.ISP,
+			FaviconURL: item.Service.HTTP.Favicon.S3URL,
 			Position: util.MergePosition(structs.Position{
-				Province:  item.Location.ProvinceCn,
-				City:      item.Location.CityCn,
-				District:  item.Location.DistrictCn,
+				Province:  item.Location.ProvinceCN,
+				City:      item.Location.CityCN,
+				District:  item.Location.DistrictCN,
 				Connector: "/",
 			}),
 		})
@@ -190,4 +193,13 @@ func mergeURL(protocol, domain, ip string, port int) string {
 		return fmt.Sprintf("%s://%s", protocol, host)
 	}
 	return fmt.Sprintf("%s://%s:%d", protocol, host, port)
+}
+
+func extractOrg(cert string) string {
+	re := regexp.MustCompile(`Subject:.*?O=([^,]+)`)
+	match := re.FindStringSubmatch(cert)
+	if len(match) > 1 {
+		return match[1]
+	}
+	return ""
 }
