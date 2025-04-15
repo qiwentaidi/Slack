@@ -8,7 +8,7 @@ import (
 )
 
 // 只要是nmap 扫描到jdwp协议，默认是 unauthorized (因为也是同样发JDWP-Handshake包检测)
-func JdwpScan(ctx context.Context, address string) {
+func JdwpScan(ctx context.Context, address string, usernames, passwords []string) {
 	// client, err := WrapperTcpWithTimeout("tcp", address, time.Duration(6)*time.Second)
 	// defer func() {
 	// 	if client != nil {
@@ -49,7 +49,7 @@ func JdwpScan(ctx context.Context, address string) {
 		Severity:    "critical",
 		Request:     "JDWP-Handshake",
 		Response:    "JDWP-Handshake",
-		Description: "检测到JDWP端口开放，自行尝试是否存在命令执行漏洞",
+		Description: "检测到JDWP端口开放, 自行尝试是否存在命令执行漏洞",
 		Reference:   "https://forum.butian.net/share/1232,https://github.com/l3yx/jdwp-codeifier",
 	})
 }

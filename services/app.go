@@ -239,8 +239,6 @@ func (a *App) ExitScanner(scanType string) {
 		dirsearch.ExitFunc = true
 	case "[portscan]":
 		portscan.ExitFunc = true
-	case "[portbrute]":
-		portscan.ExitBruteFunc = true
 	case "[webscan]":
 		webscan.ExitFunc = true
 	}
@@ -345,7 +343,7 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 
 // 端口暴破
 func (a *App) PortBrute(host string, usernames, passwords []string) {
-	portscan.ExitBruteFunc = false
+	portscan.ExitFunc = false
 	portscan.PortBrute(a.ctx, host, usernames, passwords)
 }
 

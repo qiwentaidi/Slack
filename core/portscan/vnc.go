@@ -12,9 +12,9 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func VncScan(ctx context.Context, host string, passwords []string) {
+func VncScan(ctx context.Context, host string, usernames, passwords []string) {
 	for _, pass := range passwords {
-		if ExitBruteFunc {
+		if ExitFunc {
 			return
 		}
 		pass = strings.Replace(pass, "{user}", "vnc", -1)

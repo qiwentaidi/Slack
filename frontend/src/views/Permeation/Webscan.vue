@@ -302,7 +302,6 @@ function stopScan() {
     ElMessage.error("正在停止任务, 请稍后!")
     ExitScanner("[webscan]")
     ExitScanner("[portscan]")
-    ExitScanner("[portbrute]")
     // 新增一个标志变量来确保setTimeout只执行一次
     if (!form.scanStopped) {
         form.scanStopped = true; // 设置标志为true，表示扫描已停止
@@ -574,10 +573,7 @@ class Engine {
         })
         // **使用 Promise 包装 async.eachLimit，确保 CrackRunner() 被 await**
         await new Promise((resolve, reject) => {
-            async.eachLimit(
-                crackLinks,
-                global.webscan.crack_thread,
-                async (target: string, callback: (err?: any) => void) => {
+            async.eachLimit(crackLinks, global.webscan.crack_thread, async (target: string, callback: (err?: any) => void) => {
                     if (!form.runnningStatus || form.scanStopped) {
                         return callback();  // 结束当前任务
                     }
@@ -586,7 +582,7 @@ class Engine {
                     userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!;
 
                     Callgologger("info", target + " is start weak password cracking");
-                    await PortBrute(target, userDict, passDict);
+                    PortBrute(target, userDict, passDict);
 
                     callback();  // 任务完成后调用 callback
                 },

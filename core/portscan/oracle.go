@@ -16,7 +16,7 @@ import (
 func OracleScan(ctx context.Context, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
-			if ExitBruteFunc {
+			if ExitFunc {
 				return
 			}
 			pass = strings.Replace(pass, "{user}", user, -1)

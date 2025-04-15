@@ -13,7 +13,7 @@ import (
 
 var rmiVulRegexp = regexp.MustCompile(`^N[\s\S]{1,2}\d*\.\d*\.\d*\.\d*`)
 
-func RmiScan(ctx context.Context, host string) {
+func RmiScan(ctx context.Context, host string, usernames, passwords []string) {
 	// 使用10秒超时建立TCP连接
 	client, err := WrapperTcpWithTimeout("tcp", host, 10*time.Second)
 	defer func() {

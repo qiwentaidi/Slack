@@ -11,7 +11,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MemcachedScan(ctx context.Context, host string) {
+func MemcachedScan(ctx context.Context, host string, usernames, passwords []string) {
 	client, err := WrapperTcpWithTimeout("tcp", host, 10*time.Second)
 	defer func() {
 		if client != nil {
