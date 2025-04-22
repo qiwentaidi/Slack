@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { WindowToggleMaximise } from "wailsjs/runtime/runtime";
+import { WindowToggleMaximise, WindowGetSize } from "wailsjs/runtime/runtime";
 import { IsMacOS } from "wailsjs/go/services/File";
 import global from "@/stores";
 import { ref, onMounted } from "vue";
@@ -7,6 +7,8 @@ import runnerIcon from "@/assets/icon/apprunner.svg"
 import consoleIcon from "@/assets/icon/console.svg"
 import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/style';
 import { routerControl, windowsControl } from '@/stores/options';
+import throttle from 'lodash/throttle';
+import { SaveWindowsScreenSize } from "wailsjs/go/services/Database";
 
 const showLogger = ref(false)
 
@@ -19,7 +21,14 @@ onMounted(() => {
 
 window.addEventListener('resize', () => {
     isFullScreen()
+    WindowGetSize().then(size => {
+        throttleUpdate(size.w, size.h);
+    })
 });
+
+const throttleUpdate = throttle((width: number, height: number) => {
+    SaveWindowsScreenSize(width, height);
+}, 1000);
 
 function isFullScreen() {
     let height = window.innerHeight - screen.availHeight

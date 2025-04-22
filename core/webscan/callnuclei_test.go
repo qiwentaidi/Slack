@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
-	"github.com/projectdiscovery/nuclei/v3/pkg/installer"
 	"github.com/projectdiscovery/nuclei/v3/pkg/output"
 	syncutil "github.com/projectdiscovery/utils/sync"
 )
@@ -44,10 +43,6 @@ func TestThreadSafeNucleiCaller(t *testing.T) {
 	ctx := context.Background()
 	// when running nuclei in parallel for first time it is a good practice to make sure
 	// templates exists first
-	tm := installer.TemplateManager{}
-	if err := tm.FreshInstallIfNotExists(); err != nil {
-		panic(err)
-	}
 
 	// create nuclei engine with options
 	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(ctx)

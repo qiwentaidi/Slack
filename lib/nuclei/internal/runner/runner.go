@@ -15,7 +15,6 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/authprovider"
 	"github.com/projectdiscovery/nuclei/v3/pkg/fuzz/frequency"
 	"github.com/projectdiscovery/nuclei/v3/pkg/input/provider"
-	"github.com/projectdiscovery/nuclei/v3/pkg/installer"
 	"github.com/projectdiscovery/nuclei/v3/pkg/loader/parser"
 	outputstats "github.com/projectdiscovery/nuclei/v3/pkg/output/stats"
 	"github.com/projectdiscovery/nuclei/v3/pkg/scan/events"
@@ -40,7 +39,6 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/disk"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/loader"
 	"github.com/projectdiscovery/nuclei/v3/pkg/core"
-	"github.com/projectdiscovery/nuclei/v3/pkg/external/customtemplates"
 	fuzzStats "github.com/projectdiscovery/nuclei/v3/pkg/fuzz/stats"
 	"github.com/projectdiscovery/nuclei/v3/pkg/input"
 	parsers "github.com/projectdiscovery/nuclei/v3/pkg/loader/workflow"
@@ -113,52 +111,6 @@ func New(options *types.Options) (*Runner, error) {
 	if options.HealthCheck {
 		gologger.Print().Msgf("%s\n", DoHealthCheck(options))
 		os.Exit(0)
-	}
-
-	//  Version check by default
-	if config.DefaultConfig.CanCheckForUpdates() {
-		if err := installer.NucleiVersionCheck(); err != nil {
-			if options.Verbose || options.Debug {
-				gologger.Error().Msgf("nuclei version check failed got: %s\n", err)
-			}
-		}
-
-		// check for custom template updates and update if available
-		ctm, err := customtemplates.NewCustomTemplatesManager(options)
-		if err != nil {
-			gologger.Error().Label("custom-templates").Msgf("Failed to create custom templates manager: %s\n", err)
-		}
-
-		// Check for template updates and update if available.
-		// If the custom templates manager is not nil, we will install custom templates if there is a fresh installation
-		tm := &installer.TemplateManager{
-			CustomTemplates:        ctm,
-			DisablePublicTemplates: options.PublicTemplateDisableDownload,
-		}
-		if err := tm.FreshInstallIfNotExists(); err != nil {
-			gologger.Warning().Msgf("failed to install nuclei templates: %s\n", err)
-		}
-		if err := tm.UpdateIfOutdated(); err != nil {
-			gologger.Warning().Msgf("failed to update nuclei templates: %s\n", err)
-		}
-
-		if config.DefaultConfig.NeedsIgnoreFileUpdate() {
-			if err := installer.UpdateIgnoreFile(); err != nil {
-				gologger.Warning().Msgf("failed to update nuclei ignore file: %s\n", err)
-			}
-		}
-
-		if options.UpdateTemplates {
-			// we automatically check for updates unless explicitly disabled
-			// this print statement is only to inform the user that there are no updates
-			if !config.DefaultConfig.NeedsTemplateUpdate() {
-				gologger.Info().Msgf("No new updates found for nuclei templates")
-			}
-			// manually trigger update of custom templates
-			if ctm != nil {
-				ctm.Update(context.TODO())
-			}
-		}
 	}
 
 	parser := templates.NewParser()
@@ -515,11 +467,7 @@ func (r *Runner) RunEnumeration() error {
 			r.options.Templates = append(r.options.Templates, arr...)
 		}
 	}
-	if len(r.options.NewTemplatesWithVersion) > 0 {
-		if arr := installer.GetNewTemplatesInVersions(r.options.NewTemplatesWithVersion...); len(arr) > 0 {
-			r.options.Templates = append(r.options.Templates, arr...)
-		}
-	}
+
 	// Exclude ignored file for validation
 	if !r.options.Validate {
 		ignoreFile := config.ReadIgnoreFile()

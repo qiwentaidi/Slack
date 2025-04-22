@@ -120,6 +120,7 @@ function addFingerprint(fingerprints: string[]) {
     ElMessage.success("添加成功")
     global.webscan.highlight_fingerprints.push(...fingerprints)
     SaveConfig()
+    selectHighlightFinger.value = []
 }
 function deleteFingerprint(fingerprint: string) {
     ElMessage.success("删除成功")
@@ -593,6 +594,7 @@ php:
                 </el-form-item>
                 <el-form-item label="漏洞来源">
                     <el-input v-model="formData.reference" type="textarea" :rows="3"></el-input>
+                    <span class="form-item-tips">可换行分割多个来源</span>
                 </el-form-item>
                 <el-form-item label="Matedata">
                     <el-button type="primary" size="small" @click="nuclei.addMetadata">添加 Matedata</el-button>
@@ -613,6 +615,7 @@ php:
                 </el-form-item>
                 <el-form-item label="关联指纹">
                     <el-select-v2 v-model="formData.tags" :options="fingerOptions" filterable multiple clearable />
+                    <span class="form-item-tips">必须关联指纹库中的至少1条指纹</span>
                 </el-form-item>
                 <el-form-item label="Raw数据包">
                     <el-input v-model="formData.body" type="textarea" :rows="8" placeholder="请输入请求体内容" />

@@ -181,6 +181,11 @@ func getRuleData(rule string) RuleData {
 			break
 		}
 	}
+	// 增加错误判断，防止切片越界
+	if end-1 > len(rule) || pos+2 > len(rule) || end-1 < pos+2 {
+		fmt.Printf("Error: rule [%s] pos [%d] end [%d] len [%d]\n", rule, pos, end, len(rule))
+		return RuleData{}
+	}
 	value := rule[pos+2 : end-1]
 	all := rule[start:end]
 

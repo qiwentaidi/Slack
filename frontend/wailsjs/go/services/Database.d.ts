@@ -82,9 +82,13 @@ export function RetrieveFingerscanResults(arg1:string):Promise<Array<structs.Inf
 
 export function RetrievePocscanResults(arg1:string):Promise<Array<structs.VulnerabilityInfo>>;
 
+export function SaveWindowsScreenSize(arg1:number,arg2:number):Promise<boolean>;
+
 export function SelectAllAgentPool():Promise<Array<string>>;
 
 export function SelectAllSyntax(arg1:string):Promise<Array<structs.SpaceEngineSyntax>>;
+
+export function SelectWindowsSize():Promise<structs.WindowsSize>;
 
 export function Startup(arg1:context.Context):Promise<void>;
 

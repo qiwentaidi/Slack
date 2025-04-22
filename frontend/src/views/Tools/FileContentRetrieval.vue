@@ -61,13 +61,14 @@
                         </el-tree-v2>
                     </pane>
                     <pane min-size="20" style="margin-top: -12px; height: calc(100% + 12px);">
-                        <div v-if="currentFileHits && Object.keys(currentFileHits).length" class="keyword-matches">
-                            <span class="match-title">关键词匹配:</span>
-                            <el-tag v-for="(count, keyword) in currentFileHits" :key="keyword" type="danger"
-                                class="match-tag">
-                                {{ keyword }}: {{ count }} 次
-                            </el-tag>
-                        </div>
+                        <el-descriptions :column="1" border v-if="currentFileHits && Object.keys(currentFileHits).length" style="margin-left: 5px; margin-top: 10px;">
+                            <el-descriptions-item label="关键词匹配:">
+                                <el-tag v-for="(count, keyword) in currentFileHits" :key="keyword" type="danger"
+                                    class="match-tag">
+                                    {{ keyword }}: {{ count }} 次
+                                </el-tag>
+                            </el-descriptions-item>
+                        </el-descriptions>
                         <highlightjs :code="code"></highlightjs>
                     </pane>
                 </splitpanes>
@@ -303,7 +304,7 @@ function handleSetting() {
     word-wrap: break-word;
     word-break: break-all;
     border-radius: 5px;
-    height: 100%;
+    height: calc(100vh - 200px);
 }
 
 ::v-deep(code.hljs) {
@@ -329,20 +330,7 @@ function handleSetting() {
     font-weight: bold;
 }
 
-.keyword-matches {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.match-title {
-    font-weight: bold;
-    color: #333;
-    margin-left: 5px;
-}
-
 .match-tag {
-    font-size: 12px;
+    margin: 2px;
 }
 </style>

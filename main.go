@@ -25,10 +25,11 @@ func main() {
 	file := services.NewFile()
 	db := services.NewDatabase()
 	exp := services.NewExp()
+	windowSize := db.SelectWindowsSize()
 	err := wails.Run(&options.App{
 		Title:  "Slack",
-		Width:  1280,
-		Height: 800,
+		Width:  windowSize.Width,
+		Height: windowSize.Height,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

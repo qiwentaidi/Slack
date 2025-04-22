@@ -83,6 +83,11 @@ func columnExists(db *sql.DB, tableName, columnName string) bool {
 }
 func (d *Database) CreateTable() bool {
 	_, err := d.DB.Exec(`
+		CREATE TABLE IF NOT EXISTS windows_size (
+			id INTEGER PRIMARY KEY CHECK (id = 1),
+			width INTEGER,
+			height INTEGER
+		);
         CREATE TABLE IF NOT EXISTS hunter_syntax ( name TEXT, content TEXT );
         CREATE TABLE IF NOT EXISTS quake_syntax ( name TEXT, content TEXT );
         CREATE TABLE IF NOT EXISTS fofa_syntax ( name TEXT, content TEXT );
@@ -97,6 +102,13 @@ func (d *Database) CreateTable() bool {
 		gologger.Debug(d.ctx, fmt.Sprintf("[sqlite] create table: %s", err))
 		return false
 	}
+	// 当数据不存在时，插入一条默认记录
+	_, err = d.DB.Exec(`INSERT OR IGNORE INTO windows_size (id, width, height) VALUES (1, ?, ?)`, defaultWindowsWidth, defaultWindowsHeight)
+	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("[sqlite] insert default windows_size: %s", err))
+		return false
+	}
+
 	if !columnExists(d.DB, "FingerprintInfo", "host") {
 		_, err := d.DB.Exec(`ALTER TABLE FingerprintInfo ADD COLUMN host TEXT`)
 		if err != nil {
@@ -139,6 +151,31 @@ func (d *Database) ExecSqlStatement(query string, args ...interface{}) bool {
 	}
 	err = tx.Commit()
 	return err == nil
+}
+
+const defaultWindowsWidth = 1280
+const defaultWindowsHeight = 800
+
+func (d *Database) SelectWindowsSize() structs.WindowsSize {
+	var w, h int
+	rows, err := d.DB.Query("SELECT width, height FROM windows_size WHERE id = 1")
+	if err != nil {
+		return structs.WindowsSize{
+			Width:  defaultWindowsWidth,
+			Height: defaultWindowsHeight,
+		}
+	}
+	for rows.Next() {
+		rows.Scan(&w, &h)
+	}
+	return structs.WindowsSize{
+		Width:  w,
+		Height: h,
+	}
+}
+
+func (d *Database) SaveWindowsScreenSize(width, height int) bool {
+	return d.ExecSqlStatement("UPDATE windows_size SET width = ?, height = ? WHERE id = 1", width, height)
 }
 
 func (d *Database) SelectAllAgentPool() (hosts []string) {

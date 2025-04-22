@@ -31,9 +31,10 @@ var crackScanners = map[string]crackFunc{
 	"rmi":        RmiScan,
 }
 
-func PortBrute(ctx context.Context, host string, usernames, passwords []string) {
+func Runner(ctx context.Context, host string, usernames, passwords []string) {
 	u, err := url.Parse(host)
 	if err != nil {
+		gologger.Debug(ctx, fmt.Sprintf("[!] Parse url error: %s\n", err))
 		return
 	}
 	if scanFunc, ok := crackScanners[u.Scheme]; ok {

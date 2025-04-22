@@ -344,7 +344,7 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 // 端口暴破
 func (a *App) PortBrute(host string, usernames, passwords []string) {
 	portscan.ExitFunc = false
-	portscan.PortBrute(a.ctx, host, usernames, passwords)
+	portscan.Runner(a.ctx, host, usernames, passwords)
 }
 
 // fofa

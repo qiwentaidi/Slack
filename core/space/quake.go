@@ -47,16 +47,18 @@ func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
 			Message: err.Error(),
 		}
 	}
-	if string(body) == "/quake/login" {
+	bodyStr := string(body)
+	fmt.Printf("bodyStr: %v\n", bodyStr)
+	if bodyStr == "/quake/login" {
 		return &structs.QuakeResult{
 			Code:    302,
 			Message: "Token is error",
 		}
 	}
-	if string(body) == "暂不支持搜索该内容" {
+	if bodyStr == "暂不支持搜索该内容" {
 		return &structs.QuakeResult{
 			Code:    302,
-			Message: "暂不支持搜索该内容",
+			Message: bodyStr,
 		}
 	}
 	var qrk structs.QuakeRawResult

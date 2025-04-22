@@ -181,7 +181,16 @@
             <el-table :data="item.content" border style="width: 100%;height: calc(100vh - 280px);">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" :min-width="240" :show-overflow-tooltip="true" />
-                <el-table-column prop="IP" fixed label="IP" width="150" />
+                <el-table-column prop="IP" fixed label="IP" width="160">
+                    <template #default="scope">
+                        <el-space :size="1">
+                            <span>{{ scope.row.IP }}</span>
+                            <el-tooltip content="排除检索">
+                                <el-button link :icon="ZoomOut" @click="tableCtrl.excludeFiled('ip', scope.row.IP)"></el-button>
+                            </el-tooltip>
+                        </el-space>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="Port" label="端口/协议" width="130">
                     <template #default="scope">
                         <el-space :size="3">
@@ -288,7 +297,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowDown, DocumentCopy, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled, Picture } from '@element-plus/icons-vue';
+import { Search, ArrowDown, DocumentCopy, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled, Picture, ZoomOut } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, UploadFileAndRead, convertHttpToHttps, openURL } from '@/util';
 import { ExportToXlsx } from '@/export';
@@ -537,12 +546,20 @@ const tableCtrl = ({
         }
         tableCtrl.addTab("cert: " + certName, false)
     },
-    searchFaviconMd5: async function (url: string) {
+    searchFaviconMd5: function (url: string) {
         if (url == "") {
             return
         }
         let md5 = getLastPathSegment(url)
         tableCtrl.addTab("favicon:" + md5, false)
+    },
+    excludeFiled: function (filedName: "title" | "ip", filedValue: string) {
+        if (filedValue == "") {
+            return
+        }
+        const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
+
+        const newTitle = `${tab.title} AND NOT (${filedName}: ${filedValue})`
     },
     // type 0 choose txt , type 1 choose img
     handleFileupload: async function (type: number) {

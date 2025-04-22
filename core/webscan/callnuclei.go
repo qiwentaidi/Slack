@@ -132,6 +132,11 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 func NewNucleiSDKOptions(o structs.NucleiOption) []nuclei.NucleiSDKOptions {
 	options := []nuclei.NucleiSDKOptions{
 		nuclei.DisableUpdateCheck(), // -duc
+		nuclei.EnableHeadlessWithOpts(&nuclei.HeadlessOpts{
+			ShowBrowser: false,
+			PageTimeout: 15,
+			UseChrome:   true,
+		}),
 	}
 	// 自定义请求头
 	if o.CustomHeaders != "" {

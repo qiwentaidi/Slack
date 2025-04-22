@@ -236,7 +236,7 @@ func (s *FingerScanner) NewFingerScan() {
 			Screenshot:   screenshotPath,
 		}
 	}
-	threadPool, _ := ants.NewPoolWithFunc(50, func(target interface{}) {
+	threadPool, _ := ants.NewPoolWithFunc(s.thread, func(target interface{}) {
 		t := target.(*url.URL)
 		fscan(t)
 		wg.Done()
@@ -409,7 +409,7 @@ func DumpResponseHeadersAndRaw(resp *http.Response) (headers, fullresp []byte, e
 		}
 	}
 	if err == nil {
-		_ = b.Close()
+		b.Close()
 	}
 
 	// rewind the body to allow full dump
@@ -442,7 +442,7 @@ func (s *FingerScanner) FingerScan(ctx context.Context, web *WebInfo, targetDB [
 		}
 	}()
 	//多指纹同时扫描
-	for i := 0; i < rt.NumCPU(); i++ {
+	for range rt.NumCPU() {
 		go func() {
 			for finger := range inputChan {
 				expr := finger.AllString
@@ -510,20 +510,6 @@ func (s *FingerScanner) FingerScan(ctx context.Context, web *WebInfo, targetDB [
 	wg.Wait()
 	return util.RemoveDuplicates(fingerPrintResults)
 }
-
-// func (s *FingerScanner) GetBanner(host string) string {
-// 	conn, err := portscan.NewSocket("tcp", host, 3)
-// 	if err != nil {
-// 		return ""
-// 	}
-// 	defer conn.Close()
-// 	senddataStr := fmt.Sprintf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host)
-// 	content, err := conn.Request([]byte(senddataStr), 1024)
-// 	if err != nil {
-// 		return ""
-// 	}
-// 	return string(content)
-// }
 
 func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte {
 	var nextCheckUrl string

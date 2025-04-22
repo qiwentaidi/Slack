@@ -20,7 +20,6 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/disk"
 	"github.com/projectdiscovery/nuclei/v3/pkg/core"
 	"github.com/projectdiscovery/nuclei/v3/pkg/input/provider"
-	"github.com/projectdiscovery/nuclei/v3/pkg/installer"
 	"github.com/projectdiscovery/nuclei/v3/pkg/output"
 	"github.com/projectdiscovery/nuclei/v3/pkg/progress"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols"
@@ -234,29 +233,6 @@ func (e *NucleiEngine) init(ctx context.Context) error {
 	// Only Happens once regardless how many times this function is called
 	// This will update ignore file to filter out templates with weak matchers to avoid false positives
 	// and also upgrade templates to latest version if available
-	installer.NucleiSDKVersionCheck()
 
-	if DefaultConfig.CanCheckForUpdates() {
-		return e.processUpdateCheckResults()
-	}
 	return nil
-}
-
-type syncOnce struct {
-	sync.Once
-}
-
-var updateCheckInstance = &syncOnce{}
-
-// processUpdateCheckResults processes update check results
-func (e *NucleiEngine) processUpdateCheckResults() error {
-	var err error
-	updateCheckInstance.Do(func() {
-		if e.onUpdateAvailableCallback != nil {
-			e.onUpdateAvailableCallback(config.DefaultConfig.LatestNucleiTemplatesVersion)
-		}
-		tm := installer.TemplateManager{}
-		err = tm.UpdateIfOutdated()
-	})
-	return err
 }

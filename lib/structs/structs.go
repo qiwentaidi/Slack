@@ -1,5 +1,10 @@
 package structs
 
+type WindowsSize struct {
+	Width  int
+	Height int
+}
+
 // 返回后端执行状态
 // Error: true/false
 // Msg:   错误信息

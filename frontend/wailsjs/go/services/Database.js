@@ -158,12 +158,20 @@ export function RetrievePocscanResults(arg1) {
   return window['go']['services']['Database']['RetrievePocscanResults'](arg1);
 }
 
+export function SaveWindowsScreenSize(arg1, arg2) {
+  return window['go']['services']['Database']['SaveWindowsScreenSize'](arg1, arg2);
+}
+
 export function SelectAllAgentPool() {
   return window['go']['services']['Database']['SelectAllAgentPool']();
 }
 
 export function SelectAllSyntax(arg1) {
   return window['go']['services']['Database']['SelectAllSyntax'](arg1);
+}
+
+export function SelectWindowsSize() {
+  return window['go']['services']['Database']['SelectWindowsSize']();
 }
 
 export function Startup(arg1) {

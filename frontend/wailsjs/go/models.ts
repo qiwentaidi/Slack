@@ -1251,6 +1251,20 @@ export namespace structs {
 	        this.Introduction = source["Introduction"];
 	    }
 	}
+	export class WindowsSize {
+	    Width: number;
+	    Height: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new WindowsSize(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Width = source["Width"];
+	        this.Height = source["Height"];
+	    }
+	}
 
 }
 
