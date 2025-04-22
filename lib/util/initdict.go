@@ -2,18 +2,13 @@ package util
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
-	"slack-wails/lib/gologger"
 	"strings"
 )
 
-func LoadDirsearchDict(ctx context.Context, filepath, old string, new []string) (dict []string) {
-	file, err := os.Open(filepath)
-	if err != nil {
-		gologger.Error(ctx, err)
-	}
+func LoadDirsearchDict(filepath, old string, new []string) (dict []string) {
+	file, _ := os.Open(filepath)
 	defer file.Close()
 	s := bufio.NewScanner(file)
 	for s.Scan() {

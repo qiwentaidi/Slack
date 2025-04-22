@@ -1,8 +1,10 @@
+// 主要用于记录用户在客户端可查看的日志内容
 package gologger
 
 import (
 	"context"
 	"fmt"
+	"slack-wails/lib/syslogger"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -70,5 +72,26 @@ func IntervalError(ctx context.Context, i interface{}) {
 	unixTimestamp := currentTime.Unix()
 	if unixTimestamp%5 == 0 {
 		Error(ctx, i)
+	}
+}
+
+// 同时使用gologger和syslogger
+func DualLog(ctx context.Context, level string, i interface{}) {
+	switch level {
+	case Level_INFO:
+		Info(ctx, i)
+		syslogger.Info(ctx, i)
+	case Level_WARN:
+		Warning(ctx, i)
+		syslogger.Warning(ctx, i)
+	case Level_ERROR:
+		Error(ctx, i)
+		syslogger.Error(ctx, i)
+	case Level_DEBUG:
+		Debug(ctx, i)
+		syslogger.Debug(ctx, i)
+	case Level_Success:
+		Success(ctx, i)
+		syslogger.Success(ctx, i)
 	}
 }

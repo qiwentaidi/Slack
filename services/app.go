@@ -296,7 +296,7 @@ func (a *App) TycCheckLogin(token string) bool {
 func (a *App) LoadDirsearchDict(dictPath, newExts []string) []string {
 	var dicts []string
 	for _, dict := range dictPath {
-		dicts = append(dicts, util.LoadDirsearchDict(a.ctx, dict, "%EXT%", newExts)...)
+		dicts = append(dicts, util.LoadDirsearchDict(dict, "%EXT%", newExts)...)
 	}
 	return util.RemoveDuplicates(dicts)
 }

@@ -27,14 +27,14 @@ func NewNucleiEngine(ctx context.Context, o structs.NucleiOption) {
 	options := NewNucleiSDKOptions(o)
 	ne, err := nuclei.NewNucleiEngineCtx(context.Background(), options...)
 	if err != nil {
-		gologger.Error(ctx, fmt.Sprintf("nuclei init engine err: %v", err))
+		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei init engine err: %v", err))
 		return
 	}
 	// load targets and optionally probe non http/https targets
-	gologger.Info(ctx, fmt.Sprintf("[nuclei] check vuln: %s", o.URL))
+	gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] check vuln: %s", o.URL))
 	ne.LoadTargets([]string{o.URL}, false)
 	err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
-		gologger.Success(ctx, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
+		gologger.DualLog(ctx, gologger.Level_Success, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
 		var reference string
 		if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
 			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
@@ -54,7 +54,7 @@ func NewNucleiEngine(ctx context.Context, o structs.NucleiOption) {
 		})
 	})
 	if err != nil {
-		gologger.Error(ctx, fmt.Sprintf("nuclei execute callback err: %v", err))
+		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei execute callback err: %v", err))
 		return
 	}
 	defer ne.Close()
@@ -69,7 +69,7 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 	runtime.EventsEmit(ctx, "NucleiCounts", count)
 	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(context.Background())
 	if err != nil {
-		gologger.Error(ctx, fmt.Sprintf("nuclei init engine err: %v", err))
+		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei init engine err: %v", err))
 		return
 	}
 	var id int32
@@ -79,8 +79,7 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 		return
 	}
 	ne.GlobalResultCallback(func(event *output.ResultEvent) {
-		// fmt.Printf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched)
-		gologger.Success(ctx, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
+		gologger.DualLog(ctx, gologger.Level_Success, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
 		var reference string
 		if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
 			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
@@ -114,15 +113,17 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 				runtime.EventsEmit(ctx, "NucleiProgressID", id)
 			}()
 			if option.SkipNucleiWithoutTags && len(option.Tags) == 0 {
-				// fmt.Println("[nuclei]", fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
-				gologger.Info(ctx, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
+				gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
 				return
 			}
 			options := NewNucleiSDKOptions(option)
 			// load targets and optionally probe non http/https targets
-			// fmt.Printf("[nuclei] check vuln: %s\n", option.URL)
-			gologger.Info(ctx, fmt.Sprintf("[nuclei] check vuln: %s", option.URL))
-			ne.ExecuteNucleiWithOpts([]string{option.URL}, options...)
+			gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] check vuln: %s", option.URL))
+			err := ne.ExecuteNucleiWithOpts([]string{option.URL}, options...)
+			if err != nil {
+				gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei execute callback err: %v", err))
+				return
+			}
 		}()
 	}
 	sg.Wait()
