@@ -18,7 +18,7 @@ type APIRequest struct {
 }
 
 // 发送请求测试未授权访问
-func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication []string) (bool, []byte, error) {
+func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication []string) (bool, string, error) {
 	var requestURL string
 	var requestBody *strings.Reader
 
@@ -36,28 +36,29 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 	}
 
 	// 发送请求
-	resp, body, err := clients.NewRequest(apiReq.Method, requestURL, apiReq.Headers, requestBody, 10, false, clients.NewHttpClient(nil, true))
-	if err != nil || resp == nil {
-		return false, nil, err
+	resp, err := clients.DoRequest(apiReq.Method, requestURL, apiReq.Headers, requestBody, 10, clients.NewRestyClient(nil, true))
+	if err != nil {
+		return false, "", err
+	}
+	body := string(resp.Body())
+	// 判断是否为未授权访问, 验证码接口不用判断
+	if resp.StatusCode() == 401 || resp.StatusCode() == 403 || strings.Contains(apiReq.URL, "captcha") {
+		return false, "", nil
 	}
 
-	// 判断是否为未授权访问, 验证码接口不用判断
-	if resp.StatusCode == 401 || resp.StatusCode == 403 || strings.Contains(apiReq.URL, "captcha") {
-		return false, nil, nil
-	}
-	if homeBody == string(body) {
-		return false, nil, nil
+	if homeBody == body {
+		return false, "", nil
 	}
 	// // 计算文本相似度
-	similarity := jaccardSimilarity(homeBody, string(body))
+	similarity := jaccardSimilarity(homeBody, body)
 	if similarity >= 0.9 {
-		return false, nil, errors.New("页面内容相似度超过90%")
+		return false, "", errors.New("页面内容相似度超过90%")
 	}
 
 	// 解析返回内容，检查是否包含未授权提示信息
 	for _, auth := range authentication {
 		if strings.Contains(string(body), auth) {
-			return false, nil, nil
+			return false, "", nil
 		}
 	}
 

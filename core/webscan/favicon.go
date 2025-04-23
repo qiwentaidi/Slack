@@ -8,13 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/util"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/go-resty/resty/v2"
 	"github.com/twmb/murmur3"
 )
 
@@ -24,12 +24,12 @@ var (
 )
 
 // 获取favicon Mmh3Hash32 和 MD5值
-func FaviconHash(u *url.URL, headers map[string]string, client *http.Client) (string, string) {
-	_, body, err := clients.NewRequest("GET", u.String(), headers, nil, 10, true, client)
+func FaviconHash(u *url.URL, headers map[string]string, client *resty.Client) (string, string) {
+	resp, err := clients.DoRequest("GET", u.String(), headers, nil, 10, client)
 	if err != nil {
 		return "", ""
 	}
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resp.Body()))
 	if err != nil {
 		return "", ""
 	}
@@ -44,22 +44,22 @@ func FaviconHash(u *url.URL, headers map[string]string, client *http.Client) (st
 	} else {
 		finalLink = fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, iconLink)
 	}
-	resp, body, err := clients.NewRequest("GET", finalLink, headers, nil, 10, true, client)
-	if err == nil && resp.StatusCode == 200 {
+	resp, err = clients.DoRequest("GET", finalLink, headers, nil, 10, client)
+	if err == nil && resp.StatusCode() == 200 {
 		hasher := md5.New()
-		hasher.Write(body)
+		hasher.Write(resp.Body())
 		sum := hasher.Sum(nil)
-		return Mmh3Hash32(body), hex.EncodeToString(sum)
+		return Mmh3Hash32(resp.Body()), hex.EncodeToString(sum)
 	}
 	return "", ""
 }
 
-func GetFaviconFullLink(u *url.URL, client *http.Client) (string, error) {
-	_, body, err := clients.NewSimpleGetRequest(u.String(), client)
+func GetFaviconFullLink(u *url.URL, client *resty.Client) (string, error) {
+	resp, err := clients.SimpleGet(u.String(), client)
 	if err != nil {
 		return "", err
 	}
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resp.Body()))
 	if err != nil {
 		return "", errors.New("goquery failed to parse " + u.String() + " content")
 	}

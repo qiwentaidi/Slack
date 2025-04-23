@@ -97,9 +97,9 @@ func Connect(ip string, port, timeout int, proxy clients.Proxy) *structs.InfoRes
 			Scheme: response.FingerPrint.Service,
 			URL:    fmt.Sprintf("%v://%v:%v", response.FingerPrint.Service, ip, port),
 		}
-		resp, _, err := clients.NewSimpleGetRequest(result.URL, clients.NewHttpClient(nil, true))
-		if err == nil && resp != nil {
-			result.StatusCode = resp.StatusCode
+		resp, err := clients.SimpleGet(result.URL, clients.NewRestyClient(nil, true))
+		if err == nil {
+			result.StatusCode = resp.StatusCode()
 		}
 		return result
 	}

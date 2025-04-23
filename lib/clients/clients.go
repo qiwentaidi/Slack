@@ -1,9 +1,8 @@
 package clients
 
 import (
-	"context"
 	"crypto/tls"
-	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"slack-wails/lib/util"
 	"strings"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 )
 
 var TlsConfig = &tls.Config{
@@ -33,81 +34,97 @@ var TlsConfig = &tls.Config{
 	},
 }
 
-func NewHttpClient(interfaceIp net.IP, followRedirect bool) *http.Client {
+func NewRestyClient(interfaceIp net.IP, followRedirect bool) *resty.Client {
 	dialer := &net.Dialer{
 		Timeout:   10 * time.Second,
 		KeepAlive: 30 * time.Second,
 	}
 	if interfaceIp != nil {
-		dialer.LocalAddr = &net.TCPAddr{
-			IP: interfaceIp,
-		}
+		dialer.LocalAddr = &net.TCPAddr{IP: interfaceIp}
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig:       TlsConfig,
-			Proxy:                 http.ProxyFromEnvironment,
-			DialContext:           dialer.DialContext,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) >= 10 {
-				return http.ErrUseLastResponse
-			}
-			return nil
-		},
+
+	transport := &http.Transport{
+		TLSClientConfig:       TlsConfig,
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           dialer.DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	client := resty.New().
+		SetTransport(transport).
+		SetTimeout(10*time.Second).
+		SetHeader("User-Agent", util.RandomUA()).
+		SetHeader("Connection", "close")
+	// 设置重定向规则
+	if followRedirect {
+		client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(10))
+	} else {
+		client.SetRedirectPolicy(resty.NoRedirectPolicy())
 	}
 	return client
 }
 
-func NewHttpClientWithProxy(interfaceIp net.IP, followRedirect bool, proxy Proxy) *http.Client {
-	client := NewHttpClient(interfaceIp, followRedirect)
+func NewRestyClientWithProxy(interfaceIp net.IP, followRedirect bool, proxy Proxy) *resty.Client {
+	client := NewRestyClient(interfaceIp, followRedirect)
 	if proxy.Enabled {
-		client, _ = SelectProxy(&proxy, client)
+		proxyURL := GetRawProxy(proxy)
+		client.SetProxy(proxyURL)
 	}
 	return client
 }
 
-func NewRequest(method, url string, headers map[string]string, body io.Reader, timeout int, closeRespBody bool, client *http.Client) (*http.Response, []byte, error) {
-	requestTimeout := time.Duration(timeout) * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-	defer cancel()
-	r, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, nil, err
-	}
-	r.Header.Set("User-Agent", util.RandomUA())
-	r.Header.Set("Connection", "close")
-	for key, value := range headers {
-		r.Header.Set(key, value)
-	}
-	resp, err := client.Do(r.WithContext(ctx))
-	if err != nil {
-		return nil, nil, err
-	}
-	if resp == nil {
-		return nil, nil, errors.New("response is nil, possible network error or timeout")
-	}
-	if closeRespBody {
-		defer resp.Body.Close()
-	}
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		// Handle "unexpected EOF" as a specific error case
-		if err.Error() == "unexpected EOF" {
-			return resp, bodyBytes, err
-		}
-		return nil, nil, err
+func DoRequest(method, url string, headers map[string]string, body io.Reader, timeout int, client *resty.Client) (*resty.Response, error) {
+	if timeout > 0 {
+		client.SetTimeout(time.Duration(timeout) * time.Second)
 	}
 
-	return resp, bodyBytes, nil
+	req := client.R()
+
+	if headers != nil {
+		req.SetHeaders(headers)
+	}
+
+	if body != nil {
+		// 将 io.Reader 转换为 []byte 读入
+		data, err := io.ReadAll(body)
+		if err != nil {
+			return nil, fmt.Errorf("read body failed: %w", err)
+		}
+		req.SetBody(data)
+	}
+
+	var resp *resty.Response
+	var err error
+
+	switch method {
+	case http.MethodGet:
+		resp, err = req.Get(url)
+	case http.MethodPost:
+		resp, err = req.Post(url)
+	case http.MethodPut:
+		resp, err = req.Put(url)
+	case http.MethodDelete:
+		resp, err = req.Delete(url)
+	case http.MethodPatch:
+		resp, err = req.Patch(url)
+	case http.MethodOptions:
+		resp, err = req.Options(url)
+	default:
+		return nil, fmt.Errorf("unsupported method: %s", method)
+	}
+
+	if err != nil {
+		return resp, fmt.Errorf("request failed: %w", err)
+	}
+
+	return resp, nil
 }
 
-func NewSimpleGetRequest(url string, client *http.Client) (*http.Response, []byte, error) {
-	return NewRequest("GET", url, nil, nil, 10, true, client)
+func SimpleGet(url string, client *resty.Client) (*resty.Response, error) {
+	return DoRequest("GET", url, nil, nil, 10, client)
 }
 
 var regTitle = regexp.MustCompile(`(?is)<title\b[^>]*>(.*?)</title>`)

@@ -129,13 +129,16 @@ func (b *Browser) SetUserAgent(customUserAgent string) {
 
 // UserAgent fetch the currently set custom user agent
 func (b *Browser) UserAgent() string {
+	if b == nil {
+		return ""
+	}
 	return b.customAgent
 }
 
 func (b *Browser) getHTTPClient() (*http.Client, error) {
 	var err error
 	b.httpClientOnce.Do(func() {
-		b.httpClient, err = newHttpClient(b.options)
+		b.httpClient, err = NewRestyClient(b.options)
 	})
 	return b.httpClient, err
 }

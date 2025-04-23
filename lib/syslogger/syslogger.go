@@ -20,7 +20,7 @@ const (
 	Level_Success = "[SUC]"
 )
 
-var sysLogPath = filepath.Join(util.HomeDir(), "syslog")
+var sysLogPath = filepath.Join(util.HomeDir(), "slack", "syslog")
 var logLock sync.Mutex
 
 type MsgInfo struct {

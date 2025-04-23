@@ -126,7 +126,7 @@ func InitConfig(ctx context.Context) bool {
 	var defaultFile = util.HomeDir() + "/slack/"
 	// os.MkdirAll(defaultFile, 0644)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
-	_, b, err := clients.NewSimpleGetRequest(latestConfigVersion, http.DefaultClient)
+	resp, err := clients.SimpleGet(latestConfigVersion, clients.NewRestyClient(nil, true))
 	if err != nil {
 		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 			Title:         "提示",
@@ -136,7 +136,7 @@ func InitConfig(ctx context.Context) bool {
 		})
 		return false
 	}
-	configFileZip := fmt.Sprintf("%sv%s/config.zip", LastestPocUrl, string(b))
+	configFileZip := fmt.Sprintf("%sv%s/config.zip", LastestPocUrl, string(resp.Body()))
 	fileName, err := download(configFileZip, defaultFile)
 	if err != nil {
 		gologger.Error(ctx, err)

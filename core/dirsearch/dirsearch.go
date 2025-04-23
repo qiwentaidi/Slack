@@ -3,7 +3,6 @@ package dirsearch
 import (
 	"bytes"
 	"context"
-	"net/http"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/util"
@@ -12,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -54,7 +54,7 @@ func NewScanner(ctx context.Context, o Options) {
 	if o.Timeout == 0 {
 		o.Timeout = 8
 	}
-	client := clients.NewHttpClient(nil, o.Redirect)
+	client := clients.NewRestyClient(nil, o.Redirect)
 	headers := clients.Str2HeadersMap(o.CustomHeader)
 	var id int32
 	single := make(chan struct{})
@@ -105,25 +105,25 @@ func NewScanner(ctx context.Context, o Options) {
 }
 
 // status 1 表示被排除显示在外，不计入前端ERROR请求中
-func Scan(ctx context.Context, url string, header map[string]string, o Options, client *http.Client) Result {
+func Scan(ctx context.Context, url string, header map[string]string, o Options, client *resty.Client) Result {
 	var result Result
 	result.URL = url
-	resp, body, err := clients.NewRequest(o.Method, url, header, nil, o.Timeout, true, client)
+	resp, err := clients.DoRequest(o.Method, url, header, nil, o.Timeout, client)
 	if err != nil {
 		gologger.IntervalError(ctx, err)
 		return result
 	}
-	if o.BodyExclude != "" && bytes.Contains(body, []byte(o.BodyExclude)) {
+	if o.BodyExclude != "" && bytes.Contains(resp.Body(), []byte(o.BodyExclude)) {
 		result.Status = 1
 		return result
 	} else {
-		result.Status = resp.StatusCode
+		result.Status = resp.StatusCode()
 	}
 	if util.ArrayContains(result.Status, o.StatusCodeExclude) {
 		result.Status = 1
 		return result
 	}
-	result.Length = len(body)
+	result.Length = len(resp.Body())
 	// 记录同一状态码下长度出现次数，当次数超过o.BodyLengthExcludeTimes时，将状态码设置为1，过滤显示
 	mutex.Lock()
 	bodyLengthMap[result.Length]++
@@ -131,7 +131,7 @@ func Scan(ctx context.Context, url string, header map[string]string, o Options, 
 		result.Status = 1
 	}
 	mutex.Unlock()
-	result.Body = string(body)
-	result.Location = resp.Header.Get("Location")
+	result.Body = string(resp.Body())
+	result.Location = resp.Header().Get("Location")
 	return result
 }

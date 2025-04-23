@@ -7,6 +7,7 @@ toolchain go1.23.0
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/go-ldap/ldap/v3 v3.4.5
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/lib/pq v1.10.9

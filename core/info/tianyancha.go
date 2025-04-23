@@ -41,7 +41,8 @@ func GetCompanyID(ctx context.Context, company string) (string, string) {
 	data := make(map[string]interface{})
 	data["keyword"] = company
 	bytesData, _ := json.Marshal(data)
-	_, body, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-tempest/search/suggest/v3", posthead, bytes.NewReader(bytesData), 10, true, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("POST", "https://capi.tianyancha.com/cloud-tempest/search/suggest/v3", posthead, bytes.NewReader(bytesData), 10, clients.NewRestyClient(nil, true))
+	body := resp.Body()
 	if err != nil {
 		gologger.Error(ctx, err)
 	}
@@ -68,13 +69,13 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 	data["percentLevel"] = "-100"
 	data["category"] = "-100"
 	bytesData, _ := json.Marshal(data)
-	_, b, err := clients.NewRequest("POST", "https://capi.tianyancha.com/cloud-company-background/company/investListV2", posthead, bytes.NewReader(bytesData), 10, true, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("POST", "https://capi.tianyancha.com/cloud-company-background/company/investListV2", posthead, bytes.NewReader(bytesData), 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Error(ctx, fmt.Sprintf("[tianyancha] company: %s request interface err: %v", companyName, err))
 		return
 	}
 	var qr structs.TycResult
-	err = json.Unmarshal(b, &qr)
+	err = json.Unmarshal(resp.Body(), &qr)
 	if err != nil {
 		gologger.Error(ctx, fmt.Sprintf("[tianyancha] company: %s request interface err: %v", companyName, err))
 		return
@@ -129,23 +130,23 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 
 // 获取微信公众号信息
 func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) (wr []structs.WechatReulst) {
-	_, b, err := clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize=1&pageNum=1", gethead, nil, 10, true, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize=1&pageNum=1", gethead, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Error(ctx, err)
 		return
 	}
 	var oa structs.OfficialAccounts
-	json.Unmarshal(b, &oa)
+	json.Unmarshal(resp.Body(), &oa)
 	if oa.ErrorCode != 0 || oa.Data.Count == 0 {
 		gologger.Info(ctx, "公众号查询出现错误或不存在公众号资产,公司名称: "+companyName)
 		return
 	}
-	_, b, err = clients.NewRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize="+fmt.Sprint(oa.Data.Count)+"&pageNum=1", gethead, nil, 10, true, clients.NewHttpClient(nil, true))
+	resp, err = clients.DoRequest("GET", "https://capi.tianyancha.com/cloud-business-state/wechat/list?graphId="+companyId+"&pageSize="+fmt.Sprint(oa.Data.Count)+"&pageNum=1", gethead, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Error(ctx, err)
 		return
 	}
-	json.Unmarshal(b, &oa)
+	json.Unmarshal(resp.Body(), &oa)
 	for _, result := range oa.Data.ResultList {
 		wr = append(wr, structs.WechatReulst{
 			CompanyName:  companyName,
@@ -162,11 +163,11 @@ func WeChatOfficialAccounts(ctx context.Context, companyName, companyId string) 
 func CheckLogin(token string) bool {
 	initTycHeader(token)
 	u := "https://capi.tianyancha.com/cloud-app-management/service/layout/vipStatus"
-	_, body, err := clients.NewRequest("GET", u, gethead, nil, 10, true, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("GET", u, gethead, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return false
 	}
-	if strings.Contains(string(body), "mustlogin") {
+	if strings.Contains(string(resp.Body()), "mustlogin") {
 		return false
 	}
 	return true

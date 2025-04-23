@@ -10,7 +10,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
@@ -46,11 +45,11 @@ func (f *FofaClient) GetTips(key string) ([]byte, error) {
 	params.Set("ts", ts)
 	params.Set("sign", f.GetInputSign(signParam))
 	params.Set("app_id", f.AppId)
-	_, body, err := clients.NewSimpleGetRequest(TipApi+params.Encode(), clients.NewHttpClient(nil, true))
+	resp, err := clients.SimpleGet(TipApi+params.Encode(), clients.NewRestyClient(nil, true))
 	if err != nil {
 		return nil, err
 	}
-	return body, nil
+	return resp.Body(), nil
 }
 
 func (f *FofaClient) GetInputSign(inputString string) string {
@@ -83,14 +82,14 @@ func (f *FofaClient) FofaApiSearch(ctx context.Context, search, pageSize, pageNu
 	address := f.Auth.Address + "api/v1/search/all?email=" + f.Auth.Email + "&key=" + f.Auth.Key + "&qbase64=" +
 		FOFABaseEncode(search) + "&cert.is_valid" + fmt.Sprint(cert) + fmt.Sprintf("&is_fraud=%v&is_honeypot=%v", fmt.Sprint(fraud), fmt.Sprint(fraud)) +
 		"&page=" + pageNum + "&size=" + pageSize + "&fields=host,title,ip,domain,port,protocol,country_name,region,city,icp,link,product"
-	_, b, err := clients.NewSimpleGetRequest(address, http.DefaultClient)
+	resp, err := clients.SimpleGet(address, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Debug(ctx, err)
 		fs.Error = true
 		fs.Message = "请求失败"
 		return &fs
 	}
-	json.Unmarshal(b, &fr)
+	json.Unmarshal(resp.Body(), &fr)
 	fs.Size = fr.Size
 	fs.Error = fr.Error
 	if fr.Errmsg == "[820001] 没有权限搜索product字段" {
@@ -132,11 +131,11 @@ func (f *FofaClient) FofaApiSearch(ctx context.Context, search, pageSize, pageNu
 
 func (f *FofaClient) FofaApiSearchByUserInfo(ctx context.Context) *structs.FofaUserInfo {
 	var user structs.FofaUserInfo
-	_, body, err := clients.NewSimpleGetRequest("https://fofa.info/api/v1/info/my?key="+f.Auth.Key, http.DefaultClient)
+	resp, err := clients.SimpleGet("https://fofa.info/api/v1/info/my?key="+f.Auth.Key, clients.NewRestyClient(nil, true))
 	if err != nil {
 		user.Error = true
 		return &user
 	}
-	json.Unmarshal(body, &user)
+	json.Unmarshal(resp.Body(), &user)
 	return &user
 }

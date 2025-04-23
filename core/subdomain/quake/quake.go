@@ -22,11 +22,12 @@ func FetchHosts(ctx context.Context, domain, apikey string) []string {
 		"Content-Type": "application/json",
 		"X-QuakeToken": apikey,
 	}
-	_, body, err := clients.NewRequest("POST", "https://quake.360.net/api/v3/search/quake_service", header, bytes.NewReader(bytesData), 10, false, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("POST", "https://quake.360.net/api/v3/search/quake_service", header, bytes.NewReader(bytesData), 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Debug(ctx, fmt.Sprintf("[subdomain] quake fetch host error: %v", err))
 		return result
 	}
+	body := resp.Body()
 	if string(body) == "/quake/login" {
 		gologger.Debug(ctx, "[subdomain] quake fetch host error: token is err")
 		return result

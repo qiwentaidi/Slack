@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"net"
-	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
 	"strconv"
@@ -101,11 +100,11 @@ func (c *DGworkClient) GetToken(getURL string) string {
 	params.Add("appsecret", c.AppSecret)
 	params.Add("appkey", c.AppKey)
 	getURL = getURL + "?" + params.Encode()
-	_, body, err := clients.NewRequest("GET", getURL, c.GetHeaders(getURL, params), nil, 10, false, http.DefaultClient)
+	resp, err := clients.DoRequest("GET", getURL, c.GetHeaders(getURL, params), nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return err.Error()
 	}
-	return string(body)
+	return string(resp.Body())
 }
 
 func (t *Tools) GetToken(baseURL, appkey, appsecret string) string {

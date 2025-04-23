@@ -22,12 +22,12 @@ func FetchHosts(ctx context.Context, domain, apikey string) *ChaosHosts {
 		"Authorization": apikey,
 	}
 	searchURL := fmt.Sprintf("%sdns/%s/subdomains", chaosURL, domain)
-	_, body, err := clients.NewRequest("GET", searchURL, header, nil, 10, true, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("GET", searchURL, header, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Debug(ctx, err)
 		return nil
 	}
 	var ch ChaosHosts
-	json.Unmarshal(body, &ch)
+	json.Unmarshal(resp.Body(), &ch)
 	return &ch
 }

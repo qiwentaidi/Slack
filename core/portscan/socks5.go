@@ -59,17 +59,14 @@ func Socks5Scan(ctx context.Context, host string, usernames, passwords []string)
 }
 
 func Socks5Conn(ip string, port, timeout int, username, password, aliveURL string) bool {
-	client, err := clients.SelectProxy(&clients.Proxy{
+	client := clients.NewRestyClientWithProxy(nil, true, clients.Proxy{
 		Enabled:  true,
 		Mode:     "SOCK5",
 		Address:  ip,
 		Port:     port,
 		Username: username,
 		Password: password,
-	}, clients.NewHttpClient(nil, true))
-	if err != nil {
-		return false
-	}
-	_, _, err = clients.NewRequest("GET", aliveURL, nil, nil, timeout, true, client)
+	})
+	_, err := clients.DoRequest("GET", aliveURL, nil, nil, timeout, client)
 	return err == nil
 }

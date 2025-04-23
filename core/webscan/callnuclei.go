@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime/debug"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
@@ -75,7 +76,7 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 	var id int32
 	sg, err := syncutil.New(syncutil.WithSize(5))
 	if err != nil {
-		gologger.Error(ctx, fmt.Sprintf("nuclei init sync group err: %v", err))
+		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei init sync group err: %v", err))
 		return
 	}
 	ne.GlobalResultCallback(func(event *output.ResultEvent) {
@@ -109,6 +110,11 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 		go func() {
 			defer sg.Done()
 			defer func() {
+				if r := recover(); r != nil {
+					gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("panic caught in goroutine: %v\n%s", r, debug.Stack()))
+				}
+			}()
+			defer func() {
 				atomic.AddInt32(&id, 1)
 				runtime.EventsEmit(ctx, "NucleiProgressID", id)
 			}()
@@ -133,11 +139,6 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 func NewNucleiSDKOptions(o structs.NucleiOption) []nuclei.NucleiSDKOptions {
 	options := []nuclei.NucleiSDKOptions{
 		nuclei.DisableUpdateCheck(), // -duc
-		nuclei.EnableHeadlessWithOpts(&nuclei.HeadlessOpts{
-			ShowBrowser: false,
-			PageTimeout: 15,
-			UseChrome:   true,
-		}),
 	}
 	// 自定义请求头
 	if o.CustomHeaders != "" {

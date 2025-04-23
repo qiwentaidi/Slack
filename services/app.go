@@ -113,24 +113,24 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 	} else {
 		content = []byte(body.(string))
 	}
-	resp, b, err := clients.NewRequest(method, target, headers, bytes.NewReader(content), 10, true, clients.NewHttpClientWithProxy(nil, true, proxy))
+	resp, err := clients.DoRequest(method, target, headers, bytes.NewReader(content), 10, clients.NewRestyClientWithProxy(nil, true, proxy))
 	if err != nil || resp == nil {
 		return &structs.Response{
 			Error: true,
 		}
 	}
 	headerMap := make(map[string]string)
-	for key, values := range resp.Header {
+	for key, values := range resp.Header() {
 		// 对于每个键，创建一个新的 map 并添加键值对
 		headerMap["key"] = key
 		headerMap["value"] = strings.Join(values, " ")
 	}
 	return &structs.Response{
 		Error:     false,
-		Proto:     resp.Proto,
-		StatsCode: resp.StatusCode,
+		Proto:     resp.Proto(),
+		StatsCode: resp.StatusCode(),
 		Header:    headerMap,
-		Body:      string(b),
+		Body:      string(resp.Body()),
 	}
 }
 
@@ -375,11 +375,11 @@ func (a *App) Socks5Conn(ip string, port, timeout int, username, password, alive
 }
 
 func (a *App) IconHash(target string) string {
-	_, b, err := clients.NewSimpleGetRequest(target, clients.NewHttpClient(nil, true))
+	resp, err := clients.SimpleGet(target, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return ""
 	}
-	return webscan.Mmh3Hash32(b)
+	return webscan.Mmh3Hash32(resp.Body())
 }
 
 // 仅在执行时调用一次
@@ -530,11 +530,11 @@ func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers map[
 func (a *App) FaviconMd5(target string) string {
 	hasher := md5.New()
 	if _, err := os.Stat(target); err != nil {
-		_, body, err := clients.NewSimpleGetRequest(target, clients.NewHttpClient(nil, true))
+		resp, err := clients.SimpleGet(target, clients.NewRestyClient(nil, true))
 		if err != nil {
 			return ""
 		}
-		hasher.Write(body)
+		hasher.Write(resp.Body())
 	} else {
 		content, err := os.ReadFile(target)
 		if err != nil {

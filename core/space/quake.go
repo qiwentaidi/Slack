@@ -40,15 +40,14 @@ func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
 		"Content-Type": "application/json",
 		"X-QuakeToken": o.Token,
 	}
-	_, body, err := clients.NewRequest("POST", quakeServerApi, header, bytes.NewReader(bytesData), 20, false, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("POST", quakeServerApi, header, bytes.NewReader(bytesData), 20, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return &structs.QuakeResult{
 			Code:    502,
 			Message: err.Error(),
 		}
 	}
-	bodyStr := string(body)
-	fmt.Printf("bodyStr: %v\n", bodyStr)
+	bodyStr := string(resp.Body())
 	if bodyStr == "/quake/login" {
 		return &structs.QuakeResult{
 			Code:    302,
@@ -62,7 +61,7 @@ func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
 		}
 	}
 	var qrk structs.QuakeRawResult
-	json.Unmarshal(body, &qrk)
+	json.Unmarshal(resp.Body(), &qrk)
 	qk := &structs.QuakeResult{
 		Message: qrk.Message,
 		Total:   qrk.Meta.Pagination.Total,
@@ -119,12 +118,12 @@ func QuakeUserSearch(token string) int {
 		"Content-Type": "application/json",
 		"X-QuakeToken": token,
 	}
-	_, body, err := clients.NewRequest("GET", quakeUserApi, header, nil, 10, true, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("GET", quakeUserApi, header, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return 0
 	}
 	var qui structs.QuakeUserInfo
-	if err := json.Unmarshal(body, &qui); err != nil {
+	if err := json.Unmarshal(resp.Body(), &qui); err != nil {
 		return 0
 	}
 	return qui.Data.Credit
@@ -136,11 +135,11 @@ func SearchQuakeTips(query string) *structs.QuakeTipsResult {
 	header := map[string]string{
 		"Content-Type": "application/json",
 	}
-	_, b, err := clients.NewRequest("POST", quakeTipsApi, header, strings.NewReader(jsonData), 10, true, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("POST", quakeTipsApi, header, strings.NewReader(jsonData), 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return &qs
 	}
-	json.Unmarshal(b, &qs)
+	json.Unmarshal(resp.Body(), &qs)
 	return &qs
 }
 
@@ -157,11 +156,11 @@ func getShortcuts(o *structs.QuakeRequestOptions) []string {
 	header := map[string]string{
 		"Cookie": "cert_common=" + o.CertCommon,
 	}
-	_, body, err := clients.NewRequest("GET", "https://quake.360.net/api/search/shortcuts/quake_service_unique", header, nil, 10, true, clients.NewHttpClient(nil, true))
+	resp, err := clients.DoRequest("GET", "https://quake.360.net/api/search/shortcuts/quake_service_unique", header, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return shortcuts
 	}
-	json.Unmarshal(body, &shortcutsMeta)
+	json.Unmarshal(resp.Body(), &shortcutsMeta)
 	for _, v := range shortcutsMeta.Data {
 		if v.Name == "排除CDN" {
 			cdn = v.Id

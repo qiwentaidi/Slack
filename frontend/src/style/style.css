@@ -67,6 +67,10 @@ html {
   }
 }
 
+.el-tree {
+  height: 100%;
+}
+
 .iframe {
   width: 100%;
   height: 100%;
@@ -492,8 +496,4 @@ pre code.hljs {
 
 code.hljs {
   padding: 3px 5px
-}
-
-.el-tree {
-  height: 100%;
 }

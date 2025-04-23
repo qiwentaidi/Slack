@@ -18,12 +18,12 @@ type ShodanIpReport struct {
 }
 
 func GetShodanAllPort(ctx context.Context, ip string) []float64 {
-	_, body, err := clients.NewSimpleGetRequest("https://internetdb.shodan.io/"+ip, clients.NewHttpClient(nil, true))
+	resp, err := clients.SimpleGet("https://internetdb.shodan.io/"+ip, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Error(ctx, fmt.Sprintf("[shodan] %s, error: %v", ip, err))
 		return []float64{}
 	}
 	var shodan ShodanIpReport
-	json.Unmarshal(body, &shodan)
+	json.Unmarshal(resp.Body(), &shodan)
 	return shodan.Ports
 }

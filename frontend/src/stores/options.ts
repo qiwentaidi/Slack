@@ -891,4 +891,4 @@ www.example.com
 排除IP或网段可以在可支持输入的IP格式前加!:
 !192.168.1.6/28`
 
-export const WebsiteInputTips = `https://www.example.com`
+export const WebsiteInputTips = `仅支持http/https协议目标扫描, 需要输入完整URL, 输入IP或者域名格式会自动忽略目标`

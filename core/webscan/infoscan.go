@@ -21,6 +21,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -59,8 +60,8 @@ type FingerScanner struct {
 	basicURLWithFingerprint map[string][]string // 后续nuclei需要扫描的目标列表
 	headers                 map[string]string   // 请求头
 	generateLog4j2          bool                // 是否添加Log4j2指纹，后续nuclei可以添加扫描
-	client                  *http.Client
-	notFollowClient         *http.Client
+	client                  *resty.Client
+	notFollowClient         *resty.Client
 	mutex                   sync.RWMutex
 }
 
@@ -82,8 +83,8 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 	return &FingerScanner{
 		ctx:                     ctx,
 		urls:                    urls,
-		client:                  clients.NewHttpClientWithProxy(nil, true, proxy),
-		notFollowClient:         clients.NewHttpClientWithProxy(nil, false, proxy),
+		client:                  clients.NewRestyClientWithProxy(nil, true, proxy),
+		notFollowClient:         clients.NewRestyClientWithProxy(nil, false, proxy),
 		screenshot:              options.Screenshot,
 		honeypot:                options.Honeypot,
 		thread:                  options.Thread,
@@ -111,22 +112,20 @@ func (s *FingerScanner) NewFingerScan() {
 			return
 		}
 		var (
-			rawHeaders   []byte
-			faviconHash  string
-			faviconMd5   string
-			server       string
-			content_type string
-			statusCode   int
+			rawHeaders  []byte
+			server      string
+			contentType string
+			statusCode  int
 		)
 
 		// 先进行一次不会重定向的扫描，可以获得重定向前页面的响应头中获取指纹
-		resp, _, _ := clients.NewRequest("GET", u.String(), s.headers, nil, 10, true, s.notFollowClient)
-		if resp != nil && resp.StatusCode == 302 {
-			rawHeaders = DumpResponseHeadersOnly(resp)
+		resp, err := clients.DoRequest("GET", u.String(), s.headers, nil, 10, s.notFollowClient)
+		if err == nil && resp.StatusCode() == 302 {
+			rawHeaders = DumpResponseHeadersOnly(resp.RawResponse)
 		}
 
 		// 过滤CDN
-		if resp != nil && resp.StatusCode == 422 {
+		if resp.StatusCode() == 422 {
 			retChan <- structs.InfoResult{
 				URL:        u.String(),
 				StatusCode: 422,
@@ -136,31 +135,30 @@ func (s *FingerScanner) NewFingerScan() {
 		}
 
 		// 正常请求指纹
-		resp, body, err := clients.NewRequest("GET", u.String(), s.headers, nil, 10, true, s.client)
+		resp, err = clients.DoRequest("GET", u.String(), s.headers, nil, 10, s.client)
+		body := resp.Body()
 		if err != nil || resp == nil {
 			if len(rawHeaders) > 0 {
 				gologger.Debug(s.ctx, fmt.Sprintf("%s has error to 302, response headers: %s", u.String(), string(rawHeaders)))
 				statusCode = 302
-				goto ContinueExecution
+			} else {
+				retChan <- structs.InfoResult{
+					URL:        u.String(),
+					StatusCode: 0,
+					Scheme:     u.Scheme,
+				}
+				return
 			}
-			// 如果是正常的无法响应则直接返回
-			retChan <- structs.InfoResult{
-				URL:        u.String(),
-				StatusCode: 0,
-				Scheme:     u.Scheme,
-			}
-			return
 		}
 		// 合并请求头数据
-		rawHeaders = append(rawHeaders, DumpResponseHeadersOnly(resp)...)
+		rawHeaders = append(rawHeaders, DumpResponseHeadersOnly(resp.RawResponse)...)
 
 		// 请求Logo
-		faviconHash, faviconMd5 = FaviconHash(u, s.headers, s.client)
+		faviconHash, faviconMd5 := FaviconHash(u, s.headers, s.client)
 
 		// 发送shiro探测
 		rawHeaders = append(rawHeaders, []byte(fmt.Sprintf("Set-Cookie: %s", s.ShiroScan(u)))...)
 
-	ContinueExecution:
 		// 跟随JS重定向，并替换成重定向后的数据
 		redirectBody := s.GetJSRedirectResponse(u, string(body))
 		if redirectBody != nil {
@@ -170,14 +168,12 @@ func (s *FingerScanner) NewFingerScan() {
 		}
 		// 网站正常响应
 		title := clients.GetTitle(body)
-		if resp != nil {
-			server = resp.Header.Get("Server")
-			content_type = resp.Header.Get("Content-Type")
-			statusCode = resp.StatusCode
-		}
+		server = resp.Header().Get("Server")
+		contentType = resp.Header().Get("Content-Type")
+		statusCode = resp.StatusCode()
 		web := &WebInfo{
 			HeadeString:   string(rawHeaders),
-			ContentType:   content_type,
+			ContentType:   contentType,
 			Cert:          GetTLSString(u.Scheme, u.Host),
 			BodyString:    string(body),
 			Path:          u.Path,
@@ -294,16 +290,16 @@ func (s *FingerScanner) NewActiveFingerScan() {
 		visited[fullURL] = true
 		s.mutex.Unlock()
 
-		resp, body, _ := clients.NewRequest("GET", fullURL, s.headers, nil, 5, false, s.client)
-		if resp == nil {
+		resp, err := clients.DoRequest("GET", fullURL, s.headers, nil, 5, s.client)
+		if err != nil {
 			return
 		}
-
-		server := resp.Header.Get("Server")
-		content_type := resp.Header.Get("Content-Type")
+		body := resp.Body()
+		server := resp.Header().Get("Server")
+		content_type := resp.Header().Get("Content-Type")
 		title := clients.GetTitle(body)
 
-		headers, _, _ := DumpResponseHeadersAndRaw(resp)
+		headers, _, _ := DumpResponseHeadersAndRaw(resp.RawResponse)
 		ti := &WebInfo{
 			HeadeString:   string(headers),
 			ContentType:   content_type,
@@ -313,7 +309,7 @@ func (s *FingerScanner) NewActiveFingerScan() {
 			Server:        server,
 			ContentLength: len(body),
 			Port:          netutil.GetPort(fp.URL),
-			StatusCode:    resp.StatusCode,
+			StatusCode:    resp.StatusCode(),
 		}
 		result := s.FingerScan(s.ctx, ti, fp.Fpe)
 
@@ -534,11 +530,11 @@ func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte
 		nextCheckUrl = getRealPath(u.Scheme+"://"+u.Host) + "/" + newPath
 
 	}
-	_, body, err := clients.NewSimpleGetRequest(nextCheckUrl, s.client)
+	resp, err := clients.SimpleGet(nextCheckUrl, s.client)
 	if err != nil {
 		return nil
 	}
-	return body
+	return resp.Body()
 }
 
 // 探测shiro并返回响应头中的Set-Cookie值
@@ -546,11 +542,11 @@ func (s *FingerScanner) ShiroScan(u *url.URL) string {
 	shiroHeader := map[string]string{
 		"Cookie": fmt.Sprintf("JSESSIONID=%s;rememberMe=123", util.RandomStr(16)),
 	}
-	resp, _, err := clients.NewRequest("GET", u.String(), shiroHeader, nil, 10, false, s.client)
+	resp, err := clients.DoRequest("GET", u.String(), shiroHeader, nil, 10, s.client)
 	if err != nil || resp == nil {
 		return ""
 	}
-	return resp.Header.Get("Set-Cookie")
+	return resp.Header().Get("Set-Cookie")
 }
 
 // 探测Fastjson
@@ -558,9 +554,9 @@ func (s *FingerScanner) FastjsonScan(u *url.URL) bool {
 	jsonHeader := map[string]string{
 		"Content-Type": "application/json",
 	}
-	_, body, err := clients.NewRequest("POST", u.String(), jsonHeader, strings.NewReader(`{"@type":"java.lang.AutoCloseable"`), 10, false, s.client)
-	if err != nil || body == nil {
+	resp, err := clients.DoRequest("POST", u.String(), jsonHeader, strings.NewReader(`{"@type":"java.lang.AutoCloseable"`), 10, s.client)
+	if err != nil {
 		return false
 	}
-	return bytes.Contains(body, []byte("fastjson-version"))
+	return bytes.Contains(resp.Body(), []byte("fastjson-version"))
 }

@@ -59,13 +59,13 @@ func GithubApiQuery(ctx context.Context, dork, token string) *GithubResult {
 		"Authorization": fmt.Sprintf("token %s", token),
 		"User-Agent":    "HelloGitHub",
 	}
-	_, body, err := clients.NewRequest("GET", uri.String(), headers, nil, 10, false, clients.NewHttpClient(nil, true))
+	response, err := clients.DoRequest("GET", uri.String(), headers, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Debug(ctx, err)
 		return &GithubResult{}
 	}
 	var resp GithubResponse
-	json.Unmarshal(body, &resp)
+	json.Unmarshal(response.Body(), &resp)
 	var gr GithubResult
 	gr.Status = true
 	gr.Total = resp.Total_count

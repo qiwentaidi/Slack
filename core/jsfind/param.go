@@ -2,7 +2,6 @@ package jsfind
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"regexp"
 	"slack-wails/lib/clients"
@@ -55,14 +54,14 @@ func completeParameters(method, apiURL string, params url.Values) url.Values {
 	fullURL := fmt.Sprintf("%s?%s", apiURL, params.Encode())
 
 	// 发送 GET 请求
-	_, body, err := clients.NewRequest(method, fullURL, nil, nil, 10, false, http.DefaultClient)
+	resp, err := clients.DoRequest(method, fullURL, nil, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		fmt.Println("请求失败:", err)
 		return nil
 	}
 
 	// 提取缺失参数
-	missingParam := extractMissingParams(string(body))
+	missingParam := extractMissingParams(string(resp.Body()))
 	if missingParam != nil {
 		// 生成默认值并补全参数
 		defaultValue := generateDefaultValue(missingParam.Type)

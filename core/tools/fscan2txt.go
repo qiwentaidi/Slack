@@ -38,6 +38,21 @@ var (
 		"Web INFO":        {"[*] WebTitle"},
 		"INFO":            {"[+] InfoScan"},
 		"Hikvison Camera": {"len:2512", "len:600", "len:481", "len:480"},
+		// 2.0.0 新增
+		"Rsync":         {"[+] Rsync"},
+		"SNMP":          {"[+] SNMP"},
+		"SMTP":          {"[+] SMTP"},
+		"Telent":        {"[+] Telnet"},
+		"VNC":           {"[+] vnc"},
+		"RabbitMQ":      {"[+] RabbitMQ"},
+		"Neo4j":         {"[+] Neo4j"},
+		"Modbus":        {"[+] Modbus"},
+		"LDAP":          {"[+] LDAP"},
+		"Kafka":         {"[+] Kafka"},
+		"IMAP":          {"[+] IMAP"},
+		"Elasticsearch": {"[+] Elasticsearch"},
+		"Cassandra":     {"[+] Cassandra"},
+		"ActiveMQ":      {"[+] ActiveMQ"},
 	}
 	NetInfoReg = regexp.MustCompile(`\[\*]((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}(\s+\[\-\>](\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|[a-zA-Z0-9\-]+))+`)
 )
@@ -141,6 +156,8 @@ func (t *Tools) ConnectAndExecute(protocol, ip, port string, username, password 
 	case "mongodb":
 		commond = "show databases;"
 		result, err = executeMongodbQuery(host)
+	default:
+		return fmt.Sprintf("[Error] %v", "not support")
 	}
 	if err != nil {
 		return fmt.Sprintf("[Error] %v", err)
