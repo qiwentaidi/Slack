@@ -1,10 +1,6 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, nextTick } from 'vue'
-import {
-    VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled, CircleCheck, Notification,
-    Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Warning, Picture,
-    Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, MoreFilled,
-} from '@element-plus/icons-vue';
+import { VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled, Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Picture, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
@@ -19,14 +15,9 @@ import { isPrivateIP, validateIp, validateIpAndDomain } from '@/stores/validate'
 import { structs } from 'wailsjs/go/models';
 import { portGroupOptions, webReportOptions, webscanOptions, crackDict, WebsiteInputTips, HostInputTips } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
-import {
-    RemovePocscanResult, RemoveScanTask, ExportWebReportWithHtml,
-    ExportWebReportWithJson, RetrieveAllScanTasks, AddFingerscanResult,
-    AddPocscanResult, AddScanTask, ReadWebReportWithJson, RenameScanTask,
-    RetrieveFingerscanResults, RetrievePocscanResults, UpdateScanTaskWithResults,
-    RemoveFingerprintResult,
-    ExportWebReportWithExcel
-} from 'wailsjs/go/services/Database';
+import { RemovePocscanResult, RemoveScanTask, ExportWebReportWithHtml, ExportWebReportWithJson, RetrieveAllScanTasks, AddFingerscanResult,
+    AddPocscanResult, AddScanTask, ReadWebReportWithJson, RenameScanTask, RetrieveFingerscanResults, RetrievePocscanResults, UpdateScanTaskWithResults,
+    RemoveFingerprintResult, ExportWebReportWithExcel } from 'wailsjs/go/services/Database';
 import saveIcon from '@/assets/icon/save.svg'
 import githubIcon from '@/assets/icon/github.svg'
 import dashboardIcon from '@/assets/icon/dashboard.svg'

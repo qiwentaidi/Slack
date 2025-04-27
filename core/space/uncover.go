@@ -47,7 +47,7 @@ func Uncover(ctx context.Context, query, types string, o structs.SpaceOption) []
 
 	if o.HunterKey != "" {
 		hunterStartTime := time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
-		hs := HunterApiSearch(o.HunterKey, FormatQuery("hunter", types, query), "100", "1", hunterStartTime, "3", false)
+		hs := HunterApiSearch(ctx, o.HunterKey, FormatQuery("hunter", types, query), "100", "1", hunterStartTime, "3", false)
 		gologger.Info(ctx, fmt.Sprintf("[uncover] hunter %d results", len(hs.Data.Arr)))
 		for _, r := range hs.Data.Arr {
 			var component []string

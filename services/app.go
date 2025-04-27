@@ -480,7 +480,7 @@ func (a *App) HunterTips(query string) *structs.HunterTips {
 }
 
 func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, deduplication bool) *structs.HunterResult {
-	hr := space.HunterApiSearch(api, query, pageSize, pageNum, times, asset, deduplication)
+	hr := space.HunterApiSearch(a.ctx, api, query, pageSize, pageNum, times, asset, deduplication)
 	time.Sleep(time.Second * 2)
 	return hr
 }

@@ -35,13 +35,32 @@ func detectMethod(fullURL string, headers map[string]string) (string, error) {
 }
 
 func detectContentType(url string, headers map[string]string) string {
-	headers["Content-Type"] = "application/www-form-urlencoded"
-	resp, err := clients.DoRequest("POST", url, headers, nil, 10, clients.NewRestyClient(nil, true))
-	body := string(resp.Body())
+	// 先浅拷贝一下headers，避免污染原map
+	hdr := make(map[string]string)
+	for k, v := range headers {
+		hdr[k] = v
+	}
+
+	// 第一次，不带 Content-Type 测试
+	resp, err := clients.DoRequest("POST", url, hdr, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil || resp == nil {
 		return ""
 	}
 
+	// 如果第一次就能正常POST，不需要加Content-Type，默认返回 application/x-www-form-urlencoded
+	if resp.StatusCode() >= 200 && resp.StatusCode() < 300 {
+		return "application/x-www-form-urlencoded"
+	}
+
+	// 如果出错，或者响应提示Content-Type不对，再带上 application/x-www-form-urlencoded 重试一次
+	hdr["Content-Type"] = "application/x-www-form-urlencoded"
+	resp, err = clients.DoRequest("POST", url, hdr, nil, 10, clients.NewRestyClient(nil, true))
+	if err != nil || resp == nil {
+		return ""
+	}
+	body := string(resp.Body())
+
+	// 判断返回内容
 	if strings.Contains(body, "application/x-www-form-urlencoded") && strings.Contains(body, "not supported") {
 		return "application/json"
 	}
@@ -50,5 +69,6 @@ func detectContentType(url string, headers map[string]string) string {
 		return "multipart/form-data;boundary=8ce4b16b22b58894aa86c421e8759df3"
 	}
 
+	// 默认
 	return "application/x-www-form-urlencoded"
 }

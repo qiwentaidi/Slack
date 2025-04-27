@@ -60,8 +60,10 @@
                             </template>
                         </el-tree-v2>
                     </pane>
-                    <pane min-size="20" style="margin-top: -12px; height: calc(100% + 12px);">
-                        <el-descriptions :column="1" border v-if="currentFileHits && Object.keys(currentFileHits).length" style="margin-left: 5px; margin-top: 10px;">
+                    <pane style="margin-top: -12px; height: calc(100% + 12px); display: flex; flex-direction: column;">
+                        <el-descriptions :column="1" border
+                            v-if="currentFileHits && Object.keys(currentFileHits).length"
+                            style="margin-left: 5px; margin-top: 10px;">
                             <el-descriptions-item label="关键词匹配:">
                                 <el-tag v-for="(count, keyword) in currentFileHits" :key="keyword" type="danger"
                                     class="match-tag">
@@ -69,7 +71,11 @@
                                 </el-tag>
                             </el-descriptions-item>
                         </el-descriptions>
-                        <highlightjs :code="code"></highlightjs>
+
+                        <!-- 这里包一层div -->
+                        <div style="flex: 1; overflow: auto; margin: 5px;">
+                            <highlightjs :code="code"></highlightjs>
+                        </div>
                     </pane>
                 </splitpanes>
             </div>
@@ -296,23 +302,13 @@ function handleSetting() {
 }
 
 ::v-deep(pre code.hljs) {
-    display: block;
-    overflow-x: auto;
     padding: 10px;
     margin-left: 5px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: break-all;
-    border-radius: 5px;
-    height: calc(100vh - 200px);
 }
 
 ::v-deep(code.hljs) {
-    padding: 0
-}
-
-.splitpanes {
-    height: calc(100vh - 155px);
+    padding: 0;
+    height: 100%;
 }
 
 .dirtips {
