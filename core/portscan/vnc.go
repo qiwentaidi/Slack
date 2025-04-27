@@ -12,9 +12,10 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func VncScan(ctx context.Context, host string, usernames, passwords []string) {
+func VncScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	for _, pass := range passwords {
-		if ExitFunc {
+		if ctrlCtx.Err() != nil {
+			gologger.Warning(ctx, "[vnc] User exits crack scanning")
 			return
 		}
 		pass = strings.Replace(pass, "{user}", "vnc", -1)

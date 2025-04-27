@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func MongodbScan(ctx context.Context, host string, usernames, passwords []string) {
+func MongodbScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	flag, err := MongodbConn(host, "", "")
 	if flag && err == nil {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
@@ -30,7 +30,8 @@ func MongodbScan(ctx context.Context, host string, usernames, passwords []string
 	}
 	for _, user := range usernames {
 		for _, pass := range passwords {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
+				gologger.Warning(ctx, "[mongodb] User exits crack scanning")
 				return
 			}
 			pass = strings.Replace(pass, "{user}", string(user), -1)

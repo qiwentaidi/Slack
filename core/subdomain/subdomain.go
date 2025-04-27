@@ -29,10 +29,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var (
-	DefaultDnsServers = []string{"223.6.6.6:53", "8.8.8.8:53"}
-	ExitFunc          = false
-)
+var DefaultDnsServers = []string{"223.6.6.6:53", "8.8.8.8:53"}
 
 type SubdomainResult struct {
 	Domain    string
@@ -64,7 +61,7 @@ func InitQqwry(qqwryFile string) {
 }
 
 // subdomains 为完整的域名列表
-func MultiThreadResolution(ctx context.Context, domain string, subdomains []string, source string, o structs.SubdomainOption) {
+func MultiThreadResolution(ctx, ctrlCtx context.Context, domain string, subdomains []string, source string, o structs.SubdomainOption) {
 	ipResolved := make(map[string]int)
 	single := make(chan struct{})
 	retChan := make(chan SubdomainResult)
@@ -134,7 +131,7 @@ func MultiThreadResolution(ctx context.Context, domain string, subdomains []stri
 	if len(o.Subs) > 0 {
 		runtime.EventsEmit(ctx, "subdomainCounts", len(o.Subs))
 		for _, sub := range o.Subs {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
 				return
 			}
 			wg.Add(1)
@@ -143,7 +140,7 @@ func MultiThreadResolution(ctx context.Context, domain string, subdomains []stri
 	} else { // API 模式
 		runtime.EventsEmit(ctx, "subdomainCounts", len(subdomains))
 		for _, subdomain := range subdomains {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
 				return
 			}
 			wg.Add(1)
@@ -182,7 +179,7 @@ func Find(query string) (string, error) {
 	return result.String(), err
 }
 
-func ApiPolymerization(ctx context.Context, o structs.SubdomainOption) {
+func ApiPolymerization(ctx, ctrlCtx context.Context, o structs.SubdomainOption) {
 	for _, domain := range o.Domains {
 		var subdomains []string
 		if o.ChaosApi != "" {
@@ -247,7 +244,7 @@ func ApiPolymerization(ctx context.Context, o structs.SubdomainOption) {
 		}
 		subdomains = util.RemoveDuplicates(subdomains)
 		gologger.Info(ctx, fmt.Sprintf("已从API获取到[%s]的子域名: %d个，正在验证存活", domain, len(subdomains)))
-		MultiThreadResolution(ctx, domain, subdomains, "API", o)
+		MultiThreadResolution(ctx, ctrlCtx, domain, subdomains, "API", o)
 		time.Sleep(time.Second)
 	}
 }

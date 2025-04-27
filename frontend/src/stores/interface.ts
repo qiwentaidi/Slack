@@ -204,3 +204,10 @@ export interface FormData {
     matchers: Matcher[];
     matchersCondition: string;
 }
+
+export interface ActivityItem {
+    content: string
+    type: 'primary' | 'success' | 'warning' | 'danger' | 'info'
+    timestamp?: string
+    icon?: any
+}

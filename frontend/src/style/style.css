@@ -1,499 +1,500 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  /* fix: 在部分系统上，背景颜色一直为暗色，无法从暗色切换到亮色。 */
-  /* color-scheme: light dark; */
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    /* fix: 在部分系统上，背景颜色一直为暗色，无法从暗色切换到亮色。 */
+    /* color-scheme: light dark; */
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
 
-  --titlebar-height: 35px;
+    --titlebar-height: 35px;
 }
 
 body {
-  margin: 0;
-  width: 100% !important;
+    margin: 0;
+    width: 100% !important;
 }
 
 html {
-  height: 100%;
-  overflow: hidden;
+    height: 100%;
+    overflow: hidden;
 }
 
 /* 重写一些elementplus的样式 */
 
 .el-drawer__footer {
-  height: 30px;
+    height: 30px;
 }
 
 .el-textarea__inner {
-  height: 100%;
+    height: 100%;
 }
 
 .el-card__body {
-  padding: 10px;
+    padding: 10px;
 }
 
 .el-col {
-  text-align: center;
+    text-align: center;
 }
 
 .el-text {
-  display: flex;
-  align-items: center;
-  text-align: center;
+    display: flex;
+    align-items: center;
+    text-align: center;
 }
 
 .el-drawer__header {
-  margin-bottom: 0px;
+    margin-bottom: 0px;
 }
 
 :deep(.el-table__header) {
-  width: 100% !important;
+    width: 100% !important;
 }
 
 :deep(.el-table__body) {
-  width: 100% !important;
+    width: 100% !important;
 }
 
 /* 全局调整图片预览组件样式 */
 .el-image-viewer__canvas {
-  .el-image-viewer__img {
-    max-height: calc(100% - 200px) !important;
-  }
+    .el-image-viewer__img {
+        max-height: calc(100% - 200px) !important;
+    }
 }
 
 .el-tree {
-  height: 100%;
+    height: 100%;
 }
 
 .iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 .el-tabs--border-card {
-  border-top-left-radius: 2px;
-  border-top-right-radius: 2px;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
 }
 
 .el-segmented {
-  --el-border-radius-base: 8px;
+    --el-border-radius-base: 8px;
 }
 
 .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .card-header span {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .head {
-  display: flex;
-  width: 100%;
+    display: flex;
+    width: 100%;
 }
 
 .log-textarea {
-  background-color: black;
-  color: rgb(255, 255, 255);
-  height: 100%;
-  /* 设置 textarea 高度为父元素高度 */
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  word-break: break-all;
-  overflow-x: auto;
-  padding: 2px;
+    background-color: black;
+    color: rgb(255, 255, 255);
+    height: 100%;
+    /* 设置 textarea 高度为父元素高度 */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    overflow-x: auto;
+    padding: 2px;
 }
 
 .log-info {
-  color: #518be1;
+    color: #518be1;
 }
 
 .log-warning {
-  color: #ff8800;
+    color: #ff8800;
 }
 
 .log-error {
-  color: #ff0000;
+    color: #ff0000;
 }
 
 .log-debug {
-  color: #57b435;
+    color: #57b435;
 }
 
 .log-success {
-  color: #00ff00;
+    color: #00ff00;
 }
 
 .my-header {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .pretty-response {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  word-break: break-all;
-  overflow-x: auto;
-  max-height: 60vh;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  background-color: var(--response-bg-color);
-  flex: 1;
-  padding: 1em;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    overflow-x: auto;
+    max-height: 60vh;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: var(--response-bg-color);
+    flex: 1;
+    padding: 1em;
 }
 
 .console-log {
-  height: 25px;
-  background-color: #f2f3f5;
-  position: absolute;
-  width: 100%;
-  bottom: 0;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  justify-content: space-between;
+    height: 25px;
+    background-color: #f2f3f5;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .flex-box {
-  display: flex;
+    display: flex;
 }
 
 /* 设置align-right的元素内容右对齐 */
 .align-right .el-form-item__content {
-  display: flex;
-  justify-content: flex-end;
+    display: flex;
+    justify-content: flex-end;
 }
 
 
 .position-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .vertical-center {
-  display: flex;
-  justify-content: center;
+    display: flex;
+    justify-content: center;
 }
 
 .editor-tabs .el-tabs__item {
-  position: relative;
-  display: inline-block;
-  max-width: 300px;
-  margin-bottom: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding-right: 26px !important; /* 给关闭按钮预留空间 */
+    position: relative;
+    display: inline-block;
+    max-width: 300px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 26px !important;
+    /* 给关闭按钮预留空间 */
 }
 
 .editor-tabs .el-tabs__item .el-icon {
-  position: absolute !important;
-  top: 13px !important;
-  right: 7px !important;
+    position: absolute !important;
+    top: 13px !important;
+    right: 7px !important;
 }
 
 .editor-tabs .el-tabs__nav {
-  line-height: 40px;
+    line-height: 40px;
 }
 
 .keyword-search .el-table__row:hover {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 /* 仪表盘进度条样式 */
 
 .percentage-value {
-  display: block;
-  margin-top: 10px;
-  font-size: 28px;
+    display: block;
+    margin-top: 10px;
+    font-size: 28px;
 }
 
 .percentage-label {
-  display: block;
-  margin-top: 10px;
-  font-size: 12px;
+    display: block;
+    margin-top: 10px;
+    font-size: 12px;
 }
 
 /* 网站扫描风险等级颜色 */
 
 .risk-level-display {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .risk-badge {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: bold;
-  cursor: pointer;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
 }
 
 .risk-badge-critical {
-  background-color: #931024;
-  color: white;
+    background-color: #931024;
+    color: white;
 }
 
 .risk-badge-red {
-  background-color: rgb(247, 65, 65);
-  color: white;
+    background-color: rgb(247, 65, 65);
+    color: white;
 }
 
 .risk-badge-yellow {
-  background-color: #e6a23c;
-  color: white;
+    background-color: #e6a23c;
+    color: white;
 }
 
 .risk-badge-green {
-  background-color: #73a8ed;
-  color: white;
+    background-color: #73a8ed;
+    color: white;
 }
 
 .risk-badge-gray {
-  background-color: #909399;
-  color: white;
+    background-color: #909399;
+    color: white;
 }
 
 
 .drawer-title {
-  font-weight: bold;
-  display: flex;
-  align-items: center;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
 }
 
 .drawer-title img {
-  width: 18px;
-  height: 18px;
-  margin-right: 2px;
+    width: 18px;
+    height: 18px;
+    margin-right: 2px;
 }
 
 
 .finger-container {
-  flex-wrap: wrap;
-  display: flex;
-  gap: 7px;
+    flex-wrap: wrap;
+    display: flex;
+    gap: 7px;
 }
 
 .demo-tabs .custom-tabs-label .el-icon {
-  vertical-align: middle;
+    vertical-align: middle;
 }
 
 .demo-tabs .custom-tabs-label span {
-  vertical-align: middle;
-  margin-left: 4px;
+    vertical-align: middle;
+    margin-left: 4px;
 }
 
 .select-tips {
-  float: right;
-  color: var(--el-text-color-secondary);
-  font-size: 13px;
+    float: right;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
 }
 
 .form-item-not-fill {
-  flex-direction: column;
-  display: flex;
+    flex-direction: column;
+    display: flex;
 }
 
 .form-item-tips {
-  color: var(--el-text-color-secondary);
-  font-size: 13px;
+    color: var(--el-text-color-secondary);
+    font-size: 13px;
 }
 
 /* 文字超出换行且包括识别回车符号 */
 
 .all-break {
-  word-break: break-word;
-  overflow-wrap: break-word;
-  white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .text-overflow-break {
-  word-break: break-word;
-  overflow-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /* 文本域容器 */
 
 .textarea-container {
-  position: relative;
-  width: 100%;
+    position: relative;
+    width: 100%;
 }
 
 .action-area {
-  position: absolute;
-  bottom: 10px;
-  right: 17px;
-  display: flex;
-  gap: 5px;
+    position: absolute;
+    bottom: 10px;
+    right: 17px;
+    display: flex;
+    gap: 5px;
 }
 
 /* 分割面板CSS */
 
 .splitpanes {
-  display: flex;
-  width: 100%;
-  height: 100%
+    display: flex;
+    width: 100%;
+    height: 100%
 }
 
 .splitpanes--vertical {
-  flex-direction: row
+    flex-direction: row
 }
 
 .splitpanes--horizontal {
-  flex-direction: column
+    flex-direction: column
 }
 
 .splitpanes--dragging * {
-  -webkit-user-select: none;
-  user-select: none
+    -webkit-user-select: none;
+    user-select: none
 }
 
 .splitpanes__pane {
-  width: 100%;
-  height: 100%;
-  overflow: hidden
+    width: 100%;
+    height: 100%;
+    overflow: hidden
 }
 
 .splitpanes--vertical .splitpanes__pane {
-  transition: width .2s ease-out
+    transition: width .2s ease-out
 }
 
 .splitpanes--horizontal .splitpanes__pane {
-  transition: height .2s ease-out
+    transition: height .2s ease-out
 }
 
 .splitpanes--dragging .splitpanes__pane {
-  transition: none
+    transition: none
 }
 
 .splitpanes__splitter {
-  touch-action: none
+    touch-action: none
 }
 
 .splitpanes--vertical>.splitpanes__splitter {
-  min-width: 1px;
-  cursor: col-resize
+    min-width: 1px;
+    cursor: col-resize
 }
 
 .splitpanes--horizontal>.splitpanes__splitter {
-  min-height: 1px;
-  cursor: row-resize
+    min-height: 1px;
+    cursor: row-resize
 }
 
 .splitpanes.default-theme .splitpanes__splitter {
-  box-sizing: border-box;
-  position: relative;
-  flex-shrink: 0
+    box-sizing: border-box;
+    position: relative;
+    flex-shrink: 0
 }
 
 .splitpanes.default-theme .splitpanes__splitter:before,
 .splitpanes.default-theme .splitpanes__splitter:after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  background-color: #00000026;
-  transition: background-color .3s
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background-color: #00000026;
+    transition: background-color .3s
 }
 
 .splitpanes.default-theme .splitpanes__splitter:hover:before,
 .splitpanes.default-theme .splitpanes__splitter:hover:after {
-  background-color: #00000040
+    background-color: #00000040
 }
 
 .splitpanes.default-theme .splitpanes__splitter:first-child {
-  cursor: auto
+    cursor: auto
 }
 
 .default-theme.splitpanes .splitpanes .splitpanes__splitter {
-  z-index: 1
+    z-index: 1
 }
 
 .default-theme.splitpanes--vertical>.splitpanes__splitter,
 .default-theme .splitpanes--vertical>.splitpanes__splitter {
-  width: 1px;
-  border: 3px solid var(--split-color);
+    width: 1px;
+    border: 3px solid var(--split-color);
 }
 
 .default-theme.splitpanes--vertical>.splitpanes__splitter:before,
 .default-theme.splitpanes--vertical>.splitpanes__splitter:after,
 .default-theme .splitpanes--vertical>.splitpanes__splitter:before,
 .default-theme .splitpanes--vertical>.splitpanes__splitter:after {
-  transform: translateY(-50%);
-  width: 1px;
-  height: 30px
+    transform: translateY(-50%);
+    width: 1px;
+    height: 30px
 }
 
 .default-theme.splitpanes--vertical>.splitpanes__splitter:before,
 .default-theme .splitpanes--vertical>.splitpanes__splitter:before {
-  margin-left: -2px
+    margin-left: -2px
 }
 
 .default-theme.splitpanes--vertical>.splitpanes__splitter:after,
 .default-theme .splitpanes--vertical>.splitpanes__splitter:after {
-  margin-left: 1px
+    margin-left: 1px
 }
 
 .default-theme.splitpanes--horizontal>.splitpanes__splitter,
 .default-theme .splitpanes--horizontal>.splitpanes__splitter {
-  height: 7px;
-  border-top: 1px solid #eee;
-  margin-top: -1px
+    height: 7px;
+    border-top: 1px solid #eee;
+    margin-top: -1px
 }
 
 .default-theme.splitpanes--horizontal>.splitpanes__splitter:before,
 .default-theme.splitpanes--horizontal>.splitpanes__splitter:after,
 .default-theme .splitpanes--horizontal>.splitpanes__splitter:before,
 .default-theme .splitpanes--horizontal>.splitpanes__splitter:after {
-  transform: translate(-50%);
-  width: 30px;
-  height: 1px
+    transform: translate(-50%);
+    width: 30px;
+    height: 1px
 }
 
 .default-theme.splitpanes--horizontal>.splitpanes__splitter:before,
 .default-theme .splitpanes--horizontal>.splitpanes__splitter:before {
-  margin-top: -2px
+    margin-top: -2px
 }
 
 .default-theme.splitpanes--horizontal>.splitpanes__splitter:after,
 .default-theme .splitpanes--horizontal>.splitpanes__splitter:after {
-  margin-top: 1px
+    margin-top: 1px
 }
 
 /* hljs */
 
 pre code.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 1em;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  word-break: break-all;
-  border-radius: 5px;
-  /* border: 1px solid #ccc; */
-  max-height: 80vh;
+    display: block;
+    overflow-x: auto;
+    padding: 1em;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    border-radius: 5px;
+    /* border: 1px solid #ccc; */
+    max-height: 80vh;
 }
 
 code.hljs {
-  padding: 3px 5px
+    padding: 3px 5px
 }

@@ -205,7 +205,7 @@
                         <span v-else>--</span>
                     </template>
                 </el-table-column>
-                <el-table-column label="网站图标 | 标题" width="250" :show-overflow-tooltip="true">
+                <el-table-column label="网站图标 | 标题" width="250">
                     <template #default="scope">
                         <el-space>
                             <el-image :src="convertHttpToHttps(scope.row.FaviconURL)"
@@ -218,6 +218,9 @@
                                 </template>
                             </el-image>
                             <span>{{ scope.row.Title }}</span>
+                            <el-tooltip content="排除检索">
+                                <el-button v-if="scope.row.Title != ''" link :icon="ZoomOut" @click="tableCtrl.excludeFiled('title', scope.row.Title)" style="margin-left: -7px;"></el-button>
+                            </el-tooltip>
                         </el-space>
                     </template>
                 </el-table-column>
@@ -245,14 +248,10 @@
                 </el-table-column>
                 <el-table-column prop="IcpName" label="备案名称" width="160" :show-overflow-tooltip="true" />
                 <el-table-column prop="IcpNumber" label="备案号" width="160" :show-overflow-tooltip="true" />
-                <el-table-column prop="CertName" label="证书申请单位" width="160" :show-overflow-tooltip="true">
-                    <template #default="scope">
-                        <el-text @click="tableCtrl.searchCert">{{ scope.row.CertName }}</el-text>
-                    </template>
-                </el-table-column>
+                <el-table-column prop="CertName" label="证书申请单位" width="160" :show-overflow-tooltip="true" />
                 <el-table-column prop="Isp" label="运营商" width="100" :show-overflow-tooltip="true" />
                 <el-table-column prop="Position" label="地理位置" width="200" :show-overflow-tooltip="true" />
-                <el-table-column fixed="right" label="操作" width="100" align="center">
+                <el-table-column fixed="right" label="操作" width="120" align="center">
                     <template #default="scope">
                         <el-tooltip content="打开链接" placement="top">
                             <el-button link :icon="ChromeFilled" @click="openURL(scope.row.URL)" />
@@ -262,6 +261,10 @@
                             <el-button link :icon="csegmentIcon"
                                 @click.prevent="tableCtrl.addTab('ip: ' + CsegmentIpv4(scope.row.IP), false)">
                             </el-button>
+                        </el-tooltip>
+                        <el-divider direction="vertical" />
+                        <el-tooltip content="证书查询" placement="top">
+                            <el-button link :icon="certIcon" @click="tableCtrl.searchCert(scope.row.CertName)" />
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -309,6 +312,7 @@ import { FileDialog } from 'wailsjs/go/services/File';
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
 import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
+import certIcon from '@/assets/icon/cert.svg'
 import { structs } from 'wailsjs/go/models';
 import { quakeOptions } from '@/stores/options';
 
@@ -544,7 +548,7 @@ const tableCtrl = ({
         if (certName == "") {
             return
         }
-        tableCtrl.addTab("cert: " + certName, false)
+        tableCtrl.addTab(`cert: "${certName}"`, false)
     },
     searchFaviconMd5: function (url: string) {
         if (url == "") {
@@ -558,8 +562,8 @@ const tableCtrl = ({
             return
         }
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
-
-        const newTitle = `${tab.title} AND NOT (${filedName}: ${filedValue})`
+        quake.query = `${tab.title} AND NOT (${filedName}: "${filedValue.trim()}")`
+        tableCtrl.addTab(quake.query, false)
     },
     // type 0 choose txt , type 1 choose img
     handleFileupload: async function (type: number) {
@@ -683,10 +687,6 @@ async function exportData(mode: number) {
 
 <style scoped>
 .el-image:hover {
-    cursor: pointer;
-}
-
-.el-text:hover {
     cursor: pointer;
 }
 

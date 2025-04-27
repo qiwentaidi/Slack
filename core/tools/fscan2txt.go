@@ -15,7 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"golang.org/x/crypto/ssh"
 )
 
 var (
@@ -129,7 +128,7 @@ func (t *Tools) ConnectAndExecute(protocol, ip, port string, username, password 
 	case "ssh":
 		commands := []string{"whoami", "id", "ip a"}
 		for _, cmd := range commands {
-			output, err := executeSshCommand(host, username, password, cmd)
+			output, err := portscan.ExecuteSshCommand(host, username, password, cmd)
 			if err == nil {
 				result += fmt.Sprintf("[Commond] %s\n%s\n", cmd, output)
 			}
@@ -163,41 +162,6 @@ func (t *Tools) ConnectAndExecute(protocol, ip, port string, username, password 
 		return fmt.Sprintf("[Error] %v", err)
 	}
 	return fmt.Sprint("[Commond] " + commond + "\n" + result)
-}
-
-func executeSshCommand(host, username, password, command string) (string, error) {
-	config := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(password),
-		},
-		Timeout: 5 * time.Second,
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-		},
-	}
-
-	// Connect to the SSH server
-	client, err := ssh.Dial("tcp", host, config)
-	if err != nil {
-		return "", fmt.Errorf("failed to dial: %v", err)
-	}
-	defer client.Close()
-
-	// Create a session to execute the command
-	session, err := client.NewSession()
-	if err != nil {
-		return "", fmt.Errorf("failed to create session: %v", err)
-	}
-	defer session.Close()
-
-	// Run the command and capture the output
-	output, err := session.CombinedOutput(command)
-	if err != nil {
-		return "", fmt.Errorf("failed to run command: %v", err)
-	}
-
-	return string(output), nil
 }
 
 func executeMongodbQuery(host string) (string, error) {

@@ -20,65 +20,70 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func NewNucleiEngine(ctx context.Context, o structs.NucleiOption) {
-	if o.SkipNucleiWithoutTags && len(o.Tags) == 0 {
-		gologger.Info(ctx, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", o.URL))
-		return
-	}
-	options := NewNucleiSDKOptions(o)
-	ne, err := nuclei.NewNucleiEngineCtx(context.Background(), options...)
-	if err != nil {
-		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei init engine err: %v", err))
-		return
-	}
-	// load targets and optionally probe non http/https targets
-	gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] check vuln: %s", o.URL))
-	ne.LoadTargets([]string{o.URL}, false)
-	err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
-		gologger.DualLog(ctx, gologger.Level_Success, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
-		var reference string
-		if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
-			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
+func NewNucleiEngine(ctx, ctrlCtx context.Context, allOptions []structs.NucleiOption) {
+	count := len(allOptions)
+	for i, o := range allOptions {
+		if ctrlCtx.Err() != nil {
+			gologger.Warning(ctx, "User exits vulnerability scanning")
+			return
 		}
-		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
-			ID:           event.TemplateID,
-			Name:         event.Info.Name,
-			Description:  event.Info.Description,
-			Reference:    reference,
-			URL:          showMatched(event),
-			Request:      showRequest(event),
-			Response:     showResponse(event),
-			ResponseTime: limitDecimalPlaces(event.ResponseTime),
-			Extract:      strings.Join(event.ExtractedResults, " | "),
-			Type:         strings.ToUpper(event.Type),
-			Severity:     strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
+		gologger.Info(ctx, fmt.Sprintf("vulnerability scanning %d/%d", i+1, count))
+		if o.SkipNucleiWithoutTags && len(o.Tags) == 0 {
+			gologger.Info(ctx, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", o.URL))
+			return
+		}
+		options := NewNucleiSDKOptions(o)
+		ne, err := nuclei.NewNucleiEngineCtx(context.Background(), options...)
+		if err != nil {
+			gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[nuclei] init engine err: %v", err))
+			return
+		}
+		// load targets and optionally probe non http/https targets
+		gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] check vuln: %s", o.URL))
+		ne.LoadTargets([]string{o.URL}, false)
+		err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
+			gologger.DualLog(ctx, gologger.Level_Success, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
+			var reference string
+			if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
+				reference = strings.Join(event.Info.Reference.ToSlice(), ",")
+			}
+			runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+				ID:           event.TemplateID,
+				Name:         event.Info.Name,
+				Description:  event.Info.Description,
+				Reference:    reference,
+				URL:          showMatched(event),
+				Request:      showRequest(event),
+				Response:     showResponse(event),
+				ResponseTime: limitDecimalPlaces(event.ResponseTime),
+				Extract:      strings.Join(event.ExtractedResults, " | "),
+				Type:         strings.ToUpper(event.Type),
+				Severity:     strings.ToUpper(event.Info.SeverityHolder.Severity.String()),
+			})
 		})
-	})
-	if err != nil {
-		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei execute callback err: %v", err))
-		return
+		if err != nil {
+			gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[nuclei] execute callback err: %v", err))
+			return
+		}
+		defer ne.Close()
+		runtime.EventsEmit(ctx, "NucleiProgressID", i+1)
 	}
-	defer ne.Close()
 }
 
-func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiOption) {
+func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, allOptions []structs.NucleiOption) {
 	count := len(allOptions)
-	if count == 0 {
-		gologger.Warning(ctx, "nuclei scan no targets")
-		return
-	}
-	runtime.EventsEmit(ctx, "NucleiCounts", count)
 	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(context.Background())
 	if err != nil {
-		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei init engine err: %v", err))
+		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[nuclei] init engine err: %v", err))
 		return
 	}
 	var id int32
 	sg, err := syncutil.New(syncutil.WithSize(5))
 	if err != nil {
-		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei init sync group err: %v", err))
+		gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[nuclei] init sync group err: %v", err))
 		return
 	}
+	gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] loading %d targets to scan", count))
 	ne.GlobalResultCallback(func(event *output.ResultEvent) {
 		gologger.DualLog(ctx, gologger.Level_Success, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
 		var reference string
@@ -102,7 +107,8 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 
 	// 提交扫描任务
 	for _, option := range allOptions {
-		if ExitFunc {
+		if ctrlCtx.Err() != nil {
+			gologger.Warning(ctx, "User exits vulnerability scanning")
 			return
 		}
 		sg.Add()
@@ -111,7 +117,7 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 			defer sg.Done()
 			defer func() {
 				if r := recover(); r != nil {
-					gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("panic caught in goroutine: %v\n%s", r, debug.Stack()))
+					gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[nuclei] panic caught in goroutine: %v\n%s", r, debug.Stack()))
 				}
 			}()
 			defer func() {
@@ -127,7 +133,7 @@ func NewThreadSafeNucleiEngine(ctx context.Context, allOptions []structs.NucleiO
 			gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] check vuln: %s", option.URL))
 			err := ne.ExecuteNucleiWithOpts([]string{option.URL}, options...)
 			if err != nil {
-				gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("nuclei execute callback err: %v", err))
+				gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[nuclei] execute callback err: %v", err))
 				return
 			}
 		}()

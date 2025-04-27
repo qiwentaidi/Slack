@@ -14,10 +14,11 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func SmbScan(ctx context.Context, host string, usernames, passwords []string) {
+func SmbScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
+				gologger.Warning(ctx, "[smb] User exits crack scanning")
 				return
 			}
 			pass = strings.Replace(pass, "{user}", user, -1)

@@ -1,6 +1,8 @@
-import { computed } from 'vue'
+import { computed, markRaw } from 'vue'
 import global from '@/stores';
 import { webReportOptions } from './options';
+import { ActivityItem } from './interface';
+import { CircleCheck, Notification,  Warning, CloseBold, MoreFilled } from '@element-plus/icons-vue';
 
 export const titlebarStyle = computed(() => {
     return global.Theme.value ? {
@@ -89,3 +91,12 @@ export function getSelectedIcon(selectedLabel: string) {
     const selectedItem = webReportOptions.find(item => item.label === selectedLabel);
     return selectedItem ? selectedItem.icon : null;
 };
+
+// 手动指定5种类型对应的图标（都 markRaw 了）
+export const typeToIcon: Record<ActivityItem["type"], any> = {
+    primary: markRaw(MoreFilled),
+    success: markRaw(CircleCheck),
+    warning: markRaw(Warning),
+    danger:  markRaw(CloseBold),
+    info:    markRaw(Notification),
+}

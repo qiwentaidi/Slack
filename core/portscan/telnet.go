@@ -12,13 +12,14 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func TelenetScan(ctx context.Context, host string, usernames, passwords []string) {
+func TelenetScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	h := strings.Split(host, ":")[0]
 	p, _ := strconv.Atoi(strings.Split(host, ":")[1])
 	serverType := getTelnetServerType(h, p)
 	for _, user := range usernames {
 		for _, pass := range passwords {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
+				gologger.Warning(ctx, "[telnet] User exits crack scanning")
 				return
 			}
 			pass = strings.Replace(pass, "{user}", user, -1)

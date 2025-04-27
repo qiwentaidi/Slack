@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	ExitFunc      = false
 	bodyLengthMap map[int]int
 	mutex         = sync.Mutex{}
 )
@@ -47,7 +46,7 @@ type Options struct {
 }
 
 // method 请求类型
-func NewScanner(ctx context.Context, o Options) {
+func NewScanner(ctx, ctrlCtx context.Context, o Options) {
 	runtime.EventsEmit(ctx, "dirsearchCounts", len(o.URLs)*len(o.Paths))
 	bodyLengthMap = make(map[int]int)
 	// 初始化请求信息
@@ -82,16 +81,12 @@ func NewScanner(ctx context.Context, o Options) {
 	})
 	defer threadPool.Release()
 	for _, url := range o.URLs {
-		if !strings.HasSuffix(url, "/") {
-			url = url + "/"
-		}
+		url = prettyURL(url)
 		for _, path := range o.Paths {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
 				return
 			}
-			if strings.HasPrefix(path, "/") {
-				path = strings.TrimLeft(path, "/")
-			}
+			path = prettyPath(path)
 			wg.Add(1)
 			threadPool.Invoke(url + path)
 			if o.Interval != 0 {
@@ -134,4 +129,18 @@ func Scan(ctx context.Context, url string, header map[string]string, o Options, 
 	result.Body = string(resp.Body())
 	result.Location = resp.Header().Get("Location")
 	return result
+}
+
+func prettyURL(url string) string {
+	if !strings.HasSuffix(url, "/") {
+		url = url + "/"
+	}
+	return url
+}
+
+func prettyPath(path string) string {
+	if strings.HasPrefix(path, "/") {
+		path = strings.TrimLeft(path, "/")
+	}
+	return path
 }

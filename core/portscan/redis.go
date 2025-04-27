@@ -11,7 +11,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func RedisScan(ctx context.Context, host string, usernames, passwords []string) {
+func RedisScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	flag, err := RedisUnauth(host)
 	if flag && err == nil {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
@@ -27,7 +27,8 @@ func RedisScan(ctx context.Context, host string, usernames, passwords []string) 
 		gologger.Info(ctx, fmt.Sprintf("redis://%s is no unauthorized access", host))
 	}
 	for _, pass := range passwords {
-		if ExitFunc {
+		if ctrlCtx.Err() != nil {
+			gologger.Warning(ctx, "[redis] User exits crack scanning")
 			return
 		}
 		pass = strings.Replace(pass, "{user}", "redis", -1)

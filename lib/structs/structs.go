@@ -166,7 +166,6 @@ type WebscanOptions struct {
 	Target                []string
 	Thread                int
 	Screenshot            bool
-	Honeypot              bool
 	DeepScan              bool
 	RootPath              bool
 	CallNuclei            bool

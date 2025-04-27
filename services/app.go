@@ -22,6 +22,7 @@ import (
 	"slack-wails/core/subdomain"
 	"slack-wails/core/webscan"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/control"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/netutil"
 	"slack-wails/lib/structs"
@@ -209,24 +210,25 @@ func (a *App) IpLocation(ip string) string {
 	return result.String()
 }
 func (a *App) Subdomain(o structs.SubdomainOption) {
+	ctrlCtx, cancel := control.GetScanContext(control.Subdomain) // 标识任务
+	defer cancel()
 	qqwryLoader.Do(func() {
 		subdomain.InitQqwry(a.qqwryFile)
 	})
 	cdndataLoader.Do(func() {
 		subdomain.Cdndata = netutil.ReadCDNFile(a.ctx, a.cdnFile)
 	})
-	subdomain.ExitFunc = false
 	switch o.Mode {
 	case structs.EnumerationMode:
 		for _, domain := range o.Domains {
-			subdomain.MultiThreadResolution(a.ctx, domain, []string{}, "Enumeration", o)
+			subdomain.MultiThreadResolution(a.ctx, ctrlCtx, domain, []string{}, "Enumeration", o)
 		}
 	case structs.ApiMode:
-		subdomain.ApiPolymerization(a.ctx, o)
+		subdomain.ApiPolymerization(a.ctx, ctrlCtx, o)
 	default:
-		subdomain.ApiPolymerization(a.ctx, o)
+		subdomain.ApiPolymerization(a.ctx, ctrlCtx, o)
 		for _, domain := range o.Domains {
-			subdomain.MultiThreadResolution(a.ctx, domain, []string{}, "Enumeration", o)
+			subdomain.MultiThreadResolution(a.ctx, ctrlCtx, domain, []string{}, "Enumeration", o)
 		}
 	}
 }
@@ -234,13 +236,14 @@ func (a *App) Subdomain(o structs.SubdomainOption) {
 func (a *App) ExitScanner(scanType string) {
 	switch scanType {
 	case "[subdomain]":
-		subdomain.ExitFunc = true
+		control.CancelScanContext(control.Subdomain)
 	case "[dirsearch]":
-		dirsearch.ExitFunc = true
+		control.CancelScanContext(control.Dirseach)
 	case "[portscan]":
-		portscan.ExitFunc = true
+		control.CancelScanContext(control.Portscan)
+		control.CancelScanContext(control.Crack)
 	case "[webscan]":
-		webscan.ExitFunc = true
+		control.CancelScanContext(control.Webscan)
 	}
 }
 
@@ -302,8 +305,9 @@ func (a *App) LoadDirsearchDict(dictPath, newExts []string) []string {
 }
 
 func (a *App) DirScan(options dirsearch.Options) {
-	dirsearch.ExitFunc = false
-	dirsearch.NewScanner(a.ctx, options)
+	ctrlCtx, cancel := control.GetScanContext(control.Dirseach) // 标识任务
+	defer cancel()
+	dirsearch.NewScanner(a.ctx, ctrlCtx, options)
 }
 
 // portscan
@@ -317,7 +321,8 @@ func (a *App) SpaceGetPort(ip string) []float64 {
 }
 
 func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, thread, timeout int, proxy clients.Proxy) {
-	portscan.ExitFunc = false
+	ctrlCtx, cancel := control.GetScanContext(control.Portscan) // 标识任务
+	defer cancel()
 	addresses := make(chan portscan.Address)
 
 	go func() {
@@ -338,13 +343,14 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 			addresses <- portscan.Address{IP: temp[0], Port: port}
 		}
 	}()
-	portscan.TcpScan(a.ctx, addresses, thread, timeout, proxy)
+	portscan.TcpScan(a.ctx, ctrlCtx, addresses, thread, timeout, proxy)
 }
 
 // 端口暴破
 func (a *App) PortBrute(host string, usernames, passwords []string) {
-	portscan.ExitFunc = false
-	portscan.Runner(a.ctx, host, usernames, passwords)
+	ctrlCtx, cancel := control.GetScanContext(control.Crack) // 标识任务
+	defer cancel()
+	portscan.Runner(a.ctx, ctrlCtx, host, usernames, passwords)
 }
 
 // fofa
@@ -401,12 +407,13 @@ func (a *App) FingerprintList() []string {
 
 // 多线程 Nuclei 扫描，由于Nucli的设计问题，多线程无法调用代理，否则会导致扫描失败
 func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy, threadSafe bool) {
-	webscan.ExitFunc = false
+	ctrlCtx, cancel := control.GetScanContext(control.Webscan) // 标识任务
+	defer cancel()
 	webscan.IsRunning = true
 	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
 	gologger.Info(a.ctx, "Fingerscan is running ...")
 
-	engine := webscan.NewFingerScanner(a.ctx, proxy, options)
+	engine := webscan.NewFingerScanEngine(a.ctx, proxy, options)
 	if engine == nil {
 		gologger.Error(a.ctx, "Init fingerscan engine failed")
 		webscan.IsRunning = false
@@ -414,12 +421,12 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy,
 	}
 
 	// 指纹识别
-	engine.NewFingerScan()
-	if options.DeepScan && !webscan.ExitFunc {
-		engine.NewActiveFingerScan()
+	engine.FingerScan(ctrlCtx)
+	if options.DeepScan && ctrlCtx.Err() == nil {
+		engine.ActiveFingerScan(ctrlCtx)
 	}
 
-	if options.CallNuclei && !webscan.ExitFunc {
+	if options.CallNuclei && ctrlCtx.Err() == nil {
 		gologger.Info(a.ctx, "Init nuclei engine, vulnerability scan is running ...")
 
 		// 准备模板目录
@@ -443,22 +450,18 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy,
 				Proxy:                 clients.GetRawProxy(proxy),
 			})
 		}
-
-		runtime.EventsEmit(a.ctx, "NucleiCounts", len(allOptions))
+		counts := len(allOptions)
+		if counts == 0 {
+			gologger.Warning(a.ctx, "nuclei scan no targets")
+			webscan.IsRunning = false
+			return
+		}
+		runtime.EventsEmit(a.ctx, "NucleiCounts", counts)
 
 		if threadSafe {
-			webscan.NewThreadSafeNucleiEngine(a.ctx, allOptions)
+			webscan.NewThreadSafeNucleiEngine(a.ctx, ctrlCtx, allOptions)
 		} else {
-			for i, opt := range allOptions {
-				if webscan.ExitFunc {
-					gologger.Warning(a.ctx, "User exits vulnerability scanning")
-					webscan.IsRunning = false
-					return
-				}
-				gologger.Info(a.ctx, fmt.Sprintf("vulnerability scanning %d/%d", i+1, len(allOptions)))
-				webscan.NewNucleiEngine(a.ctx, opt)
-				runtime.EventsEmit(a.ctx, "NucleiProgressID", i+1)
-			}
+			webscan.NewNucleiEngine(a.ctx, ctrlCtx, allOptions)
 		}
 
 		gologger.Info(a.ctx, "Vulnerability scan has ended")

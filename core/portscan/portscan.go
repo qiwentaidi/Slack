@@ -16,9 +16,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var ExitFunc = false
-
-func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int, proxy clients.Proxy) {
+func TcpScan(ctx, ctrlCtx context.Context, addresses <-chan Address, workers, timeout int, proxy clients.Proxy) {
 	var id int32
 	single := make(chan struct{})
 	retChan := make(chan *structs.InfoResult)
@@ -29,11 +27,10 @@ func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int
 			runtime.EventsEmit(ctx, "webFingerScan", pr)
 		}
 		close(single)
-		runtime.EventsEmit(ctx, "scanComplete", "done")
 	}()
 	// port scan func
 	portScan := func(add Address) {
-		if ExitFunc {
+		if ctrlCtx.Err() != nil {
 			return
 		}
 		pr := Connect(add.IP, add.Port, timeout, proxy)
@@ -59,7 +56,7 @@ func TcpScan(ctx context.Context, addresses <-chan Address, workers, timeout int
 	})
 	defer threadPool.Release()
 	for add := range addresses {
-		if ExitFunc {
+		if ctrlCtx.Err() != nil {
 			return
 		}
 		wg.Add(1)

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"regexp"
 	"slack-wails/lib/util"
 	"strings"
@@ -169,4 +170,65 @@ func Str2HeaderList(str string) []string {
 		headers = append(headers, line)
 	}
 	return headers
+}
+
+const (
+	HTTP_PREFIX  = "http://"
+	HTTPS_PREFIX = "https://"
+)
+
+// 检测协议，返回完整URL（带 http(s)）
+func CheckProtocol(host string, client *resty.Client) (string, error) {
+	var result string
+
+	if len(strings.TrimSpace(host)) == 0 {
+		return result, fmt.Errorf("host %q is empty", host)
+	}
+
+	if strings.HasPrefix(host, HTTPS_PREFIX) || strings.HasPrefix(host, HTTP_PREFIX) {
+		_, err := SimpleGet(host, client)
+		if err != nil {
+			return result, err
+		}
+		return host, nil
+	}
+
+	u, err := url.Parse(HTTP_PREFIX + host)
+	if err != nil {
+		return result, err
+	}
+	parsePort := u.Port()
+
+	switch {
+	case parsePort == "80":
+		_, err := SimpleGet(HTTP_PREFIX+host, client)
+		if err != nil {
+			return result, err
+		}
+		return HTTP_PREFIX + host, nil
+
+	case parsePort == "443":
+		_, err := SimpleGet(HTTPS_PREFIX+host, client)
+		if err != nil {
+			return result, err
+		}
+		return HTTPS_PREFIX + host, nil
+
+	default:
+		// 先试 https
+		_, err := SimpleGet(HTTPS_PREFIX+host, client)
+		if err == nil {
+			return HTTPS_PREFIX + host, nil
+		}
+		// 再试 http
+		resp, err := SimpleGet(HTTP_PREFIX+host, client)
+		if err == nil {
+			if strings.Contains(string(resp.Body()), "<title>400 The plain HTTP request was sent to HTTPS port</title>") {
+				return HTTPS_PREFIX + host, nil
+			}
+			return HTTP_PREFIX + host, nil
+		}
+	}
+
+	return "", fmt.Errorf("both http and https check failed for host: %s", host)
 }

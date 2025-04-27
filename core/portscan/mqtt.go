@@ -11,7 +11,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MqttScan(ctx context.Context, host string, usernames, passwords []string) {
+func MqttScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	flag, err := MqttUnauth(host)
 	if flag && err == nil {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
@@ -28,7 +28,8 @@ func MqttScan(ctx context.Context, host string, usernames, passwords []string) {
 	}
 	for _, user := range usernames {
 		for _, pass := range passwords {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
+				gologger.Warning(ctx, "[mqtt] User exits crack scanning")
 				return
 			}
 			pass = strings.Replace(pass, "{user}", user, -1)

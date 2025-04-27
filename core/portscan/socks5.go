@@ -14,7 +14,7 @@ import (
 
 const defaultAliveURL = "http://www.baidu.com"
 
-func Socks5Scan(ctx context.Context, host string, usernames, passwords []string) {
+func Socks5Scan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	hostwithoutport := strings.Split(host, ":")[0]
 	port, err := strconv.Atoi(strings.Split(host, ":")[1])
 	if err != nil {
@@ -36,7 +36,8 @@ func Socks5Scan(ctx context.Context, host string, usernames, passwords []string)
 	}
 	for _, user := range usernames {
 		for _, pass := range passwords {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
+				gologger.Warning(ctx, "[socks5] User exits crack scanning")
 				return
 			}
 			pass = strings.Replace(pass, "{user}", string(user), -1)

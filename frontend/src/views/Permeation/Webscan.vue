@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref } from 'vue'
+import { reactive, onMounted, ref, nextTick } from 'vue'
 import {
     VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled, CircleCheck, Notification,
     Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Warning, Picture,
@@ -12,7 +12,7 @@ import global from "@/stores"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import usePagination from '@/usePagination';
 import { LinkFOFA, LinkHunter } from '@/linkage';
-import { getBadgeClass, getSelectedIcon, getTagTypeBySeverity, highlightFingerprints } from '@/stores/style';
+import { getBadgeClass, getSelectedIcon, getTagTypeBySeverity, highlightFingerprints, typeToIcon } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
 import { CheckFileStat, DirectoryDialog, FileDialog, List, ReadFile, SaveFileDialog } from 'wailsjs/go/services/File';
 import { isPrivateIP, validateIp, validateIpAndDomain } from '@/stores/validate';
@@ -41,6 +41,7 @@ import async from 'async'
 import { handleWebscanContextMenu } from '@/linkage/contextMenu';
 import CustomTextarea from '@/components/CustomTextarea.vue';
 import { IPParse, PortParse } from 'wailsjs/go/core/Tools';
+import { ActivityItem } from '@/stores/interface';
 
 // 增加较快的数据需要节流刷新
 const throttleFingerscanUpdate = throttle(() => {
@@ -99,20 +100,25 @@ function updatePorts(index: number) {
     }
 }
 
-const activities = ref<{ content: string, type: string, timestamp: string, icon: any }[]>([])
+// activities 列表
+const activities = ref<ActivityItem[]>([])
 
-const timelineContainer = ref<HTMLElement | null>(null); // 创建一个 ref
+// timeline 滚动容器
+const timelineContainer = ref<HTMLElement | null>(null)
 
-function updateActivities(newActivity: { content: string, type: string, icon: any }) {
+function addActivity(newActivity: ActivityItem) {
     activities.value.push({
         content: newActivity.content,
-        timestamp: (new Date()).toTimeString(),
+        timestamp: new Date().toLocaleTimeString(),
         type: newActivity.type,
-        icon: newActivity.icon
-    });
-    if (timelineContainer.value) {
-        timelineContainer.value.scrollTop = timelineContainer.value.scrollHeight; // 滚动到最底部
-    }
+        icon: typeToIcon[newActivity.type]
+    })
+
+    nextTick(() => {
+        if (timelineContainer.value) {
+            timelineContainer.value.scrollTop = timelineContainer.value.scrollHeight
+        }
+    })
 }
 
 // webscan
@@ -147,7 +153,6 @@ const config = reactive({
     customTemplate: <string[]>[],
     customTags: <string[]>[],
     screenhost: false,
-    honeypot: true,
     rootPathScan: true,
     webscanOption: 0,
     skipNucleiWithoutTags: false,
@@ -212,18 +217,16 @@ onMounted(() => {
     });
     EventsOn("webFingerScan", (result: any) => {
         if ((result.Scheme == "http" || result.Scheme == "https") && result.StatusCode == 0) {
-            updateActivities({
+            addActivity({
                 content: result.URL + " access failed",
                 type: "warning",
-                icon: Warning,
             })
             return
         }
         if ((result.Scheme == "http" || result.Scheme == "https") && result.StatusCode == 422) {
-            updateActivities({
+            addActivity({
                 content: result.URL + " is cloud protected and has been filtered",
                 type: "warning",
-                icon: Warning,
             })
             return
         }
@@ -238,10 +241,6 @@ onMounted(() => {
     EventsOn("ActiveProgressID", (id: number) => {
         dashboard.activePercentage = Number(((id / dashboard.activeCount) * 100).toFixed(2));
     });
-    // 扫描结束时让进度条为100
-    EventsOn("ActiveScanComplete", () => {
-        dashboard.activePercentage = 100
-    });
     EventsOn("NucleiCounts", (count: number) => {
         dashboard.nucleiCount = count
     });
@@ -252,20 +251,14 @@ onMounted(() => {
     EventsOn("progressID", (id: number) => {
         dashboard.portscanPercentage = Number(((id / dashboard.portscanCount) * 100).toFixed(2));
     });
-    // 扫描结束时让进度条为100
-    EventsOn("scanComplete", () => {
-        dashboard.portscanPercentage = 100
-    });
     return () => {
         EventsOff("nucleiResult");
         EventsOff("webFingerScan");
         EventsOff("ActiveCounts");
         EventsOff("ActiveProgressID");
-        EventsOff("ActiveScanComplete");
         EventsOff("NucleiCounts");
         EventsOff("NucleiProgressID");
         EventsOff("portScanLoading");
-        EventsOff("scanComplete");
         EventsOff("progressID");
     };
 });
@@ -274,18 +267,8 @@ async function startScan() {
     let engine = new Engine
     if (!await engine.checkOptions()) return
     param.inputType == 0 ? form.newWebscanDrawer = false : form.newHostscanDrawer = false
-    switch (param.inputType) {
-        // 网站扫描
-        case 0:
-            if (!engine.checkWebscanOptions()) return
-            break
-        // 主机扫描
-        case 1:
-            if (!await engine.checkHostscanOptions()) return
-            break
-        default:
-            ElMessage.warning("未知扫描类型")
-            return
+    if (param.inputType == 1 && (!await engine.checkHostscanOptions())) {
+        return
     }
     // 检查是否能写入任务
     if (!(await taskManager.writeTask())) {
@@ -305,10 +288,9 @@ function stopScan() {
     // 新增一个标志变量来确保setTimeout只执行一次
     if (!form.scanStopped) {
         form.scanStopped = true; // 设置标志为true，表示扫描已停止
-        updateActivities({
+        addActivity({
             content: "用户已退出扫描任务",
             type: "danger",
-            icon: CloseBold
         })
         // 增加10s的暂停时间，先立即退出扫描，等10s之后再将扫描状态停止，以应对一些数据依旧在增加等问题
         setTimeout(() => {
@@ -348,15 +330,6 @@ class Engine {
         return true
     }
 
-    public checkWebscanOptions() {
-        this.inputLines = this.inputLines.filter(item => item.startsWith("http://") || item.startsWith("https://"))
-        if (this.inputLines.length == 0) {
-            ElMessage.warning('网站扫描URL输入目标有误, 请检查!')
-            return
-        }
-        return true
-    }
-
     public async checkHostscanOptions() {
         const invalidLines = this.inputLines.filter(item => !validateIpAndDomain.some(validate => validate.test(item)));
         if (invalidLines.length > 0) {
@@ -385,27 +358,24 @@ class Engine {
         }
         // 判断是否进行存活探测
         if (global.webscan.default_alive_module != "None") {
-            updateActivities({
+            addActivity({
                 content: "正在加载主机探活引擎, 更多信息请查看日志",
                 type: "primary",
-                icon: MoreFilled,
             })
             form.runnningStatus = true
             global.webscan.ping_check_alive = global.webscan.default_alive_module != 'ICMP'
             this.ips = await HostAlive(this.ips, global.webscan.ping_check_alive)
             if (this.ips == null) {
-                updateActivities({
+                addActivity({
                     content: "未发现存活主机, 任务已结束",
                     type: "warning",
-                    icon: Warning
                 })
                 form.runnningStatus = false
                 return
             }
-            updateActivities({
+            addActivity({
                 content: "主机存活目标数量: " + this.ips.length.toString(),
                 type: "info",
-                icon: Notification
             })
         }
         return true
@@ -426,17 +396,15 @@ class Engine {
     public async Runner() {
         // 先扫端口
         if (param.inputType == 1) {
-            updateActivities({
+            addActivity({
                 content: "正在加载端口扫描引擎, 目标数量: " + dashboard.portscanCount.toString(),
                 type: "primary",
-                icon: MoreFilled,
             })
             await NewTcpScanner(this.specialTarget, this.ips, this.portsList, global.webscan.port_thread, global.webscan.port_timeout, getProxy())
             if (!config.vulscan) {
-                updateActivities({
+                addActivity({
                     content: "只需要进行端口扫描, 任务已结束",
                     type: "success",
-                    icon: CircleCheck,
                 })
                 form.runnningStatus = false
                 return
@@ -447,10 +415,9 @@ class Engine {
             }
             // 对web服务先去提取再去除，之后扫描
             if (this.inputLines.length != 0) {
-                updateActivities({
+                addActivity({
                     content: "提取并移除需要深度探测网站指纹目标, 目标数量: " + this.inputLines.length.toString() + ", 正在进行网站指纹检测",
                     type: "primary",
-                    icon: MoreFilled
                 })
                 fp.table.result = fp.table.result.filter(
                     (line) => line.Scheme !== "http" && line.Scheme !== "https"
@@ -465,10 +432,9 @@ class Engine {
         if (config.crack) {
             await this.CrackRunner()
         }
-        updateActivities({
+        addActivity({
             content: "任务已结束",
             type: "success",
-            icon: CircleCheck,
         })
         form.runnningStatus = false
     }
@@ -499,7 +465,6 @@ class Engine {
             Target: this.inputLines,
             Thread: global.webscan.web_thread,
             Screenshot: config.screenhost,
-            Honeypot: config.honeypot,
             DeepScan: deepScan,
             RootPath: config.rootPathScan,
             CallNuclei: callNuclei,
@@ -511,16 +476,14 @@ class Engine {
             Tags: config.customTags,
             CustomHeaders: config.customHeaders,
         }
-        updateActivities({
+        addActivity({
             content: "正在加载网站扫描引擎, 当前模式: " + webscanOptions.find(item => item.value == config.webscanOption).label,
             type: "primary",
-            icon: MoreFilled,
         })
         if (global.proxy.enabled) {
-            updateActivities({
+            addActivity({
                 content: "代理已启用, Nuclei改为单线程执行",
                 type: "primary",
-                icon: MoreFilled,
             })
             await NewWebScanner(options, getProxy(), false)
         } else {
@@ -536,10 +499,9 @@ class Engine {
             (line) => crackDict.options.includes(line.Scheme.toLowerCase())
         ).map(item => item.URL);
         if (crackLinks.length == 0) {
-            updateActivities({
+            addActivity({
                 content: "未发现可被暴破的目标",
                 type: "warning",
-                icon: Warning,
             })
             return
         }
@@ -564,26 +526,25 @@ class Engine {
             let pass = ProcessTextAreaInput(param.password)
             passDict.push(...pass)
         }
-        updateActivities({
+        addActivity({
             content: "正在加载暴破引擎, 当前目标数量:" + crackLinks.length.toString(),
             type: "primary",
-            icon: MoreFilled,
         })
         // **使用 Promise 包装 async.eachLimit，确保 CrackRunner() 被 await**
         await new Promise((resolve, reject) => {
-            async.eachLimit(crackLinks, global.webscan.crack_thread, async (target: string, callback: (err?: any) => void) => {
-                    if (!form.runnningStatus || form.scanStopped) {
-                        return callback();  // 结束当前任务
-                    }
+            async.eachLimit(crackLinks, global.webscan.crack_thread, (target: string, callback: (err?: any) => void) => {
+                if (!form.runnningStatus || form.scanStopped) {
+                    return callback();  // 结束当前任务
+                }
 
-                    let protocol = target.split("://")[0];
-                    userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!;
+                let protocol = target.split("://")[0];
+                userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!;
 
-                    Callgologger("info", target + " is start weak password cracking");
-                    PortBrute(target, userDict, passDict);
+                Callgologger("info", target + " is start weak password cracking");
+                PortBrute(target, userDict, passDict);
 
-                    callback();  // 任务完成后调用 callback
-                },
+                callback();  // 任务完成后调用 callback
+            },
                 (err: any) => {
                     if (err) {
                         reject(err);
@@ -1006,7 +967,7 @@ const shodanRunningstatus = ref(false)
                         <template #default="scope">
                             <el-tag type="primary" round effect="plain">{{ scope.row.Port }}</el-tag>
                             <el-tag type="primary" round effect="plain" style="margin-left: 5px;">{{ scope.row.Scheme
-                            }}</el-tag>
+                                }}</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="StatusCode" width="100px" label="Code" sortable="custom" />
@@ -1341,7 +1302,7 @@ const shodanRunningstatus = ref(false)
                 <template #default="scope">
                     <el-link @click="taskManager.viewTask(scope.row)">{{ scope.row.Targets.includes('\n') ?
                         scope.row.Targets.split('\n')[0] : scope.row.Targets
-                    }}</el-link>
+                        }}</el-link>
                 </template>
             </el-table-column>
             <el-table-column label="资产" width="100px">

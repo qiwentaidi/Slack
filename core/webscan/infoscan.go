@@ -26,10 +26,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var (
-	ExitFunc  = false
-	IsRunning = false
-)
+var IsRunning = false // 用于判断网站扫描是否正在运行
 
 type WebInfo struct {
 	Protocol      string
@@ -53,7 +50,6 @@ type FingerScanner struct {
 	urls                    []*url.URL
 	aliveURLs               []*url.URL          // 默认指纹扫描结束后，存活的URL，以便后续主动指纹过滤目标
 	screenshot              bool                // 是否截屏
-	honeypot                bool                // 是否识别蜜罐
 	thread                  int                 // 指纹线程
 	deepScan                bool                // 代表主动指纹探测
 	rootPath                bool                // 主动指纹是否采取根路径扫描
@@ -65,10 +61,19 @@ type FingerScanner struct {
 	mutex                   sync.RWMutex
 }
 
-func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
+func NewFingerScanEngine(ctx context.Context, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
 	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
+	client := clients.NewRestyClientWithProxy(nil, true, proxy)
 	for _, t := range options.Target {
 		t = strings.TrimRight(t, "/")
+		// 增加协议判断
+		if !strings.HasPrefix(t, "http://") || !strings.HasPrefix(t, "https://") {
+			if url, err := clients.CheckProtocol(t, client); err != nil {
+				continue
+			} else {
+				t = url
+			}
+		}
 		u, err := url.Parse(t)
 		if err != nil {
 			gologger.Error(ctx, err)
@@ -83,10 +88,9 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 	return &FingerScanner{
 		ctx:                     ctx,
 		urls:                    urls,
-		client:                  clients.NewRestyClientWithProxy(nil, true, proxy),
+		client:                  client,
 		notFollowClient:         clients.NewRestyClientWithProxy(nil, false, proxy),
 		screenshot:              options.Screenshot,
-		honeypot:                options.Honeypot,
 		thread:                  options.Thread,
 		deepScan:                options.DeepScan,
 		rootPath:                options.RootPath,
@@ -96,7 +100,7 @@ func NewFingerScanner(ctx context.Context, proxy clients.Proxy, options structs.
 	}
 }
 
-func (s *FingerScanner) NewFingerScan() {
+func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 	var wg sync.WaitGroup
 	single := make(chan struct{})
 	retChan := make(chan structs.InfoResult, len(s.urls))
@@ -108,7 +112,7 @@ func (s *FingerScanner) NewFingerScan() {
 	}()
 	// 指纹扫描
 	fscan := func(u *url.URL) {
-		if ExitFunc {
+		if ctrlCtx.Err() != nil {
 			return
 		}
 		var (
@@ -157,7 +161,7 @@ func (s *FingerScanner) NewFingerScan() {
 		faviconHash, faviconMd5 := FaviconHash(u, s.headers, s.client)
 
 		// 发送shiro探测
-		rawHeaders = append(rawHeaders, []byte(fmt.Sprintf("Set-Cookie: %s", s.ShiroScan(u)))...)
+		rawHeaders = append(rawHeaders, fmt.Appendf(nil, "Set-Cookie: %s", s.ShiroScan(u))...)
 
 		// 跟随JS重定向，并替换成重定向后的数据
 		redirectBody := s.GetJSRedirectResponse(u, string(body))
@@ -190,7 +194,7 @@ func (s *FingerScanner) NewFingerScan() {
 
 		s.aliveURLs = append(s.aliveURLs, u)
 
-		fingerprints := s.FingerScan(s.ctx, web, FingerprintDB)
+		fingerprints := s.Scan(s.ctx, web, FingerprintDB)
 
 		if s.generateLog4j2 {
 			fingerprints = append(fingerprints, "Generate-Log4j2")
@@ -200,7 +204,7 @@ func (s *FingerScanner) NewFingerScan() {
 			fingerprints = append(fingerprints, "Fastjson")
 		}
 
-		if s.honeypot && checkHoneypotWithHeaders(web.HeadeString) || checkHoneypotWithFingerprintLength(len(fingerprints)) {
+		if checkHoneypotWithHeaders(web.HeadeString) || checkHoneypotWithFingerprintLength(len(fingerprints)) {
 			fingerprints = []string{"疑似蜜罐"}
 		}
 
@@ -233,13 +237,17 @@ func (s *FingerScanner) NewFingerScan() {
 		}
 	}
 	threadPool, _ := ants.NewPoolWithFunc(s.thread, func(target interface{}) {
+		if ctrlCtx.Err() != nil {
+			wg.Done()
+			return
+		}
 		t := target.(*url.URL)
 		fscan(t)
 		wg.Done()
 	})
 	defer threadPool.Release()
 	for _, target := range s.urls {
-		if ExitFunc {
+		if ctrlCtx.Err() != nil {
 			return
 		}
 		wg.Add(1)
@@ -251,13 +259,14 @@ func (s *FingerScanner) NewFingerScan() {
 	<-single
 }
 
-type TFP struct {
+type ActiveFingerDetect struct {
 	URL  *url.URL
 	Fpe  []FingerPEntity
 	Path string
 }
 
-func (s *FingerScanner) NewActiveFingerScan() {
+const activeTimeoutLimit = 5 // 超过该次数就不再扫描该目标
+func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 	if len(s.aliveURLs) == 0 {
 		gologger.Warning(s.ctx, "No surviving target found, active fingerprint scanning has been skipped")
 		return
@@ -265,44 +274,56 @@ func (s *FingerScanner) NewActiveFingerScan() {
 	gologger.Info(s.ctx, "Active fingerprint detection in progress")
 	var id int32
 	var wg sync.WaitGroup
-	visited := make(map[string]bool) // 用于记录已访问的URL和路径组合
+	visited := sync.Map{}        // 记录已访问路径
+	timeoutCounter := sync.Map{} // 记录每个目标的超时次数
 
 	single := make(chan struct{})
 	retChan := make(chan structs.InfoResult, len(s.urls))
+
 	go func() {
 		for pr := range retChan {
 			runtime.EventsEmit(s.ctx, "webFingerScan", pr)
 		}
 		close(single)
 	}()
-	// 主动指纹扫描
-	threadPool, _ := ants.NewPoolWithFunc(5, func(tfp interface{}) {
-		defer wg.Done()
-		fp := tfp.(TFP)
-		fullURL := fp.URL.String() + fp.Path
 
-		// 确保并发唯一性：检查和标记已经访问过的URL和路径组合
-		s.mutex.Lock()
-		if visited[fullURL] {
-			s.mutex.Unlock()
-			return // 已经处理过，跳过
+	// 主动指纹扫描线程池
+	threadPool, _ := ants.NewPoolWithFunc(s.thread, func(tfp interface{}) {
+		defer wg.Done()
+		fp := tfp.(ActiveFingerDetect)
+		fullURL := fp.URL.String() + fp.Path
+		baseURL := fp.URL.String()
+
+		// 检查是否已超出超时限制
+		if val, ok := timeoutCounter.Load(baseURL); ok && val.(int) >= activeTimeoutLimit {
+			gologger.DualLog(s.ctx, gologger.Level_WARN, fmt.Sprintf("Target %s has reached the timeout limit, skipping active scan", baseURL))
+			return
 		}
-		visited[fullURL] = true
-		s.mutex.Unlock()
+
+		// 去重：URL + path
+		// 使用 sync.Map 检查是否已访问
+		if _, ok := visited.Load(fullURL); ok {
+			return
+		}
+		visited.Store(fullURL, true)
 
 		resp, err := clients.DoRequest("GET", fullURL, s.headers, nil, 5, s.client)
 		if err != nil {
+			// 累计超时次数
+			v, _ := timeoutCounter.LoadOrStore(baseURL, 1)
+			timeoutCounter.Store(baseURL, v.(int)+1)
 			return
 		}
+
 		body := resp.Body()
 		server := resp.Header().Get("Server")
-		content_type := resp.Header().Get("Content-Type")
+		contentType := resp.Header().Get("Content-Type")
 		title := clients.GetTitle(body)
 
 		headers, _, _ := DumpResponseHeadersAndRaw(resp.RawResponse)
 		ti := &WebInfo{
 			HeadeString:   string(headers),
-			ContentType:   content_type,
+			ContentType:   contentType,
 			BodyString:    string(body),
 			Path:          fp.Path,
 			Title:         title,
@@ -311,7 +332,7 @@ func (s *FingerScanner) NewActiveFingerScan() {
 			Port:          netutil.GetPort(fp.URL),
 			StatusCode:    resp.StatusCode(),
 		}
-		result := s.FingerScan(s.ctx, ti, fp.Fpe)
+		result := s.Scan(s.ctx, ti, fp.Fpe)
 
 		if (len(result) > 0 && ti.StatusCode != 404) || util.ArrayContains("ThinkPHP", result) {
 			s.mutex.Lock()
@@ -332,21 +353,31 @@ func (s *FingerScanner) NewActiveFingerScan() {
 		}
 	})
 	defer threadPool.Release()
+
 	s.ActiveCounts()
-	// 载入存活目标
+
+	// 开始提交任务
 	for _, target := range s.aliveURLs {
 		for _, item := range ActiveFingerprintDB {
 			for _, path := range item.Path {
-				if ExitFunc { // 控制程序退出
+				if ctrlCtx.Err() != nil {
 					return
 				}
+
+				base := target.String()
+				if val, ok := timeoutCounter.Load(base); ok && val.(int) >= activeTimeoutLimit {
+					continue // 已超时限制，跳过该目标
+				}
+
 				wg.Add(1)
 				atomic.AddInt32(&id, 1)
 				runtime.EventsEmit(s.ctx, "ActiveProgressID", id)
+
 				if s.rootPath {
 					target, _ = url.Parse(util.GetBasicURL(target.String()))
 				}
-				threadPool.Invoke(TFP{
+
+				threadPool.Invoke(ActiveFingerDetect{
 					URL:  target,
 					Fpe:  item.Fpe,
 					Path: path,
@@ -354,10 +385,10 @@ func (s *FingerScanner) NewActiveFingerScan() {
 			}
 		}
 	}
+
 	wg.Wait()
 	close(retChan)
 	gologger.Info(s.ctx, "ActiveFingerScan Finished")
-	runtime.EventsEmit(s.ctx, "ActiveScanComplete", 100)
 	<-single
 }
 
@@ -418,7 +449,7 @@ func DumpResponseHeadersAndRaw(resp *http.Response) (headers, fullresp []byte, e
 	return
 }
 
-func (s *FingerScanner) FingerScan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
+func (s *FingerScanner) Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
 	var fingerPrintResults []string
 
 	inputChan := make(chan FingerPEntity, len(targetDB))
@@ -550,6 +581,7 @@ func (s *FingerScanner) ShiroScan(u *url.URL) string {
 }
 
 // 探测Fastjson
+// {"\u+040\u+074\u+079\u+070\u+065":"java.lang.AutoCloseabl\u+065" unicode 绕过 waf
 func (s *FingerScanner) FastjsonScan(u *url.URL) bool {
 	jsonHeader := map[string]string{
 		"Content-Type": "application/json",

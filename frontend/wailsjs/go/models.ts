@@ -1195,7 +1195,6 @@ export namespace structs {
 	    Target: string[];
 	    Thread: number;
 	    Screenshot: boolean;
-	    Honeypot: boolean;
 	    DeepScan: boolean;
 	    RootPath: boolean;
 	    CallNuclei: boolean;
@@ -1216,7 +1215,6 @@ export namespace structs {
 	        this.Target = source["Target"];
 	        this.Thread = source["Thread"];
 	        this.Screenshot = source["Screenshot"];
-	        this.Honeypot = source["Honeypot"];
 	        this.DeepScan = source["DeepScan"];
 	        this.RootPath = source["RootPath"];
 	        this.CallNuclei = source["CallNuclei"];

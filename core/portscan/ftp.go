@@ -12,7 +12,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func FtpScan(ctx context.Context, address string, usernames, passwords []string) {
+func FtpScan(ctx, ctrlCtx context.Context, address string, usernames, passwords []string) {
 	flag, err := FtpConn(address, "anonymous", "")
 	if flag && err == nil {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
@@ -28,7 +28,8 @@ func FtpScan(ctx context.Context, address string, usernames, passwords []string)
 	}
 	for _, user := range usernames {
 		for _, pass := range passwords {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
+				gologger.Warning(ctx, "[ftp] User exits crack scanning")
 				return
 			}
 			pass = strings.Replace(pass, "{user}", user, -1)

@@ -23,13 +23,13 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func RdpScan(ctx context.Context, host string, usernames, passwords []string) {
+func RdpScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 	limiter := make(chan bool, 10) // 限制协程数量
 	for _, user := range usernames {
 		for _, pass := range passwords {
-			if ExitFunc {
+			if ctrlCtx.Err() != nil {
 				close(limiter)
 				wg.Wait()
 				return

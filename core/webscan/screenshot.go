@@ -35,6 +35,12 @@ func init() {
 // GetScreenshot 获取指定URL的屏幕截图，并保存到本地文件。
 // 返回文件路径和错误，如果错误不为nil，则文件路径为空。
 func GetScreenshot(url string) (string, error) {
+	// 定义保存路径
+	fp := filepath.Join(dir, renameOutput(url)+".png")
+	// 检查文件是否存在，如果存在则直接返回
+	if _, err := os.Stat(fp); err == nil {
+		return fp, nil
+	}
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Flag("headless", true),
 		chromedp.Flag("disable-background-timer-throttling", false),
@@ -53,9 +59,6 @@ func GetScreenshot(url string) (string, error) {
 	); err != nil {
 		return "", errors.New("无法获取屏幕截图")
 	}
-
-	// 定义保存路径
-	fp := filepath.Join(dir, renameOutput(url)+".png")
 
 	// 确保目标目录存在
 	if err := os.MkdirAll(dir, 0755); err != nil {

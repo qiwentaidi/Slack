@@ -7,7 +7,7 @@ import (
 	"slack-wails/lib/gologger"
 )
 
-type crackFunc func(context.Context, string, []string, []string)
+type crackFunc func(context.Context, context.Context, string, []string, []string)
 
 var crackScanners = map[string]crackFunc{
 	"ftp":        FtpScan,
@@ -31,14 +31,14 @@ var crackScanners = map[string]crackFunc{
 	"rmi":        RmiScan,
 }
 
-func Runner(ctx context.Context, host string, usernames, passwords []string) {
+func Runner(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
 	u, err := url.Parse(host)
 	if err != nil {
 		gologger.Debug(ctx, fmt.Sprintf("[!] Parse url error: %s\n", err))
 		return
 	}
 	if scanFunc, ok := crackScanners[u.Scheme]; ok {
-		scanFunc(ctx, u.Host, usernames, passwords)
+		scanFunc(ctx, ctrlCtx, u.Host, usernames, passwords)
 	} else {
 		gologger.Error(ctx, fmt.Sprintf("[!] No brute module registered for: %s\n", u.Scheme))
 	}
