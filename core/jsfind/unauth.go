@@ -23,11 +23,9 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 	var requestBody *strings.Reader
 
 	if apiReq.Method == http.MethodGet {
-		// 将参数附加到 URL 查询字符串
 		requestURL = apiReq.URL + "?" + apiReq.Params.Encode()
 		requestBody = strings.NewReader("")
 	} else {
-		// 其他请求方式（POST/PUT 等），参数作为请求体
 		requestURL = apiReq.URL
 		requestBody = strings.NewReader(apiReq.Params.Encode())
 		if strings.Contains(apiReq.Headers["Content-Type"], "application/json") {
@@ -35,29 +33,31 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 		}
 	}
 
-	// 发送请求
 	resp, err := clients.DoRequest(apiReq.Method, requestURL, apiReq.Headers, requestBody, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		return false, "", err
 	}
 	body := string(resp.Body())
-	// 判断是否为未授权访问, 验证码接口不用判断
-	if resp.StatusCode() == 401 || resp.StatusCode() == 403 || strings.Contains(apiReq.URL, "captcha") {
+
+	// 1. HTTP状态码异常，直接返回
+	if resp.StatusCode() == 401 || resp.StatusCode() == 403 {
 		return false, "", nil
 	}
 
+	// 2. 页面内容完全相同，排除
 	if homeBody == body {
 		return false, "", nil
 	}
-	// // 计算文本相似度
+
+	// 3. 页面相似度检查
 	similarity := jaccardSimilarity(homeBody, body)
 	if similarity >= 0.9 {
 		return false, "", errors.New("页面内容相似度超过90%")
 	}
 
-	// 解析返回内容，检查是否包含未授权提示信息
+	// 4. 关键词判断
 	for _, auth := range authentication {
-		if strings.Contains(string(body), auth) {
+		if strings.Contains(body, auth) {
 			return false, "", nil
 		}
 	}

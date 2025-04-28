@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue';
 import { Copy, parseHeaders, ProcessTextAreaInput } from '@/util';
-import { AnalyzeAPI, ExtractAllJSLink, GoFetch, JSFind } from 'wailsjs/go/services/App';
+import { AnalyzeAPI, ExtractAllJSLink, JSFind, GoFetch } from 'wailsjs/go/services/App';
 import { ArrowUpBold, ArrowDownBold, Delete, DocumentCopy } from '@element-plus/icons-vue';
 import global from "@/stores";
 import { ElNotification, ElMessage } from 'element-plus';
@@ -30,7 +30,7 @@ onMounted(() => {
             Source: result.Source,
             VulType: "未授权访问",
             Severity: "HIGH",
-            Param: result.Param,
+            Request: result.Request,
             Length: result.Length,
             Filed: "",
             Response: result.Response,
@@ -96,7 +96,7 @@ async function JSFinder() {
                 VulType: "身份证号信息泄露",
                 Severity: "MEDIUM",
                 Length: 0,
-                Param: "",
+                Request: "",
                 Target: url,
                 Response: "",
             })
@@ -113,7 +113,7 @@ async function JSFinder() {
                 VulType: "手机号信息泄露",
                 Severity: "LOW",
                 Length: 0,
-                Param: "",
+                Request: "",
                 Target: url,
                 Response: "",
             })
@@ -137,7 +137,7 @@ async function JSFinder() {
                     VulType: "敏感字段泄露",
                     Severity: "INFO",
                     Length: 0,
-                    Param: "",
+                    Request: "",
                     Target: url,
                     Response: "",
                 })
@@ -191,7 +191,7 @@ const detail = reactive({
     Source: '',
     VulType: '',
     Severity: '',
-    Param: '',
+    Request: '',
     Filed: '',
     Response: '',
 });
@@ -202,7 +202,7 @@ function openDialog(row: any) {
     detail.Source = row.Source;
     detail.VulType = row.VulType;
     detail.Severity = row.Severity;
-    detail.Param = row.Param;
+    detail.Request = row.Request;
     detail.Filed = row.Filed;
     // 超过50kb不显示
     if (row.Response && row.Response.length >= 500 * 1024) {
@@ -366,9 +366,11 @@ function findMissingElements(A: string[], B: string[]) {
         漏洞等级: <el-tag :type="getTagTypeBySeverity(detail.Severity)">
             {{ detail.Severity }}
         </el-tag> <br /><br />
-        <span v-if="detail.Param != ''">漏洞参数: {{ detail.Param }}</span><br /><br />
-        <span>匹配内容: <strong>{{ detail.Filed }}</strong></span><br /><br />
-        <span><br /><br />响应内容: {{ detail.Response }}</span><br />
+        <span>请求内容: </span>
+        <pre style="white-space: pre-wrap; word-break: break-all;"><code>{{ detail.Request }}</code></pre>
+        <br />
+        <span>响应内容: </span><br />
+        <code>{{ detail.Response }}</code>
     </el-dialog>
 </template>
 

@@ -115,7 +115,7 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 		content = []byte(body.(string))
 	}
 	resp, err := clients.DoRequest(method, target, headers, bytes.NewReader(content), 10, clients.NewRestyClientWithProxy(nil, true, proxy))
-	if err != nil || resp == nil {
+	if err != nil {
 		return &structs.Response{
 			Error: true,
 		}

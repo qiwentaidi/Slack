@@ -141,7 +141,7 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 		// 正常请求指纹
 		resp, err = clients.DoRequest("GET", u.String(), s.headers, nil, 10, s.client)
 		body := resp.Body()
-		if err != nil || resp == nil {
+		if err != nil {
 			if len(rawHeaders) > 0 {
 				gologger.Debug(s.ctx, fmt.Sprintf("%s has error to 302, response headers: %s", u.String(), string(rawHeaders)))
 				statusCode = 302
@@ -265,7 +265,7 @@ type ActiveFingerDetect struct {
 	Path string
 }
 
-const activeTimeoutLimit = 5 // 超过该次数就不再扫描该目标
+const activeTimeoutLimit = 15 // 超过该次数就不再扫描该目标
 func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 	if len(s.aliveURLs) == 0 {
 		gologger.Warning(s.ctx, "No surviving target found, active fingerprint scanning has been skipped")
@@ -366,12 +366,12 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 
 				base := target.String()
 				if val, ok := timeoutCounter.Load(base); ok && val.(int) >= activeTimeoutLimit {
+					s.IncreaseActiveProgress(&id)
 					continue // 已超时限制，跳过该目标
 				}
 
 				wg.Add(1)
-				atomic.AddInt32(&id, 1)
-				runtime.EventsEmit(s.ctx, "ActiveProgressID", id)
+				s.IncreaseActiveProgress(&id)
 
 				if s.rootPath {
 					target, _ = url.Parse(util.GetBasicURL(target.String()))
@@ -400,6 +400,11 @@ func (s *FingerScanner) ActiveCounts() {
 	}
 	count := len(s.aliveURLs) * id
 	runtime.EventsEmit(s.ctx, "ActiveCounts", count)
+}
+
+func (s *FingerScanner) IncreaseActiveProgress(id *int32) {
+	atomic.AddInt32(id, 1) // 补上进度递增
+	runtime.EventsEmit(s.ctx, "ActiveProgressID", id)
 }
 
 func (s *FingerScanner) URLWithFingerprintMap() map[string][]string {
@@ -574,7 +579,7 @@ func (s *FingerScanner) ShiroScan(u *url.URL) string {
 		"Cookie": fmt.Sprintf("JSESSIONID=%s;rememberMe=123", util.RandomStr(16)),
 	}
 	resp, err := clients.DoRequest("GET", u.String(), shiroHeader, nil, 10, s.client)
-	if err != nil || resp == nil {
+	if err != nil {
 		return ""
 	}
 	return resp.Header().Get("Set-Cookie")

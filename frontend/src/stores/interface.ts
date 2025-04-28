@@ -151,7 +151,7 @@ export interface JSFindData {
     Source: string
     VulType: string
     Severity: string
-    Param: string
+    Request: string
     Length: number
     Filed: string
     Response: string

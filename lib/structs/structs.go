@@ -690,7 +690,7 @@ type FindSomething struct {
 type JSFindResult struct {
 	Source   string
 	Method   string
-	Param    string
+	Request  string
 	Response string
 	Length   int
 }

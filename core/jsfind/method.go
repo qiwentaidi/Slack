@@ -2,22 +2,20 @@ package jsfind
 
 import (
 	"errors"
+	"maps"
 	"slack-wails/lib/clients"
 	"strings"
 )
 
 func detectMethod(fullURL string, headers map[string]string) (string, error) {
 	resp, err := clients.DoRequest("GET", fullURL, headers, nil, 5, clients.NewRestyClient(nil, true))
-	body := string(resp.Body())
 	if err != nil {
 		if strings.Contains(err.Error(), "doesn't contain any IP SANs") {
 			return "", errors.New("证书中不包含使用的域名/IP, 请求失败")
 		}
 		return "", err
 	}
-	if resp == nil {
-		return "", errors.New("响应内容为空")
-	}
+	body := string(resp.Body())
 	// 模式错误情况 1
 	if (strings.Contains(body, "not supported") && strings.Contains(body, "Request method")) || resp.StatusCode() == 405 {
 		return "POST", nil
@@ -35,40 +33,45 @@ func detectMethod(fullURL string, headers map[string]string) (string, error) {
 }
 
 func detectContentType(url string, headers map[string]string) string {
-	// 先浅拷贝一下headers，避免污染原map
+	// 先浅拷贝一下 headers，避免污染原 headers
 	hdr := make(map[string]string)
-	for k, v := range headers {
-		hdr[k] = v
-	}
+	maps.Copy(hdr, headers)
 
-	// 第一次，不带 Content-Type 测试
+	// 第一次，不带 Content-Type 直接测试
 	resp, err := clients.DoRequest("POST", url, hdr, nil, 10, clients.NewRestyClient(nil, true))
-	if err != nil || resp == nil {
+	if err != nil {
 		return ""
 	}
 
-	// 如果第一次就能正常POST，不需要加Content-Type，默认返回 application/x-www-form-urlencoded
-	if resp.StatusCode() >= 200 && resp.StatusCode() < 300 {
-		return "application/x-www-form-urlencoded"
-	}
-
-	// 如果出错，或者响应提示Content-Type不对，再带上 application/x-www-form-urlencoded 重试一次
-	hdr["Content-Type"] = "application/x-www-form-urlencoded"
-	resp, err = clients.DoRequest("POST", url, hdr, nil, 10, clients.NewRestyClient(nil, true))
-	if err != nil || resp == nil {
-		return ""
-	}
 	body := string(resp.Body())
-
-	// 判断返回内容
-	if strings.Contains(body, "application/x-www-form-urlencoded") && strings.Contains(body, "not supported") {
-		return "application/json"
-	}
 
 	if strings.Contains(body, "not a multipart request") {
 		return "multipart/form-data;boundary=8ce4b16b22b58894aa86c421e8759df3"
 	}
 
-	// 默认
+	// 参数体缺失，一般都为json请求
+	if strings.Contains(body, "Required request body is missing") {
+		return "application/json"
+	}
+
+	// 第一次响应：如果返回 text/plain不支持则需要 content-type 字段
+	if !strings.Contains(body, "not supported") && !strings.Contains(body, "text/plain") {
+		return "text/plain"
+	}
+
+	// 需要重试，带上 application/x-www-form-urlencoded 重新请求
+	hdr["Content-Type"] = "application/x-www-form-urlencoded"
+	resp, err = clients.DoRequest("POST", url, hdr, nil, 10, clients.NewRestyClient(nil, true))
+	if err != nil {
+		return ""
+	}
+
+	body = string(resp.Body())
+
+	if strings.Contains(body, "application/x-www-form-urlencoded") && strings.Contains(body, "not supported") {
+		return "application/json"
+	}
+
+	// 默认返回 application/x-www-form-urlencoded
 	return "application/x-www-form-urlencoded"
 }

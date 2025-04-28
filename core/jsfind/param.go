@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"regexp"
 	"slack-wails/lib/clients"
+	"strings"
 )
 
 type Parameter struct {
@@ -12,7 +13,7 @@ type Parameter struct {
 	Type string `json:"type"`
 }
 
-var extractMissingRegex = regexp.MustCompile(`Required (String|Int|Long|Double|Boolean|Date|ArrayList).*?'([^']+)'`)
+var extractMissingRegex = regexp.MustCompile(`(?i)required (string|int|long|double|boolean|date|arraylist).*?'([^']+)'`)
 
 // 从错误信息中提取缺失参数的名称
 func extractMissingParams(message string) *Parameter {
@@ -30,20 +31,20 @@ func extractMissingParams(message string) *Parameter {
 
 // 根据参数类型生成默认值
 func generateDefaultValue(paramType string) interface{} {
-	switch paramType {
-	case "String":
+	switch strings.ToLower(paramType) {
+	case "string":
 		return "test"
-	case "Int":
+	case "int":
 		return 0
-	case "Long":
+	case "long":
 		return int64(0)
-	case "Double":
+	case "double":
 		return 0.0
-	case "Boolean":
+	case "boolean":
 		return false
-	case "Date":
+	case "date":
 		return "1970-01-01"
-	case "ArrayList":
+	case "arraylist":
 		return []string{"1"}
 	default:
 		return "defaultValue"

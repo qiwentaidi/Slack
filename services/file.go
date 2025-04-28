@@ -653,7 +653,7 @@ func (f *File) GenerateFaviconBase64WithOnline(rawURL string) string {
 		return ""
 	}
 	resp, err := clients.SimpleGet(faviconURL, clients.NewRestyClient(nil, true))
-	if err != nil || resp == nil {
+	if err != nil {
 		return ""
 	}
 	if resp.StatusCode() != 200 {

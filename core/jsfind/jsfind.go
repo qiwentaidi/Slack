@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 
+	"maps"
+
 	"github.com/panjf2000/ants/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -84,6 +86,7 @@ func ExtractJS(ctx context.Context, url string) (allJS []string) {
 	content := string(body)
 	for _, reg := range regJS {
 		for _, item := range reg.FindAllString(content, -1) {
+			item = strings.TrimSpace(item)
 			item = strings.TrimLeft(item, "=")
 			item = strings.Trim(item, "\"")
 			item = strings.Trim(item, "'")
@@ -261,8 +264,8 @@ func FilterExt(iss []structs.InfoSource) (news []structs.InfoSource) {
 // 处理 API 逻辑
 func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 	resp, err := clients.SimpleGet(o.HomeURL, clients.NewRestyClient(nil, true))
-	if err != nil || resp == nil {
-		gologger.Error(ctx, fmt.Sprintf("[AnalyzeAPI] %s, error: %v", o.HomeURL, err))
+	if err != nil {
+		gologger.Error(ctx, fmt.Sprintf("[AnalyzeAPI] 请求首页失败 %s, 错误: %v", o.HomeURL, err))
 		return
 	}
 	homeBody := string(resp.Body())
@@ -272,47 +275,66 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 		defer wg.Done()
 		api := data.(string)
 
+		// 为每个 API 独立生成 fullURL 和 headers 副本
 		fullURL := strings.TrimRight(o.BaseURL, "/") + "/" + strings.TrimLeft(api, "/")
-		method, err := detectMethod(fullURL, o.Headers)
+
+		// 拷贝 headers，避免竞争
+		apiHeaders := make(map[string]string)
+		maps.Copy(apiHeaders, o.Headers)
+
+		// 检测请求方法
+		method, err := detectMethod(fullURL, apiHeaders)
 		if err != nil {
-			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[!] %s : %v", fullURL, err))
+			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[!] %s 检测请求方法失败: %v", fullURL, err))
 			return
 		}
 
+		// 如果是 POST 方法，动态探测 Content-Type
 		if method == http.MethodPost {
-			contentType := detectContentType(fullURL, o.Headers)
-			if contentType != "" {
-				o.Headers["Content-Type"] = contentType
+			if contentType := detectContentType(fullURL, apiHeaders); contentType != "" {
+				apiHeaders["Content-Type"] = contentType
 			}
 		}
 
+		// 补全参数
 		param := completeParameters(method, fullURL, url.Values{})
 		if param != nil {
-			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[+] %s 已补全参数 %s", fullURL, param.Encode()))
+			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[+] %s 已补全参数: %s", fullURL, param.Encode()))
 		}
 
+		// 构建请求对象
 		apiReq := APIRequest{
 			URL:     fullURL,
 			Method:  method,
-			Headers: o.Headers,
+			Headers: apiHeaders,
 			Params:  param,
 		}
+
+		// 检查高风险路由，直接跳过测试
 		for _, router := range o.HighRiskRouter {
 			if strings.Contains(apiReq.URL, router) {
-				runtime.EventsEmit(ctx, "jsfindlog", "[!!] "+fullURL+" 高风险API已跳过测试, 相关敏感词: "+router)
+				runtime.EventsEmit(ctx, "jsfindlog", "[!!] "+fullURL+" 高风险API跳过测试, 触发敏感词: "+router)
 				return
 			}
 		}
+
 		// 测试未授权访问
 		vulnerable, body, err := testUnauthorizedAccess(homeBody, apiReq, o.Authentication)
-		if err != nil || !vulnerable {
-			runtime.EventsEmit(ctx, "jsfindlog", "[-] "+fullURL+" 不存在未授权")
+		if err != nil {
+			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[-] %s 测试未授权错误: %v", fullURL, err))
 			return
 		}
-		runtime.EventsEmit(ctx, "jsfindlog", "[+] "+fullURL+" 存在未授权")
+
+		if !vulnerable {
+			runtime.EventsEmit(ctx, "jsfindlog", "[-] "+fullURL+" 不存在未授权访问")
+			return
+		}
+
+		// 存在未授权，记录漏洞信息
+		runtime.EventsEmit(ctx, "jsfindlog", "[+] "+fullURL+" 存在未授权访问！")
 		runtime.EventsEmit(ctx, "jsfindvulcheck", structs.JSFindResult{
 			Method:   method,
-			Param:    param.Encode(),
+			Request:  buildRawRequest(apiReq),
 			Source:   fullURL,
 			Response: string(body),
 			Length:   len(body),
@@ -320,11 +342,60 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 	})
 	defer pool.Release()
 
-	// 提交 API 任务到线程池
+	// 提交任务
 	for _, api := range o.ApiList {
 		wg.Add(1)
 		pool.Invoke(api)
 	}
 
 	wg.Wait()
+}
+
+func buildRawRequest(req APIRequest) string {
+	var sb strings.Builder
+
+	parsedURL, err := url.Parse(req.URL)
+	if err != nil {
+		return "" // URL解析失败直接返回空
+	}
+
+	// 如果是 GET 请求，需要将参数附加到 URL 后面
+	if req.Method == http.MethodGet && req.Params != nil {
+		// 编码查询参数并将其附加到 URL
+		queryString := req.Params.Encode()
+		if parsedURL.RawQuery == "" {
+			parsedURL.RawQuery = queryString
+		} else {
+			parsedURL.RawQuery += "&" + queryString
+		}
+	}
+
+	// 写入请求行，只保留Path+Query，不要域名
+	pathWithQuery := parsedURL.Path
+	if parsedURL.RawQuery != "" {
+		pathWithQuery += "?" + parsedURL.RawQuery
+	}
+	sb.WriteString(fmt.Sprintf("%s %s HTTP/1.1\n", req.Method, pathWithQuery))
+
+	// Host 头
+	sb.WriteString(fmt.Sprintf("Host: %s\n", parsedURL.Host))
+
+	// 其他 Headers
+	for k, v := range req.Headers {
+		// 避免重复写 Host
+		if strings.ToLower(k) == "host" {
+			continue
+		}
+		sb.WriteString(fmt.Sprintf("%s: %s\n", k, v))
+	}
+
+	sb.WriteString("\n") // 头结束空一行
+
+	// 写入请求体
+	if req.Method != http.MethodGet && req.Params != nil {
+		// 如果是非 GET 请求，参数放到请求体中
+		sb.WriteString(req.Params.Encode())
+	}
+
+	return sb.String()
 }
