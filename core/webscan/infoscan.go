@@ -67,7 +67,7 @@ func NewFingerScanEngine(ctx context.Context, proxy clients.Proxy, options struc
 	for _, t := range options.Target {
 		t = strings.TrimRight(t, "/")
 		// 增加协议判断
-		if !strings.HasPrefix(t, "http://") || !strings.HasPrefix(t, "https://") {
+		if !strings.HasPrefix(t, "http://") && !strings.HasPrefix(t, "https://") {
 			if url, err := clients.CheckProtocol(t, client); err != nil {
 				continue
 			} else {
