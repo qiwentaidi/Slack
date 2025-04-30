@@ -204,12 +204,7 @@ function openDialog(row: any) {
     detail.Severity = row.Severity;
     detail.Request = row.Request;
     detail.Filed = row.Filed;
-    // 超过50kb不显示
-    if (row.Response && row.Response.length >= 500 * 1024) {
-        detail.Response = 'Response too large, please manually open the link to view.';
-    } else {
-        detail.Response = row.Response;
-    }
+    detail.Response = row.Response;
 }
 
 const authURL = "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/jsfinder-auth"

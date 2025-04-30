@@ -3,8 +3,11 @@ package jsfind
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
@@ -20,12 +23,6 @@ import (
 )
 
 var (
-	regJS  []*regexp.Regexp
-	JsLink = []string{
-		"(https{0,1}:[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
-		"[\"'‘“`]\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
-		"=\\s{0,6}[\",',’,”]{0,1}\\s{0,6}(/{0,1}[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{2,250}?[-a-zA-Z0-9（）@:%_\\+.~#?&//=]{3}[.]js)",
-	}
 	Filter = []string{".vue", ".jpeg", ".png", ".jpg", ".gif", ".css", ".svg", ".scss", ".eot", ".ttf", ".woff", ".js", ".ts", ".tsx", ".ico", ".less"}
 	// 因为在提取API时经常会有无用的类似数据，所以需要过滤
 	apiFilter = []string{
@@ -70,44 +67,15 @@ var (
 	IP_PORT   = regexp.MustCompile(`((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}`)
 )
 
-func init() {
-	for _, reg := range JsLink {
-		regJS = append(regJS, regexp.MustCompile(reg))
-	}
-}
-
-func ExtractJS(ctx context.Context, url string) (allJS []string) {
-	resp, err := clients.SimpleGet(url, clients.NewRestyClient(nil, true))
-	body := resp.Body()
-	if err != nil || body == nil {
-		gologger.Debug(ctx, err)
-		return
-	}
-	content := string(body)
-	for _, reg := range regJS {
-		for _, item := range reg.FindAllString(content, -1) {
-			item = strings.TrimSpace(item)
-			item = strings.TrimLeft(item, "=")
-			item = strings.Trim(item, "\"")
-			item = strings.Trim(item, "'")
-			item = strings.TrimLeft(item, ".")
-			allJS = append(allJS, item)
-		}
-	}
-	return util.RemoveDuplicates(allJS)
-}
-
 // FindInfo 使用线程池处理单个 URL 的信息提取
 func FindInfo(ctx context.Context, url string) *structs.FindSomething {
 	var fs = &structs.FindSomething{}
 	resp, err := clients.SimpleGet(url, clients.NewRestyClient(nil, true))
-	body := resp.Body()
-	if err != nil || body == nil {
+	if err != nil {
 		gologger.Debug(ctx, err)
 		return fs
 	}
-
-	content := string(body)
+	content := string(resp.Body())
 	// 提取信息
 	urls, apis := urlInfoSeparate(Link.FindAllString(content, -1))
 	// fs.JS = *AppendSource(url, js)
@@ -120,8 +88,53 @@ func FindInfo(ctx context.Context, url string) *structs.FindSomething {
 	return fs
 }
 
-// MultiThreadJSFind 使用 ants 线程池进行多线程处理
-func MultiThreadJSFind(ctx context.Context, target, prefixJsURL string, jsLinks []string) structs.FindSomething {
+// 对还原出来的 SourceMap 目录提取信息
+func ExtractFromSourceMapDir(ctx context.Context, dirPath string) *structs.FindSomething {
+	var fsResult = &structs.FindSomething{}
+
+	filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil // 忽略错误继续
+		}
+		if d.IsDir() {
+			return nil
+		}
+
+		// 只处理 .js .vue .ts .tsx 文件
+		if !(strings.HasSuffix(path, ".js") || strings.HasSuffix(path, ".vue") || strings.HasSuffix(path, ".ts") || strings.HasSuffix(path, ".tsx")) {
+			return nil
+		}
+
+		contentBytes, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+		content := string(contentBytes)
+
+		// 提取
+		urls, apis := urlInfoSeparate(Link.FindAllString(content, -1))
+
+		fsResult.APIRoute = append(fsResult.APIRoute, *AppendSource(path, apis)...)
+		fsResult.IP_URL = append(fsResult.IP_URL, *AppendSource(path, append(IP_PORT.FindAllString(content, -1), urls...))...)
+		fsResult.IDCard = append(fsResult.IDCard, *AppendSource(path, clean(IDCard.FindAllString(content, -1)))...)
+		fsResult.Phone = append(fsResult.Phone, *AppendSource(path, clean(Phone.FindAllString(content, -1)))...)
+		fsResult.Sensitive = append(fsResult.Sensitive, *AppendSource(path, Sensitive.FindAllString(content, -1))...)
+		fsResult.Email = append(fsResult.Email, *AppendSource(path, Email.FindAllString(content, -1))...)
+
+		return nil
+	})
+
+	// 去重
+	fsResult.APIRoute = RemoveDuplicatesInfoSource(fsResult.APIRoute)
+	fsResult.IP_URL = FilterExt(RemoveDuplicatesInfoSource(fsResult.IP_URL))
+	fsResult.IDCard = RemoveDuplicatesInfoSource(fsResult.IDCard)
+	fsResult.Phone = RemoveDuplicatesInfoSource(fsResult.Phone)
+	fsResult.Sensitive = RemoveDuplicatesInfoSource(fsResult.Sensitive)
+
+	return fsResult
+}
+
+func Scan(ctx context.Context, target, prefixJsURL string, jsLinks []string) structs.FindSomething {
 	var fs = structs.FindSomething{}
 	var mu sync.Mutex // 用于保护 fs 的并发写操作
 	var wg sync.WaitGroup
@@ -132,15 +145,7 @@ func MultiThreadJSFind(ctx context.Context, target, prefixJsURL string, jsLinks 
 	pool, _ := ants.NewPoolWithFunc(10, func(data interface{}) {
 		defer wg.Done()
 		jslink := data.(string)
-		var newURL string
-		host, _ := util.GetBasePath(target)
-
-		if strings.HasPrefix(jslink, "http") {
-			newURL = jslink
-		} else {
-			newURL = strings.TrimRight(host, "/") + "/" + strings.TrimLeft(jslink, "/")
-		}
-
+		newURL := formatURL(target, jslink)
 		fs2 := FindInfo(ctx, newURL)
 
 		// 加锁以安全地更新共享资源
@@ -167,6 +172,26 @@ func MultiThreadJSFind(ctx context.Context, target, prefixJsURL string, jsLinks 
 	// 等待所有任务完成
 	wg.Wait()
 
+	for _, jslink := range jsLinks {
+		mapURL := formatURL(target, jslink) + ".map"
+		resp, err := clients.SimpleGet(mapURL, clients.NewRestyClient(nil, true))
+		if err == nil && resp.StatusCode() == 200 {
+			// 检测到 .map 泄漏，尝试还原
+			fp, err := RestoreWebpack(ctx, mapURL)
+			if err == nil {
+				runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[+] 发现JS SourceMap泄漏: %s, 恢复webpack成功: %s", mapURL, fp))
+			}
+			sourceMapInfo := ExtractFromSourceMapDir(ctx, fp)
+			mu.Lock()
+			fs.IP_URL = append(fs.IP_URL, sourceMapInfo.IP_URL...)
+			fs.IDCard = append(fs.IDCard, sourceMapInfo.IDCard...)
+			fs.Phone = append(fs.Phone, sourceMapInfo.Phone...)
+			fs.Sensitive = append(fs.Sensitive, sourceMapInfo.Sensitive...)
+			fs.APIRoute = append(fs.APIRoute, sourceMapInfo.APIRoute...)
+			mu.Unlock()
+		}
+	}
+
 	// 去重处理
 	fs.APIRoute = RemoveDuplicatesInfoSource(fs.APIRoute)
 	fs.IDCard = RemoveDuplicatesInfoSource(fs.IDCard)
@@ -174,6 +199,17 @@ func MultiThreadJSFind(ctx context.Context, target, prefixJsURL string, jsLinks 
 	fs.Sensitive = RemoveDuplicatesInfoSource(fs.Sensitive)
 	fs.IP_URL = FilterExt(RemoveDuplicatesInfoSource(fs.IP_URL))
 	return fs
+}
+
+func formatURL(url string, jslink string) string {
+	var newURL string
+	host, _ := util.GetBasePath(url)
+	if strings.HasPrefix(jslink, "http") {
+		newURL = jslink
+	} else {
+		newURL = strings.TrimRight(host, "/") + "/" + strings.TrimLeft(jslink, "/")
+	}
+	return newURL
 }
 
 // clean 去除手机号和身份证中的其他字符，保留数字、+ 和 X
@@ -285,7 +321,7 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 		// 检测请求方法
 		method, err := detectMethod(fullURL, apiHeaders)
 		if err != nil {
-			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[!] %s 检测请求方法失败: %v", fullURL, err))
+			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[!] %s: %v", fullURL, err))
 			return
 		}
 
@@ -298,7 +334,7 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 
 		// 补全参数
 		param := completeParameters(method, fullURL, url.Values{})
-		if param != nil {
+		if param != nil && param.Encode() != "" {
 			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[+] %s 已补全参数: %s", fullURL, param.Encode()))
 		}
 
@@ -336,7 +372,7 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 			Method:   method,
 			Request:  buildRawRequest(apiReq),
 			Source:   fullURL,
-			Response: string(body),
+			Response: filterResponseLength(body),
 			Length:   len(body),
 		})
 	})
@@ -349,6 +385,15 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 	}
 
 	wg.Wait()
+}
+
+// 过滤响应包长度大小, 过大替换成 Response too large, please manually open the link to view.
+// 可以减少前段缓存文本的消耗
+func filterResponseLength(body string) string {
+	if len(body) > 500*1024 {
+		return "Response too large, please manually open the link to view."
+	}
+	return body
 }
 
 func buildRawRequest(req APIRequest) string {

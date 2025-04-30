@@ -510,11 +510,11 @@ func (a *App) QuakeSearch(ipList []string, query string, pageNum, pageSize int, 
 }
 
 func (a *App) ExtractAllJSLink(url string) []string {
-	return jsfind.ExtractJS(a.ctx, url)
+	return jsfind.ExtractAllJs(a.ctx, url)
 }
 
 func (a *App) JSFind(target, prefixJsURL string, jsLinks []string) structs.FindSomething {
-	return jsfind.MultiThreadJSFind(a.ctx, target, prefixJsURL, jsLinks)
+	return jsfind.Scan(a.ctx, target, prefixJsURL, jsLinks)
 }
 
 func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers map[string]string, authentication []string, highRiskRouter []string) {

@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"slack-wails/lib/util"
-	"strings"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -36,7 +35,7 @@ func init() {
 // 返回文件路径和错误，如果错误不为nil，则文件路径为空。
 func GetScreenshot(url string) (string, error) {
 	// 定义保存路径
-	fp := filepath.Join(dir, renameOutput(url)+".png")
+	fp := filepath.Join(dir, util.RenameOutput(url)+".png")
 	// 检查文件是否存在，如果存在则直接返回
 	if _, err := os.Stat(fp); err == nil {
 		return fp, nil
@@ -71,12 +70,4 @@ func GetScreenshot(url string) (string, error) {
 	}
 
 	return fp, nil
-}
-
-// renameOutput 用于清理URL中的非法字符，以生成合法的文件名。
-func renameOutput(filename string) string {
-	filename = strings.ReplaceAll(filename, ":", "_")
-	filename = strings.ReplaceAll(filename, "/", "_")
-	filename = strings.ReplaceAll(filename, "___", "_")
-	return filename
 }

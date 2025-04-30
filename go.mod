@@ -5,6 +5,7 @@ go 1.23
 toolchain go1.23.0
 
 require (
+	github.com/chromedp/cdproto v0.0.0-20241022234722-4d5d5faf59fb
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/go-ldap/ldap/v3 v3.4.5
 	github.com/go-resty/resty/v2 v2.16.5
@@ -98,7 +99,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.13.0 // indirect
 	github.com/charmbracelet/x/ansi v0.3.2 // indirect
 	github.com/cheggaaa/pb/v3 v3.1.4 // indirect
-	github.com/chromedp/cdproto v0.0.0-20241022234722-4d5d5faf59fb // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/cloudflare/cfssl v1.6.4 // indirect

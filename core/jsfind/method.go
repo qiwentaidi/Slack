@@ -17,12 +17,12 @@ func detectMethod(fullURL string, headers map[string]string) (string, error) {
 	}
 	body := string(resp.Body())
 	// 模式错误情况 1
-	if (strings.Contains(body, "not supported") && strings.Contains(body, "Request method")) || resp.StatusCode() == 405 {
+	if (strings.Contains(body, "not supported") && strings.Contains(body, "Request method")) || strings.Contains(body, "请求方式不支持") || strings.Contains(body, "请求方式错误") || resp.StatusCode() == 405 {
 		return "POST", nil
 	}
 
 	if resp.StatusCode() == 401 {
-		return "GET", errors.New("不存在未授权访问")
+		return "GET", errors.New("响应码401, 不存在未授权访问")
 	}
 
 	if resp.StatusCode() != 200 {

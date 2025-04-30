@@ -103,3 +103,11 @@ func GetBasePath(inputURL string) (string, error) {
 	basePath := fmt.Sprintf("%s://%s%s", parsedURL.Scheme, parsedURL.Host, dirPath)
 	return basePath, nil
 }
+
+// renameOutput 用于清理URL中的非法字符，以生成合法的文件名。
+func RenameOutput(filename string) string {
+	filename = strings.ReplaceAll(filename, ":", "_")
+	filename = strings.ReplaceAll(filename, "/", "_")
+	filename = strings.ReplaceAll(filename, "___", "_")
+	return filename
+}

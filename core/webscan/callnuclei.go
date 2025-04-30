@@ -112,7 +112,6 @@ func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, allOptions []struct
 			return
 		}
 		sg.Add()
-		gologger.Info(ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
 		go func() {
 			defer sg.Done()
 			defer func() {
@@ -123,6 +122,7 @@ func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, allOptions []struct
 			defer func() {
 				atomic.AddInt32(&id, 1)
 				runtime.EventsEmit(ctx, "NucleiProgressID", id)
+				gologger.Info(ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
 			}()
 			if option.SkipNucleiWithoutTags && len(option.Tags) == 0 {
 				gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
