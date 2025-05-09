@@ -1,4 +1,5 @@
 html.light {
+    --timeline-bg-color: #F9FAFB;
     --sidebar-bg-color: #F9F9F9;
     --sidebar-text-color: hsl(0, 0%, 0%);
     --titlebar-hover-color: #dcdcdc;

@@ -549,7 +549,7 @@ druid数据提取需要输出响应包内容
 </script>
 
 <template>
-    <div class="textarea-container" style="margin-bottom: 10px;">
+    <div class="textarea-container mb-10px">
         <el-input v-model="form.input" type="textarea" :rows="12" :placeholder="code"
             @contextmenu.stop.prevent="handleContextMenu" @paste="handlePaste"></el-input>
         <el-space class="action-area">
@@ -559,7 +559,7 @@ druid数据提取需要输出响应包内容
     </div>
     <CustomTextarea 
         v-model="form.result" 
-        :rows="20" 
+        :rows="24" 
         :readonly="true"
     >
     </CustomTextarea>

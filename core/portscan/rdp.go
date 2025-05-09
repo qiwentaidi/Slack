@@ -23,7 +23,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func RdpScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func RdpScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 	limiter := make(chan bool, 10) // 限制协程数量
@@ -43,6 +43,7 @@ func RdpScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []s
 				mutex.Lock()
 				if flag && err == nil {
 					runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+						TaskId:   taskId,
 						ID:       "rdp weak password",
 						Name:     "rdp weak password",
 						URL:      host,

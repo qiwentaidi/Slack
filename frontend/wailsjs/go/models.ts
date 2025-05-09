@@ -333,6 +333,7 @@ export namespace structs {
 	    Port: number;
 	    Username: string;
 	    Password: string;
+	    ServerName: string;
 	    Notes: string;
 	
 	    static createFrom(source: any = {}) {
@@ -347,6 +348,7 @@ export namespace structs {
 	        this.Port = source["Port"];
 	        this.Username = source["Username"];
 	        this.Password = source["Password"];
+	        this.ServerName = source["ServerName"];
 	        this.Notes = source["Notes"];
 	    }
 	}
@@ -720,6 +722,7 @@ export namespace structs {
 	
 	
 	export class InfoResult {
+	    TaskId: string;
 	    URL: string;
 	    Scheme: string;
 	    Host: string;
@@ -739,6 +742,7 @@ export namespace structs {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.TaskId = source["TaskId"];
 	        this.URL = source["URL"];
 	        this.Scheme = source["Scheme"];
 	        this.Host = source["Host"];
@@ -1126,6 +1130,7 @@ export namespace structs {
 		}
 	}
 	export class VulnerabilityInfo {
+	    TaskId: string;
 	    ID: string;
 	    Name: string;
 	    Description: string;
@@ -1144,6 +1149,7 @@ export namespace structs {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.TaskId = source["TaskId"];
 	        this.ID = source["ID"];
 	        this.Name = source["Name"];
 	        this.Description = source["Description"];

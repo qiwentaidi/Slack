@@ -7,12 +7,12 @@ import (
 	"slack-wails/lib/gologger"
 )
 
-type crackFunc func(context.Context, context.Context, string, []string, []string)
+type crackFunc func(context.Context, context.Context, string, string, []string, []string)
 
 var crackScanners = map[string]crackFunc{
 	"ftp":        FtpScan,
 	"ssh":        SshScan,
-	"telnet":     TelenetScan,
+	"telnet":     TelnetScan,
 	"smb":        SmbScan,
 	"oracle":     OracleScan,
 	"mssql":      MssqlScan,
@@ -31,20 +31,20 @@ var crackScanners = map[string]crackFunc{
 	"rmi":        RmiScan,
 }
 
-func Runner(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func Runner(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	u, err := url.Parse(host)
 	if err != nil {
 		gologger.Debug(ctx, fmt.Sprintf("[!] Parse url error: %s\n", err))
 		return
 	}
 	if scanFunc, ok := crackScanners[u.Scheme]; ok {
-		scanFunc(ctx, ctrlCtx, u.Host, usernames, passwords)
+		scanFunc(ctx, ctrlCtx, taskId, u.Host, usernames, passwords)
 	} else {
 		gologger.Error(ctx, fmt.Sprintf("[!] No brute module registered for: %s\n", u.Scheme))
 	}
 	// 额外漏洞扫描
 	switch u.Scheme {
 	case "smb":
-		MS17010(ctx, u.Host)
+		MS17010(ctx, taskId, u.Host)
 	}
 }

@@ -136,6 +136,7 @@ export interface DatabaseConnection {
     port: number
     username: string
     password: string
+    servername: string
     notes: string
     connected: boolean
     loading: boolean

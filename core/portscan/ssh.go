@@ -18,7 +18,7 @@ type task struct {
 	Pass string
 }
 
-func SshScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func SshScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	taskChan := make(chan task)
 	doneChan := make(chan struct{})
 
@@ -39,6 +39,7 @@ func SshScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []s
 						result = err.Error()
 					}
 					runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+						TaskId:   taskId,
 						ID:       "ssh weak password",
 						Name:     "ssh weak password",
 						URL:      host,

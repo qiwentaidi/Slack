@@ -6,9 +6,9 @@ import {context} from '../models';
 
 export function AddConnection(arg1:structs.DatabaseConnection):Promise<boolean>;
 
-export function AddFingerscanResult(arg1:string,arg2:structs.InfoResult):Promise<boolean>;
+export function AddFingerscanResult(arg1:structs.InfoResult):Promise<boolean>;
 
-export function AddPocscanResult(arg1:string,arg2:structs.VulnerabilityInfo):Promise<boolean>;
+export function AddPocscanResult(arg1:structs.VulnerabilityInfo):Promise<boolean>;
 
 export function AddScanTask(arg1:string,arg2:string,arg3:string,arg4:number,arg5:number):Promise<boolean>;
 

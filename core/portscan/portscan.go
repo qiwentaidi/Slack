@@ -16,7 +16,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func TcpScan(ctx, ctrlCtx context.Context, addresses <-chan Address, workers, timeout int, proxy clients.Proxy) {
+func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Address, workers, timeout int, proxy clients.Proxy) {
 	var id int32
 	single := make(chan struct{})
 	retChan := make(chan *structs.InfoResult)
@@ -33,7 +33,7 @@ func TcpScan(ctx, ctrlCtx context.Context, addresses <-chan Address, workers, ti
 		if ctrlCtx.Err() != nil {
 			return
 		}
-		pr := Connect(add.IP, add.Port, timeout, proxy)
+		pr := Connect(taskId, add.IP, add.Port, timeout, proxy)
 		atomic.AddInt32(&id, 1)
 		runtime.EventsEmit(ctx, "progressID", id)
 		if pr == nil {
@@ -72,41 +72,38 @@ type Address struct {
 	Port int
 }
 
-func Connect(ip string, port, timeout int, proxy clients.Proxy) *structs.InfoResult {
+func Connect(taskId, ip string, port, timeout int, proxy clients.Proxy) *structs.InfoResult {
 	scanner := gonmap.New()
 	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout), proxy)
+
+	// 端口关闭或未知，直接返回 nil
 	if status == gonmap.Closed || status == gonmap.Unknown {
 		return nil
 	}
-	if response == nil || response.FingerPrint.Service == "" {
-		return &structs.InfoResult{
-			Host:   ip,
-			Port:   port,
-			Scheme: "unknow",
-			URL:    fmt.Sprintf("%v://%v:%v", "unknow", ip, port),
-		}
+
+	// 默认协议设为 unknow
+	scheme := "unknow"
+	if response != nil && response.FingerPrint.Service != "" {
+		scheme = response.FingerPrint.Service
 	}
 
-	if response.FingerPrint.Service == "http" || response.FingerPrint.Service == "https" {
-		result := &structs.InfoResult{
-			Host:   ip,
-			Port:   port,
-			Scheme: response.FingerPrint.Service,
-			URL:    fmt.Sprintf("%v://%v:%v", response.FingerPrint.Service, ip, port),
-		}
+	result := &structs.InfoResult{
+		TaskId: taskId,
+		Host:   ip,
+		Port:   port,
+		Scheme: scheme,
+		URL:    fmt.Sprintf("%s://%s:%d", scheme, ip, port),
+	}
+
+	// 若是 HTTP/HTTPS，尝试请求获取状态码
+	if scheme == "http" || scheme == "https" {
 		resp, err := clients.SimpleGet(result.URL, clients.NewRestyClient(nil, true))
 		if err == nil {
 			result.StatusCode = resp.StatusCode()
 		}
-		return result
 	}
 
-	return &structs.InfoResult{
-		Host:   ip,
-		Port:   port,
-		Scheme: response.FingerPrint.Service,
-		URL:    fmt.Sprintf("%v://%v:%v", response.FingerPrint.Service, ip, port),
-	}
+	return result
 }
 
 func WrapperTcpWithTimeout(network, address string, timeout time.Duration) (net.Conn, error) {

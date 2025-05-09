@@ -20,7 +20,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func NewNucleiEngine(ctx, ctrlCtx context.Context, allOptions []structs.NucleiOption) {
+func NewNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allOptions []structs.NucleiOption) {
 	count := len(allOptions)
 	for i, o := range allOptions {
 		if ctrlCtx.Err() != nil {
@@ -48,6 +48,7 @@ func NewNucleiEngine(ctx, ctrlCtx context.Context, allOptions []structs.NucleiOp
 				reference = strings.Join(event.Info.Reference.ToSlice(), ",")
 			}
 			runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+				TaskId:       taskId,
 				ID:           event.TemplateID,
 				Name:         event.Info.Name,
 				Description:  event.Info.Description,
@@ -70,7 +71,7 @@ func NewNucleiEngine(ctx, ctrlCtx context.Context, allOptions []structs.NucleiOp
 	}
 }
 
-func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, allOptions []structs.NucleiOption) {
+func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allOptions []structs.NucleiOption) {
 	count := len(allOptions)
 	ne, err := nuclei.NewThreadSafeNucleiEngineCtx(context.Background())
 	if err != nil {
@@ -91,6 +92,7 @@ func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, allOptions []struct
 			reference = strings.Join(event.Info.Reference.ToSlice(), ",")
 		}
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			TaskId:       taskId,
 			ID:           event.TemplateID,
 			Name:         event.Info.Name,
 			Description:  event.Info.Description,

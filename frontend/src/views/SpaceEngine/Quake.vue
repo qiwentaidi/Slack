@@ -2,7 +2,7 @@
     <el-form :model="quake" @keydown.enter.native.prevent="tableCtrl.addTab(quake.query, false)">
         <el-form-item>
             <el-autocomplete v-model="quake.query" placeholder="Search..." :fetch-suggestions="syntax.querySearchAsync"
-                @select="syntax.handleSelect" :trigger-on-focus="false" :debounce="500" style="width: 100%;">
+                @select="syntax.handleSelect" :trigger-on-focus="false" :debounce="500" class="w-full">
                 <template #prepend>
                     查询条件
                 </template>
@@ -22,7 +22,7 @@
                                         <el-table-column width="300" property="key" label="例句">
                                             <template #default="scope">
                                                 {{ scope.row.key }}<el-tag type="success" effect="plain"
-                                                    v-if="scope.row.isVip" style="margin-left: 5px;">VIP</el-tag>
+                                                    v-if="scope.row.isVip" class="ml-5px">VIP</el-tag>
                                             </template>
                                         </el-table-column>
                                         <el-table-column property="description" label="用途说明" />
@@ -48,7 +48,7 @@
                                     @click="UploadFileAndRead(quake, 'batchIps')">上传文件</el-button>
                                 <el-input v-model="quake.batchIps" type="textarea" :rows="5"
                                     placeholder="请输入IP/域名，每行一个，多个请换行输入"></el-input>
-                                <div class="my-header">
+                                <div class="flex-between">
                                     <div></div>
                                     <el-button color="#4CA87D" :dark="true" class="search"
                                         @click="tableCtrl.addTab(generateRandomString(12), true)">检索</el-button>
@@ -178,7 +178,7 @@
         @tab-remove="tableCtrl.removeTab" class="quake-tabs">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: calc(100vh - 280px);">
+            <el-table :data="item.content" border class="w-full" style="height: calc(100vh - 280px);">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" :min-width="240" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" fixed label="IP" width="160">
@@ -269,7 +269,7 @@
                     </template>
                 </el-table-column>
             </el-table>
-            <div class="my-header" style="margin-top: 10px;">
+            <div class="flex-between mt-10px">
                 <span style="color: #4CA87D; font-size: 14px;">{{ item.message }}</span>
                 <el-pagination size="small" class="quake-pagin" background v-model:page-size="item.pageSize"
                     :page-sizes="[10, 20, 50, 100, 200, 500]" layout="total, sizes, prev, pager, next, jumper"

@@ -160,6 +160,10 @@ func getShortcuts(o *structs.QuakeRequestOptions) []string {
 	if err != nil {
 		return shortcuts
 	}
+	// 未登录状态直接返回
+	if string(resp.Body()) == "/quake/login" {
+		return shortcuts
+	}
 	json.Unmarshal(resp.Body(), &shortcutsMeta)
 	for _, v := range shortcutsMeta.Data {
 		if v.Name == "排除CDN" {

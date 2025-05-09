@@ -13,9 +13,9 @@ import (
 
 var rmiVulRegexp = regexp.MustCompile(`^N[\s\S]{1,2}\d*\.\d*\.\d*\.\d*`)
 
-func RmiScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func RmiScan(ctx, ctrlCtx context.Context, taskId, address string, usernames, passwords []string) {
 	// 使用10秒超时建立TCP连接
-	client, err := WrapperTcpWithTimeout("tcp", host, 10*time.Second)
+	client, err := WrapperTcpWithTimeout("tcp", address, 10*time.Second)
 	defer func() {
 		if client != nil {
 			client.Close()
@@ -41,9 +41,10 @@ func RmiScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []s
 					result := rmiVulRegexp.Find(rev)
 					if result != nil {
 						runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+							TaskId:   taskId,
 							ID:       "rmi unauthorized",
 							Name:     "rmi unauthorized",
-							URL:      host,
+							URL:      address,
 							Type:     "RMI",
 							Severity: "CRITICAL",
 							Request:  string(handshake),
@@ -55,5 +56,5 @@ func RmiScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []s
 			}
 		}
 	}
-	gologger.Info(ctx, fmt.Sprintf("rmi://%s is no unauthorized access", host))
+	gologger.Info(ctx, fmt.Sprintf("rmi://%s is no unauthorized access", address))
 }

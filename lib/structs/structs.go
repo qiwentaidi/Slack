@@ -147,13 +147,14 @@ type SubdomainOption struct {
 }
 
 type DatabaseConnection struct {
-	Nanoid   string
-	Scheme   string
-	Host     string
-	Port     int
-	Username string
-	Password string
-	Notes    string
+	Nanoid     string
+	Scheme     string
+	Host       string
+	Port       int
+	Username   string
+	Password   string
+	ServerName string // Oracle 的服务名称
+	Notes      string
 }
 
 type RowData struct {
@@ -484,6 +485,7 @@ type FofaUserInfo struct {
 }
 
 type VulnerabilityInfo struct {
+	TaskId       string // 任务ID
 	ID           string
 	Name         string
 	Description  string
@@ -509,6 +511,7 @@ type NucleiOption struct {
 }
 
 type InfoResult struct {
+	TaskId       string // 任务ID
 	URL          string // 网站链接
 	Scheme       string // 协议
 	Host         string // 域名 或者 IP

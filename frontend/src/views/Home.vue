@@ -20,7 +20,7 @@ const activeNames = ref(['1', '2', '3', '4'])
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 5px;">
                     <el-card shadow="hover" class="card" v-for="item in groups.children" :key="item.path"
                         @click="$router.push(groups.path + item.path)">
-                        <div style="display: flex;">
+                        <div class="flex">
                             <div class="card-content">
                                 <!-- 左侧图片 -->
                                 <el-image :src="item.icon" style="width: 24px;" />

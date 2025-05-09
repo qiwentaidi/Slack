@@ -17,19 +17,17 @@ func detectMethod(fullURL string, headers map[string]string) (string, error) {
 	}
 	body := string(resp.Body())
 	// 模式错误情况 1
-	if (strings.Contains(body, "not supported") && strings.Contains(body, "Request method")) || strings.Contains(body, "请求方式不支持") || strings.Contains(body, "请求方式错误") || resp.StatusCode() == 405 {
+	if (strings.Contains(body, "not supported") && strings.Contains(body, "Request method")) || strings.Contains(body, "请求方式不支持") || strings.Contains(body, "请求方式错误") || resp.StatusCode() == 405 || strings.Contains(body, "Method Not Allowed") {
 		return "POST", nil
 	}
-
-	if resp.StatusCode() == 401 {
+	switch resp.StatusCode() {
+	case 401:
 		return "GET", errors.New("响应码401, 不存在未授权访问")
-	}
-
-	if resp.StatusCode() != 200 {
+	case 404:
 		return "", errors.New("非正确API地址, 已忽略")
+	default:
+		return "GET", nil
 	}
-
-	return "GET", nil
 }
 
 func detectContentType(url string, headers map[string]string) string {

@@ -9,6 +9,8 @@ import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/style';
 import { routerControl, windowsControl } from '@/stores/options';
 import throttle from 'lodash/throttle';
 import { SaveWindowsScreenSize } from "wailsjs/go/services/Database";
+import { Sunny, Moon } from '@element-plus/icons-vue';
+import { useDark, useToggle } from '@vueuse/core'
 
 const showLogger = ref(false)
 
@@ -44,6 +46,18 @@ function setTitle(path: string) {
             return path.split('/').slice(-1)[0];
     }
 }
+
+const isDark = useDark({
+    storageKey: 'theme',
+    valueDark: 'dark',
+    valueLight: 'light',
+})
+
+const toggle = useToggle(isDark)
+function toggleTheme() {
+    global.Theme.value = !global.Theme.value
+    toggle(); // 保留你原来的切换逻辑（比如加/去掉 `.dark` 类）
+}
 </script>
 
 <template>
@@ -63,8 +77,13 @@ function setTitle(path: string) {
         <div class="unoccupied" @dblclick="WindowToggleMaximise">
             <span class="title">{{ setTitle($route.path) }}</span>
         </div>
-        <div style="display: flex">
+        <div class="flex">
             <el-button-group :style="rightStyle">
+                <el-button class="custom-button" text @click="toggleTheme">
+                    <el-icon :size="16">
+                        <component :is="global.Theme.value ? Moon : Sunny" />
+                    </el-icon>
+                </el-button>
                 <el-tooltip :content="$t('titlebar.yx_log')">
                     <el-button class="custom-button" text @click="showLogger = true">
                         <template #icon>

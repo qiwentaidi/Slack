@@ -12,7 +12,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func VncScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func VncScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	for _, pass := range passwords {
 		if ctrlCtx.Err() != nil {
 			gologger.Warning(ctx, "[vnc] User exits crack scanning")
@@ -22,6 +22,7 @@ func VncScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []s
 		flag, err := VncConn(host, pass)
 		if flag && err == nil {
 			runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+				TaskId:   taskId,
 				ID:       "vnc weak password",
 				Name:     "vnc weak password",
 				URL:      host,

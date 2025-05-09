@@ -11,7 +11,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func AdbScan(ctx, ctrlCtx context.Context, address string, usernames, passwords []string) {
+func AdbScan(ctx, ctrlCtx context.Context, taskId, address string, usernames, passwords []string) {
 	result := "ADB> host::features=shell_v2,cmd,stat_v2,ls_v2,fixed_push_mkdir,apex,abb,fixed_push_symlink_timestamp,abb_exec,remount_shell,track_app,sendrecv_v2,sendrecv_v2_brotli,sendrecv_v2_lz4,sendrecv_v2_zstd,sendrecv_v2_dry_run_send,openscreen_mdns\n"
 	conn, err := WrapperTcpWithTimeout("tcp", address, time.Duration(6)*time.Second)
 	if err == nil {
@@ -96,6 +96,7 @@ func AdbScan(ctx, ctrlCtx context.Context, address string, usernames, passwords 
 
 	if result != "" {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			TaskId:   taskId,
 			ID:       "adb unauthorized",
 			Name:     "adb unauthorized",
 			URL:      address,

@@ -198,13 +198,13 @@ const handleCheckAllChange = (val: boolean) => {
 </script>
 
 <template>
-    <div class="head" style="margin-bottom: 10px;">
+    <div class="flex w-full mb-10px">
         <el-input v-model="input" placeholder="请输入域名或域名文件列表">
             <template #prepend>
-                <el-select v-model="currentRunner" style="width: 150px">
+                <el-select v-model="currentRunner" style="width: 150px;">
                     <el-option v-for="item in subdomainRunnerOptions" :key="item.value" :label="item.label"
                         :value="item.value" style="width: 260px;">
-                        <span style="float: left">{{ item.label }}</span>
+                        <span class="float-left">{{ item.label }}</span>
                         <span class="select-tips">
                             {{ item.tips }}
                         </span>
@@ -219,12 +219,12 @@ const handleCheckAllChange = (val: boolean) => {
                 </el-button>
             </template>
         </el-input>
-        <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="NewTask" style="margin-left: 5px;">
+        <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="NewTask" class="ml-5px">
             {{ config.runningStatus ? '停止任务' : '开始任务' }}
         </el-button>
     </div>
     <el-card>
-        <div class="my-header" style="margin-bottom: 5px;">
+        <div class="flex-between mb-5px">
             <el-button :icon="WarningFilled" type="warning" plain @click="usefulDialog = true">使用须知</el-button>
             <el-space>
                 <el-button :icon="Setting" @click="config.drawer = true">参数设置</el-button>
@@ -236,7 +236,7 @@ const handleCheckAllChange = (val: boolean) => {
             :header-cell-style="{ 'text-align': 'center' }" style="height: calc(100vh - 205px);">
             <el-table-column type="index" label="#" width="60px" />
             <el-table-column prop="Domain" label="主域名" />
-            <el-table-column prop="Subdomain" label="子域名" align="center" style="vertical-align: middle;">
+            <el-table-column prop="Subdomain" label="子域名" align="center" class="align-middle">
                 <template #header>
                     <span class=position-center>
                         子域名<el-divider direction="vertical" />
@@ -262,8 +262,8 @@ const handleCheckAllChange = (val: boolean) => {
                 <el-empty></el-empty>
             </template>
         </el-table>
-        <div class="my-header" style="margin-top: 5px;">
-            <el-progress :text-inside="true" :stroke-width="18" :percentage="config.percentage" style="width: 40%;" />
+        <div class="flex-between mt-5px">
+            <el-progress :text-inside="true" :stroke-width="18" :percentage="config.percentage" class="w-40%" />
             <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
                 @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
                 :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
@@ -278,16 +278,16 @@ const handleCheckAllChange = (val: boolean) => {
         </template>
         <el-form :model="config" label-width="auto">
             <el-form-item label="增加搜索引擎:">
-                <div style="width: 100%;">
+                <div class="w-full">
                     <el-checkbox-group v-model="checkSpaceEngines" @change="handleCheckedCitiesChange">
                         <el-checkbox v-for="engine in spaceEngineOptions" :key="engine" :label="engine" :value="engine">
                             {{ engine }}
                         </el-checkbox>
                     </el-checkbox-group>
                 </div>
-                <div style="display: flex; justify-items: center;">
+                <div class="flex">
                     <el-checkbox v-model="checkAll" :indeterminate="isIndeterminate" @change="handleCheckAllChange"
-                        style="margin-right: 5px;">Check all</el-checkbox>
+                        class="mr-5px">Check all</el-checkbox>
                     <span class="form-item-tips">上述搜索引擎默认不参与域名收集，需要开启后使用</span>
                 </div>
             </el-form-item>
@@ -319,7 +319,7 @@ const handleCheckAllChange = (val: boolean) => {
                     :max-collapse-tags="3">
                     <el-option v-for="item in dnsServerOptions" :key="item.value" :label="item.value"
                         :value="item.value">
-                        <span style="float: left">{{ item.value }}</span>
+                        <span class="float-left">{{ item.value }}</span>
                         <span class="select-tips">
                             {{ item.label }}
                         </span>
@@ -344,7 +344,7 @@ const handleCheckAllChange = (val: boolean) => {
         <el-descriptions direction="vertical" :column="4" border>
             <template #title>
                 <span>下面为各API查询页码及积分获取情况，优先推荐配置Chaos，注册链接可在设置中查看</span>
-                <el-tag style="margin-block: 5px;">FOFA、Quake、Hunter默认不参与测绘，需要在设置中手动开启</el-tag>
+                <el-tag class="my-5px">FOFA、Quake、Hunter默认不参与测绘，需要在设置中手动开启</el-tag>
                 <el-tag>建议均使用查询模式进行子域名收集，优点在于不用消耗本地的网络资源且搜集快</el-tag>
             </template>
             <el-descriptions-item label="FOFA(需充值)">10000</el-descriptions-item>

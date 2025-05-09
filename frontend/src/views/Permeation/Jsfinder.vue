@@ -248,7 +248,7 @@ function findMissingElements(A: string[], B: string[]) {
     </el-divider>
     <el-collapse-transition>
         <div style="display: flex; gap: 10px;" v-show="showForm">
-            <el-form :model="config" label-width="auto" style="width: 50%;">
+            <el-form :model="config" label-width="auto" class="w-1/2">
                 <el-form-item label="目标地址:">
                     <CustomTextarea v-model="config.urls" :rows="5" />
                     <span class="form-item-tips">需要输入应用目录根路径</span>
@@ -259,14 +259,14 @@ function findMissingElements(A: string[], B: string[]) {
                 </el-form-item>
                 <el-form-item label="路径前缀:">
                     <el-input v-model="config.prefixApiURL" />
-                    <span class="form-item-tips">默认将获取到的API拼接到URL路径中, 大部分API需要都拼接在接口路径, 需要自行获取</span>
+                    <span class="form-item-tips">默认将获取到的API拼接到目标地址中, 大部分API需要都拼接在接口路径, 需要自行获取</span>
                 </el-form-item>
                 <el-form-item label="请求头:">
                     <el-input v-model="config.headers" type="textarea" :rows="5" />
                     <span class="form-item-tips">{{ $t('tips.customHeaders') }}</span>
                 </el-form-item>
             </el-form>
-            <el-form :model="config" label-width="auto" style="width: 50%;">
+            <el-form :model="config" label-width="auto" class="w-1/2">
                 <el-form-item label="鉴权字段:">
                     <el-input v-model="config.authFiled" type="textarea" :rows="5"></el-input>
                     <span class="form-item-tips">判断内容响应体是否需要鉴权</span>
@@ -274,6 +274,7 @@ function findMissingElements(A: string[], B: string[]) {
                 </el-form-item>
                 <el-form-item label="高危路由:">
                     <el-input v-model="config.highRiskRouter" type="textarea" :rows="5"></el-input>
+                    <span class="form-item-tips">在API中匹配路由关键词, 匹配成功会跳过接口测试</span>
                 </el-form-item>
                 <el-form-item label="黑名单域名:">
                     <el-input v-model="config.blackList" type="textarea" :rows="5"></el-input>
@@ -286,7 +287,7 @@ function findMissingElements(A: string[], B: string[]) {
             </el-form>
         </div>
     </el-collapse-transition>
-    <el-card shadow="never" style="margin-bottom: 10px;">
+    <el-card shadow="never" class="mb-10px">
         <template #header>
             <div class="card-header">
                 <el-segmented v-model="value" :options="JSFindOptions">
@@ -306,8 +307,7 @@ function findMissingElements(A: string[], B: string[]) {
                 </div>
             </div>
         </template>
-        <pre class="pretty-response" style="margin-top: 0; margin-bottom: 0;" v-show="value == 0"><code>{{ config.consoleLog
-        }}</code></pre>
+        <pre class="pretty-response" v-show="value == 0"><code>{{ config.consoleLog }}</code></pre>
         <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 200px)"
             @sort-change="pagination.ctrl.sortChange" v-show="value == 1">
             <el-table-column label="INFO">
@@ -342,7 +342,7 @@ function findMissingElements(A: string[], B: string[]) {
                 <el-empty />
             </template>
         </el-table>
-        <div class="my-header" style="margin-top: 5px;" v-show="value == 1">
+        <div class="flex-between mt-5px" v-show="value == 1">
             <div></div>
             <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
                 @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"

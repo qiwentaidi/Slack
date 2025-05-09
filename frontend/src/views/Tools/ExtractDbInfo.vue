@@ -15,7 +15,7 @@
                         <el-card class="connection-card" :class="{ 'connected': connection.connected }"
                             v-loading="connection.loading">
                             <template #header>
-                                <div class="my-header">
+                                <div class="flex-between">
                                     <el-space>
                                         <el-avatar :icon="getDbIcon(connection)" />
                                         <span>{{ connection.host }}</span>
@@ -40,7 +40,7 @@
                                     </el-button-group>
                                 </div>
                             </template>
-                            <div class="my-header">
+                            <div class="flex-between">
                                 <el-space :size="10">
                                     <el-button :icon="Coin" link>数据库:{{ connection.databaseCount }}</el-button>
                                     <el-button :icon="Postcard" link>
@@ -90,7 +90,7 @@
                             <el-empty />
                         </template>
                     </el-table>
-                    <div class="my-header" style="margin-top: 5px;">
+                    <div class="flex-between mt-5px">
                         <span>当前采集进度: {{ connection.progress }}/{{ connection.tableCount }}</span>
                         <div>
                             <el-button v-show="!isRunning" type="success"
@@ -149,6 +149,9 @@
             <el-form-item label="密码">
                 <el-input v-model="currentConnection.password" type="password" show-password></el-input>
             </el-form-item>
+            <el-form-item label="服务名" v-show="currentConnection.type=='oracle'">
+                <el-input v-model="currentConnection.servername"></el-input>
+            </el-form-item>
             <el-form-item label="备注">
                 <el-input v-model="currentConnection.notes"></el-input>
             </el-form-item>
@@ -164,7 +167,7 @@
     </el-dialog>
     <el-dialog v-model="settingDialog" title="设置" width="50%">
         <el-alert title="在连接除Mongodb之外的数据库时，程序会自动忽略系统数据库，所以有时面板显示数据库数量为0"
-        show-icon :closable="false" style="margin-bottom: 10px;"></el-alert>
+        show-icon :closable="false" class="mb-10px"></el-alert>
         <el-form :model="currentConnection">
             <el-form-item label="列名关键字">
                 <el-input v-model="global.database.columnsNameKeywords" type="textarea" :rows="3"></el-input>
@@ -216,6 +219,7 @@ const currentConnection = reactive<DatabaseConnection>({
     port: 0,
     username: '',
     password: '',
+    servername: 'orcl',
     notes: '',
     connected: false,
     loading: false,
@@ -260,6 +264,7 @@ onMounted(async () => {
                 port: item.Port,
                 username: item.Username,
                 password: item.Password,
+                servername: item.ServerName,
                 notes: item.Notes,
                 connected: false,
                 loading: false,
@@ -313,6 +318,7 @@ async function addConnection() {
         Port: currentConnection.port,
         Username: currentConnection.username,
         Password: currentConnection.password,
+        ServerName: currentConnection.servername,
         Notes: currentConnection.notes,
     })
     if (!result) {
@@ -327,6 +333,7 @@ async function addConnection() {
         port: currentConnection.port,
         username: currentConnection.username,
         password: currentConnection.password,
+        servername: currentConnection.servername,
         notes: currentConnection.notes,
         connected: false,
         loading: false,
@@ -349,6 +356,7 @@ async function updateConnection() {
             Port: currentConnection.port,
             Username: currentConnection.username,
             Password: currentConnection.password,
+            ServerName: currentConnection.servername,
             Notes: currentConnection.notes
         })
         if (result) {
@@ -426,6 +434,7 @@ async function openConnection(connection: DatabaseConnection) {
         Port: connection.port,
         Username: connection.username,
         Password: connection.password,
+        ServerName: connection.servername,
         Notes: connection.notes,
     }
     connection.loading = true

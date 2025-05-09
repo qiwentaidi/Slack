@@ -11,10 +11,11 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func RedisScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func RedisScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	flag, err := RedisUnauth(host)
 	if flag && err == nil {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			TaskId:   taskId,
 			ID:       "redis unauthorized",
 			Name:     "redis unauthorized",
 			URL:      host,
@@ -35,6 +36,7 @@ func RedisScan(ctx, ctrlCtx context.Context, host string, usernames, passwords [
 		flag, err := RedisConn(host, pass)
 		if flag && err == nil {
 			runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+				TaskId:   taskId,
 				ID:       "redis weak password",
 				Name:     "redis weak password",
 				URL:      host,

@@ -13,7 +13,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MysqlScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func MysqlScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
 			if ctrlCtx.Err() != nil {
@@ -24,6 +24,7 @@ func MysqlScan(ctx, ctrlCtx context.Context, host string, usernames, passwords [
 			flag, err := MysqlConn(host, user, pass)
 			if flag && err == nil {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "mysql weak password",
 					Name:     "mysql weak password",
 					URL:      host,

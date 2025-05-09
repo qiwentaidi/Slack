@@ -8,7 +8,7 @@ import (
 )
 
 // 只要是nmap 扫描到jdwp协议，默认是 unauthorized (因为也是同样发JDWP-Handshake包检测)
-func JdwpScan(ctx, ctrlCtx context.Context, address string, usernames, passwords []string) {
+func JdwpScan(ctx, ctrlCtx context.Context, taskId, address string, usernames, passwords []string) {
 	// client, err := WrapperTcpWithTimeout("tcp", address, time.Duration(6)*time.Second)
 	// defer func() {
 	// 	if client != nil {
@@ -42,6 +42,7 @@ func JdwpScan(ctx, ctrlCtx context.Context, address string, usernames, passwords
 	// 	return
 	// }
 	runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+		TaskId:      taskId,
 		ID:          "jdwp unauthorized",
 		Name:        "jdwp unauthorized",
 		URL:         address,

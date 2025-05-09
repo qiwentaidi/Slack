@@ -14,7 +14,7 @@ import (
 
 const defaultAliveURL = "http://www.baidu.com"
 
-func Socks5Scan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func Socks5Scan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	hostwithoutport := strings.Split(host, ":")[0]
 	port, err := strconv.Atoi(strings.Split(host, ":")[1])
 	if err != nil {
@@ -24,6 +24,7 @@ func Socks5Scan(ctx, ctrlCtx context.Context, host string, usernames, passwords 
 	flag := Socks5Conn(hostwithoutport, port, 3, "", "", defaultAliveURL)
 	if flag {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			TaskId:   taskId,
 			ID:       "socks5 unauthorized",
 			Name:     "socks5 unauthorized",
 			URL:      host,
@@ -44,6 +45,7 @@ func Socks5Scan(ctx, ctrlCtx context.Context, host string, usernames, passwords 
 			flag = Socks5Conn(hostwithoutport, port, 3, user, pass, defaultAliveURL)
 			if flag {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "socks5 weak password",
 					Name:     "socks5 weak password",
 					URL:      host,

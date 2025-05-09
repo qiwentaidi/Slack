@@ -11,7 +11,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MemcachedScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func MemcachedScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	client, err := WrapperTcpWithTimeout("tcp", host, 10*time.Second)
 	defer func() {
 		if client != nil {
@@ -28,6 +28,7 @@ func MemcachedScan(ctx, ctrlCtx context.Context, host string, usernames, passwor
 				if err == nil {
 					if strings.Contains(string(rev[:n]), "STAT") {
 						runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+							TaskId:   taskId,
 							ID:       "memcached unauthorized",
 							Name:     "memcached unauthorized",
 							URL:      host,

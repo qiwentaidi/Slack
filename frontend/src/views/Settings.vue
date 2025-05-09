@@ -1,5 +1,5 @@
 <template>
-    <el-container style="height: 100%;">
+    <el-container class="h-full">
         <el-aside width="200px">
             <el-menu default-active="0">
                 <el-menu-item v-for="(item, index) in setupOptions" :index="index.toString()" @click="selectItem">
@@ -29,8 +29,8 @@
                 <el-form-item :label="$t('setting.survival')">
                     <el-select v-model="global.webscan.default_alive_module">
                         <el-option v-for="item in aliveGroupOptions" :key="item.value" :value="item.value">
-                            <span style="float: left">{{ item.value }}</span>
-                            <span style="float: right">
+                            <span class="float-left">{{ item.value }}</span>
+                            <span class="float-right">
                                 {{ item.description }}
                             </span>
                         </el-option>
@@ -44,13 +44,13 @@
                         </el-option>
                     </el-select>
                 </el-form-item>
-                <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
+                <el-button type="primary" @click="SaveConfig" class="float-right">{{ $t('setting.save') }}</el-button>
             </el-form>
             <el-form :model="global.proxy" label-width="auto" v-show="currentDisplay == '1'">
                 <h3>{{ $t(setupOptions[1].name) }}</h3>
                 <el-form-item :label="$t('setting.enable')">
                     <el-switch v-model="global.proxy.enabled" />
-                    <el-button type="primary" size="small" @click="TestProxyWithNotify" style="margin-left: 20px;"
+                    <el-button type="primary" size="small" @click="TestProxyWithNotify" class="ml-10px"
                         v-if="global.proxy.enabled">{{ $t('setting.test_agent') }}</el-button>
                 </el-form-item>
                 <el-form-item :label="$t('setting.mode')">
@@ -71,14 +71,14 @@
                 <el-form-item :label="$t('setting.password')">
                     <el-input v-model="global.proxy.password" type="password" show-password></el-input>
                 </el-form-item>
-                <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
+                <el-button type="primary" @click="SaveConfig" class="float-right">{{ $t('setting.save') }}</el-button>
             </el-form>
             <el-form :model="global.space" label-width="auto" v-show="currentDisplay == '2'">
                 <h3>{{ $t(setupOptions[2].name) }}<el-divider direction="vertical" />{{ $t('setting.identifier') }}</h3>
                 <el-form-item label="FOFA">
                     <el-input v-model="global.space.fofaapi" placeholder="API address" clearable />
-                    <el-input v-model="global.space.fofaemail" placeholder="Email" clearable style="margin-top: 5px;" />
-                    <el-input v-model="global.space.fofakey" placeholder="API key" clearable style="margin-top: 5px;" />
+                    <el-input v-model="global.space.fofaemail" placeholder="Email" clearable class="mt-5px" />
+                    <el-input v-model="global.space.fofakey" placeholder="API key" clearable class="mt-5px" />
                 </el-form-item>
                 <el-form-item label="Hunter">
                     <el-input v-model="global.space.hunterkey" placeholder="API key" clearable />
@@ -117,7 +117,7 @@
                     <el-input v-model="global.space.github"
                         placeholder="Settings -> Developer settings -> Presonal access tokens" />
                 </el-form-item>
-                <el-button type="primary" @click="SaveConfig" style="float: right;">{{ $t('setting.save') }}</el-button>
+                <el-button type="primary" @click="SaveConfig" class="float-right">{{ $t('setting.save') }}</el-button>
             </el-form>
             <el-form :model="global.Theme" label-width="auto" v-show="currentDisplay == '3'">
                 <h3>{{ $t(setupOptions[3].name) }}</h3>
@@ -127,15 +127,11 @@
                         <el-option label="English" value="en"></el-option>
                     </el-select>
                 </el-form-item>
-                <el-form-item :label="$t('aside.theme')">
-                    <el-switch v-model="global.Theme.value" :active-action-icon="Moon" :inactive-action-icon="Sunny"
-                        style="--el-switch-on-color: #2C2C2C; --el-switch-off-color: " @change="toggle" />
-                </el-form-item>
             </el-form>
             <div v-show="currentDisplay == '4'">
                 <h3>{{ $t(setupOptions[4].name) }}<el-divider direction="vertical" />{{ $t('setting.password_tips') }}
                 </h3>
-                <el-table :data="crackDict.usernames" stripe style="width: 100%">
+                <el-table :data="crackDict.usernames" stripe class="w-full">
                     <el-table-column prop="name" label="Protocol" />
                     <el-table-column label="Operate" width="250" align="center">
                         <template #default="scope">
@@ -156,7 +152,7 @@
     </el-container>
     <el-drawer v-model="ctrl.innerDrawer" title="字典管理" :append-to-body="true">
         <el-input type="textarea" :rows="20" v-model="ctrl.currentDic"></el-input>
-        <el-button type="primary" style="margin-top: 10px; float: right;"
+        <el-button type="primary" class="mt-10px float-right"
             @click="SaveFile(ctrl.currentPath)">保存</el-button>
     </el-drawer>
 </template>
@@ -165,11 +161,10 @@
 import global from "@/stores"
 import { ElMessage, MenuItemRegistered } from 'element-plus';
 import { TestProxyWithNotify } from "@/util";
-import { Edit, Sunny, Moon, User } from '@element-plus/icons-vue';
+import { Edit, User } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, WriteFile } from "wailsjs/go/services/File";
 import { useI18n } from "vue-i18n";
-import { useDark, useToggle } from '@vueuse/core'
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import { SaveConfig } from "@/config";
 import { aliveGroupOptions, crackDict, setupOptions } from "@/stores/options";
@@ -177,14 +172,6 @@ import { aliveGroupOptions, crackDict, setupOptions } from "@/stores/options";
 const bevigilURL = "https://bevigil.com/osint-api"
 const chaosURL = "https://cloud.projectdiscovery.io/"
 const securitytrailsURL = "https://securitytrails.com/"
-
-const isDark = useDark({
-    storageKey: 'theme',
-    valueDark: 'dark',
-    valueLight: 'light',
-})
-
-const toggle = useToggle(isDark)
 
 const { locale } = useI18n();
 

@@ -414,7 +414,7 @@ function searchCsegmentIpv4(ip: string) {
     <el-form :model="form" @keydown.enter.native.prevent="tableCtrl.addTab(form.query)">
         <el-form-item>
             <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                @select="entry.handleSelect" :debounce="500" style="width: 100%;">
+                @select="entry.handleSelect" :debounce="500" class="w-full">
                 <template #prepend>
                     查询条件
                 </template>
@@ -508,8 +508,8 @@ function searchCsegmentIpv4(ip: string) {
                 <el-select v-model="form.defaultTime" style="width: 200px;">
                     <el-option v-for="item in hunterOptions.Time" :key="item.value" :label="item.label"
                         :value="item.value">
-                        <span style="float: left">{{ item.label }}</span>
-                        <span style="float: right">
+                        <span class="float-left">{{ item.label }}</span>
+                        <span class="float-right">
                             {{ item.tips }}
                         </span>
                     </el-option>
@@ -542,11 +542,11 @@ function searchCsegmentIpv4(ip: string) {
             </el-dropdown>
         </el-form-item>
     </el-form>
-    <el-tabs class="editor-tabs" v-model="table.acvtiveNames" v-loading="table.loading" type="card"
-        style="margin-top: 10px;" closable @tab-remove="tableCtrl.removeTab">
+    <el-tabs class="editor-tabs mt-10px" v-model="table.acvtiveNames" v-loading="table.loading" type="card"
+         closable @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%;height: calc(100vh - 275px);">
+            <el-table :data="item.content" border class="w-full" style="height: calc(100vh - 275px);">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" :min-width="200" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" fixed label="IP" width="150" :show-overflow-tooltip="true" />
@@ -600,7 +600,7 @@ function searchCsegmentIpv4(ip: string) {
                     </template>
                 </el-table-column>
             </el-table>
-            <div class="my-header" style="margin-top: 10px;">
+            <div class="flex-between mt-10px">
                 <span style="color: cornflowerblue;">{{ item.message }}</span>
                 <el-pagination size="small" background v-model:page-size="item.pageSize" :page-sizes="[10, 50, 100]"
                     layout="total, sizes, prev, pager, next, jumper" @size-change="tableCtrl.handleSizeChange"

@@ -348,7 +348,7 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 
 		// 检查高风险路由，直接跳过测试
 		for _, router := range o.HighRiskRouter {
-			if strings.Contains(apiReq.URL, router) {
+			if strings.Contains(strings.ToLower(apiReq.URL), router) {
 				runtime.EventsEmit(ctx, "jsfindlog", "[!!] "+fullURL+" 高风险API跳过测试, 触发敏感词: "+router)
 				return
 			}

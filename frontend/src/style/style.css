@@ -98,11 +98,6 @@ html {
     font-weight: bold;
 }
 
-.head {
-    display: flex;
-    width: 100%;
-}
-
 .log-textarea {
     background-color: black;
     color: rgb(255, 255, 255);
@@ -135,12 +130,6 @@ html {
     color: #00ff00;
 }
 
-.my-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-}
-
 .pretty-response {
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -166,10 +155,6 @@ html {
     align-items: center;
     flex-direction: row;
     justify-content: space-between;
-}
-
-.flex-box {
-    display: flex;
 }
 
 /* 设置align-right的元素内容右对齐 */
@@ -498,3 +483,113 @@ pre code.hljs {
 code.hljs {
     padding: 3px 5px
 }
+
+/* 自定义一些类似 tailwindscss 命名的样式 */
+
+.flex {
+    display: flex;
+}
+
+.flex-between {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.h-full {
+    height: 100%;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.w-1\/2  {
+    width: 50%;
+}
+
+.w-1\/3  {
+    width: 33.333%;
+}
+
+.w-1\/4  {
+    width: 25%;
+}
+
+.w-2\/3  {
+    width: 66.666%;
+}
+
+.w-3\/4  {
+    width: 75%;
+}
+
+.float-left {
+    float: left;
+}
+
+.float-right {
+    float: right;
+}
+
+.align-middle {
+    vertical-align: middle;
+}
+
+.font-bold {
+    font-weight: bold;
+}
+
+.font-small {
+    font-weight: small;
+}
+
+/* gap 后面的值为 n*4px */
+.gap-2 {
+    gap: 8px;
+}
+
+.mb-10px {
+    margin-bottom: 10px;
+}
+
+.mt-10px {
+    margin-top: 10px;
+}
+
+.ml-10px {
+    margin-left: 10px;
+}
+
+.mt-5px {
+    margin-top: 5px;
+}
+
+.ml-5px {
+    margin-left: 5px;
+}
+
+.mr-5px {
+    margin-right: 5px;
+}
+
+.mb-5px {
+    margin-bottom: 5px;
+}
+
+.my-5px {
+    margin-block: 5px;
+}
+
+.mx-5px {
+    margin-inline: 5px;
+}
+
+.w-40\% {
+    width: 40%;
+}
+

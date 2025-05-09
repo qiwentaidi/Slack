@@ -11,10 +11,11 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MqttScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func MqttScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	flag, err := MqttUnauth(host)
 	if flag && err == nil {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			TaskId:   taskId,
 			ID:       "mqtt unauthorized",
 			Name:     "mqtt unauthorized",
 			URL:      host,
@@ -36,6 +37,7 @@ func MqttScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []
 			flag, err := MqttConn(host, user, pass)
 			if flag && err == nil {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "mqtt weak password",
 					Name:     "mqtt weak password",
 					URL:      host,

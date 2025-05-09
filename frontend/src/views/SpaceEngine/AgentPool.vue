@@ -165,8 +165,8 @@ const fofaSearch = 'protocol=="socks5" && country="CN" && banner="Method:No Auth
         </el-button>
     </el-divider>
     <el-collapse-transition>
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;" v-show="showForm">
-            <el-form :model="form" label-width="auto" style="width: 50%;">
+        <div class="flex gap-2 mb-10px" v-show="showForm">
+            <el-form :model="form" label-width="auto" class="w-1/2">
                 <el-form-item label="目标:">
                     <CustomTextarea v-model="form.target" :rows="5" placeholder="192.168.1.1:1111, 目标以换行分割" />
                 </el-form-item>
@@ -182,7 +182,7 @@ const fofaSearch = 'protocol=="socks5" && country="CN" && banner="Method:No Auth
                     <el-button v-else loading>程序正在运行中</el-button>
                 </el-form-item>
             </el-form>
-            <Note style="width: 50%;">
+            <Note class="w-1/2">
                 本模块仅提供SOCKS5代理批量验证保存功能, 如需测绘可以通过空间引擎自行搜索<br /><br />
                 FOFA:<br />
                 <el-tag type="info" @click="Copy(fofaSearch)">{{ fofaSearch }}</el-tag><br />
@@ -193,7 +193,7 @@ const fofaSearch = 'protocol=="socks5" && country="CN" && banner="Method:No Auth
             </Note>
         </div>
     </el-collapse-transition>
-    <el-card shadow="never" style="width: 100%;">
+    <el-card shadow="never" class="w-full">
         <template #header>
             <div class="card-header">
                 <el-segmented v-model="form.activeNames" :options="AgentPoolOptions">
@@ -213,7 +213,7 @@ const fofaSearch = 'protocol=="socks5" && country="CN" && banner="Method:No Auth
                 </el-space>
             </div>
         </template>
-        <pre class="pretty-response" style="margin-top: 0; margin-bottom: 0;" v-show="form.activeNames == 0"><code>{{
+        <pre class="pretty-response" v-show="form.activeNames == 0"><code>{{
             form.socksLogger
         }}</code></pre>
         <el-table :data="form.pool" border style="height: 100vh;" v-show="form.activeNames == 1">

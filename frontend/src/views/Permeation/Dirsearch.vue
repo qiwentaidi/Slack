@@ -300,7 +300,7 @@ function deleteRecordsWithTimesEqualOne() {
 </script>
 
 <template>
-    <div class="head" style="margin-bottom: 10px;">
+    <div class="flex mb-10px">
         <el-input v-model="from.input" placeholder="请输入URL地址或者选择目标文件">
             <template #prepend>
                 <el-select v-model=from.defaultOption value=options style="width: 15vh;">
@@ -312,12 +312,12 @@ function deleteRecordsWithTimesEqualOne() {
             </template>
         </el-input>
         <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="dirscan"
-            style="margin-left: 5px;">
+            class="ml-5px">
             {{ config.runningStatus ? '停止扫描' : '开始扫描' }}
         </el-button>
     </div>
     <el-card shadow="never">
-        <div class="my-header" style="margin-bottom: 5px;">
+        <div class="flex-between mb-5px">
             <el-space>
                 <el-tag>递归层级:{{ config.recursion }}</el-tag>
                 <el-tag>字典大小:{{ from.paths.length }}</el-tag>
@@ -366,8 +366,8 @@ function deleteRecordsWithTimesEqualOne() {
                 <el-empty />
             </template>
         </el-table>
-        <div class="my-header" style="margin-top: 5px;">
-            <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" style="width: 40%;" />
+        <div class="flex-between mt-5px">
+            <el-progress :text-inside="true" :stroke-width="18" :percentage="from.percentage" class="w-40%" />
             <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
                 @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
                 :current-page="pagination.table.currentPage" :page-sizes="[50, 100, 200, 500]"
@@ -423,7 +423,7 @@ function deleteRecordsWithTimesEqualOne() {
             </el-form-item>
             <el-form-item label="字典列表:">
                 <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip
-                    placeholder="不选择默认加载dicc字典" :max-collapse-tags="1" style="margin-bottom: 5px;">
+                    placeholder="不选择默认加载dicc字典" :max-collapse-tags="1" class="mb-5px">
                     <template #prefix>
                         <el-button-group>
                             <el-tooltip content="加载自定义字典">
@@ -443,9 +443,9 @@ function deleteRecordsWithTimesEqualOne() {
             </el-form-item>
             <el-form-item label="扫描记录:" class="align-right">
                 <el-alert title="记录响应码为200、500路径出现次数, 数据非实时, 每次启动/刷新应用时会更新" type="info" show-icon :closable="false"></el-alert>
-                <el-button type="danger" plain :icon="WarnTriangleFilled" @click="deleteRecordsWithTimesEqualOne" style="width: 100%; margin-block: 5px;">删除次数为1的记录</el-button>
+                <el-button type="danger" plain :icon="WarnTriangleFilled" @click="deleteRecordsWithTimesEqualOne" class="w-full my-5px">删除次数为1的记录</el-button>
                 <el-table :data="pathTimes.table.pageContent" border 
-                @sort-change="pathTimes.ctrl.sortChange" style="width: 100%; height: 50vh;">
+                @sort-change="pathTimes.ctrl.sortChange" class="w-full" style="height: 50vh;">
                     <el-table-column prop="path">
                         <template #header>
                             <el-text><span>Path</span>
@@ -470,7 +470,7 @@ function deleteRecordsWithTimesEqualOne() {
                     @current-change="pathTimes.ctrl.handleCurrentChange" :pager-count="5"
                     :current-page="pathTimes.table.currentPage" :page-sizes="[50, 100, 200]"
                     :page-size="pathTimes.table.pageSize" layout="total, sizes, prev, pager, next"
-                    :total="pathTimes.table.result.length" style="margin-top: 5px;">
+                    :total="pathTimes.table.result.length" class="mt-5px">
                 </el-pagination>
             </el-form-item>
         </el-form>

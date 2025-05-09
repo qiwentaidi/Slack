@@ -1,5 +1,5 @@
 <template>
-    <div class="flex-box">
+    <div class="flex">
         <div style="width: 50vh">
             <el-space style="margin-bottom: 10px; float: right;">
                 <el-button type="primary" :icon="Plus" @click="dialog = true">添加</el-button>
@@ -20,7 +20,7 @@
             </el-table>
         </div>
         <el-card style="width: 70%; margin-left: 10px;">
-            <div class="my-header">
+            <div class="flex-between">
                 <el-tag effect="dark" type="info">{{ config.name }}</el-tag>
                 <el-button :icon="DocumentCopy" link @click="Copy(config.show)" />
             </div>

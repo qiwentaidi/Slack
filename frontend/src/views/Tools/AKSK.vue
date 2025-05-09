@@ -176,7 +176,7 @@ function CopyResult() {
                         <el-input v-model="wechat.secert" />
                     </el-form-item>
                     <el-form-item label="Token">
-                        <el-input v-model="wechat.accessToken" style="width: 100%">
+                        <el-input v-model="wechat.accessToken" class="w-full">
                             <template #suffix>
                                 <el-button type="primary" link @click="wechatCheckSecret">获取Token</el-button>
                             </template>
@@ -204,7 +204,7 @@ function CopyResult() {
                         <el-input v-model="enterpriseWechat.corpsecret" />
                     </el-form-item>
                     <el-form-item label="Token">
-                        <el-input v-model="enterpriseWechat.accessToken" style="width: 100%">
+                        <el-input v-model="enterpriseWechat.accessToken" class="w-full">
                             <template #suffix>
                                 <el-button type="primary" link @click="enterpriseWechatCheckSecret">获取Token</el-button>
                             </template>

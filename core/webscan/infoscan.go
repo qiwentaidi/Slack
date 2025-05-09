@@ -47,6 +47,7 @@ type WebInfo struct {
 
 type FingerScanner struct {
 	ctx                     context.Context
+	taskId                  string // 任务ID
 	urls                    []*url.URL
 	aliveURLs               []*url.URL          // 默认指纹扫描结束后，存活的URL，以便后续主动指纹过滤目标
 	screenshot              bool                // 是否截屏
@@ -61,7 +62,7 @@ type FingerScanner struct {
 	mutex                   sync.RWMutex
 }
 
-func NewFingerScanEngine(ctx context.Context, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
+func NewFingerScanEngine(ctx context.Context, taskId string, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
 	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
 	client := clients.NewRestyClientWithProxy(nil, true, proxy)
 	for _, t := range options.Target {
@@ -87,6 +88,7 @@ func NewFingerScanEngine(ctx context.Context, proxy clients.Proxy, options struc
 	}
 	return &FingerScanner{
 		ctx:                     ctx,
+		taskId:                  taskId,
 		urls:                    urls,
 		client:                  client,
 		notFollowClient:         clients.NewRestyClientWithProxy(nil, false, proxy),
@@ -222,6 +224,7 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 		s.mutex.Unlock()
 
 		retChan <- structs.InfoResult{
+			TaskId:       s.taskId,
 			URL:          u.String(),
 			Scheme:       u.Scheme,
 			Host:         u.Host,
@@ -340,6 +343,7 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 			s.mutex.Unlock()
 
 			retChan <- structs.InfoResult{
+				TaskId:       s.taskId,
 				URL:          fullURL,
 				StatusCode:   ti.StatusCode,
 				Length:       ti.ContentLength,

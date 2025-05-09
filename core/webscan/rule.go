@@ -20,17 +20,9 @@ type Config struct {
 	// 总和需要加载的模板文件夹
 	TemplateFolders []string
 	// 指纹规则文件
-	// FingerprintRuleFile string
+	FingerprintRuleFile string
 	// 主动探测的规则文件
-	// ActiveRuleFile string
-	// 默认模板文件夹
-	// DefaultTemplateFolder string
-}
-
-func NewConfig(template []string) *Config {
-	return &Config{
-		TemplateFolders: template,
-	}
+	ActiveRuleFile string
 }
 
 type FingerPEntity struct {
@@ -385,13 +377,13 @@ func dataCheckInt(op int16, dataSource int, dataRule int) bool {
 
 var WorkFlowDB map[string][]string
 
-func (config *Config) InitAll(ctx context.Context, webfinger, activefinger string) bool {
+func (config *Config) InitAll(ctx context.Context) bool {
 	FingerprintDB = nil
-	if err := config.InitFingprintDB(ctx, webfinger); err != nil {
+	if err := config.InitFingprintDB(ctx, config.FingerprintRuleFile); err != nil {
 		gologger.Error(ctx, err)
 		return false
 	}
-	if err := config.InitActiveScanPath(activefinger); err != nil {
+	if err := config.InitActiveScanPath(config.ActiveRuleFile); err != nil {
 		gologger.Error(ctx, err)
 		return false
 	}

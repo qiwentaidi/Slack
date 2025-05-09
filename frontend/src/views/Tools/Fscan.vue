@@ -1,6 +1,6 @@
 <template>
     <div v-show="fscan.showType == 'default'">
-        <div class="head">
+        <div class="flex">
             <el-button :icon="InfoFilled" @click="fscan.tipsDialog = true">模块介绍</el-button>
             <el-input v-model="fscan.input" placeholder="移入或者选择文件路径" style="margin-inline: 5px;">
                 <template #suffix>
@@ -160,7 +160,7 @@
                         </template>
                     </el-table-column>
                 </el-table>
-                <div class="my-header" style="margin-top: 10px;">
+                <div class="flex-between mt-10px">
                     <div></div>
                     <el-pagination size="small" background @size-change="wip.ctrl.handleSizeChange"
                         @current-change="wip.ctrl.handleCurrentChange" :current-page="wip.table.currentPage"

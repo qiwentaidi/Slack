@@ -380,8 +380,8 @@ func (d *Database) ConnectDatabase(info structs.DatabaseConnection) bool {
 		flag, err = portscan.MssqlConn(host, info.Username, info.Password)
 		dataSourceName = fmt.Sprintf("server=%s;user id=%s;password=%s;port=%v;encrypt=disable;timeout=%v", info.Host, info.Username, info.Password, info.Port, 10*time.Second)
 	case "oracle":
-		flag, err = portscan.OracleConn(host, info.Username, info.Password)
-		dataSourceName = fmt.Sprintf("oracle://%s:%s@%s/orcl", info.Username, info.Password, host)
+		flag, err = portscan.OracleConn(host, info.ServerName, info.Username, info.Password)
+		dataSourceName = fmt.Sprintf("oracle://%s:%s@%s/%s", info.Username, info.Password, host, info.ServerName)
 	case "postgres":
 		flag, err = portscan.PostgresConn(host, info.Username, info.Password)
 		dataSourceName = fmt.Sprintf("postgres://%v:%v@%v/postgres?sslmode=disable", info.Username, info.Password, host)
@@ -1064,15 +1064,15 @@ func (d *Database) RetrievePocscanResults(taskid string) []structs.Vulnerability
 }
 
 // 添加指纹扫描结果
-func (d *Database) AddFingerscanResult(taskid string, result structs.InfoResult) bool {
+func (d *Database) AddFingerscanResult(result structs.InfoResult) bool {
 	insertStmt := "INSERT INTO FingerprintInfo (task_id, url, status, length, title, detect, is_waf, waf, fingerprints, screenshot, host, scheme, port) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	return d.ExecSqlStatement(insertStmt, taskid, result.URL, result.StatusCode, result.Length, result.Title, result.Detect, result.IsWAF, result.WAF, strings.Join(result.Fingerprints, ","), result.Screenshot, result.Host, result.Scheme, result.Port)
+	return d.ExecSqlStatement(insertStmt, result.TaskId, result.URL, result.StatusCode, result.Length, result.Title, result.Detect, result.IsWAF, result.WAF, strings.Join(result.Fingerprints, ","), result.Screenshot, result.Host, result.Scheme, result.Port)
 }
 
 // 添加漏洞扫描结果
-func (d *Database) AddPocscanResult(taskid string, result structs.VulnerabilityInfo) bool {
+func (d *Database) AddPocscanResult(result structs.VulnerabilityInfo) bool {
 	insertStmt := "INSERT INTO VulnerabilityInfo (task_id, template_id, vuln_name, protocol, severity, vuln_url, extract, request, response, description, reference, response_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	return d.ExecSqlStatement(insertStmt, taskid, result.ID, result.Name, result.Type, result.Severity, result.URL, result.Extract, result.Request, result.Response, result.Description, result.Reference, result.ResponseTime)
+	return d.ExecSqlStatement(insertStmt, result.TaskId, result.ID, result.Name, result.Type, result.Severity, result.URL, result.Extract, result.Request, result.Response, result.Description, result.Reference, result.ResponseTime)
 }
 
 // 移除某个漏洞

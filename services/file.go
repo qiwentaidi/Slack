@@ -496,14 +496,17 @@ var (
 func (f *File) GetLocalNaConfig() *[]structs.Navigation {
 	if !f.CheckFileStat(na) {
 		os.Create(na)
-		gologger.Error(f.ctx, "Can't create navogation.json")
+		gologger.Error(f.ctx, "[AppLauncher] Can't create navogation.json")
+		return &navigation
 	}
 	b, err := os.ReadFile(na)
 	if err != nil {
-		gologger.Error(f.ctx, err)
+		gologger.Error(f.ctx, fmt.Errorf("[AppLauncher] Read navogation.json err: %w", err))
+		return &navigation
 	}
 	if err := json.Unmarshal(b, &navigation); err != nil {
-		gologger.Error(f.ctx, err)
+		gologger.Error(f.ctx, fmt.Errorf("[AppLauncher] Unmarshal navogation.json err: %w", err))
+		return &navigation
 	}
 	return &navigation
 }

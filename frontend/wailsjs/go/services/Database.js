@@ -6,12 +6,12 @@ export function AddConnection(arg1) {
   return window['go']['services']['Database']['AddConnection'](arg1);
 }
 
-export function AddFingerscanResult(arg1, arg2) {
-  return window['go']['services']['Database']['AddFingerscanResult'](arg1, arg2);
+export function AddFingerscanResult(arg1) {
+  return window['go']['services']['Database']['AddFingerscanResult'](arg1);
 }
 
-export function AddPocscanResult(arg1, arg2) {
-  return window['go']['services']['Database']['AddPocscanResult'](arg1, arg2);
+export function AddPocscanResult(arg1) {
+  return window['go']['services']['Database']['AddPocscanResult'](arg1);
 }
 
 export function AddScanTask(arg1, arg2, arg3, arg4, arg5) {

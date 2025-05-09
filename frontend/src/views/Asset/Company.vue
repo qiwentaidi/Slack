@@ -159,8 +159,8 @@ function toggleFormVisibility() {
         <el-button round loading v-else>正在运行</el-button>
     </el-divider>
     <el-collapse-transition>
-        <div style="display: flex; gap: 10px;" v-show="showForm">
-            <el-form :model="from" label-width="auto" style="width: 50%;">
+        <div class="flex" v-show="showForm">
+            <el-form :model="from" label-width="auto" class="w-1/2">
                 <el-form-item label="公司名称:">
                     <el-input v-model="from.company" type="textarea" :rows="5"></el-input>
                 </el-form-item>
@@ -229,7 +229,7 @@ function toggleFormVisibility() {
                         <el-empty />
                     </template>
                 </el-table>
-                <div class="my-header" style="margin-top: 5px;">
+                <div class="flex-between mt-5px">
                     <div></div>
                     <el-pagination size="small" background @size-change="pc.ctrl.handleSizeChange"
                         @current-change="pc.ctrl.handleCurrentChange" :pager-count="5"
@@ -245,7 +245,7 @@ function toggleFormVisibility() {
                     <el-table-column prop="CompanyName" label="公司名称" width="180px" />
                     <el-table-column prop="WechatName" label="公众号名称">
                         <template #default="scope">
-                            <div class="flex-box">
+                            <div class="flex">
                                 <img :src="scope.row.Logo" style="width: 25px; height: 25px; margin-right: 10px;">
                                 <span>{{ scope.row.WechatName }}</span>
                             </div>
@@ -269,7 +269,7 @@ function toggleFormVisibility() {
                         <el-empty />
                     </template>
                 </el-table>
-                <div class="my-header" style="margin-top: 5px;">
+                <div class="flex-between mr-5px">
                     <div></div>
                     <el-pagination size="small" background @size-change="pw.ctrl.handleSizeChange"
                         @current-change="pw.ctrl.handleCurrentChange" :pager-count="5"
@@ -289,9 +289,9 @@ function toggleFormVisibility() {
                         {{ u }}</p>
                 </el-scrollbar>
                 <el-button :icon="DocumentCopy" @click="Copy(from.errorCompanies.join('\n'))"
-                    style="width: 100%;">复制全部失败目标</el-button>
+                    class="w-full">复制全部失败目标</el-button>
             </el-popover>
-            <el-button :icon="exportIcon" style="margin-left: 5px;"
+            <el-button :icon="exportIcon" class="ml-5px"
                 @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">
                 结果导出
             </el-button>
@@ -301,12 +301,6 @@ function toggleFormVisibility() {
 </template>
 
 <style scoped>
-.finger-container {
-    flex-wrap: wrap;
-    display: flex;
-    gap: 7px;
-}
-
 .scrollbar-demo-item {
     display: flex;
     align-items: center;

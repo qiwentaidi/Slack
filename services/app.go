@@ -320,7 +320,7 @@ func (a *App) SpaceGetPort(ip string) []float64 {
 	return space.GetShodanAllPort(a.ctx, ip)
 }
 
-func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, thread, timeout int, proxy clients.Proxy) {
+func (a *App) NewTcpScanner(taskId string, specialTargets []string, ips []string, ports []int, thread, timeout int, proxy clients.Proxy) {
 	ctrlCtx, cancel := control.GetScanContext(control.Portscan) // 标识任务
 	defer cancel()
 	addresses := make(chan portscan.Address)
@@ -343,14 +343,14 @@ func (a *App) NewTcpScanner(specialTargets []string, ips []string, ports []int, 
 			addresses <- portscan.Address{IP: temp[0], Port: port}
 		}
 	}()
-	portscan.TcpScan(a.ctx, ctrlCtx, addresses, thread, timeout, proxy)
+	portscan.TcpScan(a.ctx, ctrlCtx, taskId, addresses, thread, timeout, proxy)
 }
 
 // 端口暴破
-func (a *App) PortBrute(host string, usernames, passwords []string) {
+func (a *App) PortBrute(taskId, host string, usernames, passwords []string) {
 	ctrlCtx, cancel := control.GetScanContext(control.Crack) // 标识任务
 	defer cancel()
-	portscan.Runner(a.ctx, ctrlCtx, host, usernames, passwords)
+	portscan.Runner(a.ctx, ctrlCtx, taskId, host, usernames, passwords)
 }
 
 // fofa
@@ -391,8 +391,12 @@ func (a *App) IconHash(target string) string {
 // 仅在执行时调用一次
 func (a *App) InitRule(appendTemplateFolder string) bool {
 	templateFolders := []string{a.templateDir, appendTemplateFolder}
-	config := webscan.NewConfig(templateFolders)
-	return config.InitAll(a.ctx, a.webfingerFile, a.activefingerFile)
+	config := &webscan.Config{
+		TemplateFolders:     templateFolders,
+		ActiveRuleFile:      a.activefingerFile,
+		FingerprintRuleFile: a.webfingerFile,
+	}
+	return config.InitAll(a.ctx)
 }
 
 // webscan
@@ -406,14 +410,14 @@ func (a *App) FingerprintList() []string {
 }
 
 // 多线程 Nuclei 扫描，由于Nucli的设计问题，多线程无法调用代理，否则会导致扫描失败
-func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy, threadSafe bool) {
+func (a *App) NewWebScanner(taskId string, options structs.WebscanOptions, proxy clients.Proxy, threadSafe bool) {
 	ctrlCtx, cancel := control.GetScanContext(control.Webscan) // 标识任务
 	defer cancel()
 	webscan.IsRunning = true
 	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
 	gologger.Info(a.ctx, "Fingerscan is running ...")
 
-	engine := webscan.NewFingerScanEngine(a.ctx, proxy, options)
+	engine := webscan.NewFingerScanEngine(a.ctx, taskId, proxy, options)
 	if engine == nil {
 		gologger.Error(a.ctx, "Init fingerscan engine failed")
 		webscan.IsRunning = false
@@ -459,9 +463,9 @@ func (a *App) NewWebScanner(options structs.WebscanOptions, proxy clients.Proxy,
 		runtime.EventsEmit(a.ctx, "NucleiCounts", counts)
 
 		if threadSafe {
-			webscan.NewThreadSafeNucleiEngine(a.ctx, ctrlCtx, allOptions)
+			webscan.NewThreadSafeNucleiEngine(a.ctx, ctrlCtx, taskId, allOptions)
 		} else {
-			webscan.NewNucleiEngine(a.ctx, ctrlCtx, allOptions)
+			webscan.NewNucleiEngine(a.ctx, ctrlCtx, taskId, allOptions)
 		}
 
 		gologger.Info(a.ctx, "Vulnerability scan has ended")

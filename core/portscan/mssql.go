@@ -13,7 +13,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func MssqlScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func MssqlScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
 			if ctrlCtx.Err() != nil {
@@ -24,6 +24,7 @@ func MssqlScan(ctx, ctrlCtx context.Context, host string, usernames, passwords [
 			flag, err := MssqlConn(host, user, pass)
 			if flag && err == nil {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "mssql weak password",
 					Name:     "mssql weak password",
 					URL:      host,

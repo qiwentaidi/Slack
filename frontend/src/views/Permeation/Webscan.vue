@@ -15,15 +15,13 @@ import { isPrivateIP, validateIp, validateIpAndDomain } from '@/stores/validate'
 import { structs } from 'wailsjs/go/models';
 import { portGroupOptions, webReportOptions, webscanOptions, crackDict, WebsiteInputTips, HostInputTips } from '@/stores/options'
 import { nanoid as nano } from 'nanoid'
-import { RemovePocscanResult, RemoveScanTask, ExportWebReportWithHtml, ExportWebReportWithJson, RetrieveAllScanTasks, AddFingerscanResult,
+import {
+    RemovePocscanResult, RemoveScanTask, ExportWebReportWithHtml, ExportWebReportWithJson, RetrieveAllScanTasks, AddFingerscanResult,
     AddPocscanResult, AddScanTask, ReadWebReportWithJson, RenameScanTask, RetrieveFingerscanResults, RetrievePocscanResults, UpdateScanTaskWithResults,
-    RemoveFingerprintResult, ExportWebReportWithExcel } from 'wailsjs/go/services/Database';
+    RemoveFingerprintResult, ExportWebReportWithExcel
+} from 'wailsjs/go/services/Database';
 import saveIcon from '@/assets/icon/save.svg'
 import githubIcon from '@/assets/icon/github.svg'
-import dashboardIcon from '@/assets/icon/dashboard.svg'
-import activityIcon from '@/assets/icon/activity.svg'
-import bugIcon from "@/assets/icon/bug.svg";
-import fingerprintIcon from "@/assets/icon/fingerprint.svg";
 import hostIcon from "@/assets/icon/host.svg";
 import websiteIcon from "@/assets/icon/website.svg";
 import { SaveConfig } from '@/config';
@@ -33,6 +31,7 @@ import { handleWebscanContextMenu } from '@/linkage/contextMenu';
 import CustomTextarea from '@/components/CustomTextarea.vue';
 import { IPParse, PortParse } from 'wailsjs/go/core/Tools';
 import { ActivityItem } from '@/stores/interface';
+import Loading from '@/components/Loading.vue';
 
 // 增加较快的数据需要节流刷新
 const throttleFingerscanUpdate = throttle(() => {
@@ -198,33 +197,40 @@ onMounted(() => {
     updatePorts(1);
     initialize()
     // 获得结果回调
-    EventsOn("nucleiResult", (result: any) => {
+    EventsOn("nucleiResult", (result: structs.VulnerabilityInfo) => {
+        // 更新漏洞数量
         const riskLevelKey = result.Severity as keyof typeof dashboard.riskLevel;
         dashboard.riskLevel[riskLevelKey]++;
-        vp.table.result.push(result)
-        vp.ctrl.watchResultChange(vp.table)
-        AddPocscanResult(form.taskId, result)
-        taskManager.updateTaskTable(form.taskId)
+        AddPocscanResult(result)
+        // 前段漏洞表格，需要当任务ID与结果的任务ID一致时，才更新漏洞表格
+        if (form.taskId == result.TaskId) {
+            vp.table.result.push(result)
+            vp.ctrl.watchResultChange(vp.table)
+        }
+        taskManager.updateTaskTable(result.TaskId)
     });
-    EventsOn("webFingerScan", (result: any) => {
+    EventsOn("webFingerScan", (result: structs.InfoResult) => {
         if ((result.Scheme == "http" || result.Scheme == "https") && result.StatusCode == 0) {
             addActivity({
-                content: result.URL + " access failed",
+                content: result.URL + " 访问失败",
                 type: "warning",
             })
-            return
+            // fix in 2.1。0 端口扫描/网站扫描访问失败的目标应该也要输出结果
+            // return
         }
         if ((result.Scheme == "http" || result.Scheme == "https") && result.StatusCode == 422) {
             addActivity({
-                content: result.URL + " is cloud protected and has been filtered",
+                content: result.URL + " 为云防护地址, 已过滤",
                 type: "warning",
             })
             return
         }
-        fp.table.result.push(result)
-        throttleFingerscanUpdate()
-        AddFingerscanResult(form.taskId, result)
-        taskManager.updateTaskTable(form.taskId)
+        AddFingerscanResult(result)
+        if (form.taskId == result.TaskId) {
+            fp.table.result.push(result)
+            throttleFingerscanUpdate()
+        }
+        taskManager.updateTaskTable(result.TaskId)
     });
     EventsOn("ActiveCounts", (count: number) => {
         dashboard.activeCount = count
@@ -279,14 +285,15 @@ function stopScan() {
     // 新增一个标志变量来确保setTimeout只执行一次
     if (!form.scanStopped) {
         form.scanStopped = true; // 设置标志为true，表示扫描已停止
-        addActivity({
-            content: "用户已退出扫描任务",
-            type: "danger",
-        })
+
         // 增加10s的暂停时间，先立即退出扫描，等10s之后再将扫描状态停止，以应对一些数据依旧在增加等问题
         setTimeout(() => {
             form.runnningStatus = false
             form.scanStopped = false; // 重置标志，以便下次可以再次调用stopScan
+            addActivity({
+                content: "用户已退出扫描任务",
+                type: "danger",
+            })
         }, 10000);
     }
 }
@@ -391,7 +398,7 @@ class Engine {
                 content: "正在加载端口扫描引擎, 目标数量: " + dashboard.portscanCount.toString(),
                 type: "primary",
             })
-            await NewTcpScanner(this.specialTarget, this.ips, this.portsList, global.webscan.port_thread, global.webscan.port_timeout, getProxy())
+            await NewTcpScanner(form.taskId, this.specialTarget, this.ips, this.portsList, global.webscan.port_thread, global.webscan.port_timeout, getProxy())
             if (!config.vulscan) {
                 addActivity({
                     content: "只需要进行端口扫描, 任务已结束",
@@ -476,9 +483,9 @@ class Engine {
                 content: "代理已启用, Nuclei改为单线程执行",
                 type: "primary",
             })
-            await NewWebScanner(options, getProxy(), false)
+            await NewWebScanner(form.taskId, options, getProxy(), false)
         } else {
-            await NewWebScanner(options, getProxy(), true)
+            await NewWebScanner(form.taskId, options, getProxy(), true)
         }
     }
 
@@ -532,7 +539,7 @@ class Engine {
                 userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!;
 
                 Callgologger("info", target + " is start weak password cracking");
-                PortBrute(target, userDict, passDict);
+                PortBrute(form.taskId, target, userDict, passDict);
 
                 callback();  // 任务完成后调用 callback
             },
@@ -729,11 +736,11 @@ const taskManager = {
                 return false
             }
             result.Fingerprints.forEach(item => {
-                AddFingerscanResult(id, item)
+                AddFingerscanResult(item)
             })
             if (result.POCs) {
                 result.POCs.forEach(item => {
-                    AddPocscanResult(id, item)
+                    AddPocscanResult(item)
                 })
                 rp.table.result.push({
                     TaskId: id,
@@ -841,102 +848,102 @@ const shodanRunningstatus = ref(false)
 </script>
 
 <template>
-    <el-row :gutter="10" style="margin-bottom: 10px;">
-        <el-col :span="14">
-            <el-card>
-                <div class="my-header">
-                    <el-text class="position-center" style="font-size: 20px; font-weight: bold;">
-                        <el-icon style="margin-right: 5px;">
-                            <dashboardIcon />
-                        </el-icon>
-                        Overview
-                    </el-text>
-                    <el-text class="position-center" style="font-size: 20px; font-weight: bold;">
-                        <el-tooltip content="指纹数量">
-                            <el-icon style="margin-right: 5px;">
-                                <fingerprintIcon />
+    <el-card class="mb-10px">
+        <div class="flex-between">
+            <span class="font-bold ml-5px" style="font-size: 20px;">
+                Overview
+            </span>
+            <div class="risk-level-display">
+                <el-tooltip v-for="(value, level) in dashboard.riskLevel" :key="level" :content="level">
+                    <div class="risk-badge" :class="getBadgeClass(level)">
+                        {{ value }}
+                    </div>
+                </el-tooltip>
+            </div>
+            <div>
+                <el-popover placement="left-start" trigger="click" :width="244" v-if="!form.runnningStatus">
+                    <template #reference>
+                        <el-button type="primary" :icon="Plus">新建任务</el-button>
+                    </template>
+                    <el-space>
+                        <el-button :icon="websiteIcon"
+                            @click="form.newWebscanDrawer = true; param.inputType = 0">网站扫描</el-button>
+                        <el-button :icon="hostIcon"
+                            @click="form.newHostscanDrawer = true; param.inputType = 1">主机扫描</el-button>
+                    </el-space>
+                </el-popover>
+                <el-button type="danger" :icon="VideoPause" @click="stopScan" v-else>停止任务</el-button>
+            </div>
+        </div>
+        <el-row :gutter="10" class="mt-10px">
+            <el-col :span="12">
+                <div class="flex">
+                    <Loading style="margin-left: 40px;" />
+                    <div class="progress-details">
+                        <div class="progress-item">
+                            <el-icon class="icon icon-blue">
+                                <Search />
                             </el-icon>
-                        </el-tooltip>
-                        {{ dashboard.fingerLength }}
-                        <el-tooltip content="漏洞数量">
-                            <el-icon style="margin-right: 5px; margin-left: 10px;">
-                                <bugIcon />
-                            </el-icon>
-                        </el-tooltip>
-                        {{ dashboard.pocLength }}
-                        <el-tooltip content="热加载指纹和POC">
-                            <el-button link @click="throttleInitialize()" style="margin-left: 5px;">
-                                <template #icon>
-                                    <el-icon :size="20">
-                                        <Refresh />
-                                    </el-icon>
-                                </template>
-                            </el-button>
-                        </el-tooltip>
-                    </el-text>
-                    <div class="risk-level-display">
-                        <el-tooltip v-for="(value, level) in dashboard.riskLevel" :key="level" :content="level">
-                            <div class="risk-badge" :class="getBadgeClass(level)">
-                                {{ value }}
+                            <div class="progress-content">
+                                <div class="progress-labels">
+                                    <span>端口扫描</span>
+                                    <span>{{ dashboard.portscanPercentage }}%</span>
+                                </div>
+                                <el-progress :percentage="dashboard.portscanPercentage" :show-text="false"
+                                    :stroke-width="8" />
                             </div>
-                        </el-tooltip>
+                        </div>
+
+                        <div class="progress-item">
+                            <el-icon class="icon icon-green">
+                                <Monitor />
+                            </el-icon>
+                            <div class="progress-content">
+                                <div class="progress-labels">
+                                    <span>主动探测</span>
+                                    <span>{{ dashboard.activePercentage }}%</span>
+                                </div>
+                                <el-progress :percentage="dashboard.activePercentage" :show-text="false"
+                                    :stroke-width="8" />
+                            </div>
+                        </div>
+
+                        <div class="progress-item">
+                            <el-icon class="icon icon-red">
+                                <Warning />
+                            </el-icon>
+                            <div class="progress-content">
+                                <div class="progress-labels">
+                                    <span>漏洞检测</span>
+                                    <span>{{ dashboard.nucleiPercentage }}%</span>
+                                </div>
+                                <el-progress :percentage="dashboard.nucleiPercentage" :show-text="false"
+                                    :stroke-width="8" />
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <el-row :gutter="10" style="margin-top: 10px;">
-                    <el-col :span="8">
-                        <el-progress type="dashboard" :percentage="dashboard.portscanPercentage">
-                            <template #default="{ percentage }">
-                                <span class="percentage-value">{{ percentage }}%</span>
-                                <span class="percentage-label">Port scan</span>
+                <div class="summary-box">
+                    <span class="summary-value">{{ dashboard.fingerLength }}</span>
+                    <span class="summary-label">指纹总数</span><br />
+                    <span class="summary-value">{{ dashboard.pocLength }}</span>
+                    <span class="summary-label">漏洞总数</span>
+                    <el-tooltip content="热加载指纹和POC">
+                        <el-button link @click="throttleInitialize()">
+                            <template #icon>
+                                <el-icon :size="20">
+                                    <Refresh />
+                                </el-icon>
                             </template>
-                        </el-progress>
-                    </el-col>
-                    <el-col :span="8">
-                        <el-progress type="dashboard" :percentage="dashboard.activePercentage">
-                            <template #default="{ percentage }">
-                                <span class="percentage-value">{{ percentage }}%</span>
-                                <span class="percentage-label">Active detection</span>
-                            </template>
-                        </el-progress>
-                    </el-col>
-                    <el-col :span="8">
-                        <el-progress type="dashboard" :percentage="dashboard.nucleiPercentage">
-                            <template #default="{ percentage }">
-                                <span class="percentage-value">{{ percentage }}%</span>
-                                <span class="percentage-label">Vulnerability</span>
-                            </template>
-                        </el-progress>
-                    </el-col>
-                </el-row>
-            </el-card>
-        </el-col>
-        <el-col :span="10">
-            <el-card style="height: 192px">
-                <div class="my-header">
-                    <el-text class="position-center" style="font-size: 20px; font-weight: bold;">
-                        <el-icon style="margin-right: 5px;">
-                            <activityIcon />
-                        </el-icon>
-                        Process
-                    </el-text>
-                    <div>
-                        <el-popover placement="left-start" trigger="click" :width="244" v-if="!form.runnningStatus">
-                            <template #reference>
-                                <el-button type="primary" :icon="Plus">新建任务</el-button>
-                            </template>
-                            <el-space>
-                                <el-button :icon="websiteIcon"
-                                    @click="form.newWebscanDrawer = true; param.inputType = 0">网站扫描</el-button>
-                                <el-button :icon="hostIcon"
-                                    @click="form.newHostscanDrawer = true; param.inputType = 1">主机扫描</el-button>
-                            </el-space>
-                        </el-popover>
-                        <el-button type="danger" :icon="VideoPause" @click="stopScan" v-else>停止任务</el-button>
-                    </div>
+                        </el-button>
+                    </el-tooltip>
                 </div>
-                <div ref="timelineContainer" style="max-height: 150px; overflow-y: auto;">
+
+            </el-col>
+            <el-col :span="12">
+                <div ref="timelineContainer" class="timelineContainer">
                     <el-timeline v-if="activities.length >= 1"
-                        style="margin-top: 10px; text-align: left; padding-left: 5px;">
+                        style="text-align: left; padding-left: 5px;">
                         <el-timeline-item v-for="(activity, index) in activities" :key="index" :icon="activity.icon"
                             :type="activity.type" :timestamp="activity.timestamp">
                             {{ activity.content }}
@@ -944,9 +951,9 @@ const shodanRunningstatus = ref(false)
                     </el-timeline>
                     <span class="position-center" v-else>No active tasks</span>
                 </div>
-            </el-card>
-        </el-col>
-    </el-row>
+            </el-col>
+        </el-row>
+    </el-card>
     <CustomTabs>
         <el-tabs type="border-card">
             <el-tab-pane label="信息">
@@ -957,7 +964,7 @@ const shodanRunningstatus = ref(false)
                     <el-table-column width="150px" label="Port & Protocol" :show-overflow-tooltip="true">
                         <template #default="scope">
                             <el-tag type="primary" round effect="plain">{{ scope.row.Port }}</el-tag>
-                            <el-tag type="primary" round effect="plain" style="margin-left: 5px;">{{ scope.row.Scheme
+                            <el-tag type="primary" round effect="plain" class="ml-5px">{{ scope.row.Scheme
                                 }}</el-tag>
                         </template>
                     </el-table-column>
@@ -995,7 +1002,7 @@ const shodanRunningstatus = ref(false)
                         <el-empty />
                     </template>
                 </el-table>
-                <div class="my-header" style="margin-top: 5px;">
+                <div class="flex-between mt-5px">
                     <div></div>
                     <el-pagination size="small" background @size-change="fp.ctrl.handleSizeChange"
                         @current-change="fp.ctrl.handleCurrentChange" :pager-count="5"
@@ -1041,7 +1048,7 @@ const shodanRunningstatus = ref(false)
                         <el-empty />
                     </template>
                 </el-table>
-                <div class="my-header" style="margin-top: 5px;">
+                <div class="flex-between mt-5px">
                     <div></div>
                     <el-pagination size="small" background @size-change="vp.ctrl.handleSizeChange"
                         @current-change="vp.ctrl.handleCurrentChange" :pager-count="5"
@@ -1068,7 +1075,7 @@ const shodanRunningstatus = ref(false)
         </template>
         <template #footer>
             <div class="position-center">
-                <el-button type="primary" @click="startScan" style="bottom: 10px; position: absolute;">开始任务</el-button>
+                <el-button type="primary" @click="startScan" style="bottom: 10px;">开始任务</el-button>
             </div>
         </template>
         <el-form label-width="auto">
@@ -1084,10 +1091,10 @@ const shodanRunningstatus = ref(false)
                     <el-option v-for="(item, index) in portGroupOptions" :label="item.text" :value="index" />
                 </el-select>
                 <el-input v-model="form.portlist" type="textarea" :rows="4" resize="none"
-                    style="margin-top: 5px;"></el-input>
+                    class="mt-5px"></el-input>
             </el-form-item>
             <el-form-item label="漏洞扫描:">
-                <el-switch v-model="config.vulscan" style="width: 100%;" />
+                <el-switch v-model="config.vulscan" class="w-full" />
                 <span class="form-item-tips">开启后端口扫描结束会进一步提取WEB应用指纹, 并调用指纹漏洞扫描模式扫描漏洞</span>
             </el-form-item>
             <el-form-item label="高级配置:" v-show="config.vulscan">
@@ -1098,7 +1105,7 @@ const shodanRunningstatus = ref(false)
                 <el-checkbox label="网站截图" v-model="config.screenhost" />
             </el-form-item>
             <el-form-item label="口令暴破:" v-show="config.vulscan">
-                <el-switch v-model="config.crack" style="width: 100%;" />
+                <el-switch v-model="config.crack" class="w-full" />
                 <span class="form-item-tips" v-show="config.crack">默认字典可通过 设置->
                     字典管理处修改, 由于RDP暴破可能存在闪退, 暂时不支持暴破</span>
             </el-form-item>
@@ -1174,7 +1181,7 @@ const shodanRunningstatus = ref(false)
                         </el-icon>
                     </el-tooltip>
                 </template>
-                <el-segmented v-model="config.webscanOption" :options="webscanOptions" style="width: 100%;">
+                <el-segmented v-model="config.webscanOption" :options="webscanOptions" class="w-full">
                     <template #default="{ item }">
                         <el-space :size="3">
                             <el-icon :size="18">
@@ -1204,7 +1211,7 @@ const shodanRunningstatus = ref(false)
             </div>
             <div v-if="config.webscanOption == 2">
                 <el-form-item label="Log4j2:">
-                    <el-switch v-model="config.generateLog4j2" style="width: 100%;" />
+                    <el-switch v-model="config.generateLog4j2" class="w-full" />
                     <span class="form-item-tips">开启后会将所有目标添加Generate-Log4j2指纹</span>
                 </el-form-item>
             </div>
@@ -1225,7 +1232,7 @@ const shodanRunningstatus = ref(false)
             <el-divider direction="vertical" />
         </template>
         <div v-if="selectedRow">
-            <el-descriptions :column="1" border style="margin-bottom: 10px; width: 100%;">
+            <el-descriptions :column="1" border class="w-full mt-10px">
                 <el-descriptions-item label="Name:">{{ selectedRow.Name }}</el-descriptions-item>
                 <el-descriptions-item label="Description:">
                     <span class="all-break">{{ selectedRow.Description }}</span>
@@ -1237,10 +1244,10 @@ const shodanRunningstatus = ref(false)
                 </el-descriptions-item>
                 <el-descriptions-item label="Extracted:">{{ selectedRow.Extract }}</el-descriptions-item>
             </el-descriptions>
-            <div style="display: flex">
-                <el-card v-show="!form.hideRequest" style="flex: 1; margin-right: 5px;">
-                    <div class="my-header">
-                        <span style="font-weight: bold;">Request</span>
+            <div class="flex">
+                <el-card v-show="!form.hideRequest" class="flex-1 mr-5px">
+                    <div class="flex-between">
+                        <span class="font-bold">Request</span>
                         <el-button-group>
                             <el-button :icon="form.hideResponse ? DArrowLeft : DArrowRight" link
                                 @click="form.hideResponse = !form.hideResponse" />
@@ -1248,11 +1255,11 @@ const shodanRunningstatus = ref(false)
                             <el-button :icon="ChromeFilled" link @click="BrowserOpenURL(selectedRow.URL)" />
                         </el-button-group>
                     </div>
-                    <highlightjs language="http" :code="selectedRow.Request" style="font-size: small;"></highlightjs>
+                    <highlightjs language="http" :code="selectedRow.Request" class="font-small"></highlightjs>
                 </el-card>
-                <el-card v-show="!form.hideResponse" style="flex: 1;">
-                    <div class="my-header">
-                        <span style="font-weight: bold;">Response
+                <el-card v-show="!form.hideResponse" class="flex-1">
+                    <div class="flex-between">
+                        <span class="font-bold">Response
                             <el-tag type="success" style="margin-left: 2px;">{{ selectedRow.ResponseTime ?
                                 selectedRow.ResponseTime : '0' }}s</el-tag>
                         </span>
@@ -1265,22 +1272,22 @@ const shodanRunningstatus = ref(false)
                             <el-button :icon="DocumentCopy" link @click="Copy(selectedRow.Response)" />
                         </el-button-group>
                     </div>
-                    <highlightjs language="http" :code="selectedRow.Response" style="font-size: small;"></highlightjs>
+                    <highlightjs language="http" :code="selectedRow.Response" class="font-small"></highlightjs>
                 </el-card>
             </div>
-            <el-card v-if="form.showYamlPoc" style="margin-top: 10px;">
-                <div class="my-header">
-                    <span style="font-weight: bold;">Yaml Poc Content</span>
+            <el-card v-if="form.showYamlPoc" class="mt-10px">
+                <div class="flex-between">
+                    <span class="font-bold">Yaml Poc Content</span>
                     <el-button :icon="CloseBold" link @click="form.showYamlPoc = false" />
                 </div>
-                <highlightjs language="yaml" :code="form.pocContent" style="font-size: small;"></highlightjs>
+                <highlightjs language="yaml" :code="form.pocContent" class="font-small"></highlightjs>
             </el-card>
         </div>
     </el-drawer>
 
     <el-drawer v-model="historyDialog" size="70%">
         <template #header>
-            <el-text style="font-weight: bold; font-size: 16px;"><el-icon :size="18" style="margin-right: 5px;">
+            <el-text class="font-bold" style="font-size: 16px;"><el-icon :size="18" class="mr-5px">
                     <Clock />
                 </el-icon><span>任务管理</span></el-text>
         </template>
@@ -1321,7 +1328,7 @@ const shodanRunningstatus = ref(false)
                 <el-empty></el-empty>
             </template>
         </el-table>
-        <div class="my-header" style="margin-top: 5px;">
+        <div class="flex-between mt-5px">
             <el-space>
                 <el-button :icon="UploadFilled" size="small" @click="taskManager.importTask()">导入任务</el-button>
                 <el-button :icon="Share" size="small" @click="taskManager.showExportDialog"
@@ -1339,7 +1346,7 @@ const shodanRunningstatus = ref(false)
     </el-drawer>
     <el-dialog title="导出报告" v-model="exportDialog">
         <el-alert :title="'已选择' + rp.table.selectRows.length + '个任务'" type="info" show-icon :closable="false"
-            style="margin-bottom: 5px" />
+            class="mr-5px" />
         <el-form :model="form" label-width="auto">
             <el-form-item label="报告类型">
                 <el-select v-model="reportOption" style="width: 240px;">
@@ -1349,7 +1356,7 @@ const shodanRunningstatus = ref(false)
                             <el-icon :size="18">
                                 <component :is="getSelectedIcon(reportOption)" />
                             </el-icon>
-                            <span style="font-weight: bold">{{ reportOption }}</span>
+                            <span class="font-bold">{{ reportOption }}</span>
                         </el-space>
                     </template>
 
@@ -1432,7 +1439,7 @@ const shodanRunningstatus = ref(false)
         </el-form>
 
         <template #footer>
-            <div class="my-header">
+            <div class="flex-between">
                 <el-progress :text-inside="true" :stroke-width="18" :percentage="shodanPercentage"
                     style="width: 300px;" />
                 <el-button size="small" type="danger" @click="shodanRunningstatus = false"
@@ -1444,3 +1451,85 @@ const shodanRunningstatus = ref(false)
         </template>
     </el-dialog>
 </template>
+
+<style>
+.timelineContainer {
+    background-color: var(--timeline-bg-color);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    height: 172px;
+    overflow-y: auto;
+}
+
+.summary-box {
+    justify-content: center;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    /* gap-2 = 8px */
+    background-color: var(--timeline-bg-color);
+    /* bg-gray-50 */
+    padding: 0.5rem 1rem;
+    /* py-2 px-4 = 8px 16px */
+    border-radius: 0.5rem;
+    /* rounded-lg = 8px */
+}
+
+.summary-value {
+    font-size: 1.125rem;
+    /* text-lg = 18px */
+    font-weight: 500;
+    /* font-medium */
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    /* text-sm = 14px */
+    color: #6B7280;
+    /* text-gray-500 */
+}
+
+.progress-details {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-left: 48px;
+    flex: 1;
+}
+
+.progress-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icon {
+    font-size: 18px;
+}
+
+.icon-blue {
+    color: #3B82F6;
+    /* Tailwind text-blue-500 */
+}
+
+.icon-green {
+    color: #22C55E;
+    /* Tailwind text-green-500 */
+}
+
+.icon-red {
+    color: #EF4444;
+    /* Tailwind text-red-500 */
+}
+
+.progress-content {
+    flex: 1;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+</style>

@@ -12,7 +12,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func TelenetScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func TelnetScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	h := strings.Split(host, ":")[0]
 	p, _ := strconv.Atoi(strings.Split(host, ":")[1])
 	serverType := getTelnetServerType(h, p)
@@ -26,6 +26,7 @@ func TelenetScan(ctx, ctrlCtx context.Context, host string, usernames, passwords
 			flag, err := TelnetConn(h, user, pass, p, serverType)
 			if flag && err == nil {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "telnet weak password",
 					Name:     "telnet weak password",
 					URL:      host,

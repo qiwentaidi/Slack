@@ -13,7 +13,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func PostgresScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func PostgresScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
 			if ctrlCtx.Err() != nil {
@@ -24,6 +24,7 @@ func PostgresScan(ctx, ctrlCtx context.Context, host string, usernames, password
 			flag, err := PostgresConn(host, user, pass)
 			if flag && err == nil {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "postgres weak password",
 					Name:     "postgres weak password",
 					URL:      host,

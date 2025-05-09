@@ -2,7 +2,7 @@
     <el-form :model="parameter" label-position="top" :inline="true">
         <el-form-item>
             <template #label>
-                <span style="font-weight: bold;">主要内容</span>
+                <span class="font-bold">主要内容</span>
             </template>
             <el-input v-model="parameter.target" 
             type="textarea" :rows="5" 
@@ -10,12 +10,12 @@
         </el-form-item>
         <el-form-item>
             <template #label>
-                <div class="my-header">
-                    <span style="font-weight: bold; width: 50%;">关键词列表</span>
-                    <el-select v-model="dictionary" size="small" style="width: 250px; height: 17px;">
+                <div class="flex-between">
+                    <span class="font-bold w-1/2">关键词列表</span>
+                    <el-select v-model="dictionary" size="small" style="width: 290px; height: 17px;">
                         <el-option v-for="item in dorksOptions" :key="item.label" :value="item.label">
-                            <span style="float: left">{{ item.label }}</span>
-                            <span style="float: right">
+                            <span class="float-left">{{ item.label }}</span>
+                            <span class="float-right">
                                 {{ item.value.split("\n").length }}
                             </span>
                         </el-option>
@@ -26,7 +26,7 @@
         </el-form-item>
         <el-form-item>
             <template #label>
-                <span style="font-weight: bold;">使用说明</span>
+                <span class="font-bold">使用说明</span>
             </template>
             <div>
                 <el-text>项目参考<el-link @click="BrowserOpenURL('https://github.com/obheda12/GitDorker')">GitDorks</el-link>，
@@ -55,9 +55,9 @@
             <el-empty />
         </template>
     </el-table>
-    <div class="my-header" style="margin-top: 5px;">
+    <div class="flex-between mt-5px">
         <el-progress :text-inside="true" :stroke-width="18" :percentage="parameter.percentage" 
-            style="width: 40%;" />
+            class="w-40%" />
         <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
             @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
             :current-page="pagination.table.currentPage" :page-sizes="[20, 50, 100]"
@@ -66,7 +66,7 @@
         </el-pagination>
     </div>
     <el-dialog v-model="dialogTableVisible" title="相关链接" width="700">
-        <el-table :data="gridData" style="width: 100%; height: 500px;">
+        <el-table :data="gridData" class="w-full" style="height: 500px;">
             <el-table-column type="index" width="50" />
             <el-table-column label="Link" :show-overflow-tooltip="true">
                 <template #default="scope">

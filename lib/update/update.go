@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -84,6 +85,15 @@ func NewDownload(ctx context.Context, target, dest, events, execName string) (st
 	if err != nil {
 		return "", err
 	}
+	if res.StatusCode == 468 {
+		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
+			Title:         "提示",
+			Message:       "当前网络环境不支持请求更新文件, 请切换网络环境后重试",
+			Type:          runtime.InfoDialog,
+			DefaultButton: "Ok",
+		})
+		return "", errors.New("network error")
+	}
 	defer res.Body.Close()
 	bufferSize := 128 * 1024
 	totalSize := res.ContentLength
@@ -131,6 +141,15 @@ func InitConfig(ctx context.Context) bool {
 		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
 			Title:         "提示",
 			Message:       "检查配置文件版本失败",
+			Type:          runtime.InfoDialog,
+			DefaultButton: "Ok",
+		})
+		return false
+	}
+	if resp.StatusCode() == 468 {
+		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
+			Title:         "提示",
+			Message:       "下载配置文件失败，请切换网络环境后重试",
 			Type:          runtime.InfoDialog,
 			DefaultButton: "Ok",
 		})

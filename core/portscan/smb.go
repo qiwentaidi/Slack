@@ -14,7 +14,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func SmbScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func SmbScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
 			if ctrlCtx.Err() != nil {
@@ -25,6 +25,7 @@ func SmbScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []s
 			flag, err := doWithTimeOut(host, user, pass)
 			if flag && err == nil {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "smb weak password",
 					Name:     "smb weak password",
 					URL:      host,

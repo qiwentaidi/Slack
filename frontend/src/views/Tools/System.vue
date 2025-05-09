@@ -31,18 +31,18 @@ async function checkPatchList() {
 </script>
 
 <template>
-    <div class="my-header">
+    <div class="flex-between">
         <el-input v-model="textarea" :rows="5" type="textarea" placeholder="tasklist /svc or systeminfo" />
-        <div>
-            <el-col :span="2" style="margin-left: 10px;">
+        <el-space direction="vertical" :size="10" class="ml-10px">
+            <el-col :span="2">
                 <el-button color="#626aef" @click="checkAVList">杀软识别</el-button>
             </el-col>
-            <el-col :span="2" style="margin-left: 10px; margin-top: 10px;">
+            <el-col :span="2">
                 <el-button color="#1e3864" @click="checkPatchList">补丁检测</el-button>
             </el-col>
-        </div>
+        </el-space>
     </div>
-    <el-tabs v-model="activeName" type="border-card" style="margin-top: 10px;">
+    <el-tabs v-model="activeName" type="border-card" class="mt-10px">
         <el-tab-pane label="杀软识别" name="1">
             <el-table :data="avlist" style="height: calc(100vh - 280px);">
                 <el-table-column type="index" width="60px" />

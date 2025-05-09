@@ -1,4 +1,5 @@
 html.dark {
+    --timeline-bg-color: #222222;
     --sidebar-bg-color: #333333;
     --sidebar-text-color: #fff;
     --titlebar-hover-color: #303030;

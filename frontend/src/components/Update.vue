@@ -31,9 +31,9 @@ onMounted(() => {
 const update = ({
     poc: async function () {
         global.UPDATE.updateDialog = false
-        LoadProgress(pocUpdate)
         let isSuccess = await UpdatePocFile(global.UPDATE.RemotePocVersion)
         if (isSuccess) {
+            LoadProgress(pocUpdate)
             ElMessageBox.confirm(
                 "POC更新成功，需要重载应用生效",
                 {
@@ -186,7 +186,7 @@ function updateSuccess() {
         </el-scrollbar>
     </el-card>
 
-    <el-card class="box-card" style="margin-top: 10px;">
+    <el-card class="box-card mt-10px">
         <template #header>
             <div class="card-header">
                 <span>

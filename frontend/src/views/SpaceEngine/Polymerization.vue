@@ -1,8 +1,8 @@
 <template>
     <el-form @submit.native.prevent="tableCtrl.addTab(uncover.query)">
         <el-form-item>
-            <div class="head">
-                <el-input v-model="uncover.query" placeholder="多目标用英文逗号,分割" style="margin-bottom: 10px;">
+            <div class="flex">
+                <el-input v-model="uncover.query" placeholder="多目标用英文逗号,分割" class="mb-10px">
                     <template #prepend>
                         <el-select size="large" style="width: 150px;" v-model="uncover.currentGroup">
                             <el-option v-for="filed in group" :value="filed" :label="filed" />
@@ -32,7 +32,7 @@
         @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%; height: calc(100vh - 245px);">
+            <el-table :data="item.content" border class="w-full" style="height: calc(100vh - 245px);">
                 <el-table-column prop="URL" label="URL" width="200px" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" label="IP" width="170px" />
                 <el-table-column prop="Domain" label="域名" width="200" :show-overflow-tooltip="true" />
@@ -75,7 +75,7 @@
                     </template>
                 </el-table-column>
             </el-table>
-            <div class="my-header" style="margin-top: 10px;">
+            <div class="flex-between mt-10px">
                 <el-button :icon="Grid"
                     @click='ExportToXlsx(["URL", "IP", "域名", "端口", "协议", "标题", "应用/组件", "来源"], "asset", "数据聚合", item.content)'>保存数据</el-button>
                 <span>共查询到数据: {{ item.total }} 条</span>

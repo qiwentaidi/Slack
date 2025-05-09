@@ -32,7 +32,7 @@
                 <div></div>
                 <splitpanes class="default-theme">
                     <pane min-size="30">
-                        <div class="my-header" style="margin-bottom: 20px; margin-right: 10px;">
+                        <div class="flex-between" style="margin-bottom: 20px; margin-right: 10px;">
                             <el-tooltip :content="tab.path">
                                 <span class="dirtips">物理路径: {{ tab.path }}</span>
                             </el-tooltip>
@@ -52,7 +52,7 @@
                         <el-tree-v2 ref="treeRef" :data="tab.treeData" :props="treeProps" node-key="id"
                             @node-click="nodeClick" :height="treeHeight" :highlight-current="true">
                             <template #default="{ node }">
-                                <el-icon style="margin-right: 5px;">
+                                <el-icon class="mr-5px">
                                     <FolderOpened class="file-color" v-if="node.data.isDir" />
                                     <Document v-else />
                                 </el-icon>
@@ -100,7 +100,7 @@
                 <el-input v-model="global.fileRetrieval.blackList" type="textarea" :rows="5"></el-input>
                 <span class="form-item-tips">以,分割关键词</span>
             </el-form-item>
-            <el-form-item style="float: right;">
+            <el-form-item class="float-right">
                 <el-button type="primary" @click="SaveConfig">保存</el-button>
             </el-form-item>
         </el-form>

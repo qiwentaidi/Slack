@@ -366,7 +366,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
 
 
 <template>
-    <div class="my-header" style="margin-bottom: 10px;">
+    <div class="flex-between mb-10px">
         <el-button plain :icon="WarningFilled" @click="config.tipsDialog = true">使用须知</el-button>
         <el-input v-model="searchFilter" placeholder="根据名称过滤搜索..." style="margin-inline: 5px">
             <template #prefix>
@@ -377,12 +377,12 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
         </el-input>
         <el-button :icon="groupIcon" @click="localGroup.addGroup()">添加分组</el-button>
     </div>
-    <div v-if="filteredGroups.length > 0" v-for="groups in filteredGroups" style="margin-bottom: 5px;">
+    <div v-if="filteredGroups.length > 0" v-for="groups in filteredGroups" class="mb-5px">
         <el-card @drop="(event: DragEvent) => event.preventDefault()" class="drop-enable"
             @contextmenu.stop.prevent="handleCardContextMenu($event, groups)"
             @mouseover="config.mouseOnGroupName = groups.Name">
-            <div class="my-header" style="margin-bottom: 20px">
-                <span style="font-weight: bold">{{ groups.Name }}</span>
+            <div class="flex-between" style="margin-bottom: 20px">
+                <span class="font-bold">{{ groups.Name }}</span>
                 <el-button :icon="DeleteFilled" link @click="localGroup.deleteGroup(groups.Name)"></el-button>
             </div>
             <div v-if="groups.Children" :style="appStartStyle">

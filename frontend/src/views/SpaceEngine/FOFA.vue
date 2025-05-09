@@ -343,7 +343,7 @@ function searchCsegmentIpv4(ip: string) {
     <el-form :model="form" @keydown.enter.native.prevent="tableCtrl.addTab(form.query)">
         <el-form-item>
             <el-autocomplete v-model="form.query" placeholder="Search..." :fetch-suggestions="entry.querySearchAsync"
-                @select="entry.handleSelect" :debounce="500" style="width: 100%;">
+                @select="entry.handleSelect" :debounce="500" class="w-full">
                 <template #prepend>
                     查询条件
                 </template>
@@ -365,7 +365,7 @@ function searchCsegmentIpv4(ip: string) {
                                         <el-table-column label="用途说明" width="350" property="description">
                                             <template #default="scope">
                                                 {{ scope.row.description }}<el-tag v-if="scope.row.level"
-                                                    style="margin-left: 5px;">{{ scope.row.level }}</el-tag>
+                                                    class="ml-5px">{{ scope.row.level }}</el-tag>
                                             </template>
                                         </el-table-column>
                                         <el-table-column label="=" property="filed1" />
@@ -379,7 +379,7 @@ function searchCsegmentIpv4(ip: string) {
                                         <el-table-column label="具体含义" property="description">
                                             <template #default="scope">
                                                 {{ scope.row.description }}<el-tag v-if="scope.row.level"
-                                                    style="margin-left: 5px;">{{ scope.row.level }}</el-tag>
+                                                    class="ml-5px">{{ scope.row.level }}</el-tag>
                                             </template>
                                         </el-table-column>
                                     </el-table>
@@ -447,7 +447,7 @@ function searchCsegmentIpv4(ip: string) {
                 <el-checkbox v-model="form.fraud">排除干扰(专业版)</el-checkbox>
                 <el-checkbox v-model="form.cert">证书(个人版)</el-checkbox>
             </div>
-            <div style="flex: 1;"></div>
+            <div class="flex-1"></div>
             <el-dropdown>
                 <el-button text bg>
                     更多功能<el-icon class="el-icon--right">
@@ -471,7 +471,7 @@ function searchCsegmentIpv4(ip: string) {
         @tab-remove="tableCtrl.removeTab">
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
-            <el-table :data="item.content" border style="width: 100%; height: calc(100vh - 280px);">
+            <el-table :data="item.content" border class="w-full" style="height: calc(100vh - 280px);">
                 <el-table-column type="index" fixed label="#" width="60px" />
                 <el-table-column prop="URL" fixed label="URL" :min-width="300" :show-overflow-tooltip="true" />
                 <el-table-column prop="Title" label="标题" :filters='getColumnData("Title")'
@@ -527,7 +527,7 @@ function searchCsegmentIpv4(ip: string) {
                     </template>
                 </el-table-column>
             </el-table>
-            <div class="my-header" style="margin-top: 10px;">
+            <div class="flex-between mt-10px">
                 <span style="color: cornflowerblue;">{{ item.message }}</span>
                 <el-pagination size="small" background v-model:page-size="item.pageSize" :page-sizes="[100, 500, 1000]"
                     layout="total, sizes, prev, pager, next, jumper" @size-change="tableCtrl.handleSizeChange"

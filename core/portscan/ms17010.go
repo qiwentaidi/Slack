@@ -31,8 +31,8 @@ var (
 	trans2SessionSetupRequest, _  = hex.DecodeString(AesDecrypt(trans2SessionSetupRequest_enc, key))
 )
 
-func MS17010(ctx context.Context, host string) error {
-	err := MS17010Scan(ctx, host)
+func MS17010(ctx context.Context, taskId, host string) error {
+	err := MS17010Scan(ctx, taskId, host)
 	if err != nil {
 		errlog := fmt.Sprintf("[-] Ms17010 %v %v", host, err)
 		gologger.Error(ctx, errlog)
@@ -40,7 +40,7 @@ func MS17010(ctx context.Context, host string) error {
 	return err
 }
 
-func MS17010Scan(ctx context.Context, host string) error {
+func MS17010Scan(ctx context.Context, taskId, host string) error {
 	// connecting to a host in LAN if reachable should be very quick
 	conn, err := WrapperTcpWithTimeout("tcp", host, time.Duration(8)*time.Second)
 	if err != nil {
@@ -137,6 +137,7 @@ func MS17010Scan(ctx context.Context, host string) error {
 		result := fmt.Sprintf("[+] MS17-010 %s\t(%s)", host, os)
 		gologger.Success(ctx, result)
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			TaskId:   taskId,
 			ID:       "MS17-010",
 			Name:     "MS17-010",
 			URL:      host,

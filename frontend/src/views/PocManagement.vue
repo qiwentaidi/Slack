@@ -483,9 +483,9 @@ php:
         <el-tabs v-model="activeTabs" type="card" class="demo-tabs">
             <el-tab-pane name="poc" label="POC管理">
                 <el-card>
-                    <div class="my-header" style="margin-bottom: 10px;">
+                    <div class="flex-between mb-10px">
                         <el-input :suffix-icon="Search" v-model="filter" @input="filterPocList()"
-                            placeholder="根据规则过滤POC" style="width: 50%;">
+                            placeholder="根据规则过滤POC" class="w-1/2">
                             <template #prepend>
                                 <el-select v-model="defaultFilter" style="width: 150px;">
                                     <el-option v-for="item in pocdetailFilterOptions" :key="item.value"
@@ -517,7 +517,7 @@ php:
                             </template>
                         </el-table-column>
                     </el-table>
-                    <div class="my-header" style="margin-top: 5px;">
+                    <div class="flex-between mt-5px">
                         <div></div>
                         <el-pagination size="small" background @size-change="pagination.ctrl.handleSizeChange"
                             @current-change="pagination.ctrl.handleCurrentChange" :pager-count="5"
@@ -530,7 +530,7 @@ php:
             </el-tab-pane>
             <el-tab-pane name="finger" label="指纹管理">
                 <el-card>
-                    <div class="my-header" style="margin-bottom: 10px;">
+                    <div class="flex-between mb-10px">
                         <el-select-v2 v-model="selectHighlightFinger" placeholder="请选择需要高亮的指纹" filterable
                             :options="highlightFingerOptions" multiple clearable />
                         <el-button :icon="CirclePlusFilled" type="primary"
@@ -557,7 +557,7 @@ php:
     <div v-show="step == 1">
         <el-page-header @back="step = 0">
             <template #content>
-                <span style="font-weight: bold; margin-right: 5px;">Nuclei PoC 生成器</span>
+                <span class="font-bold mr-5px">Nuclei PoC 生成器</span>
                 <el-tag>填写完基础信息后, 通过编辑器模式进行调整/保存</el-tag>
             </template>
             <template #extra>
@@ -572,8 +572,8 @@ php:
             </template>
         </el-page-header>
         <el-divider />
-        <div style="display: flex; gap: 10px;">
-            <el-form :model="formData" label-width="auto" class="fill-width">
+        <div class="flex gap-2">
+            <el-form :model="formData" label-width="auto" class="w-full">
                 <el-form-item label="漏洞ID">
                     <el-input v-model="formData.id"></el-input>
                 </el-form-item>
@@ -599,7 +599,7 @@ php:
                 <el-form-item label="Matedata">
                     <el-button type="primary" size="small" @click="nuclei.addMetadata">添加 Matedata</el-button>
                     <div v-if="formData.metadata">
-                        <div v-for="(value, key) in formData.metadata" :key="key"
+                        <div v-for="(_, key) in formData.metadata" :key="key"
                             style="display: flex; align-items: center; margin-bottom: 8px; width: 100%;">
                             <!-- 这里用 el-autocomplete 提供建议 -->
                             <el-autocomplete v-model="metadataTemp[key]"
@@ -622,14 +622,14 @@ php:
                 </el-form-item>
             </el-form>
             <!-- 右侧预览区域 -->
-            <el-form :model="formData" label-width="auto" class="fill-width">
+            <el-form :model="formData" label-width="auto" class="w-full">
                 <el-form-item label="匹配规则">
-                    <el-select v-model="formData.matchersCondition" class="fill-width">
+                    <el-select v-model="formData.matchersCondition" class="w-full">
                         <el-option label="AND" value="and" />
                         <el-option label="OR" value="or" />
                     </el-select>
-                    <div style="width: 100%; margin-top: 5px;">
-                        <el-card v-for="(matcher, index) in formData.matchers" :key="index" style="margin-bottom: 5px;">
+                    <div class="w-full mt-5px">
+                        <el-card v-for="(matcher, index) in formData.matchers" :key="index" class="mb-5px">
                             <template #header>
                                 <div class="card-header">
                                     <span>规则 #{{ index + 1 }}</span>
@@ -773,9 +773,5 @@ php:
     flex-grow: 1;
     height: calc(100% - 60px);
     /* Adjust based on toolbar height */
-}
-
-.fill-width {
-    width: 100%;
 }
 </style>

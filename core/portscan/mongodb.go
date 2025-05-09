@@ -14,10 +14,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func MongodbScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+func MongodbScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	flag, err := MongodbConn(host, "", "")
 	if flag && err == nil {
 		runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+			TaskId:   taskId,
 			ID:       "mongodb unauthorized",
 			Name:     "mongodb unauthorized",
 			URL:      host,
@@ -38,6 +39,7 @@ func MongodbScan(ctx, ctrlCtx context.Context, host string, usernames, passwords
 			flag, err := MongodbConn(host, user, pass)
 			if flag && err == nil {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "mongodb weak password",
 					Name:     "mongodb weak password",
 					URL:      host,

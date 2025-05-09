@@ -13,7 +13,9 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func OracleScan(ctx, ctrlCtx context.Context, host string, usernames, passwords []string) {
+const defaultOracleServerName = "orcl"
+
+func OracleScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {
 	for _, user := range usernames {
 		for _, pass := range passwords {
 			if ctrlCtx.Err() != nil {
@@ -21,9 +23,10 @@ func OracleScan(ctx, ctrlCtx context.Context, host string, usernames, passwords 
 				return
 			}
 			pass = strings.Replace(pass, "{user}", user, -1)
-			flag, err := OracleConn(host, user, pass)
+			flag, err := OracleConn(host, defaultOracleServerName, user, pass)
 			if flag && err == nil {
 				runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
+					TaskId:   taskId,
 					ID:       "oracle weak password",
 					Name:     "oracle weak password",
 					URL:      host,
@@ -39,9 +42,9 @@ func OracleScan(ctx, ctrlCtx context.Context, host string, usernames, passwords 
 	}
 }
 
-func OracleConn(host, user, pass string) (flag bool, err error) {
+func OracleConn(host, servername, user, pass string) (flag bool, err error) {
 	flag = false
-	dataSourceName := fmt.Sprintf("oracle://%s:%s@%s/orcl", user, pass, host)
+	dataSourceName := fmt.Sprintf("oracle://%s:%s@%s/%s", user, pass, host, servername)
 	db, err := sql.Open("oracle", dataSourceName)
 	if err == nil {
 		db.SetConnMaxLifetime(time.Duration(1) * time.Second)
