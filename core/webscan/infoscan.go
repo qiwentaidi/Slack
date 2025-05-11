@@ -26,6 +26,8 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
+const maxContentSize = 1024 * 100 // 100KB
+
 var IsRunning = false // 用于判断网站扫描是否正在运行
 
 type WebInfo struct {
@@ -80,6 +82,14 @@ func NewFingerScanEngine(ctx context.Context, taskId string, proxy clients.Proxy
 			gologger.Error(ctx, err)
 			continue
 		}
+		// 去除文件名，只保留目录路径（如 /123/index.html -> /123/）
+		// if path.Ext(u.Path) != "" {
+		// 	dir := path.Dir(u.Path)
+		// 	if !strings.HasSuffix(dir, "/") {
+		// 		dir += "/"
+		// 	}
+		// 	u.Path = dir
+		// }
 		urls = append(urls, u)
 	}
 	if len(urls) == 0 {
@@ -142,7 +152,6 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 
 		// 正常请求指纹
 		resp, err = clients.DoRequest("GET", u.String(), s.headers, nil, 10, s.client)
-		body := resp.Body()
 		if err != nil {
 			if len(rawHeaders) > 0 {
 				gologger.Debug(s.ctx, fmt.Sprintf("%s has error to 302, response headers: %s", u.String(), string(rawHeaders)))
@@ -156,6 +165,7 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 				return
 			}
 		}
+		body := dumpMaxResponseContent(resp.Body())
 		// 合并请求头数据
 		rawHeaders = append(rawHeaders, DumpResponseHeadersOnly(resp.RawResponse)...)
 
@@ -185,7 +195,7 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 			Path:          u.Path,
 			Title:         title,
 			Server:        server,
-			ContentLength: len(body),
+			ContentLength: len(resp.Body()),
 			Port:          netutil.GetPort(u),
 			IconHash:      faviconHash,
 			IconMd5:       faviconMd5,
@@ -240,13 +250,13 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 		}
 	}
 	threadPool, _ := ants.NewPoolWithFunc(s.thread, func(target interface{}) {
+		defer wg.Done()
 		if ctrlCtx.Err() != nil {
 			wg.Done()
 			return
 		}
 		t := target.(*url.URL)
 		fscan(t)
-		wg.Done()
 	})
 	defer threadPool.Release()
 	for _, target := range s.urls {
@@ -415,49 +425,6 @@ func (s *FingerScanner) URLWithFingerprintMap() map[string][]string {
 	return s.basicURLWithFingerprint
 }
 
-// DumpResponseHeadersOnly 只返回响应头
-func DumpResponseHeadersOnly(resp *http.Response) []byte {
-	headers, _ := httputil.DumpResponse(resp, false)
-	return headers
-}
-
-// DumpResponseHeadersAndRaw returns http headers and response as strings
-func DumpResponseHeadersAndRaw(resp *http.Response) (headers, fullresp []byte, err error) {
-	// httputil.DumpResponse does not work with websockets
-	if resp.StatusCode >= http.StatusContinue && resp.StatusCode <= http.StatusEarlyHints {
-		raw := resp.Status + "\n"
-		for h, v := range resp.Header {
-			raw += fmt.Sprintf("%s: %s\n", h, v)
-		}
-		return []byte(raw), []byte(raw), nil
-	}
-	headers, err = httputil.DumpResponse(resp, false)
-	if err != nil {
-		return
-	}
-	// logic same as httputil.DumpResponse(resp, true) but handles
-	// the edge case when we get both error and data on reading resp.Body
-	var buf1, buf2 bytes.Buffer
-	b := resp.Body
-	if _, err = buf1.ReadFrom(b); err != nil {
-		if buf1.Len() <= 0 {
-			return
-		}
-	}
-	if err == nil {
-		b.Close()
-	}
-
-	// rewind the body to allow full dump
-	resp.Body = io.NopCloser(bytes.NewReader(buf1.Bytes()))
-	err = resp.Write(&buf2)
-	fullresp = buf2.Bytes()
-
-	// rewind once more to allow further reuses
-	resp.Body = io.NopCloser(bytes.NewReader(buf1.Bytes()))
-	return
-}
-
 func (s *FingerScanner) Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
 	var fingerPrintResults []string
 
@@ -600,4 +567,54 @@ func (s *FingerScanner) FastjsonScan(u *url.URL) bool {
 		return false
 	}
 	return bytes.Contains(resp.Body(), []byte("fastjson-version"))
+}
+
+// DumpResponseHeadersOnly 只返回响应头
+func DumpResponseHeadersOnly(resp *http.Response) []byte {
+	headers, _ := httputil.DumpResponse(resp, false)
+	return headers
+}
+
+// DumpResponseHeadersAndRaw returns http headers and response as strings
+func DumpResponseHeadersAndRaw(resp *http.Response) (headers, fullresp []byte, err error) {
+	// httputil.DumpResponse does not work with websockets
+	if resp.StatusCode >= http.StatusContinue && resp.StatusCode <= http.StatusEarlyHints {
+		raw := resp.Status + "\n"
+		for h, v := range resp.Header {
+			raw += fmt.Sprintf("%s: %s\n", h, v)
+		}
+		return []byte(raw), []byte(raw), nil
+	}
+	headers, err = httputil.DumpResponse(resp, false)
+	if err != nil {
+		return
+	}
+	// logic same as httputil.DumpResponse(resp, true) but handles
+	// the edge case when we get both error and data on reading resp.Body
+	var buf1, buf2 bytes.Buffer
+	b := resp.Body
+	if _, err = buf1.ReadFrom(b); err != nil {
+		if buf1.Len() <= 0 {
+			return
+		}
+	}
+	if err == nil {
+		b.Close()
+	}
+
+	// rewind the body to allow full dump
+	resp.Body = io.NopCloser(bytes.NewReader(buf1.Bytes()))
+	err = resp.Write(&buf2)
+	fullresp = buf2.Bytes()
+
+	// rewind once more to allow further reuses
+	resp.Body = io.NopCloser(bytes.NewReader(buf1.Bytes()))
+	return
+}
+
+func dumpMaxResponseContent(body []byte) []byte {
+	if len(body) > maxContentSize {
+		return body[:maxContentSize]
+	}
+	return body
 }

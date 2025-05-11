@@ -28,7 +28,7 @@ onMounted(() => {
             Target: "",
             Method: result.Method,
             Source: result.Source,
-            VulType: "未授权访问",
+            VulType: result.VulType,
             Severity: "HIGH",
             Request: result.Request,
             Length: result.Length,
@@ -52,6 +52,7 @@ const config = reactive({
     prefixApiURL: '',
     prefixJsURL: '',
     headers: '',
+    lowHeaders: '',
     consoleLog: '',
     authFiled: '',
     highRiskRouter: '',
@@ -160,7 +161,7 @@ async function JSFinder() {
 
         config.prefixApiURL != "" ? baseURL = config.prefixApiURL : baseURL = url
 
-        await AnalyzeAPI(url, baseURL, apiRoute, parseHeaders(config.headers), global.jsfinder.authFiled, global.jsfinder.highRiskRouter)
+        await AnalyzeAPI(url, baseURL, apiRoute, parseHeaders(config.headers), parseHeaders(config.lowHeaders), global.jsfinder.authFiled, global.jsfinder.highRiskRouter)
     }
     config.consoleLog += "[*] 任务运行结束\n"
     config.loading = false
@@ -261,9 +262,12 @@ function findMissingElements(A: string[], B: string[]) {
                     <el-input v-model="config.prefixApiURL" />
                     <span class="form-item-tips">默认将获取到的API拼接到目标地址中, 大部分API需要都拼接在接口路径, 需要自行获取</span>
                 </el-form-item>
-                <el-form-item label="请求头:">
+                <el-form-item label="正常请求头:">
                     <el-input v-model="config.headers" type="textarea" :rows="5" />
-                    <span class="form-item-tips">{{ $t('tips.customHeaders') }}</span>
+                </el-form-item>
+                <el-form-item label="低权限请求头:">
+                    <el-input v-model="config.lowHeaders" type="textarea" :rows="5" />
+                    <span class="form-item-tips"><el-tag type="danger" class="mr-5px">beta</el-tag>该参数用于判断接口是否存在越权漏洞, 会将原有的请求头中的同字段键的值进行替换, 换行分割</span>
                 </el-form-item>
             </el-form>
             <el-form :model="config" label-width="auto" class="w-1/2">

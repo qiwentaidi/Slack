@@ -369,12 +369,36 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 		// 存在未授权，记录漏洞信息
 		runtime.EventsEmit(ctx, "jsfindlog", "[+] "+fullURL+" 存在未授权访问！")
 		runtime.EventsEmit(ctx, "jsfindvulcheck", structs.JSFindResult{
+			VulType:  "未授权访问",
 			Method:   method,
 			Request:  buildRawRequest(apiReq),
 			Source:   fullURL,
 			Response: filterResponseLength(body),
 			Length:   len(body),
 		})
+		// 检测越权
+		if o.LowPrivilegeHeaders != nil && o.Headers != nil {
+			lowPrivilegeReq := apiReq
+			lowPrivilegeReq.Headers = o.LowPrivilegeHeaders
+			isvulnerable, lowPrivBody, err := testPrivilegeEscalation(body, lowPrivilegeReq)
+			if err != nil {
+				runtime.EventsEmit(ctx, "jsfindlog", "[!] "+fullURL+" 检测越权访问失败："+err.Error())
+				return
+			}
+			if !isvulnerable {
+				runtime.EventsEmit(ctx, "jsfindlog", "[-] "+fullURL+" 不存在未授权访问")
+				return
+			}
+			runtime.EventsEmit(ctx, "jsfindlog", "[+] "+fullURL+" 检测到越权访问")
+			runtime.EventsEmit(ctx, "jsfindvulcheck", structs.JSFindResult{
+				VulType:  "越权访问",
+				Method:   method,
+				Request:  buildRawRequest(lowPrivilegeReq),
+				Source:   fullURL,
+				Response: filterResponseLength(lowPrivBody),
+				Length:   len(lowPrivBody),
+			})
+		}
 	})
 	defer pool.Release()
 

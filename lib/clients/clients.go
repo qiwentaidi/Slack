@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -32,6 +33,8 @@ var TlsConfig = &tls.Config{
 		tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
 		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
 		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
 	},
 }
 
@@ -43,6 +46,15 @@ func NewRestyClient(interfaceIp net.IP, followRedirect bool) *resty.Client {
 	if interfaceIp != nil {
 		dialer.LocalAddr = &net.TCPAddr{IP: interfaceIp}
 	}
+
+	// 强制 IPv4 解析
+	resolver := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			return net.Dial("tcp4", address) // 只使用 IPv4
+		},
+	}
+	dialer.Resolver = resolver
 
 	transport := &http.Transport{
 		TLSClientConfig:       TlsConfig,

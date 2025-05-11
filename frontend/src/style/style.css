@@ -313,11 +313,6 @@ html {
     white-space: pre-wrap;
 }
 
-.text-overflow-break {
-    word-break: break-word;
-    overflow-wrap: break-word;
-}
-
 /* 文本域容器 */
 
 .textarea-container {

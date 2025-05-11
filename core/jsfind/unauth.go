@@ -7,6 +7,8 @@ import (
 	"slack-wails/lib/clients"
 	"strings"
 	"unicode"
+
+	"github.com/go-resty/resty/v2"
 )
 
 // APIRequest 结构体表示 API 请求信息
@@ -19,21 +21,7 @@ type APIRequest struct {
 
 // 发送请求测试未授权访问
 func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication []string) (bool, string, error) {
-	var requestURL string
-	var requestBody *strings.Reader
-
-	if apiReq.Method == http.MethodGet {
-		requestURL = apiReq.URL + "?" + apiReq.Params.Encode()
-		requestBody = strings.NewReader("")
-	} else {
-		requestURL = apiReq.URL
-		requestBody = strings.NewReader(apiReq.Params.Encode())
-		if strings.Contains(apiReq.Headers["Content-Type"], "application/json") {
-			requestBody = strings.NewReader("{}")
-		}
-	}
-
-	resp, err := clients.DoRequest(apiReq.Method, requestURL, apiReq.Headers, requestBody, 10, clients.NewRestyClient(nil, true))
+	resp, err := sendAPIRequest(apiReq)
 	if err != nil {
 		return false, "", err
 	}
@@ -42,6 +30,11 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 	// 1. HTTP状态码异常，直接返回
 	if resp.StatusCode() == 401 || resp.StatusCode() == 403 {
 		return false, "", nil
+	}
+
+	// 检查响应体是否为HTML
+	if isHTMLResponse(body) {
+		return false, "", errors.New("响应体为HTML内容")
 	}
 
 	// 2. 页面内容完全相同，排除
@@ -63,6 +56,30 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 	}
 
 	return true, body, nil
+}
+
+// testPrivilegeEscalation 测试是否存在越权访问
+func testPrivilegeEscalation(highPrivBody string, apiReq APIRequest) (bool, string, error) {
+	// 使用低权限请求头发送请求
+	lowPrivResp, err := sendAPIRequest(apiReq)
+	if err != nil {
+		return false, "", err
+	}
+
+	lowPrivBody := string(lowPrivResp.Body())
+
+	// 如果低权限响应是 HTML 页面，也跳过检测
+	if isHTMLResponse(lowPrivBody) {
+		return false, "", errors.New("低权限响应为HTML页面")
+	}
+
+	// 判断响应内容是否一致（排除状态码）
+	if highPrivBody == lowPrivBody {
+		return true, lowPrivBody, nil // 存在越权
+	}
+
+	// 内容不同，不存在越权
+	return false, "", nil
 }
 
 // 将文本分割成 shingle（n-gram 片段），用于计算相似度
@@ -105,4 +122,31 @@ func jaccardSimilarity(text1, text2 string) float64 {
 		return 0.0
 	}
 	return float64(intersection) / float64(union)
+}
+
+func sendAPIRequest(apiReq APIRequest) (*resty.Response, error) {
+	var requestBody *strings.Reader
+	if apiReq.Method == http.MethodGet {
+		requestBody = strings.NewReader("")
+	} else {
+		requestBody = strings.NewReader(apiReq.Params.Encode())
+		if strings.Contains(apiReq.Headers["Content-Type"], "application/json") {
+			requestBody = strings.NewReader("{}")
+		}
+	}
+
+	resp, err := clients.DoRequest(
+		apiReq.Method,
+		apiReq.URL,
+		apiReq.Headers,
+		requestBody,
+		10,
+		clients.NewRestyClient(nil, true),
+	)
+	return resp, err
+}
+
+func isHTMLResponse(body string) bool {
+	bodyLower := strings.ToLower(body)
+	return strings.Contains(bodyLower, "<html") || strings.Contains(bodyLower, "<body")
 }

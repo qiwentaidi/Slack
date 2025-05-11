@@ -475,7 +475,7 @@ class Engine {
             CustomHeaders: config.customHeaders,
         }
         addActivity({
-            content: "正在加载网站扫描引擎, 当前模式: " + webscanOptions.find(item => item.value == config.webscanOption).label,
+            content: "正在加载网站扫描引擎, 当前模式: " + webscanOptions.find(item => item.value == config.webscanOption).label + " 已加载目标数: " + this.inputLines.length,
             type: "primary",
         })
         if (global.proxy.enabled) {
@@ -668,20 +668,20 @@ const taskManager = {
         Object.keys(dashboard.riskLevel).forEach(key => {
             dashboard.riskLevel[key] = 0;
         });
-        if (nucleiResult) {
-            vp.table.result = nucleiResult;
-            vp.ctrl.watchResultChange(vp.table);
-            // 遍历结果，统计每个风险等级的数量
-            vp.table.result.forEach(item => {
-                const riskLevelKey = item.Severity as keyof typeof dashboard.riskLevel;
-                if (dashboard.riskLevel[riskLevelKey] !== undefined) {
-                    dashboard.riskLevel[riskLevelKey]++;
-                }
-            });
-        } else {
+        if (!nucleiResult) {
             vp.table.result = []
             vp.ctrl.watchResultChange(vp.table);
+            return
         }
+        vp.table.result = nucleiResult;
+        vp.ctrl.watchResultChange(vp.table);
+        // 遍历结果，统计每个风险等级的数量
+        vp.table.result.forEach(item => {
+            const riskLevelKey = item.Severity as keyof typeof dashboard.riskLevel;
+            if (dashboard.riskLevel[riskLevelKey] !== undefined) {
+                dashboard.riskLevel[riskLevelKey]++;
+            }
+        });
     },
     deleteTask: function (alltaskids: string[]) {
         ElMessageBox.confirm(
@@ -938,7 +938,6 @@ const shodanRunningstatus = ref(false)
                         </el-button>
                     </el-tooltip>
                 </div>
-
             </el-col>
             <el-col :span="12">
                 <div ref="timelineContainer" class="timelineContainer">
@@ -1238,9 +1237,9 @@ const shodanRunningstatus = ref(false)
                     <span class="all-break">{{ selectedRow.Description }}</span>
                 </el-descriptions-item>
                 <el-descriptions-item label="Reference:">
-                    <span v-for="item in selectedRow.Reference.split(',')" class="text-overflow-break">
-                        {{ item }}
-                    </span>
+                    <div v-for="item in selectedRow.Reference.split(',')">
+                        <el-link>{{ item }}</el-link>
+                    </div>
                 </el-descriptions-item>
                 <el-descriptions-item label="Extracted:">{{ selectedRow.Extract }}</el-descriptions-item>
             </el-descriptions>

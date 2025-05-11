@@ -291,7 +291,7 @@ function toggleFormVisibility() {
                 <el-button :icon="DocumentCopy" @click="Copy(from.errorCompanies.join('\n'))"
                     class="w-full">复制全部失败目标</el-button>
             </el-popover>
-            <el-button :icon="exportIcon" class="ml-5px"
+            <el-button :icon="exportIcon" class="mr-5px"
                 @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">
                 结果导出
             </el-button>

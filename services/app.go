@@ -521,14 +521,15 @@ func (a *App) JSFind(target, prefixJsURL string, jsLinks []string) structs.FindS
 	return jsfind.Scan(a.ctx, target, prefixJsURL, jsLinks)
 }
 
-func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers map[string]string, authentication []string, highRiskRouter []string) {
+func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers, lowPrivilegeHeaders map[string]string, authentication []string, highRiskRouter []string) {
 	options := structs.JSFindOptions{
-		HomeURL:        homeURL,
-		BaseURL:        baseURL,
-		ApiList:        apiList,
-		Headers:        headers,
-		Authentication: authentication,
-		HighRiskRouter: highRiskRouter,
+		HomeURL:             homeURL,
+		BaseURL:             baseURL,
+		ApiList:             apiList,
+		Headers:             headers,
+		Authentication:      authentication,
+		HighRiskRouter:      highRiskRouter,
+		LowPrivilegeHeaders: lowPrivilegeHeaders,
 	}
 	jsfind.AnalyzeAPI(a.ctx, options)
 }

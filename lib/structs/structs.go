@@ -691,6 +691,7 @@ type FindSomething struct {
 }
 
 type JSFindResult struct {
+	VulType  string
 	Source   string
 	Method   string
 	Request  string
@@ -705,4 +706,6 @@ type JSFindOptions struct {
 	Authentication []string
 	HighRiskRouter []string
 	Headers        map[string]string
+	// 低权限用户请求头
+	LowPrivilegeHeaders map[string]string
 }
