@@ -97,7 +97,7 @@ func SearchSubsidiary(ctx context.Context, companyName, companyId string, ratio 
 		}
 		Asset = append(Asset, structs.CompanyInfo{
 			CompanyName: companyName,
-			Holding:     "本公司",
+			Holding:     "母公司",
 			Investment:  "",
 			RegStatus:   qr.State,
 			Domains:     util.RemoveDuplicates(domains),
