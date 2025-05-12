@@ -1,7 +1,6 @@
 package clients
 
 import (
-	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -46,15 +45,6 @@ func NewRestyClient(interfaceIp net.IP, followRedirect bool) *resty.Client {
 	if interfaceIp != nil {
 		dialer.LocalAddr = &net.TCPAddr{IP: interfaceIp}
 	}
-
-	// 强制 IPv4 解析
-	resolver := &net.Resolver{
-		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			return net.Dial("tcp4", address) // 只使用 IPv4
-		},
-	}
-	dialer.Resolver = resolver
 
 	transport := &http.Transport{
 		TLSClientConfig:       TlsConfig,
