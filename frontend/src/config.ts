@@ -1,10 +1,9 @@
 import { CheckFileStat, InitConfig, ReadFile, RemoveOldConfig, SaveDataToFile, ReadLocalStore } from 'wailsjs/go/services/File';
 import { ElLoading, ElNotification } from 'element-plus';
 import global from "./stores";
-import { compareVersion, ReadLine, sleep } from './util';
+import { compareVersion, sleep } from './util';
 import router from "./router";
 import { CreateTable } from 'wailsjs/go/services/Database';
-import { crackDict } from './stores/options';
 
 function catchError(result: boolean, loading: any) {
     if (result) {
@@ -69,7 +68,6 @@ async function LoadConfig() {
             SaveConfig()
         }
     }
-    await ReadCrackDict()
 }
 
 export function SaveConfig() {
@@ -87,11 +85,3 @@ export function SaveConfig() {
         }
     })
 };
-
-async function ReadCrackDict() {
-    for (var item of crackDict.usernames) {
-        item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name.toLowerCase() + ".txt"))!
-    }
-    crackDict.passwords = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/password/password.txt"))!
-    crackDict.passwords.push("")
-}

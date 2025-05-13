@@ -76,20 +76,6 @@ export function splitInt(n: number, slice: number): number[] {
     return res;
 }
 
-export function TrimRightSubString(str: string, sub: string) {
-    if (str.endsWith(sub)) {
-        return str.substring(0, str.length - sub.length);
-    }
-    return str;
-}
-
-export function AddRightSubString(str: string, sub: string) {
-    if (str.endsWith(sub)) {
-        return str;
-    }
-    return str + sub;
-}
-
 // version1 > version2 return 1
 export function compareVersion(version1: string, version2: string) {
     const v1 = version1.split(".").map(Number);
@@ -110,11 +96,11 @@ export function compareVersion(version1: string, version2: string) {
     return 0;
 }
 
-export async function ReadLine(filepath: string) {
+export async function ReadLine(filepath: string) :Promise<string[]> {
     let file = await ReadFile(filepath);
     if (file.Error) {
         ElNotification.warning(file.Message);
-        return;
+        return [];
     }
     const result = file.Content!.replace(/\r\n/g, "\n"); // 避免windows unix系统差异
     return Array.from(result.split("\n"));

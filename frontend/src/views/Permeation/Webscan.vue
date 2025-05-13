@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref, nextTick } from 'vue'
 import { VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled, Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Picture, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh } from '@element-plus/icons-vue';
-import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, PortBrute } from 'wailsjs/go/services/App'
+import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, NewCrackScanenr } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
 import global from "@/stores"
@@ -407,7 +407,8 @@ class Engine {
                 form.runnningStatus = false
                 return
             }
-            this.inputLines = fp.table.result.filter(line => line.Scheme === "http" || line.Scheme === "https").map(item => item.URL);
+            // 增加apachemq的poc检测需要适配后端
+            this.inputLines = fp.table.result.filter(line => line.Scheme === "http" || line.Scheme === "https" || line.Scheme === "apachemq").map(item => item.URL);
             if (!form.runnningStatus || form.scanStopped) {
                 return
             }
@@ -418,7 +419,7 @@ class Engine {
                     type: "primary",
                 })
                 fp.table.result = fp.table.result.filter(
-                    (line) => line.Scheme !== "http" && line.Scheme !== "https"
+                    line => line.Scheme !== "http" && line.Scheme !== "https" && line.Scheme !== "apachemq"
                 );
                 fp.ctrl.watchResultChange(fp.table)
                 RemoveFingerprintResult(form.taskId, this.inputLines)
@@ -430,11 +431,14 @@ class Engine {
         if (config.crack) {
             await this.CrackRunner()
         }
-        addActivity({
-            content: "任务已结束",
-            type: "success",
-        })
-        form.runnningStatus = false
+        // fix 2.1.2 用户点击停止按钮过早结束，只有在任务未被手动停止时才提示结束
+        if (!form.scanStopped) {
+            addActivity({
+                content: "任务已结束",
+                type: "success",
+            })
+            form.runnningStatus = false
+        }
     }
 
     public async WebRunner() {
@@ -493,9 +497,8 @@ class Engine {
         if (!form.runnningStatus || form.scanStopped) {
             return
         }
-        let crackLinks = fp.table.result.filter(
-            (line) => crackDict.options.includes(line.Scheme.toLowerCase())
-        ).map(item => item.URL);
+        let crackLinks = fp.table.result.filter(line => crackDict.options.includes(line.Scheme.toLowerCase()))
+        .map(item => item.URL);
         if (crackLinks.length == 0) {
             addActivity({
                 content: "未发现可被暴破的目标",
@@ -507,7 +510,7 @@ class Engine {
         let userDict = [] as string[]
         if (param.builtInUsername) {
             for (var item of crackDict.usernames) {
-                item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/username/" + item.name + ".txt"))!
+                item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + item.dicPath))!
             }
         }
         if (param.builtInPassword) {
@@ -539,7 +542,7 @@ class Engine {
                 userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!;
 
                 Callgologger("info", target + " is start weak password cracking");
-                PortBrute(form.taskId, target, userDict, passDict);
+                NewCrackScanenr(form.taskId, target, userDict, passDict);
 
                 callback();  // 任务完成后调用 callback
             },

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	rt "runtime"
 	"slack-wails/core/subdomain"
 	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
@@ -70,7 +69,7 @@ func NewFingerScanEngine(ctx context.Context, taskId string, proxy clients.Proxy
 	for _, t := range options.Target {
 		t = strings.TrimRight(t, "/")
 		// 增加协议判断
-		if !strings.HasPrefix(t, "http://") && !strings.HasPrefix(t, "https://") {
+		if !strings.HasPrefix(t, "http://") && !strings.HasPrefix(t, "https://") && !strings.HasPrefix(t, "apachemq") {
 			if url, err := clients.CheckProtocol(t, client); err != nil {
 				continue
 			} else {
@@ -82,14 +81,6 @@ func NewFingerScanEngine(ctx context.Context, taskId string, proxy clients.Proxy
 			gologger.Error(ctx, err)
 			continue
 		}
-		// 去除文件名，只保留目录路径（如 /123/index.html -> /123/）
-		// if path.Ext(u.Path) != "" {
-		// 	dir := path.Dir(u.Path)
-		// 	if !strings.HasSuffix(dir, "/") {
-		// 		dir += "/"
-		// 	}
-		// 	u.Path = dir
-		// }
 		urls = append(urls, u)
 	}
 	if len(urls) == 0 {
@@ -125,6 +116,11 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 	// 指纹扫描
 	fscan := func(u *url.URL) {
 		if ctrlCtx.Err() != nil {
+			return
+		}
+		// apachemq协议在nuclei中存在poc所以需要将其结果传入待扫描目标中
+		if u.Scheme == "apachemq" {
+			s.basicURLWithFingerprint[u.Hostname()] = append(s.basicURLWithFingerprint[u.Hostname()], "Apache-ActiveMQ-TCP")
 			return
 		}
 		var (
@@ -188,13 +184,13 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 		contentType = resp.Header().Get("Content-Type")
 		statusCode = resp.StatusCode()
 		web := &WebInfo{
-			HeadeString:   string(rawHeaders),
-			ContentType:   contentType,
-			Cert:          GetTLSString(u.Scheme, u.Host),
-			BodyString:    string(body),
-			Path:          u.Path,
-			Title:         title,
-			Server:        server,
+			HeadeString:   strings.ToLower(string(rawHeaders)),
+			ContentType:   strings.ToLower(contentType),
+			Cert:          strings.ToLower(GetTLSString(u.Scheme, u.Host)),
+			BodyString:    strings.ToLower(string(body)),
+			Path:          strings.ToLower(u.Path),
+			Title:         strings.ToLower(title),
+			Server:        strings.ToLower(server),
 			ContentLength: len(resp.Body()),
 			Port:          netutil.GetPort(u),
 			IconHash:      faviconHash,
@@ -241,7 +237,7 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 			Port:         web.Port,
 			StatusCode:   web.StatusCode,
 			Length:       web.ContentLength,
-			Title:        web.Title,
+			Title:        title,
 			Fingerprints: fingerprints,
 			IsWAF:        wafInfo.Exsits,
 			WAF:          wafInfo.Name,
@@ -252,7 +248,6 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 	threadPool, _ := ants.NewPoolWithFunc(s.thread, func(target interface{}) {
 		defer wg.Done()
 		if ctrlCtx.Err() != nil {
-			wg.Done()
 			return
 		}
 		t := target.(*url.URL)
@@ -335,12 +330,12 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 
 		headers, _, _ := DumpResponseHeadersAndRaw(resp.RawResponse)
 		ti := &WebInfo{
-			HeadeString:   string(headers),
-			ContentType:   contentType,
-			BodyString:    string(body),
-			Path:          fp.Path,
-			Title:         title,
-			Server:        server,
+			HeadeString:   strings.ToLower(string(headers)),
+			ContentType:   strings.ToLower(contentType),
+			BodyString:    strings.ToLower(string(body)),
+			Path:          strings.ToLower(fp.Path),
+			Title:         strings.ToLower(title),
+			Server:        strings.ToLower(server),
 			ContentLength: len(body),
 			Port:          netutil.GetPort(fp.URL),
 			StatusCode:    resp.StatusCode(),
@@ -357,7 +352,7 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 				URL:          fullURL,
 				StatusCode:   ti.StatusCode,
 				Length:       ti.ContentLength,
-				Title:        ti.Title,
+				Title:        title,
 				Fingerprints: []string{fp.Fpe[0].ProductName},
 				Detect:       "Active",
 				Port:         ti.Port,
@@ -425,92 +420,162 @@ func (s *FingerScanner) URLWithFingerprintMap() map[string][]string {
 	return s.basicURLWithFingerprint
 }
 
+// 不在需要多线程进行扫描，高占用的同时指纹识别速度并不会有多大的差别
+// func (s *FingerScanner) Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
+// 	var fingerPrintResults []string
+
+// 	inputChan := make(chan FingerPEntity, len(targetDB))
+// 	defer close(inputChan)
+// 	results := make(chan string, len(targetDB))
+// 	defer close(results)
+
+// 	var wg sync.WaitGroup
+
+// 	//接收结果
+// 	go func() {
+// 		for found := range results {
+// 			if found != "" {
+// 				fingerPrintResults = append(fingerPrintResults, found)
+// 			}
+// 			wg.Done()
+// 		}
+// 	}()
+// 	//多指纹同时扫描
+// 	for range rt.NumCPU() {
+// 		go func() {
+// 			for finger := range inputChan {
+// 				expr := finger.AllString
+// 				for _, rule := range finger.Rule {
+// 					var result bool
+// 					switch rule.Key {
+// 					case "header":
+// 						result = dataCheckString(rule.Op, web.HeadeString, rule.Value)
+// 					case "body":
+// 						result = dataCheckString(rule.Op, web.BodyString, rule.Value)
+// 					case "server":
+// 						result = dataCheckString(rule.Op, web.Server, rule.Value)
+// 					case "title":
+// 						result = dataCheckString(rule.Op, web.Title, rule.Value)
+// 					case "cert":
+// 						result = dataCheckString(rule.Op, web.Cert, rule.Value)
+// 					case "port":
+// 						value, err := strconv.Atoi(rule.Value)
+// 						if err == nil {
+// 							result = dataCheckInt(rule.Op, web.Port, value)
+// 						}
+// 					case "protocol":
+// 						result = (rule.Op == 0 && web.Protocol == rule.Value) || (rule.Op == 1 && web.Protocol != rule.Value)
+// 					case "path":
+// 						result = dataCheckString(rule.Op, web.Path, rule.Value)
+// 					case "icon_hash":
+// 						value, err := strconv.Atoi(rule.Value)
+// 						hashIcon, errHash := strconv.Atoi(web.IconHash)
+// 						if err == nil && errHash == nil {
+// 							result = dataCheckInt(rule.Op, hashIcon, value)
+// 						}
+// 					case "icon_mdhash":
+// 						result = dataCheckString(rule.Op, web.IconMd5, rule.Value)
+// 					case "status":
+// 						value, err := strconv.Atoi(rule.Value)
+// 						if err == nil {
+// 							result = dataCheckInt(rule.Op, web.StatusCode, value)
+// 						}
+// 					case "content_type":
+// 						result = dataCheckString(rule.Op, web.ContentType, rule.Value)
+// 						// case "banner":
+// 						// 	result = dataCheckString(rule.Op, web.Banner, rule.Value)
+// 					}
+
+// 					if result {
+// 						expr = expr[:rule.Start] + "T" + expr[rule.End:]
+// 					} else {
+// 						expr = expr[:rule.Start] + "F" + expr[rule.End:]
+// 					}
+// 				}
+// 				r, err := boolEval(expr)
+// 				if err != nil {
+// 					gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[fingerprint] 错误指纹: %v", finger.AllString))
+// 				}
+// 				if r {
+// 					results <- finger.ProductName
+// 				} else {
+// 					results <- ""
+// 				}
+// 			}
+// 		}()
+// 	}
+// 	//添加扫描目标
+// 	for _, input := range targetDB {
+// 		wg.Add(1)
+// 		inputChan <- input
+// 	}
+// 	wg.Wait()
+// 	return util.RemoveDuplicates(fingerPrintResults)
+// }
+
 func (s *FingerScanner) Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
 	var fingerPrintResults []string
 
-	inputChan := make(chan FingerPEntity, len(targetDB))
-	defer close(inputChan)
-	results := make(chan string, len(targetDB))
-	defer close(results)
-
-	var wg sync.WaitGroup
-
-	//接收结果
-	go func() {
-		for found := range results {
-			if found != "" {
-				fingerPrintResults = append(fingerPrintResults, found)
+	for _, finger := range targetDB {
+		expr := finger.AllString
+		for _, rule := range finger.Rule {
+			var result bool
+			switch rule.Key {
+			case "header":
+				result = dataCheckString(rule.Op, web.HeadeString, rule.Value)
+			case "body":
+				result = dataCheckString(rule.Op, web.BodyString, rule.Value)
+			case "server":
+				result = dataCheckString(rule.Op, web.Server, rule.Value)
+			case "title":
+				result = dataCheckString(rule.Op, web.Title, rule.Value)
+			case "cert":
+				result = dataCheckString(rule.Op, web.Cert, rule.Value)
+			case "port":
+				value, err := strconv.Atoi(rule.Value)
+				if err == nil {
+					result = dataCheckInt(rule.Op, web.Port, value)
+				}
+			case "protocol":
+				result = (rule.Op == 0 && web.Protocol == rule.Value) || (rule.Op == 1 && web.Protocol != rule.Value)
+			case "path":
+				result = dataCheckString(rule.Op, web.Path, rule.Value)
+			case "icon_hash":
+				value, err := strconv.Atoi(rule.Value)
+				hashIcon, errHash := strconv.Atoi(web.IconHash)
+				if err == nil && errHash == nil {
+					result = dataCheckInt(rule.Op, hashIcon, value)
+				}
+			case "icon_mdhash":
+				result = dataCheckString(rule.Op, web.IconMd5, rule.Value)
+			case "status":
+				value, err := strconv.Atoi(rule.Value)
+				if err == nil {
+					result = dataCheckInt(rule.Op, web.StatusCode, value)
+				}
+			case "content_type":
+				result = dataCheckString(rule.Op, web.ContentType, rule.Value)
+				// case "banner":
+				// 	result = dataCheckString(rule.Op, web.Banner, rule.Value)
 			}
-			wg.Done()
+
+			if result {
+				expr = expr[:rule.Start] + "T" + expr[rule.End:]
+			} else {
+				expr = expr[:rule.Start] + "F" + expr[rule.End:]
+			}
 		}
-	}()
-	//多指纹同时扫描
-	for range rt.NumCPU() {
-		go func() {
-			for finger := range inputChan {
-				expr := finger.AllString
-				for _, rule := range finger.Rule {
-					var result bool
-					switch rule.Key {
-					case "header":
-						result = dataCheckString(rule.Op, web.HeadeString, rule.Value)
-					case "body":
-						result = dataCheckString(rule.Op, web.BodyString, rule.Value)
-					case "server":
-						result = dataCheckString(rule.Op, web.Server, rule.Value)
-					case "title":
-						result = dataCheckString(rule.Op, web.Title, rule.Value)
-					case "cert":
-						result = dataCheckString(rule.Op, web.Cert, rule.Value)
-					case "port":
-						value, err := strconv.Atoi(rule.Value)
-						if err == nil {
-							result = dataCheckInt(rule.Op, web.Port, value)
-						}
-					case "protocol":
-						result = (rule.Op == 0 && web.Protocol == rule.Value) || (rule.Op == 1 && web.Protocol != rule.Value)
-					case "path":
-						result = dataCheckString(rule.Op, web.Path, rule.Value)
-					case "icon_hash":
-						value, err := strconv.Atoi(rule.Value)
-						hashIcon, errHash := strconv.Atoi(web.IconHash)
-						if err == nil && errHash == nil {
-							result = dataCheckInt(rule.Op, hashIcon, value)
-						}
-					case "icon_mdhash":
-						result = dataCheckString(rule.Op, web.IconMd5, rule.Value)
-					case "status":
-						value, err := strconv.Atoi(rule.Value)
-						if err == nil {
-							result = dataCheckInt(rule.Op, web.StatusCode, value)
-						}
-					case "content_type":
-						result = dataCheckString(rule.Op, web.ContentType, rule.Value)
-						// case "banner":
-						// 	result = dataCheckString(rule.Op, web.Banner, rule.Value)
-					}
 
-					if result {
-						expr = expr[:rule.Start] + "T" + expr[rule.End:]
-					} else {
-						expr = expr[:rule.Start] + "F" + expr[rule.End:]
-					}
-				}
-				r := boolEval(ctx, expr)
-				if r {
-					results <- finger.ProductName
-				} else {
-					results <- ""
-				}
-			}
-		}()
+		r, err := boolEval(expr)
+		if err != nil {
+			gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[fingerprint] 错误指纹: %v", finger.AllString))
+			continue
+		}
+		if r {
+			fingerPrintResults = append(fingerPrintResults, finger.ProductName)
+		}
 	}
-	//添加扫描目标
-	for _, input := range targetDB {
-		wg.Add(1)
-		inputChan <- input
-	}
-	wg.Wait()
+
 	return util.RemoveDuplicates(fingerPrintResults)
 }
 

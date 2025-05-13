@@ -106,6 +106,7 @@ func TestFingerscan(t *testing.T) {
 	})
 	if s == nil {
 		t.Log("engine is nil")
+		return
 	}
 
 	var wg sync.WaitGroup

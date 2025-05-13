@@ -29,6 +29,9 @@ var crackScanners = map[string]crackFunc{
 	"jdwp":       JdwpScan,
 	"adb":        AdbScan,
 	"rmi":        RmiScan,
+	"activemq":   ActiveMQScan,
+	"rsync":      RsyncScan,
+	"kafka":      KafkaScan,
 }
 
 func Runner(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwords []string) {

@@ -347,7 +347,7 @@ func (a *App) NewTcpScanner(taskId string, specialTargets []string, ips []string
 }
 
 // 端口暴破
-func (a *App) PortBrute(taskId, host string, usernames, passwords []string) {
+func (a *App) NewCrackScanenr(taskId, host string, usernames, passwords []string) {
 	ctrlCtx, cancel := control.GetScanContext(control.Crack) // 标识任务
 	defer cancel()
 	portscan.Runner(a.ctx, ctrlCtx, taskId, host, usernames, passwords)

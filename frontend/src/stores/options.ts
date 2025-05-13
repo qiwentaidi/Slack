@@ -399,69 +399,40 @@ export const fofaOptions = ({
     ],
 })
 
-export var crackDict = ({
-    // 可以进行漏洞检测的列表，包括未授权
-    options: ["ftp", "ssh", "telnet", "smb", "oracle", "mssql", "mysql", "postgresql", "vnc", "redis", "memcached", "mongodb", "ldap", "mqtt", "socks5", "jdwp", "rmi"],
-    usernames: [
-        {
-            name: "FTP",
-            dic: [] as string[]
-        },
-        {
-            name: "SSH",
-            dic: [] as string[]
-        },
-        {
-            name: "Telnet",
-            dic: [] as string[]
-        },
-        {
-            name: "LDAP",
-            dic: [] as string[]
-        },
-        {
-            name: "SMB",
-            dic: [] as string[]
-        },
-        {
-            name: "SOCKS5",
-            dic: [] as string[]
-        },
-        {
-            name: "MQTT",
-            dic: [] as string[]
-        },
-        {
-            name: "Mssql",
-            dic: [] as string[]
-        },
-        {
-            name: "Oracle",
-            dic: [] as string[]
-        },
-        {
-            name: "Mysql",
-            dic: [] as string[]
-        },
-        {
-            name: "RDP",
-            dic: [] as string[]
-        },
-        {
-            name: "Postgresql",
-            dic: [] as string[]
-        },
-        {
-            name: "VNC",
-            dic: [] as string[]
-        },
-        {
-            name: "Mongodb",
-            dic: [] as string[]
-        }
-    ],
+export var crackConfig = [
+    { name: "FTP", dicPath: "/username/ftp.txt" },
+    { name: "SSH", dicPath: "/username/ssh.txt" },
+    { name: "Telnet", dicPath: "/username/telnet.txt" },
+    { name: "LDAP", dicPath: "/username/ldap.txt" },
+    { name: "SMB", dicPath: "/username/smb.txt" },
+    { name: "SOCKS5", dicPath: "/username/socks5.txt" },
+    { name: "MQTT", dicPath: "/username/mqtt.txt" },
+    { name: "Mssql", dicPath: "/username/mssql.txt" },
+    { name: "Oracle", dicPath: "/username/oracle.txt" },
+    { name: "Mysql", dicPath: "/username/mysql.txt" },
+    // { name: "RDP", dicPath: "/username/rdp.txt" },
+    { name: "Postgresql", dicPath: "/username/postgresql.txt" },
+    { name: "VNC", dicPath: "/username/vnc.txt" },
+    { name: "Mongodb", dicPath: "/username/mongodb.txt" },
+    { name: "Redis", dicPath: "/username/redis.txt" },
+    { name: "Rmi", dicPath: "" },
+    { name: "JDWP", dicPath: "" },
+    { name: "Memcached", dicPath: "" },
+    { name: "Adb", dicPath: "" },
+    { name: "ActiveMQ", dicPath: "/username/activemq.txt" },
+    { name: "Rsync", dicPath: "/username/rsync.txt" },
+    { name: "Kafka", dicPath: "/username/kafka.txt" },
+];
+
+export var crackDict = {
+    options: crackConfig.map(item => item.name.toLowerCase()),
+    usernames: crackConfig.map(item => ({
+        name: item.name,
+        dic: [] as string[],
+        dicPath: item.dicPath,
+    })),
     passwords: [] as string[],
-})
+};
 
 export const portGroupOptions = [
     {

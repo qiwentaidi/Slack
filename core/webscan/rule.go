@@ -1,8 +1,8 @@
 package webscan
 
 import (
-	"container/list"
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Knetic/govaluate"
 	"gopkg.in/yaml.v2"
 )
 
@@ -35,10 +36,11 @@ type FingerPEntity struct {
 type RuleData struct {
 	Start int
 	End   int
-	Op    int16  // 0= 1!= 2== 3>= 4<= 5~=
-	Key   string // body="123"中的body
-	Value string // body="123"中的123
-	All   string // body="123"
+	Op    int16          // 0= 1!= 2== 3>= 4<= 5~=
+	Key   string         // body="123"中的body
+	Value string         // body="123"中的123
+	All   string         // body="123"
+	Regex *regexp.Regexp // 缓存编译后的正则表达式
 }
 
 type ActiveFingerPEntity struct {
@@ -184,139 +186,42 @@ func getRuleData(rule string) RuleData {
 	return RuleData{Start: start, End: end, Op: int16(op), Key: key, Value: value, All: all}
 }
 
-// 计算纯bool表达式，支持 ! && & || | ( )
-func boolEval(ctx context.Context, expression string) bool {
-	// 左右括号相等
-	if strings.Count(expression, "(") != strings.Count(expression, ")") {
-		gologger.Warning(ctx, fmt.Sprintf("纯布尔表达式 [%s] 左右括号不匹配", expression))
-	}
-	// 去除空格
-	for strings.Contains(expression, " ") {
-		expression = strings.ReplaceAll(expression, " ", "")
-	}
-	// 去除空表达式
-	for strings.Contains(expression, "()") {
-		expression = strings.ReplaceAll(expression, "()", "")
-	}
-	for strings.Contains(expression, "&&") {
-		expression = strings.ReplaceAll(expression, "&&", "&")
-	}
-	for strings.Contains(expression, "||") {
-		expression = strings.ReplaceAll(expression, "||", "|")
-	}
-	if !strings.Contains(expression, "T") && !strings.Contains(expression, "F") {
-		return false
-		// panic("纯布尔表达式错误，没有包含T/F")
-	}
-
-	expr := list.New()
-	operator_stack := list.New()
-	for _, ch := range expression {
-		// ch 为 T或者F
-		if ch == 84 || ch == 70 {
-			expr.PushBack(int(ch))
-		} else if advance(int(ch)) > 0 {
-			if operator_stack.Len() == 0 {
-				operator_stack.PushBack(int(ch))
-				continue
-			}
-			// 两个!抵消
-			if ch == 33 && operator_stack.Back().Value.(int) == 33 {
-				operator_stack.Remove(operator_stack.Back())
-				continue
-			}
-			for operator_stack.Len() != 0 && operator_stack.Back().Value.(int) != 40 && advance(operator_stack.Back().Value.(int)) >= advance(int(ch)) {
-				e := operator_stack.Back()
-				expr.PushBack(e.Value.(int))
-				operator_stack.Remove(e)
-			}
-			operator_stack.PushBack(int(ch))
-
-		} else if ch == 40 {
-			operator_stack.PushBack(int(ch))
-		} else if ch == 41 {
-			for operator_stack.Back().Value.(int) != 40 {
-				e := operator_stack.Back()
-				expr.PushBack(e.Value.(int))
-				operator_stack.Remove(e)
-			}
-			operator_stack.Remove(operator_stack.Back())
-		}
-	}
-	for operator_stack.Len() != 0 {
-		e := operator_stack.Back()
-		expr.PushBack(e.Value.(int))
-		operator_stack.Remove(e)
-	}
-
-	tf_stack := list.New()
-	for expr.Len() != 0 {
-		e := expr.Front()
-		ch := e.Value.(int)
-		expr.Remove(e)
-		if ch == 84 || ch == 70 {
-			tf_stack.PushBack(int(ch))
-		}
-		if ch == 38 { // &
-			em := tf_stack.Back()
-			a := em.Value.(int)
-			tf_stack.Remove(em)
-			em = tf_stack.Back()
-			b := em.Value.(int)
-			tf_stack.Remove(em)
-			if a == 84 && b == 84 {
-				tf_stack.PushBack(84)
-			} else {
-				tf_stack.PushBack(70)
-			}
-		}
-		if ch == 124 { // |
-			em := tf_stack.Back()
-			a := em.Value.(int)
-			tf_stack.Remove(em)
-			em = tf_stack.Back()
-			b := em.Value.(int)
-			tf_stack.Remove(em)
-			if a == 70 && b == 70 {
-				tf_stack.PushBack(70)
-			} else {
-				tf_stack.PushBack(84)
-			}
-		}
-		if ch == 33 { // !
-			em := tf_stack.Back()
-			a := em.Value.(int)
-			tf_stack.Remove(em)
-			if a == 70 {
-				tf_stack.PushBack(84)
-			} else if a == 84 {
-				tf_stack.PushBack(70)
-			}
-		}
-	}
-	if tf_stack.Front().Value.(int) == 84 {
-		return true
-	} else {
-		return false
-	}
-
+// 将 T/F 替换为 true/false，并转换逻辑运算符符号
+func normalizeExpression(expr string) string {
+	expr = strings.ReplaceAll(expr, " ", "") // 去空格
+	expr = strings.ReplaceAll(expr, "T", "true")
+	expr = strings.ReplaceAll(expr, "F", "false")
+	return expr
 }
 
-// 判断优先级 非运算符返回0
-func advance(ch int) int {
-	// !
-	if ch == 33 {
-		return 3
+// 使用 govaluate 实现 boolEval
+func boolEval(expression string) (bool, error) {
+	// 检查是否有 T 或 F
+	if !strings.Contains(expression, "T") && !strings.Contains(expression, "F") {
+		return false, errors.New("纯布尔表达式错误，没有包含T/F")
 	}
-	// &
-	if ch == 38 {
-		return 2
+
+	// 标准化表达式
+	exprStr := normalizeExpression(expression)
+
+	// 创建表达式对象
+	expr, err := govaluate.NewEvaluableExpression(exprStr)
+	if err != nil {
+		return false, fmt.Errorf("无法解析表达式 [%s]: %v", exprStr, err)
+
 	}
-	// |
-	if ch == 124 {
-		return 1
+
+	// 求值
+	result, err := expr.Evaluate(nil) // 不需要变量
+	if err != nil {
+		return false, fmt.Errorf("执行表达式出错 [%s]: %v", exprStr, err)
 	}
-	return 0
+
+	// 类型断言并返回布尔结果
+	if booleanResult, ok := result.(bool); ok {
+		return booleanResult, nil
+	}
+	return false, errors.New("结果不是布尔类型")
 }
 
 func regexMatch(pattern string, s string) (bool, error) {
@@ -329,8 +234,6 @@ func regexMatch(pattern string, s string) (bool, error) {
 
 // body="123"  op=0  dataSource为http.body dataRule=123
 func dataCheckString(op int16, dataSource string, dataRule string) bool {
-	dataSource = strings.ToLower(dataSource)
-
 	dataRule = strings.ToLower(dataRule)
 	dataRule = strings.ReplaceAll(dataRule, "\\\"", "\"")
 	if op == 0 {

@@ -59,7 +59,7 @@ var (
 		"M/D/yy",
 		"text/csv",
 	}
-	Sensitive = regexp.MustCompile(`\b(access.{0,3}key|access.{0,3}Key|access.{0,3}Id|access.{0,3}id|access.{0,3}Secret|access.{0,3}secret|bucket|Bucket|endpoint|Endpoint|.{0,5}密码|.{0,5}账号|默认.{0,5}密码|password|username)\s*[:=]\s*["']([^"']+)["']`)
+	Sensitive = regexp.MustCompile(`\b(access.{0,3}key|access.{0,3}Key|access.{0,3}Id|access.{0,3}id|access.{0,3}Secret|access.{0,3}secret|bucket|Bucket|endpoint|Endpoint|.{0,5}密码|.{0,5}账号|默认.{0,5}密码|password|username)\s*[:=]\s*["']?([^"'\s]+)["']?|\b((ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,}|ey[A-Za-z0-9_\/+-]{10,}\.[A-Za-z0-9._\/+-]{10,}))\b`)
 	Phone     = regexp.MustCompile(`(^|[^0-9a-zA-Z])(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}([^0-9a-zA-Z]|$)`)
 	IDCard    = regexp.MustCompile(`(^|[^0-9a-zA-Z])((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))([^0-9a-zA-Z]|$)`)
 	Email     = regexp.MustCompile(`\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*`)

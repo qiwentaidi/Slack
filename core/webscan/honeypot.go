@@ -2,7 +2,7 @@ package webscan
 
 import "strings"
 
-var honeypotHeaders = []string{"Cacti", "grafana_session", "X-Jenkins", "Mime-Version", "Composed-By", "zbx_session", "akaunting_session", "DSSIGNIN", "X-Drupal", "X-Influxdb", "X-Cmd-Response", "X-Root"}
+var honeypotHeaders = []string{"Cacti", "grafana_session", "X-Jenkins", "Mime-Version", "Composed-By", "zbx_session", "akaunting_session", "DSSIGNIN", "X-Drupal", "drupal", "X-Influxdb", "X-Cmd-Response", "X-Root", "couchdb"}
 
 func checkHoneypotWithHeaders(rawHeaders string) bool {
 	var count int
