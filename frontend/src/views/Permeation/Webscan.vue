@@ -749,10 +749,12 @@ const taskManager = {
                 return false
             }
             result.Fingerprints.forEach(item => {
+                item.TaskId = id
                 AddFingerscanResult(item)
             })
             if (result.POCs) {
                 result.POCs.forEach(item => {
+                    item.TaskId = id
                     AddPocscanResult(item)
                 })
                 rp.table.result.push({
