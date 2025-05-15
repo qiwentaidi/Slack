@@ -58,7 +58,7 @@ export function RemoveOldConfig():Promise<void>;
 
 export function Restart():Promise<void>;
 
-export function RunApp(arg1:string,arg2:string,arg3:string):Promise<void>;
+export function RunApp(arg1:structs.Children):Promise<void>;
 
 export function SaveDataToFile(arg1:any):Promise<boolean>;
 
@@ -67,6 +67,8 @@ export function SaveFileDialog(arg1:string):Promise<string>;
 export function SaveNavigation(arg1:Array<structs.Navigation>):Promise<boolean>;
 
 export function SaveToTempFile(arg1:string):Promise<string>;
+
+export function SnippetCommandLine(arg1:structs.Children):Promise<string>;
 
 export function Startup(arg1:context.Context):Promise<void>;
 

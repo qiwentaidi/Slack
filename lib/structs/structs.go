@@ -32,6 +32,7 @@ type Children struct {
 	Path    string
 	Target  string
 	Favicon string // 纯图标路径
+	Args    string // 占位符解析参数
 }
 
 type TycCompanyInfo struct {
@@ -165,6 +166,7 @@ type RowData struct {
 
 type WebscanOptions struct {
 	Target                []string
+	TcpTarget             map[string][]string // tcp层的目标，兼容nuclei可以扫描
 	Thread                int
 	Screenshot            bool
 	DeepScan              bool

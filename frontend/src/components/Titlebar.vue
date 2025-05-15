@@ -73,13 +73,20 @@ function toggleTheme() {
                     </el-button>
                 </el-tooltip>
             </el-button-group>
+            <el-button class="custom-button" text @click="toggleTheme" v-show="!global.temp.isMacOS">
+                <el-icon :size="16">
+                    <component :is="global.Theme.value ? Moon : Sunny" />
+                </el-icon>
+            </el-button>
         </div>
         <div class="unoccupied" @dblclick="WindowToggleMaximise">
-            <span class="title">{{ setTitle($route.path) }}</span>
+           <div class="title-container">
+                <span class="title">{{ setTitle($route.path) }}</span>
+            </div>
         </div>
         <div class="flex">
             <el-button-group :style="rightStyle">
-                <el-button class="custom-button" text @click="toggleTheme">
+                <el-button class="custom-button" text @click="toggleTheme" v-show="global.temp.isMacOS">
                     <el-icon :size="16">
                         <component :is="global.Theme.value ? Moon : Sunny" />
                     </el-icon>
@@ -151,6 +158,18 @@ function toggleTheme() {
     --wails-draggable: drag;
 }
 
+.title-container {
+  position: absolute;
+  /* top: 0; */
+  left: 50%;
+  transform: translateX(-50%);
+  /* height: 100%; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* 防止遮挡点击 */
+}
+
 .title {
     -webkit-user-select: none;
     /* Safari */
@@ -160,7 +179,7 @@ function toggleTheme() {
     /* IE10+/Edge */
     user-select: none;
     /* Standard syntax */
-    margin-right: 5%;
+    /* margin-right: 5%; */
 }
 
 .title:hover {

@@ -8,7 +8,6 @@ import proxyIcon from "@/assets/icon/proxy.svg"
 import dictmanagerIcon from "@/assets/icon/dict.svg"
 import layersIcon from "@/assets/icon/layers.svg"
 import aboutIcon from "@/assets/icon/about.svg"
-import scriptIcon from "@/assets/icon/script.svg"
 import maxmizeIcon from "@/assets/icon/maximize.svg"
 import reductionIcon from "@/assets/icon/reduction.svg"
 import pocIcon from '@/assets/icon/pocmanagement.svg'
@@ -497,10 +496,6 @@ export const setupOptions = [
         name: 'setting.dict',
         icon: dictmanagerIcon,
     },
-    // {
-    //   name: 'aside.script',
-    //   icon: scriptIcon,
-    // },
     {
         name: 'setting.about',
         icon: aboutIcon,

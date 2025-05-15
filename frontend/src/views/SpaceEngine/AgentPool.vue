@@ -185,11 +185,11 @@ const fofaSearch = 'protocol=="socks5" && country="CN" && banner="Method:No Auth
             <Note class="w-1/2">
                 本模块仅提供SOCKS5代理批量验证保存功能, 如需测绘可以通过空间引擎自行搜索<br /><br />
                 FOFA:<br />
-                <el-tag type="info" @click="Copy(fofaSearch)">{{ fofaSearch }}</el-tag><br />
+                <el-tag @click="Copy(fofaSearch)">{{ fofaSearch }}</el-tag><br />
                 Quake: <br />
-                <el-tag type="info" @click="Copy(quakeSearch)">{{ quakeSearch }}</el-tag><br />
+                <el-tag @click="Copy(quakeSearch)">{{ quakeSearch }}</el-tag><br />
                 Hunter:<br />
-                <el-tag type="info" @click="Copy(hunterSearch)">{{ hunterSearch }}</el-tag>
+                <el-tag @click="Copy(hunterSearch)">{{ hunterSearch }}</el-tag>
             </Note>
         </div>
     </el-collapse-transition>

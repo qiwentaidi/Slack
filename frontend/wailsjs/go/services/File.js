@@ -110,8 +110,8 @@ export function Restart() {
   return window['go']['services']['File']['Restart']();
 }
 
-export function RunApp(arg1, arg2, arg3) {
-  return window['go']['services']['File']['RunApp'](arg1, arg2, arg3);
+export function RunApp(arg1) {
+  return window['go']['services']['File']['RunApp'](arg1);
 }
 
 export function SaveDataToFile(arg1) {
@@ -128,6 +128,10 @@ export function SaveNavigation(arg1) {
 
 export function SaveToTempFile(arg1) {
   return window['go']['services']['File']['SaveToTempFile'](arg1);
+}
+
+export function SnippetCommandLine(arg1) {
+  return window['go']['services']['File']['SnippetCommandLine'](arg1);
 }
 
 export function Startup(arg1) {

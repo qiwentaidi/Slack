@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import { reactive, ref, h, computed } from "vue";
-import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled, Guide, PictureRounded } from "@element-plus/icons-vue";
+import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled, Guide, PictureRounded, DocumentCopy } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
-import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal, GenerateFaviconBase64WithOnline, GenerateFaviconBase64, AutoGenerateFavicon } from "wailsjs/go/services/File";
+import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal, GenerateFaviconBase64WithOnline, GenerateFaviconBase64, AutoGenerateFavicon, SnippetCommandLine } from "wailsjs/go/services/File";
 import ContextMenu from '@imengyu/vue3-context-menu'
 import groupIcon from "@/assets/icon/tag-group.svg"
 import tagIcon from "@/assets/icon/tag.svg"
@@ -16,44 +16,50 @@ import itermIcon from '@/assets/icon/iterm.svg'
 import chromeIcon from '@/assets/icon/chrome.svg'
 import buttonIcon from '@/assets/icon/button.svg'
 import gridIcon from '@/assets/icon/grid.svg'
+import scriptIcon from '@/assets/icon/script.svg'
 import global from "@/stores";
 import { structs } from "wailsjs/go/models";
 import Note from "@/components/Note.vue";
+import { Copy } from "@/util";
 
 
 onMounted(async () => {
     OnFileDrop((x, y, paths) => {
-        let card = localGroup.options.value.find(item => item.Name === config.mouseOnGroupName)
-        paths.forEach(async p => {
-            if (!p) {
-                return
-            }
-            let pathinfo: any = await Path(p)
-            if (card) {
-                let base64Icon = await AutoGenerateFavicon(p)
-                let c = {
-                    Name: pathinfo.Name,
-                    Type: localGroup.getExtType(pathinfo.Ext),
-                    Path: p,
-                    Target: "",
-                    Favicon: base64Icon,
-                }
-                if (!card.Children) {
-                    card.Children = [c];
-                } else {
-                    card.Children.push(c)
-                }
-                InsetItemNavigation(config.mouseOnGroupName, c)
-            }
-        })
-    }, true)
-    GetLocalNaConfig().then(async (groups: structs.Navigation[]) => {
-        if (groups) {
-            localGroup.options.value = groups
-        } else {
-            ElMessageBox.alert('可以通过右上角|右键添加分组，然后分组右键添加启动应用', 'Tips', {})
-        }
-    })
+        const el = document.elementFromPoint(x, y);
+        if (!el) return;
+
+        const target = el.closest('[data-group]');
+        if (!target) return;
+
+        const groupName = target.getAttribute('data-group');
+        if (!groupName) return;
+
+        const card = localGroup.options.value.find(item => item.Name === groupName);
+        if (!card) return;
+
+        paths.forEach(async (p) => {
+            if (!p) return;
+            const pathinfo = await Path(p);
+            const base64Icon = await AutoGenerateFavicon(p);
+            const c = {
+                Name: pathinfo.Name,
+                Type: localGroup.getExtType(pathinfo.Ext),
+                Path: p,
+                Target: "",
+                Favicon: base64Icon,
+                Args: "",
+            };
+            card.Children = card.Children || [];
+            card.Children.push(c);
+            InsetItemNavigation(groupName, c);
+        });
+    }, true);
+    let groups = await GetLocalNaConfig()
+    if (groups) {
+        localGroup.options.value = groups
+    } else {
+        ElMessageBox.alert('可以通过右上角|右键添加分组，然后分组右键添加启动应用', 'Tips', {})
+    }
 })
 
 var edit = reactive({
@@ -62,6 +68,7 @@ var edit = reactive({
     Type: "",
     Target: "",
     Favicon: "",
+    Args: "",
 })
 
 const config = reactive({
@@ -71,7 +78,7 @@ const config = reactive({
     path: "",
     target: "",
     favicon: "",
-    mouseOnGroupName: "", // 鼠标移入时的组名
+    args: "",
     editDialog: false,
     editChild: {} as structs.Children, // 存储被修改元素之前的状态，为了后续在配置文件中找到是哪个元素被修改了
     editGroupName: "", // 正在被编辑的组名
@@ -96,7 +103,28 @@ const filteredGroups = computed(() => {
 
 const localGroup = ({
     options: ref<structs.Navigation[]>([]),
-    openGroup: ["CMD", "APP", "JAR", "Link"],
+    openGroup: [
+        {
+            name: "CMD",
+            icon: itermIcon,
+        },
+        {
+            name: "APP",
+            icon: appIcon,
+        },
+        {
+            name: "JAR",
+            icon: javaIcon,
+        },
+        {
+            name: "Link",
+            icon: chromeIcon,
+        },
+        {
+            name: "Script",
+            icon: scriptIcon,
+        }
+    ],
     getGroupsName: function () {
         return localGroup.options.value.map(item => item.Name) // 获取所有分组名称
     },
@@ -108,6 +136,8 @@ const localGroup = ({
                 return appIcon
             case "Link":
                 return chromeIcon
+            case "Script":
+                return scriptIcon
             default:
                 return itermIcon
         }
@@ -150,14 +180,16 @@ const localGroup = ({
             if (config.defaultType == "Link" && config.path.startsWith("http")) {
                 ElMessage("正在加载图标资源，加载完毕后会自动关闭窗口...")
                 config.favicon = await GenerateFaviconBase64WithOnline(config.path)
+            } else {
+                config.favicon = await AutoGenerateFavicon(config.path)
             }
-            config.favicon = await AutoGenerateFavicon(config.path)
             let child = {
                 Name: config.name,
                 Type: config.defaultType,
                 Path: config.path,
                 Target: config.target,
-                Favicon: config.favicon
+                Favicon: config.favicon,
+                Args: config.args
             }
             if (!card.Children) {
                 card.Children = [child];
@@ -210,19 +242,17 @@ const localGroup = ({
             });
         }
     },
-    moveItem: function (toGroupName: string, child: structs.Children) {
+    moveItem: function (fromGroupName: string, toGroupName: string, child: structs.Children) {
         const fromGroupIndex = localGroup.options.value.findIndex(group =>
-            group.Name == config.mouseOnGroupName // 鼠标一定处于被移动组中
+            group.Name == fromGroupName
         );
         const toGroupIndex = localGroup.options.value.findIndex(group =>
             group.Name == toGroupName
         );
-
         if (fromGroupIndex !== -1 && toGroupIndex !== -1) {
             const itemToMoveIndex = localGroup.options.value[fromGroupIndex].Children!.findIndex(item =>
                 item.Name == child.Name && item.Type == child.Type && item.Path == child.Path
             );
-
             if (itemToMoveIndex !== -1) {
                 const [itemToMove] = localGroup.options.value[fromGroupIndex].Children!.splice(itemToMoveIndex, 1);
                 localGroup.options.value[toGroupIndex].Children!.push(itemToMove);
@@ -269,7 +299,7 @@ function handleCardContextMenu(e: MouseEvent, groups: any) {
                     config.target = ""
                     config.path = ""
                     config.favicon = ""
-                    config.defualtGroupName = config.mouseOnGroupName
+                    config.defualtGroupName = groups.Name
                 }
             },
             {
@@ -333,12 +363,30 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 }
             },
             {
+                label: "复制占位符命令",
+                icon: h(DocumentCopy, defaultIconSize),
+                onClick: () => {
+                    if (item.Type != "Script") {
+                        ElNotification({
+                            title: "错误",
+                            message: "仅Script类型应用支持复制",
+                            type: "error",
+                            position: 'bottom-right',
+                        })
+                        return
+                    }
+                    SnippetCommandLine(item).then(command => {
+                        Copy(command)
+                    })
+                }
+            },
+            {
                 label: "移动至",
                 icon: h(Guide, defaultIconSize),
                 children: localGroup.getGroupsName().map(name => ({
                     label: name,
                     onClick: () => {
-                        localGroup.moveItem(name, item);
+                        localGroup.moveItem(groups.Name, name, item);
                     }
                 }))
             },
@@ -379,8 +427,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
     </div>
     <div v-if="filteredGroups.length > 0" v-for="groups in filteredGroups" class="mb-5px">
         <el-card @drop="(event: DragEvent) => event.preventDefault()" class="drop-enable"
-            @contextmenu.stop.prevent="handleCardContextMenu($event, groups)"
-            @mouseover="config.mouseOnGroupName = groups.Name">
+            @contextmenu.stop.prevent="handleCardContextMenu($event, groups)" :data-group="groups.Name">
             <div class="flex-between" style="margin-bottom: 20px">
                 <span class="font-bold">{{ groups.Name }}</span>
                 <el-button :icon="DeleteFilled" link @click="localGroup.deleteGroup(groups.Name)"></el-button>
@@ -388,8 +435,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             <div v-if="groups.Children" :style="appStartStyle">
                 <div v-for="(item, index) in groups.Children" :key="index">
                     <el-tooltip :content="item.Name" :show-after="500">
-                        <div class="card-content" v-show="global.temp.isGrid"
-                            @click="RunApp(item.Type, item.Path, item.Target)"
+                        <div class="card-content" v-show="global.temp.isGrid" @click="RunApp(item)"
                             @contextmenu.stop.prevent="handleButtonContextMenu($event, groups, item)">
                             <component v-if="item.Favicon == ''" :is="localGroup.showDefaultFavicon(item.Type)"
                                 style="width: 40px; height: 40px;">
@@ -399,7 +445,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                         </div>
                     </el-tooltip>
                     <div v-show="!global.temp.isGrid">
-                        <el-button bg text @click="RunApp(item.Type, item.Path, item.Target)"
+                        <el-button bg text @click="RunApp(item)"
                             @contextmenu.stop.prevent="handleButtonContextMenu($event, groups, item)">
                             <template #icon>
                                 <el-icon v-if="item.Favicon == ''">
@@ -415,7 +461,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
         </el-card>
     </div>
     <el-empty v-else></el-empty>
-    <el-dialog v-model="config.addItemDialog" :title="$t('navigator.add_item')" width="500">
+    <el-dialog v-model="config.addItemDialog" :title="$t('navigator.add_item')" width="550">
         <el-form :model="config" label-width="auto">
             <el-form-item label="组名">
                 <el-select v-model="config.defualtGroupName">
@@ -426,16 +472,25 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 <el-input v-model="config.name" />
             </el-form-item>
             <el-form-item label="类型">
-                <el-radio-group v-model="config.defaultType">
-                    <el-radio border v-for="item in localGroup.openGroup" :key="item" :value="item">{{ item
-                        }}</el-radio>
+                <el-radio-group v-model="config.defaultType" text-color="#626aef" fill="rgb(239, 240, 253)">
+                    <el-radio-button v-for="item in localGroup.openGroup" :key="item.name" :value="item.name">
+                        <el-space :size="6">
+                            <el-icon :size="18">
+                                <component :is="item.icon" />
+                            </el-icon>
+                            <span class="font-bold">{{ item.name }}</span>
+                        </el-space>
+                    </el-radio-button>
                 </el-radio-group>
             </el-form-item>
-            <el-form-item label="命令">
-                <el-input v-model="config.target" :disabled="config.defaultType != 'CMD'" />
-                <span class="form-item-tips">类型为CMD可自定义启动命令</span>
+            <el-form-item label="命令" v-show="config.defaultType == 'CMD' || config.defaultType == 'Script'">
+                <el-input v-model="config.target" type="textarea" :rows="5" />
             </el-form-item>
-            <el-form-item label="路径">
+            <el-form-item label="占位参数" v-show="config.defaultType == 'Script'">
+                <el-input v-model="config.args" type="textarea" :rows="5" />
+                <span class="form-item-tips">仅当类型为Script时, 替换命令中的占位符使用</span>
+            </el-form-item>
+            <el-form-item label="文件路径">
                 <el-input v-model="config.path">
                     <template #suffix>
                         <el-button :icon="Document" link @click="localGroup.selectPathFile" />
@@ -458,22 +513,31 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             </el-button>
         </template>
     </el-dialog>
-    <el-dialog v-model="config.editDialog" :title="$t('navigator.edit_item')" width="500">
+    <el-dialog v-model="config.editDialog" :title="$t('navigator.edit_item')" width="550">
         <el-form :model="edit" label-width="auto">
             <el-form-item label="名称">
                 <el-input v-model="edit.Name" />
             </el-form-item>
             <el-form-item label="类型">
-                <el-radio-group v-model="edit.Type">
-                    <el-radio border v-for="item in localGroup.openGroup" :key="item" :value="item">{{ item
-                        }}</el-radio>
+                <el-radio-group v-model="edit.Type" text-color="#626aef" fill="rgb(239, 240, 253)">
+                    <el-radio-button v-for="item in localGroup.openGroup" :key="item.name" :value="item.name">
+                        <el-space :size="6">
+                            <el-icon :size="18">
+                                <component :is="item.icon" />
+                            </el-icon>
+                            <span class="font-bold">{{ item.name }}</span>
+                        </el-space>
+                    </el-radio-button>
                 </el-radio-group>
             </el-form-item>
-            <el-form-item label="命令">
-                <el-input v-model="edit.Target" :disabled="edit.Type != 'CMD'"></el-input>
-                <span class="form-item-tips">类型为CMD可自定义启动命令</span>
+            <el-form-item label="命令" v-show="edit.Type == 'CMD' || edit.Type == 'Script'">
+                <el-input v-model="edit.Target" type="textarea" :rows="5" />
             </el-form-item>
-            <el-form-item label="路径">
+            <el-form-item label="占位参数" v-show="edit.Type == 'Script'">
+                <el-input v-model="edit.Args" type="textarea" :rows="5" />
+                <span class="form-item-tips">仅当类型为Script时, 替换命令中的占位符使用</span>
+            </el-form-item>
+            <el-form-item label="文件路径">
                 <el-input v-model="edit.Path">
                     <template #suffix>
                         <el-button :icon="Document" link @click="localGroup.editPathFile" />
@@ -496,16 +560,23 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             </el-button>
         </template>
     </el-dialog>
-    <el-dialog v-model="config.tipsDialog" title="使用须知" width="900px">
-        <Note type="info">
-            1、jar应用在默认点击启动时, 会使用以java -jar启动应用<br /><br />
+    <el-dialog v-model="config.tipsDialog" width="900px">
+        <Note>
+            1、jar应用在默认点击启动时, 会使用以java -jar启动应用<br />
+            如果在启动jar GUI应用时出现无法打开的情况，可能是使用了切换Java环境变量的一些功能应用，需要配置实际Java bin的路径
+            <br /><br />
             2、如果默认配置无法满足使用, 可以通过填写目标自定义启动命令<strong>(类型必须为CMD)</strong>, %path%关键词可以自动替换为应用路径<br />
             e.g. 启动Exp-Tools, 路径为: <code>/Users/xxx/exp/Exp-Tools-1.2.7-encrypted.jar</code> 命令可以为:
             <code>java -javaagent:%path% -jar %path%</code><br /><br />
             3、拖入应用到分组中会自动按类型添加元素<br /><br />
             4、每个面板右键都有独立的功能!!!<br /><br />
             5、Link类型可以在路径处填写网址链接, 作为书签使用<br /><br />
-            6、应用默认添加时Link类型以及EXE、LNK应用会自动获取图标信息(图标参数为空会使用默认图标, 部分应用可能无法正常显示需要自行设置), 对于20kb以上图标会进行压缩存储
+            6、应用默认添加时Link类型以及EXE、LNK应用会自动获取图标信息(图标参数为空会使用默认图标, 部分应用可能无法正常显示需要自行设置), 对于20kb以上图标会进行压缩存储<br /><br />
+            7、Script类型表示需要程序打开终端, 将预输入好的命令输入到命令行中, 支持参数化编写<br />
+            e.g. 我需要执行jwt-crack, 则命令为:
+            <code>jwt-hack crack %token% -w %dict%
+            参数为(根据;号分割):
+            %token%:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiIxIiwicm5TdHIiOiJUc1RwSFBNUlZaeGtKZWREUGFxa281ZVdTUlBSZmQ4bCJ9.QsplJJwqcW5rmRoEbA2h0VtsAzvfX5E-SkxOjqRhKy4;%dict%:/Users/xxx/jwt.txt</code>
         </Note>
     </el-dialog>
 </template>

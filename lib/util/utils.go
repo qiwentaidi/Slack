@@ -20,21 +20,6 @@ func HomeDir() string {
 	return s
 }
 
-// IsURL tests a string to determine if it is a well-structured url or not.
-func IsURL(input string) bool {
-	_, err := url.ParseRequestURI(input)
-	if err != nil {
-		return false
-	}
-
-	u, err := url.Parse(input)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return false
-	}
-
-	return true
-}
-
 func ReverseString(s string) string {
 	runes := []rune(s)
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {

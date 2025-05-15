@@ -99,7 +99,7 @@ func TestThreadSafeNucleiCaller(t *testing.T) {
 }
 
 func TestFingerscan(t *testing.T) {
-	s := NewFingerScanEngine(context.Background(), "", clients.Proxy{}, structs.WebscanOptions{
+	s := NewWebscanEngine(context.Background(), "", clients.Proxy{}, structs.WebscanOptions{
 		Target:   []string{""},
 		Thread:   10,
 		RootPath: true,
@@ -200,7 +200,7 @@ func TestFingerscan(t *testing.T) {
 
 		s.aliveURLs = append(s.aliveURLs, u)
 
-		fingerprints := s.Scan(s.ctx, web, FingerprintDB)
+		fingerprints := Scan(s.ctx, web, FingerprintDB)
 
 		if s.generateLog4j2 {
 			fingerprints = append(fingerprints, "Generate-Log4j2")

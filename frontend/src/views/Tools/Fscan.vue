@@ -173,10 +173,10 @@
     </div>
     <div id="main" v-show="fscan.showType == 'graph'" style="width: 100%; height: 100vh;"></div>
     <el-dialog v-model="fscan.tipsDialog" title="模块介绍" width="50%">
-        <Note type="info">
+        <Note>
             Raw: 按行匹配筛选规则<br /><br />
             其他模块: 只有在使用官网项目 <strong>https://github.com/shadow1ng/fscan</strong> 时才能正常使用<br /><br />
-            <el-space><el-tag type="warning">其他魔改过输出内容的版本，其他模块无法适配</el-tag><el-tag type="warning">且版本需要小于2.0.0</el-tag></el-space>
+            <el-space><el-tag>其他魔改过输出内容的版本，其他模块无法适配</el-tag><el-tag>且版本需要小于2.0.0</el-tag></el-space>
         </Note>
     </el-dialog>
 </template>

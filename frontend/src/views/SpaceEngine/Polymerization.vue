@@ -1,8 +1,7 @@
 <template>
     <el-form @submit.native.prevent="tableCtrl.addTab(uncover.query)">
         <el-form-item>
-            <div class="flex">
-                <el-input v-model="uncover.query" placeholder="多目标用英文逗号,分割" class="mb-10px">
+                <el-input v-model="uncover.query" placeholder="多目标用英文逗号,分割">
                     <template #prepend>
                         <el-select size="large" style="width: 150px;" v-model="uncover.currentGroup">
                             <el-option v-for="filed in group" :value="filed" :label="filed" />
@@ -25,7 +24,6 @@
                             @click="tableCtrl.addTab(uncover.query)">查询</el-button>
                     </template>
                 </el-input>
-            </div>
         </el-form-item>
     </el-form>
     <el-tabs v-model="table.acvtiveNames" v-loading="table.loading" type="card" closable

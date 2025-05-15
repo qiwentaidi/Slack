@@ -42,8 +42,8 @@ type WebInfo struct {
 	ContentType   string
 	Server        string
 	ContentLength int
-	// Banner        string // tcp指纹
-	Cert string // TLS证书
+	Banner        string // tcp指纹
+	Cert          string // TLS证书
 }
 
 type FingerScanner struct {
@@ -63,13 +63,13 @@ type FingerScanner struct {
 	mutex                   sync.RWMutex
 }
 
-func NewFingerScanEngine(ctx context.Context, taskId string, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
+func NewWebscanEngine(ctx context.Context, taskId string, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
 	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
 	client := clients.NewRestyClientWithProxy(nil, true, proxy)
 	for _, t := range options.Target {
 		t = strings.TrimRight(t, "/")
 		// 增加协议判断
-		if !strings.HasPrefix(t, "http://") && !strings.HasPrefix(t, "https://") && !strings.HasPrefix(t, "apachemq") {
+		if !strings.HasPrefix(t, "http://") && !strings.HasPrefix(t, "https://") {
 			if url, err := clients.CheckProtocol(t, client); err != nil {
 				continue
 			} else {
@@ -83,7 +83,17 @@ func NewFingerScanEngine(ctx context.Context, taskId string, proxy clients.Proxy
 		}
 		urls = append(urls, u)
 	}
-	if len(urls) == 0 {
+	// 可以兼容其他协议目标进行漏洞扫描
+	basicURLWithFingerprint := make(map[string][]string)
+	var mutex sync.RWMutex
+	for target, fingerprints := range options.TcpTarget {
+		if len(fingerprints) > 0 {
+			mutex.Lock()
+			basicURLWithFingerprint[target] = fingerprints
+			mutex.Unlock()
+		}
+	}
+	if len(urls) == 0 && len(basicURLWithFingerprint) == 0 {
 		gologger.Error(ctx, "No available targets found, please check input")
 		return nil
 	}
@@ -97,7 +107,7 @@ func NewFingerScanEngine(ctx context.Context, taskId string, proxy clients.Proxy
 		thread:                  options.Thread,
 		deepScan:                options.DeepScan,
 		rootPath:                options.RootPath,
-		basicURLWithFingerprint: make(map[string][]string),
+		basicURLWithFingerprint: basicURLWithFingerprint,
 		headers:                 clients.Str2HeadersMap(options.CustomHeaders),
 		generateLog4j2:          options.GenerateLog4j2,
 	}
@@ -116,11 +126,6 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 	// 指纹扫描
 	fscan := func(u *url.URL) {
 		if ctrlCtx.Err() != nil {
-			return
-		}
-		// apachemq协议在nuclei中存在poc所以需要将其结果传入待扫描目标中
-		if u.Scheme == "apachemq" {
-			s.basicURLWithFingerprint[u.Hostname()] = append(s.basicURLWithFingerprint[u.Hostname()], "Apache-ActiveMQ-TCP")
 			return
 		}
 		var (
@@ -202,7 +207,7 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 
 		s.aliveURLs = append(s.aliveURLs, u)
 
-		fingerprints := s.Scan(s.ctx, web, FingerprintDB)
+		fingerprints := Scan(s.ctx, web, FingerprintDB)
 
 		if s.generateLog4j2 {
 			fingerprints = append(fingerprints, "Generate-Log4j2")
@@ -340,7 +345,7 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 			Port:          netutil.GetPort(fp.URL),
 			StatusCode:    resp.StatusCode(),
 		}
-		result := s.Scan(s.ctx, ti, fp.Fpe)
+		result := Scan(s.ctx, ti, fp.Fpe)
 
 		if (len(result) > 0 && ti.StatusCode != 404) || util.ArrayContains("ThinkPHP", result) {
 			s.mutex.Lock()
@@ -513,7 +518,7 @@ func (s *FingerScanner) URLWithFingerprintMap() map[string][]string {
 // 	return util.RemoveDuplicates(fingerPrintResults)
 // }
 
-func (s *FingerScanner) Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
+func Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
 	var fingerPrintResults []string
 
 	for _, finger := range targetDB {
@@ -555,8 +560,8 @@ func (s *FingerScanner) Scan(ctx context.Context, web *WebInfo, targetDB []Finge
 				}
 			case "content_type":
 				result = dataCheckString(rule.Op, web.ContentType, rule.Value)
-				// case "banner":
-				// 	result = dataCheckString(rule.Op, web.Banner, rule.Value)
+			case "banner":
+				result = dataCheckString(rule.Op, web.Banner, rule.Value)
 			}
 
 			if result {

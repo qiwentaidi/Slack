@@ -234,6 +234,9 @@ func regexMatch(pattern string, s string) (bool, error) {
 
 // body="123"  op=0  dataSource为http.body dataRule=123
 func dataCheckString(op int16, dataSource string, dataRule string) bool {
+	if dataSource == "" {
+		return false
+	}
 	dataRule = strings.ToLower(dataRule)
 	dataRule = strings.ReplaceAll(dataRule, "\\\"", "\"")
 	if op == 0 {

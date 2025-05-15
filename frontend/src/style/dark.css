@@ -6,8 +6,11 @@ html.dark {
     --response-bg-color: #1c1b1b;
     --list-item-hover-color: #303030;
     --list-item-selected-color: #3B3B3B;
-    --el-divider-text: #1E1E1E;
     --split-color: #262626;
+
+    .el-divider__text {
+        background-color: #1E1E1E;
+    }
 
     .el-tag.el-tag--critical {
         background-color: #2F141A;

@@ -301,6 +301,9 @@ function stopScan() {
 // 自动化扫描引擎
 class Engine {
     inputLines = [] as string[] // 输入的目标行
+    tcpLines = {} as {
+        [key: string]: string[];
+    }
     ips = [] as string[] // IP列表
     portsList = [] as number[] // 端口列表
     specialTarget = [] as string[] // IP:PORT 特殊目标
@@ -407,8 +410,14 @@ class Engine {
                 form.runnningStatus = false
                 return
             }
-            // 增加apachemq的poc检测需要适配后端
-            this.inputLines = fp.table.result.filter(line => line.Scheme === "http" || line.Scheme === "https" || line.Scheme === "apachemq").map(item => item.URL);
+            this.inputLines = fp.table.result.filter(line => line.Scheme === "http" || line.Scheme === "https").map(item => item.URL);
+            fp.table.result.map(line => {
+                if (line.Scheme === "http" || line.Scheme === "https") {
+                   this.inputLines.push(line.URL)
+                } else {
+                    this.tcpLines[line.URL] = line.Fingerprints
+                }
+            })
             if (!form.runnningStatus || form.scanStopped) {
                 return
             }
@@ -465,6 +474,7 @@ class Engine {
 
         let options: structs.WebscanOptions = {
             Target: this.inputLines,
+            TcpTarget: this.tcpLines,
             Thread: global.webscan.web_thread,
             Screenshot: config.screenhost,
             DeepScan: deepScan,
@@ -1348,7 +1358,7 @@ const shodanRunningstatus = ref(false)
     </el-drawer>
     <el-dialog title="导出报告" v-model="exportDialog">
         <el-alert :title="'已选择' + rp.table.selectRows.length + '个任务'" type="info" show-icon :closable="false"
-            class="mr-5px" />
+            style="margin-bottom: 5px;" />
         <el-form :model="form" label-width="auto">
             <el-form-item label="报告类型">
                 <el-select v-model="reportOption" style="width: 240px;">

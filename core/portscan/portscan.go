@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"slack-wails/core/webscan"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/structs"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -33,7 +35,7 @@ func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Addre
 		if ctrlCtx.Err() != nil {
 			return
 		}
-		pr := Connect(taskId, add.IP, add.Port, timeout, proxy)
+		pr := Connect(ctx, taskId, add.IP, add.Port, timeout, proxy)
 		atomic.AddInt32(&id, 1)
 		runtime.EventsEmit(ctx, "progressID", id)
 		if pr == nil {
@@ -72,7 +74,7 @@ type Address struct {
 	Port int
 }
 
-func Connect(taskId, ip string, port, timeout int, proxy clients.Proxy) *structs.InfoResult {
+func Connect(ctx context.Context, taskId, ip string, port, timeout int, proxy clients.Proxy) *structs.InfoResult {
 	scanner := gonmap.New()
 	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout), proxy)
 
@@ -86,13 +88,19 @@ func Connect(taskId, ip string, port, timeout int, proxy clients.Proxy) *structs
 	if response != nil && response.FingerPrint.Service != "" {
 		scheme = response.FingerPrint.Service
 	}
-
+	tcpinfo := &webscan.WebInfo{
+		Protocol: scheme,
+		Banner:   strings.ToLower(response.Raw),
+	}
+	tcpfinger := webscan.Scan(ctx, tcpinfo, webscan.FingerprintDB)
 	result := &structs.InfoResult{
-		TaskId: taskId,
-		Host:   ip,
-		Port:   port,
-		Scheme: scheme,
-		URL:    fmt.Sprintf("%s://%s:%d", scheme, ip, port),
+		TaskId:       taskId,
+		Host:         ip,
+		Port:         port,
+		Scheme:       scheme,
+		URL:          fmt.Sprintf("%s://%s:%d", scheme, ip, port),
+		Fingerprints: tcpfinger,
+		Detect:       "Default",
 	}
 
 	// 若是 HTTP/HTTPS，尝试请求获取状态码

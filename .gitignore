@@ -5,3 +5,4 @@ release
 .vscode
 assets/Thumbs.db
 .DS_Store
+poc.go

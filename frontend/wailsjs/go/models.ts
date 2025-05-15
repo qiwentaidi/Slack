@@ -274,6 +274,7 @@ export namespace structs {
 	    Path: string;
 	    Target: string;
 	    Favicon: string;
+	    Args: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Children(source);
@@ -286,6 +287,7 @@ export namespace structs {
 	        this.Path = source["Path"];
 	        this.Target = source["Target"];
 	        this.Favicon = source["Favicon"];
+	        this.Args = source["Args"];
 	    }
 	}
 	export class CompanyInfo {
@@ -1199,6 +1201,7 @@ export namespace structs {
 	}
 	export class WebscanOptions {
 	    Target: string[];
+	    TcpTarget: {[key: string]: string[]};
 	    Thread: number;
 	    Screenshot: boolean;
 	    DeepScan: boolean;
@@ -1219,6 +1222,7 @@ export namespace structs {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.Target = source["Target"];
+	        this.TcpTarget = source["TcpTarget"];
 	        this.Thread = source["Thread"];
 	        this.Screenshot = source["Screenshot"];
 	        this.DeepScan = source["DeepScan"];

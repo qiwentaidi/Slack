@@ -6,7 +6,6 @@ html.light {
     --response-bg-color: #f6f6f6;
     --list-item-hover-color: #EDEDED;
     --list-item-selected-color: #E6E6E6;
-    --el-divider-text: #ffffff;
     --split-color: #F5F5F5;
 
     .el-tag.el-tag--critical {
