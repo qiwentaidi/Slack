@@ -126,9 +126,14 @@ func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allO
 				runtime.EventsEmit(ctx, "NucleiProgressID", id)
 				gologger.Info(ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
 			}()
+			// 当URL目标为WEB时，如果无指纹以及开启跳过时，则跳过该URL
+			// 当URL目标为其他协议时 例如: Mysql时，不需要开启跳过，只要没有指纹就跳过
 			if option.SkipNucleiWithoutTags && len(option.Tags) == 0 {
 				gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
 				return
+			}
+			if !strings.HasPrefix(option.URL, "http") && len(option.Tags) == 0 {
+				gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s is not web and does not have tags, scan skipped", option.URL))
 			}
 			options := NewNucleiSDKOptions(option)
 			// load targets and optionally probe non http/https targets

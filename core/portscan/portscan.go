@@ -32,12 +32,17 @@ func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Addre
 	}()
 	// port scan func
 	portScan := func(add Address) {
+		defer wg.Done()
+		defer func() {
+			atomic.AddInt32(&id, 1)
+			runtime.EventsEmit(ctx, "progressID", id)
+		}()
 		if ctrlCtx.Err() != nil {
 			return
 		}
 		pr := Connect(ctx, taskId, add.IP, add.Port, timeout, proxy)
-		atomic.AddInt32(&id, 1)
-		runtime.EventsEmit(ctx, "progressID", id)
+		// atomic.AddInt32(&id, 1)
+		// runtime.EventsEmit(ctx, "progressID", id)
 		if pr == nil {
 			return
 		}
@@ -54,7 +59,6 @@ func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Addre
 	threadPool, _ := ants.NewPoolWithFunc(workers, func(ipaddr interface{}) {
 		ipa := ipaddr.(Address)
 		portScan(ipa)
-		wg.Done()
 	})
 	defer threadPool.Release()
 	for add := range addresses {
@@ -82,7 +86,7 @@ func Connect(ctx context.Context, taskId, ip string, port, timeout int, proxy cl
 	if status == gonmap.Closed || status == gonmap.Unknown {
 		return nil
 	}
-
+	var tcpfinger []string
 	// 默认协议设为 unknow
 	scheme := "unknow"
 	if response != nil && response.FingerPrint.Service != "" {
@@ -92,7 +96,9 @@ func Connect(ctx context.Context, taskId, ip string, port, timeout int, proxy cl
 		Protocol: scheme,
 		Banner:   strings.ToLower(response.Raw),
 	}
-	tcpfinger := webscan.Scan(ctx, tcpinfo, webscan.FingerprintDB)
+	if scheme == "http" || scheme == "https" {
+		tcpfinger = webscan.Scan(ctx, tcpinfo, webscan.FingerprintDB)
+	}
 	result := &structs.InfoResult{
 		TaskId:       taskId,
 		Host:         ip,

@@ -266,6 +266,10 @@ func (f *File) UpdatePocFile(version string) bool {
 		gologger.Error(f.ctx, err)
 		return false
 	}
+	// 删除 /slack/config/pocs 文件夹，这样可以删除一些原有没用的poc
+	if err = os.RemoveAll(defaultFile + "config/pocs"); err != nil {
+		gologger.Error(f.ctx, fmt.Sprintf("Remove pocs file error: %s", err))
+	}
 	uz := fileutil.NewUnzip()
 	if _, err := uz.Extract(defaultFile+"config.zip", defaultFile); err != nil {
 		gologger.Error(f.ctx, err)

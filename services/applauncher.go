@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	rt "runtime"
 	"slack-wails/core/webscan"
+	"slack-wails/lib/bridge"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/fileutil"
 	"slack-wails/lib/gologger"
@@ -171,8 +172,8 @@ func (f *File) RunApp(item structs.Children) {
 
 		switch rt.GOOS {
 		case "windows":
-			// /k 表示执行后不关闭窗口
-			cmd = exec.Command("cmd", "/k", command)
+			bridge.ExecuteScriptCommand(command)
+			return
 		case "darwin":
 			// macOS: 使用 AppleScript 来执行命令
 			script := fmt.Sprintf(`tell application "Terminal"

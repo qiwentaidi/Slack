@@ -138,16 +138,22 @@ func Scan(ctx context.Context, target, prefixJsURL string, jsLinks []string) str
 	var fs = structs.FindSomething{}
 	var mu sync.Mutex // 用于保护 fs 的并发写操作
 	var wg sync.WaitGroup
+	var visited sync.Map // 并发安全的去重 map
 	if prefixJsURL != "" {
 		target = prefixJsURL
 	}
+
 	// 创建线程池
 	pool, _ := ants.NewPoolWithFunc(10, func(data interface{}) {
 		defer wg.Done()
 		jslink := data.(string)
 		newURL := formatURL(target, jslink)
+		// 判断是否已访问
+		if _, loaded := visited.LoadOrStore(newURL, struct{}{}); loaded {
+			// 已处理过，跳过
+			return
+		}
 		fs2 := FindInfo(ctx, newURL)
-
 		// 加锁以安全地更新共享资源
 		mu.Lock()
 		fs.IP_URL = append(fs.IP_URL, fs2.IP_URL...)
@@ -377,7 +383,7 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 			Length:   len(body),
 		})
 		// 检测越权
-		if o.LowPrivilegeHeaders != nil && o.Headers != nil {
+		if len(o.LowPrivilegeHeaders) != 0 && len(o.Headers) != 0 {
 			lowPrivilegeReq := apiReq
 			lowPrivilegeReq.Headers = o.LowPrivilegeHeaders
 			isvulnerable, lowPrivBody, err := testPrivilegeEscalation(body, lowPrivilegeReq)

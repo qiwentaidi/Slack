@@ -31,6 +31,7 @@
         <el-tab-pane v-for="item in table.editableTabs" :key="item.name" :label="item.title" :name="item.name"
             v-if="table.editableTabs.length != 0">
             <el-table :data="item.content" border class="w-full" style="height: calc(100vh - 245px);">
+                <el-table-column type="index" width="50" />
                 <el-table-column prop="URL" label="URL" width="200px" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" label="IP" width="170px" />
                 <el-table-column prop="Domain" label="域名" width="200" :show-overflow-tooltip="true" />

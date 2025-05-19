@@ -210,8 +210,7 @@ func (a *App) IpLocation(ip string) string {
 	return result.String()
 }
 func (a *App) Subdomain(o structs.SubdomainOption) {
-	ctrlCtx, cancel := control.GetScanContext(control.Subdomain) // 标识任务
-	defer cancel()
+	ctrlCtx, _ := control.GetScanContext(control.Subdomain) // 标识任务
 	qqwryLoader.Do(func() {
 		subdomain.InitQqwry(a.qqwryFile)
 	})
@@ -305,8 +304,7 @@ func (a *App) LoadDirsearchDict(dictPath, newExts []string) []string {
 }
 
 func (a *App) DirScan(options dirsearch.Options) {
-	ctrlCtx, cancel := control.GetScanContext(control.Dirseach) // 标识任务
-	defer cancel()
+	ctrlCtx, _ := control.GetScanContext(control.Dirseach) // 标识任务
 	dirsearch.NewScanner(a.ctx, ctrlCtx, options)
 }
 
@@ -321,8 +319,7 @@ func (a *App) SpaceGetPort(ip string) []float64 {
 }
 
 func (a *App) NewTcpScanner(taskId string, specialTargets []string, ips []string, ports []int, thread, timeout int, proxy clients.Proxy) {
-	ctrlCtx, cancel := control.GetScanContext(control.Portscan) // 标识任务
-	defer cancel()
+	ctrlCtx, _ := control.GetScanContext(control.Portscan) // 标识任务
 	addresses := make(chan portscan.Address)
 
 	go func() {
@@ -348,8 +345,7 @@ func (a *App) NewTcpScanner(taskId string, specialTargets []string, ips []string
 
 // 端口暴破
 func (a *App) NewCrackScanenr(taskId, host string, usernames, passwords []string) {
-	ctrlCtx, cancel := control.GetScanContext(control.Crack) // 标识任务
-	defer cancel()
+	ctrlCtx, _ := control.GetScanContext(control.Crack) // 标识任务
 	portscan.Runner(a.ctx, ctrlCtx, taskId, host, usernames, passwords)
 }
 
