@@ -16,6 +16,8 @@ export function DownloadLastestClient():Promise<structs.Status>;
 
 export function FileDialog(arg1:string):Promise<string>;
 
+export function FilepathJoin(arg1:Array<string>):Promise<string>;
+
 export function GenerateFaviconBase64(arg1:string):Promise<string>;
 
 export function GenerateFaviconBase64WithOnline(arg1:string):Promise<string>;

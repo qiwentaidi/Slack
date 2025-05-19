@@ -4,7 +4,7 @@ import { Copy, ReadLine, transformArrayFields } from '@/util'
 import { ExportToXlsx } from '@/export'
 import { reactive, ref, onMounted } from "vue";
 import { ExitScanner, Subdomain } from "wailsjs/go/services/App";
-import { CheckFileStat, FileDialog } from "wailsjs/go/services/File";
+import { CheckFileStat, FileDialog, FilepathJoin } from "wailsjs/go/services/File";
 import { ElMessage, ElNotification } from 'element-plus'
 import { WarningFilled, Setting } from '@element-plus/icons-vue';
 import exportIcon from '@/assets/icon/doucment-export.svg'
@@ -128,7 +128,8 @@ class Runner {
         config.runningStatus = true
         pagination.initTable()
         if (currentRunner.value != 1 && config.subs.length == 0) {
-            config.subs = (await ReadLine(global.PATH.homedir + "/slack/config/subdomain/dicc.txt"))!
+            let filepath = await FilepathJoin([global.PATH.homedir, "/slack/config/subdomain/dicc.txt"])
+            config.subs = (await ReadLine(filepath))!
         }
         let option: structs.SubdomainOption = {
             Mode: currentRunner.value,

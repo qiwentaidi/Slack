@@ -234,6 +234,10 @@ type FileInfo struct {
 	Content string
 }
 
+func (f *File) FilepathJoin(paths []string) string {
+	return filepath.Join(paths...)
+}
+
 func (f *File) ReadFile(filename string) *FileInfo {
 	b, err := os.ReadFile(filename)
 	if err != nil {

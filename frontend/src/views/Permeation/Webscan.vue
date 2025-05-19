@@ -10,7 +10,7 @@ import usePagination from '@/usePagination';
 import { LinkFOFA, LinkHunter } from '@/linkage';
 import { getBadgeClass, getSelectedIcon, getTagTypeBySeverity, highlightFingerprints, typeToIcon } from '@/stores/style';
 import CustomTabs from '@/components/CustomTabs.vue';
-import { CheckFileStat, DirectoryDialog, FileDialog, List, ReadFile, SaveFileDialog } from 'wailsjs/go/services/File';
+import { CheckFileStat, DirectoryDialog, FileDialog, FilepathJoin, List, ReadFile, SaveFileDialog } from 'wailsjs/go/services/File';
 import { isPrivateIP, validateIp, validateIpAndDomain } from '@/stores/validate';
 import { structs } from 'wailsjs/go/models';
 import { portGroupOptions, webReportOptions, webscanOptions, crackDict, WebsiteInputTips, HostInputTips } from '@/stores/options'
@@ -520,11 +520,13 @@ class Engine {
         let userDict = [] as string[]
         if (param.builtInUsername) {
             for (var item of crackDict.usernames) {
-                item.dic = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + item.dicPath))!
+                let filepath = await FilepathJoin([global.PATH.homedir, global.PATH.PortBurstPath, item.dicPath])
+                item.dic = (await ReadLine(filepath))!
             }
         }
         if (param.builtInPassword) {
-            passDict = (await ReadLine(global.PATH.homedir + global.PATH.PortBurstPath + "/password/password.txt"))!
+            let filepath = await FilepathJoin([global.PATH.homedir, global.PATH.PortBurstPath, "/password/password.txt"])
+            passDict = (await ReadLine(filepath))!
             passDict.push("")
         }
         if (param.username != "") {

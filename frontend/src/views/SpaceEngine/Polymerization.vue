@@ -93,7 +93,7 @@ import global from '@/stores';
 import { CsegmentIpv4, openURL } from '@/util';
 import { ExportToXlsx } from '@/export';
 import csegmentIcon from '@/assets/icon/csegment.svg'
-import { structs } from 'wailsjs/go/models';
+import { space, structs } from 'wailsjs/go/models';
 import { uncoverSyntaxOptions } from '@/stores/options';
 
 const group = ["IP", "域名", "标题", "Body", "备案名称", "备案号"]
@@ -122,7 +122,7 @@ const tableCtrl = ({
             HunterKey: global.space.hunterkey,
             QuakeKey: global.space.quakekey,
         }
-        let result: any = await UncoverSearch(query, uncover.currentGroup, options)
+        let result = await UncoverSearch(query, uncover.currentGroup, options)
         table.editableTabs.push({
             title: query,
             name: newTabName,

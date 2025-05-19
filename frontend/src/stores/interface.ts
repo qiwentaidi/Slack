@@ -1,4 +1,4 @@
-import { structs } from "wailsjs/go/models";
+import { space, structs } from "wailsjs/go/models";
 
 export interface TableTabs {
     title: string;
@@ -70,20 +70,10 @@ export interface QuakeTipsData {
 export interface Uncover {
     title: string;
     name: string;
-    content: UncoverData[];
+    content: space.Result[];
     total: number;
     pageSize: number;
     currentPage: number;
-}
-
-interface UncoverData {
-    URL: string
-    IP: string
-    Domain: string
-    Port: string
-    Protocol: string
-    Component: string
-    Source: string
 }
 
 export interface LogInfo {

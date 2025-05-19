@@ -92,12 +92,14 @@ func Uncover(ctx context.Context, query, types string, o structs.SpaceOption) []
 		}
 	}
 	uniqueResults := make([]Result, 0)
-	seen := make(map[string]bool)
+	seenURL := make(map[string]bool)
+	seenKey := make(map[string]bool)
 
 	for _, r := range results {
 		key := fmt.Sprintf("%s:%s:%s", r.IP, r.Port, r.Title)
-		if !seen[key] {
-			seen[key] = true
+		if !seenURL[r.URL] && !seenKey[key] {
+			seenURL[r.URL] = true
+			seenKey[key] = true
 			uniqueResults = append(uniqueResults, r)
 		}
 	}
