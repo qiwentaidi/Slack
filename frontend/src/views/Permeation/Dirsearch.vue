@@ -7,7 +7,7 @@ import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
 import { RefreshRight, Document, FolderOpened, DocumentCopy, ChromeFilled, Reading, Setting, Delete, WarnTriangleFilled } from '@element-plus/icons-vue';
 import { onMounted } from 'vue';
 import global from '@/stores';
-import { CheckFileStat, List, OpenFolder } from 'wailsjs/go/services/File';
+import { CheckFileStat, FilepathJoin, List, OpenFolder } from 'wailsjs/go/services/File';
 import { DirseearchResult } from '@/stores/interface';
 import usePagination from '@/usePagination';
 import redirectIcon from '@/assets/icon/redirect.svg'
@@ -97,7 +97,7 @@ let pagination = usePagination<DirseearchResult>(50)
 let pathTimes = usePagination<{ path: string, times: number }>(50)
 async function getDictList() {
     from.selectDict = []
-    from.configPath = global.PATH.homedir + "/slack/config/dirsearch"
+    from.configPath = await FilepathJoin([global.PATH.homedir, "/slack/config/dirsearch"])
     let files = await List([from.configPath])
     from.dictList = files.filter(item => item.Path.endsWith(".txt")).map(item => item.Path);
 }

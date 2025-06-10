@@ -6,9 +6,11 @@ import { FetchCompanyInfo, GoFetch, ResumeAfterHumanCheck } from "wailsjs/go/ser
 import CustomTabs from "@/components/CustomTabs.vue";
 import wechatIcon from "@/assets/icon/wechatOfficialAccount.svg"
 import { debounce } from "lodash"
-import { BrowserOpenURL, EventsOn } from "wailsjs/runtime/runtime";
+import { BrowserOpenURL, EventsOff, EventsOn } from "wailsjs/runtime/runtime";
 import { structs } from "wailsjs/go/models";
-import { getProxy } from "@/util";
+import { getProxy, ProcessTextAreaInput } from "@/util";
+import { FilepathJoin, OpenFolder } from "wailsjs/go/services/File";
+import global from '@/stores';
 
 const companiesInfo = ref<structs.CompanyInfo[]>([])
 
@@ -25,15 +27,17 @@ onMounted(async () => {
     if (storedMiit) {
         ruleForm.miitApi = storedMiit;
     }
+    from.configPath = await FilepathJoin([global.PATH.homedir, "/slack/company_info"])
     EventsOn("tyc-human-check", (msg: string) => {
         from.humanCheckDialogVisible = true
         from.humanCheckMessage = msg
     })
+    EventsOff("tyc-human-check")
 })
 
 const handleHumanCheckConfirmed = () => {
-  from.humanCheckDialogVisible = false
-  ResumeAfterHumanCheck() // 调用后端接口，释放阻塞
+    from.humanCheckDialogVisible = false
+    ResumeAfterHumanCheck() // 调用后端接口，释放阻塞
 }
 
 const storageConfig = debounce(() => {
@@ -51,6 +55,7 @@ const from = reactive({
     runningStatus: false,
     humanCheckDialogVisible: false,
     humanCheckMessage: "",
+    configPath: "",
 })
 
 interface RuleForm {
@@ -130,7 +135,6 @@ async function Collect() {
     ruleForm.tycToken = ruleForm.tycToken.replace(/[\r\n\s]/g, '')
     ruleForm.tycId = ruleForm.tycId.replace(/[\r\n\s]/g, '')
     from.newTask = false
-    // from.runningStatus = true
 
     let dataSource: structs.DataSource = {
         Tianyancha: {} as structs.Tianyancha,
@@ -145,13 +149,15 @@ async function Collect() {
     }
 
     dataSource.Miit.API = ruleForm.miitApi
-    let result = await FetchCompanyInfo(ruleForm.company, ruleForm.invest, dataSource, ruleForm.subcompanyLevel)
-    companiesInfo.value.push(result)
-    console.log(result)
-    // from.runningStatus = false
+    let compnaies = ProcessTextAreaInput(ruleForm.company)
+    from.runningStatus = true
+    companiesInfo.value = []
+    for (const compamy of compnaies) {
+        let result = await FetchCompanyInfo(compamy, ruleForm.invest, dataSource, ruleForm.subcompanyLevel)
+        companiesInfo.value.push(result)
+    }
+    from.runningStatus = false
 }
-
-const detailVisible = ref(false)
 
 const allOfficialAccounts = computed(() =>
     extractAllChildren(companiesInfo.value, 'OfficialAccounts')
@@ -196,7 +202,7 @@ function extractAllChildren<T>(
 
 
 <template>
-    <CustomTabs v-show="!detailVisible">
+    <CustomTabs>
         <el-tabs v-model="from.activeName" type="card">
             <el-tab-pane label="对外投资" name="subcompany">
                 <el-table :data="companiesInfo" row-key="CompanyName" :highlight-current-row="true" border
@@ -231,9 +237,10 @@ function extractAllChildren<T>(
                     </el-table-column>
                     <el-table-column label="域名" align="center">
                         <template #default="scope">
-                            <div class="finger-container" v-if="scope.row.Domains != null && scope.row.Domains.length > 0">
+                            <div class="finger-container"
+                                v-if="scope.row.Domains != null && scope.row.Domains.length > 0">
                                 <el-tag v-for="domain in scope.row.Domains" :key="domain">{{ domain
-                                    }}</el-tag>
+                                }}</el-tag>
                             </div>
                         </template>
                     </el-table-column>
@@ -291,8 +298,9 @@ function extractAllChildren<T>(
         </el-tabs>
         <template #ctrl>
             <el-space style="margin-right: -5px;">
-                <el-button :icon="Share" @click="">结果导出</el-button>
-                <el-button :icon="Plus" @click="from.newTask = true">新建任务</el-button>
+                <el-button :icon="Share" @click="OpenFolder(from.configPath)">结果保存</el-button>
+                <el-button :icon="Plus" @click="from.newTask = true" v-if="!from.runningStatus">新建任务</el-button>
+                <el-button loading v-else>正在查询</el-button>
             </el-space>
         </template>
     </CustomTabs>
@@ -309,6 +317,7 @@ function extractAllChildren<T>(
         <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-width="120px">
             <el-form-item label="公司名称" prop="company">
                 <el-input v-model="ruleForm.company" type="textarea" :rows="5"></el-input>
+                <span class="form-item-tips">调用天眼查时尽量减少目标数与层级</span>
             </el-form-item>
             <el-form-item label="对外投资比例">
                 <el-input-number v-model="ruleForm.invest" :min="1" :max="100"
@@ -325,12 +334,16 @@ function extractAllChildren<T>(
                             风鸟</el-text>
                     </el-checkbox> -->
                     <el-checkbox value="tyc">
-                        <el-text><el-image src="/tyc.png" class="mr-5px" style="width: 16px;" />
-                            天眼查</el-text>
+                        <el-tooltip content="对外投资/公众号">
+                            <el-text><el-image src="/tyc.png" class="mr-5px" style="width: 16px;" />
+                                天眼查</el-text>
+                        </el-tooltip>
                     </el-checkbox>
                     <el-checkbox value="miit" disabled>
-                        <el-text><el-image src="/icp.ico" class="mr-5px" style="width: 16px;" />
-                            工信部</el-text>
+                        <el-tooltip content="小程序/App/域名, 单独使用时需要输入完整公司名称">
+                            <el-text><el-image src="/icp.ico" class="mr-5px" style="width: 16px;" />
+                                工信部</el-text>
+                        </el-tooltip>
                     </el-checkbox>
                 </el-checkbox-group>
             </el-form-item>
