@@ -1,10 +1,10 @@
 <template>
     <CustomTabs>
-        <el-tabs v-model="activeTab" type="card" class="demo-tabs">
+        <el-tabs v-model="activeTab" type="card">
             <el-tab-pane name="dashborad">
                 <template #label>
                     <el-text class="position-center">
-                        <el-icon style="margin-right: 2px;">
+                        <el-icon class="mr-5px">
                             <DataAnalysis />
                         </el-icon>
                         连接池

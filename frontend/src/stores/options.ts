@@ -591,20 +591,35 @@ export const dnsServerOptions = [
 
 export const subdomainRunnerOptions = [
     {
-        label: "枚举模式",
-        value: 0,
-        tips: "不推荐使用"
+        label: "子域名收集",
+        options: [
+            {
+                label: "枚举模式",
+                value: 0,
+                tips: "不推荐使用"
+            },
+            {
+                label: "查询模式",
+                value: 1,
+                tips: "通过API查询"
+            },
+            {
+                label: "混合模式",
+                value: 2,
+                tips: "先查询后枚举"
+            },
+        ]
     },
     {
-        label: "查询模式",
-        value: 1,
-        tips: "通过API查询"
-    },
-    {
-        label: "混合模式",
-        value: 2,
-        tips: "先查询后枚举"
-    },
+        label: "CDN/WAF",
+        options: [
+            {
+                label: "CDN/WAF检测",
+                value: 3,
+                tips: "通过本地DNS查询"
+            }
+        ]
+    }
 ]
 
 export const uncoverSyntaxOptions = [

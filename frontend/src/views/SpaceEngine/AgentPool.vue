@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ArrowUpBold, ArrowDownBold, Connection, Delete, DocumentCopy } from '@element-plus/icons-vue';
+import { ArrowUpBold, ArrowDownBold, Connection, Delete, DocumentCopy, Share } from '@element-plus/icons-vue';
 import { ExportTXT } from '@/export'
 import { reactive, onMounted, ref } from 'vue';
 import { Socks5Conn } from 'wailsjs/go/services/App'
 import { DeleteAgentPool, InsertAgentPool, SelectAllAgentPool, DeleteAllAgentPool } from 'wailsjs/go/services/Database';
 import { ElMessage } from 'element-plus';
-import exportIcon from '@/assets/icon/doucment-export.svg';
 import CustomTextarea from '@/components/CustomTextarea.vue';
 import Note from '@/components/Note.vue';
 import { AgentPoolOptions } from '@/stores/options';
@@ -208,7 +207,7 @@ const fofaSearch = 'protocol=="socks5" && country="CN" && banner="Method:No Auth
                 </el-segmented>
                 <el-space v-show="form.activeNames == 1">
                     <el-button :icon="DocumentCopy" plain type="primary" @click="Copy(form.pool.join('\n'))">复制全部</el-button>
-                    <el-button :icon="exportIcon" plain type="primary" @click="exportHosts">导出目标</el-button>
+                    <el-button :icon="Share" plain type="primary" @click="exportHosts">导出目标</el-button>
                     <el-button :icon="Delete" plain type="danger" @click="deleteAllPool">删除全部</el-button>
                 </el-space>
             </div>

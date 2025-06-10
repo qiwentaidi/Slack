@@ -12,7 +12,7 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/httputil"
 	"strings"
 	"sync"
 
@@ -21,6 +21,8 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+const maxResponseSize = 500 * 1024 // 500KB
 
 var (
 	Filter = []string{".vue", ".jpeg", ".png", ".jpg", ".gif", ".css", ".svg", ".scss", ".eot", ".ttf", ".woff", ".js", ".ts", ".tsx", ".ico", ".less"}
@@ -134,7 +136,7 @@ func ExtractFromSourceMapDir(ctx context.Context, dirPath string) *structs.FindS
 	return fsResult
 }
 
-func Scan(ctx context.Context, target, prefixJsURL string, jsLinks []string) structs.FindSomething {
+func Scan(ctx context.Context, target, prefixJsURL string, jsLinks, blackDomainList []string) structs.FindSomething {
 	var fs = structs.FindSomething{}
 	var mu sync.Mutex // 用于保护 fs 的并发写操作
 	var wg sync.WaitGroup
@@ -148,6 +150,12 @@ func Scan(ctx context.Context, target, prefixJsURL string, jsLinks []string) str
 		defer wg.Done()
 		jslink := data.(string)
 		newURL := formatURL(target, jslink)
+		for _, blackDomain := range blackDomainList {
+			if strings.Contains(newURL, blackDomain) {
+				// 黑名单域名，跳过
+				return
+			}
+		}
 		// 判断是否已访问
 		if _, loaded := visited.LoadOrStore(newURL, struct{}{}); loaded {
 			// 已处理过，跳过
@@ -209,11 +217,11 @@ func Scan(ctx context.Context, target, prefixJsURL string, jsLinks []string) str
 
 func formatURL(url string, jslink string) string {
 	var newURL string
-	host, _ := util.GetBasePath(url)
+	host, _ := httputil.GetBasePath(url)
 	if strings.HasPrefix(jslink, "http") {
 		newURL = jslink
 	} else {
-		newURL = strings.TrimRight(host, "/") + "/" + strings.TrimLeft(jslink, "/")
+		newURL = host + strings.TrimLeft(jslink, "/")
 	}
 	return newURL
 }
@@ -330,17 +338,20 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[!] %s: %v", fullURL, err))
 			return
 		}
-
+		body := ""
 		// 如果是 POST 方法，动态探测 Content-Type
 		if method == http.MethodPost {
 			if contentType := detectContentType(fullURL, apiHeaders); contentType != "" {
 				apiHeaders["Content-Type"] = contentType
+				if contentType == "application/json" {
+					body = "{}"
+				}
 			}
 		}
 
 		// 补全参数
-		param := completeParameters(method, fullURL, url.Values{})
-		if param != nil && param.Encode() != "" {
+		param := completeParameters(ctx, method, fullURL, url.Values{})
+		if param.Encode() != "" {
 			runtime.EventsEmit(ctx, "jsfindlog", fmt.Sprintf("[+] %s 已补全参数: %s", fullURL, param.Encode()))
 		}
 
@@ -350,6 +361,7 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 			Method:  method,
 			Headers: apiHeaders,
 			Params:  param,
+			Body:    body,
 		}
 
 		// 检查高风险路由，直接跳过测试
@@ -379,7 +391,7 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 			Method:   method,
 			Request:  buildRawRequest(apiReq),
 			Source:   fullURL,
-			Response: filterResponseLength(body),
+			Response: httputil.LimitResponse(body, maxResponseSize, "Response too large, please manually open the link to view."),
 			Length:   len(body),
 		})
 		// 检测越权
@@ -401,7 +413,7 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 				Method:   method,
 				Request:  buildRawRequest(lowPrivilegeReq),
 				Source:   fullURL,
-				Response: filterResponseLength(lowPrivBody),
+				Response: httputil.LimitResponse(lowPrivBody, maxResponseSize, "Response too large, please manually open the link to view."),
 				Length:   len(lowPrivBody),
 			})
 		}
@@ -415,15 +427,6 @@ func AnalyzeAPI(ctx context.Context, o structs.JSFindOptions) {
 	}
 
 	wg.Wait()
-}
-
-// 过滤响应包长度大小, 过大替换成 Response too large, please manually open the link to view.
-// 可以减少前段缓存文本的消耗
-func filterResponseLength(body string) string {
-	if len(body) > 500*1024 {
-		return "Response too large, please manually open the link to view."
-	}
-	return body
 }
 
 func buildRawRequest(req APIRequest) string {
@@ -471,6 +474,9 @@ func buildRawRequest(req APIRequest) string {
 		// 如果是非 GET 请求，参数放到请求体中
 		sb.WriteString(req.Params.Encode())
 	}
-
+	if req.Body != "" {
+		// 如果请求体不为空，则直接写入
+		sb.WriteString(req.Body)
+	}
 	return sb.String()
 }

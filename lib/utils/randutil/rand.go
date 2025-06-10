@@ -1,4 +1,4 @@
-package util
+package randutil
 
 import (
 	"bytes"
@@ -128,8 +128,8 @@ func IntN(max int) (int, error) {
 	return int(nBig.Int64()), nil
 }
 
-// sleep start - start + 1
+// SleepRandTime returns a random duration between start and start+3 seconds (e.g. 2–5s)
 func SleepRandTime(start float64) time.Duration {
-	randomDelay := start + math.Round(rand.Float64()*10)/10 // 生成2到3秒之间的随机延时，保留1位小数
-	return time.Duration(randomDelay) * time.Second
+	randomDelay := start + math.Round(rand.Float64()*30)/10 // 生成 start 到 start+3 之间的随机数（保留1位小数）
+	return time.Duration(randomDelay * float64(time.Second))
 }

@@ -106,6 +106,15 @@ export async function ReadLine(filepath: string) :Promise<string[]> {
     return Array.from(result.split("\n"));
 }
 
+export async function ReadLineWithoutNotify(filepath: string) :Promise<string[]> {
+    let file = await ReadFile(filepath);
+    if (file.Error) {
+        return [];
+    }
+    const result = file.Content!.replace(/\r\n/g, "\n"); // 避免windows unix系统差异
+    return Array.from(result.split("\n"));
+}
+
 const defaultAliveURL = "https://www.baidu.com";
 export async function TestProxyWithNotify() {
     if (!global.proxy.enabled) {

@@ -8,7 +8,6 @@ export default {
         'pocdetail': 'Poc Detail',
         'asset_collection': 'Asset Collection',
         'asset_from_company': 'Asset From CompanyName',
-        'subdomain_brute_force': 'Subdomain Collection',
         'search_domain_info': 'Search Domain Info',
         'space_engine': 'Asset Mapping',
         'hunter': 'Hunter',

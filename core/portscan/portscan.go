@@ -6,7 +6,6 @@ import (
 	"net"
 	"slack-wails/core/webscan"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/gologger"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/structs"
 	"strings"
@@ -23,14 +22,19 @@ func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Addre
 	single := make(chan struct{})
 	retChan := make(chan *structs.InfoResult)
 	var wg sync.WaitGroup
-	openPorts := make(map[string]bool) // 记录开放的端口
+	// openPorts := make(map[string]bool) // 记录开放的端口
 	go func() {
 		for pr := range retChan {
 			runtime.EventsEmit(ctx, "webFingerScan", pr)
 		}
 		close(single)
 	}()
-	// port scan func
+	var (
+		portCount     = make(map[string]int)
+		servicePorts  = make(map[string][]int)
+		openPortMutex sync.Mutex
+	)
+
 	portScan := func(add Address) {
 		defer wg.Done()
 		defer func() {
@@ -41,20 +45,30 @@ func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Addre
 			return
 		}
 		pr := Connect(ctx, taskId, add.IP, add.Port, timeout, proxy)
-		// atomic.AddInt32(&id, 1)
-		// runtime.EventsEmit(ctx, "progressID", id)
 		if pr == nil {
 			return
 		}
-		// 检查1-10端口的开放情况
-		if pr.Port >= 1 && pr.Port <= 20 {
-			openPorts[pr.Host] = true // 记录该IP有开放端口
-			gologger.IntervalError(ctx, fmt.Sprintf("[portscan] %s 疑似cdn地址，会对未识别到服务的端口进行过滤", pr.Host))
-		} else if openPorts[pr.Host] && pr.Scheme == "" {
-			// 如果该IP在1-10端口有开放，后续端口必须识别到服务
-			return // 如果没有识别到服务，则不返回
+
+		ip := pr.Host
+		port := pr.Port
+		scheme := pr.Scheme
+
+		openPortMutex.Lock()
+		portCount[ip]++
+		if scheme != "unknown" {
+			servicePorts[ip] = append(servicePorts[ip], port)
+			openPortMutex.Unlock()
+			retChan <- pr
+		} else {
+			totalOpen := portCount[ip]
+			openPortMutex.Unlock()
+			// 超过30个unknown服务直接忽略不
+			if totalOpen > 30 {
+				// gologger.Debug(ctx, fmt.Sprintf("[FILTER] %s:%d 忽略无服务端口（疑似全端口开放）", ip, port))
+				return
+			}
+			retChan <- pr
 		}
-		retChan <- pr
 	}
 	threadPool, _ := ants.NewPoolWithFunc(workers, func(ipaddr interface{}) {
 		ipa := ipaddr.(Address)
@@ -87,16 +101,18 @@ func Connect(ctx context.Context, taskId, ip string, port, timeout int, proxy cl
 		return nil
 	}
 	var tcpfinger []string
-	// 默认协议设为 unknow
-	scheme := "unknow"
+	var raw string // 添加一个默认值
+	// 默认协议设为 unknown
+	scheme := "unknown"
 	if response != nil && response.FingerPrint.Service != "" {
 		scheme = response.FingerPrint.Service
+		raw = response.Raw
 	}
 	tcpinfo := &webscan.WebInfo{
 		Protocol: scheme,
-		Banner:   strings.ToLower(response.Raw),
+		Banner:   strings.ToLower(raw),
 	}
-	if scheme == "http" || scheme == "https" {
+	if scheme != "http" && scheme != "https" {
 		tcpfinger = webscan.Scan(ctx, tcpinfo, webscan.FingerprintDB)
 	}
 	result := &structs.InfoResult{

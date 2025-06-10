@@ -9,7 +9,8 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
+	"slack-wails/lib/utils/httputil"
 	"strings"
 	"sync/atomic"
 
@@ -19,6 +20,9 @@ import (
 	syncutil "github.com/projectdiscovery/utils/sync"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+// nuclei 最大响应包大小
+var maxResponseSize = 1024 * 512
 
 func NewNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allOptions []structs.NucleiOption) {
 	count := len(allOptions)
@@ -188,7 +192,7 @@ func findTagsFile(inputTags, templateDirs []string) []string {
 	var tempFileList []string
 	for _, inputTag := range inputTags {
 		for pocName, pocTags := range WorkFlowDB {
-			if util.ArrayContains(inputTag, pocTags) {
+			if arrayutil.ArrayContains(inputTag, pocTags) {
 				tempFileList = append(tempFileList, pocName)
 			}
 		}
@@ -208,7 +212,7 @@ func findTagsFile(inputTags, templateDirs []string) []string {
 		return templateDirs
 	}
 
-	return util.RemoveDuplicates(fileList)
+	return arrayutil.RemoveDuplicates(fileList)
 }
 
 func finalTags(detectTags, customTags []string) []string {
@@ -237,11 +241,7 @@ func showRequest(event *output.ResultEvent) string {
 
 func showResponse(event *output.ResultEvent) string {
 	if event.Response != "" {
-		byteResponse := []byte(event.Response)
-		if len(byteResponse) > 1024*512 {
-			return string(byteResponse[:1024*512]) + " ..."
-		}
-		return event.Response
+		return httputil.LimitResponse(event.Response, maxResponseSize, "")
 	}
 	if event.Interaction != nil {
 		return event.Interaction.RawResponse

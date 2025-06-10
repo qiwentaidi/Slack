@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 	"slack-wails/lib/gologger"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type crackFunc func(context.Context, context.Context, string, string, []string, []string)
@@ -50,4 +52,5 @@ func Runner(ctx, ctrlCtx context.Context, taskId, host string, usernames, passwo
 	case "smb":
 		MS17010(ctx, taskId, u.Host)
 	}
+	runtime.EventsEmit(ctx, fmt.Sprintf("crackDone::%s", host))
 }

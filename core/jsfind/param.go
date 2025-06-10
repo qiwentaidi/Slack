@@ -1,10 +1,12 @@
 package jsfind
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"regexp"
 	"slack-wails/lib/clients"
+	"slack-wails/lib/gologger"
 	"strings"
 )
 
@@ -52,15 +54,15 @@ func generateDefaultValue(paramType string) interface{} {
 }
 
 // 参数补全
-func completeParameters(method, apiURL string, params url.Values) url.Values {
+func completeParameters(ctx context.Context, method, apiURL string, params url.Values) url.Values {
 	// 构造完整 URL
 	fullURL := fmt.Sprintf("%s?%s", apiURL, params.Encode())
 
 	// 发送请求
 	resp, err := clients.DoRequest(method, fullURL, nil, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
-		fmt.Println("请求失败:", err)
-		return nil
+		gologger.Error(ctx, err)
+		return url.Values{}
 	}
 
 	// 提取缺失参数
@@ -70,7 +72,7 @@ func completeParameters(method, apiURL string, params url.Values) url.Values {
 		defaultValue := generateDefaultValue(missingParam.Type)
 		params.Set(missingParam.Name, fmt.Sprint(defaultValue))
 		// 递归调用，直到所有参数补全
-		return completeParameters(method, apiURL, params)
+		return completeParameters(ctx, method, apiURL, params)
 	}
 	// fix in 2.0.9
 	// return nil

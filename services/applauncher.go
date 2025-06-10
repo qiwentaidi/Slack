@@ -16,10 +16,10 @@ import (
 	"slack-wails/core/webscan"
 	"slack-wails/lib/bridge"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/fileutil"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
+	"slack-wails/lib/utils/fileutil"
 	"strings"
 
 	"github.com/mat/besticon/v3/ico"
@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	configFile = util.HomeDir() + "/slack/navogation.json"
+	configFile = utils.HomeDir() + "/slack/navogation.json"
 	navigation []structs.Navigation
 )
 
@@ -172,7 +172,10 @@ func (f *File) RunApp(item structs.Children) {
 
 		switch rt.GOOS {
 		case "windows":
-			bridge.ExecuteScriptCommand(command)
+			if err := bridge.ExecuteScriptCommand(command); err != nil {
+				gologger.Debug(f.ctx, "[AppLauncher] 执行脚本失败 "+err.Error())
+				return
+			}
 			return
 		case "darwin":
 			// macOS: 使用 AppleScript 来执行命令

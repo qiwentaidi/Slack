@@ -1,317 +1,385 @@
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from "vue";
-import { ChromeFilled, ArrowUpBold, ArrowDownBold, DocumentCopy } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus'
-import { WechatOfficial, SubsidiariesAndDomains, TycCheckLogin, Callgologger } from "wailsjs/go/services/App";
-import { ExportAssetToXlsx } from '@/export'
-import usePagination from "@/usePagination";
-import { Copy, getRootDomain, transformArrayFields } from "@/util";
-import exportIcon from '@/assets/icon/doucment-export.svg'
-import throttle from 'lodash/throttle';
+import { computed, onMounted, reactive, ref } from "vue";
+import { Plus, Share, ChromeFilled } from '@element-plus/icons-vue';
+import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { FetchCompanyInfo, GoFetch, ResumeAfterHumanCheck } from "wailsjs/go/services/App";
 import CustomTabs from "@/components/CustomTabs.vue";
 import wechatIcon from "@/assets/icon/wechatOfficialAccount.svg"
 import { debounce } from "lodash"
-import { BrowserOpenURL } from "wailsjs/runtime/runtime";
+import { BrowserOpenURL, EventsOn } from "wailsjs/runtime/runtime";
 import { structs } from "wailsjs/go/models";
+import { getProxy } from "@/util";
 
-const throttleUpdate = throttle(() => {
-    pc.ctrl.watchResultChange(pc.table);
-}, 1000);
+const companiesInfo = ref<structs.CompanyInfo[]>([])
 
-
-onMounted(() => {
+onMounted(async () => {
     const storedToken = localStorage.getItem('tyc-token');
     if (storedToken) {
-        from.token = storedToken;
+        ruleForm.tycToken = storedToken;
     }
+    const storedId = localStorage.getItem('tyc-id');
+    if (storedId) {
+        ruleForm.tycId = storedId;
+    }
+    const storedMiit = localStorage.getItem('miit-api');
+    if (storedMiit) {
+        ruleForm.miitApi = storedMiit;
+    }
+    EventsOn("tyc-human-check", (msg: string) => {
+        from.humanCheckDialogVisible = true
+        from.humanCheckMessage = msg
+    })
 })
+
+const handleHumanCheckConfirmed = () => {
+  from.humanCheckDialogVisible = false
+  ResumeAfterHumanCheck() // 调用后端接口，释放阻塞
+}
+
+const storageConfig = debounce(() => {
+    // 2秒后将数据存储到localStorage
+    localStorage.setItem('tyc-token', ruleForm.tycToken);
+    localStorage.setItem('tyc-id', ruleForm.tycId);
+    localStorage.setItem('miit-api', ruleForm.miitApi);
+}, 2000);
+
 
 const from = reactive({
     newTask: false,
-    wechat: true,
-    domain: false,
-    company: '',
-    defaultHold: 100,
-    subcompanyLevel: 1,
-    token: '',
+    active: 1,
     activeName: 'subcompany',
     runningStatus: false,
-    machineStr: '',
-    errorCompanies: [] as string[]
+    humanCheckDialogVisible: false,
+    humanCheckMessage: "",
 })
 
-let pc = usePagination<structs.CompanyInfo>(20) // paginationCompany
-let pw = usePagination<structs.WechatReulst>(20) // paginationWehcat
+interface RuleForm {
+    company: string;
+    invest: number;
+    dataSource: string[];
+    tycToken: string;
+    tycId: string;
+    subcompanyLevel: number;
+    domain: boolean;
+    miitApi: string;
+}
 
+const ruleFormRef = ref<FormInstance>()
+
+const ruleForm = reactive<RuleForm>({
+    company: '',
+    invest: 100,
+    dataSource: ['tyc', 'miit'],
+    tycToken: '',
+    tycId: '',
+    subcompanyLevel: 1,
+    domain: false,
+    miitApi: 'http://127.0.0.1:16181/',
+})
+
+const rules = reactive<FormRules<RuleForm>>({
+    company: [
+        { required: true, message: '请输入公司名称, 多个公司换行处理', trigger: 'blur' },
+    ],
+    tycToken: [
+        {
+            required: true,
+            validator: (_, value, callback) => {
+                if (ruleForm.dataSource.includes("tyc") && !value.trim()) {
+                    callback(new Error('请填写登录天眼查后请求头中的X-Auth-Token字段'));
+                } else {
+                    callback();
+                }
+            },
+            trigger: 'blur',
+        },
+    ],
+    tycId: [
+        {
+            required: true,
+            validator: (_, value, callback) => {
+                if (ruleForm.dataSource.includes("tyc") && !value.trim()) {
+                    callback(new Error('请填写登录天眼查后请求头中的X-TYCID字段'));
+                } else {
+                    callback();
+                }
+            },
+            trigger: 'blur',
+        },
+    ],
+    miitApi: [
+        { required: true, message: '接口地址不能为空', trigger: 'blur' }
+    ]
+})
 async function Collect() {
-    if (from.company == "") {
-        ElMessage.warning('查询目标不能为空')
+    let response = await GoFetch("GET", ruleForm.miitApi, "", {}, 10, getProxy())
+    if (response.Error) {
+        ElMessage.warning("请求MIIT接口失败! 请根据ICP_Query项目搭建自身接口")
         return
     }
-    if (from.token == "") {
-        ElMessage.warning('天眼查Token为空，大概率会影响爬取结果，请先填写Token信息')
-        return
-    } else {
-        from.token = from.token.replace(/[\r\n\s]/g, '')
-        let isLogin = await TycCheckLogin(from.token)
-        if (!isLogin) {
-            ElMessage.warning('天眼查Token已失效')
+    try {
+        let jsonResult = JSON.parse(response.Body)
+        if (jsonResult.msg != "查询请访问http://0.0.0.0:16181/query/{name}") {
+            ElMessage.warning("请求接口结果异常!")
             return
         }
-    }
-
-    if (from.domain && from.machineStr == "") {
-        ElMessage.warning('MachineStr为空, 无法进行子域名查询, 请先配置该内容')
+    } catch (error) {
+        ElMessage.warning(error)
         return
-    } else {
-        from.machineStr = from.machineStr.replace(/[\r\n\s]/g, '')
     }
-
+    ruleForm.tycToken = ruleForm.tycToken.replace(/[\r\n\s]/g, '')
+    ruleForm.tycId = ruleForm.tycId.replace(/[\r\n\s]/g, '')
     from.newTask = false
-    from.runningStatus = true
-    showForm.value = false
-    const lines = from.company.split(/[(\r\n)\r\n]+/);
-    let companys = lines.map(line => line.trim().replace(/\s+/g, ''));
-    pc.initTable()
-    pw.initTable()
-    from.errorCompanies = []
-    let allCompany = [] as string[]
-    // 1. 收集子公司信息
-    for (let i = 0; i < companys.length; i++) {
-        const companyName = companys[i];
-        Callgologger("info", `正在收集${companyName}的子公司信息`);
+    // from.runningStatus = true
 
-        if (typeof companyName === 'string') {
-            const result = await SubsidiariesAndDomains(companyName, from.subcompanyLevel, from.defaultHold, from.domain, from.machineStr);
+    let dataSource: structs.DataSource = {
+        Tianyancha: {} as structs.Tianyancha,
+        Miit: {} as structs.Miit,
+        convertValues: () => { }
+    };
 
-            // 查询失败了，可能是封号/人机校验
-            if (!result) {
-                from.errorCompanies.push(companyName);
-
-                // 将剩余未查询的公司全部加入 errorCompanies
-                from.errorCompanies.push(...companys.slice(i + 1));
-
-                Callgologger("error", "触发人机校验或封号，终止任务");
-                from.runningStatus = false;
-                showForm.value = true;
-                return;
-            }
-
-            if (result.length > 0) {
-                pc.table.result.push(...result);
-                throttleUpdate();
-                for (const item of result) {
-                    allCompany.push(item.CompanyName!);
-                }
-            }
-        }
+    dataSource.Tianyancha = {
+        Enable: ruleForm.dataSource.includes('tyc'),
+        Token: ruleForm.tycToken,
+        Id: ruleForm.tycId
     }
 
-    Callgologger("info", "已完成子公司查询任务")
+    dataSource.Miit.API = ruleForm.miitApi
+    let result = await FetchCompanyInfo(ruleForm.company, ruleForm.invest, dataSource, ruleForm.subcompanyLevel)
+    companiesInfo.value.push(result)
+    console.log(result)
+    // from.runningStatus = false
+}
 
-    // 3. 收集微信公众号信息
-    if (from.wechat) {
-        for (const companyName of allCompany) {
-            if (companyName == "") return
-            Callgologger("info", `正在收集${companyName}的微信公众号资产`)
-            if (typeof companyName === 'string') {
-                const result = await WechatOfficial(companyName);
-                if (Array.isArray(result) && result.length > 0) {
-                    pw.table.result.push(...result);
-                    pw.ctrl.watchResultChange(pw.table)
+const detailVisible = ref(false)
+
+const allOfficialAccounts = computed(() =>
+    extractAllChildren(companiesInfo.value, 'OfficialAccounts')
+);
+
+const allApps = computed(() =>
+    extractAllChildren(companiesInfo.value, 'Apps')
+);
+
+const allApplets = computed(() =>
+    extractAllChildren(companiesInfo.value, 'Applets')
+);
+// 给每个子项加上所属公司名
+function extractAllChildren<T>(
+    companies: any[],
+    key: 'OfficialAccounts' | 'Apps' | 'Applets'
+): (T & { BelongCompany: string })[] {
+    const result: any[] = [];
+
+    const dfs = (list: any[]) => {
+        for (const company of list) {
+            const children = company[key];
+            if (Array.isArray(children)) {
+                for (const item of children) {
+                    result.push({
+                        ...item,
+                        BelongCompany: company.CompanyName,
+                    });
                 }
             }
+
+            if (Array.isArray(company.Subsidiaries)) {
+                dfs(company.Subsidiaries);
+            }
         }
-        Callgologger("info", "已完成微信公众查询任务")
-    }
+    };
 
-    // 4. 完成所有任务
-    from.runningStatus = false
-    showForm.value = true
-}
-
-const debouncedInput = debounce(() => {
-    // 2秒后将数据存储到localStorage
-    localStorage.setItem('tyc-token', from.token);
-}, 2000);
-
-function copyAllDomains() {
-    const allDomains = pc.table.result
-        .flatMap(item => item.Domains)
-        .map(getRootDomain);
-    Copy(allDomains.join('\n'));
-}
-
-const showForm = ref(true);
-
-function toggleFormVisibility() {
-    showForm.value = !showForm.value;
+    dfs(companies);
+    return result;
 }
 </script>
 
 
 <template>
-    <el-divider>
-        <el-button round :icon="showForm ? ArrowUpBold : ArrowDownBold" @click="toggleFormVisibility"
-            v-if="!from.runningStatus">
-            {{ showForm ? '隐藏参数' : '展开参数' }}
-        </el-button>
-        <el-button round loading v-else>正在运行</el-button>
-    </el-divider>
-    <el-collapse-transition>
-        <div class="flex" v-show="showForm">
-            <el-form :model="from" label-width="auto" class="w-1/2">
-                <el-form-item label="公司名称:">
-                    <el-input v-model="from.company" type="textarea" :rows="5"></el-input>
-                </el-form-item>
-                <el-form-item label="股权比例:">
-                    <el-input-number v-model="from.defaultHold" :min="1" :max="100"></el-input-number>
-                </el-form-item>
-                <el-form-item label="子公司层级:">
-                    <el-input-number v-model="from.subcompanyLevel" :min="1" :max="3"></el-input-number>
-                </el-form-item>
-                <el-form-item label="其他查询内容:">
-                    <el-checkbox v-model="from.wechat" label="公众号" />
-                    <el-checkbox v-model="from.domain" label="域名查询" />
-                </el-form-item>
-                <el-form-item label="Token:">
-                    <el-input v-model="from.token" type="textarea" :rows="4" @input="debouncedInput"></el-input>
-                    <span class="form-item-tips">填写TYC网页登录后Cookie头中auth_token字段</span>
-                </el-form-item>
-                <el-form-item label="MachineStr:">
-                    <el-input v-model="from.machineStr">
-                        <template #suffix>
-                            <el-button :icon="ChromeFilled" link @click="BrowserOpenURL('https://www.beianx.cn/')" />
-                        </template>
-                    </el-input>
-                    <span class="form-item-tips">
-                        填写www.beianx.cn Cookie头中machine_str字段的值, 如果没有的话先进行一次查询
-                    </span>
-                </el-form-item>
-                <el-form-item class="align-right">
-                    <el-button type="primary" @click="Collect">开始任务</el-button>
-                </el-form-item>
-            </el-form>
-        </div>
-    </el-collapse-transition>
-    <CustomTabs>
-        <el-tabs v-model="from.activeName" type="border-card">
-            <el-tab-pane label="控股企业" name="subcompany">
-                <el-table :data="pc.table.pageContent" style="height: calc(100vh - 175px);">
-                    <el-table-column type="index" label="#" width="60px" />
-                    <el-table-column prop="CompanyName" label="公司名称" :show-overflow-tooltip="true" />
-                    <el-table-column prop="Holding" width="100px" label="股权比例" />
-                    <el-table-column prop="Investment" width="160px" label="投资数额" />
-                    <el-table-column prop="RegStatus" width="100px" label="企业状态" align="center">
+    <CustomTabs v-show="!detailVisible">
+        <el-tabs v-model="from.activeName" type="card">
+            <el-tab-pane label="对外投资" name="subcompany">
+                <el-table :data="companiesInfo" row-key="CompanyName" :highlight-current-row="true" border
+                    :tree-props="{ children: 'Subsidiaries' }">
+                    <el-table-column prop="CompanyName" label="公司名称">
                         <template #default="scope">
-                            <el-tag v-if="scope.row.RegStatus === '存续' || scope.row.RegStatus === 'ok'"
-                                type="success">{{ scope.row.RegStatus
-                                }}</el-tag>
-                            <el-tag v-else type="danger">{{ scope.row.RegStatus
-                                }}</el-tag>
+                            <div class="company-cell">
+                                <div v-if="scope.row.Trademark == '<nil>'"></div>
+                                <el-popover placement="right" :width="180" v-else>
+                                    <template #reference>
+                                        <el-image :src="scope.row.Trademark" class="avatar mr-5px">
+                                            <template #error>
+                                                <div></div>
+                                            </template>
+                                        </el-image>
+                                    </template>
+                                    <template #default><el-image :src="scope.row.Trademark" class="qr" /></template>
+                                </el-popover>
+                                <span>{{ scope.row.CompanyName }}</span>
+                            </div>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="Domains">
-                        <template #header>
-                            <span class="position-center">域名
-                                <el-divider direction="vertical" />
-                                <el-button size="small" text bg @click="copyAllDomains()">复制全部根域名</el-button>
-                            </span>
-                        </template>
+                    <el-table-column prop="Investment" label="投资比例" width="100px" />
+                    <el-table-column prop="Amount" label="投资金额" width="160px" />
+                    <el-table-column prop="RegStatus" label="状态" width="100px">
                         <template #default="scope">
-                            <div class="finger-container" v-if="scope.row.Domains.length > 0">
+                            <el-tag
+                                :type="scope.row.RegStatus === '存续' || scope.row.RegStatus === 'ok' ? 'success' : 'danger'">
+                                {{ scope.row.RegStatus }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="域名" align="center">
+                        <template #default="scope">
+                            <div class="finger-container" v-if="scope.row.Domains != null && scope.row.Domains.length > 0">
                                 <el-tag v-for="domain in scope.row.Domains" :key="domain">{{ domain
                                     }}</el-tag>
                             </div>
                         </template>
                     </el-table-column>
-                    <template #empty>
-                        <el-empty />
-                    </template>
                 </el-table>
-                <div class="flex-between mt-5px">
-                    <div></div>
-                    <el-pagination size="small" background @size-change="pc.ctrl.handleSizeChange"
-                        @current-change="pc.ctrl.handleCurrentChange" :pager-count="5"
-                        :current-page="pc.table.currentPage" :page-sizes="[20, 50, 100]" :page-size="pc.table.pageSize"
-                        layout="total, sizes, prev, pager, next" :total="pc.table.result.length">
-                    </el-pagination>
-                </div>
             </el-tab-pane>
             <el-tab-pane label="公众号" name="wechat">
-                <el-table :data="pw.table.pageContent" style="height: calc(100vh - 175px);"
-                    :cell-style="{ height: '23px' }">
+                <el-table :data="allOfficialAccounts" border>
                     <el-table-column type="index" label="#" width="60px" />
-                    <el-table-column prop="CompanyName" label="公司名称" width="180px" />
-                    <el-table-column prop="WechatName" label="公众号名称">
+                    <el-table-column prop="BelongCompany" label="所属单位" />
+                    <el-table-column prop="Name" label="名称">
                         <template #default="scope">
                             <div class="flex">
-                                <img :src="scope.row.Logo" style="width: 25px; height: 25px; margin-right: 10px;">
-                                <span>{{ scope.row.WechatName }}</span>
+                                <img :src="scope.row.Logo" class="avatar mr-5px" />
+                                <span>{{ scope.row.Name }}</span>
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="WechatNums" label="微信号" :show-overflow-tooltip="true" />
-                    <el-table-column prop="Qrcode" width="80px" label="二维码" align="center">
+                    <el-table-column prop="Numbers" label="微信号" />
+                    <el-table-column label="二维码" align="center" width="100px">
                         <template #default="scope">
-                            <el-popover :width="180" placement="left">
+                            <el-popover placement="left" :width="180">
                                 <template #reference>
                                     <wechatIcon />
                                 </template>
-                                <template #default>
-                                    <img :src="scope.row.Qrcode" style="width: 150px; height: 150px">
-                                </template>
+                                <template #default><img :src="scope.row.Qrcode" class="qr" /></template>
                             </el-popover>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="Introduction" label="简介" />
-                    <template #empty>
-                        <el-empty />
-                    </template>
+                    <el-table-column prop="Introduction" label="简介" show-overflow-tooltip />
                 </el-table>
-                <div class="flex-between mr-5px">
-                    <div></div>
-                    <el-pagination size="small" background @size-change="pw.ctrl.handleSizeChange"
-                        @current-change="pw.ctrl.handleCurrentChange" :pager-count="5"
-                        :current-page="pw.table.currentPage" :page-sizes="[20, 50, 100]" :page-size="pw.table.pageSize"
-                        layout="total, sizes, prev, pager, next" :total="pw.table.result.length">
-                    </el-pagination>
-                </div>
             </el-tab-pane>
+
+            <el-tab-pane label="小程序" name="applet">
+                <el-table :data="allApplets" border>
+                    <el-table-column type="index" label="#" width="60px" />
+                    <el-table-column prop="BelongCompany" label="所属单位" />
+                    <el-table-column prop="serviceName" label="小程序名称" />
+                    <el-table-column prop="serviceLicence" label="备案号" />
+                    <el-table-column prop="updateRecordTime" label="更新日期" />
+                </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="APP" name="app">
+                <el-table :data="allApps" border>
+                    <el-table-column type="index" label="#" width="60px" />
+                    <el-table-column prop="BelongCompany" label="所属单位" />
+                    <el-table-column prop="serviceName" label="APP名称" />
+                    <el-table-column prop="serviceLicence" label="备案号" />
+                    <!-- <el-table-column prop="iconUrl" label="图标">
+                        <template #default="scope"><img :src="scope.row.iconUrl" class="avatar" /></template>
+                    </el-table-column> -->
+                </el-table>
+            </el-tab-pane>
+
         </el-tabs>
         <template #ctrl>
-            <el-popover title="失败列表" :width="300" trigger="click">
-                <template #reference>
-                    <el-button>失败列表: {{ from.errorCompanies.length }}</el-button>
-                </template>
-                <el-scrollbar height="150px">
-                    <p v-for="u in from.errorCompanies" class="scrollbar-demo-item">
-                        {{ u }}</p>
-                </el-scrollbar>
-                <el-button :icon="DocumentCopy" @click="Copy(from.errorCompanies.join('\n'))"
-                    class="w-full">复制全部失败目标</el-button>
-            </el-popover>
-            <el-button :icon="exportIcon" class="mr-5px"
-                @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">
-                结果导出
-            </el-button>
+            <el-space style="margin-right: -5px;">
+                <el-button :icon="Share" @click="">结果导出</el-button>
+                <el-button :icon="Plus" @click="from.newTask = true">新建任务</el-button>
+            </el-space>
         </template>
     </CustomTabs>
+    <!-- 
+<el-button :icon="exportIcon" class="mr-5px"
+    @click="ExportAssetToXlsx(transformArrayFields(pc.table.result), pw.table.result)">
+    结果导出
+</el-button> -->
 
+    <el-drawer v-model="from.newTask" title size="50%">
+        <template #header>
+            <span class="drawer-title">新建任务</span>
+        </template>
+        <el-form ref="ruleFormRef" :model="ruleForm" :rules="rules" label-width="120px">
+            <el-form-item label="公司名称" prop="company">
+                <el-input v-model="ruleForm.company" type="textarea" :rows="5"></el-input>
+            </el-form-item>
+            <el-form-item label="对外投资比例">
+                <el-input-number v-model="ruleForm.invest" :min="1" :max="100"
+                    controls-position="right"></el-input-number>
+            </el-form-item>
+            <el-form-item label="子公司层级:">
+                <el-input-number v-model="ruleForm.subcompanyLevel" :min="1" :max="2"
+                    controls-position="right"></el-input-number>
+            </el-form-item>
+            <el-form-item label="数据来源:">
+                <el-checkbox-group v-model="ruleForm.dataSource">
+                    <!-- <el-checkbox value="riskbird">
+                        <el-text><el-image src="/riskbird.ico" class="mr-5px" style="width: 16px;" />
+                            风鸟</el-text>
+                    </el-checkbox> -->
+                    <el-checkbox value="tyc">
+                        <el-text><el-image src="/tyc.png" class="mr-5px" style="width: 16px;" />
+                            天眼查</el-text>
+                    </el-checkbox>
+                    <el-checkbox value="miit" disabled>
+                        <el-text><el-image src="/icp.ico" class="mr-5px" style="width: 16px;" />
+                            工信部</el-text>
+                    </el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+            <el-form-item label="天眼查Token:" prop="tycToken" v-show="ruleForm.dataSource.includes('tyc')">
+                <el-input v-model="ruleForm.tycToken" type="textarea" :rows="4" @input="storageConfig"></el-input>
+            </el-form-item>
+            <el-form-item label="天眼查Id:" prop="tycId" v-show="ruleForm.dataSource.includes('tyc')">
+                <el-input v-model="ruleForm.tycId" @input="storageConfig"></el-input>
+            </el-form-item>
+            <el-form-item label="工信部API:" prop="miitApi">
+                <el-input v-model="ruleForm.miitApi" @input="storageConfig">
+                    <template #suffix>
+                        <el-button :icon="ChromeFilled" link
+                            @click="BrowserOpenURL('https://github.com/HG-ha/ICP_Query')" />
+                    </template>
+                </el-input>
+                <span class="form-item-tips">根据ICP_Query项目搭建自身接口</span>
+            </el-form-item>
+            <el-form-item class="align-right">
+                <el-button type="primary" @click="Collect">开始任务</el-button>
+            </el-form-item>
+        </el-form>
+    </el-drawer>
+    <el-dialog v-model="from.humanCheckDialogVisible" title="人机校验提醒" width="400px">
+        <p>{{ from.humanCheckMessage }}</p>
+        <p>人机校验次数请勿在短时间内重复多次, 大于3次时需要关闭程序防止账号封禁</p>
+        <template #footer>
+            <el-button type="primary" @click="handleHumanCheckConfirmed">我已完成验证</el-button>
+        </template>
+    </el-dialog>
 </template>
 
 <style scoped>
-.scrollbar-demo-item {
-    display: flex;
+.company-cell {
+    display: inline-flex;
+    /* 只占内容宽度 */
     align-items: center;
-    justify-content: center;
-    height: 50px;
-    margin-block: 10px;
-    text-align: center;
-    border-radius: 4px;
-    background: var(--el-color-primary-light-9);
-    color: var(--el-color-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* 垂直居中 */
+    vertical-align: middle;
+}
+
+.avatar {
+    width: 20px;
+    height: 20px;
+    /* border-radius: 50%; */
+}
+
+.qr {
+    width: 150px;
+    height: 150px;
 }
 </style>

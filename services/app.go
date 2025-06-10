@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/md5"
@@ -14,7 +15,8 @@ import (
 	"path/filepath"
 	"slack-wails/core/dirsearch"
 	"slack-wails/core/dumpall"
-	"slack-wails/core/info"
+	"slack-wails/core/info/icp"
+	"slack-wails/core/info/tianyancha"
 	"slack-wails/core/isic"
 	"slack-wails/core/jsfind"
 	"slack-wails/core/portscan"
@@ -24,9 +26,13 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/control"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/netutil"
+	"slack-wails/lib/gomessage"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
+	"slack-wails/lib/utils/arrayutil"
+	"slack-wails/lib/utils/fileutil"
+	"slack-wails/lib/utils/netutil"
+	"slack-wails/lib/utils/randutil"
 	"strconv"
 	"strings"
 	"sync"
@@ -49,7 +55,7 @@ type App struct {
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	home := util.HomeDir()
+	home := utils.HomeDir()
 	return &App{
 		webfingerFile:    home + "/slack/config/webfinger.yaml",
 		activefingerFile: home + "/slack/config/dir.yaml",
@@ -155,53 +161,11 @@ func (a *App) CyberChefLocalServer() {
 	})
 }
 
-func (a *App) ICPInfo(domain string) string {
-	name, icp, ip := info.SeoChinaz(a.ctx, domain)
-	return fmt.Sprintf("公司名称: %v\n备案号: %v\nIP: %v", name, icp, ip)
-}
-
-func (App) Ip138IpHistory(domain string) string {
-	return info.Ip138IpHistory(domain)
-}
-
-func (App) Ip138Subdomain(domain string) string {
-	return info.Ip138Subdomain(domain)
-}
-
-var cdndataLoader sync.Once
-
-func (a *App) CheckCdn(domain string) string {
-	ips, cnames, err := netutil.Resolution(domain, subdomain.DefaultDnsServers, 10)
-	if err != nil {
-		return fmt.Sprintf("域名: %v 解析失败,%v", domain, err)
-	}
-	if len(ips) == 1 && len(cnames) == 0 {
-		return fmt.Sprintf("域名: %v，解析到唯一IP %v，未解析到CNAME信息", domain, ips[0])
-	}
-	cdndataLoader.Do(func() {
-		subdomain.Cdndata = netutil.ReadCDNFile(a.ctx, a.cdnFile)
-	})
-	ipList := strings.Join(ips, " | ")
-	for _, cname := range cnames {
-		for name, cdns := range subdomain.Cdndata {
-			for _, cdn := range cdns {
-				if strings.Contains(cname, cdn) {
-					return fmt.Sprintf("域名: %v，识别到CDN域名，CNAME: %v CDN名称: %v 解析到IP为: %v", domain, cname, name, ipList)
-				}
-			}
-		}
-		if strings.Contains(cname, "cdn") {
-			return fmt.Sprintf("域名: %v，CNAME中含有关键字: cdn，该域名可能使用了CDN技术 CNAME: %v 解析到IP为: %v", domain, cname, ipList)
-		}
-	}
-	return fmt.Sprintf("域名: %v，未识别到CDN信息，解析到IP为: %v CNAME: %v", domain, ipList, strings.Join(cnames, ","))
-}
-
 var qqwryLoader sync.Once
 
 func (a *App) IpLocation(ip string) string {
 	qqwryLoader.Do(func() {
-		subdomain.InitQqwry(a.qqwryFile)
+		subdomain.InitQqwry(a.ctx, a.qqwryFile)
 	})
 	result, err := subdomain.Database.Find(ip)
 	if err != nil {
@@ -209,26 +173,32 @@ func (a *App) IpLocation(ip string) string {
 	}
 	return result.String()
 }
+
+var cdndataLoader sync.Once
+
 func (a *App) Subdomain(o structs.SubdomainOption) {
 	ctrlCtx, _ := control.GetScanContext(control.Subdomain) // 标识任务
 	qqwryLoader.Do(func() {
-		subdomain.InitQqwry(a.qqwryFile)
+		subdomain.InitQqwry(a.ctx, a.qqwryFile)
 	})
 	cdndataLoader.Do(func() {
 		subdomain.Cdndata = netutil.ReadCDNFile(a.ctx, a.cdnFile)
 	})
+	engine := subdomain.NewSubdomainEngine(a.ctx, o)
 	switch o.Mode {
 	case structs.EnumerationMode:
 		for _, domain := range o.Domains {
-			subdomain.MultiThreadResolution(a.ctx, ctrlCtx, domain, []string{}, "Enumeration", o)
+			engine.Runner(ctrlCtx, domain, []string{}, "Enumeration")
 		}
 	case structs.ApiMode:
-		subdomain.ApiPolymerization(a.ctx, ctrlCtx, o)
-	default:
-		subdomain.ApiPolymerization(a.ctx, ctrlCtx, o)
+		engine.ApiPolymerization(ctrlCtx)
+	case structs.MixedMode:
+		engine.ApiPolymerization(ctrlCtx)
 		for _, domain := range o.Domains {
-			subdomain.MultiThreadResolution(a.ctx, ctrlCtx, domain, []string{}, "Enumeration", o)
+			engine.Runner(ctrlCtx, domain, []string{}, "Enumeration")
 		}
+	default:
+		engine.Runner(ctrlCtx, "", []string{}, "")
 	}
 }
 
@@ -246,66 +216,241 @@ func (a *App) ExitScanner(scanType string) {
 	}
 }
 
-func (a *App) SubsidiariesAndDomains(query string, subLevel, ratio int, searchDomain bool, machine string) []structs.CompanyInfo {
-	tkm := info.CheckKeyMap(a.ctx, query)
-	time.Sleep(util.SleepRandTime(1))
-	result := info.SearchSubsidiary(a.ctx, tkm.CompanyName, tkm.CompanyId, ratio, false, searchDomain, machine)
-	if result == nil {
-		return nil
-	}
-	var secondCompanyNames []string
-	if subLevel >= 2 {
-		for _, r := range result {
-			if r.CompanyName == tkm.CompanyName { // 跳过本级单位查询
-				continue
+func (a *App) FetchCompanyInfo(companyName string, ratio int, ds *structs.DataSource, maxDepth int) structs.CompanyInfo {
+	var result structs.CompanyInfo
+	result.CompanyName = companyName
+	if ds.Tianyancha.Enable {
+		tyc := tianyancha.NewClient(a.ctx, ds.Tianyancha.Token, ds.Tianyancha.Token)
+		if tyc.CheckLogin() {
+			info, err := a.fetchCompanyRecursiveByTianyancha(tyc, companyName, ratio, 1, maxDepth)
+			if err != nil {
+				gologger.Error(a.ctx, fmt.Sprintf("[tianyancha] fetch company info error: %s", err.Error()))
 			}
-			secondCompanyNames = append(secondCompanyNames, r.CompanyName)
-			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain, machine)
-			result = append(result, secondResult...)
-			time.Sleep(util.SleepRandTime(2))
+			a.WriteCompanyInfoToJson(info)
+			result = info
+		} else {
+			gomessage.Warning(a.ctx, "tianyancha token is invalid")
+			gologger.Warning(a.ctx, "tianyancha token is invalid")
 		}
 	}
-	if subLevel == 3 {
-		for _, r := range result {
-			if util.ArrayContains(r.CompanyName, secondCompanyNames) { // 已经查询过的二级IP跳过
-				continue
+
+	if ds.Miit.API != "" {
+		ds.Miit.API = strings.TrimRight(ds.Miit.API, "/")
+		// 给主公司填充ICP信息
+		a.EnrichCompanyWithMiit(&result, ds.Miit.API)
+		time.Sleep(randutil.SleepRandTime(2))
+		// 给所有子公司递归填充
+		var enrichSubsidiaries func(subs []structs.CompanyInfo)
+		enrichSubsidiaries = func(subs []structs.CompanyInfo) {
+			for i := range subs {
+				a.EnrichCompanyWithMiit(&subs[i], ds.Miit.API)
+				if len(subs[i].Subsidiaries) > 0 {
+					enrichSubsidiaries(subs[i].Subsidiaries)
+				}
 			}
-			secondResult := info.SearchSubsidiary(a.ctx, r.CompanyName, r.CompanyId, ratio, true, searchDomain, machine)
-			result = append(result, secondResult...)
-			time.Sleep(util.SleepRandTime(1))
 		}
+		enrichSubsidiaries(result.Subsidiaries)
 	}
+	a.WriteCompanyInfoToJson(result)
 	return result
 }
 
-func (a *App) WechatOfficial(query string) []structs.WechatReulst {
-	var companyId string
-	for _, tkm := range info.TycKeyMap {
-		if tkm.CompanyName == query {
-			companyId = tkm.CompanyId
-			break
-		}
+func (a *App) EnrichCompanyWithMiit(company *structs.CompanyInfo, miitApi string) {
+	// 吊销或注销则跳过
+	if company.RegStatus == "吊销" || company.RegStatus == "注销" {
+		return
 	}
-	time.Sleep(time.Second)
-	return info.WeChatOfficialAccounts(a.ctx, query, companyId)
+	gologger.Info(a.ctx, fmt.Sprintf("[icp] 正在查询%s域名信息", company.CompanyName))
+	if webResp, err := icp.FetchWebInfo(a.ctx, miitApi, company.CompanyName); err == nil {
+		var domains []string
+		for _, data := range webResp.Params.List {
+			domains = append(domains, data.Domain)
+		}
+		company.Domains = domains
+	} else {
+		gologger.Warning(a.ctx, fmt.Sprintf("%s fetch web info error: %s", company.CompanyName, err))
+	}
+
+	time.Sleep(2 * time.Second)
+	gologger.Info(a.ctx, fmt.Sprintf("[icp] 正在查询%sApp信息", company.CompanyName))
+	if appResp, err := icp.FetchAppInfo(a.ctx, miitApi, company.CompanyName); err == nil {
+		company.Apps = appResp.Params.List
+	} else {
+		gologger.Warning(a.ctx, fmt.Sprintf("%s fetch app info error: %s", company.CompanyName, err))
+	}
+
+	time.Sleep(2 * time.Second)
+	gologger.Info(a.ctx, fmt.Sprintf("[icp] 正在查询%s小程序信息", company.CompanyName))
+	if appletResp, err := icp.FetchAppletInfo(a.ctx, miitApi, company.CompanyName); err == nil {
+		company.Applets = appletResp.Params.List
+	} else {
+		gologger.Warning(a.ctx, fmt.Sprintf("%s fetch applet info error: %s", company.CompanyName, err))
+	}
 }
 
-func (a *App) TycCheckLogin(token string) bool {
-	return info.CheckLogin(token)
+func (a *App) ResumeAfterHumanCheck() {
+	go func() {
+		tianyancha.HumanCheckChan <- struct{}{}
+	}()
+}
+
+// func (a *App) fetchCompanyRecursiveByRiskbird(rb *riskbird.RiskbirdClient, company string, ratio int, currentDepth, maxDepth int) (structs.CompanyInfo, error) {
+// 	var companyInfo structs.CompanyInfo
+
+// 	info, orderNo, err := rb.FetchBasicCompanyInfo(company)
+// 	if err != nil {
+// 		return companyInfo, err
+// 	}
+// 	companyInfo = info
+
+// 	// Step 2: 查询 App、小程序、公众号等
+// 	if apps, err := rb.FetchApp(orderNo); err == nil {
+// 		companyInfo.Apps = apps
+// 	}
+// 	time.Sleep(1 * time.Second)
+
+// 	if applets, err := rb.FetchApplet(orderNo); err == nil {
+// 		// applets 需要转换为 OfficialAccounts，如果你有对应函数可以调用，否则跳过
+// 		for _, ap := range applets {
+// 			companyInfo.OfficialAccounts = append(companyInfo.OfficialAccounts, structs.OfficialAccount{
+// 				Name: ap.Name, Logo: ap.Logo, Qrcode: fmt.Sprintf("%v", ap.Qrcode),
+// 			})
+// 		}
+// 	}
+// 	time.Sleep(1 * time.Second)
+
+// 	// Step 3: 查询子公司
+// 	subs, err := rb.FetchSubsidiary(orderNo)
+// 	if err == nil && currentDepth <= maxDepth {
+// 		for _, sub := range subs {
+// 			gq, _ := strconv.Atoi(strings.TrimSuffix(sub.FunderRatio, "%"))
+// 			if gq < ratio {
+// 				continue
+// 			}
+// 			child, err := a.fetchCompanyRecursiveByRiskbird(rb, sub.EntName, ratio, currentDepth+1, maxDepth)
+// 			if err != nil {
+// 				gologger.Error(a.ctx, fmt.Sprintf("[riskbird] %s fetch sub error: %s", sub.EntName, err.Error()))
+// 				continue
+// 			}
+// 			child.Investment = sub.FunderRatio
+// 			child.Amount = sub.RegCapFormat
+// 			child.RegStatus = sub.EntStatus
+// 			companyInfo.Subsidiaries = append(companyInfo.Subsidiaries, child)
+// 		}
+// 	}
+
+//		return companyInfo, nil
+//	}
+func (a *App) fetchCompanyRecursiveByTianyancha(tyc *tianyancha.TycClient, company string, ratio int, currentDepth, maxDepth int) (structs.CompanyInfo, error) {
+	var companyInfo structs.CompanyInfo
+
+	// Step 1: 获取公司基本信息
+	suggest, err := tyc.CheckKeyMap(company)
+	if err != nil {
+		return companyInfo, err
+	}
+	companyInfo.CompanyName = suggest.ComName
+	companyInfo.Investment = "母公司"
+	companyInfo.RegStatus = tyc.GetRegStatus(suggest.RegStatus)
+	companyInfo.Trademark = suggest.Logo
+
+	// Step 2: 非注销/吊销状态的公司需要获取公众号信息
+	if officialAccounts, err := tyc.FetchWeChatOfficialAccounts(suggest.ComName, suggest.GraphID); err == nil {
+		companyInfo.OfficialAccounts = officialAccounts
+	}
+	time.Sleep(randutil.SleepRandTime(2))
+
+	// Step 3: 获取子公司信息
+	subsidiaries, err := tyc.FetchSubsidiary(suggest.ComName, suggest.GraphID, ratio)
+	if err != nil {
+		return companyInfo, err
+	}
+
+	for _, subs := range subsidiaries {
+		child := structs.CompanyInfo{
+			CompanyName: subs.Name,
+			Investment:  subs.Percent,
+			Amount:      subs.Amount,
+			RegStatus:   subs.RegStatus,
+			Trademark:   fmt.Sprint(subs.Logo),
+		}
+		// 跳过已注销或吊销的子公司
+		if suggest.RegStatus != 1 && suggest.RegStatus != 2 && currentDepth < maxDepth {
+			for {
+				time.Sleep(2 * time.Second)
+				subInfo, err := a.fetchCompanyRecursiveByTianyancha(tyc, subs.Name, ratio, currentDepth+1, maxDepth)
+				if err != nil && strings.Contains(err.Error(), "账号存在风险请人机验证") {
+					// 通知前端进行人机验证
+					runtime.EventsEmit(a.ctx, "tyc-human-check", "天眼查出现人机校验，请手动处理")
+					gologger.DualLog(a.ctx, gologger.Level_DEBUG, "天眼查出现人机校验，请手动处理")
+					<-tianyancha.HumanCheckChan
+					gologger.DualLog(a.ctx, gologger.Level_DEBUG, "收到用户确认，继续查询")
+					continue // 重试
+				}
+				if err == nil {
+					child.OfficialAccounts = subInfo.OfficialAccounts
+					child.Subsidiaries = subInfo.Subsidiaries
+				}
+				break
+			}
+		}
+
+		// 当前深度已达最大，或者递归处理完都要追加子公司
+		companyInfo.Subsidiaries = append(companyInfo.Subsidiaries, child)
+	}
+
+	return companyInfo, nil
+}
+
+var companyPath = filepath.Join(utils.HomeDir(), "slack", "company_info")
+
+func (a *App) WriteCompanyInfoToJson(info structs.CompanyInfo) bool {
+	os.Mkdir(companyPath, 0777)
+	fp := filepath.Join(companyPath, fmt.Sprintf("%s-%s.json", info.CompanyName, info.RegStatus))
+	return fileutil.SaveJsonWithFormat(a.ctx, fp, info)
 }
 
 // dirsearch
 func (a *App) LoadDirsearchDict(dictPath, newExts []string) []string {
 	var dicts []string
 	for _, dict := range dictPath {
-		dicts = append(dicts, util.LoadDirsearchDict(dict, "%EXT%", newExts)...)
+		dicts = append(dicts, LoadDirDict(dict, "%EXT%", newExts)...)
 	}
-	return util.RemoveDuplicates(dicts)
+	return arrayutil.RemoveDuplicates(dicts)
 }
 
-func (a *App) DirScan(options dirsearch.Options) {
+func LoadDirDict(filepath, old string, new []string) (dict []string) {
+	file, _ := os.Open(filepath)
+	defer file.Close()
+	s := bufio.NewScanner(file)
+	for s.Scan() {
+		if s.Text() != "" { // 去除空行
+			if len(new) > 0 {
+				if strings.Contains(s.Text(), old) { // 如何新数组不为空,将old字段替换成new数组
+					for _, n := range new {
+						dict = append(dict, strings.ReplaceAll(s.Text(), old, n))
+					}
+				} else {
+					dict = append(dict, s.Text())
+				}
+			} else {
+				if !strings.Contains(s.Text(), old) {
+					dict = append(dict, s.Text())
+				}
+			}
+		}
+	}
+	return dict
+}
+
+func (a *App) NewDirsearchScanner(options dirsearch.Options) {
 	ctrlCtx, _ := control.GetScanContext(control.Dirseach) // 标识任务
-	dirsearch.NewScanner(a.ctx, ctrlCtx, options)
+	engine := dirsearch.NewDirsearchEngine(a.ctx, ctrlCtx, options)
+	if options.Backupscan {
+		engine.BackupRunner(ctrlCtx)
+	} else {
+		engine.Runner(ctrlCtx)
+	}
 }
 
 // portscan
@@ -441,7 +586,7 @@ func (a *App) NewWebScanner(taskId string, options structs.WebscanOptions, proxy
 		for target, tags := range fpm {
 			allOptions = append(allOptions, structs.NucleiOption{
 				URL:                   target,
-				Tags:                  util.RemoveDuplicates(tags),
+				Tags:                  arrayutil.RemoveDuplicates(tags),
 				TemplateFile:          options.TemplateFiles,
 				SkipNucleiWithoutTags: options.SkipNucleiWithoutTags,
 				TemplateFolders:       allTemplateFolders,
@@ -479,8 +624,8 @@ func (a *App) HunterTips(query string) *structs.HunterTips {
 	return space.SearchHunterTips(query)
 }
 
-func (a *App) HunterSearch(api, query, pageSize, pageNum, times, asset string, deduplication bool) *structs.HunterResult {
-	hr := space.HunterApiSearch(a.ctx, api, query, pageSize, pageNum, times, asset, deduplication)
+func (a *App) HunterSearch(api, key, query, pageSize, pageNum, times, asset string, deduplication bool) *structs.HunterResult {
+	hr := space.HunterApiSearch(a.ctx, api, key, query, pageSize, pageNum, times, asset, deduplication)
 	time.Sleep(time.Second * 2)
 	return hr
 }
@@ -513,8 +658,8 @@ func (a *App) ExtractAllJSLink(url string) []string {
 	return jsfind.ExtractAllJs(a.ctx, url)
 }
 
-func (a *App) JSFind(target, prefixJsURL string, jsLinks []string) structs.FindSomething {
-	return jsfind.Scan(a.ctx, target, prefixJsURL, jsLinks)
+func (a *App) JSFind(target, prefixJsURL string, jsLinks, blackDomainList []string) structs.FindSomething {
+	return jsfind.Scan(a.ctx, target, prefixJsURL, jsLinks, blackDomainList)
 }
 
 func (a *App) AnalyzeAPI(homeURL, baseURL string, apiList []string, headers, lowPrivilegeHeaders map[string]string, authentication []string, highRiskRouter []string) {

@@ -10,26 +10,29 @@ import (
 	"slack-wails/core/subdomain/fofa"
 	"slack-wails/core/subdomain/github"
 	"slack-wails/core/subdomain/hunter"
+	"slack-wails/core/subdomain/ip138"
 	"slack-wails/core/subdomain/quake"
 	"slack-wails/core/subdomain/securitytrails"
 	"slack-wails/core/subdomain/zoomeye"
 	"slack-wails/core/waf"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/netutil"
 	"slack-wails/lib/qqwry"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
+	"slack-wails/lib/utils/netutil"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/panjf2000/ants/v2"
-	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var DefaultDnsServers = []string{"223.6.6.6:53", "8.8.8.8:53"}
+type Subdomain struct {
+	ctx     context.Context
+	options *structs.SubdomainOption
+}
 
 type SubdomainResult struct {
 	Domain    string
@@ -41,19 +44,31 @@ type SubdomainResult struct {
 }
 
 var (
-	Database *qqwry.QQwry
-	Cdndata  map[string][]string
+	DefaultDnsServers = []string{"223.6.6.6:53", "8.8.8.8:53"}
+	Database          *qqwry.QQwry
+	Cdndata           map[string][]string
 )
 
+func NewSubdomainEngine(ctx context.Context, option structs.SubdomainOption) *Subdomain {
+	subdomain := &Subdomain{
+		ctx:     ctx,
+		options: &option,
+	}
+	if len(subdomain.options.DnsServers) == 0 {
+		subdomain.options.DnsServers = DefaultDnsServers
+	}
+	return subdomain
+}
+
 // 初始化IP纯真库
-func InitQqwry(qqwryFile string) {
+func InitQqwry(ctx context.Context, qqwryFile string) {
 	fs, err := os.OpenFile(qqwryFile, os.O_RDONLY, 0777)
 	if err != nil {
-		logger.NewDefaultLogger().Debug("qqwry open err:" + err.Error())
+		gologger.DualLog(ctx, gologger.Level_DEBUG, "qqwry open err: "+err.Error())
 		return
 	}
 	if d, err := qqwry.NewQQwryFS(fs); err != nil {
-		logger.NewDefaultLogger().Debug("qqwry init err:" + err.Error())
+		gologger.DualLog(ctx, gologger.Level_DEBUG, "qqwry init err: "+err.Error())
 		return
 	} else {
 		Database = d
@@ -61,7 +76,7 @@ func InitQqwry(qqwryFile string) {
 }
 
 // subdomains 为完整的域名列表
-func MultiThreadResolution(ctx, ctrlCtx context.Context, domain string, subdomains []string, source string, o structs.SubdomainOption) {
+func (s *Subdomain) Runner(ctrlCtx context.Context, domain string, subdomains []string, source string) {
 	ipResolved := make(map[string]int)
 	single := make(chan struct{})
 	retChan := make(chan SubdomainResult)
@@ -70,44 +85,32 @@ func MultiThreadResolution(ctx, ctrlCtx context.Context, domain string, subdomai
 	var id int32
 	go func() {
 		for sr := range retChan {
-			runtime.EventsEmit(ctx, "subdomainLoading", sr)
+			runtime.EventsEmit(s.ctx, "subdomainLoading", sr)
 		}
 		close(single)
-		gologger.Info(ctx, fmt.Sprintf("已完成 %s 的解析", domain))
-		runtime.EventsEmit(ctx, "subdomainComplete", fmt.Sprintf("已完成 %s 的解析", domain))
+		gologger.Info(s.ctx, fmt.Sprintf("已完成 %s 的解析", domain))
+		runtime.EventsEmit(s.ctx, "subdomainComplete", fmt.Sprintf("已完成 %s 的解析", domain))
 	}()
 
 	resolutionScan := func(subdomain string) {
-		ips, cnames, err := netutil.Resolution(subdomain, o.DnsServers, o.Timeout)
+		ips, cnames, err := netutil.Resolution(subdomain, s.options.DnsServers, s.options.Timeout)
 		if err != nil {
 			return
 		}
 		for _, ip := range ips {
 			mutex.Lock()
 			ipResolved[ip]++
-			if ipResolved[ip] > o.ResolveExcludeTimes { // 解析到该IP5次以上就不再显示
-				ips = util.RemoveElement(ips, ip)
+			if ipResolved[ip] > s.options.ResolveExcludeTimes { // 解析到固定IP n次以上就不再显示
+				ips = arrayutil.RemoveElement(ips, ip)
 			}
 			mutex.Unlock()
 		}
-		flag, name := CheckCdn(cnames)
-		// 如果目标域名存在waf优先显示
-		if len(cnames) > 0 {
-			for n, domains := range waf.WAFs {
-				for _, domain := range domains {
-					if strings.Contains(cnames[0], domain) {
-						flag = true
-						name = n
-						break
-					}
-				}
-			}
-		}
+		flag, name := s.DetectCdnORWAF(cnames)
 		// 解析时移除内网地址
 		for _, ip := range ips {
 			_, err := Find(ip)
 			if err != nil {
-				ips = util.RemoveElement(ips, ip)
+				ips = arrayutil.RemoveElement(ips, ip)
 			}
 		}
 		retChan <- SubdomainResult{
@@ -119,32 +122,45 @@ func MultiThreadResolution(ctx, ctrlCtx context.Context, domain string, subdomai
 			Source:    source,
 		}
 	}
-	threadPool, _ := ants.NewPoolWithFunc(o.Thread, func(p interface{}) {
+	threadPool, _ := ants.NewPoolWithFunc(s.options.Thread, func(p interface{}) {
 		domain := p.(string)
 		atomic.AddInt32(&id, 1)
-		runtime.EventsEmit(ctx, "subdomainProgressID", id)
+		runtime.EventsEmit(s.ctx, "subdomainProgressID", id)
 		resolutionScan(domain)
 		wg.Done()
 	})
 	defer threadPool.Release()
-	// 枚举模式
-	if len(o.Subs) > 0 {
-		runtime.EventsEmit(ctx, "subdomainCounts", len(o.Subs))
-		for _, sub := range o.Subs {
+	// 只进行CDN/WAF识别
+	if s.options.Mode == 3 {
+		runtime.EventsEmit(s.ctx, "subdomainCounts", len(s.options.Domains))
+		for _, domain := range s.options.Domains {
 			if ctrlCtx.Err() != nil {
 				return
 			}
 			wg.Add(1)
-			threadPool.Invoke(sub + "." + domain)
+			threadPool.Invoke(domain)
 		}
-	} else { // API 模式
-		runtime.EventsEmit(ctx, "subdomainCounts", len(subdomains))
-		for _, subdomain := range subdomains {
-			if ctrlCtx.Err() != nil {
-				return
+		// runtime.EventsEmit(ctx, "subdomainCounts", len(s.options.Subs))
+	} else {
+		// 枚举模式
+		if len(s.options.Subs) > 0 {
+			runtime.EventsEmit(s.ctx, "subdomainCounts", len(s.options.Subs))
+			for _, sub := range s.options.Subs {
+				if ctrlCtx.Err() != nil {
+					return
+				}
+				wg.Add(1)
+				threadPool.Invoke(sub + "." + domain)
 			}
-			wg.Add(1)
-			threadPool.Invoke(subdomain)
+		} else { // API 模式
+			runtime.EventsEmit(s.ctx, "subdomainCounts", len(subdomains))
+			for _, subdomain := range subdomains {
+				if ctrlCtx.Err() != nil {
+					return
+				}
+				wg.Add(1)
+				threadPool.Invoke(subdomain)
+			}
 		}
 	}
 	wg.Wait()
@@ -152,10 +168,14 @@ func MultiThreadResolution(ctx, ctrlCtx context.Context, domain string, subdomai
 	<-single
 }
 
-func CheckCdn(cnames []string) (bool, string) {
+func (s *Subdomain) DetectCdnORWAF(cnames []string) (bool, string) {
+	wafs := waf.CheckWAF(cnames)
+	if wafs.Exsits {
+		return true, wafs.Name
+	}
 	for _, cname := range cnames {
 		if strings.Contains(cname, "cdn") {
-			return true, "Name contains cdn"
+			return true, "CNames contains cdn filed"
 		}
 		for name, cdns := range Cdndata {
 			for _, cdn := range cdns {
@@ -179,11 +199,11 @@ func Find(query string) (string, error) {
 	return result.String(), err
 }
 
-func ApiPolymerization(ctx, ctrlCtx context.Context, o structs.SubdomainOption) {
-	for _, domain := range o.Domains {
+func (s *Subdomain) ApiPolymerization(ctrlCtx context.Context) {
+	for _, domain := range s.options.Domains {
 		var subdomains []string
-		if o.ChaosApi != "" {
-			ch := chaos.FetchHosts(ctx, domain, o.ChaosApi)
+		if s.options.ChaosApi != "" {
+			ch := chaos.FetchHosts(s.ctx, domain, s.options.ChaosApi)
 			if ch != nil {
 				for _, sub := range ch.Subdomains {
 					if strings.Contains(sub, "*") {
@@ -193,40 +213,40 @@ func ApiPolymerization(ctx, ctrlCtx context.Context, o structs.SubdomainOption) 
 				}
 			}
 		}
-		if util.ArrayContains("FOFA", o.AppendEngines) && o.FofaApi != "" {
-			fh := fofa.FetchHosts(ctx, domain, structs.FofaAuth{
-				Address: o.FofaAddress,
-				Email:   o.FofaEmail,
-				Key:     o.FofaApi,
+		if arrayutil.ArrayContains("FOFA", s.options.AppendEngines) && s.options.FofaApi != "" {
+			fh := fofa.FetchHosts(s.ctx, domain, structs.FofaAuth{
+				Address: s.options.FofaAddress,
+				Email:   s.options.FofaEmail,
+				Key:     s.options.FofaApi,
 			})
 			subdomains = append(subdomains, fh...)
 		}
 
-		if util.ArrayContains("Hunter", o.AppendEngines) && o.HunterApi != "" {
-			hh := hunter.FetchHosts(ctx, domain, o.HunterApi)
+		if arrayutil.ArrayContains("Hunter", s.options.AppendEngines) && s.options.HunterApi != "" {
+			hh := hunter.FetchHosts(s.ctx, domain, s.options.HunterApi)
 			subdomains = append(subdomains, hh...)
 		}
 
-		if util.ArrayContains("Quake", o.AppendEngines) && o.QuakeApi != "" {
-			qh := quake.FetchHosts(ctx, domain, o.QuakeApi)
+		if arrayutil.ArrayContains("Quake", s.options.AppendEngines) && s.options.QuakeApi != "" {
+			qh := quake.FetchHosts(s.ctx, domain, s.options.QuakeApi)
 			subdomains = append(subdomains, qh...)
 		}
-		if o.BevigilApi != "" {
-			bh := bevigil.FetchHosts(ctx, domain, o.BevigilApi)
+		if s.options.BevigilApi != "" {
+			bh := bevigil.FetchHosts(s.ctx, domain, s.options.BevigilApi)
 			if bh != nil {
 				subdomains = append(subdomains, bh.Subdomains...)
 			}
 		}
-		if o.ZoomeyeApi != "" {
-			zh := zoomeye.FetchHosts(ctx, domain, o.ZoomeyeApi)
+		if s.options.ZoomeyeApi != "" {
+			zh := zoomeye.FetchHosts(s.ctx, domain, s.options.ZoomeyeApi)
 			if zh != nil {
 				for _, item := range zh.List {
 					subdomains = append(subdomains, item.Name)
 				}
 			}
 		}
-		if o.GithubApi != "" {
-			result := github.FetchHosts(ctx, domain, o.GithubApi)
+		if s.options.GithubApi != "" {
+			result := github.FetchHosts(s.ctx, domain, s.options.GithubApi)
 			// github 会返回一些不正确的域名信息，需要判断根域名是否包含
 			for _, sub := range result {
 				if strings.Contains(sub, "."+domain) {
@@ -234,17 +254,21 @@ func ApiPolymerization(ctx, ctrlCtx context.Context, o structs.SubdomainOption) 
 				}
 			}
 		}
-		if o.SecuritytrailsApi != "" {
-			sh := securitytrails.FetchHosts(ctx, domain, o.SecuritytrailsApi)
+		if s.options.SecuritytrailsApi != "" {
+			sh := securitytrails.FetchHosts(s.ctx, domain, s.options.SecuritytrailsApi)
 			if sh != nil {
 				for _, sub := range sh.Subdomains {
 					subdomains = append(subdomains, sub+"."+domain)
 				}
 			}
 		}
-		subdomains = util.RemoveDuplicates(subdomains)
-		gologger.Info(ctx, fmt.Sprintf("已从API获取到[%s]的子域名: %d个，正在验证存活", domain, len(subdomains)))
-		MultiThreadResolution(ctx, ctrlCtx, domain, subdomains, "API", o)
+		domains := ip138.FetchHosts(s.ctx, domain)
+		if len(domains) > 0 {
+			subdomains = append(subdomains, domains...)
+		}
+		subdomains = arrayutil.RemoveDuplicates(subdomains)
+		gologger.Info(s.ctx, fmt.Sprintf("已从API获取到[%s]的子域名: %d个，正在验证存活", domain, len(subdomains)))
+		s.Runner(ctrlCtx, domain, subdomains, "API")
 		time.Sleep(time.Second)
 	}
 }

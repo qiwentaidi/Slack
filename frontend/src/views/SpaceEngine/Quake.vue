@@ -163,8 +163,8 @@
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="exportIcon" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="exportIcon" @click="exportData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Share" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Share" @click="exportData(1)">导出全部数据</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', false)" divided>复制当前页URL</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top500', false)">复制前500条URL</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', true)" divided>去重复制当前页URL</el-dropdown-item>
@@ -300,7 +300,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Search, ArrowDown, DocumentCopy, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled, Picture, ZoomOut } from '@element-plus/icons-vue';
+import { Search, ArrowDown, DocumentCopy, Document, PictureRounded, Histogram, UploadFilled, Delete, Star, Collection, CollectionTag, ChromeFilled, QuestionFilled, Picture, ZoomOut, Share } from '@element-plus/icons-vue';
 import { reactive, ref } from 'vue';
 import { Copy, ReadLine, generateRandomString, splitInt, transformArrayFields, CsegmentIpv4, UploadFileAndRead, convertHttpToHttps, openURL } from '@/util';
 import { ExportToXlsx } from '@/export';
@@ -310,7 +310,6 @@ import global from '@/stores';
 import { ElMessage, ElMessageBox, ElNotification, FormInstance } from 'element-plus';
 import { FileDialog } from 'wailsjs/go/services/File';
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
-import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import certIcon from '@/assets/icon/cert.svg'
 import { structs } from 'wailsjs/go/models';

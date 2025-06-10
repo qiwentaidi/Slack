@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slack-wails/lib/utils"
 	"sync"
 	"time"
-
-	"slack-wails/lib/util"
 )
 
 const (
@@ -20,7 +19,7 @@ const (
 	Level_Success = "[SUC]"
 )
 
-var sysLogPath = filepath.Join(util.HomeDir(), "slack", "syslog")
+var sysLogPath = filepath.Join(utils.HomeDir(), "slack", "syslog")
 var logLock sync.Mutex
 
 type MsgInfo struct {

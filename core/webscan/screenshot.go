@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
 	"time"
 
 	"github.com/chromedp/chromedp"
 )
 
-var dir = filepath.Join(util.HomeDir(), "slack", "screenshot")
+var dir = filepath.Join(utils.HomeDir(), "slack", "screenshot")
 
 func init() {
 	// 创建截屏文件服务器
@@ -35,7 +35,7 @@ func init() {
 // 返回文件路径和错误，如果错误不为nil，则文件路径为空。
 func GetScreenshot(url string) (string, error) {
 	// 定义保存路径
-	fp := filepath.Join(dir, util.RenameOutput(url)+".png")
+	fp := filepath.Join(dir, utils.RenameOutput(url)+".png")
 	// 检查文件是否存在，如果存在则直接返回
 	if _, err := os.Stat(fp); err == nil {
 		return fp, nil

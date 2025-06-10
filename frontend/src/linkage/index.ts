@@ -8,7 +8,7 @@ export async function LinkHunter(query: string, count: string) {
         return
     }
     ElMessage.info("正在查询鹰图数据，请稍后...")
-    let result = await HunterSearch(global.space.hunterkey, query, count, "1", "0", "3", false)
+    let result = await HunterSearch(global.space.hunterapi, global.space.hunterkey, query, count, "1", "0", "3", false)
     if (result.code !== 200) {
         if (result.code == 40205) {
             ElMessage(result.message)

@@ -8,9 +8,9 @@ import (
 	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/netutil"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
+	"slack-wails/lib/utils/httputil"
 	"strings"
 	"sync"
 	"testing"
@@ -25,7 +25,7 @@ func TestNucleiCaller(t *testing.T) {
 	// proxys := []string{"http://127.0.0.1:8080"}
 	ne, err := nuclei.NewNucleiEngineCtx(context.Background(),
 		nuclei.WithTemplatesOrWorkflows(nuclei.TemplateSources{
-			Templates: []string{util.HomeDir() + "/slack/config/pocs"},
+			Templates: []string{utils.HomeDir() + "/slack/config/pocs"},
 		}), // -t
 		nuclei.DisableUpdateCheck(), // -duc
 		// nuclei.WithProxy(proxys, false), // -proxy
@@ -130,7 +130,7 @@ func TestFingerscan(t *testing.T) {
 		// 先进行一次不会重定向的扫描，可以获得重定向前页面的响应头中获取指纹
 		resp, err := clients.DoRequest("GET", u.String(), s.headers, nil, 10, s.notFollowClient)
 		if err == nil && resp.StatusCode() == 302 {
-			rawHeaders = DumpResponseHeadersOnly(resp.RawResponse)
+			rawHeaders = httputil.DumpResponseHeadersOnly(resp.RawResponse)
 		}
 
 		// 过滤CDN
@@ -161,7 +161,7 @@ func TestFingerscan(t *testing.T) {
 			}
 		}
 		// 合并请求头数据
-		rawHeaders = append(rawHeaders, DumpResponseHeadersOnly(resp.RawResponse)...)
+		rawHeaders = append(rawHeaders, httputil.DumpResponseHeadersOnly(resp.RawResponse)...)
 
 		// 请求Logo
 		faviconHash, faviconMd5 := FaviconHash(u, s.headers, s.client)
@@ -190,7 +190,7 @@ func TestFingerscan(t *testing.T) {
 			Title:         title,
 			Server:        server,
 			ContentLength: len(body),
-			Port:          netutil.GetPort(u),
+			Port:          httputil.GetPort(u),
 			IconHash:      faviconHash,
 			IconMd5:       faviconMd5,
 			StatusCode:    statusCode,
@@ -257,4 +257,11 @@ func TestFingerscan(t *testing.T) {
 	close(retChan)
 	t.Log("FingerScan Finished")
 	<-single
+}
+
+func TestFullFaviconURL(t *testing.T) {
+	rawURL := ""
+	u, _ := url.Parse(rawURL)
+	result, _ := GetFaviconFullLink(u, clients.NewRestyClient(nil, true))
+	fmt.Printf("result: %v\n", result)
 }

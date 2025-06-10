@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"slack-wails/core/subdomain"
 	"slack-wails/core/waf"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/netutil"
+	"slack-wails/lib/gomessage"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
+	"slack-wails/lib/utils/httputil"
+	"slack-wails/lib/utils/randutil"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,7 +24,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-const maxContentSize = 1024 * 100 // 100KB
+const maxInfoReponseSize = 1024 * 100 // 100KB
 
 var IsRunning = false // 用于判断网站扫描是否正在运行
 
@@ -65,24 +64,43 @@ type FingerScanner struct {
 
 func NewWebscanEngine(ctx context.Context, taskId string, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
 	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
+	waitChecks := []string{}
 	client := clients.NewRestyClientWithProxy(nil, true, proxy)
+	hasNoProtocol := false
 	for _, t := range options.Target {
 		t = strings.TrimRight(t, "/")
-		// 增加协议判断
-		if !strings.HasPrefix(t, "http://") && !strings.HasPrefix(t, "https://") {
+		if !strings.Contains(t, "://") {
+			hasNoProtocol = true
+			waitChecks = append(waitChecks, t)
+		} else {
+			u, err := url.Parse(t)
+			if err != nil {
+				gologger.Error(ctx, err)
+				continue
+			}
+			urls = append(urls, u)
+		}
+	}
+
+	if hasNoProtocol {
+		gomessage.Info(ctx, "存在未包含协议的目标, 程序正在识别http/https, 详情见日志")
+		gologger.DualLog(ctx, gologger.Level_INFO, "存在未包含协议的目标, 程序正在识别http/https")
+		for _, t := range waitChecks {
+			gologger.Info(ctx, t+": 正在识别http/https")
 			if url, err := clients.CheckProtocol(t, client); err != nil {
 				continue
 			} else {
 				t = url
 			}
+			u, err := url.Parse(t)
+			if err != nil {
+				gologger.Error(ctx, err)
+				continue
+			}
+			urls = append(urls, u)
 		}
-		u, err := url.Parse(t)
-		if err != nil {
-			gologger.Error(ctx, err)
-			continue
-		}
-		urls = append(urls, u)
 	}
+
 	// 可以兼容其他协议目标进行漏洞扫描
 	basicURLWithFingerprint := make(map[string][]string)
 	var mutex sync.RWMutex
@@ -138,7 +156,7 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 		// 先进行一次不会重定向的扫描，可以获得重定向前页面的响应头中获取指纹
 		resp, err := clients.DoRequest("GET", u.String(), s.headers, nil, 10, s.notFollowClient)
 		if err == nil && resp.StatusCode() == 302 {
-			rawHeaders = DumpResponseHeadersOnly(resp.RawResponse)
+			rawHeaders = httputil.DumpResponseHeadersOnly(resp.RawResponse)
 		}
 
 		// 过滤CDN
@@ -166,9 +184,10 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 				return
 			}
 		}
-		body := dumpMaxResponseContent(resp.Body())
+
+		body := httputil.LimitResponseBytes(resp.Body(), maxInfoReponseSize)
 		// 合并请求头数据
-		rawHeaders = append(rawHeaders, DumpResponseHeadersOnly(resp.RawResponse)...)
+		rawHeaders = append(rawHeaders, httputil.DumpResponseHeadersOnly(resp.RawResponse)...)
 
 		// 请求Logo
 		faviconHash, faviconMd5 := FaviconHash(u, s.headers, s.client)
@@ -197,7 +216,7 @@ func (s *FingerScanner) FingerScan(ctrlCtx context.Context) {
 			Title:         strings.ToLower(title),
 			Server:        strings.ToLower(server),
 			ContentLength: len(resp.Body()),
-			Port:          netutil.GetPort(u),
+			Port:          httputil.GetPort(u),
 			IconHash:      faviconHash,
 			IconMd5:       faviconMd5,
 			StatusCode:    statusCode,
@@ -333,7 +352,7 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 		contentType := resp.Header().Get("Content-Type")
 		title := clients.GetTitle(body)
 
-		headers, _, _ := DumpResponseHeadersAndRaw(resp.RawResponse)
+		headers, _, _ := httputil.DumpResponseHeadersAndRaw(resp.RawResponse)
 		ti := &WebInfo{
 			HeadeString:   strings.ToLower(string(headers)),
 			ContentType:   strings.ToLower(contentType),
@@ -342,12 +361,12 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 			Title:         strings.ToLower(title),
 			Server:        strings.ToLower(server),
 			ContentLength: len(body),
-			Port:          netutil.GetPort(fp.URL),
+			Port:          httputil.GetPort(fp.URL),
 			StatusCode:    resp.StatusCode(),
 		}
 		result := Scan(s.ctx, ti, fp.Fpe)
 
-		if (len(result) > 0 && ti.StatusCode != 404) || util.ArrayContains("ThinkPHP", result) {
+		if (len(result) > 0 && ti.StatusCode != 404) || arrayutil.ArrayContains("ThinkPHP", result) {
 			s.mutex.Lock()
 			s.basicURLWithFingerprint[fp.URL.String()] = append(s.basicURLWithFingerprint[fp.URL.String()], result...)
 			s.mutex.Unlock()
@@ -388,7 +407,7 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 				s.IncreaseActiveProgress(&id)
 
 				if s.rootPath {
-					target, _ = url.Parse(util.GetBasicURL(target.String()))
+					target, _ = url.Parse(httputil.GetBasicURL(target.String()))
 				}
 
 				threadPool.Invoke(ActiveFingerDetect{
@@ -424,99 +443,6 @@ func (s *FingerScanner) IncreaseActiveProgress(id *int32) {
 func (s *FingerScanner) URLWithFingerprintMap() map[string][]string {
 	return s.basicURLWithFingerprint
 }
-
-// 不在需要多线程进行扫描，高占用的同时指纹识别速度并不会有多大的差别
-// func (s *FingerScanner) Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
-// 	var fingerPrintResults []string
-
-// 	inputChan := make(chan FingerPEntity, len(targetDB))
-// 	defer close(inputChan)
-// 	results := make(chan string, len(targetDB))
-// 	defer close(results)
-
-// 	var wg sync.WaitGroup
-
-// 	//接收结果
-// 	go func() {
-// 		for found := range results {
-// 			if found != "" {
-// 				fingerPrintResults = append(fingerPrintResults, found)
-// 			}
-// 			wg.Done()
-// 		}
-// 	}()
-// 	//多指纹同时扫描
-// 	for range rt.NumCPU() {
-// 		go func() {
-// 			for finger := range inputChan {
-// 				expr := finger.AllString
-// 				for _, rule := range finger.Rule {
-// 					var result bool
-// 					switch rule.Key {
-// 					case "header":
-// 						result = dataCheckString(rule.Op, web.HeadeString, rule.Value)
-// 					case "body":
-// 						result = dataCheckString(rule.Op, web.BodyString, rule.Value)
-// 					case "server":
-// 						result = dataCheckString(rule.Op, web.Server, rule.Value)
-// 					case "title":
-// 						result = dataCheckString(rule.Op, web.Title, rule.Value)
-// 					case "cert":
-// 						result = dataCheckString(rule.Op, web.Cert, rule.Value)
-// 					case "port":
-// 						value, err := strconv.Atoi(rule.Value)
-// 						if err == nil {
-// 							result = dataCheckInt(rule.Op, web.Port, value)
-// 						}
-// 					case "protocol":
-// 						result = (rule.Op == 0 && web.Protocol == rule.Value) || (rule.Op == 1 && web.Protocol != rule.Value)
-// 					case "path":
-// 						result = dataCheckString(rule.Op, web.Path, rule.Value)
-// 					case "icon_hash":
-// 						value, err := strconv.Atoi(rule.Value)
-// 						hashIcon, errHash := strconv.Atoi(web.IconHash)
-// 						if err == nil && errHash == nil {
-// 							result = dataCheckInt(rule.Op, hashIcon, value)
-// 						}
-// 					case "icon_mdhash":
-// 						result = dataCheckString(rule.Op, web.IconMd5, rule.Value)
-// 					case "status":
-// 						value, err := strconv.Atoi(rule.Value)
-// 						if err == nil {
-// 							result = dataCheckInt(rule.Op, web.StatusCode, value)
-// 						}
-// 					case "content_type":
-// 						result = dataCheckString(rule.Op, web.ContentType, rule.Value)
-// 						// case "banner":
-// 						// 	result = dataCheckString(rule.Op, web.Banner, rule.Value)
-// 					}
-
-// 					if result {
-// 						expr = expr[:rule.Start] + "T" + expr[rule.End:]
-// 					} else {
-// 						expr = expr[:rule.Start] + "F" + expr[rule.End:]
-// 					}
-// 				}
-// 				r, err := boolEval(expr)
-// 				if err != nil {
-// 					gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[fingerprint] 错误指纹: %v", finger.AllString))
-// 				}
-// 				if r {
-// 					results <- finger.ProductName
-// 				} else {
-// 					results <- ""
-// 				}
-// 			}
-// 		}()
-// 	}
-// 	//添加扫描目标
-// 	for _, input := range targetDB {
-// 		wg.Add(1)
-// 		inputChan <- input
-// 	}
-// 	wg.Wait()
-// 	return util.RemoveDuplicates(fingerPrintResults)
-// }
 
 func Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string {
 	var fingerPrintResults []string
@@ -581,7 +507,7 @@ func Scan(ctx context.Context, web *WebInfo, targetDB []FingerPEntity) []string 
 		}
 	}
 
-	return util.RemoveDuplicates(fingerPrintResults)
+	return arrayutil.RemoveDuplicates(fingerPrintResults)
 }
 
 func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte {
@@ -617,7 +543,7 @@ func (s *FingerScanner) GetJSRedirectResponse(u *url.URL, respRaw string) []byte
 // 探测shiro并返回响应头中的Set-Cookie值
 func (s *FingerScanner) ShiroScan(u *url.URL) string {
 	shiroHeader := map[string]string{
-		"Cookie": fmt.Sprintf("JSESSIONID=%s;rememberMe=123", util.RandomStr(16)),
+		"Cookie": fmt.Sprintf("JSESSIONID=%s;rememberMe=123", randutil.RandomStr(16)),
 	}
 	resp, err := clients.DoRequest("GET", u.String(), shiroHeader, nil, 10, s.client)
 	if err != nil {
@@ -632,59 +558,9 @@ func (s *FingerScanner) FastjsonScan(u *url.URL) bool {
 	jsonHeader := map[string]string{
 		"Content-Type": "application/json",
 	}
-	resp, err := clients.DoRequest("POST", u.String(), jsonHeader, strings.NewReader(`{"@type":"java.lang.AutoCloseable"`), 10, s.client)
+	resp, err := clients.DoRequest("POST", u.String(), jsonHeader, strings.NewReader(`{"\u+040\u+074\u+079\u+070\u+065":"java.lang.AutoCloseabl\u+065"`), 10, s.client)
 	if err != nil {
 		return false
 	}
 	return bytes.Contains(resp.Body(), []byte("fastjson-version"))
-}
-
-// DumpResponseHeadersOnly 只返回响应头
-func DumpResponseHeadersOnly(resp *http.Response) []byte {
-	headers, _ := httputil.DumpResponse(resp, false)
-	return headers
-}
-
-// DumpResponseHeadersAndRaw returns http headers and response as strings
-func DumpResponseHeadersAndRaw(resp *http.Response) (headers, fullresp []byte, err error) {
-	// httputil.DumpResponse does not work with websockets
-	if resp.StatusCode >= http.StatusContinue && resp.StatusCode <= http.StatusEarlyHints {
-		raw := resp.Status + "\n"
-		for h, v := range resp.Header {
-			raw += fmt.Sprintf("%s: %s\n", h, v)
-		}
-		return []byte(raw), []byte(raw), nil
-	}
-	headers, err = httputil.DumpResponse(resp, false)
-	if err != nil {
-		return
-	}
-	// logic same as httputil.DumpResponse(resp, true) but handles
-	// the edge case when we get both error and data on reading resp.Body
-	var buf1, buf2 bytes.Buffer
-	b := resp.Body
-	if _, err = buf1.ReadFrom(b); err != nil {
-		if buf1.Len() <= 0 {
-			return
-		}
-	}
-	if err == nil {
-		b.Close()
-	}
-
-	// rewind the body to allow full dump
-	resp.Body = io.NopCloser(bytes.NewReader(buf1.Bytes()))
-	err = resp.Write(&buf2)
-	fullresp = buf2.Bytes()
-
-	// rewind once more to allow further reuses
-	resp.Body = io.NopCloser(bytes.NewReader(buf1.Bytes()))
-	return
-}
-
-func dumpMaxResponseContent(body []byte) []byte {
-	if len(body) > maxContentSize {
-		return body[:maxContentSize]
-	}
-	return body
 }

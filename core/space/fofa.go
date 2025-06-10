@@ -14,7 +14,7 @@ import (
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"strconv"
 	"time"
 )
@@ -113,7 +113,7 @@ func (f *FofaClient) FofaApiSearch(ctx context.Context, search, pageSize, pageNu
 					Port:     fr.Results[i][4],
 					Domain:   fr.Results[i][3],
 					Protocol: fr.Results[i][5],
-					Region: util.MergePosition(structs.Position{
+					Region: arrayutil.MergePosition(structs.Position{
 						Country:   fr.Results[i][6],
 						Province:  fr.Results[i][7],
 						City:      fr.Results[i][8],

@@ -82,7 +82,7 @@ onMounted(async () => {
         <el-aside style="width: 64px;">
             <Sidebar />
         </el-aside>
-        <el-main :class="{ 'no-scroll': $route.path == '/Tools/CyberChef' }" class="content-wrapper">
+        <el-main class="content-wrapper">
             <el-config-provider :locale="locale">
                 <!-- 一定要使用插槽否则keey-alive不会生效 -->
                 <router-view v-slot="{ Component }">
@@ -103,10 +103,5 @@ onMounted(async () => {
     max-height: calc(100vh - 35px);
     overflow-y: auto;
     scrollbar-width: none;
-}
-
-.no-scroll {
-    overflow-y: hidden;
-    /* 禁用滚动 */
 }
 </style>

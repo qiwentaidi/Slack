@@ -81,7 +81,8 @@
                     <el-input v-model="global.space.fofakey" placeholder="API key" clearable class="mt-5px" />
                 </el-form-item>
                 <el-form-item label="Hunter">
-                    <el-input v-model="global.space.hunterkey" placeholder="API key" clearable />
+                    <el-input v-model="global.space.hunterapi" placeholder="API address" clearable />
+                    <el-input v-model="global.space.hunterkey" placeholder="API key" clearable class="mt-5px" />
                 </el-form-item>
                 <el-form-item label="Quake">
                     <el-input v-model="global.space.quakekey" placeholder="API key" clearable />

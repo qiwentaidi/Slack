@@ -85,7 +85,7 @@ async function enterpriseWechatCheckSecret() {
     }
     const jsonResult = JSON.parse(response.Body);
     if (response.Body.includes("access_token")) {
-        enterpriseWechat.accessToken = jsonResult.content.data.access_token;
+        enterpriseWechat.accessToken = jsonResult.access_token;
         ElMessage.success("Successfully");
     }
     result.value = jsonResult;
@@ -165,10 +165,10 @@ function CopyResult() {
             <el-tab-pane name="wechat">
                 <template #label>
                     <el-text class="position-center">
-                        <wechatIcon style="margin-right: 2px;" />微信公众号
+                        <wechatIcon style="margin-right: 2px;" />微信公众号/小程序
                     </el-text>
                 </template>
-                <el-form :model="wechat" label-width="auto">
+                <el-form :model="wechat" label-width="80px">
                     <el-form-item label="Appid">
                         <el-input v-model="wechat.appid" />
                     </el-form-item>
@@ -196,7 +196,7 @@ function CopyResult() {
                         <wechatIcon style="margin-right: 2px;" />企业微信
                     </el-text>
                 </template>
-                <el-form :model="enterpriseWechat" label-width="auto">
+                <el-form :model="enterpriseWechat" label-width="80px">
                     <el-form-item label="Corpid">
                         <el-input v-model="enterpriseWechat.corpid" />
                     </el-form-item>
@@ -224,7 +224,7 @@ function CopyResult() {
                         <dingtalkIcon style="margin-right: 2px;" />钉钉
                     </el-text>
                 </template>
-                <el-form :model="dingtalk" label-width="auto">
+                <el-form :model="dingtalk" label-width="80px">
                     <el-form-item label="Appid">
                         <el-input v-model="dingtalk.appid" />
                     </el-form-item>
@@ -255,7 +255,7 @@ function CopyResult() {
                         <dingtalkIcon style="margin-right: 2px;" />专有钉钉
                     </el-text>
                 </template>
-                <el-form :model="dgwork" label-width="auto">
+                <el-form :model="dgwork" label-width="80px">
                     <el-form-item label="Domain">
                         <el-input v-model="dgwork.domain" placeholder="e.g: https://openplatform.dg-work.cn" />
                     </el-form-item>
@@ -298,7 +298,7 @@ function CopyResult() {
         </div>
     </div>
     <el-dialog v-model="dingtalk.addUserDialog" title="Dingtalk添加用户" width="40%">
-        <el-form ref="ruleFormRef" :model="dingtalk" :rules="dingtalkRules" status-icon label-width="auto">
+        <el-form ref="ruleFormRef" :model="dingtalk" :rules="dingtalkRules" status-icon label-width="80px">
             <el-form-item label="手机号" prop="phone">
                 <el-input v-model="dingtalk.phone" />
             </el-form-item>

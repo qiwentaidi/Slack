@@ -52,24 +52,34 @@ func detectContentType(url string, headers map[string]string) string {
 		return "application/json"
 	}
 
-	// 第一次响应：如果返回 text/plain不支持则需要 content-type 字段
-	if !strings.Contains(body, "not supported") && !strings.Contains(body, "text/plain") {
-		return "text/plain"
+	contentTypes := []string{
+		"text/plain",
+		"application/json",
+		"application/x-www-form-urlencoded",
 	}
 
-	// 需要重试，带上 application/x-www-form-urlencoded 重新请求
-	hdr["Content-Type"] = "application/x-www-form-urlencoded"
-	resp, err = clients.DoRequest("POST", url, hdr, nil, 10, clients.NewRestyClient(nil, true))
-	if err != nil {
-		return ""
+	// 尝试每个 Content-Type
+	for _, contentType := range contentTypes {
+		// 设置当前 Content-Type
+		hdr["Content-Type"] = contentType
+
+		// 发送请求
+		resp, err := clients.DoRequest("POST", url, hdr, nil, 10, clients.NewRestyClient(nil, true))
+		if err != nil {
+			continue
+		}
+
+		body = string(resp.Body())
+
+		// 判断是否包含“不支持”的关键词
+		if strings.Contains(body, "not supported") && strings.Contains(body, contentType) {
+			continue // 当前类型不支持，尝试下一个
+		}
+
+		// 成功匹配到可用的 Content-Type
+		return contentType
 	}
 
-	body = string(resp.Body())
-
-	if strings.Contains(body, "application/x-www-form-urlencoded") && strings.Contains(body, "not supported") {
-		return "application/json"
-	}
-
-	// 默认返回 application/x-www-form-urlencoded
-	return "application/x-www-form-urlencoded"
+	// 所有类型都不支持
+	return ""
 }

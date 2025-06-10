@@ -35,11 +35,6 @@ type Children struct {
 	Args    string // 占位符解析参数
 }
 
-type TycCompanyInfo struct {
-	CompanyId   string
-	CompanyName string
-}
-
 type Position struct {
 	Country   string
 	Province  string
@@ -124,6 +119,7 @@ const (
 	EnumerationMode = 0
 	ApiMode         = 1
 	MixedMode       = 2
+	CdnMode         = 3
 )
 
 type SubdomainOption struct {
@@ -535,18 +531,65 @@ type WebReport struct {
 }
 
 type CompanyInfo struct {
-	CompanyName string
-	Holding     string
-	Investment  string // 投资比例
-	RegStatus   string
-	Domains     []string
-	CompanyId   string
+	CompanyName      string
+	Trademark        string // 商标
+	Investment       string // 投资比例
+	Amount           string // 注册资金
+	RegStatus        string // 注册状态
+	Domains          []string
+	Subsidiaries     []CompanyInfo
+	Apps             []App             // App
+	Applets          []Applet          // 小程序
+	OfficialAccounts []OfficialAccount // 公众号
 }
 
-type WechatReulst struct {
-	CompanyName  string
-	WechatName   string
-	WechatNums   string
+type App struct {
+	CityID           int    `json:"cityId"`
+	CountyID         int    `json:"countyId"`
+	DataID           int    `json:"dataId"`
+	LeaderName       string `json:"leaderName"`
+	MainID           string `json:"mainId"`
+	MainLicence      string `json:"mainLicence"`
+	MainUnitAddress  string `json:"mainUnitAddress"`
+	MainUnitCertNo   string `json:"mainUnitCertNo"`
+	MainUnitCertType int    `json:"mainUnitCertType"`
+	NatureID         int    `json:"natureId"`
+	NatureName       string `json:"natureName"`
+	ProvinceID       int    `json:"provinceId"`
+	ServiceID        int64  `json:"serviceId"`
+	ServiceLicence   string `json:"serviceLicence"`
+	ServiceName      string `json:"serviceName"`
+	ServiceType      int    `json:"serviceType"`
+	UnitName         string `json:"unitName"`
+	UpdateRecordTime string `json:"updateRecordTime"`
+	Version          string `json:"version"`
+}
+
+type Applet struct {
+	CityID           int    `json:"cityId"`
+	CountyID         int    `json:"countyId"`
+	DataID           int    `json:"dataId"`
+	LeaderName       string `json:"leaderName"`
+	MainID           string `json:"mainId"`
+	MainLicence      string `json:"mainLicence"`
+	MainUnitAddress  string `json:"mainUnitAddress"`
+	MainUnitCertNo   string `json:"mainUnitCertNo"`
+	MainUnitCertType int    `json:"mainUnitCertType"`
+	NatureID         int    `json:"natureId"`
+	NatureName       string `json:"natureName"`
+	ProvinceID       int    `json:"provinceId"`
+	ServiceID        int64  `json:"serviceId"`
+	ServiceLicence   string `json:"serviceLicence"`
+	ServiceName      string `json:"serviceName"`
+	ServiceType      int    `json:"serviceType"`
+	UnitName         string `json:"unitName"`
+	UpdateRecordTime string `json:"updateRecordTime"`
+	Version          string `json:"version"`
+}
+
+type OfficialAccount struct {
+	Name         string
+	Numbers      string
 	Logo         string
 	Qrcode       string
 	Introduction string
@@ -583,95 +626,6 @@ type TableInfo struct {
 	RowsCount int
 }
 
-type TycSearchID struct {
-	State      string `json:"state"`
-	Message    string `json:"message"`
-	Special    string `json:"special"`
-	VipMessage string `json:"vipMessage"`
-	IsLogin    int    `json:"isLogin"`
-	ErrorCode  int    `json:"errorCode"`
-	Data       []struct {
-		ID         int         `json:"id"`
-		GraphID    string      `json:"graphId"`
-		Type       int         `json:"type"`
-		MatchType  string      `json:"matchType"` // 商标信息匹配 > 股票简称匹配 > 公司名称匹配 > 公司品牌匹配 > 公司信息匹配
-		ComName    string      `json:"comName"`
-		Name       string      `json:"name"`
-		Alias      string      `json:"alias"`
-		Logo       string      `json:"logo"`
-		ClaimLevel interface{} `json:"claimLevel"`
-		RegStatus  int         `json:"regStatus"`
-	} `json:"data"`
-}
-
-type TycResult struct {
-	State      string `json:"state"`
-	Message    string `json:"message"`
-	Special    string `json:"special"`
-	VipMessage string `json:"vipMessage"`
-	IsLogin    int    `json:"isLogin"`
-	ErrorCode  int    `json:"errorCode"`
-	Data       struct {
-		Result []struct {
-			Name             string      `json:"name"` // 公司名称
-			PersonType       int         `json:"personType"`
-			ServiceType      interface{} `json:"serviceType"`
-			RegStatus        string      `json:"regStatus"`
-			Percent          string      `json:"percent"` // 股权比例
-			LegalPersonTitle string      `json:"legalPersonTitle"`
-			LegalPersonName  string      `json:"legalPersonName"`
-			Logo             interface{} `json:"logo"`
-			Alias            string      `json:"alias"`
-			ID               int64       `json:"id"` // 子公司的companyId
-			Amount           string      `json:"amount"`
-			EstiblishTime    int64       `json:"estiblishTime"`
-			LegalPersonID    int         `json:"legalPersonId"`
-			ServiceCount     interface{} `json:"serviceCount"`
-			LegalAlias       interface{} `json:"legalAlias"`
-			LegalLogo        interface{} `json:"legalLogo"`
-			JigouName        interface{} `json:"jigouName"`
-			JigouLogo        interface{} `json:"jigouLogo"`
-			JigouID          interface{} `json:"jigouId"`
-			ProductName      interface{} `json:"productName"`
-			ProductLogo      interface{} `json:"productLogo"`
-			ProductID        interface{} `json:"productId"`
-		} `json:"result"`
-		SortField   interface{} `json:"sortField"`
-		PercentList []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
-		} `json:"percentList"`
-		ProvinceList []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
-		} `json:"provinceList"`
-		CategoryList []struct {
-			Key   string `json:"key"`
-			Value string `json:"value"`
-		} `json:"categoryList"`
-		Total int `json:"total"`
-	} `json:"data"`
-}
-
-type OfficialAccounts struct {
-	State      string `json:"state"`
-	Message    string `json:"message"`
-	Special    string `json:"special"`
-	VipMessage string `json:"vipMessage"`
-	IsLogin    int    `json:"isLogin"`
-	ErrorCode  int    `json:"errorCode"`
-	Data       struct {
-		Count      int `json:"count"`
-		ResultList []struct {
-			PublicNum   string `json:"publicNum"`   // 微信号
-			CodeImg     string `json:"codeImg"`     // 二维码
-			Recommend   string `json:"recommend"`   // 简介
-			Title       string `json:"title"`       // 名称
-			TitleImgURL string `json:"titleImgURL"` // 公众号LOGO
-		} `json:"resultList"`
-	} `json:"data"`
-}
-
 type NetwordCard struct {
 	Name string
 	IP   string
@@ -693,12 +647,15 @@ type FindSomething struct {
 }
 
 type JSFindResult struct {
+	Target   string
 	VulType  string
+	Severity string
 	Source   string
 	Method   string
 	Request  string
 	Response string
 	Length   int
+	Filed    string
 }
 
 type JSFindOptions struct {
@@ -710,4 +667,19 @@ type JSFindOptions struct {
 	Headers        map[string]string
 	// 低权限用户请求头
 	LowPrivilegeHeaders map[string]string
+}
+
+type DataSource struct {
+	Tianyancha Tianyancha
+	Miit       Miit
+}
+
+type Tianyancha struct {
+	Enable bool
+	Token  string
+	Id     string
+}
+
+type Miit struct {
+	API string
 }

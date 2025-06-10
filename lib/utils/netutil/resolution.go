@@ -5,7 +5,7 @@ import (
 	"net"
 	"os"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"time"
 
 	"github.com/miekg/dns"
@@ -15,7 +15,7 @@ import (
 func Resolution(domain string, dnsServers []string, timeout int) (ips, cname []string, err error) {
 	cname, err = LookupCNAME(domain, dnsServers, timeout)
 	ips, _ = LookupHost(domain, dnsServers, timeout)
-	return util.RemoveDuplicates(ips), cname, err
+	return arrayutil.RemoveDuplicates(ips), cname, err
 }
 
 func LookupHost(domain string, domainServers []string, timeout int) (ips []string, err error) {

@@ -8,7 +8,6 @@ export default {
         'pocdetail': '漏洞详情',
         'asset_collection': '信息收集',
         'asset_from_company': '企业名信息查询',
-        'subdomain_brute_force': '子域名收集',
         'search_domain_info': '域名信息查询',
         'space_engine': '空间测绘',
         'hunter': '鹰图',

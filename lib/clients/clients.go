@@ -8,7 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
+	"slack-wails/lib/utils/randutil"
 	"strings"
 	"time"
 
@@ -59,7 +60,7 @@ func NewRestyClient(interfaceIp net.IP, followRedirect bool) *resty.Client {
 	client := resty.New().
 		SetTransport(transport).
 		SetTimeout(10*time.Second).
-		SetHeader("User-Agent", util.RandomUA()).
+		SetHeader("User-Agent", randutil.RandomUA()).
 		SetHeader("Connection", "close")
 	// 设置重定向规则
 	if followRedirect {
@@ -137,7 +138,7 @@ func GetTitle(body []byte) string {
 		return ""
 	}
 	if match := regTitle.FindSubmatch(body); len(match) > 1 {
-		return strings.TrimSpace(util.Str2UTF8(string(match[1])))
+		return strings.TrimSpace(utils.Str2UTF8(string(match[1])))
 	}
 	return ""
 }

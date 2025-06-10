@@ -4,7 +4,7 @@ import (
 	"os"
 	"regexp"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -64,7 +64,7 @@ var AuthPatchs = []structs.AuthPatch{
 // 杀软识别
 func (t *Tools) AntivirusIdentify(tasklist string) []structs.AntivirusResult {
 	var antivirus []structs.AntivirusResult
-	file := util.HomeDir() + "/slack/config/antivirues.yaml"
+	file := utils.HomeDir() + "/slack/config/antivirues.yaml"
 	yamlData, err := os.ReadFile(file)
 	if err != nil {
 		return nil

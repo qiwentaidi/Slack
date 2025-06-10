@@ -494,7 +494,7 @@ php:
                                 </el-select>
                             </template>
                         </el-input>
-                        <el-button class="ml-5px" type="primary" :icon="CirclePlusFilled" @click="step = 1">添加POC</el-button>
+                        <el-button class="ml-5px" type="primary" plain :icon="CirclePlusFilled" @click="step = 1">添加POC</el-button>
                     </div>
                     <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 225px);">
                         <el-table-column prop="Name" label="名称" />
@@ -533,7 +533,7 @@ php:
                     <div class="flex-between mb-10px">
                         <el-select-v2 v-model="selectHighlightFinger" placeholder="请选择需要高亮的指纹" filterable
                             :options="highlightFingerOptions" multiple clearable />
-                        <el-button :icon="CirclePlusFilled" type="primary"
+                        <el-button :icon="CirclePlusFilled" type="primary" plain
                             @click="addFingerprint(selectHighlightFinger)" class="ml-5px">添加</el-button>
                     </div>
                     <el-table :data="global.webscan.highlight_fingerprints" style="height: calc(100vh - 195px);">

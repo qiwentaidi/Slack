@@ -12,7 +12,9 @@ import (
 	"time"
 )
 
-func HunterApiSearch(ctx context.Context, api, query, pageSize, page, startTime, asset string, deduplication bool) *structs.HunterResult {
+const defaultHunterApi = "https://hunter.qianxin.com/"
+
+func HunterApiSearch(ctx context.Context, api, key, query, pageSize, page, startTime, asset string, deduplication bool) *structs.HunterResult {
 	var beforeTime string
 	currentTime := time.Now().Format("2006-01-02")
 	switch startTime {
@@ -23,7 +25,7 @@ func HunterApiSearch(ctx context.Context, api, query, pageSize, page, startTime,
 	case "2":
 		beforeTime = time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
 	}
-	address := "https://hunter.qianxin.com/openApi/search?api-key=" + api + "&search=" + HunterBaseEncode(query) + "&page=" +
+	address := api + "openApi/search?api-key=" + key + "&search=" + HunterBaseEncode(query) + "&page=" +
 		page + "&page_size=" + pageSize + "&is_web=" + asset + "&port_filter=" + fmt.Sprint(deduplication) + "&start_time=" + beforeTime + "&end_time=" + currentTime
 	var hr structs.HunterResult
 	resp, err := clients.SimpleGet(address, clients.NewRestyClient(nil, true))

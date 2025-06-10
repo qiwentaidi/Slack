@@ -14,12 +14,6 @@ const relatedTools = [
         Link: "https://github.com/qiwentaidi/LuckyCat",
         Image: "/luckycat.png"
     },
-    {
-        Name: "initial",
-        Description: "Slack webscan cli",
-        Link: "https://github.com/qiwentaidi/initial",
-        Image: "/initial.png"
-    }
 ]
 </script>
 

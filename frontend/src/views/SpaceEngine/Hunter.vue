@@ -2,13 +2,12 @@
 import { ExportToXlsx } from '@/export'
 import { reactive, ref } from 'vue';
 import { ElNotification, ElMessage, ElMessageBox, FormInstance } from "element-plus";
-import { Search, ChromeFilled, DocumentCopy, PictureRounded, Delete, Star, Collection, CollectionTag } from '@element-plus/icons-vue';
+import { Search, ChromeFilled, DocumentCopy, PictureRounded, Delete, Star, Collection, CollectionTag, Share } from '@element-plus/icons-vue';
 import { splitInt, Copy, CsegmentIpv4, openURL } from '@/util'
 import { TableTabs, HunterEntryTips } from "@/stores/interface"
 import global from "@/stores"
 import { FaviconMd5, HunterSearch, HunterTips } from 'wailsjs/go/services/App'
 import { InsertFavGrammarFiled, SelectAllSyntax, RemoveFavGrammarFiled } from 'wailsjs/go/services/Database'
-import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { hunterOptions } from '@/stores/options';
 import { structs } from 'wailsjs/go/models';
@@ -126,7 +125,7 @@ const tableCtrl = ({
         }
         const newTabName = `${++table.tabIndex}`
         table.loading = true
-        let result = await HunterSearch(global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication)
+        let result = await HunterSearch(global.space.hunterapi, global.space.hunterkey, query, "10", "1", form.defaultTime, form.defaultSever, form.deduplication)
         if (isError(result.code, result.message)) {
             table.loading = false
             return
@@ -148,7 +147,7 @@ const tableCtrl = ({
             table.loading = false
             return
         }
-        result.data.arr.forEach((item: any) => {
+        result.data.arr!.forEach(item => {
             tab.content?.push({
                 URL: item.url,
                 IP: item.ip,
@@ -187,7 +186,7 @@ const tableCtrl = ({
     handleSizeChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
-        let result = await HunterSearch(global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication)
+        let result = await HunterSearch(global.space.hunterapi, global.space.hunterkey, tab.title, val.toString(), "1", form.defaultTime, form.defaultSever, form.deduplication)
         if (isError(result.code, result.message)) {
             table.loading = false
             tab.message = result.message
@@ -196,7 +195,7 @@ const tableCtrl = ({
         tab.message = result.message + "," + result.data.rest_quota
         tab.content = [{}]
         tab.content.pop()
-        result.data.arr.forEach((item: any) => {
+        result.data.arr!.forEach(item => {
             tab.content?.push({
                 URL: item.url,
                 IP: item.ip,
@@ -219,7 +218,7 @@ const tableCtrl = ({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        let result = await HunterSearch(global.space.hunterkey, tab.title, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication)
+        let result = await HunterSearch(global.space.hunterapi, global.space.hunterkey, tab.title, tab.pageSize.toString(), val.toString(), form.defaultTime, form.defaultSever, form.deduplication)
         if (isError(result.code, result.message)) {
             table.loading = false
             tab.message = result.message
@@ -228,7 +227,7 @@ const tableCtrl = ({
         tab.message = result.message + "," + result.data.rest_quota
         tab.content = [{}]
         tab.content.pop()
-        result.data.arr.forEach((item: any) => {
+        result.data.arr!.forEach(item => {
             tab.content?.push({
                 URL: item.url,
                 IP: item.ip,
@@ -302,7 +301,7 @@ async function exportData(mode: number) {
         index += 1;
         ElMessage(`正在查询第 ${index} 页`);
 
-        let result = await HunterSearch(global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication);
+        let result = await HunterSearch(global.space.hunterapi, global.space.hunterkey, tab.title, "100", index.toString(), form.defaultTime, form.defaultSever, form.deduplication);
 
         if (isError(result.code, result.message)) {
             ElNotification.error({
@@ -312,7 +311,7 @@ async function exportData(mode: number) {
             break; // 遇到错误时停止后续查询
         }
 
-        result.data.arr.forEach((item: any) => {
+        result.data.arr!.forEach(item => {
             temp.push({
                 URL: item.url,
                 IP: item.ip,
@@ -386,7 +385,7 @@ async function copyURLs(type: 'current' | 'top100', dedup: boolean = false) {
         }
         urls = data.map(item => item.URL);
     } else {
-        const result = await HunterSearch(global.space.hunterkey, tab.title, "100", "1", form.defaultTime, form.defaultSever, form.deduplication)
+        const result = await HunterSearch(global.space.hunterapi, global.space.hunterkey, tab.title, "100", "1", form.defaultTime, form.defaultSever, form.deduplication)
 
         let data = result.data.arr;
         if (dedup) {
@@ -531,8 +530,8 @@ function searchCsegmentIpv4(ip: string) {
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="exportIcon" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="exportIcon" @click="exportData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Share" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Share" @click="exportData(1)">导出全部数据</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', false)" divided>复制当前页URL</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top100', false)">复制前100条URL</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', true)" divided>去重复制当前页URL</el-dropdown-item>

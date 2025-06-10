@@ -5,7 +5,7 @@ const activeNames = ref(['1', '2', '3', '4'])
 </script>
 
 <template>
-    <el-collapse v-model="activeNames">
+    <el-collapse v-model="activeNames" class="el-collapse-parent">
         <template v-for="(groups, index) in MenuList">
             <el-collapse-item v-if="groups.children" :name="index.toString()">
                 <template #title>
@@ -17,7 +17,7 @@ const activeNames = ref(['1', '2', '3', '4'])
                     </div>
                 </template>
 
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 5px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-top: 10px;">
                     <el-card shadow="hover" class="card" v-for="item in groups.children" :key="item.path"
                         @click="$router.push(groups.path + item.path)">
                         <div class="flex">
@@ -39,6 +39,19 @@ const activeNames = ref(['1', '2', '3', '4'])
 </template>
 
 <style scoped>
+.el-collapse-parent {
+    border: none;
+    width: 100%;
+    :deep(.el-collapse-item__header) {
+        background: var(--sidebar-bg-color);
+        border-radius: 4px 4px 0px 0px;
+        border-bottom: 1px solid var(--collapse-border-color);
+    }
+    :deep(.el-collapse-item__content) {
+        padding-bottom: 10px;
+    }
+}
+
 .custom-header {
     display: flex;
     align-items: center;

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
-import { Search, ChromeFilled, DocumentCopy, CollectionTag, Delete, Document, PictureRounded, Star, Collection } from '@element-plus/icons-vue';
+import { Search, ChromeFilled, DocumentCopy, CollectionTag, Delete, Document, PictureRounded, Star, Collection, Share } from '@element-plus/icons-vue';
 import { ProcessTextAreaInput, splitInt, Copy, CsegmentIpv4, openURL } from '@/util'
 import { TableTabs, Results } from "@/stores/interface"
 import { ExportToXlsx } from '@/export'
@@ -8,7 +8,6 @@ import { FofaTips, FofaSearch, IconHash } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification, FormInstance } from 'element-plus';
 import global from "@/stores"
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
-import exportIcon from '@/assets/icon/doucment-export.svg'
 import csegmentIcon from '@/assets/icon/csegment.svg'
 import { validateSingleDomain, validateSingleIP } from '@/stores/validate';
 import { structs } from 'wailsjs/go/models';
@@ -456,8 +455,8 @@ function searchCsegmentIpv4(ip: string) {
                 </el-button>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item :icon="exportIcon" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
-                        <el-dropdown-item :icon="exportIcon" @click="exportData(1)">导出全部数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Share" @click="exportData(0)">导出当前查询页数据</el-dropdown-item>
+                        <el-dropdown-item :icon="Share" @click="exportData(1)">导出全部数据</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', false)" divided>复制当前页URL</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('top10000', false)">复制前1w条URL</el-dropdown-item>
                         <el-dropdown-item :icon="DocumentCopy" @click="copyURLs('current', true)" divided>去重复制当前页URL</el-dropdown-item>

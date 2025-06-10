@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"runtime"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 
 	"strings"
 	"sync"
@@ -27,7 +27,7 @@ func CheckLive(ctx context.Context, hostslist []string, Ping bool) []string {
 	chanHosts := make(chan string, len(hostslist))
 	go func() {
 		for ip := range chanHosts {
-			if _, ok := ExistHosts[ip]; !ok && util.ArrayContains(ip, hostslist) {
+			if _, ok := ExistHosts[ip]; !ok && arrayutil.ArrayContains(ip, hostslist) {
 				ExistHosts[ip] = struct{}{}
 				gologger.Info(ctx, ip+" is alive!")
 				AliveHosts = append(AliveHosts, ip)

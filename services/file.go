@@ -11,11 +11,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	rt "runtime"
-	"slack-wails/lib/fileutil"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/update"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
+	"slack-wails/lib/utils/fileutil"
 	"strings"
 	"time"
 
@@ -56,7 +56,7 @@ func (f *File) Startup(ctx context.Context) {
 }
 
 func NewFile() *File {
-	home := util.HomeDir()
+	home := utils.HomeDir()
 	return &File{
 		configPath:   home + "/slack/config",
 		downloadPath: home + "/Downloads/",
@@ -65,8 +65,8 @@ func NewFile() *File {
 
 // 创建爆破字典
 func init() {
-	var userPath = util.HomeDir() + "/slack/portburte/username"
-	var passPath = util.HomeDir() + "/slack/portburte/password"
+	var userPath = utils.HomeDir() + "/slack/portburte/username"
+	var passPath = utils.HomeDir() + "/slack/portburte/password"
 	os.MkdirAll(userPath, 0777)
 	os.MkdirAll(passPath, 0777)
 	for name, dict := range Userdict {
@@ -119,7 +119,7 @@ func (f *File) SaveFileDialog(filename string) string {
 
 // 开始就要检测
 func (f *File) UserHomeDir() string {
-	return util.HomeDir()
+	return utils.HomeDir()
 }
 
 func (f *File) IsMacOS() bool {
@@ -262,7 +262,7 @@ func (f *File) ReadFile(filename string) *FileInfo {
 }
 
 func (f *File) UpdatePocFile(version string) bool {
-	var defaultFile = util.HomeDir() + "/slack/"
+	var defaultFile = utils.HomeDir() + "/slack/"
 	os.MkdirAll(defaultFile, 0777)
 	configFileZip := fmt.Sprintf("%sv%s/config.zip", update.LastestPocUrl, version)
 	_, err := update.NewDownload(f.ctx, configFileZip, defaultFile, "pocDownloadProgress", "")
@@ -279,7 +279,7 @@ func (f *File) UpdatePocFile(version string) bool {
 		gologger.Error(f.ctx, err)
 		return false
 	}
-	os.Remove(util.HomeDir() + "/slack/config.zip")
+	os.Remove(utils.HomeDir() + "/slack/config.zip")
 	return true
 }
 
@@ -352,7 +352,7 @@ func (*File) SaveToTempFile(content string) string {
 }
 
 func (a *App) DownloadCyberChef(url string) error {
-	cyber := util.HomeDir() + "/slack/CyberChef.zip"
+	cyber := utils.HomeDir() + "/slack/CyberChef.zip"
 	fileName, err := update.NewDownload(a.ctx, url, a.defaultPath, "downloadProgress", "")
 	if err != nil {
 		return err

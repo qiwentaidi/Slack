@@ -1,4 +1,4 @@
-package util
+package arrayutil
 
 import (
 	"slack-wails/lib/structs"
@@ -95,17 +95,6 @@ func SplitInt(n, slice int) []int {
 	}
 	res = append(res, n)
 	return res
-}
-
-// 两个数组进行排列组合
-func Combination(s1, s2 []string, split string) []string {
-	var temp []string
-	for _, v1 := range s1 {
-		for _, v2 := range s2 {
-			temp = append(temp, v1+split+v2)
-		}
-	}
-	return temp
 }
 
 // 拼接非空值项数组

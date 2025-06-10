@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"strings"
 	"time"
 )
@@ -47,12 +47,12 @@ func Uncover(ctx context.Context, query, types string, o structs.SpaceOption) []
 
 	if o.HunterKey != "" {
 		hunterStartTime := time.Now().AddDate(-1, 0, -0).Format("2006-01-02")
-		hs := HunterApiSearch(ctx, o.HunterKey, FormatQuery("hunter", types, query), "100", "1", hunterStartTime, "3", false)
+		hs := HunterApiSearch(ctx, defaultHunterApi, o.HunterKey, FormatQuery("hunter", types, query), "100", "1", hunterStartTime, "3", false)
 		gologger.Info(ctx, fmt.Sprintf("[uncover] hunter %d results", len(hs.Data.Arr)))
 		for _, r := range hs.Data.Arr {
 			var component []string
 			for _, c := range r.Component {
-				component = append(component, util.MergeNonEmpty([]string{c.Name, c.Version}, "/"))
+				component = append(component, arrayutil.MergeNonEmpty([]string{c.Name, c.Version}, "/"))
 			}
 			results = append(results, Result{
 				URL:        r.URL,
@@ -81,6 +81,7 @@ func Uncover(ctx context.Context, query, types string, o structs.SpaceOption) []
 		gologger.Info(ctx, fmt.Sprintf("[uncover] quake %d results", len(result.Data)))
 		for _, r := range result.Data {
 			results = append(results, Result{
+				URL:        r.URL,
 				IP:         r.IP,
 				Domain:     r.Host,
 				Port:       fmt.Sprintf("%v", r.Port),

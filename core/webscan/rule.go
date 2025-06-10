@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"strings"
 	"sync"
 
@@ -36,11 +36,10 @@ type FingerPEntity struct {
 type RuleData struct {
 	Start int
 	End   int
-	Op    int16          // 0= 1!= 2== 3>= 4<= 5~=
-	Key   string         // body="123"中的body
-	Value string         // body="123"中的123
-	All   string         // body="123"
-	Regex *regexp.Regexp // 缓存编译后的正则表达式
+	Op    int16  // 0= 1!= 2== 3>= 4<= 5~=
+	Key   string // body="123"中的body
+	Value string // body="123"中的123
+	All   string // body="123"
 }
 
 type ActiveFingerPEntity struct {
@@ -77,7 +76,7 @@ func (config *Config) InitFingprintDB(ctx context.Context, fingerprintFile strin
 				continue
 			}
 
-			if !util.ArrayContains(rule, m[productName]) {
+			if !arrayutil.ArrayContains(rule, m[productName]) {
 				m[productName] = append(m[productName], rule)
 			}
 		}

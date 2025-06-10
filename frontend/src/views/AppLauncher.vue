@@ -120,10 +120,10 @@ const localGroup = ({
             name: "Link",
             icon: chromeIcon,
         },
-        {
-            name: "Script",
-            icon: scriptIcon,
-        }
+        // {
+        //     name: "Script",
+        //     icon: scriptIcon,
+        // }
     ],
     getGroupsName: function () {
         return localGroup.options.value.map(item => item.Name) // 获取所有分组名称

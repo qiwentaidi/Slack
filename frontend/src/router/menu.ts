@@ -51,14 +51,9 @@ const MenuList = [
                 icon: "/app/company.png",
             },
             {
-                name: "aside.subdomain_brute_force",
-                path: "/Subdomain",
-                icon: "/app/www.png"
-            },
-            {
                 name: "aside.search_domain_info",
-                path: "/Ipdomain",
-                icon: "/app/domain.png"
+                path: "/Domain",
+                icon: "/app/www.png"
             },
             {
                 name: "aside.isic",

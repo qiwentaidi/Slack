@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/randutil"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -60,7 +60,7 @@ func (e *Exp) Check() bool {
 
 func (e *Exp) javaHexExploit(option int) {
 	for i := 0; i <= 300; i++ {
-		id := util.RandomStr(8)
+		id := randutil.RandomStr(8)
 		jarFilename := "/tmp/tmp" + id + ".jar"
 		externalName := e.getExternalName(option)
 		javaHex := e.getJavaHex(option)

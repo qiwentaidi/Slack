@@ -2,17 +2,19 @@
 import { onMounted, reactive, ref } from 'vue';
 import { Copy, parseHeaders, ProcessTextAreaInput } from '@/util';
 import { AnalyzeAPI, ExtractAllJSLink, JSFind, GoFetch } from 'wailsjs/go/services/App';
-import { ArrowUpBold, ArrowDownBold, Delete, DocumentCopy } from '@element-plus/icons-vue';
+import { ArrowUpBold, ArrowDownBold, Delete, DocumentCopy, Share } from '@element-plus/icons-vue';
 import global from "@/stores";
 import { ElNotification, ElMessage } from 'element-plus';
 import CustomTextarea from '@/components/CustomTextarea.vue';
 import saveIcon from '@/assets/icon/save.svg'
 import usePagination from '@/usePagination';
 import { JSFindOptions } from '@/stores/options';
-import { JSFindData } from '@/stores/interface';
 import { BrowserOpenURL, EventsOff, EventsOn } from 'wailsjs/runtime/runtime';
 import { getTagTypeBySeverity } from '@/stores/style';
 import { SaveConfig } from '@/config';
+import { structs } from 'wailsjs/go/models';
+import { ExportJSReportWithExcel } from 'wailsjs/go/services/Database';
+import { SaveFileDialog } from 'wailsjs/go/services/File';
 
 onMounted(() => {
     // 初始化参数
@@ -59,7 +61,7 @@ const config = reactive({
     blackList: '',
 })
 
-const pagination = usePagination<JSFindData>(20)
+const pagination = usePagination<structs.JSFindResult>(20)
 
 async function JSFinder() {
     let urls = ProcessTextAreaInput(config.urls)
@@ -73,14 +75,14 @@ async function JSFinder() {
     config.consoleLog = ""
     for (const url of urls) {
         let apiRoute = [] as string[]
-        config.consoleLog += `[*] 正在提取${url}的JS链接...\n`
+        config.consoleLog += `[*] 正在提取${url}的JS链接\n`
         let jslinks = await ExtractAllJSLink(url)
         config.consoleLog += `[+] 共提取到JS链接: ${getLength(jslinks)}个\n`
         if (jslinks != null) {
             config.consoleLog += jslinks.join("\n")
         }
-        config.consoleLog += "\n\n[*] 正在提取JS信息中...\n"
-        let somethings = await JSFind(url, config.prefixJsURL, jslinks)
+        config.consoleLog += "\n\n[*] 正在提取JS信息中\n"
+        let somethings = await JSFind(url, config.prefixJsURL, jslinks, global.jsfinder.whiteList)
         config.consoleLog += `[+] 共提取到API: ${getLength(somethings.APIRoute)}个\n`
         somethings.APIRoute.forEach(item => {
             apiRoute.push(item.Filed)
@@ -237,6 +239,15 @@ function findMissingElements(A: string[], B: string[]) {
     let setA = new Set(A);
     return B.filter(item => !setA.has(item));
 }
+
+async function exportData() {
+    let filepath = await SaveFileDialog("JSFinder-Report.xlsx")
+    if (!filepath) {
+        return
+    }
+    let isSuccess = await ExportJSReportWithExcel(filepath, pagination.table.result)
+    isSuccess ? ElMessage.success("导出成功") : ElMessage.error("导出失败")
+}
 </script>
 
 <template>
@@ -248,7 +259,7 @@ function findMissingElements(A: string[], B: string[]) {
         <el-button round loading v-else>正在运行</el-button>
     </el-divider>
     <el-collapse-transition>
-        <div style="display: flex; gap: 10px;" v-show="showForm">
+        <div class="flex gap-2" v-show="showForm">
             <el-form :model="config" label-width="auto" class="w-1/2">
                 <el-form-item label="目标地址:">
                     <CustomTextarea v-model="config.urls" :rows="5" />
@@ -282,7 +293,7 @@ function findMissingElements(A: string[], B: string[]) {
                 </el-form-item>
                 <el-form-item label="黑名单域名:">
                     <el-input v-model="config.blackList" type="textarea" :rows="5"></el-input>
-                    <span class="form-item-tips">过滤IP/URL内容</span>
+                    <span class="form-item-tips">黑名单的JS内容不会进行信息采集</span>
                 </el-form-item>
                 <el-form-item label=" ">
                     <el-button type="primary" @click="JSFinder">开始任务</el-button>
@@ -312,7 +323,9 @@ function findMissingElements(A: string[], B: string[]) {
             </div>
         </template>
         <pre class="pretty-response" v-show="value == 0"><code>{{ config.consoleLog }}</code></pre>
-        <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 200px)"
+        <el-table :data="pagination.table.pageContent" 
+            :highlight-current-row="true"
+            style="height: calc(100vh - 200px)"
             @sort-change="pagination.ctrl.sortChange" v-show="value == 1">
             <el-table-column label="INFO">
                 <template #default="scope">
@@ -337,7 +350,10 @@ function findMissingElements(A: string[], B: string[]) {
                     </el-space>
                 </template>
             </el-table-column>
-            <el-table-column width="100" align="center">
+            <el-table-column width="120" align="center">
+                <template #header>
+                    <el-button :icon="Share" size="small" @click="exportData">导出数据</el-button>
+                </template>
                 <template #default="scope">
                     <el-button type="primary" @click="openDialog(scope.row)">More</el-button>
                 </template>
@@ -358,10 +374,11 @@ function findMissingElements(A: string[], B: string[]) {
     </el-card>
     <el-dialog v-model="dialog" title="漏洞详情">
         请求方式: {{ detail.Method }} <br /><br />
-        <span v-if="detail.VulType != '未授权访问'">源目标: <el-link type="primary" @click="BrowserOpenURL(detail.Target)">{{
+        <span>源目标: <el-link type="primary" @click="BrowserOpenURL(detail.Target)">{{
             detail.Target }}</el-link> <br /><br /></span>
         来源链接: <el-link type="primary" @click="BrowserOpenURL(detail.Source)">{{ detail.Source }}</el-link><br /><br />
         漏洞类型: {{ detail.VulType }} <br /><br />
+        <span>字段内容: {{ detail.Filed }}<br /><br /></span>
         漏洞等级: <el-tag :type="getTagTypeBySeverity(detail.Severity)">
             {{ detail.Severity }}
         </el-tag> <br /><br />

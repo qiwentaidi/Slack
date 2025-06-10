@@ -3,7 +3,7 @@ package gonmap
 import (
 	"fmt"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"strings"
 	"time"
 
@@ -45,7 +45,7 @@ func (n *Nmap) Scan(ip string, port int, timeout time.Duration, proxy clients.Pr
 	}
 	probeNames = append(probeNames, n.sslProbeMap...)
 	//探针去重
-	probeNames = util.RemoveDuplicates(probeNames)
+	probeNames = arrayutil.RemoveDuplicates(probeNames)
 
 	firstProbe := probeNames[0]
 	status, response = n.getRealResponse(ip, port, n.timeout, proxy, firstProbe)

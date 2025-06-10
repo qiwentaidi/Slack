@@ -7,6 +7,7 @@ html.dark {
     --list-item-hover-color: #303030;
     --list-item-selected-color: #3B3B3B;
     --split-color: #262626;
+    --collapse-border-color: #424242;
 
     .el-divider__text {
         background-color: #1E1E1E;

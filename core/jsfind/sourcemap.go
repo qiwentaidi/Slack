@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
+	"slack-wails/lib/utils/httputil"
 	"strings"
 )
 
@@ -20,7 +21,7 @@ type SourceMap struct {
 }
 
 // 输出路径：~/slack/sourceMap
-var outputPath = filepath.Join(util.HomeDir(), "slack", "sourceMap")
+var outputPath = filepath.Join(utils.HomeDir(), "slack", "sourceMap")
 
 func RestoreWebpack(ctx context.Context, sourceMapURL string) (string, error) {
 	// 正确逻辑：必须以 .js.map 结尾
@@ -52,7 +53,7 @@ func RestoreWebpack(ctx context.Context, sourceMapURL string) (string, error) {
 		sourcePath = removeWebpackPrefix(sourcePath)
 
 		// 最终的输出路径
-		fullOutputPath := filepath.Join(outputPath, util.RenameOutput(util.GetBasicURL(sourceMapURL)), sourcePath)
+		fullOutputPath := filepath.Join(outputPath, utils.RenameOutput(httputil.GetBasicURL(sourceMapURL)), sourcePath)
 
 		// 创建中间目录
 		if err := os.MkdirAll(filepath.Dir(fullOutputPath), 0755); err != nil {

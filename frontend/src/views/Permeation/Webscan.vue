@@ -3,7 +3,7 @@ import { reactive, onMounted, ref, nextTick } from 'vue'
 import { VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled, Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Picture, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, NewCrackScanenr } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLine } from '@/util'
+import { TestProxy, Copy, generateRandomString, ProcessTextAreaInput, getProxy, ReadLineWithoutNotify, ReadLine } from '@/util'
 import global from "@/stores"
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime/runtime';
 import usePagination from '@/usePagination';
@@ -180,7 +180,8 @@ async function initialize() {
     dashboard.pocLength = pocMap ? Object.keys(pocMap).length : 0;
 
     // 遍历模板
-    let files = await List([global.PATH.homedir + "/slack/config/pocs", global.webscan.append_pocfile]);
+    let defaultPath = await FilepathJoin([global.PATH.homedir, "/slack/config/pocs"]);
+    let files = await List([defaultPath, global.webscan.append_pocfile]);
     param.allTemplate = files
         .filter(file => file.Path.endsWith(".yaml"))
         .map(file => ({ label: file.BaseName, value: file.Path }));
@@ -218,7 +219,7 @@ onMounted(() => {
             // fix in 2.1。0 端口扫描/网站扫描访问失败的目标应该也要输出结果
             // return
         }
-        if ((result.Scheme == "http" || result.Scheme == "https") && result.StatusCode == 422) {
+        if (result.StatusCode == 422 || result.StatusCode == 402) {
             addActivity({
                 content: result.URL + " 为云防护地址, 已过滤",
                 type: "warning",
@@ -413,7 +414,7 @@ class Engine {
             this.inputLines = fp.table.result.filter(line => line.Scheme === "http" || line.Scheme === "https").map(item => item.URL);
             fp.table.result.map(line => {
                 if (line.Scheme === "http" || line.Scheme === "https") {
-                   this.inputLines.push(line.URL)
+                    this.inputLines.push(line.URL)
                 } else {
                     this.tcpLines[line.URL] = line.Fingerprints
                 }
@@ -503,12 +504,21 @@ class Engine {
         }
     }
 
+    public async NewCrackScanenrAwait(taskId: string, target: string, userDict: string[], passDict: string[]) {
+        return new Promise<void>((resolve) => {
+            NewCrackScanenr(taskId, target, userDict, passDict)
+            EventsOn(`crackDone::${target}`, () => {
+                resolve()
+            })
+        });
+    }
+
     public async CrackRunner() {
         if (!form.runnningStatus || form.scanStopped) {
             return
         }
         let crackLinks = fp.table.result.filter(line => crackDict.options.includes(line.Scheme.toLowerCase()))
-        .map(item => item.URL);
+            .map(item => item.URL);
         if (crackLinks.length == 0) {
             addActivity({
                 content: "未发现可被暴破的目标",
@@ -521,7 +531,7 @@ class Engine {
         if (param.builtInUsername) {
             for (var item of crackDict.usernames) {
                 let filepath = await FilepathJoin([global.PATH.homedir, global.PATH.PortBurstPath, item.dicPath])
-                item.dic = (await ReadLine(filepath))!
+                item.dic = (await ReadLineWithoutNotify(filepath))!
             }
         }
         if (param.builtInPassword) {
@@ -545,25 +555,32 @@ class Engine {
         })
         // **使用 Promise 包装 async.eachLimit，确保 CrackRunner() 被 await**
         await new Promise((resolve, reject) => {
-            async.eachLimit(crackLinks, global.webscan.crack_thread, (target: string, callback: (err?: any) => void) => {
-                if (!form.runnningStatus || form.scanStopped) {
-                    return callback();  // 结束当前任务
-                }
+            async.eachLimit(
+                crackLinks,
+                global.webscan.crack_thread,
+                (target: string, callback: (err?: any) => void) => { // ⚠️ 不要加 async 在这里
+                    (async () => {
+                        try {
+                            if (!form.runnningStatus || form.scanStopped) return callback();  // 结束当前任务
 
-                let protocol = target.split("://")[0];
-                userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!;
+                            let protocol = target.split("://")[0];
+                            userDict = crackDict.usernames.find(item => item.name.toLocaleLowerCase() === protocol)?.dic!;
 
-                Callgologger("info", target + " is start weak password cracking");
-                NewCrackScanenr(form.taskId, target, userDict, passDict);
-
-                callback();  // 任务完成后调用 callback
-            },
+                            Callgologger("info", target + " is start weak password cracking");
+                            await this.NewCrackScanenrAwait(form.taskId, target, userDict, passDict);
+                        } catch (err) {
+                            Callgologger("error", "crack error: " + err);
+                        } finally {
+                            EventsOff(`crackDone::${target}`);
+                            callback(); // ✅ 确保回调调用
+                        }
+                    })();
+                },
                 (err: any) => {
                     if (err) {
                         reject(err);
                     } else {
-                        Callgologger("info", "Crack Finished");
-                        resolve(null); // 任务全部完成
+                        resolve(null); // 所有任务完成
                     }
                 }
             );
@@ -958,8 +975,7 @@ const shodanRunningstatus = ref(false)
             </el-col>
             <el-col :span="12">
                 <div ref="timelineContainer" class="timelineContainer">
-                    <el-timeline v-if="activities.length >= 1"
-                        style="text-align: left; padding-left: 5px;">
+                    <el-timeline v-if="activities.length >= 1" style="text-align: left; padding-left: 5px;">
                         <el-timeline-item v-for="(activity, index) in activities" :key="index" :icon="activity.icon"
                             :type="activity.type" :timestamp="activity.timestamp">
                             {{ activity.content }}
@@ -973,11 +989,15 @@ const shodanRunningstatus = ref(false)
     <CustomTabs>
         <el-tabs type="border-card">
             <el-tab-pane label="信息">
-                <el-table :data="fp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
-                    :header-cell-style="{ 'text-align': 'center' }" @row-contextmenu="handleWebscanContextMenu"
+                <el-table :data="fp.table.pageContent" 
+                    stripe height="100vh" 
+                    :highlight-current-row="true"
+                    :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ 'text-align': 'center' }"
+                    @row-contextmenu="handleWebscanContextMenu"
                     @sort-change="fp.ctrl.sortChange">
                     <el-table-column fixed prop="URL" label="Link" width="350px" />
-                    <el-table-column width="150px" label="Port & Protocol" :show-overflow-tooltip="true">
+                    <el-table-column width="170px" label="Port & Protocol" :show-overflow-tooltip="true">
                         <template #default="scope">
                             <el-tag type="primary" round effect="plain">{{ scope.row.Port }}</el-tag>
                             <el-tag type="primary" round effect="plain" class="ml-5px">{{ scope.row.Scheme
@@ -1029,7 +1049,9 @@ const shodanRunningstatus = ref(false)
                 </div>
             </el-tab-pane>
             <el-tab-pane label="漏洞">
-                <el-table :data="vp.table.pageContent" stripe height="100vh" :cell-style="{ textAlign: 'center' }"
+                <el-table :data="vp.table.pageContent" stripe height="100vh" 
+                    :highlight-current-row="true"
+                    :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }"
                     @sort-change="((data: any) => vp.ctrl.sortChange(data, true))"
                     @filter-change="vp.ctrl.filterChange">
@@ -1106,8 +1128,7 @@ const shodanRunningstatus = ref(false)
                 <el-select v-model="param.portGroup" @change="updatePorts">
                     <el-option v-for="(item, index) in portGroupOptions" :label="item.text" :value="index" />
                 </el-select>
-                <el-input v-model="form.portlist" type="textarea" :rows="4" resize="none"
-                    class="mt-5px"></el-input>
+                <el-input v-model="form.portlist" type="textarea" :rows="4" resize="none" class="mt-5px"></el-input>
             </el-form-item>
             <el-form-item label="漏洞扫描:">
                 <el-switch v-model="config.vulscan" class="w-full" />
@@ -1248,7 +1269,7 @@ const shodanRunningstatus = ref(false)
             <el-divider direction="vertical" />
         </template>
         <div v-if="selectedRow">
-            <el-descriptions :column="1" border class="w-full mt-10px">
+            <el-descriptions :column="1" border class="w-full mb-10px">
                 <el-descriptions-item label="Name:">{{ selectedRow.Name }}</el-descriptions-item>
                 <el-descriptions-item label="Description:">
                     <span class="all-break">{{ selectedRow.Description }}</span>

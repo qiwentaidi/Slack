@@ -10,7 +10,7 @@ import (
 	"hash"
 	"net/url"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -72,7 +72,12 @@ func GetFaviconFullLink(u *url.URL, client *resty.Client) (string, error) {
 	} else if strings.HasPrefix(iconLink, "//") {
 		finalLink = u.Scheme + ":" + iconLink
 	} else {
-		finalLink = fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, iconLink)
+		// 传入二级路径的时，需要正确处理图标路径
+		if u.Path != "" {
+			finalLink = fmt.Sprintf("%s://%s%s/%s", u.Scheme, u.Host, u.Path, iconLink)
+		} else {
+			finalLink = fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, iconLink)
+		}
 	}
 	return finalLink, nil
 }
@@ -85,7 +90,7 @@ func parseIcons(doc *goquery.Document) []string {
 		href, exists := s.Attr("href")
 		if exists {
 			// 匹配ICON链接
-			if rel, exists := s.Attr("rel"); exists && util.ArrayContains(rel, iconDesktopRels) {
+			if rel, exists := s.Attr("rel"); exists && arrayutil.ArrayContains(rel, iconDesktopRels) {
 				icons = append(icons, href)
 			}
 		}
@@ -96,7 +101,7 @@ func parseIcons(doc *goquery.Document) []string {
 			href, exists := s.Attr("href")
 			if exists {
 				// 匹配ICON链接
-				if rel, exists := s.Attr("rel"); exists && util.ArrayContains(rel, iconMobileRels) {
+				if rel, exists := s.Attr("rel"); exists && arrayutil.ArrayContains(rel, iconMobileRels) {
 					icons = append(icons, href)
 				}
 			}

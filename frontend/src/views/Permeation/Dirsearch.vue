@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
-import { LoadDirsearchDict, DirScan, ExitScanner } from "wailsjs/go/services/App";
+import { LoadDirsearchDict, NewDirsearchScanner, ExitScanner } from "wailsjs/go/services/App";
 import { ProcessTextAreaInput, Copy, ReadLine, selectFileAndAssign } from '@/util'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { BrowserOpenURL, EventsOn, EventsOff } from 'wailsjs/runtime'
@@ -168,7 +168,6 @@ class Dirsearch {
         } else {
             this.urls = [from.input]
         }
-
         for (let i = 0; i <= config.recursion; i++) {
             let option: dirsearch.Options = {
                 Method: from.defaultOption,
@@ -183,6 +182,7 @@ class Dirsearch {
                 Interval: config.interval,
                 CustomHeader: config.headers,
                 Recursion: i,
+                Backupscan: config.backupfileScan
             }
             if (i > 0) {
                 option.URLs = pagination.table.result.filter(item => (item.Status == 200 && item.Recursion == i - 1))
@@ -191,7 +191,7 @@ class Dirsearch {
             if (option.URLs.length == 0 || !config.runningStatus) {
                 return
             }
-            await DirScan(option)
+            await NewDirsearchScanner(option)
         }
         config.runningStatus = false
         ElNotification.success({
@@ -246,6 +246,7 @@ const config = reactive({
     redirectClient: false,
     runningStatus: false,
     recursion: 0,
+    backupfileScan: false,
 })
 
 function copyHistory(length: number) {
@@ -311,24 +312,30 @@ function deleteRecordsWithTimesEqualOne() {
                 <el-button link :icon="Document" @click="selectFileAndAssign(from, 'input', '*.txt')" />
             </template>
         </el-input>
-        <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="dirscan"
-            class="ml-5px">
+        <el-button :type="config.runningStatus ? 'danger' : 'primary'" @click="dirscan" class="ml-5px">
             {{ config.runningStatus ? '停止扫描' : '开始扫描' }}
         </el-button>
     </div>
     <el-card shadow="never">
         <div class="flex-between mb-5px">
             <el-space>
+                <el-switch v-model="config.backupfileScan" inline-prompt active-text="开启备份文件扫描模式" inactive-text="关闭备份文件扫描模式" />
+                <el-switch v-model="config.redirectClient" inline-prompt active-text="开启重定向跟随" inactive-text="关闭重定向跟随" />
                 <el-tag>递归层级:{{ config.recursion }}</el-tag>
-                <el-tag>字典大小:{{ from.paths.length }}</el-tag>
+                <el-tag>
+                    <span v-if="!config.backupfileScan">字典大小: {{ from.paths.length }}</span>
+                    <span v-else>内置字典规则</span>
+                </el-tag>
                 <el-tooltip placement="bottom" content="请求失败数量">
                     <el-tag type="danger">ERROR:{{ from.errorCounts }}</el-tag>
                 </el-tooltip>
             </el-space>
             <el-button :icon="Setting" @click="config.drawer = true">参数设置</el-button>
         </div>
-        <el-table :data="pagination.table.pageContent" @sort-change="pagination.ctrl.sortChange"
-             style="height: calc(100vh - 205px);">
+        <el-table :data="pagination.table.pageContent" 
+            @sort-change="pagination.ctrl.sortChange"
+            :highlight-current-row="true"
+            style="height: calc(100vh - 205px);">
             <el-table-column type="index" label="#" width="60px" />
             <el-table-column prop="Status" width="100px" label="Code" sortable="custom" />
             <el-table-column prop="Length" width="100px" label="Length" sortable="custom" />
@@ -348,6 +355,7 @@ function deleteRecordsWithTimesEqualOne() {
                     {{ scope.row.URL }}
                 </template>
             </el-table-column>
+            <el-table-column prop="Title" width="300px" label="Title" />
             <el-table-column prop="Recursion" width="100px" label="Recursion" />
             <el-table-column label="Operate" width="120px" align="center">
                 <template #default="scope">
@@ -384,9 +392,6 @@ function deleteRecordsWithTimesEqualOne() {
             <span class="drawer-title">设置高级参数</span>
         </template>
         <el-form label-width="auto">
-            <el-form-item label="重定向跟随:">
-                <el-switch v-model="config.redirectClient" />
-            </el-form-item>
             <el-form-item label="线程:">
                 <el-input-number v-model="config.thread" :min="1" :max="100" />
             </el-form-item>
@@ -419,7 +424,8 @@ function deleteRecordsWithTimesEqualOne() {
                 <el-input v-model="from.statusFilter" placeholder="支持200,300 | 200-300,400-500"></el-input>
             </el-form-item>
             <el-form-item label="请求头:">
-                <el-input v-model="config.headers" :placeholder="$t('tips.customHeaders')" type="textarea" :rows="3"></el-input>
+                <el-input v-model="config.headers" :placeholder="$t('tips.customHeaders')" type="textarea"
+                    :rows="3"></el-input>
             </el-form-item>
             <el-form-item label="字典列表:">
                 <el-select v-model="from.selectDict" multiple clearable collapse-tags collapse-tags-tooltip
@@ -427,7 +433,8 @@ function deleteRecordsWithTimesEqualOne() {
                     <template #prefix>
                         <el-button-group>
                             <el-tooltip content="加载自定义字典">
-                                <el-button link :icon="Document" @click="selectFileAndAssign(from, 'selectDict', '*.txt')" />
+                                <el-button link :icon="Document"
+                                    @click="selectFileAndAssign(from, 'selectDict', '*.txt')" />
                             </el-tooltip>
                             <el-tooltip content="打开文件夹">
                                 <el-button link :icon="FolderOpened" @click="OpenFolder(from.configPath)" />
@@ -439,13 +446,16 @@ function deleteRecordsWithTimesEqualOne() {
                     </template>
                     <el-option v-for="item in from.dictList" :label="item" :value="item" />
                 </el-select>
-                <el-input v-model="config.customDict" type="textarea" :rows="8" placeholder="若该文本框中存在内容，则加载其内容目录为字典，不使用选中字典"></el-input>
+                <el-input v-model="config.customDict" type="textarea" :rows="8"
+                    placeholder="若该文本框中存在内容，则加载其内容目录为字典，不使用选中字典"></el-input>
             </el-form-item>
             <el-form-item label="扫描记录:" class="align-right">
-                <el-alert title="记录响应码为200、500路径出现次数, 数据非实时, 每次启动/刷新应用时会更新" type="info" show-icon :closable="false"></el-alert>
-                <el-button type="danger" plain :icon="WarnTriangleFilled" @click="deleteRecordsWithTimesEqualOne" class="w-full my-5px">删除次数为1的记录</el-button>
-                <el-table :data="pathTimes.table.pageContent" border 
-                @sort-change="pathTimes.ctrl.sortChange" class="w-full" style="height: 50vh;">
+                <el-alert title="记录响应码为200、500路径出现次数, 数据非实时, 每次启动/刷新应用时会更新" type="info" show-icon
+                    :closable="false"></el-alert>
+                <el-button type="danger" plain :icon="WarnTriangleFilled" @click="deleteRecordsWithTimesEqualOne"
+                    class="w-full my-5px">删除次数为1的记录</el-button>
+                <el-table :data="pathTimes.table.pageContent" border @sort-change="pathTimes.ctrl.sortChange"
+                    class="w-full" style="height: 50vh;">
                     <el-table-column prop="path">
                         <template #header>
                             <el-text><span>Path</span>
@@ -459,7 +469,8 @@ function deleteRecordsWithTimesEqualOne() {
                     <el-table-column prop="times" label="Occurrences" width="150" sortable="custom" />
                     <el-table-column label="Operate" width="100" align="center">
                         <template #default="scope">
-                            <el-button :icon="Delete" size="small" plain @click="deleteRecordFormPath(scope.row.path)">删除</el-button>
+                            <el-button :icon="Delete" size="small" plain
+                                @click="deleteRecordFormPath(scope.row.path)">删除</el-button>
                         </template>
                     </el-table-column>
                     <template #empty>

@@ -12,9 +12,9 @@ import (
 	"os"
 	"path"
 	"slack-wails/lib/clients"
-	"slack-wails/lib/fileutil"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
+	"slack-wails/lib/utils/fileutil"
 
 	"github.com/minio/selfupdate"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -133,7 +133,7 @@ func roundToTwoDecimals(value float64) float64 {
 }
 
 func InitConfig(ctx context.Context) bool {
-	var defaultFile = util.HomeDir() + "/slack/"
+	var defaultFile = utils.HomeDir() + "/slack/"
 	// os.MkdirAll(defaultFile, 0644)
 	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
 	resp, err := clients.SimpleGet(latestConfigVersion, clients.NewRestyClient(nil, true))
@@ -166,6 +166,6 @@ func InitConfig(ctx context.Context) bool {
 		gologger.Error(ctx, err)
 		return false
 	}
-	os.Remove(util.HomeDir() + "/slack/config.zip")
+	os.Remove(utils.HomeDir() + "/slack/config.zip")
 	return true
 }

@@ -1,4 +1,4 @@
-package info
+package beianx
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ import (
 var acwscv2 = ""
 
 // 返回域名组，延时防止请求过快
-func Beianx(company string, machine string) ([]string, error) {
+func FetchDomainByCompanyName(company string, machine string) ([]string, error) {
 	h := map[string]string{
 		"Cookie": fmt.Sprintf("acw_sc__v2=%s;machine_str=%s", acwscv2, machine),
 	}
@@ -29,7 +29,7 @@ func Beianx(company string, machine string) ([]string, error) {
 		arg1 := getArg1FromHTML(string(resp.Body()))
 		acwscv2 = getAcwScV2(arg1)
 		time.Sleep(time.Second)
-		return Beianx(company, machine)
+		return FetchDomainByCompanyName(company, machine)
 	}
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(resp.Body()))
 	if err != nil {

@@ -6,6 +6,7 @@ var space = reactive({
     fofaapi: 'https://fofa.info/',
     fofaemail: '',
     fofakey: '',
+    hunterapi: 'https://hunter.qianxin.com/',
     hunterkey: '',
     quakekey: '',
     chaos: '',
@@ -91,7 +92,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "2.1.2"
+const LOCAL_VERSION = "2.2.0"
 
 const Language = ref("zh")
 const Theme = ref(false)

@@ -10,20 +10,16 @@ export function Callgologger(arg1, arg2) {
   return window['go']['services']['App']['Callgologger'](arg1, arg2);
 }
 
-export function CheckCdn(arg1) {
-  return window['go']['services']['App']['CheckCdn'](arg1);
-}
-
 export function CyberChefLocalServer() {
   return window['go']['services']['App']['CyberChefLocalServer']();
 }
 
-export function DirScan(arg1) {
-  return window['go']['services']['App']['DirScan'](arg1);
-}
-
 export function DownloadCyberChef(arg1) {
   return window['go']['services']['App']['DownloadCyberChef'](arg1);
+}
+
+export function EnrichCompanyWithMiit(arg1, arg2) {
+  return window['go']['services']['App']['EnrichCompanyWithMiit'](arg1, arg2);
 }
 
 export function ExitScanner(arg1) {
@@ -36,6 +32,10 @@ export function ExtractAllJSLink(arg1) {
 
 export function FaviconMd5(arg1) {
   return window['go']['services']['App']['FaviconMd5'](arg1);
+}
+
+export function FetchCompanyInfo(arg1, arg2, arg3, arg4) {
+  return window['go']['services']['App']['FetchCompanyInfo'](arg1, arg2, arg3, arg4);
 }
 
 export function FingerprintList() {
@@ -66,16 +66,12 @@ export function HostAlive(arg1, arg2) {
   return window['go']['services']['App']['HostAlive'](arg1, arg2);
 }
 
-export function HunterSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
-  return window['go']['services']['App']['HunterSearch'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+export function HunterSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+  return window['go']['services']['App']['HunterSearch'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
 export function HunterTips(arg1) {
   return window['go']['services']['App']['HunterTips'](arg1);
-}
-
-export function ICPInfo(arg1) {
-  return window['go']['services']['App']['ICPInfo'](arg1);
 }
 
 export function IconHash(arg1) {
@@ -86,20 +82,12 @@ export function InitRule(arg1) {
   return window['go']['services']['App']['InitRule'](arg1);
 }
 
-export function Ip138IpHistory(arg1) {
-  return window['go']['services']['App']['Ip138IpHistory'](arg1);
-}
-
-export function Ip138Subdomain(arg1) {
-  return window['go']['services']['App']['Ip138Subdomain'](arg1);
-}
-
 export function IpLocation(arg1) {
   return window['go']['services']['App']['IpLocation'](arg1);
 }
 
-export function JSFind(arg1, arg2, arg3) {
-  return window['go']['services']['App']['JSFind'](arg1, arg2, arg3);
+export function JSFind(arg1, arg2, arg3, arg4) {
+  return window['go']['services']['App']['JSFind'](arg1, arg2, arg3, arg4);
 }
 
 export function LoadDirsearchDict(arg1, arg2) {
@@ -118,6 +106,10 @@ export function NewDSStoreEngine(arg1) {
   return window['go']['services']['App']['NewDSStoreEngine'](arg1);
 }
 
+export function NewDirsearchScanner(arg1) {
+  return window['go']['services']['App']['NewDirsearchScanner'](arg1);
+}
+
 export function NewTcpScanner(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
   return window['go']['services']['App']['NewTcpScanner'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
@@ -132,6 +124,10 @@ export function QuakeSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
 export function QuakeTips(arg1) {
   return window['go']['services']['App']['QuakeTips'](arg1);
+}
+
+export function ResumeAfterHumanCheck() {
+  return window['go']['services']['App']['ResumeAfterHumanCheck']();
 }
 
 export function Socks5Conn(arg1, arg2, arg3, arg4, arg5, arg6) {
@@ -150,18 +146,10 @@ export function Subdomain(arg1) {
   return window['go']['services']['App']['Subdomain'](arg1);
 }
 
-export function SubsidiariesAndDomains(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['services']['App']['SubsidiariesAndDomains'](arg1, arg2, arg3, arg4, arg5);
-}
-
-export function TycCheckLogin(arg1) {
-  return window['go']['services']['App']['TycCheckLogin'](arg1);
-}
-
 export function UncoverSearch(arg1, arg2, arg3) {
   return window['go']['services']['App']['UncoverSearch'](arg1, arg2, arg3);
 }
 
-export function WechatOfficial(arg1) {
-  return window['go']['services']['App']['WechatOfficial'](arg1);
+export function WriteCompanyInfoToJson(arg1) {
+  return window['go']['services']['App']['WriteCompanyInfoToJson'](arg1);
 }

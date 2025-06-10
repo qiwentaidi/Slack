@@ -2,6 +2,7 @@ package jsfind
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slack-wails/lib/clients"
@@ -17,6 +18,7 @@ type APIRequest struct {
 	Method  string            `json:"method"`
 	Headers map[string]string `json:"headers"`
 	Params  url.Values        `json:"params"`
+	Body    string            `json:"body"`
 }
 
 // 发送请求测试未授权访问
@@ -33,9 +35,9 @@ func testUnauthorizedAccess(homeBody string, apiReq APIRequest, authentication [
 	}
 
 	// 检查响应体是否为HTML
-	if isHTMLResponse(body) {
-		return false, "", errors.New("响应体为HTML内容")
-	}
+	// if isHTMLResponse(body) {
+	// 	return false, "", errors.New("响应体为HTML内容")
+	// }
 
 	// 2. 页面内容完全相同，排除
 	if homeBody == body {
@@ -69,9 +71,9 @@ func testPrivilegeEscalation(highPrivBody string, apiReq APIRequest) (bool, stri
 	lowPrivBody := string(lowPrivResp.Body())
 
 	// 如果低权限响应是 HTML 页面，也跳过检测
-	if isHTMLResponse(lowPrivBody) {
-		return false, "", errors.New("低权限响应为HTML页面")
-	}
+	// if isHTMLResponse(lowPrivBody) {
+	// 	return false, "", errors.New("低权限响应为HTML页面")
+	// }
 
 	// 判断响应内容是否一致（排除状态码）
 	if highPrivBody == lowPrivBody {
@@ -126,18 +128,26 @@ func jaccardSimilarity(text1, text2 string) float64 {
 
 func sendAPIRequest(apiReq APIRequest) (*resty.Response, error) {
 	var requestBody *strings.Reader
+	finalURL := apiReq.URL
+
+	// GET 请求时，参数应拼接在 URL 上
 	if apiReq.Method == http.MethodGet {
+		if len(apiReq.Params.Encode()) > 0 {
+			finalURL = fmt.Sprintf("%s?%s", apiReq.URL, apiReq.Params.Encode())
+		}
 		requestBody = strings.NewReader("")
 	} else {
-		requestBody = strings.NewReader(apiReq.Params.Encode())
-		if strings.Contains(apiReq.Headers["Content-Type"], "application/json") {
-			requestBody = strings.NewReader("{}")
+		// POST/PUT 等请求
+		if apiReq.Body != "" {
+			requestBody = strings.NewReader(apiReq.Body)
+		} else {
+			requestBody = strings.NewReader(apiReq.Params.Encode())
 		}
 	}
 
 	resp, err := clients.DoRequest(
 		apiReq.Method,
-		apiReq.URL,
+		finalURL,
 		apiReq.Headers,
 		requestBody,
 		10,
@@ -146,7 +156,7 @@ func sendAPIRequest(apiReq APIRequest) (*resty.Response, error) {
 	return resp, err
 }
 
-func isHTMLResponse(body string) bool {
-	bodyLower := strings.ToLower(body)
-	return strings.Contains(bodyLower, "<html") || strings.Contains(bodyLower, "<body")
-}
+// func isHTMLResponse(body string) bool {
+// 	bodyLower := strings.ToLower(body)
+// 	return strings.Contains(bodyLower, "<html") || strings.Contains(bodyLower, "<body")
+// }

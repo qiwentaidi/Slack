@@ -1,4 +1,4 @@
-<h4 align="center">安全服务集成化工具平台，希望能帮助你少开几个应用测试</h4>
+<h4 align="center">安全服务集成化工具集</h4>
 
 <p align="center">
 <img src="https://img.shields.io/github/go-mod/go-version/qiwentaidi/Slack?filename=go.mod">

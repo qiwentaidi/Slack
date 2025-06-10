@@ -6,8 +6,7 @@ import { reactive, ref, onMounted } from "vue";
 import { ExitScanner, Subdomain } from "wailsjs/go/services/App";
 import { CheckFileStat, FileDialog, FilepathJoin } from "wailsjs/go/services/File";
 import { ElMessage, ElNotification } from 'element-plus'
-import { WarningFilled, Setting } from '@element-plus/icons-vue';
-import exportIcon from '@/assets/icon/doucment-export.svg'
+import { WarningFilled, Setting, Share } from '@element-plus/icons-vue';
 import usePagination from "@/usePagination";
 import { SubdomainInfo } from "@/stores/interface";
 import { EventsOn, EventsOff } from "wailsjs/runtime/runtime";
@@ -24,7 +23,7 @@ onMounted(() => {
     EventsOn("subdomainLoading", (result: SubdomainInfo) => {
         if (result.Source == "Enumeration") {
             let r = pagination.table.result.find(item => item.Subdomain == result.Subdomain)
-            if (r == undefined) {
+            if (!r) {
                 return
             }
         }
@@ -38,7 +37,6 @@ onMounted(() => {
         config.count = count
     });
     EventsOn("subdomainComplete", (message: string) => {
-        ElMessage.info(message)
         config.runningStatus = false
         config.percentage = 100
     });
@@ -85,55 +83,55 @@ async function NewTask() {
 }
 
 class Runner {
+    domains = [] as string[]
     public async checkInput() {
         if (input.value == '') {
             ElMessage.warning("请输入域名或者域名文件")
             return false
         }
         if (validateSingleDomain(input.value)) {
+            this.domains = [input.value]
             return true
         }
         let stat = await CheckFileStat(input.value)
         if (!stat) {
             ElMessage.warning('输入的文件路径不存在')
+            return false
         }
-        return stat
+        this.domains = await ReadLine(input.value)
+        return true
     }
 
     public async NewRunner() {
-        let domains = [] as string[]
-        if (await CheckFileStat(input.value)) {
-            domains = (await ReadLine(input.value))!
-        } else {
-            domains = [input.value]
-        }
-        if (currentRunner.value == 1 && checkSpaceEngines.value.includes("FOFA") && (!global.space.fofakey)) {
-            ElMessage.warning('请先配置FOFA密钥')
-            return
-        }
-        if (currentRunner.value == 1 && checkSpaceEngines.value.includes("Hunter") && (!global.space.hunterkey)) {
-            ElMessage.warning('请先配置Hunter密钥')
-            return
-        }
-        if (currentRunner.value == 1 && checkSpaceEngines.value.includes("Quake") && (!global.space.quakekey)) {
-            ElMessage.warning('请先配置Quake密钥')
-            return
-        }
-        if (currentRunner.value == 1 && (!global.space.chaos) && (!global.space.bevigil) &&
-            (!global.space.securitytrails) && (!global.space.zoomeye) && (!global.space.github) &&
-            (!global.space.fofakey) && (!global.space.hunterkey) && (!global.space.quakekey)) {
-            ElMessage.warning("请至少填写一个API进行查询")
-            return
+        if (currentRunner.value != 3) {
+            if (currentRunner.value == 1 && checkSpaceEngines.value.includes("FOFA") && (!global.space.fofakey)) {
+                ElMessage.warning('请先配置FOFA密钥')
+                return
+            }
+            if (currentRunner.value == 1 && checkSpaceEngines.value.includes("Hunter") && (!global.space.hunterkey)) {
+                ElMessage.warning('请先配置Hunter密钥')
+                return
+            }
+            if (currentRunner.value == 1 && checkSpaceEngines.value.includes("Quake") && (!global.space.quakekey)) {
+                ElMessage.warning('请先配置Quake密钥')
+                return
+            }
+            if (currentRunner.value == 1 && (!global.space.chaos) && (!global.space.bevigil) &&
+                (!global.space.securitytrails) && (!global.space.zoomeye) && (!global.space.github) &&
+                (!global.space.fofakey) && (!global.space.hunterkey) && (!global.space.quakekey)) {
+                ElMessage.warning("请至少填写一个API进行查询")
+                return
+            }
+            if (currentRunner.value != 1 && config.subs.length == 0) {
+                let filepath = await FilepathJoin([global.PATH.homedir, "/slack/config/subdomain/dicc.txt"])
+                config.subs = (await ReadLine(filepath))!
+            }
         }
         config.runningStatus = true
         pagination.initTable()
-        if (currentRunner.value != 1 && config.subs.length == 0) {
-            let filepath = await FilepathJoin([global.PATH.homedir, "/slack/config/subdomain/dicc.txt"])
-            config.subs = (await ReadLine(filepath))!
-        }
         let option: structs.SubdomainOption = {
             Mode: currentRunner.value,
-            Domains: domains,
+            Domains: this.domains,
             Subs: config.subs,
             Thread: config.thread,
             Timeout: config.timeout,
@@ -156,7 +154,9 @@ class Runner {
 }
 async function handleFileChange() {
     config.subFilepath = await FileDialog("*.txt")
-    config.subs = (await ReadLine(config.subFilepath))!
+    if (config.subFilepath) {
+        config.subs = (await ReadLine(config.subFilepath))!
+    }
 }
 
 async function handleTargetFileChange() {
@@ -196,6 +196,14 @@ const handleCheckAllChange = (val: boolean) => {
     isIndeterminate.value = false
 }
 
+function exportData() {
+    if (pagination.table.result.length == 0) {
+        ElMessage.warning("请先开始查询任务")
+        return
+    }
+    ExportToXlsx(['主域名', '子域名', 'IPS', '是否为CDN', 'CDN名称', '来源'], '子域名暴破', 'subdomain', transformArrayFields(pagination.table.result))
+}
+
 </script>
 
 <template>
@@ -203,13 +211,15 @@ const handleCheckAllChange = (val: boolean) => {
         <el-input v-model="input" placeholder="请输入域名或域名文件列表">
             <template #prepend>
                 <el-select v-model="currentRunner" style="width: 150px;">
-                    <el-option v-for="item in subdomainRunnerOptions" :key="item.value" :label="item.label"
-                        :value="item.value" style="width: 260px;">
-                        <span class="float-left">{{ item.label }}</span>
-                        <span class="select-tips">
-                            {{ item.tips }}
-                        </span>
-                    </el-option>
+                    <el-option-group v-for="group in subdomainRunnerOptions" :key="group.label" :label="group.label">
+                        <el-option v-for="item in group.options" :key="item.value" :label="item.label"
+                            :value="item.value" style="width: 260px;">
+                            <span class="float-left">{{ item.label }}</span>
+                            <span class="select-tips">
+                                {{ item.tips }}
+                            </span>
+                        </el-option>
+                    </el-option-group>
                 </el-select>
             </template>
             <template #suffix>
@@ -229,8 +239,8 @@ const handleCheckAllChange = (val: boolean) => {
             <el-button :icon="WarningFilled" type="warning" plain @click="usefulDialog = true">使用须知</el-button>
             <el-space>
                 <el-button :icon="Setting" @click="config.drawer = true">参数设置</el-button>
-                <el-button :icon="exportIcon"
-                    @click="ExportToXlsx(['主域名', '子域名', 'IPS', '是否为CDN', 'CDN名称', '来源'], '子域名暴破', 'subdomain', transformArrayFields(pagination.table.result))">导出结果</el-button>
+                <el-button :icon="Share"
+                    @click="exportData">导出结果</el-button>
             </el-space>
         </div>
         <el-table :data="pagination.table.pageContent" :cell-style="{ textAlign: 'center' }"
@@ -300,20 +310,10 @@ const handleCheckAllChange = (val: boolean) => {
                 <el-input-number v-model="config.timeout" :min="1" :max="20">
                 </el-input-number>
             </el-form-item>
-            <el-form-item>
-                <template #label>
-                    <span>过滤IP次数:</span>
-                    <el-tooltip placement="left">
-                        <template #content>设置次数可以有效过滤泛解析数据，确保在泛解析<br />
-                            的域名中获取到不同的IP信息，次数为0表示不过滤
-                        </template>
-                        <el-icon>
-                            <QuestionFilled size="24" />
-                        </el-icon>
-                    </el-tooltip>
-                </template>
+            <el-form-item label="过滤IP次数:">
                 <el-input-number v-model="config.resolveExcludeTimes" :min="0" :max="1000">
                 </el-input-number>
+                <span class="form-item-tips">设置次数可以有效过滤泛解析数据, 确保在泛解析的域名中获取到不同的IP信息, 次数为0表示不过滤</span>
             </el-form-item>
             <el-form-item label="DNS Servers:">
                 <el-select v-model="selectDnsServer" multiple clearable collapse-tags collapse-tags-tooltip
@@ -342,10 +342,10 @@ const handleCheckAllChange = (val: boolean) => {
         </el-form>
     </el-drawer>
     <el-dialog v-model="usefulDialog" title="使用须知">
-        <el-descriptions direction="vertical" :column="4" border>
+        <el-descriptions direction="vertical" :column="3" border>
             <template #title>
-                <span>下面为各API查询页码及积分获取情况，优先推荐配置Chaos，注册链接可在设置中查看</span>
-                <el-tag class="my-5px">FOFA、Quake、Hunter默认不参与测绘，需要在设置中手动开启</el-tag>
+                <span>下面为各API单查询最大扣除积分数及积分获取情况, 优先推荐配置Chaos</span>
+                <el-tag class="my-5px">FOFA、Quake、Hunter默认不参与测绘, 需要在设置中手动开启</el-tag>
                 <el-tag>建议均使用查询模式进行子域名收集，优点在于不用消耗本地的网络资源且搜集快</el-tag>
             </template>
             <el-descriptions-item label="FOFA(需充值)">10000</el-descriptions-item>
@@ -356,6 +356,7 @@ const handleCheckAllChange = (val: boolean) => {
             <el-descriptions-item label="Github(无限/月)">无限</el-descriptions-item>
             <el-descriptions-item label="Bevigil(50次/月)">无限</el-descriptions-item>
             <el-descriptions-item label="Securitytrails(50次/月)">无限</el-descriptions-item>
+            <el-descriptions-item label="IP138(无限/月)">无限</el-descriptions-item>
         </el-descriptions>
     </el-dialog>
 </template>

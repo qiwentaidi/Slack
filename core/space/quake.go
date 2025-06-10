@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"strconv"
 	"strings"
 )
@@ -77,9 +77,9 @@ func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
 		var protocol string
 		for _, v := range item.Components {
 			if v.ProductNameEN == "" {
-				components = append(components, util.MergeNonEmpty([]string{v.ProductNameCN, v.Version}, "/"))
+				components = append(components, arrayutil.MergeNonEmpty([]string{v.ProductNameCN, v.Version}, "/"))
 			} else {
-				components = append(components, util.MergeNonEmpty([]string{v.ProductNameEN, v.Version}, "/"))
+				components = append(components, arrayutil.MergeNonEmpty([]string{v.ProductNameEN, v.Version}, "/"))
 			}
 		}
 		if item.Service.Name == "http/ssl" {
@@ -100,7 +100,7 @@ func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
 			IP:         item.IP,
 			Isp:        item.Location.ISP,
 			FaviconURL: item.Service.HTTP.Favicon.S3URL,
-			Position: util.MergePosition(structs.Position{
+			Position: arrayutil.MergePosition(structs.Position{
 				Province:  item.Location.ProvinceCN,
 				City:      item.Location.CityCN,
 				District:  item.Location.DistrictCN,

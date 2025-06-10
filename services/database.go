@@ -9,11 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"slack-wails/lib/fileutil"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/report"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils"
+	"slack-wails/lib/utils/fileutil"
 	"strings"
 	"sync"
 
@@ -35,8 +35,8 @@ func (d *Database) Startup(ctx context.Context) {
 }
 
 func NewDatabase() *Database {
-	os.Mkdir(util.HomeDir()+"/slack", 0777) // 创建配置文件夹
-	dp := util.HomeDir() + "/slack/config.db"
+	os.Mkdir(utils.HomeDir()+"/slack", 0777) // 创建配置文件夹
+	dp := utils.HomeDir() + "/slack/config.db"
 	db, err := sql.Open("sqlite3", dp) // 创建数据库文件
 	if err != nil {
 		return &Database{
@@ -543,13 +543,17 @@ func (d *Database) ExportWebReportWithExcel(reportpath string, tasks []structs.T
 	// 创建Excel文件
 	f := excelize.NewFile()
 	// 添加"Targets"工作表
-	targetsSheet := "Sheet1"
+	targetsSheet := "Targets"
 	f.NewSheet(targetsSheet)
 	f.SetCellValue(targetsSheet, "A1", "Targets")
-	for i, target := range targets {
+	var alltargets []string
+	for _, target := range targets {
+		alltargets = append(alltargets, strings.Split(target, "\n")...)
+	}
+	for i, target := range alltargets {
 		f.SetCellValue(targetsSheet, fmt.Sprintf("A%d", i+2), target)
 	}
-
+	f.DeleteSheet("Sheet1") // 删除默认的工作表
 	// 添加"Fingerprints"工作表
 	fingerprintsSheet := "Fingerprints"
 	f.NewSheet(fingerprintsSheet)
@@ -596,6 +600,37 @@ func (d *Database) ExportWebReportWithExcel(reportpath string, tasks []structs.T
 	// 保存Excel文件
 	if err := f.SaveAs(reportpath); err != nil {
 		gologger.Error(d.ctx, "Failed to save Excel file")
+		return false
+	}
+
+	return true
+}
+
+func (d *Database) ExportJSReportWithExcel(reportpath string, results []structs.JSFindResult) bool {
+	// 创建Excel文件
+	f := excelize.NewFile()
+	// 添加"Fingerprints"工作表
+	resultSheet := "JSFinder Results"
+	f.NewSheet(resultSheet)
+	resultHeader := []string{"Source", "Method", "VulType", "Severity", "Length", "Request", "Response", "Filed"}
+	for i, header := range resultHeader {
+		f.SetCellValue(resultSheet, fmt.Sprintf("%s1", string(rune('A'+i))), header)
+	}
+	for i, result := range results {
+		f.SetCellValue(resultSheet, fmt.Sprintf("A%d", i+2), result.Source)
+		f.SetCellValue(resultSheet, fmt.Sprintf("B%d", i+2), result.Method)
+		f.SetCellValue(resultSheet, fmt.Sprintf("C%d", i+2), result.VulType)
+		f.SetCellValue(resultSheet, fmt.Sprintf("D%d", i+2), result.Severity)
+		f.SetCellValue(resultSheet, fmt.Sprintf("E%d", i+2), result.Length)
+		f.SetCellValue(resultSheet, fmt.Sprintf("F%d", i+2), result.Request)
+		f.SetCellValue(resultSheet, fmt.Sprintf("G%d", i+2), result.Response)
+		f.SetCellValue(resultSheet, fmt.Sprintf("H%d", i+2), result.Filed)
+	}
+	f.DeleteSheet("Sheet1") // 删除默认的工作表
+
+	// 保存Excel文件
+	if err := f.SaveAs(reportpath); err != nil {
+		gologger.Error(d.ctx, "Failed to save Excel file : "+err.Error())
 		return false
 	}
 

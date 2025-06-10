@@ -6,12 +6,13 @@ import (
 	"regexp"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 var (
@@ -32,9 +33,20 @@ func init() {
 func ExtractAllJs(ctx context.Context, url string) (allJS []string) {
 	staticJsLinks := extractStaticJs(ctx, url)
 	dynamicJsLinks := extractDynamicsJs(ctx, url)
-	allJS = append(allJS, staticJsLinks...)
+	// 如果动态加载到JS不为空，则获取到的完整URL一定是正确路径，静态提取的JS内容如果在动态JS中出现过则删除，可以避免后续二次访问
 	allJS = append(allJS, dynamicJsLinks...)
-	return util.RemoveDuplicates(allJS)
+	if len(dynamicJsLinks) > 0 {
+		for _, static := range staticJsLinks {
+			for _, dynamic := range dynamicJsLinks {
+				if !strings.Contains(dynamic, static) {
+					allJS = append(allJS, static)
+				}
+			}
+		}
+	} else {
+		allJS = append(allJS, staticJsLinks...)
+	}
+	return arrayutil.RemoveDuplicates(allJS)
 }
 
 // 通过主页提取静态JS
@@ -66,7 +78,7 @@ func extractDynamicsJs(mainCtx context.Context, url string) []string {
 	defer cancel()
 
 	// 设置超时
-	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	linkSet := make(map[string]bool) // 防止重复
@@ -91,7 +103,7 @@ func extractDynamicsJs(mainCtx context.Context, url string) []string {
 		chromedp.Sleep(5*time.Second), // 等待页面加载 & JS 动态加载完成
 	)
 	if err != nil {
-		gologger.Error(mainCtx, fmt.Sprintf("[jsfinder] chromedp 运行失败: %v, 无法动态加载JS链接", err))
+		runtime.EventsEmit(mainCtx, "jsfindlog", fmt.Sprintf("[-] chromedp 运行失败无法动态加载JS链接, 错误原因: (%v)", err))
 		return dynamicJsLinks
 	}
 

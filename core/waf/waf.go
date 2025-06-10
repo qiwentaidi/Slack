@@ -1,8 +1,8 @@
 package waf
 
 import (
-	"slack-wails/lib/netutil"
-	"slack-wails/lib/util"
+	"regexp"
+	"slack-wails/lib/utils/netutil"
 	"strings"
 )
 
@@ -31,6 +31,7 @@ var (
 		"ksyun":               {".ksyunwaf.com"},
 		"jdcloud-star-shield": {".cloud-scdn.com"},
 	}
+	regIp = regexp.MustCompile(`((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}`)
 )
 
 type WAF struct {
@@ -41,7 +42,7 @@ type WAF struct {
 // waf 识别
 func ResolveAndWafIdentify(host string, dnsServers []string) *WAF {
 	// 如果是IP则直接返回
-	if util.RegIP.MatchString(host) {
+	if regIp.MatchString(host) {
 		return &WAF{}
 	}
 	cnames, err := netutil.LookupCNAME(host, dnsServers, 3)

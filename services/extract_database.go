@@ -7,7 +7,7 @@ import (
 	"slack-wails/core/portscan"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
-	"slack-wails/lib/util"
+	"slack-wails/lib/utils/arrayutil"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -188,7 +188,7 @@ func (d *Database) FetchDatabaseinfoFromMysql() map[string][]string {
 			gologger.Warning(d.ctx, fmt.Sprintf("[mysql] 扫描数据库名称失败: %v", err))
 			continue
 		}
-		if util.ArrayContains(dbName, mysql_system_db) {
+		if arrayutil.ArrayContains(dbName, mysql_system_db) {
 			continue
 		}
 
@@ -302,7 +302,7 @@ func (d *Database) FetchDatabaseinfoFromSqlServer() map[string][]string {
 			gologger.Warning(d.ctx, fmt.Sprintf("[sqlserver] 扫描数据库名称失败: %v", err))
 			continue
 		}
-		if util.ArrayContains(dbName, sqlserver_system_db) {
+		if arrayutil.ArrayContains(dbName, sqlserver_system_db) {
 			continue
 		}
 
@@ -414,7 +414,7 @@ func (d *Database) FetchDatabaseInfoFromOracle() map[string][]string {
 		}
 
 		// Skip system schemas
-		if util.ArrayContains(schemaName, oracleSystemSchemas) {
+		if arrayutil.ArrayContains(schemaName, oracleSystemSchemas) {
 			continue
 		}
 
@@ -523,7 +523,7 @@ func (d *Database) FetchDatabaseInfoFromPostgres(info structs.DatabaseConnection
 		}
 
 		// Skip system schemas
-		if util.ArrayContains(schemaName, postgresSystemSchemas) {
+		if arrayutil.ArrayContains(schemaName, postgresSystemSchemas) {
 			continue
 		}
 
