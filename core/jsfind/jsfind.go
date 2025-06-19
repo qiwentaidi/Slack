@@ -264,6 +264,26 @@ func urlInfoSeparate(links []string) (urls, apis []string) {
 		// 判断是否是 URL
 		if strings.HasPrefix(link, "http") || strings.HasPrefix(link, "ws") || strings.HasPrefix(link, "//") {
 			urls = append(urls, link)
+			// 提取路径 + 参数，加入到 apis
+			u, err := url.Parse(link)
+			if err == nil {
+				apiPath := u.Path
+				if u.RawQuery != "" {
+					apiPath += "?" + u.RawQuery
+				}
+
+				// 过滤敏感字段
+				skip := false
+				for _, filter := range append(apiFilter, Filter...) {
+					if strings.Contains(apiPath, filter) {
+						skip = true
+						break
+					}
+				}
+				if !skip {
+					apis = append(apis, apiPath)
+				}
+			}
 			continue // 直接进入下一次循环
 		}
 

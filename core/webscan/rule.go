@@ -27,10 +27,9 @@ type Config struct {
 }
 
 type FingerPEntity struct {
-	ProductName      string
-	AllString        string
-	Rule             []RuleData
-	IsExposureDetect bool
+	ProductName string
+	AllString   string
+	Rule        []RuleData
 }
 
 type RuleData struct {

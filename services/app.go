@@ -218,7 +218,6 @@ func (a *App) ExitScanner(scanType string) {
 
 func (a *App) FetchCompanyInfo(companyName string, ratio int, ds *structs.DataSource, maxDepth int) structs.CompanyInfo {
 	var result structs.CompanyInfo
-	result.CompanyName = companyName
 	if ds.Tianyancha.Enable {
 		tyc := tianyancha.NewClient(a.ctx, ds.Tianyancha.Token, ds.Tianyancha.Token)
 		if tyc.CheckLogin() {
