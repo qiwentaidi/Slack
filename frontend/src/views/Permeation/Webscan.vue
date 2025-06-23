@@ -150,6 +150,8 @@ const config = reactive({
     crack: false, // 是否开启暴破
     customHeaders: '',
     vulscan: false,
+    excludePrintPorts: false, // 排除打印机端口
+    // printPorts: ['9100'],
 })
 
 const detailDialog = ref(false)
@@ -348,6 +350,14 @@ class Engine {
         }
         // 处理端口和IP组
         this.portsList = await PortParse(form.portlist)
+        // 排除9100端口
+        if (config.excludePrintPorts) {
+            this.portsList = this.portsList.filter(port => port != 9100);
+        }
+        if (this.portsList.length == 0) {
+            ElMessage.warning('端口列表为空')
+            return
+        }
         this.ips = await IPParse(this.conventionTarget)
         if (this.ips == null) {
             dashboard.portscanCount = this.specialTarget.length
@@ -411,7 +421,6 @@ class Engine {
                 form.runnningStatus = false
                 return
             }
-            this.inputLines = fp.table.result.filter(line => line.Scheme === "http" || line.Scheme === "https").map(item => item.URL);
             fp.table.result.map(line => {
                 if (line.Scheme === "http" || line.Scheme === "https") {
                     this.inputLines.push(line.URL)
@@ -1129,6 +1138,11 @@ const shodanRunningstatus = ref(false)
                     <el-option v-for="(item, index) in portGroupOptions" :label="item.text" :value="index" />
                 </el-select>
                 <el-input v-model="form.portlist" type="textarea" :rows="4" resize="none" class="mt-5px"></el-input>
+            </el-form-item>
+            <el-form-item label="其他:">
+                <el-tooltip content="排除9100端口">
+                    <el-checkbox v-model="config.excludePrintPorts">不扫描网络打印机</el-checkbox>
+                </el-tooltip>
             </el-form-item>
             <el-form-item label="漏洞扫描:">
                 <el-switch v-model="config.vulscan" class="w-full" />
