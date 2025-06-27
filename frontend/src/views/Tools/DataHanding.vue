@@ -38,7 +38,8 @@ async function processInput() {
         return false
     }
     if (form.input.startsWith("{{file://") && form.input.endsWith("}}")) {
-        let filepath = form.input.substring(8, form.input.length - 2);
+        let filepath = form.input.replaceAll("{{file://", "")
+        filepath = filepath.replaceAll("}}", "")
         let isStat = await CheckFileStat(filepath)
         if (!isStat) {
             ElMessage.warning('文件不存在!')

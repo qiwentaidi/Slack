@@ -122,6 +122,12 @@ func (d *Database) CreateTable() bool {
 			return false
 		}
 	}
+	if !columnExists(d.DB, "dbManager", "serverName") {
+		_, err := d.DB.Exec(`ALTER TABLE dbManager ADD COLUMN serverName TEXT`)
+		if err != nil {
+			return false
+		}
+	}
 	return err == nil
 }
 

@@ -17,33 +17,40 @@ import (
 )
 
 func (d *Database) GetAllDatabaseConnections() (dcs []structs.DatabaseConnection) {
-	rows, err := d.DB.Query(`SELECT * FROM dbManager;`)
+	rows, err := d.DB.Query(`
+		SELECT nanoid, scheme, host, port, username, password, serverName, notes 
+		FROM dbManager;
+	`)
 	if err != nil {
+		gologger.Debug(d.ctx, fmt.Sprintf("查询数据库连接失败: %v", err))
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var nanoid, scheme, host, username, password, notes string
+		var serverName sql.NullString
 		var port int
-		err = rows.Scan(&nanoid, &scheme, &host, &port, &username, &password, &notes)
+		err = rows.Scan(&nanoid, &scheme, &host, &port, &username, &password, &serverName, &notes)
 		if err != nil {
+			gologger.Debug(d.ctx, fmt.Sprintf("扫描数据库连接失败: %v", err))
 			return
 		}
 		dcs = append(dcs, structs.DatabaseConnection{
-			Nanoid:   nanoid,
-			Scheme:   scheme,
-			Host:     host,
-			Port:     port,
-			Username: username,
-			Password: password,
-			Notes:    notes,
+			Nanoid:     nanoid,
+			Scheme:     scheme,
+			Host:       host,
+			Port:       port,
+			Username:   username,
+			Password:   password,
+			ServerName: serverName.String,
+			Notes:      notes,
 		})
 	}
 	return dcs
 }
 
 func (d *Database) AddConnection(info structs.DatabaseConnection) bool {
-	return d.ExecSqlStatement("INSERT INTO dbManager (nanoid, scheme, host, port, username, password, notes) VALUES (?, ?, ?, ?, ?, ?, ?)", info.Nanoid, info.Scheme, info.Host, info.Port, info.Username, info.Password, info.Notes)
+	return d.ExecSqlStatement("INSERT INTO dbManager (nanoid, scheme, host, port, username, password, serverName, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", info.Nanoid, info.Scheme, info.Host, info.Port, info.Username, info.Password, info.ServerName, info.Notes)
 }
 
 func (d *Database) RemoveConnection(nanoid string) bool {
@@ -51,7 +58,7 @@ func (d *Database) RemoveConnection(nanoid string) bool {
 }
 
 func (d *Database) UpdateConnection(info structs.DatabaseConnection) bool {
-	return d.ExecSqlStatement("UPDATE dbManager SET scheme = ?, host = ?, port = ? , username = ?, password = ?, notes = ? WHERE nanoid = ?", info.Scheme, info.Host, info.Port, info.Username, info.Password, info.Notes, info.Nanoid)
+	return d.ExecSqlStatement("UPDATE dbManager SET scheme = ?, host = ?, port = ? , username = ?, password = ?, notes = ?, serverName = ? WHERE nanoid = ?", info.Scheme, info.Host, info.Port, info.Username, info.Password, info.Notes, info.ServerName, info.Nanoid)
 }
 
 func (d *Database) ConnectDatabase(info structs.DatabaseConnection) bool {

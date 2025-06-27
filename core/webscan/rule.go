@@ -141,16 +141,17 @@ func getRuleData(rule string) RuleData {
 	}
 	pos := strings.Index(rule, "=\"")
 	op := 0
-	if rule[pos-1] == 33 {
-		op = 1
-	} else if rule[pos-1] == 61 {
-		op = 2
-	} else if rule[pos-1] == 62 {
-		op = 3
-	} else if rule[pos-1] == 60 {
-		op = 4
-	} else if rule[pos-1] == 126 {
-		op = 5
+	switch rule[pos-1] {
+	case 33: // !
+		op = 1 // !=
+	case 61: // =
+		op = 2 // ==
+	case 62: // >
+		op = 3 // >=
+	case 60: // <
+		op = 4 // <=
+	case 126: // ~
+		op = 5 // ~=
 	}
 
 	start := 0
@@ -237,19 +238,20 @@ func dataCheckString(op int16, dataSource string, dataRule string) bool {
 	}
 	dataRule = strings.ToLower(dataRule)
 	dataRule = strings.ReplaceAll(dataRule, "\\\"", "\"")
-	if op == 0 {
+	switch op {
+	case 0:
 		if strings.Contains(dataSource, dataRule) {
 			return true
 		}
-	} else if op == 1 {
+	case 1:
 		if !strings.Contains(dataSource, dataRule) {
 			return true
 		}
-	} else if op == 2 {
+	case 2:
 		if dataSource == dataRule {
 			return true
 		}
-	} else if op == 5 {
+	case 5:
 		rs, err := regexMatch(dataRule, dataSource)
 		if err == nil && rs {
 			return true
@@ -259,19 +261,23 @@ func dataCheckString(op int16, dataSource string, dataRule string) bool {
 }
 
 func dataCheckInt(op int16, dataSource int, dataRule int) bool {
-	if op == 0 { // 数字相等
+	switch op {
+	// 数字相等
+	case 0:
 		if dataSource == dataRule {
 			return true
 		}
-	} else if op == 1 { // 数字不相等
+	// 数字不相等
+	case 1:
 		if dataSource != dataRule {
 			return true
 		}
-	} else if op == 3 { // 大于等于
+	// 大于等于
+	case 3:
 		if dataSource >= dataRule {
 			return true
 		}
-	} else if op == 4 {
+	case 4:
 		if dataSource <= dataRule {
 			return true
 		}
