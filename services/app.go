@@ -231,6 +231,8 @@ func (a *App) FetchCompanyInfo(companyName string, ratio int, ds *structs.DataSo
 			gomessage.Warning(a.ctx, "tianyancha token is invalid")
 			gologger.Warning(a.ctx, "tianyancha token is invalid")
 		}
+	} else {
+		result.CompanyName = companyName
 	}
 
 	if ds.Miit.API != "" {

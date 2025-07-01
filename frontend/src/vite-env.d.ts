@@ -7,4 +7,3 @@ declare module "*.vue" {
 }
 
 declare module "async";
-declare module 'splitpanes';

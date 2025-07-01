@@ -30,8 +30,8 @@
             <!-- 文件树 -->
             <div v-else class="tree-container">
                 <div></div>
-                <splitpanes class="default-theme">
-                    <pane min-size="30">
+                <el-splitter>
+                    <el-splitter-panel size="30%">
                         <div class="flex-between" style="margin-bottom: 20px; margin-right: 10px;">
                             <el-tooltip :content="tab.path">
                                 <span class="dirtips">物理路径: {{ tab.path }}</span>
@@ -59,11 +59,11 @@
                                 <span :class="{ 'highlight-file': node.data.hits }">{{ node.label }}</span>
                             </template>
                         </el-tree-v2>
-                    </pane>
-                    <pane style="margin-top: -12px; height: calc(100% + 12px); display: flex; flex-direction: column;">
+                    </el-splitter-panel>
+                    <el-splitter-panel>
                         <el-descriptions :column="1" border
                             v-if="currentFileHits && Object.keys(currentFileHits).length"
-                            style="margin-left: 5px; margin-top: 10px;">
+                            style="margin-left: 5px">
                             <el-descriptions-item label="关键词匹配:">
                                 <el-tag v-for="(count, keyword) in currentFileHits" :key="keyword" type="danger"
                                     class="match-tag">
@@ -73,11 +73,9 @@
                         </el-descriptions>
 
                         <!-- 这里包一层div -->
-                        <div style="flex: 1; overflow: auto; margin: 5px;">
-                            <highlightjs :code="code"></highlightjs>
-                        </div>
-                    </pane>
-                </splitpanes>
+                        <highlightjs :code="code"></highlightjs>
+                    </el-splitter-panel>
+                </el-splitter>
             </div>
         </el-tab-pane>
     </el-tabs>
@@ -113,7 +111,6 @@ import { Document, FolderOpened, Back, RefreshLeft, Film, Setting } from '@eleme
 import { ElMessage } from 'element-plus';
 import { DirectoryDialog, BuildTree, CheckFileStat, ReadFile, ListDir } from 'wailsjs/go/services/File';
 import { TreeNodeData } from 'element-plus/es/components/tree-v2/src/types';
-import { Splitpanes, Pane } from 'splitpanes'
 import { DirectoryTab, TreeNode } from '@/stores/interface';
 import global from '@/stores/index';
 import { SaveConfig } from '@/config';
