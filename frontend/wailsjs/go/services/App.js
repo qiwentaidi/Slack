@@ -62,6 +62,10 @@ export function GoFetch(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['services']['App']['GoFetch'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
+export function GoogleHackerBingSearch(arg1) {
+  return window['go']['services']['App']['GoogleHackerBingSearch'](arg1);
+}
+
 export function HostAlive(arg1, arg2) {
   return window['go']['services']['App']['HostAlive'](arg1, arg2);
 }

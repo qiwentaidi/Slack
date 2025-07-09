@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+	"slack-wails/lib/structs"
 	"strings"
 )
 
@@ -41,14 +42,7 @@ type Matches struct {
 	Text    string    `json:"text"`
 }
 
-type GithubResult struct {
-	Status bool
-	Total  float64
-	Items  []string
-	Link   string
-}
-
-func GithubApiQuery(ctx context.Context, dork, token string) *GithubResult {
+func GithubApiQuery(ctx context.Context, dork, token string) *structs.ISICollectionResult {
 	uri, _ := url.Parse("https://api.github.com/search/code")
 	param := url.Values{}
 	param.Set("q", dork)
@@ -62,16 +56,19 @@ func GithubApiQuery(ctx context.Context, dork, token string) *GithubResult {
 	response, err := clients.DoRequest("GET", uri.String(), headers, nil, 10, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Debug(ctx, err)
-		return &GithubResult{}
+		return &structs.ISICollectionResult{}
 	}
 	var resp GithubResponse
 	json.Unmarshal(response.Body(), &resp)
-	var gr GithubResult
-	gr.Status = true
+	gr := structs.ISICollectionResult{
+		Query:  dork,
+		Total:  resp.Total_count,
+		Source: "Github",
+	}
 	gr.Total = resp.Total_count
 	for _, item := range resp.Items {
 		gr.Items = append(gr.Items, item.Html_url)
 	}
-	gr.Link = strings.Replace(uri.String(), "https://api.github.com/search/code", "https://github.com/search", -1) + "&s=indexed&type=Code&o=desc"
+	gr.Link = strings.ReplaceAll(uri.String(), "https://api.github.com/search/code", "https://github.com/search") + "&s=indexed&type=Code&o=desc"
 	return &gr
 }

@@ -480,7 +480,7 @@ php:
 
 <template>
     <CustomTabs v-show="step == 0">
-        <el-tabs v-model="activeTabs" type="card" class="demo-tabs">
+        <el-tabs v-model="activeTabs" type="card">
             <el-tab-pane name="poc" label="POC管理">
                 <el-card>
                     <div class="flex-between mb-10px">

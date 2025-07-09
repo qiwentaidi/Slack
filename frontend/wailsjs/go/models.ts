@@ -66,29 +66,6 @@ export namespace dirsearch {
 
 }
 
-export namespace isic {
-	
-	export class GithubResult {
-	    Status: boolean;
-	    Total: number;
-	    Items: string[];
-	    Link: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new GithubResult(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Status = source["Status"];
-	        this.Total = source["Total"];
-	        this.Items = source["Items"];
-	        this.Link = source["Link"];
-	    }
-	}
-
-}
-
 export namespace mongo {
 	
 	export class Client {
@@ -927,6 +904,26 @@ export namespace structs {
 	}
 	
 	
+	export class ISICollectionResult {
+	    Query: string;
+	    Total: number;
+	    Items: string[];
+	    Link: string;
+	    Source: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ISICollectionResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Query = source["Query"];
+	        this.Total = source["Total"];
+	        this.Items = source["Items"];
+	        this.Link = source["Link"];
+	        this.Source = source["Source"];
+	    }
+	}
 	export class InfoResult {
 	    TaskId: string;
 	    URL: string;

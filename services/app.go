@@ -700,8 +700,25 @@ func (a *App) UncoverSearch(query, types string, option structs.SpaceOption) []s
 	return space.Uncover(a.ctx, query, types, option)
 }
 
-func (a *App) GitDorks(target, dork, apikey string) *isic.GithubResult {
+func (a *App) GitDorks(target, dork, apikey string) *structs.ISICollectionResult {
 	return isic.GithubApiQuery(a.ctx, fmt.Sprintf("%s %s", target, dork), apikey)
+}
+
+func (a *App) GoogleHackerBingSearch(query string) *structs.ISICollectionResult {
+	result, total, err := isic.GoogleHackerBingSearch(query)
+	if err != nil {
+		return nil
+	}
+	items := []string{}
+	for _, item := range result {
+		items = append(items, item.URL)
+	}
+	return &structs.ISICollectionResult{
+		Items:  items,
+		Link:   fmt.Sprintf("https://www.bing.com/search?q=%s", url.QueryEscape(query)),
+		Source: "Bing",
+		Total:  float64(total),
+	}
 }
 
 func (a *App) NetDial(host string) bool {

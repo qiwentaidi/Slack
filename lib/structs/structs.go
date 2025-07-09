@@ -683,3 +683,11 @@ type Tianyancha struct {
 type Miit struct {
 	API string
 }
+
+type ISICollectionResult struct {
+	Query  string
+	Total  float64  // 搜索总数
+	Items  []string // 搜索结果
+	Link   string   // 搜索链接
+	Source string   // 来源
+}

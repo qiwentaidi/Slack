@@ -5,7 +5,7 @@ export default defineComponent({
     props: {
         filterLeftPosition: {
             type: [Number, String] as PropType<number | string>,
-            default: 100,
+            default: 120,
         },
     },
 })

@@ -98,14 +98,6 @@ export interface SubdomainInfo {
     Source: string
 }
 
-export interface ISICResult {
-    Query: string
-    Status: boolean
-    Total: number
-    Items: string[]
-    Link: string
-}
-
 export interface PocDetail {
     Name: string
     AssociatedFingerprint: string[]
