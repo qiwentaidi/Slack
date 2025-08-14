@@ -32,6 +32,6 @@ export default defineConfig({
         },
     },
     build: {
-        sourcemap: true // 启用 Source Maps
+        target: ['chrome112', 'firefox113', 'safari16.5', 'edge112']
     }
 })
