@@ -340,7 +340,7 @@ const Request_OPTIONS = {
     readOnly: false,
     minimap: { enabled: false }, // 禁用迷你地图
     scrollBeyondLastLine: false, // 禁用滚动到最后一行后额外空白
-    contextmenu: true, // 禁用右键菜单
+    contextmenu: false, // 禁用右键菜单
     wordWrap: 'on', // ✅ 自动换行
 }
 
