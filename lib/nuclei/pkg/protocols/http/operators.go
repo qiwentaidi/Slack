@@ -194,6 +194,7 @@ func (request *Request) MakeResultEventItem(wrapped *output.InternalWrappedEvent
 		GlobalMatchers:   isGlobalMatchers,
 		Request:          types.ToString(wrapped.InternalEvent["request"]),
 		Response:         request.truncateResponse(wrapped.InternalEvent["response"]),
+		ResponseTime:     types.ToString(wrapped.InternalEvent["duration"]),
 		CURLCommand:      types.ToString(wrapped.InternalEvent["curl-command"]),
 		TemplateEncoded:  request.options.EncodeTemplate(),
 		Error:            types.ToString(wrapped.InternalEvent["error"]),
