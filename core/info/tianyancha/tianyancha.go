@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/gomessage"
 	"slack-wails/lib/structs"
 	"sync"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 
 	"strconv"
 	"strings"

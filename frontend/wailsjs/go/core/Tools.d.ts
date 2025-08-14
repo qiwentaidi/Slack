@@ -18,7 +18,7 @@ export function FormatOutput(arg1:string):Promise<{[key: string]: Array<string>}
 
 export function GOOS():Promise<string>;
 
-export function GetToken(arg1:string,arg2:string,arg3:string):Promise<string>;
+export function GetToken(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<string>;
 
 export function IPParse(arg1:Array<string>):Promise<Array<string>>;
 

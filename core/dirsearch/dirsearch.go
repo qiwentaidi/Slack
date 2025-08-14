@@ -3,7 +3,6 @@ package dirsearch
 import (
 	"bytes"
 	"context"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/utils/arrayutil"
 	"slack-wails/lib/utils/httputil"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"

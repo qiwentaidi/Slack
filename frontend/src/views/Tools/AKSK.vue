@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { reactive, ref } from "vue";
+import { h, reactive, ref } from "vue";
 import { GoFetch } from "wailsjs/go/services/App";
 import { QuestionFilled, ChromeFilled, DocumentCopy } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from "element-plus";
-import { Copy, generateRandomString, proxys } from "@/util";
+import { Copy, generateRandomString, getProxy } from "@/util";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import CustomTabs from "@/components/CustomTabs.vue";
 import { ApiDocsOptions, dingtalkApiOptions, enterpriseWechatApiOptions, wechatApiOptions, wechatResponseDescription } from "@/stores/options";
@@ -12,7 +12,7 @@ import wechatIcon from "@/assets/icon/wechat.svg"
 import { GetToken } from "wailsjs/go/core/Tools";
 
 const activeName = ref("wechat")
-
+const xforwordfor = ref("")
 const warning = "First, need to obtain the accesstoken"
 
 const wechat = reactive({
@@ -57,13 +57,22 @@ async function doRequest(accessToken: string, method: string, url: string, param
     } else {
         body = param
     }
-    let response = await GoFetch(method, url + accessToken, body, {}, 10, proxys);
+    let response = await GoFetch(method, url + accessToken, body, {}, 10, getProxy());
     result.value = JSON.parse(response.Body);
+}
+
+function Headers() {
+    if (xforwordfor.value == "") {
+        return {};
+    }
+    return {
+        "X-Forwarded-For": xforwordfor.value || "",
+    };
 }
 
 async function wechatCheckSecret() {
     let url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat.appid}&secret=${wechat.secert}`
-    let response = await GoFetch("GET", url, "", {}, 10, proxys);
+    let response = await GoFetch("GET", url, "", Headers(), 10, getProxy());
     if (response.Error) {
         result.value += "请求失败\n";
         return;
@@ -78,7 +87,7 @@ async function wechatCheckSecret() {
 
 async function enterpriseWechatCheckSecret() {
     let url = `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${enterpriseWechat.corpid}&corpsecret=${enterpriseWechat.corpsecret}`
-    let response = await GoFetch("GET", url, "", {}, 10, proxys);
+    let response = await GoFetch("GET", url, "", Headers(), 10, getProxy());
     if (response.Error) {
         result.value += "请求失败\n";
         return;
@@ -104,7 +113,7 @@ const dingtalkRules = reactive<FormRules>({
 
 const dingdingOption = ({
     checksecret: async function () {
-        let response = await GoFetch("GET", `https://oapi.dingtalk.com/gettoken?appkey=${dingtalk.appid}&appsecret=${dingtalk.secert}`, "", {}, 10, proxys)
+        let response = await GoFetch("GET", `https://oapi.dingtalk.com/gettoken?appkey=${dingtalk.appid}&appsecret=${dingtalk.secert}`, "", Headers(), 10, getProxy())
         if (response.Error) {
             result.value += "请求失败\n";
             return;
@@ -122,7 +131,7 @@ const dingdingOption = ({
         if (!isValidate) return
         let rdm = generateRandomString(12)
         let body = `{"name":"${dingtalk.name}","mobile":"${dingtalk.phone}","dept_title_list":[{"dept_id":1,"title":"普通员工"}],"dept_order_list":[{"dept_id":1,"order":1}],"dept_id_list":"1","userid":"${rdm}"}`
-        let response = await GoFetch("POST", `https://oapi.dingtalk.com/topapi/v2/user/create?access_token=${dingtalk.accessToken}`, body, {}, 10, proxys)
+        let response = await GoFetch("POST", `https://oapi.dingtalk.com/topapi/v2/user/create?access_token=${dingtalk.accessToken}`, body, Headers(), 10, getProxy())
         result.value = `当前添加用户UserId为: ${rdm} \n这个一定要记住后续删除用户的时候要用到\n\n${JSON.parse(response.Body)}`
     },
     delUser: async function () {
@@ -132,7 +141,7 @@ const dingdingOption = ({
         })
             .then(async ({ value }) => {
                 let body = `{ "userid":"${value}" }`
-                let response = await GoFetch("POST", `https://oapi.dingtalk.com/topapi/v2/user/delete?access_token=${dingtalk.accessToken}`, body, {}, 10, proxys)
+                let response = await GoFetch("POST", `https://oapi.dingtalk.com/topapi/v2/user/delete?access_token=${dingtalk.accessToken}`, body, Headers(), 10, getProxy())
                 result.value = JSON.parse(response.Body);
             })
     },
@@ -145,7 +154,7 @@ POST 参数: {"dept_id":1,"cursor":0,"size":100}`
 })
 
 async function dgworkCheckSecret() {
-    let response = await GetToken(dgwork.domain, dgwork.appkey, dgwork.secert)
+    let response = await GetToken(dgwork.domain, dgwork.appkey, dgwork.secert, xforwordfor.value, getProxy());
     const jsonResult = JSON.parse(response);
     result.value = jsonResult;
     if (response.includes("7200")) {
@@ -175,6 +184,9 @@ function CopyResult() {
                     <el-form-item label="Secert">
                         <el-input v-model="wechat.secert" />
                     </el-form-item>
+                    <el-form-item label="Forword">
+                        <el-input v-model="xforwordfor" placeholder="X-Forwarded-For value, e.g: 192.168.1.1"></el-input>
+                    </el-form-item>
                     <el-form-item label="Token">
                         <el-input v-model="wechat.accessToken" class="w-full">
                             <template #suffix>
@@ -203,6 +215,9 @@ function CopyResult() {
                     <el-form-item label="Secert">
                         <el-input v-model="enterpriseWechat.corpsecret" />
                     </el-form-item>
+                    <el-form-item label="Forword">
+                        <el-input v-model="xforwordfor" placeholder="X-Forwarded-For value, e.g: 192.168.1.1"></el-input>
+                    </el-form-item>
                     <el-form-item label="Token">
                         <el-input v-model="enterpriseWechat.accessToken" class="w-full">
                             <template #suffix>
@@ -230,6 +245,9 @@ function CopyResult() {
                     </el-form-item>
                     <el-form-item label="Secert">
                         <el-input v-model="dingtalk.secert" />
+                    </el-form-item>
+                    <el-form-item label="Forword">
+                        <el-input v-model="xforwordfor" placeholder="X-Forwarded-For value, e.g: 192.168.1.1"></el-input>
                     </el-form-item>
                     <el-form-item label="Token">
                         <el-input v-model="dingtalk.accessToken">
@@ -261,6 +279,9 @@ function CopyResult() {
                     </el-form-item>
                     <el-form-item label="Appid">
                         <el-input v-model="dgwork.appkey" />
+                    </el-form-item>
+                    <el-form-item label="Forword">
+                        <el-input v-model="xforwordfor" placeholder="X-Forwarded-For value, e.g: 192.168.1.1"></el-input>
                     </el-form-item>
                     <el-form-item label="Secert">
                         <el-input v-model="dgwork.secert" />

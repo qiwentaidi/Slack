@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils/randutil"
 	"strings"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 )
 
 // 接口返回结构

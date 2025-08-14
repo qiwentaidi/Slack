@@ -7,24 +7,27 @@ import (
 	"encoding/base64"
 	"net"
 	"net/url"
-	"slack-wails/lib/clients"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 )
 
 type DGworkClient struct {
-	BaseURL   string
-	AppKey    string
-	AppSecret string
+	BaseURL     string
+	AppKey      string
+	AppSecret   string
+	XForwordFor string
 }
 
 // NewClient NewClient
-func NewDGworkClient(BaseURL, AppKey, AppSecret string) *DGworkClient {
+func NewDGworkClient(BaseURL, AppKey, AppSecret, XForwordFor string) *DGworkClient {
 	return &DGworkClient{
-		BaseURL:   BaseURL,
-		AppKey:    AppKey,
-		AppSecret: AppSecret,
+		BaseURL:     BaseURL,
+		AppKey:      AppKey,
+		AppSecret:   AppSecret,
+		XForwordFor: XForwordFor,
 	}
 }
 
@@ -78,6 +81,9 @@ func (c *DGworkClient) GETURL(uri string) string {
 func (c *DGworkClient) GetHeaders(getURL string, params url.Values) map[string]string {
 	mac := GetFirstMacAddress()
 	ip := GetFirstIP()
+	if c.XForwordFor != "" {
+		ip = c.XForwordFor
+	}
 	timestamp := time.Now().Format("2006-01-02T15:04:05.999999+08:00")
 	nonce := strconv.FormatInt(time.Now().UnixNano()/100, 10)
 	reqURL, _ := url.Parse(getURL)
@@ -95,19 +101,19 @@ func (c *DGworkClient) GetHeaders(getURL string, params url.Values) map[string]s
 	}
 }
 
-func (c *DGworkClient) GetToken(getURL string) string {
+func (c *DGworkClient) GetToken(getURL, proxyURL string) string {
 	params := url.Values{}
 	params.Add("appsecret", c.AppSecret)
 	params.Add("appkey", c.AppKey)
 	getURL = getURL + "?" + params.Encode()
-	resp, err := clients.DoRequest("GET", getURL, c.GetHeaders(getURL, params), nil, 10, clients.NewRestyClient(nil, true))
+	resp, err := clients.DoRequest("GET", getURL, c.GetHeaders(getURL, params), nil, 10, clients.NewRestyClientWithProxy(nil, true, proxyURL))
 	if err != nil {
 		return err.Error()
 	}
 	return string(resp.Body())
 }
 
-func (t *Tools) GetToken(baseURL, appkey, appsecret string) string {
-	c := NewDGworkClient(baseURL, appkey, appsecret)
-	return c.GetToken(c.GETURL("/gettoken.json"))
+func (t *Tools) GetToken(baseURL, appkey, appsecret, xforwordfor, proxyURL string) string {
+	c := NewDGworkClient(baseURL, appkey, appsecret, xforwordfor)
+	return c.GetToken(c.GETURL("/gettoken.json"), proxyURL)
 }

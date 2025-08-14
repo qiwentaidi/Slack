@@ -122,12 +122,11 @@
             </el-form>
             <el-form :model="global.Theme" label-width="auto" v-show="currentDisplay == '3'">
                 <h3>{{ $t(setupOptions[3].name) }}</h3>
-                <el-form-item :label="$t('aside.language')">
-                    <el-select v-model="global.Language.value" @change="changeLanguage" style="width: 150px;">
-                        <el-option label="中文" value="zh"></el-option>
-                        <el-option label="English" value="en"></el-option>
-                    </el-select>
+                <el-form-item :label="$t('setting.poc_source')">
+                    <el-input v-model="global.update.pocSource"></el-input>
+                    <span class="form-item-tips">{{ $t('setting.poc_tips') }}</span>
                 </el-form-item>
+                <el-button type="primary" @click="SaveConfig" class="float-right">{{ $t('setting.save') }}</el-button>
             </el-form>
             <div v-show="currentDisplay == '4'">
                 <h3>{{ $t(setupOptions[4].name) }}<el-divider direction="vertical" />{{ $t('setting.password_tips') }}
@@ -165,7 +164,6 @@ import { TestProxyWithNotify } from "@/util";
 import { Edit, User } from '@element-plus/icons-vue';
 import { reactive, ref } from "vue";
 import { ReadFile, WriteFile } from "wailsjs/go/services/File";
-import { useI18n } from "vue-i18n";
 import { BrowserOpenURL } from "wailsjs/runtime/runtime";
 import { SaveConfig } from "@/config";
 import { aliveGroupOptions, crackDict, setupOptions } from "@/stores/options";
@@ -173,14 +171,6 @@ import { aliveGroupOptions, crackDict, setupOptions } from "@/stores/options";
 const bevigilURL = "https://bevigil.com/osint-api"
 const chaosURL = "https://cloud.projectdiscovery.io/"
 const securitytrailsURL = "https://securitytrails.com/"
-
-const { locale } = useI18n();
-
-global.Language.value = locale.value
-const changeLanguage = (lang: string) => {
-    localStorage.setItem("language", lang);
-    locale.value = lang;
-}
 
 const ctrl = reactive({
     innerDrawer: false,

@@ -11,16 +11,15 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/utils"
 	"slack-wails/lib/utils/fileutil"
 
+	"github.com/qiwentaidi/clients"
+
 	"github.com/minio/selfupdate"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
-
-const LastestPocUrl = "https://gitee.com/the-temperature-is-too-low/slack-poc/releases/download/"
 
 func download(target, dest string) (string, error) {
 	fileName := path.Base(target)
@@ -132,10 +131,10 @@ func roundToTwoDecimals(value float64) float64 {
 	return math.Round(value*100) / 100
 }
 
-func InitConfig(ctx context.Context) bool {
+func InitConfig(ctx context.Context, warehouse string) bool {
 	var defaultFile = utils.HomeDir() + "/slack/"
-	// os.MkdirAll(defaultFile, 0644)
-	const latestConfigVersion = "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version"
+	var latestConfigVersion = warehouse + "/raw/master/version"
+	var LastestPocUrl = warehouse + "/releases/download/"
 	resp, err := clients.SimpleGet(latestConfigVersion, clients.NewRestyClient(nil, true))
 	if err != nil {
 		runtime.MessageDialog(ctx, runtime.MessageDialogOptions{

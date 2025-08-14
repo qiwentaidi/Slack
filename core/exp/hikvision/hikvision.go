@@ -8,10 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"strings"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/chromedp/chromedp"
 	"github.com/go-resty/resty/v2"

@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"slack-wails/core/subdomain"
 	"slack-wails/core/waf"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/panjf2000/ants/v2"
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
@@ -99,7 +100,7 @@ func TestThreadSafeNucleiCaller(t *testing.T) {
 }
 
 func TestFingerscan(t *testing.T) {
-	s := NewWebscanEngine(context.Background(), "", clients.Proxy{}, structs.WebscanOptions{
+	s := NewWebscanEngine(context.Background(), "", "", structs.WebscanOptions{
 		Target:   []string{""},
 		Thread:   10,
 		RootPath: true,

@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 )
 
 // subdomains return is complete subdomain

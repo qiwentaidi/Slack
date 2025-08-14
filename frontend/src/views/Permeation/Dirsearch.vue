@@ -63,6 +63,7 @@ onMounted(() => {
     });
     EventsOn("dirsearchComplete", () => {
         config.runningStatus = false
+        updatePercentageThrottled.cancel?.(); // 防止节流后刷
         from.percentage = 100
     });
     return () => {

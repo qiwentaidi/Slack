@@ -7,6 +7,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -20,10 +21,10 @@ import (
 	"slack-wails/core/isic"
 	"slack-wails/core/jsfind"
 	"slack-wails/core/portscan"
+	"slack-wails/core/repeater"
 	"slack-wails/core/space"
 	"slack-wails/core/subdomain"
 	"slack-wails/core/webscan"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/control"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/gomessage"
@@ -31,6 +32,7 @@ import (
 	"slack-wails/lib/utils"
 	"slack-wails/lib/utils/arrayutil"
 	"slack-wails/lib/utils/fileutil"
+	"slack-wails/lib/utils/httputil"
 	"slack-wails/lib/utils/netutil"
 	"slack-wails/lib/utils/randutil"
 	"strconv"
@@ -38,6 +40,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/qiwentaidi/clients"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -107,7 +110,7 @@ func (a *App) Callgologger(level, msg string) {
 	}
 }
 
-func (a *App) GoFetch(method, target string, body interface{}, headers map[string]string, timeout int, proxy clients.Proxy) *structs.Response {
+func (a *App) GoFetch(method, target string, body interface{}, headers map[string]string, timeout int, proxyURL string) *structs.Response {
 	if _, err := url.Parse(target); err != nil {
 		return &structs.Response{
 			Error: true,
@@ -120,7 +123,7 @@ func (a *App) GoFetch(method, target string, body interface{}, headers map[strin
 	} else {
 		content = []byte(body.(string))
 	}
-	resp, err := clients.DoRequest(method, target, headers, bytes.NewReader(content), 10, clients.NewRestyClientWithProxy(nil, true, proxy))
+	resp, err := clients.DoRequest(method, target, headers, bytes.NewReader(content), 10, clients.NewRestyClientWithProxy(nil, true, proxyURL))
 	if err != nil {
 		return &structs.Response{
 			Error: true,
@@ -464,7 +467,7 @@ func (a *App) SpaceGetPort(ip string) []float64 {
 	return space.GetShodanAllPort(a.ctx, ip)
 }
 
-func (a *App) NewTcpScanner(taskId string, specialTargets []string, ips []string, ports []int, thread, timeout int, proxy clients.Proxy) {
+func (a *App) NewTcpScanner(taskId string, specialTargets []string, ips []string, ports []int, thread, timeout int, proxyURL string) {
 	ctrlCtx, _ := control.GetScanContext(control.Portscan) // 标识任务
 	addresses := make(chan portscan.Address)
 
@@ -486,7 +489,7 @@ func (a *App) NewTcpScanner(taskId string, specialTargets []string, ips []string
 			addresses <- portscan.Address{IP: temp[0], Port: port}
 		}
 	}()
-	portscan.TcpScan(a.ctx, ctrlCtx, taskId, addresses, thread, timeout, proxy)
+	portscan.TcpScan(a.ctx, ctrlCtx, taskId, addresses, thread, timeout, proxyURL)
 }
 
 // 端口暴破
@@ -552,14 +555,14 @@ func (a *App) FingerprintList() []string {
 }
 
 // 多线程 Nuclei 扫描，由于Nucli的设计问题，多线程无法调用代理，否则会导致扫描失败
-func (a *App) NewWebScanner(taskId string, options structs.WebscanOptions, proxy clients.Proxy, threadSafe bool) {
+func (a *App) NewWebScanner(taskId string, options structs.WebscanOptions, proxyURL string, threadSafe bool) {
 	ctrlCtx, cancel := control.GetScanContext(control.Webscan) // 标识任务
 	defer cancel()
 	webscan.IsRunning = true
 	gologger.Info(a.ctx, fmt.Sprintf("Load web scanner, targets number: %d", len(options.Target)))
 	gologger.Info(a.ctx, "Fingerscan is running ...")
 
-	engine := webscan.NewWebscanEngine(a.ctx, taskId, proxy, options)
+	engine := webscan.NewWebscanEngine(a.ctx, taskId, proxyURL, options)
 	if engine == nil {
 		gologger.Error(a.ctx, "Init fingerscan engine failed")
 		webscan.IsRunning = false
@@ -593,7 +596,7 @@ func (a *App) NewWebScanner(taskId string, options structs.WebscanOptions, proxy
 				TemplateFolders:       allTemplateFolders,
 				CustomTags:            options.Tags,
 				CustomHeaders:         options.CustomHeaders,
-				Proxy:                 clients.GetRawProxy(proxy),
+				Proxy:                 proxyURL,
 			})
 		}
 		counts := len(allOptions)
@@ -734,4 +737,39 @@ func (a *App) NewDSStoreEngine(url string) []string {
 		return nil
 	}
 	return links
+}
+
+func (a *App) SendRequest(raw string, forceHttps, redirect bool, proxyURL string) structs.RawResponse {
+	resp, t, err := repeater.SendRequestWithRaw(raw, forceHttps, redirect, proxyURL)
+	if err != nil {
+		if errors.Is(err, http.ErrUseLastResponse) {
+			return structs.RawResponse{
+				StatusCode:   0,
+				Error:        "",
+				Response:     string(httputil.DumpResponseHeadersOnly(resp.RawResponse)),
+				ResponseTime: 0,
+			}
+		}
+		return structs.RawResponse{
+			StatusCode:   0,
+			Error:        err.Error(),
+			Response:     "",
+			ResponseTime: 0,
+		}
+	}
+	rawReponse, err := httputil.DumpResponseHeadersAndDecodedBody(resp.RawResponse)
+	if err != nil {
+		return structs.RawResponse{
+			StatusCode:   resp.StatusCode(),
+			Error:        err.Error(),
+			Response:     "",
+			ResponseTime: t,
+		}
+	}
+	return structs.RawResponse{
+		Error:        "",
+		Response:     rawReponse,
+		ResponseTime: t,
+		StatusCode:   resp.StatusCode(),
+	}
 }

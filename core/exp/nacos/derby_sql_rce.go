@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/utils/randutil"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -23,7 +24,7 @@ const (
 	derbyURI   = "v1/cs/ops/derby"
 )
 
-func New(target string, customHeaders string, proxy clients.Proxy) *Exp {
+func New(target string, customHeaders string, proxyURL string) *Exp {
 	var header = map[string]string{}
 	if customHeaders != "" {
 		for _, single := range strings.Split(customHeaders, "\n") {
@@ -35,7 +36,7 @@ func New(target string, customHeaders string, proxy clients.Proxy) *Exp {
 		DerbyURL:   target + derbyURI,
 		RemovalURL: target + removalURI,
 		Headers:    header,
-		Client:     clients.NewRestyClientWithProxy(nil, true, proxy),
+		Client:     clients.NewRestyClientWithProxy(nil, true, proxyURL),
 	}
 }
 

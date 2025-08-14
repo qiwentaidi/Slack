@@ -3,7 +3,8 @@ package finereport
 import (
 	"bytes"
 	"encoding/base64"
-	"slack-wails/lib/clients"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/go-resty/resty/v2"
 )

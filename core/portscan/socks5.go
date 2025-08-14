@@ -3,12 +3,12 @@ package portscan
 import (
 	"context"
 	"fmt"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"strconv"
 	"strings"
 
+	"github.com/qiwentaidi/clients"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -62,14 +62,8 @@ func Socks5Scan(ctx, ctrlCtx context.Context, taskId, host string, usernames, pa
 }
 
 func Socks5Conn(ip string, port, timeout int, username, password, aliveURL string) bool {
-	client := clients.NewRestyClientWithProxy(nil, true, clients.Proxy{
-		Enabled:  true,
-		Mode:     "SOCK5",
-		Address:  ip,
-		Port:     port,
-		Username: username,
-		Password: password,
-	})
+	socks5URL := fmt.Sprintf("socks5://%s:%s@%s:%d", username, password, ip, port)
+	client := clients.NewRestyClientWithProxy(nil, true, socks5URL)
 	_, err := clients.DoRequest("GET", aliveURL, nil, nil, timeout, client)
 	return err == nil
 }

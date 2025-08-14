@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/utils/arrayutil"
 	"strings"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"

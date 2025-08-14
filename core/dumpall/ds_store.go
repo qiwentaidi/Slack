@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/utils/arrayutil"
 	"strings"
 	"unicode/utf16"
 	"unicode/utf8"
 	"unsafe"
+
+	"github.com/qiwentaidi/clients"
 )
 
 type Block struct {

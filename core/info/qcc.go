@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"slack-wails/lib/clients"
 	"strconv"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 )
 
 var (

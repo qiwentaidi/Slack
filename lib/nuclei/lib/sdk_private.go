@@ -230,9 +230,5 @@ func (e *NucleiEngine) init(ctx context.Context) error {
 		e.httpxClient = nucleiUtils.GetInputLivenessChecker(client)
 	}
 
-	// Only Happens once regardless how many times this function is called
-	// This will update ignore file to filter out templates with weak matchers to avoid false positives
-	// and also upgrade templates to latest version if available
-
 	return nil
 }

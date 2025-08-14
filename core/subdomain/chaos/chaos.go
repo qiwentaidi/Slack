@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+
+	"github.com/qiwentaidi/clients"
 )
 
 const chaosURL = "https://dns.projectdiscovery.io/"

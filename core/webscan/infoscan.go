@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"slack-wails/core/subdomain"
 	"slack-wails/core/waf"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/gomessage"
 	"slack-wails/lib/structs"
@@ -18,6 +17,8 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/panjf2000/ants/v2"
@@ -62,10 +63,10 @@ type FingerScanner struct {
 	mutex                   sync.RWMutex
 }
 
-func NewWebscanEngine(ctx context.Context, taskId string, proxy clients.Proxy, options structs.WebscanOptions) *FingerScanner {
+func NewWebscanEngine(ctx context.Context, taskId string, proxyURL string, options structs.WebscanOptions) *FingerScanner {
 	urls := make([]*url.URL, 0, len(options.Target)) // 提前分配容量
 	waitChecks := []string{}
-	client := clients.NewRestyClientWithProxy(nil, true, proxy)
+	client := clients.NewRestyClientWithProxy(nil, true, proxyURL)
 	hasNoProtocol := false
 	for _, t := range options.Target {
 		t = strings.TrimRight(t, "/")
@@ -120,7 +121,7 @@ func NewWebscanEngine(ctx context.Context, taskId string, proxy clients.Proxy, o
 		taskId:                  taskId,
 		urls:                    urls,
 		client:                  client,
-		notFollowClient:         clients.NewRestyClientWithProxy(nil, false, proxy),
+		notFollowClient:         clients.NewRestyClientWithProxy(nil, false, proxyURL),
 		screenshot:              options.Screenshot,
 		thread:                  options.Thread,
 		deepScan:                options.DeepScan,

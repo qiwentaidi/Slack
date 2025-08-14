@@ -92,7 +92,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "2.2.1"
+const LOCAL_VERSION = "2.2.2"
 
 const Language = ref("zh")
 const Theme = ref(false)
@@ -126,6 +126,10 @@ var fileRetrieval = reactive({
     blackList: '.exe,.dll,.so',
 })
 
+var update = reactive({
+    pocSource: 'https://gitee.com/the-temperature-is-too-low/slack-poc',
+})
+
 var syntaxRules = reactive<FormRules<structs.SpaceEngineSyntax>>({
     Name: [
         { required: true, message: '请输入语法名称', trigger: 'blur' },
@@ -153,5 +157,6 @@ export default {
     Theme,
     database,
     syntaxRules,
-    fileRetrieval
+    fileRetrieval,
+    update
 };

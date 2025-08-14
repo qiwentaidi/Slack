@@ -9,12 +9,13 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils/httputil"
 	"strings"
 	"sync"
+
+	"github.com/qiwentaidi/clients"
 
 	"maps"
 

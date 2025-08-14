@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"slack-wails/core/webscan"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gonmap"
 	"slack-wails/lib/structs"
 	"strings"
@@ -14,10 +13,11 @@ import (
 	"time"
 
 	"github.com/panjf2000/ants/v2"
+	"github.com/qiwentaidi/clients"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Address, workers, timeout int, proxy clients.Proxy) {
+func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Address, workers, timeout int, proxyURL string) {
 	var id int32
 	single := make(chan struct{})
 	retChan := make(chan *structs.InfoResult)
@@ -44,7 +44,7 @@ func TcpScan(ctx, ctrlCtx context.Context, taskId string, addresses <-chan Addre
 		if ctrlCtx.Err() != nil {
 			return
 		}
-		pr := Connect(ctx, taskId, add.IP, add.Port, timeout, proxy)
+		pr := Connect(ctx, taskId, add.IP, add.Port, timeout, proxyURL)
 		if pr == nil {
 			return
 		}
@@ -92,9 +92,9 @@ type Address struct {
 	Port int
 }
 
-func Connect(ctx context.Context, taskId, ip string, port, timeout int, proxy clients.Proxy) *structs.InfoResult {
+func Connect(ctx context.Context, taskId, ip string, port, timeout int, proxyURL string) *structs.InfoResult {
 	scanner := gonmap.New()
-	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout), proxy)
+	status, response := scanner.Scan(ip, port, time.Second*time.Duration(timeout), proxyURL)
 
 	// 端口关闭或未知，直接返回 nil
 	if status == gonmap.Closed || status == gonmap.Unknown {

@@ -3,8 +3,9 @@ package jsfind
 import (
 	"errors"
 	"maps"
-	"slack-wails/lib/clients"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 )
 
 func detectMethod(fullURL string, headers map[string]string) (string, error) {

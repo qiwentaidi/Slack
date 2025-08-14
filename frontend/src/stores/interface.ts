@@ -182,10 +182,35 @@ export interface FormData {
     description: string;
     reference?: string;
     tags?: string[];
-    body: string;
+    flow: string;
+    rawRequest: boolean;
+    requests: Request[];
     metadata?: Metadata,
+    variables?: Record<string, string>;
+}
+
+
+interface Request {
+    method: string;
+    path: string[];
+    pathText: string;
+    headers: Record<string, string>;
+    body: string;
+    rawBody: string;
     matchers: Matcher[];
     matchersCondition: string;
+    stopAtFirstMatcher: boolean;
+    cookieReuse: boolean;
+    extractors: Extractor[];
+}
+
+interface Extractor {
+    type: string;
+    name?: string;
+    part?: string;
+    typeValue: string[];
+    typeText?: string;
+    internal?: boolean;
 }
 
 export interface ActivityItem {

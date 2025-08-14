@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 )
 
 type GithubResponse struct {

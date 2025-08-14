@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"slack-wails/lib/clients"
+
+	"github.com/qiwentaidi/clients"
 )
 
 const securitytrailsURL = "https://api.securitytrails.com/"

@@ -22,6 +22,8 @@ import yaml from "highlight.js/lib/languages/yaml";
 import http from "highlight.js/lib/languages/http";
 import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 import ContextMenu from '@imengyu/vue3-context-menu'
+import { install as VueMonacoEditorPlugin } from '@guolao/vue-monaco-editor';
+import * as monaco from 'monaco-editor';
 
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("yaml", yaml);
@@ -51,5 +53,7 @@ const app = createApp(AppComponent)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
 }
+
+app.use(VueMonacoEditorPlugin, { monaco });
 
 app.use(router).use(i18n).use(hljsVuePlugin).use(ContextMenu).mount("#app");

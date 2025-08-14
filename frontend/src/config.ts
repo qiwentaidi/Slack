@@ -1,7 +1,7 @@
 import { CheckFileStat, InitConfig, ReadFile, RemoveOldConfig, SaveDataToFile, ReadLocalStore } from 'wailsjs/go/services/File';
 import { ElLoading, ElNotification } from 'element-plus';
 import global from "./stores";
-import { compareVersion, sleep } from './util';
+import { check, compareVersion, sleep } from './util';
 import router from "./router";
 import { CreateTable } from 'wailsjs/go/services/Database';
 
@@ -17,7 +17,7 @@ function catchError(result: boolean, loading: any) {
 }
 
 export async function InitConfigFile(timeout: number) {
-    LoadConfig();
+    await LoadConfig();
     CreateTable()
     let backgroundColor = global.Theme.value ? "rgba(0, 0, 0)" : "rgba(255, 255, 255)"
     const loading = ElLoading.service({
@@ -28,7 +28,7 @@ export async function InitConfigFile(timeout: number) {
     let cfgStat = await CheckFileStat(global.PATH.homedir + "/slack")
     if (!cfgStat) {
         loading.setText('未检测到配置文件，正在下载...')
-        let result = await InitConfig();
+        let result = await InitConfig(global.update.pocSource);
         catchError(result, loading)
     } else {
         let result = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile)
@@ -36,7 +36,7 @@ export async function InitConfigFile(timeout: number) {
         if (!global.UPDATE.LocalPocVersion || compareVersion(global.UPDATE.LocalPocVersion, "0.0.4") != 1) {
             await RemoveOldConfig();
             loading.setText("正在下载新配置文件...");
-            let result = await InitConfig();
+            let result = await InitConfig(global.update.pocSource);
             catchError(result, loading)
         }
     }
@@ -54,7 +54,7 @@ export async function InitConfigFile(timeout: number) {
 async function LoadConfig() {
     let stat = await CheckFileStat(global.PATH.homedir + "/slack/config.json")
     if (!stat) {
-        var data = { proxy: global.proxy, space: global.space, jsfinder: global.jsfinder, webscan: global.webscan, database: global.database, fileRetrieval: global.fileRetrieval };
+        var data = { proxy: global.proxy, space: global.space, jsfinder: global.jsfinder, webscan: global.webscan, database: global.database, fileRetrieval: global.fileRetrieval, update: global.update };
         await SaveDataToFile(data);
     } else {
         let result = await ReadLocalStore()
@@ -64,10 +64,14 @@ async function LoadConfig() {
         Object.assign(global.webscan, result["webscan"])
         Object.assign(global.database, result["database"])
         Object.assign(global.fileRetrieval, result["fileRetrieval"])
+        Object.assign(global.update, result["update"])
         if (!result["webscan"]["highlight_fingerprints"] || global.database.columnsNameKeywords == "" || !result["fileRetrieval"]) {
             SaveConfig()
         }
     }
+    // 检测更新
+    check.client();
+    check.poc();
 }
 
 export function SaveConfig() {
@@ -75,7 +79,7 @@ export function SaveConfig() {
     let list = Object.entries(global.space).map(([key, value]) => value);
     // 去除不可见字符
     list = list.map(item => item.replace(/[\r\n\s]/g, ''));
-    var data = { proxy: global.proxy, space: global.space, jsfinder: global.jsfinder, webscan: global.webscan, database: global.database, fileRetrieval: global.fileRetrieval };
+    var data = { proxy: global.proxy, space: global.space, jsfinder: global.jsfinder, webscan: global.webscan, database: global.database, fileRetrieval: global.fileRetrieval, update: global.update };
     SaveDataToFile(data).then(result => {
         if (result) {
             ElNotification.success({

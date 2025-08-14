@@ -2,8 +2,9 @@ package nacos
 
 import (
 	"fmt"
-	"slack-wails/lib/clients"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/go-resty/resty/v2"
 )

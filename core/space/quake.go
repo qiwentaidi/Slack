@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils/arrayutil"
 	"strconv"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 )
 
 const (

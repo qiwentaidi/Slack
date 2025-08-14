@@ -134,6 +134,10 @@ export function ResumeAfterHumanCheck() {
   return window['go']['services']['App']['ResumeAfterHumanCheck']();
 }
 
+export function SendRequest(arg1, arg2, arg3, arg4) {
+  return window['go']['services']['App']['SendRequest'](arg1, arg2, arg3, arg4);
+}
+
 export function Socks5Conn(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['services']['App']['Socks5Conn'](arg1, arg2, arg3, arg4, arg5, arg6);
 }

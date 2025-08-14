@@ -1,30 +1,3 @@
-export namespace clients {
-	
-	export class Proxy {
-	    Enabled: boolean;
-	    Mode: string;
-	    Address: string;
-	    Port: number;
-	    Username: string;
-	    Password: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new Proxy(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Enabled = source["Enabled"];
-	        this.Mode = source["Mode"];
-	        this.Address = source["Address"];
-	        this.Port = source["Port"];
-	        this.Username = source["Username"];
-	        this.Password = source["Password"];
-	    }
-	}
-
-}
-
 export namespace dirsearch {
 	
 	export class Options {
@@ -1176,6 +1149,24 @@ export namespace structs {
 		    }
 		    return a;
 		}
+	}
+	export class RawResponse {
+	    Error: string;
+	    StatusCode: number;
+	    Response: string;
+	    ResponseTime: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new RawResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Error = source["Error"];
+	        this.StatusCode = source["StatusCode"];
+	        this.Response = source["Response"];
+	        this.ResponseTime = source["ResponseTime"];
+	    }
 	}
 	export class Response {
 	    Error: boolean;

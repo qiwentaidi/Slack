@@ -11,12 +11,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils/arrayutil"
 	"strconv"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 )
 
 const TipApi = "https://api.fofa.info/v1/search/tip?"
@@ -45,7 +46,7 @@ func (f *FofaClient) GetTips(key string) ([]byte, error) {
 	params.Set("ts", ts)
 	params.Set("sign", f.GetInputSign(signParam))
 	params.Set("app_id", f.AppId)
-	resp, err := clients.SimpleGet(TipApi+params.Encode(), clients.NewRestyClient(nil, true))
+	resp, err := clients.SimpleGet(TipApi+params.Encode(), clients.DefaultRestyClient())
 	if err != nil {
 		return nil, err
 	}

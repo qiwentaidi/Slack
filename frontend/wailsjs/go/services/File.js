@@ -42,8 +42,8 @@ export function GetLocalNaConfig() {
   return window['go']['services']['File']['GetLocalNaConfig']();
 }
 
-export function InitConfig() {
-  return window['go']['services']['File']['InitConfig']();
+export function InitConfig(arg1) {
+  return window['go']['services']['File']['InitConfig'](arg1);
 }
 
 export function InitMemo(arg1, arg2) {
@@ -142,8 +142,8 @@ export function Startup(arg1) {
   return window['go']['services']['File']['Startup'](arg1);
 }
 
-export function UpdatePocFile(arg1) {
-  return window['go']['services']['File']['UpdatePocFile'](arg1);
+export function UpdatePocFile(arg1, arg2) {
+  return window['go']['services']['File']['UpdatePocFile'](arg1, arg2);
 }
 
 export function UserHomeDir() {

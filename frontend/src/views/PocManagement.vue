@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { watch, onMounted, onUnmounted, ref, nextTick, toRaw, computed } from 'vue';
-import { Search, CirclePlusFilled, Delete, DocumentCopy, Reading, Minus, EditPen, CollectionTag } from "@element-plus/icons-vue";
+import { onMounted, ref, nextTick, toRaw, computed, shallowRef } from 'vue';
+import { Search, CirclePlusFilled, Delete, DocumentCopy, Reading, CollectionTag } from "@element-plus/icons-vue";
 import { CheckFileStat, ReadFile, RemoveFile, SaveFileDialog, WriteFile } from 'wailsjs/go/services/File';
 import global from '@/stores';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/services/App';
@@ -14,7 +14,7 @@ import aiIcon from '@/assets/icon/ai.svg'
 import { SaveConfig } from '@/config';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import "monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution";
-import { dslOptions, metadataOptions, pocdetailFilterOptions, sortSeverityOptions } from '@/stores/options';
+import { dslOptions, httpMethodOptions, metadataOptions, pocdetailFilterOptions, sortSeverityOptions, variablesOptions } from '@/stores/options';
 import { FormData } from '@/stores/interface';
 import { BrowserOpenURL } from 'wailsjs/runtime/runtime';
 
@@ -131,47 +131,38 @@ function deleteFingerprint(fingerprint: string) {
     global.webscan.highlight_fingerprints.splice(global.webscan.highlight_fingerprints.indexOf(fingerprint), 1)
 }
 
-const editorContainer = ref<HTMLElement | null>(null);
-const editor = ref<any | null>(null);
-const isEditable = ref(false);
-const hasUnsavedChanges = ref(false); // 标记是否有未保存的更改
+const isModified = ref(false);
+const originalContent = ref('')
+const editorRef = shallowRef()
+const isSettingContent = ref(false) // 添加标志位，区分程序设置内容和用户修改
 
-async function initEditor() {
-    if (editorContainer.value && !editor.value) {
-        editor.value = monaco.editor.create(editorContainer.value, {
-            value: content.value,
-            language: 'yaml',
-            theme: 'vs-dark',
-            readOnly: !isEditable.value,
-            automaticLayout: true,
-            minimap: { enabled: false }, // 禁用迷你地图
-            scrollBeyondLastLine: false, // 禁用滚动到最后一行后额外空白
-            contextmenu: false, // 禁用右键菜单
-        });
+const MONACO_EDITOR_OPTIONS = {
+    automaticLayout: true,
+    minimap: { enabled: false }, // 禁用迷你地图
+    scrollBeyondLastLine: false, // 禁用滚动到最后一行后额外空白
+    contextmenu: false, // 禁用右键菜单
+}
 
-        // 监听编辑器内容变化
-        editor.value.onDidChangeModelContent(() => {
-            hasUnsavedChanges.value = true; // 标记为有未保存的更改
-        });
-    }
-};
-
-function disposeEditor() {
-    if (editor.value) {
-        // 解除所有事件监听器
-        editor.value.getModel()?.dispose();
-        editor.value.dispose(); // 销毁编辑器实例
-        editor.value = null;
-    }
-};
-
-function toggleEditable() {
-    isEditable.value = !isEditable.value;
-    if (editor.value) {
-        editor.value.updateOptions({ readOnly: !isEditable.value });
-    }
-};
-
+function handleMount(editorInstance: any) {
+    editorRef.value = editorInstance
+    editorRef.value.addCommand(
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+        (e: DragEvent) => {
+            // 阻止默认事件
+            e.preventDefault?.();
+            // 调用保存方法
+            saveContent();
+            isModified.value = false
+        }
+    );
+    editorInstance.onDidChangeModelContent(() => {
+        // 只有在非程序设置内容时才触发修改状态
+        if (!isSettingContent.value) {
+            const currentValue = editorInstance.getValue()
+            isModified.value = currentValue !== originalContent.value
+        }
+    })
+}
 
 const detailDialog = ref(false)
 const content = ref('')
@@ -179,8 +170,7 @@ const currentFilepath = ref(""); // 记录当前被编辑的文件路径，方�
 
 async function readPocFile(filename: string) {
     detailDialog.value = true
-    hasUnsavedChanges.value = false
-    isEditable.value = false
+    isModified.value = false
     let filepath = global.PATH.homedir + "/slack/config/pocs/" + filename + ".yaml"
     let isStat = await CheckFileStat(filepath)
     if (!isStat) {
@@ -188,18 +178,19 @@ async function readPocFile(filename: string) {
     }
     currentFilepath.value = filepath
     let file = await ReadFile(filepath)
-    content.value = file.Content
     // 使用 nextTick 确保 content 更新后再初始化编辑器
     nextTick(() => {
-        if (detailDialog.value) {
-            initEditor();
+        if (editorRef.value) {
+            content.value = file.Content
+            originalContent.value = file.Content; // 保存原始内容
         }
+        isSettingContent.value = false // 设置完成，取消标记
     });
 }
 
 function handleBeforeClose(done: () => void) {
     // 如果有未保存的更改，提示保存
-    if (hasUnsavedChanges.value) {
+    if (isModified.value) {
         ElMessageBox.confirm(
             '您有未保存的更改，是否保存？',
             '未保存的更改',
@@ -217,7 +208,7 @@ function handleBeforeClose(done: () => void) {
                     });
             })
             .catch(() => {
-                hasUnsavedChanges.value = false; // 放弃更改，标记无更改
+                isModified.value = false; // 放弃更改，标记无更改
                 done(); // 放弃后关闭
             });
     } else {
@@ -228,93 +219,97 @@ function handleBeforeClose(done: () => void) {
 async function saveContent() {
     try {
         // 当前编辑器状态未改动时，直接返回不用处理保存功能
-        if (!hasUnsavedChanges.value) {
+        if (!isModified.value) {
             return
         }
         // 已知BUG，需要使用 toRaw 获取原始对象，直接获取会导致CPU占用率到100%，
-        const updatedContent = toRaw(editor.value).getValue() || content.value;
+        const updatedContent = toRaw(editorRef.value).getValue() || content.value;
         let isSuccess = await WriteFile("yaml", currentFilepath.value, updatedContent);
         if (!isSuccess) {
             ElMessage.error("保存失败")
             return
         }
-        hasUnsavedChanges.value = false; // 重置未保存状态
+        
         ElMessage.success('保存成功!');
     } catch (error) {
         ElMessage.error('保存失败，请检查文件路径或权限!');
     }
 };
 
-watch(detailDialog, (newValue) => {
-    if (!newValue) {
-        disposeEditor(); // 在关闭时销毁实例
-    }
-});
-
-onUnmounted(() => {
-    disposeEditor();
-});
-
 // step 1 add poc, hide poclist
 const step = ref(0)
 
 const metadataTemp = ref({}); // 临时存储 key
+const headerKeys = ref({}); // 临时存储请求头 key
+const variablesTemp = ref({}); // 临时存储变量 key
 
-const formData = ref<FormData>({
-    id: '',
+const formRef = ref(null)
+
+const nucleiTeamplate = ref<FormData>({
+    id: 'nuclei-test-teamplate',
     name: '',
-    author: '',
+    author: 'slack',
     description: '',
-    severity: 'medium',
-    body: '',
-    matchers: [] as Matcher[],
-    matchersCondition: 'and'
+    reference: '',
+    severity: 'high',
+    flow: '',
+    rawRequest: false,
+    variables: {},
+    requests: [{
+        method: 'GET',
+        path: [],
+        pathText: '',
+        headers: {},
+        body: '',
+        rawBody: '',
+        matchers: [] as Matcher[],
+        matchersCondition: 'and',
+        stopAtFirstMatcher: false,
+        cookieReuse: false,
+        extractors: []
+    }],
+    tags: [] as string[],
+    metadata: {}
 });
+
+
+const rules = {
+    id: [
+        { required: true, message: '请输入模板id', trigger: 'blur' },
+        {
+            validator: (_: any, value: string, callback: (error?: string | Error) => void) => {
+                const validIdPattern = /^([a-zA-Z0-9]+[-_])*[a-zA-Z0-9]+$/;
+                if (!validIdPattern.test(value)) {
+                    callback(new Error('模板ID只能包含字母、数字、中划线、下划线，且不能以中划线/下划线开头或结尾'));
+                } else {
+                    callback();
+                }
+            },
+            trigger: 'blur'
+        }
+    ],
+    name: [{ required: true, message: '请输入漏洞名称', trigger: 'blur' }],
+    author: [{ required: true, message: '请输入作者名称', trigger: 'blur' }],
+    description: [{ required: true, message: '请输入漏洞描述', trigger: 'blur' }],
+    tags: [{ required: true, message: '请选择绑定的指纹, 至少一个', trigger: 'blur' }],
+}
+
 // 控制缩进函数
 const indent = (level: number, content: string) => ' '.repeat(level * 2) + content;
-
 const generatedPoc = computed(() => {
 
-    const matchers = formData.value.matchers.map(matcher => {
-        let matcherConfig = [indent(3, `- type: ${matcher.type}`)];
-
-        // 处理需要 part 属性的类型
-        if (["word", "regex"].includes(matcher.type) && matcher.part !== "all") {
-            matcherConfig.push(indent(4, `part: ${matcher.part || "body"}`));
-        }
-
-        // 处理不同类型的字段
-        const fieldType = matcher.type === "regex" ? "regex" : matcher.type === "word" ? "words" : matcher.type;
-        matcherConfig.push(indent(4, `${fieldType}:`));
-
-        // 处理匹配值
-        const wrapWithQuotes = !(["size", "status", "binary"].includes(matcher.type));
-        matcherConfig.push(
-            matcher.words
-                .map(word => indent(5, `- ${wrapWithQuotes ? `'${word}'` : word}`))
-                .join("\n")
-        );
-
-        // 处理 condition
-        if (matcher.words.length > 1) {
-            matcherConfig.push(indent(4, `condition: ${matcher.condition}`));
-        }
-
-        return matcherConfig.join("\n");
-    }).join("\n");
-
     const pocConfig = [
-        `id: ${formData.value.id}\n`,
+        `id: ${nucleiTeamplate.value.id}\n`,
         'info:',
-        indent(1, `name: ${formData.value.name}`),
-        indent(1, `author: ${formData.value.author}`),
-        indent(1, `severity: ${formData.value.severity}`),
+        indent(1, `name: ${nucleiTeamplate.value.name}`),
+        indent(1, `author: ${nucleiTeamplate.value.author}`),
+        indent(1, `severity: ${nucleiTeamplate.value.severity}`),
         indent(1, `description: |`),
-        indent(2, formData.value.description),
+        indent(2, `${nucleiTeamplate.value.description}`),
     ];
 
-    if (formData.value.reference && Object.keys(formData.value.reference).length > 0) {
-        const referenceArray = formData.value.reference.split('\n').filter(ref => ref.trim() !== '');
+    if (nucleiTeamplate.value.reference && Object.keys(nucleiTeamplate.value.reference).length > 0) {
+        const referenceArray = nucleiTeamplate.value.reference.split('\n').filter(ref => ref.trim() !== '');
         if (referenceArray.length > 0) {
             pocConfig.push(indent(1, 'reference:'));
             referenceArray.forEach(ref => {
@@ -323,98 +318,192 @@ const generatedPoc = computed(() => {
         }
     }
 
-    if (formData.value.tags && Object.keys(formData.value.tags).length > 0) {
-        pocConfig.push(indent(1, `tags: ${formData.value.tags.join(',')}`))
-    }
-
     // 处理 metadata 部分
-    if (formData.value.metadata && Object.keys(formData.value.metadata).length > 0) {
+    if (nucleiTeamplate.value.metadata && Object.keys(nucleiTeamplate.value.metadata).length > 0) {
         pocConfig.push(indent(1, 'metadata:'));
-        Object.entries(formData.value.metadata).forEach(([key, value]) => {
+        Object.entries(nucleiTeamplate.value.metadata).forEach(([key, value]) => {
             if (value) {
                 pocConfig.push(indent(2, `${key}: ${value}`));
             }
         });
     }
 
-    pocConfig.push(
-        '\nhttp:',
-        indent(1, '- raw:'),
-        indent(3, '- |'),
-    );
+    if (nucleiTeamplate.value.tags && Object.keys(nucleiTeamplate.value.tags).length > 0) {
+        pocConfig.push(indent(1, `tags: ${nucleiTeamplate.value.tags.join(',')}`))
+    }
 
-    if (formData.value.body && Object.keys(formData.value.body).length > 0) {
-        const bodyArray = formData.value.body.split('\n');
-        if (bodyArray.length > 0) {
-            bodyArray.forEach(ref => {
-                pocConfig.push(indent(4, ref.trim()));
+    if (nucleiTeamplate.value.variables && Object.keys(nucleiTeamplate.value.variables).length > 0) {
+        pocConfig.push(indent(0, 'variables:'));
+        Object.entries(nucleiTeamplate.value.variables).forEach(([key, value]) => {
+            if (value) {
+                pocConfig.push(indent(1, `${key}: ${value}`));
+            }
+        });
+    }
+
+    if (nucleiTeamplate.value.flow && nucleiTeamplate.value.requests.length > 1) {
+        pocConfig.push('')
+        pocConfig.push(indent(0, 'flow: ' + nucleiTeamplate.value.flow));
+    }
+
+    pocConfig.push('\nhttp:');
+
+    // 处理多个请求
+    nucleiTeamplate.value.requests.forEach((request, requestIndex) => {
+        if (requestIndex > 0) {
+            pocConfig.push(''); // 请求之间的空行
+        }
+
+        if (nucleiTeamplate.value.rawRequest) {
+            // Raw 请求模式
+            pocConfig.push(indent(1, '- raw:'));
+            pocConfig.push(indent(3, '- |'));
+
+            if (request.rawBody && Object.keys(request.rawBody).length > 0) {
+                const bodyArray = request.rawBody.split('\n');
+                if (bodyArray.length > 0) {
+                    bodyArray.forEach(line => {
+                        pocConfig.push(indent(4, line.trim()));
+                    });
+                }
+            }
+        } else {
+            // 结构化请求模式
+            pocConfig.push(indent(1, '- method: ' + request.method));
+            pocConfig.push(indent(2, 'path:'));
+            request.path.forEach(path => {
+                pocConfig.push(indent(3, '- ' + '"{{BaseURL}}' + path.trim()) + "\"");
+            });
+
+            // 处理请求头
+            if (request.headers && Object.keys(request.headers).length > 0) {
+                pocConfig.push(indent(2, 'headers:'));
+                Object.entries(request.headers).forEach(([key, value]) => {
+                    if (key && value) {
+                        pocConfig.push(indent(3, `${key}: ${value}`));
+                    }
+                });
+            }
+
+            // 处理请求体
+            if (request.body && request.body.trim()) {
+                pocConfig.push(indent(2, 'body: |'));
+                const bodyLines = request.body.split('\n');
+                bodyLines.forEach(line => {
+                    pocConfig.push(indent(3, line));
+                });
+            }
+        }
+
+        // 处理 stop-at-first-matcher
+        if (request.stopAtFirstMatcher) {
+            pocConfig.push('');
+            pocConfig.push(indent(2, 'stop-at-first-matcher: true'));
+        }
+
+        if (request.cookieReuse) {
+            pocConfig.push(indent(2, 'cookie-reuse: true'));
+        }
+
+        // 处理匹配规则
+        if (request.matchers && request.matchers.length > 0) {
+
+            if (request.matchers.length > 1) {
+                pocConfig.push(indent(2, `matchers-condition: ${request.matchersCondition}`));
+            }
+
+            pocConfig.push(indent(2, 'matchers:'));
+
+            const matchers = request.matchers.map(matcher => {
+                let matcherConfig = [indent(3, `- type: ${matcher.type}`)];
+
+                // 处理需要 part 属性的类型
+                if (["word", "regex"].includes(matcher.type) && matcher.part !== "all") {
+                    matcherConfig.push(indent(4, `part: ${matcher.part || "body"}`));
+                }
+
+                // 处理不同类型的字段
+                const fieldType = matcher.type === "regex" ? "regex" : matcher.type === "word" ? "words" : matcher.type;
+                matcherConfig.push(indent(4, `${fieldType}:`));
+
+                // 处理匹配值
+                const wrapWithQuotes = !(["size", "status", "binary"].includes(matcher.type));
+                matcherConfig.push(
+                    matcher.words
+                        .map(word => indent(5, `- ${wrapWithQuotes ? `'${word}'` : word}`))
+                        .join("\n")
+                );
+
+                // 处理 condition
+                if (matcher.words.length > 1) {
+                    matcherConfig.push(indent(4, `condition: ${matcher.condition}`));
+                }
+
+                return matcherConfig.join("\n");
+            }).join("\n");
+
+            pocConfig.push(matchers);
+        }
+        if (request.extractors && request.extractors.length > 0) {
+            pocConfig.push(indent(2, 'extractors:'));
+            request.extractors.forEach(extractor => {
+                pocConfig.push(indent(3, '- type: ' + extractor.type));
+                if (extractor.name) {
+                    pocConfig.push(indent(4, 'name: ' + extractor.name));
+                }
+                if (extractor.part) {
+                    pocConfig.push(indent(4, 'part: ' + extractor.part));
+                }
+                if (extractor.internal) {
+                    pocConfig.push(indent(4, 'internal: ' + extractor.internal));
+                }
+                pocConfig.push(indent(4, extractor.type + ':'));
+                extractor.typeValue.forEach(value => {
+                    pocConfig.push(indent(5, '- ' + value));
+                });
             });
         }
-    }
-
-    pocConfig.push('\n')
-
-    if (formData.value.matchers.length > 1) {
-        pocConfig.push(indent(2, `matchers-condition: ${formData.value.matchersCondition}`));
-    }
-
-    pocConfig.push(indent(2, 'matchers:'));
-    pocConfig.push(matchers);
+    });
 
     return pocConfig.join('\n');
 });
 
-const editorDialog = ref(false);
-
-function openEditor() {
-    editorDialog.value = true
-    content.value = generatedPoc.value
-    isEditable.value = true
-    nextTick(() => {
-        if (editorDialog.value) {
-            initEditor();
-        }
-    });
-}
-
-watch(editorDialog, (newValue) => {
-    if (!newValue) {
-        disposeEditor(); // 在关闭时销毁实例
-    }
-});
 
 const nuclei = ({
     fetchMetatedataSuggestions: function (query: string, cb: Function) {
         cb(metadataOptions.filter(k => k.includes(query)).map(k => ({ value: k })))
     },
+    fetchDslSuggestions: function (query: string, cb: Function) {
+        cb(dslOptions.filter(k => k.text.includes(query)))
+    },
+    fetchVariablesSuggestions: function (query: string, cb: Function) {
+        cb(variablesOptions.filter(k => k.text.includes(query)).map(item => ({ value: item.text, label: item.text, realValue: item.value })));
+    },
     updateMetadataKey: function (oldKey: string, newKey: string) {
-        if (newKey && oldKey !== newKey && !formData.value.metadata[newKey]) {
-            formData.value.metadata[newKey] = formData.value.metadata[oldKey];
-            delete formData.value.metadata[oldKey];
+        if (newKey && oldKey !== newKey && !nucleiTeamplate.value.metadata[newKey]) {
+            nucleiTeamplate.value.metadata[newKey] = nucleiTeamplate.value.metadata[oldKey];
+            delete nucleiTeamplate.value.metadata[oldKey];
             metadataTemp.value[newKey] = newKey;
             delete metadataTemp.value[oldKey];
         }
     },
     addMetadata: function () {
-        if (!formData.value.metadata) {
-            formData.value.metadata = {};
+        if (!nucleiTeamplate.value.metadata) {
+            nucleiTeamplate.value.metadata = {};
         }
         const newKey = ''; // 默认空 key
-        formData.value.metadata[newKey] = '';
+        nucleiTeamplate.value.metadata[newKey] = '';
         metadataTemp.value[newKey] = newKey;
     },
     removeMetadata: function (key: string) {
-        if (formData.value.metadata) {
-            delete formData.value.metadata[key];
+        if (nucleiTeamplate.value.metadata) {
+            delete nucleiTeamplate.value.metadata[key];
             delete metadataTemp.value[key]; // 同步删除临时 key
         }
     },
-    fetchDslSuggestions: function (query: string, cb: Function) {
-        cb(dslOptions.filter(k => k.text.includes(query)))
-    },
-    updateMatcherWords: function (index: number) {
+    updateMatcherWords: function (requestIndex: number, matcherIndex: number) {
         nextTick(() => {
-            const matcher = formData.value.matchers[index];
+            const matcher = nucleiTeamplate.value.requests[requestIndex].matchers[matcherIndex];
             if (matcher.wordsText) {
                 matcher.words = matcher.wordsText.split('\n').filter(word => word.trim());
             } else {
@@ -422,8 +511,8 @@ const nuclei = ({
             }
         })
     },
-    addMatcher: function () {
-        formData.value.matchers.push({
+    addMatcher: function (requestIndex: number) {
+        nucleiTeamplate.value.requests[requestIndex].matchers.push({
             type: 'word',
             part: 'all',
             words: [],
@@ -431,41 +520,115 @@ const nuclei = ({
             wordsText: '',
         });
     },
-    removeMatcher: function (index: number) {
-        formData.value.matchers.splice(index, 1);
+    removeMatcher: function (requestIndex: number, matcherIndex: number) {
+        nucleiTeamplate.value.requests[requestIndex].matchers.splice(matcherIndex, 1);
     },
     replaceHostAll: function () {
-        formData.value.body = formData.value.body.replace(/(Host:\s*)([^\n]+)/g, '{{Hostname}}');
+        nucleiTeamplate.value.requests[0].rawBody = nucleiTeamplate.value.requests[0].rawBody.replace(/(Host:\s*)([^\n]+)/g, '{{Hostname}}');
+    },
+    addHeader: function () {
+        const newKey = ''; // 默认空 key
+        nucleiTeamplate.value.requests[0].headers[newKey] = '';
+        headerKeys.value[newKey] = newKey;
+    },
+    removeHeader: function (key: string) {
+        if (nucleiTeamplate.value.requests[0].headers) {
+            delete nucleiTeamplate.value.requests[0].headers[key];
+            delete headerKeys.value[key]; // 同步删除临时 key
+        }
+    },
+    updateHeaderKey: function (oldKey: string, newKey: string) {
+        if (newKey && oldKey !== newKey && !nucleiTeamplate.value.requests[0].headers[newKey]) {
+            nucleiTeamplate.value.requests[0].headers[newKey] = nucleiTeamplate.value.requests[0].headers[oldKey];
+            delete nucleiTeamplate.value.requests[0].headers[oldKey];
+            headerKeys.value[newKey] = newKey;
+            delete headerKeys.value[oldKey];
+        }
+    },
+    addVariable: function () {
+        const newKey = '';
+        nucleiTeamplate.value.variables[newKey] = '';
+        variablesTemp.value[newKey] = newKey;
+    },
+    updateVariablesKey: function (oldKey: string, newKey: string) {
+        if (newKey && oldKey !== newKey && !nucleiTeamplate.value.variables[newKey]) {
+            nucleiTeamplate.value.variables[newKey] = nucleiTeamplate.value.variables[oldKey];
+            delete nucleiTeamplate.value.variables[oldKey];
+            variablesTemp.value[newKey] = newKey;
+            delete variablesTemp.value[oldKey];
+        }
+    },
+    removeVariable: function (key: string) {
+        if (nucleiTeamplate.value.variables) {
+            delete nucleiTeamplate.value.variables[key];
+            delete variablesTemp.value[key];
+        }
+    },
+    addRequest: function () {
+        nucleiTeamplate.value.requests.push({
+            method: 'GET',
+            path: [],
+            pathText: '',
+            headers: {},
+            body: '',
+            rawBody: '',
+            matchers: [],
+            matchersCondition: 'and',
+            stopAtFirstMatcher: false,
+            cookieReuse: false,
+            extractors: [],
+        });
+    },
+    removeRequest: function (index: number) {
+        if (nucleiTeamplate.value.requests.length > 1) {
+            nucleiTeamplate.value.requests.splice(index, 1);
+        }
+    },
+    addExtractor: function (requestIndex: number) {
+        nucleiTeamplate.value.requests[requestIndex].extractors.push({
+            type: 'regex',
+            name: '',
+            part: 'body',
+            typeValue: [],
+            internal: false,
+        });
+    },
+    updateExtractor: function (requestIndex: number, matcherIndex: number) {
+        nextTick(() => {
+            const extractor = nucleiTeamplate.value.requests[requestIndex].extractors[matcherIndex];
+            if (extractor.typeText) {
+                extractor.typeValue = extractor.typeText.split('\n').filter(word => word.trim());
+            } else {
+                extractor.typeValue = [];
+            }
+        })
+    },
+    removeExtractor: function (requestIndex: number, extractorIndex: number) {
+        nucleiTeamplate.value.requests[requestIndex].extractors.splice(extractorIndex, 1);
+    },
+    updatePaths: function (index: number) {
+        const request = nucleiTeamplate.value.requests[index];
+        request.path = request.pathText.split('\n').map(path => path.trim());
     },
 })
 
 async function savePoc() {
-    if (formData.value.id === "") {
+    if (nucleiTeamplate.value.id === "") {
         ElMessage.warning("请输入POC ID!")
         return;
     }
-    const path = await SaveFileDialog(formData.value.id + ".yaml");
+    const path = await SaveFileDialog(nucleiTeamplate.value.id + ".yaml");
     if (!path) {
         return;
     }
-    const result = await WriteFile("yaml", path, content.value);
+    const result = await WriteFile("yaml", path, generatedPoc.value);
     result ? ElMessage.success("保存成功!") : ElMessage.error("保存失败!");
 }
-
-const variables = `variables:
-  num: "999999999"
-  filename: "{{rand_base(8)}}"
-  s1: "{{rand_int(40000, 44800)}}"`
 
 const func = `随机整数: {{rand_int(40000, 44800)}}
 随机字符串: {{rand_base(8)}} || {{randstr}}
 转小写: {{to_lower(rand_text_alpha(5))}}
 转大写: {{to_upper(rand_base(12))}}`
-
-const path = `http:
-  - method: GET
-    path:
-      - "{{BaseURL}}/libs/granite/offloading/content/view.html"`
 
 const uploads = `aspx:
   <%@Page Language="C#" %>
@@ -494,7 +657,8 @@ php:
                                 </el-select>
                             </template>
                         </el-input>
-                        <el-button class="ml-5px" type="primary" plain :icon="CirclePlusFilled" @click="step = 1">添加POC</el-button>
+                        <el-button class="ml-5px" type="primary" plain :icon="CirclePlusFilled"
+                            @click="step = 1">添加POC</el-button>
                     </div>
                     <el-table :data="pagination.table.pageContent" style="height: calc(100vh - 225px);">
                         <el-table-column prop="Name" label="名称" />
@@ -558,48 +722,46 @@ php:
         <el-page-header @back="step = 0">
             <template #content>
                 <span class="font-bold mr-5px">Nuclei PoC 生成器</span>
-                <el-tag>填写完基础信息后, 通过编辑器模式进行调整/保存</el-tag>
             </template>
             <template #extra>
-                <el-button circle @click="BrowserOpenURL('https://cloud.projectdiscovery.io/templates')">
+                <el-button @click="BrowserOpenURL('https://cloud.projectdiscovery.io/templates')">
                     <template #icon>
-                        <el-icon size="24">
+                        <el-icon size="18">
                             <aiIcon />
                         </el-icon>
                     </template>
+                    AI生成
                 </el-button>
-                <el-button round :icon="EditPen" @click="openEditor">编辑器模式</el-button>
             </template>
         </el-page-header>
         <el-divider />
         <div class="flex gap-2">
-            <el-form :model="formData" label-width="auto" class="w-full">
-                <el-form-item label="漏洞ID">
-                    <el-input v-model="formData.id"></el-input>
+            <el-form :model="nucleiTeamplate" :rules="rules" ref="formRef" label-width="auto" class="w-1/2">
+                <el-form-item label="模板id" prop="id">
+                    <el-input v-model="nucleiTeamplate.id"></el-input>
                 </el-form-item>
-                <el-form-item label="漏洞名称">
-                    <el-input v-model="formData.name"></el-input>
+                <el-form-item label="漏洞名称" prop="name">
+                    <el-input v-model="nucleiTeamplate.name"></el-input>
                 </el-form-item>
-                <el-form-item label="作者">
-                    <el-input v-model="formData.author"></el-input>
+                <el-form-item label="作者" prop="author">
+                    <el-input v-model="nucleiTeamplate.author"></el-input>
                 </el-form-item>
-                <el-form-item label="风险等级">
-                    <el-select v-model="formData.severity">
+                <el-form-item label="风险等级" prop="severity">
+                    <el-select v-model="nucleiTeamplate.severity">
                         <el-option v-for="severity in sortSeverityOptions" :key="severity" :label="severity"
                             :value="severity.toLowerCase()" />
                     </el-select>
                 </el-form-item>
-                <el-form-item label="漏洞描述">
-                    <el-input v-model="formData.description" type="textarea" :rows="3"></el-input>
+                <el-form-item label="漏洞描述" prop="description">
+                    <el-input v-model="nucleiTeamplate.description" type="textarea" :rows="3"></el-input>
                 </el-form-item>
-                <el-form-item label="漏洞来源">
-                    <el-input v-model="formData.reference" type="textarea" :rows="3"></el-input>
-                    <span class="form-item-tips">可换行分割多个来源</span>
+                <el-form-item label="漏洞来源" prop="reference">
+                    <el-input v-model="nucleiTeamplate.reference" placeholder="请输入来源, 每行一个" type="textarea"
+                        :rows="3"></el-input>
                 </el-form-item>
                 <el-form-item label="Matedata">
-                    <el-button type="primary" size="small" @click="nuclei.addMetadata">添加 Matedata</el-button>
-                    <div v-if="formData.metadata">
-                        <div v-for="(_, key) in formData.metadata" :key="key"
+                    <div v-if="nucleiTeamplate.metadata" class="w-full">
+                        <div v-for="(_, key) in nucleiTeamplate.metadata" :key="key"
                             style="display: flex; align-items: center; margin-bottom: 8px; width: 100%;">
                             <!-- 这里用 el-autocomplete 提供建议 -->
                             <el-autocomplete v-model="metadataTemp[key]"
@@ -607,84 +769,218 @@ php:
                                 :fetch-suggestions="nuclei.fetchMetatedataSuggestions" placeholder="请输入 Key"
                                 style="flex: 1; margin-right: 8px;"
                                 @change="nuclei.updateMetadataKey(key, metadataTemp[key])" />
-                            <el-input v-model="formData.metadata[key]" placeholder="请输入 Value"
+                            <el-input v-model="nucleiTeamplate.metadata[key]" placeholder="请输入 Value"
                                 style="flex: 1; margin-right: 8px;" />
-                            <el-button :icon="Minus" size="small" circle @click="nuclei.removeMetadata(key)" />
+                            <el-button :icon="Delete" type="danger" plain @click="nuclei.removeMetadata(key)" />
                         </div>
                     </div>
+                    <el-button type="primary" size="small" @click="nuclei.addMetadata">添加 Matedata</el-button>
                 </el-form-item>
-                <el-form-item label="关联指纹">
-                    <el-select-v2 v-model="formData.tags" :options="fingerOptions" filterable multiple clearable />
-                    <span class="form-item-tips">必须关联指纹库中的至少1条指纹</span>
+                <el-form-item label="关联指纹" prop="tags">
+                    <el-select-v2 v-model="nucleiTeamplate.tags" filterable :options="fingerOptions"
+                        :props="{ label: 'name', value: 'name' }" multiple clearable />
                 </el-form-item>
-                <el-form-item label="Raw数据包">
-                    <el-input v-model="formData.body" type="textarea" :rows="8" placeholder="请输入请求体内容" />
-                </el-form-item>
-            </el-form>
-            <!-- 右侧预览区域 -->
-            <el-form :model="formData" label-width="auto" class="w-full">
-                <el-form-item label="匹配规则">
-                    <el-select v-model="formData.matchersCondition" class="w-full">
-                        <el-option label="AND" value="and" />
-                        <el-option label="OR" value="or" />
-                    </el-select>
-                    <div class="w-full mt-5px">
-                        <el-card v-for="(matcher, index) in formData.matchers" :key="index" class="mb-5px">
-                            <template #header>
-                                <div class="card-header">
-                                    <span>规则 #{{ index + 1 }}</span>
-                                    <el-button size="small" type="danger" :icon="Delete"
-                                        @click="nuclei.removeMatcher(index)">
-                                    </el-button>
-                                </div>
-                            </template>
-
-                            <el-form label-position="top">
-                                <el-form-item label="类型">
-                                    <el-select v-model="matcher.type">
-                                        <el-option label="word" value="word" />
-                                        <el-option label="status" value="status" />
-                                        <el-option label="regex" value="regex" />
-                                        <el-option label="dsl" value="dsl" />
-                                        <el-option label="size" value="size" />
-                                        <el-option label="binary" value="binary" />
-                                    </el-select>
-                                </el-form-item>
-                                <el-form-item label="匹配部分" v-if="matcher.type === 'word' || matcher.type === 'regex'">
-                                    <el-select v-model="matcher.part">
-                                        <el-option label="响应体" value="body" />
-                                        <el-option label="响应头" value="header" />
-                                        <el-option label="全部" value="all" />
-                                    </el-select>
-                                </el-form-item>
-                                <el-form-item label="词条">
-                                    <el-autocomplete v-model="matcher.wordsText" type="textarea" :rows="3"
-                                        :fetch-suggestions="matcher.type === 'dsl' ? nuclei.fetchDslSuggestions : () => []"
-                                        placeholder="请输入词条, 每行一个" @input="nuclei.updateMatcherWords(index)">
-                                        <template #default="{ item }">
-                                            <div>
-                                                <span style="color: #559FF8;">{{ item.text }}</span>
-                                                <el-divider direction="vertical" />
-                                                <span>{{ item.value }}</span>
-                                            </div>
-                                        </template>
-                                    </el-autocomplete>
-                                </el-form-item>
-
-                                <el-form-item label="词条匹配条件">
-                                    <el-radio-group v-model="matcher.condition">
-                                        <el-radio value="and">AND</el-radio>
-                                        <el-radio value="or">OR</el-radio>
-                                    </el-radio-group>
-                                </el-form-item>
-                            </el-form>
-                        </el-card>
-                        <el-button type="primary" size="small" @click="nuclei.addMatcher">
-                            添加匹配规则
-                        </el-button>
+                <el-form-item label="全局变量">
+                    <div v-if="nucleiTeamplate.variables" class="w-full">
+                        <div v-for="(_, key) in nucleiTeamplate.variables" :key="key"
+                            style="display: flex; align-items: center; margin-bottom: 8px; width: 100%;">
+                            <el-autocomplete v-model="variablesTemp[key]"
+                                :fetch-suggestions="nuclei.fetchVariablesSuggestions" placeholder="请输入 Key"
+                                style="flex: 1; margin-right: 8px;"
+                                @select="(item) => { variablesTemp[key] = item.value; nuclei.updateVariablesKey(key, item.value); nucleiTeamplate.variables[item.value] = item.realValue; delete nucleiTeamplate.variables[key]; }"
+                                @change="nuclei.updateVariablesKey(key, variablesTemp[key])" />
+                            <el-input v-model="nucleiTeamplate.variables[key]" placeholder="请输入 Value"
+                                style="flex: 1; margin-right: 8px;" />
+                            <el-button :icon="Delete" type="danger" plain @click="nuclei.removeVariable(key)" />
+                        </div>
                     </div>
+                    <el-button type="primary" size="small" @click="nuclei.addVariable">添加 Variables</el-button>
                 </el-form-item>
+                <el-form-item label="Raw请求">
+                    <el-switch v-model="nucleiTeamplate.rawRequest" />
+                </el-form-item>
+                <el-form-item label="工作流" v-show="nucleiTeamplate.requests.length > 1">
+                    <el-input v-model="nucleiTeamplate.flow"></el-input>
+                </el-form-item>
+                <!-- 请求组 -->
+                <div v-for="(request, requestIndex) in nucleiTeamplate.requests" :key="requestIndex"
+                    class="request-group">
+                    <el-card class="mb-10px">
+                        <template #header>
+                            <div class="card-header">
+                                <span>请求 #{{ requestIndex + 1 }}</span>
+                                <el-button v-if="nucleiTeamplate.requests.length > 1" size="small" type="danger" plain
+                                    :icon="Delete" @click="nuclei.removeRequest(requestIndex)">
+                                </el-button>
+                            </div>
+                        </template>
+
+                        <el-form-item label="Raw数据包" v-show="nucleiTeamplate.rawRequest">
+                            <el-input v-model="request.rawBody" type="textarea" :rows="8" placeholder="请输入请求体内容" />
+                        </el-form-item>
+
+                        <div v-show="!nucleiTeamplate.rawRequest">
+                            <el-form-item label="请求方式">
+                                <el-select-v2 v-model="request.method" :options="httpMethodOptions">
+                                </el-select-v2>
+                            </el-form-item>
+                            <el-form-item label="请求路径">
+                                <el-input v-model="request.pathText" type="textarea" :rows="3" placeholder="请输入路径，每行一个"
+                                    @input="nuclei.updatePaths(requestIndex)" />
+                            </el-form-item>
+                            <el-form-item label="请求头">
+                                <div v-for="(value, key) in request.headers" :key="key"
+                                    style="display: flex; align-items: center; margin-bottom: 8px; width: 100%;">
+                                    <el-input v-model="headerKeys[key]" placeholder="请输入 Key"
+                                        style="flex: 1; margin-right: 8px;"
+                                        @change="nuclei.updateHeaderKey(key, headerKeys[key])" />
+                                    <el-input v-model="request.headers[key]" placeholder="请输入 Value"
+                                        style="flex: 1; margin-right: 8px;" />
+                                    <el-button :icon="Delete" type="danger" plain @click="nuclei.removeHeader(key)" />
+                                </div>
+                                <el-button type="primary" size="small" @click="nuclei.addHeader">添加请求头</el-button>
+                            </el-form-item>
+                            <el-form-item label="请求体">
+                                <el-input v-model="request.body" type="textarea" :rows="5"></el-input>
+                            </el-form-item>
+                        </div>
+                        <el-form-item label="首次匹配停止">
+                            <el-switch v-model="request.stopAtFirstMatcher" />
+                        </el-form-item>
+                        <el-form-item label="Cookie复用">
+                            <el-switch v-model="request.cookieReuse" />
+                        </el-form-item>
+                        <!-- 匹配规则 -->
+                        <el-form-item label="匹配规则">
+                            <el-select v-model="request.matchersCondition" class="w-full">
+                                <el-option label="AND" value="and" />
+                                <el-option label="OR" value="or" />
+                            </el-select>
+                            <div class="w-full mt-5px">
+                                <el-card v-for="(matcher, matcherIndex) in request.matchers" :key="matcherIndex"
+                                    class="mb-5px">
+                                    <template #header>
+                                        <div class="card-header">
+                                            <span>规则 #{{ matcherIndex + 1 }}</span>
+                                            <el-radio-group v-model="matcher.condition">
+                                                <el-radio value="and">AND</el-radio>
+                                                <el-radio value="or">OR</el-radio>
+                                            </el-radio-group>
+                                            <el-button size="small" type="danger" plain :icon="Delete"
+                                                @click="nuclei.removeMatcher(requestIndex, matcherIndex)">
+                                            </el-button>
+                                        </div>
+                                    </template>
+
+                                    <el-form label-position="top">
+                                        <el-form-item label="类型">
+                                            <el-select v-model="matcher.type">
+                                                <el-option label="word" value="word" />
+                                                <el-option label="status" value="status" />
+                                                <el-option label="regex" value="regex" />
+                                                <el-option label="dsl" value="dsl" />
+                                                <el-option label="size" value="size" />
+                                                <el-option label="binary" value="binary" />
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="匹配部分"
+                                            v-if="matcher.type === 'word' || matcher.type === 'regex'">
+                                            <el-select v-model="matcher.part">
+                                                <el-option label="响应体" value="body" />
+                                                <el-option label="响应头" value="header" />
+                                                <el-option label="全部" value="all" />
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="词条">
+                                            <el-autocomplete v-model="matcher.wordsText" type="textarea" :rows="3"
+                                                :fetch-suggestions="matcher.type === 'dsl' ? nuclei.fetchDslSuggestions : () => []"
+                                                placeholder="请输入词条, 每行一个"
+                                                @input="nuclei.updateMatcherWords(requestIndex, matcherIndex)" />
+                                        </el-form-item>
+                                    </el-form>
+                                </el-card>
+                                <el-button type="primary" size="small" @click="nuclei.addMatcher(requestIndex)">
+                                    添加匹配规则
+                                </el-button>
+                            </div>
+                        </el-form-item>
+                        <el-form-item label="提取器">
+                            <div class="w-full">
+                                <el-card v-for="(extractor, extractorIndex) in request.extractors" :key="extractorIndex"
+                                    class="mb-5px">
+                                    <template #header>
+                                        <div class="card-header">
+                                            <span>提取器 #{{ extractorIndex + 1 }}</span>
+                                            <el-button size="small" type="danger" plain :icon="Delete"
+                                                @click="nuclei.removeExtractor(requestIndex, extractorIndex)">
+                                            </el-button>
+                                        </div>
+                                    </template>
+
+                                    <el-form label-position="top">
+                                        <el-form-item label="类型">
+                                            <el-select v-model="extractor.type">
+                                                <el-option label="regex" value="regex" />
+                                                <el-option label="xpath" value="xpath" />
+                                                <el-option label="json" value="json" />
+                                                <el-option label="kval" value="kval" />
+                                                <el-option label="dsl" value="dsl" />
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="名称">
+                                            <el-input v-model="extractor.name" placeholder="提取器名称（可选）" />
+                                        </el-form-item>
+                                        <el-form-item label="提取部分">
+                                            <el-select v-model="extractor.part">
+                                                <el-option label="响应体" value="body" />
+                                                <el-option label="响应头" value="header" />
+                                                <el-option label="全部" value="all" />
+                                            </el-select>
+                                        </el-form-item>
+                                        <el-form-item label="内部提取">
+                                            <el-switch v-model="extractor.internal" />
+                                        </el-form-item>
+                                        <el-form-item label="表达式">
+                                            <el-input v-model="extractor.typeText" type="textarea" :rows="3"
+                                                placeholder="请输入表达式, 每行一个"
+                                                @input="nuclei.updateExtractor(requestIndex, extractorIndex)" />
+                                        </el-form-item>
+                                    </el-form>
+                                </el-card>
+                                <el-button type="primary" size="small" @click="nuclei.addExtractor(requestIndex)">
+                                    添加提取器
+                                </el-button>
+                            </div>
+                        </el-form-item>
+                    </el-card>
+                </div>
+                <el-button type="primary" size="small" @click="nuclei.addRequest" class="mb-10px">
+                    添加请求
+                </el-button>
             </el-form>
+            <el-card class="w-1/2">
+                <div class="card-header">
+                    <span>POC预览</span>
+                    <el-space>
+                        <el-popover placement="left-start" :width="800" trigger="click">
+                        <template #reference>
+                            <el-button size="small" :icon="CollectionTag">常用语法</el-button>
+                        </template>
+                        <el-descriptions :column="1" border>
+                            <el-descriptions-item label="常用函数">
+                                <highlightjs language="yaml" :code='func'></highlightjs>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="无害化上传">
+                                <highlightjs language="yaml" :code='uploads'></highlightjs>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                    </el-popover>
+                        <el-button size="small" :icon="DocumentCopy" @click="Copy(content)">复制</el-button>
+                        <el-button size="small" :icon="saveIcon" @click="savePoc">保存</el-button>
+                    </el-space>
+                </div>
+                <highlightjs language="yaml" :code='generatedPoc'></highlightjs>
+            </el-card>
         </div>
     </div>
     <el-drawer v-model="detailDialog" size="70%" :before-close="handleBeforeClose">
@@ -694,61 +990,18 @@ php:
         <div class="editor-container">
             <!-- 操作区 -->
             <div class="editor-toolbar">
+                <div>
+                    <el-tag type="warning" v-show="isModified">未保存</el-tag>
+                </div>
                 <el-space>
-                    <el-tooltip content="点击切换状态">
-                        <el-button link color="#000" :icon="isEditable ? EditPen : Reading" @click="toggleEditable">
-                            {{ isEditable ? '当前状态: 编辑' : '当前状态: 只读' }}
-                        </el-button>
-                    </el-tooltip>
-                    <el-tag type="warning" v-show="hasUnsavedChanges">未保存</el-tag>
-                </el-space>
-                <el-space>
-                    <el-button link color="#000" :icon="DocumentCopy" @click="Copy(content)">复制</el-button>
-                    <el-button link color="#000" :icon="saveIcon" @click="saveContent">保存</el-button>
+                    <el-button plain :icon="DocumentCopy" @click="Copy(content)">复制</el-button>
+                    <el-button plain :icon="saveIcon" @click="saveContent">保存</el-button>
                 </el-space>
             </div>
-            <!-- Monaco 编辑器容器 -->
-            <div ref="editorContainer" class="monaco-editor"></div>
-        </div>
-    </el-drawer>
-    <el-drawer v-model="editorDialog" size="70%">
-        <template #header>
-            <span class="drawer-title">编辑漏洞</span>
-        </template>
-        <div class="editor-container">
-            <!-- 操作区 -->
-            <div class="editor-toolbar">
-                <el-popover placement="bottom-start" :width="800" trigger="click">
-                    <template #reference>
-                        <el-button link color="#000" :icon="CollectionTag">常用语法</el-button>
-                    </template>
-                    <el-scrollbar height="600px">
-                        <el-descriptions :column="1" border>
-                            <el-descriptions-item label="声明变量">
-                                <highlightjs language="yaml" :code='variables'></highlightjs>
-                            </el-descriptions-item>
-                            <el-descriptions-item label="常用函数">
-                                <highlightjs language="yaml" :code='func'></highlightjs>
-                            </el-descriptions-item>
-                            <el-descriptions-item label="路径匹配">
-                                <highlightjs language="yaml" :code='path'></highlightjs>
-                            </el-descriptions-item>
-                            <el-descriptions-item label="匹配成功立即停止">
-                                <highlightjs language="yaml" code='stop-at-first-match'></highlightjs>
-                            </el-descriptions-item>
-                            <el-descriptions-item label="无害化上传">
-                                <highlightjs language="yaml" :code='uploads'></highlightjs>
-                            </el-descriptions-item>
-                        </el-descriptions>
-                    </el-scrollbar>
-                </el-popover>
-                <el-space>
-                    <el-button link color="#000" :icon="DocumentCopy" @click="Copy(content)">复制</el-button>
-                    <el-button link color="#000" :icon="saveIcon" @click="savePoc">保存</el-button>
-                </el-space>
+            <div style="height: calc(100vh - 130px);">
+                <vue-monaco-editor v-model:value="content" language="yaml" theme="vs-dark"
+                    :options="MONACO_EDITOR_OPTIONS" @mount="handleMount" />
             </div>
-            <!-- Monaco 编辑器容器 -->
-            <div ref="editorContainer" class="monaco-editor"></div>
         </div>
     </el-drawer>
 </template>

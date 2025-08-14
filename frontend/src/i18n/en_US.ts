@@ -41,6 +41,8 @@ export default {
         'timestamp': 'Timestamp',
         'dumpall': 'Dumpall',
         'fileinfo': 'File Info Retrieval',
+        'request': 'Request',
+        'data_comparison': 'Data Comparison',
     },
     navigator: {
         'add_group': 'Add Group',
@@ -80,7 +82,9 @@ export default {
         'issue': 'New Issue',
         'about': 'About',
         'dict': 'Dictionary',
-        'display': 'Display',
+        'poc_update': 'PoC Update',
+        'poc_source': 'PoC Source',
+        'poc_tips': 'After modification, it will take effect after refreshing/restarting the client'
     },
     update: {
         'latest': 'Lastest',

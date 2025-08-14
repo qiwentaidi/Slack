@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 )
 
 type Parameter struct {

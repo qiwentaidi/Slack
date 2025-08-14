@@ -5,11 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 
 	"time"
+
+	"github.com/qiwentaidi/clients"
 )
 
 const defaultHunterApi = "https://hunter.qianxin.com/"

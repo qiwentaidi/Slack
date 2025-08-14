@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"net/url"
 	"slack-wails/core/space"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
+
+	"github.com/qiwentaidi/clients"
 )
 
 func FetchHosts(ctx context.Context, domain string, auth structs.FofaAuth) []string {

@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"slack-wails/lib/clients"
 	"strings"
 	"unicode"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/go-resty/resty/v2"
 )

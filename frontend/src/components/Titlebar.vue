@@ -5,12 +5,14 @@ import global from "@/stores";
 import { ref, onMounted } from "vue";
 import runnerIcon from "@/assets/icon/apprunner.svg"
 import consoleIcon from "@/assets/icon/console.svg"
+import languageIcon from "@/assets/icon/language.svg"
 import { titlebarStyle, leftStyle, rightStyle, macStyle } from '@/stores/style';
 import { routerControl, windowsControl } from '@/stores/options';
 import throttle from 'lodash/throttle';
 import { SaveWindowsScreenSize } from "wailsjs/go/services/Database";
 import { Sunny, Moon } from '@element-plus/icons-vue';
 import { useDark, useToggle } from '@vueuse/core'
+import { useI18n } from "vue-i18n";
 
 const showLogger = ref(false)
 
@@ -58,6 +60,14 @@ function toggleTheme() {
     global.Theme.value = !global.Theme.value
     toggle(); // 保留你原来的切换逻辑（比如加/去掉 `.dark` 类）
 }
+
+const { locale } = useI18n();
+
+global.Language.value = locale.value
+function changeLanguage(lang: string) {
+    localStorage.setItem("language", lang);
+    locale.value = lang;
+}
 </script>
 
 <template>
@@ -80,11 +90,26 @@ function toggleTheme() {
             </el-button>
         </div>
         <div class="unoccupied" @dblclick="WindowToggleMaximise">
-           <div class="title-container">
+            <div class="title-container">
                 <span class="title">{{ setTitle($route.path) }}</span>
             </div>
         </div>
         <div class="flex">
+            <el-dropdown @command="changeLanguage">
+                <el-button class="custom-button" text>
+                    <template #icon>
+                        <el-icon :size="16">
+                            <languageIcon />
+                        </el-icon>
+                    </template>
+                </el-button>
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item command="zh">中文</el-dropdown-item>
+                        <el-dropdown-item command="en">English</el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+            </el-dropdown>
             <el-button-group :style="rightStyle">
                 <el-button class="custom-button" text @click="toggleTheme" v-show="global.temp.isMacOS">
                     <el-icon :size="16">
@@ -159,15 +184,16 @@ function toggleTheme() {
 }
 
 .title-container {
-  position: absolute;
-  /* top: 0; */
-  left: 50%;
-  transform: translateX(-50%);
-  /* height: 100%; */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none; /* 防止遮挡点击 */
+    position: absolute;
+    /* top: 0; */
+    left: 50%;
+    transform: translateX(-50%);
+    /* height: 100%; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    /* 防止遮挡点击 */
 }
 
 .title {

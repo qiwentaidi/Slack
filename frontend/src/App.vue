@@ -49,9 +49,6 @@ onMounted(async () => {
     global.temp.goos = await GOOS();
     // 初始化配置文件
     await InitConfigFile(500);
-    // 检测更新
-    check.client();
-    check.poc();
     // 初始化网卡
     let list = await NetworkCardInfo()
     global.temp.NetworkCardList.push(...list)

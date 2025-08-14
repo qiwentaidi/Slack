@@ -691,3 +691,10 @@ type ISICollectionResult struct {
 	Link   string   // 搜索链接
 	Source string   // 来源
 }
+
+type RawResponse struct {
+	Error        string
+	StatusCode   int
+	Response     string
+	ResponseTime int64
+}

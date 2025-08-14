@@ -32,7 +32,7 @@ const update = ({
     poc: async function () {
         global.UPDATE.updateDialog = false
         LoadProgress(pocUpdate)
-        let isSuccess = await UpdatePocFile(global.UPDATE.RemotePocVersion)
+        let isSuccess = await UpdatePocFile(global.update.pocSource, global.UPDATE.RemotePocVersion)
         if (isSuccess) {
             ElMessageBox.confirm(
                 "POC更新成功，需要重载应用生效",

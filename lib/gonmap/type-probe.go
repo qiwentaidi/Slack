@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gonmap/simplenet"
 	"strconv"
 	"strings"
@@ -35,17 +34,17 @@ type probe struct {
 	sendRaw string
 }
 
-func (p *probe) scan(host string, port int, tls bool, timeout time.Duration, size int, proxy clients.Proxy) (string, bool, error) {
+func (p *probe) scan(host string, port int, tls bool, timeout time.Duration, size int, proxyURL string) (string, bool, error) {
 	uri := fmt.Sprintf("%s:%d", host, port)
 
 	sendRaw := strings.Replace(p.sendRaw, "{Host}", fmt.Sprintf("%s:%d", host, port), -1)
 
-	text, err := simplenet.Send(p.protocol, tls, uri, sendRaw, timeout, size, proxy)
+	text, err := simplenet.Send(p.protocol, tls, uri, sendRaw, timeout, size, proxyURL)
 	if err == nil {
 		return text, tls, nil
 	}
 	if strings.Contains(err.Error(), "STEP1") && tls {
-		text, err := simplenet.Send(p.protocol, false, uri, p.sendRaw, timeout, size, proxy)
+		text, err := simplenet.Send(p.protocol, false, uri, p.sendRaw, timeout, size, proxyURL)
 		return text, false, err
 	}
 	return text, tls, err

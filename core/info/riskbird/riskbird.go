@@ -8,9 +8,10 @@ import (
 	"maps"
 	"net/url"
 	"regexp"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
+
+	"github.com/qiwentaidi/clients"
 )
 
 type RiskbirdClient struct {

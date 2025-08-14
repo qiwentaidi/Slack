@@ -32,7 +32,7 @@ func RedisScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, pas
 			gologger.Warning(ctx, "[redis] User exits crack scanning")
 			return
 		}
-		pass = strings.Replace(pass, "{user}", "redis", -1)
+		pass = strings.ReplaceAll(pass, "{user}", "redis")
 		flag, err := RedisConn(host, pass)
 		if flag && err == nil {
 			runtime.EventsEmit(ctx, "nucleiResult", structs.VulnerabilityInfo{
@@ -66,7 +66,7 @@ func RedisConn(address, password string) (flag bool, err error) {
 	if err != nil {
 		return flag, err
 	}
-	_, err = conn.Write([]byte(fmt.Sprintf("auth %s\r\n", password)))
+	_, err = fmt.Fprintf(conn, "auth %s\r\n", password)
 	if err != nil {
 		return flag, err
 	}

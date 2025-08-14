@@ -3,16 +3,19 @@ package webscan
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime/debug"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils/arrayutil"
 	"slack-wails/lib/utils/httputil"
 	"strings"
 	"sync/atomic"
+
+	"github.com/qiwentaidi/clients"
 
 	nuclei "github.com/projectdiscovery/nuclei/v3/lib"
 
@@ -118,7 +121,18 @@ func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allO
 			return
 		}
 		sg.Add()
-		go func() {
+		// 当URL目标为WEB时，如果无指纹以及开启跳过时，则跳过该URL
+		// 当URL目标为其他协议时 例如: Mysql时，不需要开启跳过，只要没有指纹就跳过
+		if option.SkipNucleiWithoutTags && len(option.Tags) == 0 {
+			gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
+			continue
+		}
+		if !strings.HasPrefix(option.URL, "http") && len(option.Tags) == 0 {
+			gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s is not web and does not have tags, scan skipped", option.URL))
+			continue
+		}
+		sdkOpt := NewNucleiSDKOptions(option)
+		go func(url string, Opts []nuclei.NucleiSDKOptions) {
 			defer sg.Done()
 			defer func() {
 				if r := recover(); r != nil {
@@ -130,24 +144,15 @@ func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allO
 				runtime.EventsEmit(ctx, "NucleiProgressID", id)
 				gologger.Info(ctx, fmt.Sprintf("vulnerability scanning %d/%d", id, count))
 			}()
-			// 当URL目标为WEB时，如果无指纹以及开启跳过时，则跳过该URL
-			// 当URL目标为其他协议时 例如: Mysql时，不需要开启跳过，只要没有指纹就跳过
-			if option.SkipNucleiWithoutTags && len(option.Tags) == 0 {
-				gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
-				return
-			}
-			if !strings.HasPrefix(option.URL, "http") && len(option.Tags) == 0 {
-				gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s is not web and does not have tags, scan skipped", option.URL))
-			}
-			options := NewNucleiSDKOptions(option)
+
 			// load targets and optionally probe non http/https targets
-			gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] check vuln: %s", option.URL))
-			err := ne.ExecuteNucleiWithOpts([]string{option.URL}, options...)
+			gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] check vuln: %s", url))
+			err := ne.ExecuteNucleiWithOpts([]string{url}, Opts...)
 			if err != nil {
 				gologger.DualLog(ctx, gologger.Level_ERROR, fmt.Sprintf("[nuclei] execute callback err: %v", err))
 				return
 			}
-		}()
+		}(option.URL, sdkOpt)
 	}
 	sg.Wait()
 	defer ne.Close()
@@ -188,6 +193,9 @@ func NewNucleiSDKOptions(o structs.NucleiOption) []nuclei.NucleiSDKOptions {
 }
 
 func findTagsFile(inputTags, templateDirs []string) []string {
+	if len(inputTags) == 0 {
+		return expandYamlFiles(templateDirs)
+	}
 	var fileList []string
 	var tempFileList []string
 	for _, inputTag := range inputTags {
@@ -208,11 +216,24 @@ func findTagsFile(inputTags, templateDirs []string) []string {
 		}
 	}
 	// 如果没有找到文件，则使用指定的模板文件夹，避免使用Nuclei自带的模板文件夹
-	if len(fileList) == 0 {
-		return templateDirs
+	if len(tempFileList) == 0 {
+		return expandYamlFiles(templateDirs)
 	}
 
 	return arrayutil.RemoveDuplicates(fileList)
+}
+
+func expandYamlFiles(dirs []string) []string {
+	var files []string
+	for _, dir := range dirs {
+		filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+			if err == nil && !d.IsDir() && strings.HasSuffix(path, ".yaml") {
+				files = append(files, path)
+			}
+			return nil
+		})
+	}
+	return files
 }
 
 func finalTags(detectTags, customTags []string) []string {

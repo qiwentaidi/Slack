@@ -41,6 +41,8 @@ export default {
         'timestamp': '时间戳转换',
         'dumpall': 'Dumpall',
         'fileinfo': '文件夹信息检索',
+        'request': '请求转发',
+        'data_comparison': '数据对比',
     },
     navigator: {
         'enterprise': '企业及备案信息查询',
@@ -85,7 +87,9 @@ export default {
         'issue': '提出问题',
         'about': '关于',
         'dict': '字典管理',
-        'display': '显示设置',
+        'poc_update': 'PoC更新',
+        'poc_source': 'PoC源',
+        'poc_tips': '修改后, 刷新/重启客户端后生效'
     },
     update: {
         'latest': '最新',

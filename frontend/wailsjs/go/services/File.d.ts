@@ -24,7 +24,7 @@ export function GenerateFaviconBase64WithOnline(arg1:string):Promise<string>;
 
 export function GetLocalNaConfig():Promise<any>;
 
-export function InitConfig():Promise<boolean>;
+export function InitConfig(arg1:string):Promise<boolean>;
 
 export function InitMemo(arg1:string,arg2:string):Promise<boolean>;
 
@@ -74,7 +74,7 @@ export function SnippetCommandLine(arg1:structs.Children):Promise<string>;
 
 export function Startup(arg1:context.Context):Promise<void>;
 
-export function UpdatePocFile(arg1:string):Promise<boolean>;
+export function UpdatePocFile(arg1:string,arg2:string):Promise<boolean>;
 
 export function UserHomeDir():Promise<string>;
 

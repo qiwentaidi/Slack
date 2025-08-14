@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/PuerkitoBio/goquery"
 )

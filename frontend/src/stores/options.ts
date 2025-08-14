@@ -3,7 +3,7 @@ import fingerprintIcon from '@/assets/icon/fingerprint.svg'
 import deepscanIcon from '@/assets/icon/deepscan.svg'
 import bulleyeIcon from '@/assets/icon/bulleye.svg'
 import scanIcon from "@/assets/icon/scan.svg"
-import themeIcon from "@/assets/icon/theme.svg"
+// import themeIcon from "@/assets/icon/theme.svg"
 import proxyIcon from "@/assets/icon/proxy.svg"
 import dictmanagerIcon from "@/assets/icon/dict.svg"
 import layersIcon from "@/assets/icon/layers.svg"
@@ -15,7 +15,7 @@ import consoleIcon from '@/assets/icon/console.svg'
 import htmlIcon from '@/assets/icon/html.svg'
 import jsonIcon from '@/assets/icon/json.svg'
 import excleIcon from '@/assets/icon/excle.svg'
-import { Back, Right, RefreshRight, Minus, Close, Refresh, Setting, DataBoard, Coin } from '@element-plus/icons-vue';
+import { Back, Right, RefreshRight, Minus, Close, Refresh, Setting, DataBoard, Coin, RefreshLeft } from '@element-plus/icons-vue';
 import { WindowReload, WindowToggleMaximise, Quit, WindowMinimise } from "wailsjs/runtime/runtime";
 import { computed } from "vue";
 import global from "./index";
@@ -80,7 +80,57 @@ export const dslOptions = [
     },
 ]
 
+export const variablesOptions = [
+    {
+        text: 'randstr',
+        value: '{{rand_base(4)}}',
+    },
+    {
+        text: 'num',
+        value: '{{rand_int(1000,9999)}}',
+    },
+    {
+        text: 'filename',
+        value: "{{to_lower(rand_text_alpha(8))}}"
+    },
+    {
+        text: 'md5',
+        value: "{{md5(123456)}}"
+    },
+    {
+        text: 'oast',
+        value: "{{interactsh-url}}"
+    }
+]
+
 export const metadataOptions = ['verified', 'fofa-query', 'google-query', 'shodan-query', 'hunter-query', 'max-request', 'vendor', 'product'];
+
+export const httpMethodOptions = [
+    {
+        label: 'GET',
+        value: 'GET'
+    },
+    {
+        label: 'POST',
+        value: 'POST'
+    },
+    {
+        label: 'PUT',
+        value: 'PUT'
+    },
+    {
+        label: 'DELETE',
+        value: 'DELETE'
+    },
+    {
+        label: 'HEAD',
+        value: 'HEAD'
+    },
+    {
+        label: 'OPTIONS',
+        value: 'OPTIONS'
+    },
+]
 
 export const quakeOptions = [
     {
@@ -489,8 +539,8 @@ export const setupOptions = [
         icon: layersIcon,
     },
     {
-        name: 'setting.display',
-        icon: themeIcon,
+        name: 'setting.poc_update',
+        icon: RefreshLeft,
     },
     {
         name: 'setting.dict',

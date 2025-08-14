@@ -15,12 +15,13 @@ import (
 	rt "runtime"
 	"slack-wails/core/webscan"
 	"slack-wails/lib/bridge"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils"
 	"slack-wails/lib/utils/fileutil"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/mat/besticon/v3/ico"
 	"github.com/nfnt/resize"

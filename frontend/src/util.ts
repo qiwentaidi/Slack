@@ -3,12 +3,11 @@ import global from "./stores";
 import { Callgologger, GoFetch, NetDial, Socks5Conn } from "wailsjs/go/services/App";
 import { CheckFileStat, FileDialog, ReadFile, RemoveOldClient } from "wailsjs/go/services/File";
 import { Loading } from '@element-plus/icons-vue';
-import { ProxyOptions } from "./stores/interface";
 import { BrowserOpenURL, ClipboardSetText } from "wailsjs/runtime/runtime";
 import { marked } from 'marked';
-import { clients } from "wailsjs/go/models";
+import { reactive } from "vue";
 
-export var proxys: ProxyOptions; // wails2.9之后替换原来的null
+export var proxys: ""; // wails2.9之后替换原来的null
 
 // 惰性函数，如果支持navigator.clipboard就用它，不支持就改成另一个
 let copyText: (content: string) => void;
@@ -166,14 +165,10 @@ export async function TestProxy() {
 }
 
 const download = {
-    RemotePocVersion:
-        "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/version",
-    RemoteClientVersion:
-        "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/version",
-    PocUpdateCentent:
-        "https://gitee.com/the-temperature-is-too-low/slack-poc/raw/master/update",
-    ClientUpdateCentent:
-        "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update",
+    RemotePocVersion: "/raw/master/version",
+    RemoteClientVersion: "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/version",
+    PocUpdateCentent: "/raw/master/update",
+    ClientUpdateCentent: "https://gitee.com/the-temperature-is-too-low/Slack/raw/main/update",
 };
 
 export const check = {
@@ -188,14 +183,14 @@ export const check = {
             let file = await ReadFile(global.PATH.homedir + global.PATH.LocalPocVersionFile);
             global.UPDATE.LocalPocVersion = file.Content!;
         }
-        let resp = await GoFetch("GET", download.RemotePocVersion, "", {}, 10, proxys);
+        let resp = await GoFetch("GET", global.update.pocSource + download.RemotePocVersion, "", {}, 10, proxys);
         if (resp.Error == true) {
             global.UPDATE.PocContent = "检测更新失败";
             global.UPDATE.PocStatus = false;
         } else {
             global.UPDATE.RemotePocVersion = resp.Body!;
             if (compareVersion(global.UPDATE.LocalPocVersion, global.UPDATE.RemotePocVersion) == -1) {
-                let result = await GoFetch("GET", download.PocUpdateCentent, "", {}, 10, proxys);
+                let result = await GoFetch("GET", global.update.pocSource + download.PocUpdateCentent, "", {}, 10, proxys);
                 global.UPDATE.PocContent = result.Body;
                 global.UPDATE.PocStatus = true;
             } else {
@@ -282,16 +277,15 @@ export function getBasicURL(rawURL: string) {
         return undefined;
     }
 }
-
-export function getProxy(): clients.Proxy {
-    return {
-        Enabled: global.proxy.enabled,
-        Mode: global.proxy.mode,
-        Address: global.proxy.address,
-        Port: global.proxy.port,
-        Username: global.proxy.username,
-        Password: global.proxy.password,
+//  获取RAW代理地址
+export function getProxy(): string {
+    if (!global.proxy.enabled) {
+        return "";
     }
+    if (global.proxy.mode == "HTTP") {
+        return global.proxy.mode + "://" + global.proxy.address + ":" + global.proxy.port;
+    }
+    return global.proxy.mode + "://" + global.proxy.username + ":" + global.proxy.password + "@" + global.proxy.address + ":" + global.proxy.port;
 }
 
 export function getRootDomain(hostname: string) {

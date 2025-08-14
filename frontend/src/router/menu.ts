@@ -38,6 +38,11 @@ const MenuList = [
                 path: "/Dumpall",
                 icon: "/app/dropbox.png"
             },
+            {
+                name: "aside.request",
+                path: "/Request",
+                icon: "/app/send.png"
+            },
         ]
     },
     {
@@ -133,6 +138,16 @@ const MenuList = [
                 name: "aside.fileinfo",
                 path: "/FileContentRetrieval",
                 icon: "/app/searchfile.png"
+            },
+            {
+                name: "aside.data_comparison",
+                path: "/DataComparison",
+                icon: "/app/comparison.png"
+            },
+            {
+                name: "aside.timestamp",
+                path: "/Timestamp",
+                icon: "/app/timestamp.png"
             },
             {
                 name: "aside.memorandum",

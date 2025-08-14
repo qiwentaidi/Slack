@@ -31,7 +31,7 @@ func SshScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passw
 					continue
 				}
 
-				pass := strings.Replace(t.Pass, "{user}", t.User, -1)
+				pass := strings.ReplaceAll(t.Pass, "{user}", t.User)
 				flag, err := SshConn(host, t.User, pass)
 				if flag && err == nil {
 					result, err := ExecuteSshCommand(host, t.User, pass, "whoami")

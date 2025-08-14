@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"slack-wails/lib/clients"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/qiwentaidi/clients"
 
 	"github.com/PuerkitoBio/goquery"
 )

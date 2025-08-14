@@ -34,8 +34,8 @@ export function GOOS() {
   return window['go']['core']['Tools']['GOOS']();
 }
 
-export function GetToken(arg1, arg2, arg3) {
-  return window['go']['core']['Tools']['GetToken'](arg1, arg2, arg3);
+export function GetToken(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['core']['Tools']['GetToken'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function IPParse(arg1) {

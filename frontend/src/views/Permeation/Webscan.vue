@@ -1063,6 +1063,7 @@ const shodanRunningstatus = ref(false)
                     :cell-style="{ textAlign: 'center' }"
                     :header-cell-style="{ 'text-align': 'center' }"
                     @sort-change="((data: any) => vp.ctrl.sortChange(data, true))"
+                    @row-contextmenu="handleWebscanContextMenu"
                     @filter-change="vp.ctrl.filterChange">
                     <el-table-column prop="ID" label="Template" width="250px" />
                     <el-table-column prop="Type" label="Type" width="150px" />
@@ -1306,7 +1307,11 @@ const shodanRunningstatus = ref(false)
                             <el-button :icon="ChromeFilled" link @click="BrowserOpenURL(selectedRow.URL)" />
                         </el-button-group>
                     </div>
-                    <highlightjs language="http" :code="selectedRow.Request" class="font-small"></highlightjs>
+                    <highlightjs 
+                        language="http" 
+                        :code="selectedRow.Request" 
+                        class="font-small"
+                    ></highlightjs>
                 </el-card>
                 <el-card v-show="!form.hideResponse" class="flex-1">
                     <div class="flex-between">

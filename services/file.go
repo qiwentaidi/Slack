@@ -261,10 +261,11 @@ func (f *File) ReadFile(filename string) *FileInfo {
 	}
 }
 
-func (f *File) UpdatePocFile(version string) bool {
+func (f *File) UpdatePocFile(warehouse, version string) bool {
 	var defaultFile = utils.HomeDir() + "/slack/"
+	var LastestPocUrl = warehouse + "/releases/download/"
 	os.MkdirAll(defaultFile, 0777)
-	configFileZip := fmt.Sprintf("%sv%s/config.zip", update.LastestPocUrl, version)
+	configFileZip := fmt.Sprintf("%sv%s/config.zip", LastestPocUrl, version)
 	_, err := update.NewDownload(f.ctx, configFileZip, defaultFile, "pocDownloadProgress", "")
 	if err != nil {
 		gologger.Error(f.ctx, err)
@@ -283,8 +284,8 @@ func (f *File) UpdatePocFile(version string) bool {
 	return true
 }
 
-func (f *File) InitConfig() bool {
-	return update.InitConfig(f.ctx)
+func (f *File) InitConfig(warehouse string) bool {
+	return update.InitConfig(f.ctx, warehouse)
 }
 
 func (*File) InitMemo(filepath, content string) bool {

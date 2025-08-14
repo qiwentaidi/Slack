@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"slack-wails/lib/clients"
+	"net/url"
 	"strings"
 	"time"
 
@@ -224,14 +224,20 @@ func tlsSendWithProxy(protocol string, netloc string, data string, duration time
 	return string(buf), nil
 }
 
-func Send(protocol string, tls bool, netloc string, data string, duration time.Duration, size int, pr clients.Proxy) (string, error) {
-	if pr.Enabled && pr.Mode != "HTTP" {
-		auth := &proxy.Auth{User: pr.Username, Password: pr.Password}
-		socksAddress := fmt.Sprintf("%v:%v", pr.Address, pr.Port)
-		if tls {
-			return tlsSendWithProxy(protocol, netloc, data, duration, size, socksAddress, auth)
-		} else {
-			return tcpSendWithProxy(protocol, netloc, data, duration, size, socksAddress, auth)
+func Send(protocol string, tls bool, netloc string, data string, duration time.Duration, size int, proxyURL string) (string, error) {
+	if proxyURL != "" {
+		u, err := url.Parse(proxyURL)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse proxy URL: %w", err)
+		}
+		if u.User != nil {
+			username := u.User.Username()
+			password, _ := u.User.Password()
+			if tls {
+				return tlsSendWithProxy(protocol, netloc, data, duration, size, u.Host, &proxy.Auth{User: username, Password: password})
+			} else {
+				return tcpSendWithProxy(protocol, netloc, data, duration, size, u.Host, &proxy.Auth{User: username, Password: password})
+			}
 		}
 	}
 	if tls {

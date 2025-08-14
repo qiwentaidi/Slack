@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slack-wails/lib/clients"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/utils"
 	"slack-wails/lib/utils/httputil"
 	"strings"
+
+	"github.com/qiwentaidi/clients"
 )
 
 // SourceMap 是 .map 文件的结构（只关心需要的部分）

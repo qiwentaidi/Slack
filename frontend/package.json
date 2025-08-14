@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@guolao/vue-monaco-editor": "^1.5.5",
     "@highlightjs/vue-plugin": "^2.1.0",
     "@imengyu/vue3-context-menu": "^1.4.2",
     "@types/node": "^20.9.1",
