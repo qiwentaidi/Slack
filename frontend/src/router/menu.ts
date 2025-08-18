@@ -154,11 +154,6 @@ const MenuList = [
                 path: "/Memo",
                 icon: "/app/memo.png"
             },
-            {
-                name: "aside.timestamp",
-                path: "/Timestamp",
-                icon: "/app/timestamp.png"
-            },
         ]
     },
 ]

@@ -778,7 +778,7 @@ php:
                 </el-form-item>
                 <el-form-item label="关联指纹" prop="tags">
                     <el-select-v2 v-model="nucleiTeamplate.tags" filterable :options="fingerOptions"
-                        :props="{ label: 'name', value: 'name' }" multiple clearable />
+                     multiple clearable />
                 </el-form-item>
                 <el-form-item label="全局变量">
                     <div v-if="nucleiTeamplate.variables" class="w-full">
