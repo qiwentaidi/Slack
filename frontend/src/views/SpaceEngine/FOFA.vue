@@ -4,7 +4,7 @@ import { Search, ChromeFilled, DocumentCopy, CollectionTag, Delete, Document, Pi
 import { ProcessTextAreaInput, splitInt, Copy, CsegmentIpv4, openURL } from '@/util'
 import { TableTabs, Results } from "@/stores/interface"
 import { ExportToXlsx } from '@/export'
-import { FofaTips, FofaSearch, IconHash } from 'wailsjs/go/services/App'
+import { FofaTips, FofaSearch, IconHash, Callgologger } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox, ElNotification, FormInstance } from 'element-plus';
 import global from "@/stores"
 import { InsertFavGrammarFiled, RemoveFavGrammarFiled, SelectAllSyntax } from 'wailsjs/go/services/Database';
@@ -89,7 +89,8 @@ const entry = ({
     },
     getTips: async function (queryString: string) {
         let tips = <{ text: string, value: string }[]>[]
-        let result: any = await FofaTips(queryString)
+        let result = await FofaTips(queryString)
+        Callgologger("info", "FOFA Tips: " + JSON.stringify(result))
         if (result.code == 0) {
             for (const item of result.data) {
                 tips.push({

@@ -10,7 +10,6 @@ import { LogInfo } from "./stores/interface";
 import { useDark } from '@vueuse/core'
 import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/services/File";
 import { InitConfigFile } from "./config";
-import { check } from "@/util";
 import CyberChef from "./views/Tools/CyberChef.vue";
 import { ElMessage } from "element-plus";
 import { GOOS } from "wailsjs/go/core/Tools";

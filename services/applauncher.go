@@ -14,7 +14,6 @@ import (
 	"path/filepath"
 	rt "runtime"
 	"slack-wails/core/webscan"
-	"slack-wails/lib/bridge"
 	"slack-wails/lib/gologger"
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils"
@@ -161,35 +160,16 @@ func (f *File) RunApp(item structs.Children) {
 		}
 		switch filepath.Ext(item.Path) {
 		case ".exe":
-			cmd = exec.Command(name)
+			if _, err := os.Stat(item.Path); err == nil {
+				// 优先完整路径运行
+				cmd = exec.Command(item.Path)
+			} else {
+				// fallback：用 cmd /c start 方式
+				cmd = exec.Command("cmd", "/c", "start", name)
+				cmd.Dir = filepath.Dir(item.Path)
+			}
 		default:
 			cmd = exec.Command("cmd", "/c", "start", name)
-		}
-	case "Script":
-		if item.Target == "" {
-			return
-		}
-		command := f.SnippetCommandLine(item)
-
-		switch rt.GOOS {
-		case "windows":
-			if err := bridge.ExecuteScriptCommand(command); err != nil {
-				gologger.Debug(f.ctx, "[AppLauncher] 执行脚本失败 "+err.Error())
-				return
-			}
-			return
-		case "darwin":
-			// macOS: 使用 AppleScript 来执行命令
-			script := fmt.Sprintf(`tell application "Terminal"
-    activate
-    tell application "System Events" to tell process "Terminal" to keystroke "t" using command down
-    delay 0.1
-    do script "%s" in front window
-end tell`, command)
-			cmd = exec.Command("osascript", "-e", script)
-		default:
-			// Linux 假设 GNOME Terminal，其他可能要适配
-			cmd = exec.Command("gnome-terminal", "--", "bash", "-c", command+"; exec bash")
 		}
 	default:
 		if item.Target == "" {

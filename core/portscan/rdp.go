@@ -34,7 +34,7 @@ func RdpScan(ctx, ctrlCtx context.Context, taskId, host string, usernames, passw
 				wg.Wait()
 				return
 			}
-			pass = strings.Replace(pass, "{user}", string(user), -1)
+			pass = strings.ReplaceAll(pass, "{user}", string(user))
 			wg.Add(1)
 			limiter <- true
 			go func(user, pass string) {

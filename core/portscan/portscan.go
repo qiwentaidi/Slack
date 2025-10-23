@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"net"
 	"slack-wails/core/webscan"
-	"slack-wails/lib/gonmap"
 	"slack-wails/lib/structs"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/qiwentaidi/gonmap"
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/qiwentaidi/clients"
@@ -115,6 +116,9 @@ func Connect(ctx context.Context, taskId, ip string, port, timeout int, proxyURL
 	if scheme != "http" && scheme != "https" {
 		tcpfinger = webscan.Scan(ctx, tcpinfo, webscan.FingerprintDB)
 	}
+	// if scheme == "unknown" {
+	// 	scheme = gonmap.GuessProtocol(port)
+	// }
 	result := &structs.InfoResult{
 		TaskId:       taskId,
 		Host:         ip,

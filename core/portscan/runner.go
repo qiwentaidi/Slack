@@ -30,7 +30,7 @@ var crackScanners = map[string]crackFunc{
 	"memcached":  MemcachedScan,
 	"jdwp":       JdwpScan,
 	"adb":        AdbScan,
-	"rmi":        RmiScan,
+	"java-rmi":   RmiScan,
 	"activemq":   ActiveMQScan,
 	"rsync":      RsyncScan,
 	"kafka":      KafkaScan,
