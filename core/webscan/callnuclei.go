@@ -120,17 +120,19 @@ func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allO
 			gologger.Warning(ctx, "User exits vulnerability scanning")
 			return
 		}
-		sg.Add()
 		// 当URL目标为WEB时，如果无指纹以及开启跳过时，则跳过该URL
 		// 当URL目标为其他协议时 例如: Mysql时，不需要开启跳过，只要没有指纹就跳过
 		if option.SkipNucleiWithoutTags && len(option.Tags) == 0 {
 			gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s does not have tags, scan skipped", option.URL))
+			atomic.AddInt32(&id, 1)
 			continue
 		}
 		if !strings.HasPrefix(option.URL, "http") && len(option.Tags) == 0 {
 			gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] %s is not web and does not have tags, scan skipped", option.URL))
+			atomic.AddInt32(&id, 1)
 			continue
 		}
+		sg.Add()
 		sdkOpt := NewNucleiSDKOptions(option)
 		go func(url string, Opts []nuclei.NucleiSDKOptions) {
 			defer sg.Done()
