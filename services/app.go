@@ -471,6 +471,11 @@ func (a *App) NewTcpScanner(taskId string, specialTargets []string, ips []string
 	ctrlCtx, _ := control.GetScanContext(control.Portscan) // 标识任务
 	addresses := make(chan portscan.Address)
 
+	// 先统计实际要扫描的总数
+	totalCount := len(ips)*len(ports) + len(specialTargets)
+	// 发送总数给前端
+	runtime.EventsEmit(a.ctx, "portScanTotalCount", totalCount)
+
 	go func() {
 		defer close(addresses)
 		// Generate addresses from ips and ports
