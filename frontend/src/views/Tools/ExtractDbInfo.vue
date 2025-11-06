@@ -123,7 +123,22 @@
         <el-form :model="currentConnection" label-width="auto">
             <el-form-item label="数据库类型">
                 <el-select v-model="currentConnection.type" @change="chooseDefaultPort">
-                    <el-option v-for="item in databaseOptions" :label="item.label" :value="item.value" />
+                    <template #label>
+                        <el-space :size="6">
+                            <el-icon :size="18">
+                                <component :is="getDbIcon(currentConnection)" />
+                            </el-icon>
+                            <span class="font-bold">{{ currentConnection.type.toUpperCase() }}</span>
+                        </el-space>
+                    </template>
+                    <el-option v-for="item in databaseOptions" :label="item.label" :value="item.value">
+                        <el-space :size="6">
+                            <el-icon :size="18">
+                                <component :is="item.icon" />
+                            </el-icon>
+                            <span>{{ item.label }}</span>
+                        </el-space>
+                    </el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="主机">

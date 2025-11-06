@@ -98,8 +98,13 @@ func (d *Database) ConnectDatabase(info structs.DatabaseConnection) bool {
 	}
 
 	// Handle connection failure
-	if err != nil || !flag {
+	if err != nil {
 		d.showErrorMessage(err.Error())
+		return false
+	}
+
+	if !flag {
+		d.showErrorMessage("无法连接到数据库，请检查连接参数是否正确")
 		return false
 	}
 
@@ -114,6 +119,11 @@ func (d *Database) ConnectDatabase(info structs.DatabaseConnection) bool {
 
 // Helper function to show error messages
 func (d *Database) showErrorMessage(message string) {
+	// 安全检查：确保 ctx 不为 nil
+	if d.ctx == nil {
+		gologger.Error(context.Background(), fmt.Sprintf("数据库连接错误: %s", message))
+		return
+	}
 	runtime.MessageDialog(d.ctx, runtime.MessageDialogOptions{
 		Title:         "提示",
 		Message:       message,

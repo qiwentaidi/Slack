@@ -15,6 +15,11 @@ import consoleIcon from '@/assets/icon/console.svg'
 import htmlIcon from '@/assets/icon/html.svg'
 import jsonIcon from '@/assets/icon/json.svg'
 import excleIcon from '@/assets/icon/excle.svg'
+import mysqlIcon from '@/assets/icon/mysql.svg'
+import mssqlIcon from '@/assets/icon/sqlserver.svg'
+import oracleIcon from '@/assets/icon/oracle.svg'
+import psqlIcon from '@/assets/icon/postgresql.svg'
+import mongodbIcon from '@/assets/icon/mongodb.svg'
 import { Back, Right, RefreshRight, Minus, Close, Refresh, Setting, DataBoard, Coin, RefreshLeft } from '@element-plus/icons-vue';
 import { WindowReload, WindowToggleMaximise, Quit, WindowMinimise } from "wailsjs/runtime/runtime";
 import { computed } from "vue";
@@ -686,23 +691,28 @@ export const uncoverSyntaxOptions = [
 export const databaseOptions = [
     {
         label: "MySQL",
-        value: "mysql"
+        value: "mysql",
+        icon: mysqlIcon,
     },
     {
         label: "SQL Server",
-        value: "mssql"
+        value: "mssql",
+        icon: mssqlIcon,
     },
     {
         label: "Oracle",
-        value: "oracle"
+        value: "oracle",
+        icon: oracleIcon,
     },
     {
         label: "PostgreSQL",
-        value: "postgres"
+        value: "postgres",
+        icon: psqlIcon,
     },
     {
         label: "Mongodb",
-        value: "mongodb"
+        value: "mongodb",
+        icon: mongodbIcon,
     }
 ]
 

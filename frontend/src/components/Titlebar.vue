@@ -206,6 +206,12 @@ function changeLanguage(lang: string) {
     user-select: none;
     /* Standard syntax */
     /* margin-right: 5%; */
+    font-size: 13px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .title:hover {
