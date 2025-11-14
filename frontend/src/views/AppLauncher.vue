@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, ref, h, computed } from "vue";
-import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled, Guide, PictureRounded, DocumentCopy } from "@element-plus/icons-vue";
+import { DeleteFilled, Edit, FolderOpened, Document, Menu, WarningFilled, Guide, PictureRounded, Warning, Delete } from "@element-plus/icons-vue";
 import { onMounted } from "vue";
 import { OnFileDrop } from "wailsjs/runtime/runtime";
-import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal, GenerateFaviconBase64WithOnline, GenerateFaviconBase64, AutoGenerateFavicon, SnippetCommandLine } from "wailsjs/go/services/File";
+import { Path, GetLocalNaConfig, InsetGroupNavigation, InsetItemNavigation, OpenFolder, SaveNavigation, RunApp, FileDialog, OpenTerminal, GenerateFaviconBase64WithOnline, GenerateFaviconBase64, AutoGenerateFavicon, GetJdkConfig, InsetJdkConfig, SaveJdkConfig } from "wailsjs/go/services/File";
 import ContextMenu from '@imengyu/vue3-context-menu'
 import groupIcon from "@/assets/icon/tag-group.svg"
 import tagIcon from "@/assets/icon/tag.svg"
@@ -20,7 +20,6 @@ import scriptIcon from '@/assets/icon/script.svg'
 import global from "@/stores";
 import { structs } from "wailsjs/go/models";
 import Note from "@/components/Note.vue";
-import { Copy } from "@/util";
 
 
 onMounted(async () => {
@@ -47,7 +46,7 @@ onMounted(async () => {
                 Path: p,
                 Target: "",
                 Favicon: base64Icon,
-                Args: "",
+                Jdk: "",
             };
             card.Children = card.Children || [];
             card.Children.push(c);
@@ -60,31 +59,109 @@ onMounted(async () => {
     } else {
         ElMessageBox.alert('可以通过右上角|右键添加分组，然后分组右键添加启动应用', 'Tips', {})
     }
+
+    let jdkConfigTemp = await GetJdkConfig()
+    if (jdkConfigTemp) {
+        jdkConfig.value = jdkConfigTemp
+    }
 })
 
-var edit = reactive({
-    Name: "",
-    Path: "",
-    Type: "",
-    Target: "",
-    Favicon: "",
-    Args: "",
-})
+var jdkConfig = ref<structs.JdkConfig[]>([])
 
-const config = reactive({
-    defaultType: "CMD",
-    defualtGroupName: "",
+const isJdkConfigAdding = ref(false)
+
+const newJdkConfig = reactive({
     name: "",
     path: "",
-    target: "",
-    favicon: "",
-    args: "",
-    editDialog: false,
-    editChild: {} as structs.Children, // 存储被修改元素之前的状态，为了后续在配置文件中找到是哪个元素被修改了
-    editGroupName: "", // 正在被编辑的组名
-    addItemDialog: false,
+})
+
+function AddJdkConfig() {
+    if (!jdkConfig.value.find(item => item.name == newJdkConfig.name)) {
+        jdkConfig.value.push(newJdkConfig)
+        InsetJdkConfig(newJdkConfig)
+        ElMessage.success("添加成功")
+    } else {
+        ElMessage.warning("不能添加重名JDK配置")
+    }
+}
+
+function DeleteJdkConfig(name: string) {
+    jdkConfig.value = jdkConfig.value.filter(item => item.name != name)
+    SaveJdkConfig(jdkConfig.value)
+}
+
+type DialogMode = "add" | "edit"
+
+const config = reactive({
+    itemDialog: false,
+    dialogMode: "add" as DialogMode,
     tipsDialog: false,
 })
+
+const itemForm = reactive({
+    GroupName: "",
+    Name: "",
+    Type: "CMD",
+    Path: "",
+    Target: "",
+    Favicon: "",
+    Jdk: "",
+})
+
+const editContext = reactive<{
+    child: structs.Children | null
+    groupName: string
+}>({
+    child: null,
+    groupName: "",
+})
+
+const isEditMode = computed(() => config.dialogMode === "edit")
+
+function resetItemForm(groupName = "") {
+    itemForm.GroupName = groupName
+    itemForm.Name = ""
+    itemForm.Type = "CMD"
+    itemForm.Path = ""
+    itemForm.Target = ""
+    itemForm.Favicon = ""
+    itemForm.Jdk = ""
+}
+
+function openAddItemDialog(groupName: string) {
+    config.dialogMode = "add"
+    resetItemForm(groupName)
+    config.itemDialog = true
+    editContext.child = null
+    editContext.groupName = ""
+}
+
+function openEditItemDialog(groupName: string, item: structs.Children) {
+    config.dialogMode = "edit"
+    editContext.child = item
+    editContext.groupName = groupName
+    Object.assign(itemForm, {
+        GroupName: groupName,
+        Name: item.Name,
+        Type: item.Type,
+        Path: item.Path,
+        Target: item.Target,
+        Favicon: item.Favicon,
+        Jdk: item.Jdk || "",
+    })
+    config.itemDialog = true
+}
+
+function closeItemDialog() {
+    config.itemDialog = false
+}
+
+function handleItemDialogClosed() {
+    editContext.child = null
+    editContext.groupName = ""
+    resetItemForm()
+    config.dialogMode = "add"
+}
 
 const searchFilter = ref("")
 
@@ -105,25 +182,25 @@ const localGroup = ({
     options: ref<structs.Navigation[]>([]),
     openGroup: [
         {
-            name: "CMD",
+            label: "CMD",
+            value: "CMD",
             icon: itermIcon,
         },
         {
-            name: "APP",
+            label: "APP",
+            value: "APP",
             icon: appIcon,
         },
         {
-            name: "JAR",
+            label: "JAR",
+            value: "JAR",
             icon: javaIcon,
         },
         {
-            name: "Link",
+            label: "Link",
+            value: "Link",
             icon: chromeIcon,
         },
-        // {
-        //     name: "Script",
-        //     icon: scriptIcon,
-        // }
     ],
     getGroupsName: function () {
         return localGroup.options.value.map(item => item.Name) // 获取所有分组名称
@@ -175,30 +252,35 @@ const localGroup = ({
             })
     },
     addItem: async function () {
-        let card = localGroup.options.value.find(item => item.Name === config.defualtGroupName)
+        if (!itemForm.GroupName) {
+            ElMessage.warning("请先选择分组")
+            return
+        }
+        let card = localGroup.options.value.find(item => item.Name === itemForm.GroupName)
         if (card) {
-            if (config.defaultType == "Link" && config.path.startsWith("http")) {
+            if (itemForm.Type == "Link" && itemForm.Path.startsWith("http")) {
                 ElMessage("正在加载图标资源，加载完毕后会自动关闭窗口...")
-                config.favicon = await GenerateFaviconBase64WithOnline(config.path)
+                itemForm.Favicon = await GenerateFaviconBase64WithOnline(itemForm.Path)
             } else {
-                config.favicon = await AutoGenerateFavicon(config.path)
+                itemForm.Favicon = await AutoGenerateFavicon(itemForm.Path)
             }
             let child = {
-                Name: config.name,
-                Type: config.defaultType,
-                Path: config.path,
-                Target: config.target,
-                Favicon: config.favicon,
-                Args: config.args
+                Name: itemForm.Name,
+                Type: itemForm.Type,
+                Path: itemForm.Path,
+                Target: itemForm.Target,
+                Favicon: itemForm.Favicon,
+                Jdk: itemForm.Jdk,
             }
             if (!card.Children) {
                 card.Children = [child];
             } else {
                 card.Children.push(child)
             }
-            InsetItemNavigation(config.defualtGroupName, child)
+            InsetItemNavigation(itemForm.GroupName, child)
         }
-        config.addItemDialog = false
+        closeItemDialog()
+        resetItemForm()
     },
     deleteGroup: function (name: string) {
         ElMessageBox.confirm(
@@ -229,15 +311,27 @@ const localGroup = ({
         SaveNavigation(localGroup.options.value)
     },
     saveEdit: function () {
+        if (!editContext.child) {
+            closeItemDialog()
+            return
+        }
         const groupIndex = localGroup.options.value.findIndex(group =>
-            group.Name == config.editGroupName
+            group.Name == editContext.groupName
         );
-        if (groupIndex !== -1) { // If the group is found
+        if (groupIndex !== -1 && localGroup.options.value[groupIndex].Children) { // If the group is found
             localGroup.options.value[groupIndex].Children!.forEach((item, index) => {
-                if (item == config.editChild) {
-                    localGroup.options.value[groupIndex].Children![index] = edit
+                if (item == editContext.child) {
+                    localGroup.options.value[groupIndex].Children![index] = {
+                        ...localGroup.options.value[groupIndex].Children![index],
+                        Name: itemForm.Name,
+                        Type: itemForm.Type,
+                        Path: itemForm.Path,
+                        Target: itemForm.Target,
+                        Favicon: itemForm.Favicon,
+                        Jdk: itemForm.Jdk,
+                    }
                     SaveNavigation(localGroup.options.value);
-                    config.editDialog = false;
+                    closeItemDialog();
                 }
             });
         }
@@ -267,18 +361,11 @@ const localGroup = ({
         }
     },
     selectPathFile: async function () {
-        config.path = await FileDialog("")
+        itemForm.Path = await FileDialog("")
     },
     selctFaviconFile: async function () {
         let filepath = await FileDialog("*.ico;*.png;*.jpg;*.jpeg;*.svg")
-        config.favicon = await GenerateFaviconBase64(filepath)
-    },
-    editFaviconFile: async function () {
-        let filepath = await FileDialog("*.ico;*.png;*.jpg;*.jpeg;*.svg")
-        edit.Favicon = await GenerateFaviconBase64(filepath)
-    },
-    editPathFile: async function () {
-        edit.Path = await FileDialog("")
+        itemForm.Favicon = await GenerateFaviconBase64(filepath)
     },
 })
 
@@ -294,12 +381,7 @@ function handleCardContextMenu(e: MouseEvent, groups: any) {
                 label: "添加元素",
                 icon: h(tagIcon, defaultIconSize),
                 onClick: () => {
-                    config.addItemDialog = true
-                    config.name = ""
-                    config.target = ""
-                    config.path = ""
-                    config.favicon = ""
-                    config.defualtGroupName = groups.Name
+                    openAddItemDialog(groups.Name)
                 }
             },
             {
@@ -363,24 +445,6 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 }
             },
             {
-                label: "复制占位符命令",
-                icon: h(DocumentCopy, defaultIconSize),
-                onClick: () => {
-                    if (item.Type != "Script") {
-                        ElNotification({
-                            title: "错误",
-                            message: "仅Script类型应用支持复制",
-                            type: "error",
-                            position: 'bottom-right',
-                        })
-                        return
-                    }
-                    SnippetCommandLine(item).then(command => {
-                        Copy(command)
-                    })
-                }
-            },
-            {
                 label: "移动至",
                 icon: h(Guide, defaultIconSize),
                 children: localGroup.getGroupsName().map(name => ({
@@ -394,10 +458,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
                 label: "编辑",
                 icon: h(Edit, defaultIconSize),
                 onClick: () => {
-                    config.editDialog = true;
-                    Object.assign(edit, item);
-                    config.editChild = item;
-                    config.editGroupName = groups.Name;
+                    openEditItemDialog(groups.Name, item);
                 }
             },
             {
@@ -461,105 +522,115 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
         </el-card>
     </div>
     <el-empty v-else></el-empty>
-    <el-dialog v-model="config.addItemDialog" :title="$t('navigator.add_item')" width="550">
-        <el-form :model="config" label-width="auto">
-            <el-form-item label="组名">
-                <el-select v-model="config.defualtGroupName">
-                    <el-option v-for="name in localGroup.getGroupsName()" :value="name">{{ name }}</el-option>
+    <el-dialog v-model="config.itemDialog"
+        :title="config.dialogMode === 'add' ? $t('navigator.add_item') : $t('navigator.edit_item')" width="550"
+        @closed="handleItemDialogClosed">
+        <el-form :model="itemForm" label-width="auto">
+            <el-form-item label="组名" v-if="!isEditMode">
+                <el-select v-model="itemForm.GroupName">
+                    <el-option v-for="name in localGroup.getGroupsName()" :key="name" :value="name">{{ name }}</el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="名称">
-                <el-input v-model="config.name" />
+                <el-input v-model="itemForm.Name" />
             </el-form-item>
             <el-form-item label="类型">
-                <el-radio-group v-model="config.defaultType" text-color="#626aef" fill="rgb(239, 240, 253)">
-                    <el-radio-button v-for="item in localGroup.openGroup" :key="item.name" :value="item.name">
-                        <el-space :size="6">
-                            <el-icon :size="18">
-                                <component :is="item.icon" />
+                <div class="custom-style">
+                    <el-segmented v-model="itemForm.Type" :options="localGroup.openGroup" block>
+                        <template #default="{ item }">
+                            <el-space :size="6">
+                                <el-icon :size="18">
+                                    <component :is="item.icon" />
+                                </el-icon>
+                                <span class="font-bold">{{ item.label }}</span>
+                            </el-space>
+                        </template>
+                    </el-segmented>
+                </div>
+            </el-form-item>
+            <el-form-item v-show="itemForm.Type == 'JAR'">
+                <template #label>
+                    <el-text>
+                        JDK
+                        <el-tooltip content="不配置默认以java参数调用" placement="right">
+                            <el-icon :size="16" style="margin-left: 5px;">
+                                <Warning />
                             </el-icon>
-                            <span class="font-bold">{{ item.name }}</span>
-                        </el-space>
-                    </el-radio-button>
-                </el-radio-group>
+                        </el-tooltip>
+                    </el-text>
+                </template>
+                <el-select v-model="itemForm.Jdk" placeholder="选择JDK环境变量">
+                    <template #footer>
+                        <el-button v-if="!isJdkConfigAdding" text bg @click="isJdkConfigAdding = true">添加</el-button>
+                        <template v-else>
+                            <el-form :model="newJdkConfig">
+                                <el-form-item label="名称">
+                                    <el-input v-model="newJdkConfig.name" />
+                                </el-form-item>
+                                <el-form-item label="路径">
+                                    <el-input v-model="newJdkConfig.path" />
+                                </el-form-item>
+                            </el-form>
+                            <el-space>
+                                <el-button type="primary" @click="AddJdkConfig">保存</el-button>
+                                <el-button text bg @click="isJdkConfigAdding = false">取消</el-button>
+                            </el-space>
+                        </template>
+                    </template>
+                    <el-option v-for="jdk in jdkConfig" :value="jdk.path">
+                        <div class="flex-between">
+                            <span>{{ jdk.name }}</span>
+                            <el-button link :icon="Delete" type="danger" @click.stop.prevent="DeleteJdkConfig(jdk.name)"></el-button>
+                        </div>
+                    </el-option>
+                </el-select>
             </el-form-item>
-            <el-form-item label="命令" v-show="config.defaultType == 'CMD' || config.defaultType == 'Script'">
-                <el-input v-model="config.target" type="textarea" :rows="5" />
+            <el-form-item label="命令" v-show="itemForm.Type == 'CMD'">
+                <el-input v-model="itemForm.Target" type="textarea" :rows="5" />
             </el-form-item>
-            <el-form-item label="占位参数" v-show="config.defaultType == 'Script'">
-                <el-input v-model="config.args" type="textarea" :rows="5" />
-                <span class="form-item-tips">仅当类型为Script时, 替换命令中的占位符使用</span>
-            </el-form-item>
-            <el-form-item label="文件路径">
-                <el-input v-model="config.path">
+            <el-form-item>
+                <template #label>
+                    <el-text>
+                        路径
+                        <el-tooltip content="对于Link类型填写网址链接" placement="right">
+                            <el-icon :size="16" style="margin-left: 5px;">
+                                <Warning />
+                            </el-icon>
+                        </el-tooltip>
+                    </el-text>
+                </template>
+                <el-input v-model="itemForm.Path">
                     <template #suffix>
                         <el-button :icon="Document" link @click="localGroup.selectPathFile" />
                     </template>
                 </el-input>
-                <span class="form-item-tips">类型为Link时路径填写URL网址</span>
             </el-form-item>
-            <el-form-item label="图标">
-                <el-input v-model="config.favicon">
+            <el-form-item>
+                <template #label>
+                    <el-text>
+                        图标
+                        <el-tooltip content="Link类型和App类型中的EXE、LNK应用可以自动获取图标" placement="right">
+                            <el-icon :size="16" style="margin-left: 5px;">
+                                <Warning />
+                            </el-icon>
+                        </el-tooltip>
+                    </el-text>
+                </template>
+                <el-input v-model="itemForm.Favicon">
                     <template #suffix>
                         <el-button :icon="PictureRounded" link @click="localGroup.selctFaviconFile" />
                     </template>
                 </el-input>
-                <span class="form-item-tips">Link类型、App中的EXE、LNK应用可以自动获取图标</span>
             </el-form-item>
         </el-form>
         <template #footer>
-            <el-button type="primary" @click="localGroup.addItem">
+            <el-button type="primary"
+                @click="config.dialogMode === 'add' ? localGroup.addItem() : localGroup.saveEdit()">
                 保存
             </el-button>
         </template>
     </el-dialog>
-    <el-dialog v-model="config.editDialog" :title="$t('navigator.edit_item')" width="550">
-        <el-form :model="edit" label-width="auto">
-            <el-form-item label="名称">
-                <el-input v-model="edit.Name" />
-            </el-form-item>
-            <el-form-item label="类型">
-                <el-radio-group v-model="edit.Type" text-color="#626aef" fill="rgb(239, 240, 253)">
-                    <el-radio-button v-for="item in localGroup.openGroup" :key="item.name" :value="item.name">
-                        <el-space :size="6">
-                            <el-icon :size="18">
-                                <component :is="item.icon" />
-                            </el-icon>
-                            <span class="font-bold">{{ item.name }}</span>
-                        </el-space>
-                    </el-radio-button>
-                </el-radio-group>
-            </el-form-item>
-            <el-form-item label="命令" v-show="edit.Type == 'CMD' || edit.Type == 'Script'">
-                <el-input v-model="edit.Target" type="textarea" :rows="5" />
-            </el-form-item>
-            <el-form-item label="占位参数" v-show="edit.Type == 'Script'">
-                <el-input v-model="edit.Args" type="textarea" :rows="5" />
-                <span class="form-item-tips">仅当类型为Script时, 替换命令中的占位符使用</span>
-            </el-form-item>
-            <el-form-item label="文件路径">
-                <el-input v-model="edit.Path">
-                    <template #suffix>
-                        <el-button :icon="Document" link @click="localGroup.editPathFile" />
-                    </template>
-                </el-input>
-                <span class="form-item-tips">类型为Link时路径填写URL网址</span>
-            </el-form-item>
-            <el-form-item label="图标">
-                <el-input v-model="edit.Favicon">
-                    <template #suffix>
-                        <el-button :icon="PictureRounded" link @click="localGroup.editFaviconFile" />
-                    </template>
-                </el-input>
-                <span class="form-item-tips">Link类型、App中的EXE、LNK应用可以自动获取图标</span>
-            </el-form-item>
-        </el-form>
-        <template #footer>
-            <el-button type="primary" @click="localGroup.saveEdit">
-                保存
-            </el-button>
-        </template>
-    </el-dialog>
+    
     <el-dialog v-model="config.tipsDialog" width="900px">
         <Note>
             1、jar应用在默认点击启动时, 会使用以java -jar启动应用<br />
@@ -571,12 +642,7 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
             3、拖入应用到分组中会自动按类型添加元素<br /><br />
             4、每个面板右键都有独立的功能!!!<br /><br />
             5、Link类型可以在路径处填写网址链接, 作为书签使用<br /><br />
-            6、应用默认添加时Link类型以及EXE、LNK应用会自动获取图标信息(图标参数为空会使用默认图标, 部分应用可能无法正常显示需要自行设置), 对于20kb以上图标会进行压缩存储<br /><br />
-            7、Script类型表示需要程序打开终端, 将预输入好的命令输入到命令行中, 支持参数化编写<br />
-            e.g. 我需要执行jwt-crack, 则命令为:
-            <code>jwt-hack crack %token% -w %dict%
-            参数为(根据;号分割):
-            %token%:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpblR5cGUiOiJsb2dpbiIsImxvZ2luSWQiOiIxIiwicm5TdHIiOiJUc1RwSFBNUlZaeGtKZWREUGFxa281ZVdTUlBSZmQ4bCJ9.QsplJJwqcW5rmRoEbA2h0VtsAzvfX5E-SkxOjqRhKy4;%dict%:/Users/xxx/jwt.txt</code>
+            6、应用默认添加时Link类型以及EXE、LNK应用会自动获取图标信息(图标参数为空会使用默认图标, 部分应用可能无法正常显示需要自行设置), 对于20kb以上图标会进行压缩存储<br />
         </Note>
     </el-dialog>
 </template>
@@ -617,5 +683,15 @@ function handleButtonContextMenu(e: MouseEvent, groups: any, item: any) {
 
 .drop-enable {
     --wails-drop-target: drop;
+}
+
+.custom-style {
+    width: 100%;
+}
+
+.custom-style .el-segmented {
+    --el-segmented-item-selected-color: #626aef;
+    --el-segmented-item-selected-bg-color: rgb(208, 211, 255);
+    --el-border-radius-base: 5px;
 }
 </style>

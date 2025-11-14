@@ -26,13 +26,18 @@ type Navigation struct {
 	Children []Children
 }
 
+type JdkConfig struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
 type Children struct {
 	Name    string
 	Type    string
 	Path    string
 	Target  string
 	Favicon string // 纯图标路径
-	Args    string // 占位符解析参数
+	Jdk     string // JDK环境变量
 }
 
 type Position struct {

@@ -22,7 +22,7 @@ export function GenerateFaviconBase64(arg1:string):Promise<string>;
 
 export function GenerateFaviconBase64WithOnline(arg1:string):Promise<string>;
 
-export function GetJdkConfigs():Promise<Array<structs.JdkConfig>>;
+export function GetJdkConfig():Promise<any>;
 
 export function GetLocalNaConfig():Promise<any>;
 
@@ -33,6 +33,8 @@ export function InitMemo(arg1:string,arg2:string):Promise<boolean>;
 export function InsetGroupNavigation(arg1:structs.Navigation):Promise<boolean>;
 
 export function InsetItemNavigation(arg1:string,arg2:structs.Children):Promise<boolean>;
+
+export function InsetJdkConfig(arg1:structs.JdkConfig):Promise<boolean>;
 
 export function IsMacOS():Promise<boolean>;
 
@@ -68,13 +70,11 @@ export function SaveDataToFile(arg1:any):Promise<boolean>;
 
 export function SaveFileDialog(arg1:string):Promise<string>;
 
-export function SaveJdkConfigs(arg1:Array<structs.JdkConfig>):Promise<boolean>;
+export function SaveJdkConfig(arg1:Array<structs.JdkConfig>):Promise<boolean>;
 
 export function SaveNavigation(arg1:Array<structs.Navigation>):Promise<boolean>;
 
 export function SaveToTempFile(arg1:string):Promise<string>;
-
-export function SnippetCommandLine(arg1:structs.Children):Promise<string>;
 
 export function Startup(arg1:context.Context):Promise<void>;
 

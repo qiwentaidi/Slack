@@ -30,8 +30,10 @@ import (
 )
 
 var (
-	configFile = utils.HomeDir() + "/slack/navogation.json"
-	navigation []structs.Navigation
+	configFile    = utils.HomeDir() + "/slack/navogation.json"
+	jdkConfigFile = utils.HomeDir() + "/slack/jdkConfig.json"
+	navigation    []structs.Navigation
+	jdkConfig     []structs.JdkConfig
 )
 
 func (f *File) GetLocalNaConfig() *[]structs.Navigation {
@@ -50,6 +52,34 @@ func (f *File) GetLocalNaConfig() *[]structs.Navigation {
 		return &navigation
 	}
 	return &navigation
+}
+
+// 获取系统变量配置文件内容，主要用于配置JDK环境变量
+func (f *File) GetJdkConfig() *[]structs.JdkConfig {
+	if !f.CheckFileStat(jdkConfigFile) {
+		os.Create(jdkConfigFile)
+		gologger.Error(f.ctx, "[AppLauncher] Can't create jdkConfig.json")
+	}
+	b, err := os.ReadFile(jdkConfigFile)
+	if err != nil {
+		gologger.Error(f.ctx, fmt.Errorf("[AppLauncher] Read jdkConfig.json err: %w", err))
+		return &jdkConfig
+	}
+	if err := json.Unmarshal(b, &jdkConfig); err != nil {
+		gologger.Error(f.ctx, fmt.Errorf("[AppLauncher] Unmarshal jdkConfig.json err: %w", err))
+		return &jdkConfig
+	}
+	return &jdkConfig
+}
+
+func (f *File) InsetJdkConfig(jdk structs.JdkConfig) bool {
+	jdkConfig = append(jdkConfig, jdk)
+	return fileutil.SaveJsonWithFormat(f.ctx, jdkConfigFile, jdkConfig)
+}
+
+func (f *File) SaveJdkConfig(jdks []structs.JdkConfig) bool {
+	jdkConfig = jdks
+	return fileutil.SaveJsonWithFormat(f.ctx, jdkConfigFile, jdkConfig)
 }
 
 func (f *File) InsetGroupNavigation(n structs.Navigation) bool {
@@ -116,28 +146,6 @@ func (f *File) OpenTerminal(filepath string) string {
 	return ""
 }
 
-func (f *File) SnippetCommandLine(item structs.Children) string {
-	placeholders := map[string]string{}
-	argsList := strings.Split(item.Args, ";")
-	for _, pair := range argsList {
-		if pair == "" {
-			continue
-		}
-		split := strings.SplitN(pair, ":", 2)
-		if len(split) != 2 {
-			continue
-		}
-		key := strings.TrimSpace(split[0])
-		val := strings.TrimSpace(split[1])
-		placeholders[key] = val
-	}
-
-	command := item.Target
-	for key, val := range placeholders {
-		command = strings.ReplaceAll(command, key, val)
-	}
-	return command
-}
 func (f *File) RunApp(item structs.Children) {
 	var cmd *exec.Cmd
 	name := filepath.Base(item.Path)
@@ -147,6 +155,10 @@ func (f *File) RunApp(item structs.Children) {
 		runtime.BrowserOpenURL(f.ctx, item.Path)
 		return
 	case "JAR":
+		if item.Jdk != "" {
+			cmd = exec.Command(item.Jdk, "-jar", name)
+			break
+		}
 		cmd = exec.Command("java", "-jar", name)
 	case "APP":
 		if rt.GOOS != "windows" {
