@@ -38,6 +38,10 @@ export function GenerateFaviconBase64WithOnline(arg1) {
   return window['go']['services']['File']['GenerateFaviconBase64WithOnline'](arg1);
 }
 
+export function GetJdkConfigs() {
+  return window['go']['services']['File']['GetJdkConfigs']();
+}
+
 export function GetLocalNaConfig() {
   return window['go']['services']['File']['GetLocalNaConfig']();
 }
@@ -124,6 +128,10 @@ export function SaveDataToFile(arg1) {
 
 export function SaveFileDialog(arg1) {
   return window['go']['services']['File']['SaveFileDialog'](arg1);
+}
+
+export function SaveJdkConfigs(arg1) {
+  return window['go']['services']['File']['SaveJdkConfigs'](arg1);
 }
 
 export function SaveNavigation(arg1) {

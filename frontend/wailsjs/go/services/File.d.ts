@@ -22,6 +22,8 @@ export function GenerateFaviconBase64(arg1:string):Promise<string>;
 
 export function GenerateFaviconBase64WithOnline(arg1:string):Promise<string>;
 
+export function GetJdkConfigs():Promise<Array<structs.JdkConfig>>;
+
 export function GetLocalNaConfig():Promise<any>;
 
 export function InitConfig(arg1:string):Promise<boolean>;
@@ -65,6 +67,8 @@ export function RunApp(arg1:structs.Children):Promise<void>;
 export function SaveDataToFile(arg1:any):Promise<boolean>;
 
 export function SaveFileDialog(arg1:string):Promise<string>;
+
+export function SaveJdkConfigs(arg1:Array<structs.JdkConfig>):Promise<boolean>;
 
 export function SaveNavigation(arg1:Array<structs.Navigation>):Promise<boolean>;
 
