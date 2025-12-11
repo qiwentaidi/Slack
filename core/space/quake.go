@@ -20,19 +20,13 @@ const (
 )
 
 func QuakeApiSearch(o *structs.QuakeRequestOptions) *structs.QuakeResult {
-	var startIndex int
-	if o.PageNum == 1 {
-		startIndex = 0
-	} else {
-		startIndex = (o.PageNum - 1) * o.PageSize
-	}
 	data := make(map[string]interface{})
 	if len(o.IpList) > 0 {
 		data["ip_list"] = o.IpList
 	} else {
 		data["query"] = o.Query
 	}
-	data["start"] = startIndex
+	data["start"] = (o.PageNum - 1) * o.PageSize
 	data["size"] = o.PageSize
 	data["latest"] = o.Latest
 	data["shortcuts"] = getShortcuts(o)

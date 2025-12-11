@@ -117,19 +117,9 @@ const rules = reactive<FormRules<RuleForm>>({
     ]
 })
 async function Collect() {
-    let response = await GoFetch("GET", ruleForm.miitApi, "", {}, 10, getProxy())
+    let response = await GoFetch("GET", ruleForm.miitApi + "/query/web?search=baidu.com", "", {}, 10, getProxy())
     if (response.Error) {
         ElMessage.warning("请求MIIT接口失败! 请根据ICP_Query项目搭建自身接口")
-        return
-    }
-    try {
-        let jsonResult = JSON.parse(response.Body)
-        if (jsonResult.msg != "查询请访问http://0.0.0.0:16181/query/{name}") {
-            ElMessage.warning("请求接口结果异常!")
-            return
-        }
-    } catch (error) {
-        ElMessage.warning(error)
         return
     }
     ruleForm.tycToken = ruleForm.tycToken.replace(/[\r\n\s]/g, '')
