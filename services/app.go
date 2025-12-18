@@ -233,6 +233,7 @@ func (a *App) FetchCompanyInfo(companyName string, ratio int, ds *structs.DataSo
 		} else {
 			gomessage.Warning(a.ctx, "tianyancha token is invalid")
 			gologger.Warning(a.ctx, "tianyancha token is invalid")
+			return structs.CompanyInfo{}
 		}
 	} else {
 		result.CompanyName = companyName
