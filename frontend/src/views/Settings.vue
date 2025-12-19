@@ -17,6 +17,9 @@
                 <el-form-item :label="$t('setting.webscan_thread')">
                     <el-input-number v-model="global.webscan.web_thread" :min="1" :max="200" />
                 </el-form-item>
+                <el-form-item :label="$t('setting.active_timeout')">
+                    <el-input-number v-model="global.webscan.active_timeout" :min="3" :max="60" />
+                </el-form-item>
                 <el-form-item :label="$t('setting.crack_thread')">
                     <el-input-number v-model="global.webscan.crack_thread" :min="1" :max="200" />
                 </el-form-item>

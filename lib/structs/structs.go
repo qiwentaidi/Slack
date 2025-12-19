@@ -180,6 +180,7 @@ type WebscanOptions struct {
 	AppendTemplateFolder  string // 追加模板文件夹
 	NetworkCard           string // 指定扫描网卡
 	CustomHeaders         string // 自定义请求头
+	ActiveTimeout         int    // 主动扫描超时时间
 }
 
 type AntivirusResult struct {

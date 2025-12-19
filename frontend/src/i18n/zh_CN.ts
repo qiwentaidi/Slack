@@ -89,7 +89,8 @@ export default {
         'dict': '字典管理',
         'poc_update': 'PoC更新',
         'poc_source': 'PoC源',
-        'poc_tips': '修改后, 刷新/重启客户端后生效'
+        'poc_tips': '修改后, 刷新/重启客户端后生效',
+        'active_timeout': '主动指纹响应超时(s)',
     },
     update: {
         'latest': '最新',

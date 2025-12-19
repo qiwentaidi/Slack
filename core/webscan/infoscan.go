@@ -53,6 +53,7 @@ type FingerScanner struct {
 	aliveURLs               []*url.URL          // 默认指纹扫描结束后，存活的URL，以便后续主动指纹过滤目标
 	screenshot              bool                // 是否截屏
 	thread                  int                 // 指纹线程
+	activeTimeout           int                 // 主动指纹超时时间
 	deepScan                bool                // 代表主动指纹探测
 	rootPath                bool                // 主动指纹是否采取根路径扫描
 	basicURLWithFingerprint map[string][]string // 后续nuclei需要扫描的目标列表
@@ -129,6 +130,7 @@ func NewWebscanEngine(ctx context.Context, taskId string, proxyURL string, optio
 		basicURLWithFingerprint: basicURLWithFingerprint,
 		headers:                 clients.Str2HeadersMap(options.CustomHeaders),
 		generateLog4j2:          options.GenerateLog4j2,
+		activeTimeout:           options.ActiveTimeout,
 	}
 }
 
@@ -340,7 +342,7 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 		}
 		visited.Store(fullURL, true)
 
-		resp, err := clients.DoRequest("GET", fullURL, s.headers, nil, 5, s.client)
+		resp, err := clients.DoRequest("GET", fullURL, s.headers, nil, s.activeTimeout, s.client)
 		if err != nil {
 			// 累计超时次数
 			v, _ := timeoutCounter.LoadOrStore(baseURL, 1)

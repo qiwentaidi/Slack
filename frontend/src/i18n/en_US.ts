@@ -84,7 +84,8 @@ export default {
         'dict': 'Dictionary',
         'poc_update': 'PoC Update',
         'poc_source': 'PoC Source',
-        'poc_tips': 'After modification, it will take effect after refreshing/restarting the client'
+        'poc_tips': 'After modification, it will take effect after refreshing/restarting the client',
+        'active_timeout': 'Active fingerprint response timeout(s)',
     },
     update: {
         'latest': 'Lastest',

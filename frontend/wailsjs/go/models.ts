@@ -1451,6 +1451,7 @@ export namespace structs {
 	    AppendTemplateFolder: string;
 	    NetworkCard: string;
 	    CustomHeaders: string;
+	    ActiveTimeout: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new WebscanOptions(source);
@@ -1472,6 +1473,7 @@ export namespace structs {
 	        this.AppendTemplateFolder = source["AppendTemplateFolder"];
 	        this.NetworkCard = source["NetworkCard"];
 	        this.CustomHeaders = source["CustomHeaders"];
+	        this.ActiveTimeout = source["ActiveTimeout"];
 	    }
 	}
 	export class WindowsSize {

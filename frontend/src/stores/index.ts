@@ -30,6 +30,7 @@ var webscan = reactive({
     crack_thread: 20, // 暴破任务线程
     port_thread: 1000,
     port_timeout: 7,
+    active_timeout: 5,
     ping_check_alive: false,
     default_alive_module: "None",
     default_network: "Auto",
@@ -92,7 +93,7 @@ const Logger = reactive({
     length: 100, // 日志显示条数
 })
 
-const LOCAL_VERSION = "2.2.5"
+const LOCAL_VERSION = "2.2.6"
 
 const Language = ref("zh")
 const Theme = ref(false)
