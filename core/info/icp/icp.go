@@ -52,24 +52,46 @@ func FetchWebInfo(ctx context.Context, apiAddress string, query string) (*WebApi
 	pageNum := 1
 	totalPages := 1
 	var lastResponse WebApiResponse
+	retryCount := 0
+	maxRetries := 5
 
 	for {
 		queryURL := fmt.Sprintf("%s/query/web?search=%s&pageNum=%d&pageSize=%d", apiAddress, url.QueryEscape(query), pageNum, pageSize)
 		resp, err := clients.SimpleGet(queryURL, clients.NewRestyClient(nil, true))
 		if err != nil {
-			return nil, err
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询备案信息重试超过%d次，返回空结果", query, maxRetries))
+				return &WebApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询备案信息出现错误: %v，重试第%d次", query, err, retryCount))
+			time.Sleep(randutil.SleepRandTime(2))
+			continue
 		}
+
 		bodyStr := string(resp.Body())
 		// 如果不包含params参数时代码查询失败，需要重新查询
 		if !strings.Contains(bodyStr, "params") {
-			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询备案信息时出现错误: %s", query, bodyStr))
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询备案信息重试超过%d次，返回空结果", query, maxRetries))
+				return &WebApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询备案信息时出现错误: %s，重试第%d次", query, bodyStr, retryCount))
 			time.Sleep(randutil.SleepRandTime(2))
 			continue
 		}
 
 		var response WebApiResponse
 		if err := json.Unmarshal(resp.Body(), &response); err != nil {
-			return nil, err
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询备案信息重试超过%d次，返回空结果", query, maxRetries))
+				return &WebApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s解析备案信息时出现错误: %v，重试第%d次", query, err, retryCount))
+			time.Sleep(randutil.SleepRandTime(2))
+			continue
 		}
 		if !response.Success {
 			break
@@ -90,6 +112,7 @@ func FetchWebInfo(ctx context.Context, apiAddress string, query string) (*WebApi
 		}
 
 		pageNum++
+		retryCount = 0 // 重置重试计数器
 		time.Sleep(3000 * time.Millisecond)
 	}
 
@@ -129,24 +152,46 @@ func FetchAppInfo(ctx context.Context, apiAddress string, companyName string) (*
 	pageNum := 1
 	totalPages := 1
 	var lastResponse AppApiResponse
+	retryCount := 0
+	maxRetries := 5
 
 	for {
 		queryURL := fmt.Sprintf("%s/query/app?search=%s&pageNum=%d&pageSize=%d", apiAddress, url.QueryEscape(companyName), pageNum, pageSize)
 		resp, err := clients.SimpleGet(queryURL, clients.NewRestyClient(nil, true))
 		if err != nil {
-			return nil, err
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询App信息重试超过%d次，返回空结果", companyName, maxRetries))
+				return &AppApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询App信息出现错误: %v，重试第%d次", companyName, err, retryCount))
+			time.Sleep(randutil.SleepRandTime(2))
+			continue
 		}
+
 		bodyStr := string(resp.Body())
 		// 如果不包含params参数时代码查询失败，需要重新查询
 		if !strings.Contains(bodyStr, "params") {
-			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询App信息时出现错误: %s", companyName, bodyStr))
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询App信息重试超过%d次，返回空结果", companyName, maxRetries))
+				return &AppApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询App信息时出现错误: %s，重试第%d次", companyName, bodyStr, retryCount))
 			time.Sleep(randutil.SleepRandTime(2))
 			continue
 		}
 
 		var response AppApiResponse
 		if err := json.Unmarshal(resp.Body(), &response); err != nil {
-			return nil, err
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询App信息重试超过%d次，返回空结果", companyName, maxRetries))
+				return &AppApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s解析App信息时出现错误: %v，重试第%d次", companyName, err, retryCount))
+			time.Sleep(randutil.SleepRandTime(2))
+			continue
 		}
 		if !response.Success {
 			break
@@ -167,6 +212,7 @@ func FetchAppInfo(ctx context.Context, apiAddress string, companyName string) (*
 		}
 
 		pageNum++
+		retryCount = 0 // 重置重试计数器
 		time.Sleep(3000 * time.Millisecond)
 	}
 
@@ -206,23 +252,46 @@ func FetchAppletInfo(ctx context.Context, apiAddress string, companyName string)
 	pageNum := 1
 	totalPages := 1
 	var lastResponse AppletApiResponse
+	retryCount := 0
+	maxRetries := 5
 
 	for {
 		queryURL := fmt.Sprintf("%s/query/mapp?search=%s&pageNum=%d&pageSize=%d", apiAddress, url.QueryEscape(companyName), pageNum, pageSize)
 		resp, err := clients.SimpleGet(queryURL, clients.NewRestyClient(nil, true))
 		if err != nil {
-			return nil, err
-		}
-		bodyStr := string(resp.Body())
-		// 如果不包含params参数时代码查询失败，需要重新查询
-		if !strings.Contains(bodyStr, "params") {
-			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询小程序信息时出现错误: %s", companyName, bodyStr))
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询小程序信息重试超过%d次，返回空结果", companyName, maxRetries))
+				return &AppletApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询小程序信息出现错误: %v，重试第%d次", companyName, err, retryCount))
 			time.Sleep(randutil.SleepRandTime(2))
 			continue
 		}
+
+		bodyStr := string(resp.Body())
+		// 如果不包含params参数时代码查询失败，需要重新查询
+		if !strings.Contains(bodyStr, "params") {
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询小程序信息重试超过%d次，返回空结果", companyName, maxRetries))
+				return &AppletApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询小程序信息时出现错误: %s，重试第%d次", companyName, bodyStr, retryCount))
+			time.Sleep(randutil.SleepRandTime(2))
+			continue
+		}
+
 		var response AppletApiResponse
 		if err := json.Unmarshal(resp.Body(), &response); err != nil {
-			return nil, err
+			retryCount++
+			if retryCount > maxRetries {
+				gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s查询小程序信息重试超过%d次，返回空结果", companyName, maxRetries))
+				return &AppletApiResponse{}, nil
+			}
+			gologger.DualLog(ctx, gologger.Level_DEBUG, fmt.Sprintf("[icp] %s解析小程序信息时出现错误: %v，重试第%d次", companyName, err, retryCount))
+			time.Sleep(randutil.SleepRandTime(2))
+			continue
 		}
 		if !response.Success {
 			break
@@ -243,6 +312,7 @@ func FetchAppletInfo(ctx context.Context, apiAddress string, companyName string)
 		}
 
 		pageNum++
+		retryCount = 0 // 重置重试计数器
 		time.Sleep(3000 * time.Millisecond)
 	}
 
