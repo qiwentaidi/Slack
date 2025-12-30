@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, onMounted, ref, nextTick } from 'vue'
+import { reactive, onMounted, ref, nextTick, watch } from 'vue'
 import { VideoPause, QuestionFilled, Plus, DocumentCopy, ChromeFilled, Filter, View, Clock, Delete, Share, DArrowRight, DArrowLeft, Picture, Reading, FolderOpened, Tickets, CloseBold, UploadFilled, Edit, Refresh, InfoFilled } from '@element-plus/icons-vue';
 import { InitRule, FingerprintList, NewWebScanner, GetFingerPocMap, ExitScanner, Callgologger, SpaceGetPort, HostAlive, NewTcpScanner, NewCrackScanenr } from 'wailsjs/go/services/App'
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -32,6 +32,7 @@ import CustomTextarea from '@/components/CustomTextarea.vue';
 import { IPParse, PortParse } from 'wailsjs/go/core/Tools';
 import { ActivityItem } from '@/stores/interface';
 import Loading from '@/components/Loading.vue';
+import { useRoute } from 'vue-router';
 
 // 增加较快的数据需要节流刷新
 const throttleFingerscanUpdate = throttle(() => {
@@ -156,12 +157,26 @@ const config = reactive({
 
 const detailDialog = ref(false)
 const historyDialog = ref(false)
+const route = useRoute()
+const pendingTaskId = ref<string | null>(null)
 
 const selectedRow = ref();
 
 let fp = usePagination<structs.InfoResult>(50)
 let vp = usePagination<structs.VulnerabilityInfo>(50)
 let rp = usePagination<structs.TaskResult>(20)
+
+const applyRouteTask = () => {
+    const taskId = (route.query.taskId as string) || pendingTaskId.value;
+    if (!taskId) return;
+    const row = rp.table.result.find(item => item.TaskId === taskId);
+    if (row) {
+        pendingTaskId.value = null;
+        taskManager.viewTask(row);
+    } else {
+        pendingTaskId.value = taskId;
+    }
+};
 
 // 初始化时调用
 async function initialize() {
@@ -192,6 +207,7 @@ async function initialize() {
     if (Array.isArray(result)) {
         rp.table.result = result;
         rp.ctrl.watchResultChange(rp.table);
+        applyRouteTask();
     }
 }
 
@@ -261,6 +277,11 @@ onMounted(() => {
         EventsOff("portScanLoading");
         EventsOff("progressID");
     };
+});
+
+watch(() => route.query.taskId, (val) => {
+    pendingTaskId.value = (val as string) || null;
+    applyRouteTask();
 });
 
 async function startScan() {

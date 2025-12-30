@@ -114,6 +114,14 @@ export function GetAllPathsAndTimes() {
   return window['go']['services']['Database']['GetAllPathsAndTimes']();
 }
 
+export function GetTopRiskTargets() {
+  return window['go']['services']['Database']['GetTopRiskTargets']();
+}
+
+export function GetVulnDashboard() {
+  return window['go']['services']['Database']['GetVulnDashboard']();
+}
+
 export function InsertAgentPool(arg1) {
   return window['go']['services']['Database']['InsertAgentPool'](arg1);
 }

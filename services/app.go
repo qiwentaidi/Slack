@@ -41,6 +41,8 @@ import (
 	"time"
 
 	"github.com/qiwentaidi/clients"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -54,6 +56,7 @@ type App struct {
 	templateDir      string
 	defaultPath      string
 	cyberCherDir     string
+	statsCancel      context.CancelFunc
 }
 
 // NewApp creates a new App application struct
@@ -74,11 +77,15 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
+	a.startSystemStatsEmitter()
 }
 
 // 返回 true 将导致应用程序继续，false 将继续正常关闭
 func (a *App) BeforeClose(ctx context.Context) (prevent bool) {
 	if !webscan.IsRunning {
+		if a.statsCancel != nil {
+			a.statsCancel()
+		}
 		return false
 	}
 	dialog, err := runtime.MessageDialog(ctx, runtime.MessageDialogOptions{
@@ -108,6 +115,46 @@ func (a *App) Callgologger(level, msg string) {
 	default:
 		gologger.Debug(a.ctx, msg)
 	}
+}
+
+func (a *App) emitSystemStats() {
+	cpuPercent, err := cpu.Percent(0, false)
+	if err != nil || len(cpuPercent) == 0 {
+		cpuPercent = []float64{0}
+	}
+
+	memStat, err := mem.VirtualMemory()
+	memPercent := float64(0)
+	if err == nil && memStat != nil {
+		memPercent = memStat.UsedPercent
+	}
+
+	runtime.EventsEmit(a.ctx, "system-stats", map[string]any{
+		"cpu": cpuPercent[0],
+		"mem": memPercent,
+	})
+}
+
+func (a *App) startSystemStatsEmitter() {
+	if a.statsCancel != nil {
+		a.statsCancel()
+	}
+
+	ctx, cancel := context.WithCancel(a.ctx)
+	a.statsCancel = cancel
+
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				a.emitSystemStats()
+			}
+		}
+	}()
 }
 
 func (a *App) GoFetch(method, target string, body interface{}, headers map[string]string, timeout int, proxyURL string) *structs.Response {

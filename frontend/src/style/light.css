@@ -8,6 +8,11 @@ html.light {
     --list-item-selected-color: #E6E6E6;
     --split-color: #F5F5F5;
     --collapse-border-color: #D9D9D9;
+    --risk-critical: #b30000;  /* 深红 */
+    --risk-high: #ff4d4f;      /* 红 */
+    --risk-medium: #f5c542;    /* 黄 */
+    --risk-low: #409eff;       /* 蓝 */
+    --risk-info: #8fa3c4;      /* 信息 */
 
     .el-tag.el-tag--critical {
         background-color: #FFE6E6;

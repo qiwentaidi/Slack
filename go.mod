@@ -26,6 +26,7 @@ require (
 	github.com/projectdiscovery/utils v0.4.19
 	github.com/qiwentaidi/clients v0.0.0-20250702115236-129e21f47c9d
 	github.com/qiwentaidi/gonmap v0.0.1
+	github.com/shirou/gopsutil/v3 v3.24.2
 	github.com/sijms/go-ora/v2 v2.8.22
 	github.com/stacktitan/smb v0.0.0-20190531122847-da9a425dceb8
 	github.com/tomatome/grdp v0.1.0
@@ -258,7 +259,6 @@ require (
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/seh-msft/burpxml v1.0.1 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
-	github.com/shirou/gopsutil/v3 v3.24.2 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect

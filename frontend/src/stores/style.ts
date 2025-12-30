@@ -14,18 +14,6 @@ export const titlebarStyle = computed(() => {
     };
 })
 
-export const rightStyle = computed(() => {
-    return global.temp.isMacOS ? { marginRight: '3.5px' } : {};
-})
-
-export const leftStyle = computed(() => {
-    return !global.temp.isMacOS ? { marginLeft: '3.5px' } : {};
-})
-
-export const macStyle = computed(() => {
-    return global.temp.isMacOS && !global.temp.isMax ? { marginLeft: '80px' } : {};
-})
-
 export const defaultIconSize = {
     width: '16px',
     height: '16px',

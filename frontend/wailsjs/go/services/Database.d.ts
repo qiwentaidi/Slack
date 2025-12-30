@@ -60,6 +60,10 @@ export function GetAllDatabaseConnections():Promise<Array<structs.DatabaseConnec
 
 export function GetAllPathsAndTimes():Promise<Array<structs.PathTimes>>;
 
+export function GetTopRiskTargets():Promise<Array<structs.TaskResult>>;
+
+export function GetVulnDashboard():Promise<structs.VulnDashboard>;
+
 export function InsertAgentPool(arg1:string):Promise<boolean>;
 
 export function InsertFavGrammarFiled(arg1:string,arg2:string,arg3:string):Promise<boolean>;

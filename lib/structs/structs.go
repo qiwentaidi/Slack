@@ -205,6 +205,18 @@ type TaskResult struct {
 	Vulnerability int
 }
 
+type VulnDashboard struct {
+	TotalTasks           int
+	TotalVulnerabilities int
+	TotalFailed          int
+	SeverityCritical     int
+	SeverityHigh         int
+	SeverityMedium       int
+	SeverityLow          int
+	SeverityInfo         int
+	RecentTasks          []TaskResult
+}
+
 type QuakeRequestOptions struct {
 	Query      string
 	IpList     []string // 判断 IpList 是否为空决定是否为批量查询

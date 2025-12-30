@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/xuri/excelize/v2"
+	"strings"
 
 	"encoding/json"
 	"fmt"
@@ -14,7 +15,6 @@ import (
 	"slack-wails/lib/structs"
 	"slack-wails/lib/utils"
 	"slack-wails/lib/utils/fileutil"
-	"strings"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -372,6 +372,101 @@ func (d *Database) RemoveScanTask(taskid string) bool {
 func (d *Database) RenameScanTask(taskid, taskname string) bool {
 	updateStmt := "UPDATE scanTask SET task_name = ? WHERE task_id = ?"
 	return d.ExecSqlStatement(updateStmt, taskname, taskid)
+}
+
+// 仪表盘数据汇总
+func (d *Database) GetVulnDashboard() structs.VulnDashboard {
+	result := structs.VulnDashboard{}
+	if d.DB == nil {
+		return result
+	}
+
+	d.lock.RLock()
+	defer d.lock.RUnlock()
+
+	// 总任务数
+	d.DB.QueryRow("SELECT COUNT(*) FROM scanTask;").Scan(&result.TotalTasks)
+	// 总漏洞数
+	d.DB.QueryRow("SELECT COALESCE(SUM(vulnerability), 0) FROM scanTask;").Scan(&result.TotalVulnerabilities)
+	// 总失败数
+	d.DB.QueryRow("SELECT COALESCE(SUM(failed), 0) FROM scanTask;").Scan(&result.TotalFailed)
+
+	// 按严重等级统计
+	rows, err := d.DB.Query("SELECT LOWER(severity) AS s, COUNT(*) FROM VulnerabilityInfo GROUP BY LOWER(severity);")
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var sev string
+			var cnt int
+			if err := rows.Scan(&sev, &cnt); err != nil {
+				continue
+			}
+			switch strings.TrimSpace(sev) {
+			case "critical":
+				result.SeverityCritical = cnt
+			case "high":
+				result.SeverityHigh = cnt
+			case "medium":
+				result.SeverityMedium = cnt
+			case "low":
+				result.SeverityLow = cnt
+			case "info", "information":
+				result.SeverityInfo = cnt
+			}
+		}
+	}
+
+	// 最近任务
+	rows, err = d.DB.Query(`
+		SELECT task_id, task_name, targets, failed, vulnerability
+		FROM scanTask
+		ORDER BY rowid DESC
+		LIMIT 5;
+	`)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var task structs.TaskResult
+			if err := rows.Scan(&task.TaskId, &task.TaskName, &task.Targets, &task.Failed, &task.Vulnerability); err != nil {
+				continue
+			}
+			result.RecentTasks = append(result.RecentTasks, task)
+		}
+	}
+
+	return result
+}
+
+// 风险目标 Top
+func (d *Database) GetTopRiskTargets() []structs.TaskResult {
+	var list []structs.TaskResult
+	if d.DB == nil {
+		return list
+	}
+
+	d.lock.RLock()
+	defer d.lock.RUnlock()
+
+	rows, err := d.DB.Query(`
+		SELECT task_id, task_name, targets, failed, vulnerability
+		FROM scanTask
+		ORDER BY vulnerability DESC
+		LIMIT 5;
+	`)
+	if err != nil {
+		return list
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var task structs.TaskResult
+		if err := rows.Scan(&task.TaskId, &task.TaskName, &task.Targets, &task.Failed, &task.Vulnerability); err != nil {
+			continue
+		}
+		list = append(list, task)
+	}
+
+	return list
 }
 
 // 根据taskid检索指纹扫描的结果

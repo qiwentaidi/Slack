@@ -16,32 +16,26 @@ const MenuList = [
             {
                 name: "aside.webscan",
                 path: "/Webscan", // 二级文件 .vue 的名称
-                icon: "/app/webscan.png"
             },
             {
                 name: "aside.dirscan",
                 path: "/Dirsearch",
-                icon: "/app/dirscan.png"
             },
             {
                 name: "aside.jsfinder",
                 path: "/JSFinder",
-                icon: "/app/extract.png"
             },
             {
                 name: "aside.exp",
                 path: "/Exploitation",
-                icon: "/app/target.png"
             },
             {
                 name: "aside.dumpall",
                 path: "/Dumpall",
-                icon: "/app/dropbox.png"
             },
             {
                 name: "aside.request",
                 path: "/Request",
-                icon: "/app/send.png"
             },
         ]
     },
@@ -53,17 +47,14 @@ const MenuList = [
             {
                 name: "aside.asset_from_company",
                 path: "/Company",
-                icon: "/app/company.png",
             },
             {
                 name: "aside.search_domain_info",
                 path: "/Domain",
-                icon: "/app/www.png"
             },
             {
                 name: "aside.isic",
                 path: "/ISICollection",
-                icon: "/app/internet.png"
             },
         ]
     },
@@ -75,27 +66,22 @@ const MenuList = [
             {
                 name: "aside.fofa",
                 path: "/FOFA",
-                icon: "/app/fofa.png"
             },
             {
                 name: "aside.hunter",
                 path: "/Hunter",
-                icon: "/app/hunter.ico"
             },
             {
                 name: "aside.360quake",
                 path: "/Quake",
-                icon: "/app/360.png"
             },
             {
                 name: "aside.polymerization",
                 path: "/Polymerization",
-                icon: "/app/polymerization.png"
             },
             {
                 name: "aside.agent_pool",
                 path: "/AgentPool",
-                icon: "/app/pool.png"
             },
         ]
     },
@@ -107,52 +93,42 @@ const MenuList = [
             {
                 name: "aside.cyberchef",
                 path: "/CyberChef",
-                icon: "/app/encrypt.png"
             },
             {
                 name: "aside.systeminfo",
                 path: "/System",
-                icon: "/app/virus.png"
             },
             {
                 name: "aside.data_handing",
                 path: "/DataHanding",
-                icon: "/app/data.png"
             },
             {
                 name: "aside.fscan",
                 path: "/Fscan",
-                icon: "/app/skull.png"
             },
             {
                 name: "aside.aksk",
                 path: "/AKSK",
-                icon: "/app/wechat.png"
             },
             {
                 name: "aside.extract_database_info",
                 path: "/ExtractDbInfo",
-                icon: "/app/database.png"
             },
             {
                 name: "aside.fileinfo",
                 path: "/FileContentRetrieval",
-                icon: "/app/searchfile.png"
             },
             {
                 name: "aside.data_comparison",
                 path: "/DataComparison",
-                icon: "/app/comparison.png"
             },
             {
                 name: "aside.timestamp",
                 path: "/Timestamp",
-                icon: "/app/timestamp.png"
             },
             {
                 name: "aside.memorandum",
                 path: "/Memo",
-                icon: "/app/memo.png"
             },
         ]
     },

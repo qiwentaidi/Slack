@@ -19,6 +19,7 @@
     "marked": "^14.0.0",
     "monaco-editor": "^0.52.0",
     "nanoid": "^5.0.7",
+    "echarts": "^5.5.0",
     "vite-svg-loader": "^5.1.0",
     "vue": "^3.2.37",
     "vue-i18n": "^9.9.0",

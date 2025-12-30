@@ -8,6 +8,11 @@ html.dark {
     --list-item-selected-color: #3B3B3B;
     --split-color: #262626;
     --collapse-border-color: #424242;
+    --risk-critical: #ff5a5a;  /* 深红 */
+    --risk-high: #ff7b7b;      /* 红 */
+    --risk-medium: #ffd666;    /* 黄 */
+    --risk-low: #5f9dff;       /* 蓝 */
+    --risk-info: #9fb4c9;      /* 信息 */
 
     .el-divider__text {
         background-color: #1E1E1E;

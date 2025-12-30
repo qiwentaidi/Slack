@@ -57,13 +57,16 @@ func main() {
 			&core.Tools{},
 		},
 		Mac: &mac.Options{
-			TitleBar:            mac.TitleBarHiddenInset(),
-			WindowIsTranslucent: true,
+			TitleBar: &mac.TitleBar{
+				TitlebarAppearsTransparent: true,
+				HideTitle:                  true,
+				HideTitleBar:               true,
+				FullSizeContent:            true,
+			},
 		},
 		Windows: &windows.Options{
 			WebviewBrowserPath: "", // 可以让windows使用默认浏览器打开链接
 		},
-		Frameless: rt.GOOS != "darwin",
 	})
 	if err != nil {
 		println("Error:", err.Error())
