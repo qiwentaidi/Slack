@@ -894,10 +894,29 @@ async function showPocDetail(filename: string) {
     if (!form.showYamlPoc) {
         return
     }
-    let filepath = global.PATH.homedir + "/slack/config/pocs/" + filename + ".yaml"
+    const defaultPath = await FilepathJoin([global.PATH.homedir, "slack", "config", "pocs", `${filename}.yaml`])
+    let filepath = defaultPath
     let isStat = await CheckFileStat(filepath)
+    if (!isStat && global.webscan.append_pocfile) {
+        filepath = await FilepathJoin([global.webscan.append_pocfile, `${filename}.yaml`])
+        isStat = await CheckFileStat(filepath)
+    }
     if (!isStat) {
-        filepath = global.webscan.append_pocfile + "/" + filename + ".yaml"
+        // 尝试扫描已知目录
+        const paths: string[] = []
+        const base = await FilepathJoin([global.PATH.homedir, "slack", "config", "pocs"])
+        paths.push(base)
+        if (global.webscan.append_pocfile) paths.push(global.webscan.append_pocfile)
+        const files = await List(paths)
+        const match = files.find(f => f.BaseName === `${filename}.yaml` || f.BaseName.replace(/\.ya?ml$/i, "") === filename)
+        if (match) {
+            filepath = match.Path
+            isStat = true
+        }
+    }
+    if (!isStat) {
+        form.pocContent = "未找到对应的 POC 文件"
+        return
     }
     let file = await ReadFile(filepath)
     form.pocContent = file.Content

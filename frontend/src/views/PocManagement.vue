@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, nextTick, toRaw, computed, shallowRef } from 'vue';
 import { Search, CirclePlusFilled, Delete, DocumentCopy, Reading, CollectionTag } from "@element-plus/icons-vue";
-import { CheckFileStat, ReadFile, RemoveFile, SaveFileDialog, WriteFile } from 'wailsjs/go/services/File';
+import { CheckFileStat, ReadFile, RemoveFile, SaveFileDialog, WriteFile, FilepathJoin, List } from 'wailsjs/go/services/File';
 import global from '@/stores';
 import { FingerprintList, GetFingerPocMap } from 'wailsjs/go/services/App';
 import { Copy } from '@/util';
@@ -43,6 +43,7 @@ onMounted(async () => {
         option => !global.webscan.highlight_fingerprints.includes(option.value)
     );
 
+    await buildPocPathMap();
 });
 
 const pagination = usePagination<PocDetail>(20)
@@ -81,6 +82,25 @@ const selectHighlightFinger = ref<string[]>([])
 
 const fingerOptions = ref<{ label: string, value: string }[]>([])
 var highlightFingerOptions = ref<{ label: string, value: string }[]>([])
+
+async function buildPocPathMap() {
+    const paths: string[] = []
+    const defaultPath = await FilepathJoin([global.PATH.homedir, "slack", "config", "pocs"])
+    paths.push(defaultPath)
+    if (global.webscan.append_pocfile) {
+        paths.push(global.webscan.append_pocfile)
+    }
+    const files = await List(paths)
+    const map: Record<string, string> = {}
+    files.forEach(file => {
+        if (!file.Path.endsWith(".yaml")) return
+        const base = file.BaseName
+        const key = base.replace(/\.ya?ml$/i, "")
+        map[key] = file.Path
+        map[base] = file.Path
+    })
+    pocPathMap.value = map
+}
 
 function deletePoc(pocName: string) {
     ElMessageBox.confirm(
@@ -167,14 +187,21 @@ function handleMount(editorInstance: any) {
 const detailDialog = ref(false)
 const content = ref('')
 const currentFilepath = ref(""); // 记录当前被编辑的文件路径，方便后续保存时调用
+const pocPathMap = ref<Record<string, string>>({});
 
 async function readPocFile(filename: string) {
     detailDialog.value = true
     isModified.value = false
-    let filepath = global.PATH.homedir + "/slack/config/pocs/" + filename + ".yaml"
+    const lookup = pocPathMap.value[filename] || pocPathMap.value[`${filename}.yaml`]
+    const defaultPath = await FilepathJoin([global.PATH.homedir, "slack", "config", "pocs", `${filename}.yaml`])
+    let filepath = lookup || defaultPath
     let isStat = await CheckFileStat(filepath)
-    if (!isStat) {
-        filepath = global.webscan.append_pocfile + "/" + filename + ".yaml"
+    if (!isStat && global.webscan.append_pocfile) {
+        filepath = await FilepathJoin([global.webscan.append_pocfile, `${filename}.yaml`])
+        isStat = await CheckFileStat(filepath)
+    }
+    if (!isStat && lookup) {
+        filepath = lookup
     }
     currentFilepath.value = filepath
     let file = await ReadFile(filepath)
