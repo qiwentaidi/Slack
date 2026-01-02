@@ -67,6 +67,7 @@ func main() {
 		Windows: &windows.Options{
 			WebviewBrowserPath: "", // 可以让windows使用默认浏览器打开链接
 		},
+		Frameless: rt.GOOS != "darwin", // 屏蔽windows/linux原生标题栏
 	})
 	if err != nil {
 		println("Error:", err.Error())
