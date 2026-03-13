@@ -13,6 +13,11 @@
 <a href="https://github.com/qiwentaidi/Slack/wiki">支持平台/运行代码</a>
 </p>
 
+
+> [!NOTE]
+>
+> 目前该工具维护率会下降，目前做了一个Web增强版，可以带来全新的界面以及更好的体验 https://github.com/qiwentaidi/Hephaestus
+
 ## 网站扫描
 
 目前内置8500+指纹，3400+POC，引擎使用的Nuclei v3，得益于Nulcei强大的社区及丰富的POC易用可扩展，以及多种格式报告导出。
