@@ -471,6 +471,7 @@ type Results struct {
 	URL      string
 	Host     string
 	Title    string
+	Fid      string
 	IP       string
 	Port     string
 	Domain   string

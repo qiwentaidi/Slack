@@ -566,13 +566,13 @@ func (a *App) FofaTips(query string) *structs.TipsResult {
 	return &ts
 }
 
-func (a *App) FofaSearch(query, pageSzie, pageNum, address, email, key string, fraud, cert bool) *structs.FofaSearchResult {
+func (a *App) FofaSearch(query, pageSzie, pageNum, address, email, key string, fraud, cert, withFid bool) *structs.FofaSearchResult {
 	config := space.NewFofaConfig(&structs.FofaAuth{
 		Address: address,
 		Email:   email,
 		Key:     key,
 	})
-	return config.FofaApiSearch(a.ctx, query, pageSzie, pageNum, fraud, cert)
+	return config.FofaApiSearch(a.ctx, query, pageSzie, pageNum, fraud, cert, withFid)
 }
 
 func (a *App) Socks5Conn(ip string, port, timeout int, username, password, aliveURL string) bool {

@@ -371,6 +371,12 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 		result := Scan(s.ctx, ti, fp.Fpe)
 
 		if (len(result) > 0 && ti.StatusCode != 404) || arrayutil.ArrayContains("ThinkPHP", result) {
+			var screenshotPath string
+			if s.screenshot && (fp.URL.Scheme == "https" || fp.URL.Scheme == "http") {
+				if screenshotPath, err = GetScreenshot(fullURL); err != nil {
+					gologger.Debug(s.ctx, err)
+				}
+			}
 			s.mutex.Lock()
 			s.basicURLWithFingerprint[fp.URL.String()] = append(s.basicURLWithFingerprint[fp.URL.String()], result...)
 			s.mutex.Unlock()
@@ -386,6 +392,7 @@ func (s *FingerScanner) ActiveFingerScan(ctrlCtx context.Context) {
 				Port:         ti.Port,
 				Scheme:       fp.URL.Scheme,
 				Host:         fp.URL.Host,
+				Screenshot:   screenshotPath,
 			}
 		}
 	})

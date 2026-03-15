@@ -1540,3 +1540,4 @@ export namespace structs {
 	}
 
 }
+

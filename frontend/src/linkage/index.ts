@@ -26,7 +26,7 @@ export async function LinkFOFA(query: string, count: number) {
         return
     }
     ElMessage.info("正在查询FOFA数据，请稍后...")
-    let result = await FofaSearch(query, count.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true)
+    let result = await FofaSearch(query, count.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, true, true, false)
     if (result.Error) {
         ElMessage.warning(result.Message)
         return

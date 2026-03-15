@@ -30,7 +30,7 @@ func Uncover(ctx context.Context, query, types string, o structs.SpaceOption) []
 			Email:   o.FofaEmail,
 			Key:     o.FofaKey,
 		})
-		fs := config.FofaApiSearch(ctx, FormatQuery("fofa", types, query), "1000", "1", false, false)
+		fs := config.FofaApiSearch(ctx, FormatQuery("fofa", types, query), "1000", "1", false, false, false)
 		gologger.Info(ctx, fmt.Sprintf("[uncover] fofa %d results", fs.Size))
 		for _, r := range fs.Results {
 			results = append(results, Result{

@@ -42,8 +42,8 @@ export function FingerprintList() {
   return window['go']['services']['App']['FingerprintList']();
 }
 
-export function FofaSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-  return window['go']['services']['App']['FofaSearch'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+export function FofaSearch(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) {
+  return window['go']['services']['App']['FofaSearch'](arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 }
 
 export function FofaTips(arg1) {

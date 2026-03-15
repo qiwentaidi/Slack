@@ -25,7 +25,7 @@ export function FetchCompanyInfo(arg1:string,arg2:number,arg3:structs.DataSource
 
 export function FingerprintList():Promise<Array<string>>;
 
-export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean):Promise<structs.FofaSearchResult>;
+export function FofaSearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:boolean,arg8:boolean,arg9:boolean):Promise<structs.FofaSearchResult>;
 
 export function FofaTips(arg1:string):Promise<structs.TipsResult>;
 
