@@ -1,568 +1,821 @@
-<script lang="ts" setup>
-import { h, reactive } from "vue";
-import { IpLocation } from "wailsjs/go/services/App";
-import { User, Location, Cellphone, Postcard, Upload, CloseBold, Unlock } from "@element-plus/icons-vue";
-import alibabaIcon from "@/assets/icon/alibaba.svg";
-import onlineIcon from "@/assets/icon/online.svg";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { regexpIdCard, regexpPhone, validateSingleIP } from "@/stores/validate";
-import ContextMenu from '@imengyu/vue3-context-menu'
-import { defaultIconSize } from "@/stores/style";
-import { CheckFileStat, FileDialog, ReadFile, SaveToTempFile } from "wailsjs/go/services/File";
-import { ExtractAlibabaDruidWebSession, ExtractAlibabaDruidWebURI, ExtractIP, ExtractURLs } from "wailsjs/go/core/Tools";
+<script setup lang="ts">
+import { computed, reactive, ref, watch } from "vue";
+import { CloseBold, CopyDocument, Delete, DocumentAdd, FolderOpened } from "@element-plus/icons-vue";
+import { ElMessage } from "element-plus";
 import CustomTextarea from "@/components/CustomTextarea.vue";
-import { ProcessTextAreaInput } from "@/util";
-import async from "async";
+import { Copy } from "@/util";
+import { CheckFileStat, FileDialog, ReadFile } from "wailsjs/go/services/File";
+import { codecCategories, codecOperations, codecOperationMap, createAddedCodecOperation, runCodecPipeline, type AddedCodecOperation, type OperationMode } from "@/lib/codec";
 
-let content = "" // 实际要处理的内容
+type CodecWorkspaceTab = {
+    id: string;
+    title: string;
+    search: string;
+    input: string;
+    output: string;
+    tips: string;
+    running: boolean;
+    steps: AddedCodecOperation[];
+};
 
-const form = reactive({
+let runToken = 0;
+let tabCounter = 1;
+
+const createWorkspaceTab = (): CodecWorkspaceTab => ({
+    id: `codec-tab-${Date.now()}-${tabCounter}`,
+    title: `标签 ${tabCounter++}`,
+    search: "",
     input: "",
-    result: "",
-    dedupSplit: "",
-    tips: "",
+    output: "",
+    tips: "选择左侧操作后会按顺序处理输入内容，可叠加多步流水线。",
+    running: false,
+    steps: [],
 });
 
-async function uploadFile() {
-    let filepath = await FileDialog("");
-    if (!filepath) return
-    form.input = `{{file://${filepath}}}`
-}
+const tabs = reactive<CodecWorkspaceTab[]>([createWorkspaceTab()]);
+const activeTabId = ref(tabs[0].id);
+const currentTab = computed(() => tabs.find((tab) => tab.id === activeTabId.value) || tabs[0]);
 
-async function processInput() {
-    if (form.input.length == 0) {
-        ElMessage.warning({
-            message: "请输入待处理的内容或者文件",
-            grouping: true,
-        })
-        return false
-    }
-    if (form.input.startsWith("{{file://") && form.input.endsWith("}}")) {
-        let filepath = form.input.replaceAll("{{file://", "")
-        filepath = filepath.replaceAll("}}", "")
-        let isStat = await CheckFileStat(filepath)
-        if (!isStat) {
-            ElMessage.warning('文件不存在!')
-            return false
-        }
-        let file = await ReadFile(filepath)
-        content = file.Content
-        return true
-    }
-    content = form.input
-    return true
-}
+const expandedCategories = ref(codecCategories.map((item) => item.id));
+const draggingLibraryOp = ref<{ operationId: string; mode: OperationMode } | null>(null);
+const draggingStepIndex = ref<number | null>(null);
+const flowDropIndex = ref<number | null>(null);
 
-function handlePaste(event: any) {
-    const clipboardData = event.clipboardData
-    const pastedData = clipboardData.getData('Text');
-    if (pastedData.length > 100 * 1024) { // 检查输入内容是否大于100KB
-        event.preventDefault(); // 阻止输入
-        ElMessageBox.confirm('粘贴的内容过长，是已转换为临时文件存储？', '提示', {
-            type: 'warning',
-        }).then(async () => {
-            let tempfile = await SaveToTempFile(pastedData)
-            form.input = `{{file://${tempfile}}}`; // 更新文本框内容为文件路径
-        });
-    }
-}
+const filteredOperations = computed(() => {
+    const query = currentTab.value.search.trim().toLowerCase();
+    if (!query) return codecOperations;
+    return codecOperations.filter((item) =>
+        item.name.toLowerCase().includes(query) || item.description.toLowerCase().includes(query)
+    );
+});
 
-function deduplication(input: string) {
-    processInput().then(isSuccess => {
-        if (!isSuccess) {
-            return
+const groupedOperations = computed(() =>
+    codecCategories.map((category) => ({
+        ...category,
+        operations: filteredOperations.value.filter((item) => item.category === category.id),
+    }))
+);
+
+const resolveInputContent = async () => {
+    const raw = currentTab.value.input.trim();
+    if (!raw) {
+        throw new Error("请输入待处理的内容或者文件");
+    }
+    if (raw.startsWith("{{file://") && raw.endsWith("}}")) {
+        let filepath = raw.replace("{{file://", "").replace("}}", "");
+        const exists = await CheckFileStat(filepath);
+        if (!exists) {
+            throw new Error("文件不存在");
         }
-        let lines = [] as string[];
-        if (input == null) {
-            lines = content.split(/[(\r\n)\r\n]+/); // 根据换行或者回车进行识别
-        } else {
-            lines = content.split(form.dedupSplit);
+        const file = await ReadFile(filepath);
+        return file.Content || "";
+    }
+    return currentTab.value.input;
+};
+
+const executePipeline = async () => {
+    const targetTab = currentTab.value;
+    const currentToken = ++runToken;
+    targetTab.running = true;
+    try {
+        const input = await resolveInputContent();
+        const output = await runCodecPipeline(input, targetTab.steps);
+        if (currentToken !== runToken) return;
+        targetTab.output = output;
+        targetTab.tips = targetTab.steps.length ? `执行完成，共运行 ${targetTab.steps.length} 个步骤` : "没有添加步骤，结果保持原始输入";
+    } catch (error) {
+        if (currentToken !== runToken) return;
+        targetTab.output = "";
+        targetTab.tips = error instanceof Error ? error.message : "执行失败";
+        ElMessage.warning(targetTab.tips);
+    } finally {
+        if (currentToken === runToken) {
+            targetTab.running = false;
         }
-        lines = lines.filter((item) => item.trim() !== ""); // 删除空项并去除左右空格
-        let uniqueArray = Array.from(new Set(lines));
-        if (lines.length === uniqueArray.length) {
-            ElMessage.info({
-                message: "不存在重复数据",
-                grouping: true,
-            });
+    }
+};
+
+const hasRunnableInput = computed(() => {
+    const raw = currentTab.value.input.trim();
+    return Boolean(raw);
+});
+
+watch(
+    () => [activeTabId.value, currentTab.value.input, JSON.stringify(currentTab.value.steps)],
+    () => {
+        if (!hasRunnableInput.value) {
+            currentTab.value.output = "";
+            currentTab.value.running = false;
             return;
         }
-        form.tips = `已去重数据${lines.length - uniqueArray.length}条`,
-        form.result = uniqueArray.join("\n");
-    })
-}
+        executePipeline();
+    },
+    { deep: true }
+);
 
-function getDomains() {
-    processInput().then(async isSuccess => {
-        if (!isSuccess) {
-            return
-        }
-        const urls = await ExtractURLs(content);
-        const uniqueArray = Array.from(new Set(urls))
-        const domains = uniqueArray
-            .map((url: string) => {
-                try {
-                    const parsedUrl = new URL(url);
-                    return parsedUrl.hostname;
-                } catch (e) {
-
-                }
-            })
-            .filter((domain) => domain); // 过滤掉空字符串
-        form.result = domains.join("\n");
-        form.tips = `共提取 ${domains.length} 个结果`
-    })
-}
-
-function getURLs() {
-    processInput().then(async isSuccess => {
-        if (!isSuccess) {
-            return
-        }
-        const urls = await ExtractURLs(content);
-        const uniqueArray = Array.from(new Set(urls))
-        form.result = uniqueArray.join("\n");
-        form.tips = `共提取 ${uniqueArray.length} 个结果`
-    })
-}
-
-function getPhoneNumbers() {
-    processInput().then(isSuccess => {
-        if (!isSuccess) {
-            return
-        }
-        const phoneNumbers = content.match(regexpPhone) || [];
-        const uniqueArray = Array.from(new Set(phoneNumbers))
-        form.result = uniqueArray.join("\n");
-        form.tips = `共提取 ${uniqueArray.length} 个结果`
-    })
-}
-
-function getIdCards() {
-    processInput().then(isSuccess => {
-        if (!isSuccess) {
-            return
-        }
-        const idcards = content.match(regexpIdCard) || [];
-        const uniqueArray = Array.from(new Set(idcards))
-        form.result = uniqueArray.join("\n");
-        form.tips = `共提取 ${uniqueArray.length} 个结果`
-    })
-}
-
-function getAlibabaDruidWebURI() {
-    processInput().then(async isSuccess => {
-        if (!isSuccess) {
-            return
-        }
-        const uris = await ExtractAlibabaDruidWebURI(content);
-        form.result = uris.join("\n");
-        form.tips = `共提取 ${uris.length} 个结果`
-    })
-}
-
-function getAlibabaDruidWebSession() {
-    processInput().then(async isSuccess => {
-        if (!isSuccess) {
-            return
-        }
-        const sessions = await ExtractAlibabaDruidWebSession(content);
-        form.result = sessions.join("\n");
-        form.tips = `共提取 ${sessions.length} 个结果`
-    })
-}
-
-// 帆软v8解密
-const PASSWORD_MASK_ARRAY: number[] = [19, 78, 10, 15, 100, 213, 43, 23]; // 掩码
-
-function decryptWinSCPIniContent(iniContent: string) {
-    const WSCP_SIMPLE_MAGIC = 0xA3;
-    const WSCP_SIMPLE_STRING = '0123456789ABCDEF';
-    const WSCP_SIMPLE_FLAG = 0xFF;
-    const WSCP_SIMPLE_INTERNAL = 0x00;
-    let WSCP_CHARS = [];
-
-    function _simple_decrypt_next_char() {
-        if (WSCP_CHARS.length == 0) {
-            return WSCP_SIMPLE_INTERNAL;
-        }
-
-        const a = WSCP_SIMPLE_STRING.indexOf(WSCP_CHARS.shift());
-        const b = WSCP_SIMPLE_STRING.indexOf(WSCP_CHARS.shift());
-
-        return WSCP_SIMPLE_FLAG & ~(((a << 4) + b << 0) ^ WSCP_SIMPLE_MAGIC);
+const addOperation = (operationId: string, mode: OperationMode, index?: number) => {
+    const step = createAddedCodecOperation(operationId, mode);
+    if (!step) return;
+    if (typeof index === "number") {
+        currentTab.value.steps.splice(index, 0, step);
+        return;
     }
+    currentTab.value.steps.push(step);
+};
 
-    function decrypt(username: string, hostname: string, encodedPassword: string) {
-        if (!encodedPassword.match(/[A-F0-9]+/)) {
-            return '';
-        }
+const removeOperation = (index: number) => {
+    currentTab.value.steps.splice(index, 1);
+};
 
-        const result = [];
-        const key = [username, hostname].join('');
+const updateOption = (step: AddedCodecOperation, key: string, value: string) => {
+    step.options[key] = value;
+};
 
-        WSCP_CHARS = encodedPassword.split('');
+const uploadFile = async () => {
+    const filepath = await FileDialog("");
+    if (!filepath) return;
+    currentTab.value.input = `{{file://${filepath}}}`;
+};
 
-        const flag = _simple_decrypt_next_char();
-        let length;
+const resetAll = () => {
+    currentTab.value.input = "";
+    currentTab.value.output = "";
+    currentTab.value.steps = [];
+    currentTab.value.tips = "已清空输入、输出和流水线";
+};
 
-        if (flag == WSCP_SIMPLE_FLAG) {
-            _simple_decrypt_next_char();
-            length = _simple_decrypt_next_char();
-        } else {
-            length = flag;
-        }
+const clearPipeline = () => {
+    currentTab.value.steps = [];
+};
 
-        WSCP_CHARS = WSCP_CHARS.slice(_simple_decrypt_next_char() * 2);
+const startLibraryDrag = (operationId: string, mode: OperationMode) => {
+    draggingLibraryOp.value = {
+        operationId,
+        mode,
+    };
+    draggingStepIndex.value = null;
+};
 
-        for (let i = 0; i < length; i++) {
-            result.push(String.fromCharCode(_simple_decrypt_next_char()));
-        }
+const startStepDrag = (index: number) => {
+    draggingStepIndex.value = index;
+    draggingLibraryOp.value = null;
+};
 
-        if (flag == WSCP_SIMPLE_FLAG) {
-            const valid = result.slice(0, key.length).join('');
+const clearDragState = () => {
+    draggingLibraryOp.value = null;
+    draggingStepIndex.value = null;
+    flowDropIndex.value = null;
+};
 
-            if (valid != key) {
-                return '';
-            } else {
-                return result.slice(key.length).join('');
-            }
-        }
+const setFlowDropIndex = (index: number) => {
+    flowDropIndex.value = index;
+};
 
-        return result.join('');
+const handleFlowDrop = () => {
+    if (draggingLibraryOp.value) {
+        addOperation(draggingLibraryOp.value.operationId, draggingLibraryOp.value.mode, flowDropIndex.value ?? currentTab.value.steps.length);
+        clearDragState();
+        return;
     }
-
-    const sessions = iniContent.split('\n[').filter(session => session.startsWith('Sessions\\'));
-    const decodedSessions = sessions.map(session => {
-        const sessionName = decodeURIComponent(session.split(']')[0].replace('Sessions\\', ''));
-        const usernameLine = session.split('\n').find(line => line.startsWith('UserName='));
-        const hostnameLine = session.split('\n').find(line => line.startsWith('HostName='));
-        const passwordLine = session.split('\n').find(line => line.startsWith('Password='));
-
-        if (usernameLine && hostnameLine && passwordLine) {
-            const username = usernameLine.split('=')[1].trim();
-            const hostname = hostnameLine.split('=')[1].trim();
-            const encodedPassword = passwordLine.split('=')[1].trim();
-            const decodedPassword = decrypt(username, hostname, encodedPassword);
-            return {
-                session: sessionName,
-                username,
-                hostname,
-                decodedPassword: decodedPassword || '解密失败'
-            };
-        }
-        return {
-            session: sessionName,
-            decodedPassword: '密码未找到'
-        };
-    });
-
-    return decodedSessions;
-}
-
-/**
- * 将包含整数列表和有效字节数信息的字典数据转换为字符串，用于处理在断点调试时无法找到字符串密钥，只有字典数据时使用
- */
-function dataDictConvertToString(dataDict: { words: number[]; sigBytes: number }): string {
-    const { words, sigBytes } = dataDict;
-    // 验证有效字节数是否合理
-    if (sigBytes < 0) {
-        return "有效字节数不能为负数，转换操作无法进行。";
+    if (draggingStepIndex.value === null) return;
+    const from = draggingStepIndex.value;
+    const rawTarget = flowDropIndex.value ?? currentTab.value.steps.length;
+    const target = rawTarget > from ? rawTarget - 1 : rawTarget;
+    if (target === from || target < 0 || target > currentTab.value.steps.length - 1) {
+        clearDragState();
+        return;
     }
+    const [item] = currentTab.value.steps.splice(from, 1);
+    currentTab.value.steps.splice(target, 0, item);
+    clearDragState();
+};
 
-    let byteSequence: Uint8Array;
-    try {
-        // 将 "words" 数组转化为字节序列
-        const buffer = new ArrayBuffer(words.length * 4);
-        const dataView = new DataView(buffer);
+const handleDropOutsideFlow = () => {
+    if (draggingStepIndex.value === null) return;
+    currentTab.value.steps.splice(draggingStepIndex.value, 1);
+    clearDragState();
+};
 
-        words.forEach((num, index) => {
-            dataView.setUint32(index * 4, num, false); // Big-endian (network byte order)
-        });
+const useOutputAsInput = () => {
+    if (!currentTab.value.output) return;
+    currentTab.value.input = currentTab.value.output;
+    currentTab.value.tips = "已将结果写回输入区";
+};
 
-        byteSequence = new Uint8Array(buffer);
+const addTab = () => {
+    const tab = createWorkspaceTab();
+    tabs.push(tab);
+    activeTabId.value = tab.id;
+};
 
-        // 截取实际有效字节数
-        if (sigBytes > byteSequence.length) {
-            form.tips = "指定的有效字节数超过了实际生成字节序列的长度，将按实际长度截取。"
-            byteSequence = byteSequence.slice(0, byteSequence.length);
-        } else {
-            byteSequence = byteSequence.slice(0, sigBytes);
-        }
-        // 将字节序列转化为字符串
-        return new TextDecoder("utf-8").decode(byteSequence);
-    } catch (error) {
-        if (error instanceof RangeError) {
-            return `在将整数转换为字节序列时出现错误: ${error.message}`
-        } else if (error instanceof TypeError) {
-
-            return "字节序列无法按照UTF-8编码进行解码，请检查数据来源和编码格式！"
-        } else {
-            return "发生了未知错误：" + error
-        }
+const removeTab = (targetId: string) => {
+    if (tabs.length === 1) {
+        resetAll();
+        return;
     }
-}
-
-function parseDataDict(input: string): { words: number[]; sigBytes: number } | string {
-    /**
-     * 解析前端传入的字符串形式的 dataDict
-     * 并验证其格式是否符合要求
-     */
-    try {
-        // 尝试解析 JSON 字符串
-        const parsed = JSON.parse(input);
-
-        // 检查是否包含所需的 "words" 和 "sigBytes" 字段
-        if (
-            !Array.isArray(parsed.words) ||
-            typeof parsed.sigBytes !== "number"
-        ) {
-            return "输入数据的结构不正确，应包含 'words' 数组和 'sigBytes' 数字。"
-        }
-
-        // 验证 "words" 的每个值是否为有效整数
-        for (const num of parsed.words) {
-            if (!Number.isInteger(num)) {
-                return "'words' 数组中包含无效的整数值。"
-            }
-        }
-
-        // 验证 "sigBytes" 是否为非负整数
-        if (parsed.sigBytes < 0) {
-            return "'sigBytes' 必须是非负整数。"
-        }
-
-        return {
-            words: parsed.words,
-            sigBytes: parsed.sigBytes,
-        };
-    } catch (error) {
-        return "解析失败：" + error.message
+    const index = tabs.findIndex((tab) => tab.id === targetId);
+    if (index < 0) return;
+    tabs.splice(index, 1);
+    if (activeTabId.value === targetId) {
+        activeTabId.value = tabs[Math.max(0, index - 1)]?.id || tabs[0].id;
     }
-}
+};
 
-function handleContextMenu(e: MouseEvent) {
-    //prevent the browser's default menu
-    e.preventDefault();
-    //show our menu
-    ContextMenu.showContextMenu({
-        x: e.x,
-        y: e.y,
-        items: [
-            {
-                label: "Alibaba Druid",
-                icon: h(alibabaIcon, defaultIconSize),
-                children: [
-                    {
-                        label: "提取WebURI",
-                        onClick: () => {
-                            getAlibabaDruidWebURI()
-                        }
-                    },
-                    {
-                        label: "提取WebSession",
-                        onClick: () => {
-                            getAlibabaDruidWebSession()
-                        }
-                    },
-                ]
-            },
-            {
-                label: "网络信息",
-                icon: h(onlineIcon, defaultIconSize),
-                children: [
-                    {
-                        label: "提取IP",
-                        onClick: () => {
-                            processInput().then(isSuccess => {
-                                if (!isSuccess) {
-                                    return
-                                }
-                                ExtractIP(content).then((result) => {
-                                    form.result = result;
-                                });
-                            })
+const handleTabEdit = (targetName: string | number | undefined, action: "add" | "remove") => {
+    if (action === "add") {
+        addTab();
+        return;
+    }
+    if (action === "remove" && typeof targetName === "string") {
+        removeTab(targetName);
+    }
+};
 
-                        }
-                    },
-                    {
-                        label: "提取URL",
-                        onClick: () => {
-                            getURLs();
-                        }
-                    },
-                    {
-                        label: "提取URL中的域名",
-                        divided: true,
-                        onClick: () => {
-                            getDomains();
-                        }
-                    },
-                    {
-                        label: "IP定位查询",
-                        icon: h(Location, defaultIconSize),
-                        onClick: () => {
-                            processInput().then(isSuccess => {
-                                if (!isSuccess) {
-                                    return
-                                }
-                                let lines = ProcessTextAreaInput(content);
-                                let ips = [] as string[]
-                                for (const line of lines) {
-                                    if (validateSingleIP(line)) ips.push(line)
-                                }
-                                
-                                const uniqueArray = Array.from(new Set(ips))
-                                form.result = "";
-                                async.eachLimit(ips, 20, async (ip: string, callback: () => void) => {
-                                    let result = await IpLocation(ip);
-                                    form.result += `${ip}  |  ${result}\n`;
-                                });
-                                form.tips = `共定位了 ${uniqueArray.length} 个结果`
-                            })         
-                        }
-                    },
-                ]
-            },
-            {
-                label: "个人敏感信息",
-                icon: h(User, defaultIconSize),
-                children: [
-                    {
-                        label: "提取手机号",
-                        icon: h(Cellphone, defaultIconSize),
-                        onClick: () => {
-                            getPhoneNumbers()
-                        }
-                    },
-                    {
-                        label: "提取身份证",
-                        icon: h(Postcard, defaultIconSize),
-                        onClick: () => {
-                            getIdCards()
-                        }
-                    },
-                ]
-            },
-            {
-                label: "密码解密",
-                icon: h(Unlock, defaultIconSize),
-                divided: true,
-                children: [
-                    {
-                        label: "WinSCP - WinSCP.ini",
-                        onClick: async () => {
-                            if (! await processInput()) {
-                                return
-                            }
-                            const decodedSessions = decryptWinSCPIniContent(content);
-                            form.result = decodedSessions.map(session =>
-                                `Session: ${session.session}\nUsername: ${session.username}\nHostname: ${session.hostname}\nPassword: ${session.decodedPassword}\n`
-                            ).join('\n');
-                            if (decodedSessions.length === 0) {
-                                form.result = "WinSCP - WinSCP.ini 解密失败，请输入完整的WinSCP.ini内容"
-                                return
-                            }
-                            form.tips = `解密完成，共处理 ${decodedSessions.length} 个会话`;
-                        }
-                    },
-                    {
-                        label: "Finereport v8 - privilege.xml",
-                        onClick: async () => {
-                            if (! await processInput()) {
-                                return
-                            }
-                            if (content.length <= 3) {
-                                form.result = "Finereport v8 - privilege.xml 解密失败，密码示例: ___0072002a00670066000a"
-                                return
-                            }
-                            let result = ""
-                            let temp = content.substring(3); // 截断三位后
-                            for (let i = 0; i < temp.length / 4; i++) {
-                                let c1: number = parseInt(temp.substring(i * 4, (i + 1) * 4), 16);
-                                let c2: number = c1 ^ PASSWORD_MASK_ARRAY[i % 8];
-                                result += String.fromCharCode(c2);
-                            }
-                            form.result = result;
-                            form.tips = `解密成功`
-                        }
-                    },
-                    {
-                        label: "Seeyon OA - datasourceCtp.properties",
-                        divided: true,
-                        onClick: async () => {
-                            if (! await processInput()) {
-                                return
-                            }
-                            let pass = content.replace(/\//g, "");
-                            let p = pass.split(".0");
-                            if (p.length <= 1) {
-                                form.result = "Seeyon OA - datasourceCtp.properties 解密失败，密码示例: /1.0/UWJ0dHgxc2U="
-                                return
-                            }
-                            let result = ""
-                            let iv = parseInt(p[0]);
-                            let password = atob(p[1]);
-                            for (let i = 0; i < password.length; i++) {
-                                let char = password.charCodeAt(i);
-                                result += String.fromCharCode(char - iv);
-                            }
-                            form.result = result;
-                            form.tips = `解密成功`
-                        }
-                    },
-                    {
-                        label: "AES | DES json key to string",
-                        onClick: async () => {
-                            if (! await processInput()) {
-                                return
-                            }
-                            let result = parseDataDict(content)
-                            if (typeof result === "string") {
-                                form.result = result
-                                form.result += "\n\n" + `示例数据(是否换行无所谓是JSON就行):\n {"words": [1161312566,808858179,892351288,1145124405], "sigBytes": 16}`
-                                return
-                            }
-                            form.result = dataDictConvertToString(result)
-                        }
-                    }
-                ]
-            },
-            {
-                label: "数据去重",
-                onClick: () => {
-                    ElMessageBox.prompt('在此处输入分隔字符后会将数据转换成数组然后去重，不输入默认按换行去重', '数据去重', {
-                        confirmButtonText: '去重',
-                    })
-                        .then(({ value }) => {
-                            deduplication(value)
-                        })
-                }
-            }
-        ],
-    });
-}
-
-const code = `请输入内容，大文本内容会转换成特定的文件形式处理，输出处理等功能通过右键菜单进行调用
-
-druid数据提取需要输出响应包内容
-`
+const stepName = (step: AddedCodecOperation) => codecOperationMap.get(step.operationId)?.name || step.operationId;
+const stepOptions = (step: AddedCodecOperation) => codecOperationMap.get(step.operationId)?.options || [];
 </script>
 
 <template>
-    <div class="textarea-container mb-10px">
-        <el-input v-model="form.input" type="textarea" :rows="12" :placeholder="code"
-            @contextmenu.stop.prevent="handleContextMenu" @paste="handlePaste"></el-input>
-        <el-space class="action-area">
-            <el-button :icon="Upload" size="small" @click="uploadFile">Upload</el-button>
-            <el-button :icon="CloseBold" size="small" @click="form.input = ''"></el-button>
-        </el-space>
+    <div class="codec-page">
+        <div class="workspace-tabs">
+            <el-tabs v-model="activeTabId" type="card" editable @edit="handleTabEdit">
+                <el-tab-pane v-for="tab in tabs" :key="tab.id" :name="tab.id" :label="tab.title" :closable="tabs.length > 1" />
+            </el-tabs>
+        </div>
+
+        <el-splitter class="workspace-splitter">
+            <el-splitter-panel
+                size="20%"
+                min="240px"
+                class="pane panel-surface library-panel"
+                :class="{ 'drop-delete-target': draggingStepIndex !== null }"
+                @dragover.prevent="draggingStepIndex !== null"
+                @drop.prevent="handleDropOutsideFlow"
+            >
+                <div class="library-body">
+                    <div class="library-search">
+                        <el-input v-model="currentTab.search" placeholder="搜索操作..." clearable />
+                    </div>
+
+                    <div class="library-list">
+                        <el-collapse v-model="expandedCategories" class="op-groups">
+                            <el-collapse-item
+                                v-for="group in groupedOperations"
+                                :key="group.id"
+                                :name="group.id"
+                                v-show="group.operations.length > 0"
+                            >
+                                <template #title>
+                                    <div class="group-title">
+                                        <span>{{ group.name }}</span>
+                                        <el-tag size="small" effect="plain">{{ group.operations.length }}</el-tag>
+                                    </div>
+                                </template>
+
+                                <div class="op-list compact">
+                                    <article
+                                        v-for="operation in group.operations"
+                                        :key="operation.id"
+                                        class="op-row clickable"
+                                        :draggable="Boolean(operation.transform || (operation.encode && !operation.decode) || (!operation.encode && operation.decode))"
+                                        @click="operation.transform ? addOperation(operation.id, 'transform') : operation.encode && !operation.decode ? addOperation(operation.id, 'encode') : !operation.encode && operation.decode ? addOperation(operation.id, 'decode') : undefined"
+                                        @dragstart="
+                                            operation.transform
+                                                ? startLibraryDrag(operation.id, 'transform')
+                                                : operation.encode && !operation.decode
+                                                  ? startLibraryDrag(operation.id, 'encode')
+                                                  : !operation.encode && operation.decode
+                                                    ? startLibraryDrag(operation.id, 'decode')
+                                                    : undefined
+                                        "
+                                        @dragend="clearDragState"
+                                    >
+                                        <el-tooltip :content="operation.name" placement="top" :show-after="300">
+                                            <div class="op-copy compact">
+                                                <strong>{{ operation.name }}</strong>
+                                            </div>
+                                        </el-tooltip>
+                                        <div class="op-actions inline">
+                                            <el-button
+                                                v-if="operation.encode && operation.decode"
+                                                size="small"
+                                                text
+                                                type="success"
+                                                draggable="true"
+                                                @click.stop="addOperation(operation.id, 'encode')"
+                                                @dragstart="startLibraryDrag(operation.id, 'encode')"
+                                                @dragend="clearDragState"
+                                            >
+                                                编码
+                                            </el-button>
+                                            <el-button
+                                                v-if="operation.encode && operation.decode"
+                                                size="small"
+                                                text
+                                                type="warning"
+                                                draggable="true"
+                                                @click.stop="addOperation(operation.id, 'decode')"
+                                                @dragstart="startLibraryDrag(operation.id, 'decode')"
+                                                @dragend="clearDragState"
+                                            >
+                                                解码
+                                            </el-button>
+                                        </div>
+                                    </article>
+                                </div>
+                            </el-collapse-item>
+                        </el-collapse>
+                    </div>
+                </div>
+            </el-splitter-panel>
+
+            <el-splitter-panel size="20%" min="220px" class="pane panel-surface">
+                <div class="pane-head flow-head">
+                    <h3>操作流程</h3>
+                    <div class="toolbar single-line">
+                        <el-button size="small" :icon="Delete" text @click="clearPipeline" />
+                    </div>
+                </div>
+
+                <div v-if="currentTab.steps.length" class="flow-body">
+                    <div
+                        class="flow-list"
+                        @dragover.prevent="setFlowDropIndex(currentTab.steps.length)"
+                        @drop.prevent="handleFlowDrop"
+                    >
+                        <template v-for="(step, index) in currentTab.steps" :key="step.id">
+                            <div
+                                class="flow-dropzone"
+                                :class="{ active: flowDropIndex === index }"
+                                @dragover.prevent="setFlowDropIndex(index)"
+                                @drop.prevent="handleFlowDrop"
+                            />
+                            <article
+                                class="flow-card unified"
+                                draggable="true"
+                                @dragstart="startStepDrag(index)"
+                                @dragend="clearDragState"
+                                @dragover.stop.prevent="setFlowDropIndex(index)"
+                                @drop.stop.prevent="handleFlowDrop"
+                            >
+                                <div class="flow-card-head">
+                                    <div class="flow-card-main">
+                                        <button class="drag-handle" type="button" aria-label="拖拽排序">
+                                            <span /><span /><span /><span /><span /><span />
+                                        </button>
+                                        <div class="flow-index">{{ index + 1 }}</div>
+                                        <div class="flow-copy">
+                                            <strong>{{ stepName(step) }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="flow-tools">
+                                        <el-button size="small" text :icon="CloseBold" @click="removeOperation(index)" />
+                                    </div>
+                                </div>
+
+                                <div v-if="stepOptions(step).length" class="step-options single-column integrated">
+                                    <div v-for="option in stepOptions(step)" :key="option.key" class="option-item">
+                                        <span>{{ option.label }}</span>
+                                        <el-select
+                                            v-if="option.type === 'select'"
+                                            :model-value="step.options[option.key]"
+                                            @update:model-value="(value) => updateOption(step, option.key, String(value))"
+                                        >
+                                            <el-option v-for="item in option.options || []" :key="item" :label="item" :value="item" />
+                                        </el-select>
+                                        <el-input
+                                            v-else
+                                            :model-value="step.options[option.key]"
+                                            @update:model-value="(value) => updateOption(step, option.key, value)"
+                                        />
+                                    </div>
+                                </div>
+                            </article>
+                        </template>
+                        <div
+                            class="flow-dropzone tail"
+                            :class="{ active: flowDropIndex === currentTab.steps.length }"
+                            @dragover.prevent="setFlowDropIndex(currentTab.steps.length)"
+                            @drop.prevent="handleFlowDrop"
+                        />
+                    </div>
+
+                </div>
+                <div v-else class="flow-empty">
+                    <strong>从左侧添加操作</strong>
+                    <span>支持链式处理</span>
+                    <span>支持拖拽删除</span>
+                </div>
+            </el-splitter-panel>
+
+            <el-splitter-panel
+                class="pane panel-surface"
+                :class="{ 'drop-delete-target': draggingStepIndex !== null }"
+                @dragover.prevent="draggingStepIndex !== null"
+                @drop.prevent="handleDropOutsideFlow"
+            >
+                <el-splitter layout="vertical" class="io-splitter">
+                    <el-splitter-panel size="52%" min="220px" class="io-pane">
+                        <div class="pane-head io-head">
+                            <h3>输入</h3>
+                            <div class="toolbar single-line">
+                                <el-tooltip content="选择文件" placement="top">
+                                    <el-button size="small" :icon="FolderOpened" text @click="uploadFile" />
+                                </el-tooltip>
+                                <el-tooltip content="复制输入" placement="top">
+                                    <el-button size="small" :icon="CopyDocument" text @click="Copy(currentTab.input)" />
+                                </el-tooltip>
+                                <el-tooltip content="清空输入" placement="top">
+                                    <el-button size="small" :icon="Delete" text @click="currentTab.input = ''" />
+                                </el-tooltip>
+                            </div>
+                        </div>
+                        <el-input
+                            v-model="currentTab.input"
+                            type="textarea"
+                            resize="none"
+                            class="editor-area"
+                            placeholder="输入待处理内容。"
+                        />
+                    </el-splitter-panel>
+
+                    <el-splitter-panel class="io-pane">
+                        <div class="pane-head io-head">
+                            <h3>输出</h3>
+                            <div class="toolbar single-line">
+                                <el-tooltip content="复制输出" placement="top">
+                                    <el-button size="small" :icon="CopyDocument" text @click="Copy(currentTab.output)" />
+                                </el-tooltip>
+                                <el-tooltip content="转为输入" placement="top">
+                                    <el-button size="small" :icon="DocumentAdd" text @click="useOutputAsInput" />
+                                </el-tooltip>
+                                <el-tooltip content="全部清空" placement="top">
+                                    <el-button size="small" :icon="Delete" text @click="resetAll" />
+                                </el-tooltip>
+                            </div>
+                        </div>
+                        <CustomTextarea
+                            v-model="currentTab.output"
+                            class="editor-area output-area"
+                            :rows="10"
+                            :readonly="true"
+                            :hide-readonly-action="true"
+                            resize="none"
+                        />
+                    </el-splitter-panel>
+                </el-splitter>
+            </el-splitter-panel>
+        </el-splitter>
     </div>
-    <CustomTextarea 
-        v-model="form.result" 
-        :rows="24" 
-        :readonly="true"
-    >
-    </CustomTextarea>
-    <span class="form-item-tips">{{ form.tips }}</span>
 </template>
+
+<style scoped>
+.codec-page {
+    height: calc(100vh - 94px);
+    min-height: 680px;
+    display: flex;
+    flex-direction: column;
+}
+
+.workspace-tabs {
+    flex: 0 0 auto;
+}
+
+.workspace-tabs :deep(.el-tabs__nav-wrap::after) {
+    display: none;
+}
+
+.workspace-splitter,
+.io-splitter {
+    height: 100%;
+}
+
+.workspace-splitter {
+    flex: 1;
+    min-height: 0;
+}
+
+.pane,
+.io-pane {
+    min-width: 0;
+    min-height: 0;
+}
+
+.panel-surface {
+    height: 100%;
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.pane-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.pane-head h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--el-text-color-primary);
+}
+
+.library-body,
+.flow-list {
+    height: calc(100% - 66px);
+    padding: 12px;
+}
+
+.library-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.library-panel .library-body {
+    height: 100%;
+}
+
+.library-search {
+    flex: 0 0 auto;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.library-list {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding-top: 12px;
+    scrollbar-gutter: stable;
+    padding-right: 18px;
+}
+
+.op-groups {
+    border: none;
+}
+
+.group-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-weight: 700;
+    padding-right: 28px;
+}
+
+.flow-body {
+    height: calc(100% - 66px);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.flow-list {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.flow-empty {
+    height: calc(100% - 66px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--el-text-color-secondary);
+}
+
+.flow-empty strong {
+    color: var(--el-text-color-primary);
+    font-size: 16px;
+}
+
+.flow-empty span {
+    font-size: 13px;
+}
+
+.op-list.compact {
+    display: flex;
+    flex-direction: column;
+}
+
+.op-groups :deep(.el-collapse-item__header) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.op-groups :deep(.el-collapse-item__arrow) {
+    order: -1;
+    margin: 0 2px 0 0;
+}
+
+.op-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-top: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.op-row:first-child {
+    border-top: none;
+}
+
+.op-row.clickable:hover {
+    background: var(--el-fill-color);
+    color: var(--el-color-primary);
+}
+
+.op-copy.compact {
+    min-width: 0;
+    flex: 1;
+}
+
+.op-copy.compact strong {
+    display: block;
+    color: var(--el-text-color-primary);
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.op-actions.inline,
+.toolbar.single-line,
+.flow-tools,
+.flow-tags {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.op-actions.inline {
+    gap: 2px;
+}
+
+.op-actions.inline :deep(.el-button) {
+    padding-inline: 4px;
+}
+
+.flow-card {
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 12px;
+    background: var(--el-fill-color-light);
+    margin-bottom: 0;
+}
+
+.flow-card.unified {
+    padding: 10px 12px;
+}
+
+.flow-card-head,
+.flow-card-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.flow-card-head {
+    justify-content: space-between;
+}
+
+.drag-handle {
+    width: 16px;
+    height: 28px;
+    display: grid;
+    grid-template-columns: repeat(2, 4px);
+    grid-template-rows: repeat(3, 4px);
+    gap: 2px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: grab;
+    align-self: center;
+    place-content: center;
+    margin-top: 0;
+}
+
+.drag-handle span {
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--el-text-color-secondary);
+}
+
+.flow-dropzone {
+    height: 4px;
+    border-radius: 999px;
+    margin: 0 4px 4px;
+    transition: background 0.2s ease;
+}
+
+.flow-dropzone.active {
+    background: color-mix(in srgb, var(--el-color-primary) 35%, transparent);
+}
+
+.drop-delete-target {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    border-color: color-mix(in srgb, var(--el-color-danger) 20%, var(--el-border-color-lighter));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--el-color-danger) 10%, transparent);
+}
+
+.drop-delete-target .pane-head h3 {
+    color: var(--el-color-danger);
+}
+
+.flow-index {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--el-fill-color);
+    color: var(--el-text-color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.flow-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.flow-copy strong {
+    font-size: 14px;
+    color: var(--el-text-color-primary);
+}
+
+.step-options.single-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.step-options.single-column.integrated {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.option-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.option-item span {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+}
+
+.editor-area {
+    height: calc(100% - 67px);
+}
+
+.editor-area :deep(.el-textarea),
+.editor-area :deep(.el-textarea__inner) {
+    height: 100%;
+}
+
+.editor-area :deep(.el-textarea__inner) {
+    resize: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 16px;
+    background: transparent;
+}
+
+.output-area {
+    height: calc(100% - 67px);
+}
+
+.io-pane {
+    height: 100%;
+    background: var(--el-bg-color);
+}
+
+@media (max-width: 1100px) {
+    .codec-page {
+        height: auto;
+        min-height: auto;
+    }
+}
+</style>

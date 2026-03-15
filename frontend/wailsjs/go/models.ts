@@ -568,6 +568,7 @@ export namespace structs {
 	    URL: string;
 	    Host: string;
 	    Title: string;
+	    Fid: string;
 	    IP: string;
 	    Port: string;
 	    Domain: string;
@@ -585,6 +586,7 @@ export namespace structs {
 	        this.URL = source["URL"];
 	        this.Host = source["Host"];
 	        this.Title = source["Title"];
+	        this.Fid = source["Fid"];
 	        this.IP = source["IP"];
 	        this.Port = source["Port"];
 	        this.Domain = source["Domain"];
@@ -1538,4 +1540,3 @@ export namespace structs {
 	}
 
 }
-

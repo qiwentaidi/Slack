@@ -91,10 +91,6 @@ const MenuList = [
         icon: toolsIcon,
         children: [
             {
-                name: "aside.cyberchef",
-                path: "/CyberChef",
-            },
-            {
                 name: "aside.systeminfo",
                 path: "/System",
             },
@@ -121,10 +117,6 @@ const MenuList = [
             {
                 name: "aside.data_comparison",
                 path: "/DataComparison",
-            },
-            {
-                name: "aside.timestamp",
-                path: "/Timestamp",
             },
             {
                 name: "aside.memorandum",

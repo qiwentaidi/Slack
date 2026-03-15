@@ -10,7 +10,6 @@ import { LogInfo } from "./stores/interface";
 import { useDark } from '@vueuse/core'
 import { NetworkCardInfo, UserHomeDir } from "wailsjs/go/services/File";
 import { InitConfigFile } from "./config";
-import CyberChef from "./views/Tools/CyberChef.vue";
 import { ElMessage } from "element-plus";
 import { GOOS } from "wailsjs/go/core/Tools";
 
@@ -80,16 +79,12 @@ onMounted(async () => {
         </el-aside>
         <el-main class="content-wrapper">
             <el-config-provider :locale="locale">
-                <!-- 一定要使用插槽否则keey-alive不会生效 -->
                 <router-view v-slot="{ Component }">
                     <keep-alive>
                         <component :is="Component"></component>
                     </keep-alive>
                 </router-view>
             </el-config-provider>
-            <div v-show="$route.path == '/Tools/CyberChef'">
-                <CyberChef />
-            </div>
         </el-main>
     </el-container>
 </template>

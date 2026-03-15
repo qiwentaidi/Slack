@@ -16,6 +16,7 @@ import { fofaOptions } from '@/stores/options';
 const form = reactive({
     query: '',
     fraud: false,
+    fid: false,
     cert: false,
     syntaxData: [] as structs.SpaceEngineSyntax[],
 })
@@ -118,7 +119,7 @@ const tableCtrl = ({
     addTab: async (query: string) => {
         const newTabName = `${++table.tabIndex}`
         table.loading = true
-        let result = await FofaSearch(query, "100", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(query, "100", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert, form.fid)
         if (result.Error) {
             ElMessage.warning(result.Message);
             table.loading = false
@@ -159,7 +160,7 @@ const tableCtrl = ({
     handleSizeChange: async (val: any) => {
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         table.loading = true
-        let result = await FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(tab.title, val.toString(), "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert, form.fid)
         tab.message = result.Message
         if (result.Error) {
             table.loading = false
@@ -173,7 +174,7 @@ const tableCtrl = ({
         const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
         tab.currentPage = val
         table.loading = true
-        let result = await FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(tab.title, tab.pageSize.toString(), val.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert, form.fid)
         tab.message = result.Message
         table.loading = false
         if (result.Error) {
@@ -235,7 +236,14 @@ function batchSearch() {
         })
 }
 
-const excelHeaders = ["URL", "Host", "标题", "IP", "端口", "域名", "协议", "地区", "备案号", "组件"]
+const getExcelHeaders = () => {
+    const headers = ["URL", "Host", "标题"];
+    if (form.fid) {
+        headers.push("FID");
+    }
+    headers.push("IP", "端口", "域名", "协议", "地区", "备案号", "组件");
+    return headers;
+}
 // mode = 0 导出当前查询数据 
 async function exportData(mode: number) {
     if (table.editableTabs.length == 0) {
@@ -248,7 +256,7 @@ async function exportData(mode: number) {
     const tab = table.editableTabs.find(tab => tab.name === table.acvtiveNames)!;
 
     if (mode == 0 || tab.total <= tab.pageSize) {
-        ExportToXlsx(excelHeaders, "asset", "fofa_asset", tab.content!)
+        ExportToXlsx(getExcelHeaders(), "asset", "fofa_asset", tab.content!)
         return
     }
     let temp = [] as Results[]
@@ -260,7 +268,7 @@ async function exportData(mode: number) {
     for (const num of splitInt(tab.total, 10000)) {
         index += 1
         ElMessage("正在查询第" + index.toString() + "页");
-        let result = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(tab.title, num.toString(), index.toString(), global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert, form.fid)
         if (result.Error) {
             ElNotification.error({
                 title: "FOFA Tips",
@@ -270,7 +278,7 @@ async function exportData(mode: number) {
         }
         temp.push(...result.Results!)
     }
-    ExportToXlsx(excelHeaders, "asset", "fofa_asset", temp)
+    ExportToXlsx(getExcelHeaders(), "asset", "fofa_asset", temp)
     temp = []
 }
 
@@ -307,7 +315,7 @@ async function copyURLs(type: 'current' | 'top10000', dedup: boolean = false) {
         }
         urls = data.map(item => item.URL);
     } else {
-        let result = await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert)
+        let result = await FofaSearch(form.query, "10000", "1", global.space.fofaapi, global.space.fofaemail, global.space.fofakey, form.fraud, form.cert, form.fid)
         if (result.Error) {
             ElMessage.warning(result.Message)
             return
@@ -445,6 +453,7 @@ function searchCsegmentIpv4(ip: string) {
         <el-form-item>
             <div>
                 <el-checkbox v-model="form.fraud">排除干扰(专业版)</el-checkbox>
+                <el-checkbox v-model="form.fid">FID(专业版)</el-checkbox>
                 <el-checkbox v-model="form.cert">证书(个人版)</el-checkbox>
             </div>
             <div class="flex-1"></div>
@@ -480,6 +489,7 @@ function searchCsegmentIpv4(ip: string) {
                         <Filter />
                     </template>
                 </el-table-column>
+                <el-table-column v-if="form.fid" prop="Fid" label="FID" width="220" :show-overflow-tooltip="true" />
                 <el-table-column prop="IP" label="IP" width="150" :show-overflow-tooltip="true" />
                 <el-table-column prop="Port" label="端口" width="100"
                     :sort-method="(a: any, b: any) => { return a.Port - b.Port }" sortable

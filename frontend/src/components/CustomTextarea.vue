@@ -17,7 +17,7 @@
             </el-button>
             <el-button :icon="CloseIcon" size="small" @click="clearInput"></el-button>
         </el-button-group>
-        <el-button v-else :icon="CopyIcon" size="small" @click="handleCopy" class="action-area">
+        <el-button v-else-if="!hideReadonlyAction" :icon="CopyIcon" size="small" @click="handleCopy" class="action-area">
             Copy
         </el-button>
     </div>
@@ -46,6 +46,10 @@ export default defineComponent({
             default: true,
         },
         readonly: {
+            type: Boolean,
+            default: false,
+        },
+        hideReadonlyAction: {
             type: Boolean,
             default: false,
         },

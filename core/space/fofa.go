@@ -76,12 +76,16 @@ func FOFABaseEncode(str string) string {
 	return base64.StdEncoding.EncodeToString([]byte(str))
 }
 
-func (f *FofaClient) FofaApiSearch(ctx context.Context, search, pageSize, pageNum string, fraud, cert bool) *structs.FofaSearchResult {
+func (f *FofaClient) FofaApiSearch(ctx context.Context, search, pageSize, pageNum string, fraud, cert, withFid bool) *structs.FofaSearchResult {
 	var fs structs.FofaSearchResult // 期望返回结构体
 	var fr structs.FofaResult       // 原始数据
+	fields := "host,title,ip,domain,port,protocol,country_name,region,city,icp,link,product"
+	if withFid {
+		fields += ",fid"
+	}
 	address := f.Auth.Address + "api/v1/search/all?email=" + f.Auth.Email + "&key=" + f.Auth.Key + "&qbase64=" +
 		FOFABaseEncode(search) + "&cert.is_valid" + fmt.Sprint(cert) + fmt.Sprintf("&is_fraud=%v&is_honeypot=%v", fmt.Sprint(fraud), fmt.Sprint(fraud)) +
-		"&page=" + pageNum + "&size=" + pageSize + "&fields=host,title,ip,domain,port,protocol,country_name,region,city,icp,link,product"
+		"&page=" + pageNum + "&size=" + pageSize + "&fields=" + fields
 	resp, err := clients.SimpleGet(address, clients.NewRestyClient(nil, true))
 	if err != nil {
 		gologger.Debug(ctx, err)
@@ -105,22 +109,31 @@ func (f *FofaClient) FofaApiSearch(ctx context.Context, search, pageSize, pageNu
 			fs.Message = "未查询到数据"
 		} else {
 			for i := range fr.Results {
+				row := fr.Results[i]
+				if len(row) < 12 {
+					continue
+				}
+				fid := ""
+				if withFid && len(row) > 12 {
+					fid = row[12]
+				}
 				fs.Results = append(fs.Results, structs.Results{
-					URL:      fr.Results[i][10],
-					Host:     fr.Results[i][0],
-					Title:    fr.Results[i][1],
-					IP:       fr.Results[i][2],
-					Port:     fr.Results[i][4],
-					Domain:   fr.Results[i][3],
-					Protocol: fr.Results[i][5],
+					URL:      row[10],
+					Host:     row[0],
+					Title:    row[1],
+					Fid:      fid,
+					IP:       row[2],
+					Port:     row[4],
+					Domain:   row[3],
+					Protocol: row[5],
 					Region: MergePosition(structs.Position{
-						Country:   fr.Results[i][6],
-						Province:  fr.Results[i][7],
-						City:      fr.Results[i][8],
+						Country:   row[6],
+						Province:  row[7],
+						City:      row[8],
 						Connector: "/",
 					}),
-					ICP:     fr.Results[i][9],
-					Product: fr.Results[i][11],
+					ICP:     row[9],
+					Product: row[11],
 				})
 			}
 		}
