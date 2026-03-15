@@ -76,6 +76,10 @@ func (request *Request) Extract(data map[string]interface{}, extractor *extracto
 		return extractor.ExtractKval(data)
 	case extractors.DSLExtractor:
 		return extractor.ExtractDSL(data)
+	case extractors.XPathExtractor:
+		return extractor.ExtractXPath(itemStr)
+	case extractors.JSONExtractor:
+		return extractor.ExtractJSON(itemStr)
 	}
 	return nil
 }
@@ -151,7 +155,6 @@ func (request *Request) MakeResultEventItem(wrapped *output.InternalWrappedEvent
 		IP:               fields.Ip,
 		Request:          types.ToString(wrapped.InternalEvent["request"]),
 		Response:         types.ToString(wrapped.InternalEvent["data"]),
-		ResponseTime:     types.ToString(wrapped.InternalEvent["duration"]),
 		TemplateEncoded:  request.options.EncodeTemplate(),
 		Error:            types.ToString(wrapped.InternalEvent["error"]),
 	}

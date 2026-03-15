@@ -5,7 +5,10 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
+	"sync"
 
+	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/nuclei/v3/pkg/authprovider"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/loader"
@@ -16,6 +19,7 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/output"
 	"github.com/projectdiscovery/nuclei/v3/pkg/progress"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols"
+	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/generators"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/hosterrorscache"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/interactsh"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/protocolinit"
@@ -26,7 +30,7 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/types"
 	"github.com/projectdiscovery/ratelimit"
 	"github.com/projectdiscovery/retryablehttp-go"
-	errorutil "github.com/projectdiscovery/utils/errors"
+	"github.com/projectdiscovery/utils/errkit"
 )
 
 // NucleiSDKOptions contains options for nuclei SDK
@@ -34,13 +38,13 @@ type NucleiSDKOptions func(e *NucleiEngine) error
 
 var (
 	// ErrNotImplemented is returned when a feature is not implemented
-	ErrNotImplemented = errorutil.New("Not implemented")
+	ErrNotImplemented = errkit.New("Not implemented")
 	// ErrNoTemplatesAvailable is returned when no templates are available to execute
-	ErrNoTemplatesAvailable = errorutil.New("No templates available")
+	ErrNoTemplatesAvailable = errkit.New("No templates available")
 	// ErrNoTargetsAvailable is returned when no targets are available to scan
-	ErrNoTargetsAvailable = errorutil.New("No targets available")
+	ErrNoTargetsAvailable = errkit.New("No targets available")
 	// ErrOptionsNotSupported is returned when an option is not supported in thread safe mode
-	ErrOptionsNotSupported = errorutil.NewWithFmt("Option %v not supported in thread safe mode")
+	ErrOptionsNotSupported = errkit.New("Option not supported in thread safe mode")
 )
 
 type engineMode uint
@@ -64,6 +68,7 @@ type NucleiEngine struct {
 	templatesLoaded bool
 
 	// unexported core fields
+	ctx              context.Context
 	interactshClient *interactsh.Client
 	catalog          catalog.Catalog
 	rateLimiter      *ratelimit.Limiter
@@ -84,20 +89,26 @@ type NucleiEngine struct {
 	customWriter   output.Writer
 	customProgress progress.Progress
 	rc             reporting.Client
-	executerOpts   protocols.ExecutorOptions
+	executerOpts   *protocols.ExecutorOptions
+
+	// Logger instance for the engine
+	Logger *gologger.Logger
+
+	// Temporary directory for SDK-managed template files
+	tmpDir string
 }
 
 // LoadAllTemplates loads all nuclei template based on given options
 func (e *NucleiEngine) LoadAllTemplates() error {
-	workflowLoader, err := workflow.NewLoader(&e.executerOpts)
+	workflowLoader, err := workflow.NewLoader(e.executerOpts)
 	if err != nil {
-		return errorutil.New("Could not create workflow loader: %s\n", err)
+		return errkit.Wrapf(err, "Could not create workflow loader: %s", err)
 	}
 	e.executerOpts.WorkflowLoader = workflowLoader
 
 	e.store, err = loader.New(loader.NewConfig(e.opts, e.catalog, e.executerOpts))
 	if err != nil {
-		return errorutil.New("Could not create loader client: %s\n", err)
+		return errkit.Wrapf(err, "Could not create loader client: %s", err)
 	}
 	e.store.Load()
 	e.templatesLoaded = true
@@ -124,9 +135,9 @@ func (e *NucleiEngine) GetWorkflows() []*templates.Template {
 func (e *NucleiEngine) LoadTargets(targets []string, probeNonHttp bool) {
 	for _, target := range targets {
 		if probeNonHttp {
-			_ = e.inputProvider.SetWithProbe(target, e.httpxClient)
+			_ = e.inputProvider.SetWithProbe(e.opts.ExecutionId, target, e.httpxClient)
 		} else {
-			e.inputProvider.Set(target)
+			e.inputProvider.Set(e.opts.ExecutionId, target)
 		}
 	}
 }
@@ -136,9 +147,9 @@ func (e *NucleiEngine) LoadTargetsFromReader(reader io.Reader, probeNonHttp bool
 	buff := bufio.NewScanner(reader)
 	for buff.Scan() {
 		if probeNonHttp {
-			_ = e.inputProvider.SetWithProbe(buff.Text(), e.httpxClient)
+			_ = e.inputProvider.SetWithProbe(e.opts.ExecutionId, buff.Text(), e.httpxClient)
 		} else {
-			e.inputProvider.Set(buff.Text())
+			e.inputProvider.Set(e.opts.ExecutionId, buff.Text())
 		}
 	}
 }
@@ -161,7 +172,7 @@ func (e *NucleiEngine) LoadTargetsWithHttpData(filePath string, filemode string)
 
 // GetExecuterOptions returns the nuclei executor options
 func (e *NucleiEngine) GetExecuterOptions() *protocols.ExecutorOptions {
-	return &e.executerOpts
+	return e.executerOpts
 }
 
 // ParseTemplate parses a template from given data
@@ -224,12 +235,18 @@ func (e *NucleiEngine) closeInternal() {
 	if e.httpxClient != nil {
 		_ = e.httpxClient.Close()
 	}
+	if e.tmpDir != "" {
+		_ = os.RemoveAll(e.tmpDir)
+	}
+	if e.opts != nil {
+		generators.ClearOptionsPayloadMap(e.opts)
+	}
 }
 
 // Close all resources used by nuclei engine
 func (e *NucleiEngine) Close() {
 	e.closeInternal()
-	protocolinit.Close()
+	protocolinit.Close(e.opts.ExecutionId)
 }
 
 // ExecuteCallbackWithCtx executes templates on targets and calls callback on each result(only if results are found)
@@ -246,9 +263,9 @@ func (e *NucleiEngine) ExecuteCallbackWithCtx(ctx context.Context, callback ...f
 	}
 
 	filtered := []func(event *output.ResultEvent){}
-	for _, callback := range callback {
-		if callback != nil {
-			filtered = append(filtered, callback)
+	for _, cb := range callback {
+		if cb != nil {
+			filtered = append(filtered, cb)
 		}
 	}
 	e.resultCallbacks = append(e.resultCallbacks, filtered...)
@@ -258,15 +275,32 @@ func (e *NucleiEngine) ExecuteCallbackWithCtx(ctx context.Context, callback ...f
 		return ErrNoTemplatesAvailable
 	}
 
-	_ = e.engine.ExecuteScanWithOpts(ctx, templatesAndWorkflows, e.inputProvider, false)
-	defer e.engine.WorkPool().Wait()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_ = e.engine.ExecuteScanWithOpts(ctx, templatesAndWorkflows, e.inputProvider, false)
+	}()
+
+	// wait for context to be cancelled
+	select {
+	case <-ctx.Done():
+		<-wait(&wg) // wait for scan to finish
+		return ctx.Err()
+	case <-wait(&wg):
+		// scan finished
+	}
 	return nil
 }
 
 // ExecuteWithCallback is same as ExecuteCallbackWithCtx but with default context
 // Note this is deprecated and will be removed in future major release
 func (e *NucleiEngine) ExecuteWithCallback(callback ...func(event *output.ResultEvent)) error {
-	return e.ExecuteCallbackWithCtx(context.Background(), callback...)
+	ctx := context.Background()
+	if e.ctx != nil {
+		ctx = e.ctx
+	}
+	return e.ExecuteCallbackWithCtx(ctx, callback...)
 }
 
 // Options return nuclei Type Options
@@ -287,9 +321,12 @@ func (e *NucleiEngine) Store() *loader.Store {
 // NewNucleiEngineCtx creates a new nuclei engine instance with given context
 func NewNucleiEngineCtx(ctx context.Context, options ...NucleiSDKOptions) (*NucleiEngine, error) {
 	// default options
+	defaultOptions := types.DefaultOptions()
 	e := &NucleiEngine{
-		opts: types.DefaultOptions(),
-		mode: singleInstance,
+		opts:   defaultOptions,
+		mode:   singleInstance,
+		ctx:    ctx,
+		Logger: defaultOptions.Logger,
 	}
 	for _, option := range options {
 		if err := option(e); err != nil {
@@ -305,4 +342,19 @@ func NewNucleiEngineCtx(ctx context.Context, options ...NucleiSDKOptions) (*Nucl
 // Deprecated: use NewNucleiEngineCtx instead
 func NewNucleiEngine(options ...NucleiSDKOptions) (*NucleiEngine, error) {
 	return NewNucleiEngineCtx(context.Background(), options...)
+}
+
+// GetParser returns the template parser with cache
+func (e *NucleiEngine) GetParser() *templates.Parser {
+	return e.parser
+}
+
+// wait for a waitgroup to finish
+func wait(wg *sync.WaitGroup) <-chan struct{} {
+	ch := make(chan struct{})
+	go func() {
+		defer close(ch)
+		wg.Wait()
+	}()
+	return ch
 }

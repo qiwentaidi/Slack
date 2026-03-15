@@ -114,7 +114,7 @@ export namespace services {
 	    id: string;
 	    label: string;
 	    isDir: boolean;
-	    hits?: {[key: string]: number};
+	    hits?: Record<string, number>;
 	    children?: Tree[];
 	
 	    static createFrom(source: any = {}) {
@@ -1188,7 +1188,7 @@ export namespace structs {
 	    Error: boolean;
 	    Proto: string;
 	    StatsCode: number;
-	    Header: {[key: string]: string};
+	    Header: Record<string, string>;
 	    Body: string;
 	
 	    static createFrom(source: any = {}) {
@@ -1486,7 +1486,7 @@ export namespace structs {
 	}
 	export class WebscanOptions {
 	    Target: string[];
-	    TcpTarget: {[key: string]: string[]};
+	    TcpTarget: Record<string, Array<string>>;
 	    Thread: number;
 	    Screenshot: boolean;
 	    DeepScan: boolean;

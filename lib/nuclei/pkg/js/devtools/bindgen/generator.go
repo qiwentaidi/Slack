@@ -178,6 +178,7 @@ func CreateTemplateData(directory string, packagePrefix string) (*TemplateData, 
 // with all the exported functions from the runtime
 func (d *TemplateData) InitNativeScripts() {
 	runtime := compiler.InternalGetGeneratorRuntime()
+	defer compiler.ReleaseGeneratorRuntime(runtime)
 
 	exports := runtime.Get("exports")
 	if exports == nil {

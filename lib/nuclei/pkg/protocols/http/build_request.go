@@ -27,8 +27,7 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/types/scanstrategy"
 	"github.com/projectdiscovery/rawhttp"
 	"github.com/projectdiscovery/retryablehttp-go"
-	errorutil "github.com/projectdiscovery/utils/errors"
-	readerutil "github.com/projectdiscovery/utils/reader"
+	"github.com/projectdiscovery/utils/errkit"
 	stringsutil "github.com/projectdiscovery/utils/strings"
 	urlutil "github.com/projectdiscovery/utils/url"
 )
@@ -38,9 +37,39 @@ const (
 )
 
 // ErrEvalExpression
+type errorTemplate struct {
+	format string
+}
+
+func (e errorTemplate) Wrap(err error) wrapperError {
+	return wrapperError{template: e, err: err}
+}
+
+func (e errorTemplate) Msgf(args ...interface{}) error {
+	return errkit.Newf(e.format, args...)
+}
+
+type wrapperError struct {
+	template errorTemplate
+	err      error
+}
+
+func (w wrapperError) WithTag(tag string) error {
+	return errkit.Wrap(w.err, w.template.format)
+}
+
+func (w wrapperError) Msgf(format string, args ...interface{}) error {
+	return errkit.Wrapf(w.err, format, args...)
+}
+
+func (w wrapperError) Error() string {
+	return errkit.Wrap(w.err, w.template.format).Error()
+}
+
+// ErrEvalExpression
 var (
-	ErrEvalExpression = errorutil.NewWithTag("expr", "could not evaluate helper expressions")
-	ErrUnresolvedVars = errorutil.NewWithFmt("unresolved variables `%v` found in request")
+	ErrEvalExpression = errorTemplate{"could not evaluate helper expressions"}
+	ErrUnresolvedVars = errorTemplate{"unresolved variables `%v` found in request"}
 )
 
 // generatedRequest is a single generated request wrapped for a template request
@@ -62,9 +91,8 @@ type generatedRequest struct {
 
 // setReqURLPattern sets the url request pattern for the generated request
 func (gr *generatedRequest) setReqURLPattern(reqURLPattern string) {
-	data := strings.Split(reqURLPattern, "\n")
-	if len(data) > 1 {
-		reqURLPattern = strings.TrimSpace(data[0])
+	if idx := strings.IndexByte(reqURLPattern, '\n'); idx >= 0 {
+		reqURLPattern = strings.TrimSpace(reqURLPattern[:idx])
 		// this is raw request (if it has 3 parts after strings.Fields then its valid only use 2nd part)
 		parts := strings.Fields(reqURLPattern)
 		if len(parts) >= 3 {
@@ -115,7 +143,7 @@ func (g *generatedRequest) ApplyAuth(provider authprovider.AuthProvider) {
 
 func (g *generatedRequest) URL() string {
 	if g.request != nil {
-		return g.request.URL.String()
+		return g.request.String()
 	}
 	if g.rawRequest != nil {
 		return g.rawRequest.FullURL
@@ -181,7 +209,7 @@ func (r *requestGenerator) Make(ctx context.Context, input *contextargs.Context,
 	// optionvars are vars passed from CLI or env variables
 	optionVars := generators.BuildPayloadFromOptions(r.request.options.Options)
 
-	variablesMap, interactURLs := r.options.Variables.EvaluateWithInteractsh(generators.MergeMaps(defaultReqVars, optionVars), r.options.Interactsh)
+	variablesMap, interactURLs := r.options.Variables.EvaluateWithInteractsh(generators.MergeMaps(dynamicValues, defaultReqVars, optionVars), r.options.Interactsh)
 	if len(interactURLs) > 0 {
 		r.interactshURLs = append(r.interactshURLs, interactURLs...)
 	}
@@ -193,7 +221,7 @@ func (r *requestGenerator) Make(ctx context.Context, input *contextargs.Context,
 	for payloadName, payloadValue := range payloads {
 		payloads[payloadName], err = expressions.Evaluate(types.ToString(payloadValue), allVars)
 		if err != nil {
-			return nil, ErrEvalExpression.Wrap(err).WithTag("http")
+			return nil, errkit.Wrap(err, "could not evaluate helper expressions")
 		}
 	}
 	// finalVars contains allVars and any generator/fuzzing specific payloads
@@ -210,7 +238,7 @@ func (r *requestGenerator) Make(ctx context.Context, input *contextargs.Context,
 	// Evaluate (replace) variable with final values
 	reqData, err = expressions.Evaluate(reqData, finalVars)
 	if err != nil {
-		return nil, ErrEvalExpression.Wrap(err).WithTag("http")
+		return nil, errkit.Wrap(err, "could not evaluate helper expressions")
 	}
 
 	if isRawRequest {
@@ -219,7 +247,7 @@ func (r *requestGenerator) Make(ctx context.Context, input *contextargs.Context,
 
 	reqURL, err := urlutil.ParseAbsoluteURL(reqData, true)
 	if err != nil {
-		return nil, errorutil.NewWithTag("http", "failed to parse url %v while creating http request", reqData)
+		return nil, errkit.Newf("failed to parse url %v while creating http request", reqData)
 	}
 	// while merging parameters first preference is given to target params
 	finalparams := parsed.Params
@@ -252,7 +280,7 @@ func (r *requestGenerator) makeSelfContainedRequest(ctx context.Context, data st
 	// evaluate request
 	data, err := expressions.Evaluate(data, values)
 	if err != nil {
-		return nil, ErrEvalExpression.Wrap(err).WithTag("self-contained")
+		return nil, errkit.Wrap(err, "could not evaluate helper expressions")
 	}
 	// If the request is a raw request, get the URL from the request
 	// header and use it to make the request.
@@ -275,7 +303,7 @@ func (r *requestGenerator) makeSelfContainedRequest(ctx context.Context, data st
 		}
 
 		if err := expressions.ContainsUnresolvedVariables(parts[1]); err != nil && !r.request.SkipVariablesCheck {
-			return nil, ErrUnresolvedVars.Msgf(parts[1])
+			return nil, errkit.Newf("unresolved variables `%v` found in request", parts[1])
 		}
 
 		parsed, err := urlutil.ParseURL(parts[1], true)
@@ -289,19 +317,19 @@ func (r *requestGenerator) makeSelfContainedRequest(ctx context.Context, data st
 		// Evaluate (replace) variable with final values
 		data, err = expressions.Evaluate(data, values)
 		if err != nil {
-			return nil, ErrEvalExpression.Wrap(err).WithTag("self-contained", "raw")
+			return nil, errkit.Wrap(err, "could not evaluate helper expressions")
 		}
 		return r.generateRawRequest(ctx, data, parsed, values, payloads)
 	}
 	if err := expressions.ContainsUnresolvedVariables(data); err != nil && !r.request.SkipVariablesCheck {
 		// early exit: if there are any unresolved variables in `path` after evaluation
 		// then return early since this will definitely fail
-		return nil, ErrUnresolvedVars.Msgf(data)
+		return nil, errkit.Newf("unresolved variables `%v` found in request", data)
 	}
 
 	urlx, err := urlutil.ParseURL(data, true)
 	if err != nil {
-		return nil, errorutil.NewWithErr(err).Msgf("failed to parse %v in self contained request", data).WithTag("self-contained")
+		return nil, errkit.Wrapf(err, "failed to parse %v in self contained request", data)
 	}
 	return r.generateHttpRequest(ctx, urlx, values, payloads)
 }
@@ -312,7 +340,7 @@ func (r *requestGenerator) makeSelfContainedRequest(ctx context.Context, data st
 func (r *requestGenerator) generateHttpRequest(ctx context.Context, urlx *urlutil.URL, finalVars, generatorValues map[string]interface{}) (*generatedRequest, error) {
 	method, err := expressions.Evaluate(r.request.Method.String(), finalVars)
 	if err != nil {
-		return nil, ErrEvalExpression.Wrap(err).Msgf("failed to evaluate while generating http request")
+		return nil, errkit.Wrap(err, "failed to evaluate while generating http request")
 	}
 	// Build a request on the specified URL
 	req, err := retryablehttp.NewRequestFromURLWithContext(ctx, method, urlx, nil)
@@ -341,7 +369,7 @@ func (r *requestGenerator) generateRawRequest(ctx context.Context, rawRequest st
 		rawRequestData, err = raw.Parse(rawRequest, baseURL, r.request.Unsafe, r.request.DisablePathAutomerge)
 	}
 	if err != nil {
-		return nil, errorutil.NewWithErr(err).Msgf("failed to parse raw request")
+		return nil, errkit.Wrap(err, "failed to parse raw request")
 	}
 
 	// Unsafe option uses rawhttp library
@@ -357,7 +385,7 @@ func (r *requestGenerator) generateRawRequest(ctx context.Context, rawRequest st
 	}
 	urlx, err := urlutil.ParseAbsoluteURL(rawRequestData.FullURL, true)
 	if err != nil {
-		return nil, errorutil.NewWithErr(err).Msgf("failed to create request with url %v got %v", rawRequestData.FullURL, err).WithTag("raw")
+		return nil, errkit.Wrapf(err, "failed to create request with url %v got %v", rawRequestData.FullURL, err)
 	}
 	req, err := retryablehttp.NewRequestFromURLWithContext(ctx, rawRequestData.Method, urlx, rawRequestData.Data)
 	if err != nil {
@@ -414,7 +442,7 @@ func (r *requestGenerator) fillRequest(req *retryablehttp.Request, values map[st
 		}
 		value, err := expressions.Evaluate(value, values)
 		if err != nil {
-			return nil, ErrEvalExpression.Wrap(err).Msgf("failed to evaluate while adding headers to request")
+			return nil, errkit.Wrap(err, "failed to evaluate while adding headers to request")
 		}
 		req.Header[header] = []string{value}
 		if header == "Host" {
@@ -435,13 +463,11 @@ func (r *requestGenerator) fillRequest(req *retryablehttp.Request, values map[st
 		}
 		body, err := expressions.Evaluate(body, values)
 		if err != nil {
-			return nil, ErrEvalExpression.Wrap(err)
+			return nil, errkit.Wrap(err, "could not evaluate helper expressions")
 		}
-		bodyReader, err := readerutil.NewReusableReadCloser([]byte(body))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to create reusable reader for request body")
+		if err := req.SetBodyString(body); err != nil {
+			return nil, errors.Wrap(err, "failed to set request body")
 		}
-		req.Body = bodyReader
 	}
 	if !r.request.Unsafe {
 		userAgent := useragent.PickRandom()
@@ -456,9 +482,9 @@ func (r *requestGenerator) fillRequest(req *retryablehttp.Request, values map[st
 
 	if !LeaveDefaultPorts {
 		switch {
-		case req.URL.Scheme == "http" && strings.HasSuffix(req.Host, ":80"):
+		case req.Scheme == "http" && strings.HasSuffix(req.Host, ":80"):
 			req.Host = strings.TrimSuffix(req.Host, ":80")
-		case req.URL.Scheme == "https" && strings.HasSuffix(req.Host, ":443"):
+		case req.Scheme == "https" && strings.HasSuffix(req.Host, ":443"):
 			req.Host = strings.TrimSuffix(req.Host, ":443")
 		}
 	}

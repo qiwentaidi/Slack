@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"reflect"
@@ -25,14 +24,14 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/tmplexec"
 	"github.com/projectdiscovery/nuclei/v3/pkg/utils"
 	"github.com/projectdiscovery/nuclei/v3/pkg/utils/json"
-	errorutil "github.com/projectdiscovery/utils/errors"
+	"github.com/projectdiscovery/utils/errkit"
 	stringsutil "github.com/projectdiscovery/utils/strings"
 )
 
 var (
 	ErrCreateTemplateExecutor          = errors.New("cannot create template executer")
 	ErrIncompatibleWithOfflineMatching = errors.New("template can't be used for offline matching")
-	// track how many templates are verfied and by which signer
+	// track how many templates are verified and by which signer
 	SignatureStats = map[string]*atomic.Uint64{}
 )
 
@@ -47,66 +46,196 @@ func init() {
 	SignatureStats[Unsigned] = &atomic.Uint64{}
 }
 
-// Parse parses a yaml request template file
-// TODO make sure reading from the disk the template parsing happens once: see parsers.ParseTemplate vs templates.Parse
-func Parse(filePath string, preprocessor Preprocessor, options protocols.ExecutorOptions) (*Template, error) {
-	parser, ok := options.Parser.(*Parser)
-	if !ok {
-		panic("not a parser")
+// updateRequestOptions updates options for all request types in a template
+func updateRequestOptions(template *Template) {
+	for i, r := range template.RequestsDNS {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsDNS[i] = &rCopy
 	}
-	if !options.DoNotCache {
-		if value, _, err := parser.compiledTemplatesCache.Has(filePath); value != nil {
-			return value, err
-		}
+	for i, r := range template.RequestsHTTP {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsHTTP[i] = &rCopy
 	}
+	for i, r := range template.RequestsCode {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsCode[i] = &rCopy
+	}
+	for i, r := range template.RequestsFile {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsFile[i] = &rCopy
+	}
+	for i, r := range template.RequestsHeadless {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsHeadless[i] = &rCopy
+	}
+	for i, r := range template.RequestsNetwork {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsNetwork[i] = &rCopy
+	}
+	for i, r := range template.RequestsJavascript {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsJavascript[i] = &rCopy
+	}
+	for i, r := range template.RequestsSSL {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsSSL[i] = &rCopy
+	}
+	for i, r := range template.RequestsWHOIS {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsWHOIS[i] = &rCopy
+	}
+	for i, r := range template.RequestsWebsocket {
+		rCopy := *r
+		rCopy.UpdateOptions(template.Options)
+		template.RequestsWebsocket[i] = &rCopy
+	}
+}
 
-	var reader io.ReadCloser
-	if !options.DoNotCache {
-		_, raw, err := parser.parsedTemplatesCache.Has(filePath)
-		if err == nil && raw != nil {
-			reader = io.NopCloser(bytes.NewReader(raw))
-		}
-	}
-	var err error
-	if reader == nil {
-		reader, err = utils.ReaderFromPathOrURL(filePath, options.Catalog)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	defer reader.Close()
-
-	options.TemplatePath = filePath
-	template, err := ParseTemplateFromReader(reader, preprocessor, options.Copy())
+// parseFromSource parses a template from source with caching support
+func parseFromSource(filePath string, preprocessor Preprocessor, options *protocols.ExecutorOptions, parser *Parser) (*Template, error) {
+	reader, err := utils.ReaderFromPathOrURL(filePath, options.Catalog)
 	if err != nil {
 		return nil, err
 	}
+
+	defer func() {
+		_ = reader.Close()
+	}()
+
+	options = options.Copy()
+	options.TemplatePath = filePath
+
+	template, err := ParseTemplateFromReader(reader, preprocessor, options)
+	if err != nil {
+		return nil, err
+	}
+
 	if template.isGlobalMatchersEnabled() {
 		item := &globalmatchers.Item{
 			TemplateID:   template.ID,
 			TemplatePath: filePath,
 			TemplateInfo: template.Info,
 		}
+
 		for _, request := range template.RequestsHTTP {
 			item.Operators = append(item.Operators, request.CompiledOperators)
 		}
+
 		options.GlobalMatchers.AddOperator(item)
+
 		return nil, nil
 	}
+
 	// Compile the workflow request
 	if len(template.Workflows) > 0 {
 		compiled := &template.Workflow
 
-		compileWorkflow(filePath, preprocessor, &options, compiled, options.WorkflowLoader)
+		compileWorkflow(filePath, preprocessor, options, compiled, options.WorkflowLoader)
 		template.CompiledWorkflow = compiled
-		template.CompiledWorkflow.Options = &options
+		template.CompiledWorkflow.Options = options
 	}
+
 	template.Path = filePath
 	if !options.DoNotCache {
-		parser.compiledTemplatesCache.Store(filePath, template, nil, err)
+		parser.compiledTemplatesCache.StoreWithoutRaw(filePath, template, err)
 	}
+
 	return template, nil
+}
+
+// getParser returns a cached parser instance
+func getParser(options *protocols.ExecutorOptions) *Parser {
+	parser, ok := options.Parser.(*Parser)
+	if !ok || parser == nil {
+		panic("invalid parser")
+	}
+
+	return parser
+}
+
+// Parse parses a yaml request template file
+// TODO make sure reading from the disk the template parsing happens once: see parsers.ParseTemplate vs templates.Parse
+func Parse(filePath string, preprocessor Preprocessor, options *protocols.ExecutorOptions) (*Template, error) {
+	parser := getParser(options)
+
+	if !options.DoNotCache {
+		if value, _, _ := parser.compiledTemplatesCache.Has(filePath); value != nil {
+			// Copy the template, apply new options, and recompile requests
+			tplCopy := *value
+			newBase := options.Copy()
+			newBase.TemplateID = tplCopy.Options.TemplateID
+			newBase.TemplatePath = tplCopy.Options.TemplatePath
+			newBase.TemplateInfo = tplCopy.Options.TemplateInfo
+			newBase.TemplateVerifier = tplCopy.Options.TemplateVerifier
+			newBase.RawTemplate = tplCopy.Options.RawTemplate
+
+			if tplCopy.Options.Variables.Len() > 0 {
+				newBase.Variables = tplCopy.Options.Variables
+			}
+
+			if len(tplCopy.Options.Constants) > 0 {
+				newBase.Constants = tplCopy.Options.Constants
+			}
+
+			tplCopy.Options = newBase
+			tplCopy.Options.ApplyNewEngineOptions(options)
+
+			if tplCopy.CompiledWorkflow != nil {
+				tplCopy.CompiledWorkflow.Options.ApplyNewEngineOptions(options)
+				for _, w := range tplCopy.CompiledWorkflow.Workflows {
+					for _, ex := range w.Executers {
+						ex.Options.ApplyNewEngineOptions(options)
+					}
+				}
+			}
+
+			// Update options for all request types
+			updateRequestOptions(&tplCopy)
+			template := &tplCopy
+
+			if template.isGlobalMatchersEnabled() {
+				item := &globalmatchers.Item{
+					TemplateID:   template.ID,
+					TemplatePath: filePath,
+					TemplateInfo: template.Info,
+				}
+
+				for _, request := range template.RequestsHTTP {
+					item.Operators = append(item.Operators, request.CompiledOperators)
+				}
+
+				options.GlobalMatchers.AddOperator(item)
+
+				return nil, nil
+			}
+
+			// Compile the workflow request
+			if len(template.Workflows) > 0 {
+				compiled := &template.Workflow
+				compileWorkflow(filePath, preprocessor, tplCopy.Options, compiled, tplCopy.Options.WorkflowLoader)
+				template.CompiledWorkflow = compiled
+				template.CompiledWorkflow.Options = tplCopy.Options
+			}
+
+			if isCachedTemplateValid(template) {
+				// options.Logger.Error().Msgf("returning cached template %s after recompiling %d requests", tplCopy.Options.TemplateID, tplCopy.Requests())
+				return template, nil
+			}
+
+			// else: fallthrough to re-parse template from scratch
+		}
+	}
+
+	return parseFromSource(filePath, preprocessor, options, parser)
 }
 
 // isGlobalMatchersEnabled checks if any of requests in the template
@@ -191,34 +320,34 @@ func (template *Template) compileProtocolRequests(options *protocols.ExecutorOpt
 			options.IsMultiProtocol = true
 		}
 	} else {
-		if len(template.RequestsDNS) > 0 {
+		if template.HasDNSRequest() {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsDNS)...)
 		}
-		if len(template.RequestsFile) > 0 {
+		if template.HasFileRequest() {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsFile)...)
 		}
-		if len(template.RequestsNetwork) > 0 {
+		if template.HasNetworkRequest() {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsNetwork)...)
 		}
-		if len(template.RequestsHTTP) > 0 {
+		if template.HasHTTPRequest() {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsHTTP)...)
 		}
-		if len(template.RequestsHeadless) > 0 && options.Options.Headless {
+		if template.HasHeadlessRequest() && options.Options.Headless {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsHeadless)...)
 		}
-		if len(template.RequestsSSL) > 0 {
+		if template.HasSSLRequest() {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsSSL)...)
 		}
-		if len(template.RequestsWebsocket) > 0 {
+		if template.HasWebsocketRequest() {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsWebsocket)...)
 		}
-		if len(template.RequestsWHOIS) > 0 {
+		if template.HasWHOISRequest() {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsWHOIS)...)
 		}
-		if len(template.RequestsCode) > 0 && options.Options.EnableCodeTemplates {
+		if template.HasCodeRequest() && options.Options.EnableCodeTemplates {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsCode)...)
 		}
-		if len(template.RequestsJavascript) > 0 {
+		if template.HasJavascriptRequest() {
 			requests = append(requests, template.convertRequestToProtocolsRequest(template.RequestsJavascript)...)
 		}
 	}
@@ -282,7 +411,7 @@ mainLoop:
 
 // ParseTemplateFromReader reads the template from reader
 // returns the parsed template
-func ParseTemplateFromReader(reader io.Reader, preprocessor Preprocessor, options protocols.ExecutorOptions) (*Template, error) {
+func ParseTemplateFromReader(reader io.Reader, preprocessor Preprocessor, options *protocols.ExecutorOptions) (*Template, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
@@ -353,7 +482,10 @@ func ParseTemplateFromReader(reader io.Reader, preprocessor Preprocessor, option
 }
 
 // this method does not include any kind of preprocessing
-func parseTemplate(data []byte, options protocols.ExecutorOptions) (*Template, error) {
+func parseTemplate(data []byte, srcOptions *protocols.ExecutorOptions) (*Template, error) {
+	// Create a copy of the options specifically for this template
+	options := srcOptions.Copy()
+
 	template := &Template{}
 	var err error
 	switch config.GetTemplateFormatFromExt(template.Path) {
@@ -368,7 +500,7 @@ func parseTemplate(data []byte, options protocols.ExecutorOptions) (*Template, e
 		}
 	}
 	if err != nil {
-		return nil, errorutil.NewWithErr(err).Msgf("failed to parse %s", template.Path)
+		return nil, errkit.Wrapf(err, "failed to parse %s", template.Path)
 	}
 
 	if utils.IsBlank(template.Info.Name) {
@@ -416,10 +548,10 @@ func parseTemplate(data []byte, options protocols.ExecutorOptions) (*Template, e
 
 	// initialize the js compiler if missing
 	if options.JsCompiler == nil {
-		options.JsCompiler = GetJsCompiler()
+		options.JsCompiler = GetJsCompiler() // this is a singleton
 	}
 
-	template.Options = &options
+	template.Options = options
 	// If no requests, and it is also not a workflow, return error.
 	if template.Requests() == 0 {
 		return nil, fmt.Errorf("no requests defined for %s", template.ID)
@@ -428,7 +560,7 @@ func parseTemplate(data []byte, options protocols.ExecutorOptions) (*Template, e
 	// load `flow` and `source` in code protocol from file
 	// if file is referenced instead of actual source code
 	if err := template.ImportFileRefs(template.Options); err != nil {
-		return nil, errorutil.NewWithErr(err).Msgf("failed to load file refs for %s", template.ID)
+		return nil, errkit.Wrapf(err, "failed to load file refs for %s", template.ID)
 	}
 
 	if err := template.compileProtocolRequests(template.Options); err != nil {
@@ -448,6 +580,19 @@ func parseTemplate(data []byte, options protocols.ExecutorOptions) (*Template, e
 
 	// check if the template is verified
 	// only valid templates can be verified or signed
+	if options.TemplateVerificationCallback != nil && options.TemplatePath != "" {
+		if cached := options.TemplateVerificationCallback(options.TemplatePath); cached != nil {
+			template.Verified = cached.Verified
+			template.TemplateVerifier = cached.Verifier
+			options.TemplateVerifier = cached.Verifier
+			//nolint
+			if !(template.Verified && template.TemplateVerifier == "projectdiscovery/nuclei-templates") {
+				template.Options.RawTemplate = data
+			}
+			return template, nil
+		}
+	}
+
 	var verifier *signer.TemplateSigner
 	for _, verifier = range signer.DefaultTemplateVerifiers {
 		template.Verified, _ = verifier.Verify(data, template)
@@ -460,10 +605,57 @@ func parseTemplate(data []byte, options protocols.ExecutorOptions) (*Template, e
 		}
 	}
 	options.TemplateVerifier = template.TemplateVerifier
+
+	//nolint
 	if !(template.Verified && verifier.Identifier() == "projectdiscovery/nuclei-templates") {
 		template.Options.RawTemplate = data
 	}
+
 	return template, nil
+}
+
+// isCachedTemplateValid validates that a cached template is still usable after
+// option updates
+func isCachedTemplateValid(template *Template) bool {
+	// no requests or workflows
+	if template.Requests() == 0 && len(template.Workflows) == 0 {
+		return false
+	}
+
+	// options not initialized
+	if template.Options == nil {
+		return false
+	}
+
+	// executer not available for non-workflow template
+	if len(template.Workflows) == 0 && template.Executer == nil {
+		return false
+	}
+
+	// compiled workflow not available
+	if len(template.Workflows) > 0 && template.CompiledWorkflow == nil {
+		return false
+	}
+
+	// template ID mismatch
+	if template.Options.TemplateID != template.ID {
+		return false
+	}
+
+	// executer exists but no requests or flow available
+	if template.Executer != nil {
+		// NOTE(dwisiswant0): This is a basic sanity check since we can't access
+		// private fields, but we can check requests tho
+		if template.Requests() == 0 && template.Options.Flow == "" {
+			return false
+		}
+	}
+
+	if template.Options.Options == nil {
+		return false
+	}
+
+	return true
 }
 
 var (

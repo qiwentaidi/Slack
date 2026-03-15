@@ -8,11 +8,11 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/protocolstate"
 )
 
-func memoizedgetServerInfo(host string, port int) (string, error) {
-	hash := "getServerInfo" + ":" + fmt.Sprint(host) + ":" + fmt.Sprint(port)
+func memoizedgetServerInfo(executionId string, host string, port int) (string, error) {
+	hash := "getServerInfo" + ":" + fmt.Sprint(executionId) + ":" + fmt.Sprint(host) + ":" + fmt.Sprint(port)
 
 	v, err, _ := protocolstate.Memoizer.Do(hash, func() (interface{}, error) {
-		return getServerInfo(host, port)
+		return getServerInfo(executionId, host, port)
 	})
 	if err != nil {
 		return "", err
@@ -24,11 +24,11 @@ func memoizedgetServerInfo(host string, port int) (string, error) {
 	return "", errors.New("could not convert cached result")
 }
 
-func memoizedconnect(host string, port int, password string) (bool, error) {
-	hash := "connect" + ":" + fmt.Sprint(host) + ":" + fmt.Sprint(port) + ":" + fmt.Sprint(password)
+func memoizedconnect(executionId string, host string, port int, password string) (bool, error) {
+	hash := "connect" + ":" + fmt.Sprint(executionId) + ":" + fmt.Sprint(host) + ":" + fmt.Sprint(port) + ":" + fmt.Sprint(password)
 
 	v, err, _ := protocolstate.Memoizer.Do(hash, func() (interface{}, error) {
-		return connect(host, port, password)
+		return connect(executionId, host, port, password)
 	})
 	if err != nil {
 		return false, err
@@ -40,11 +40,11 @@ func memoizedconnect(host string, port int, password string) (bool, error) {
 	return false, errors.New("could not convert cached result")
 }
 
-func memoizedgetServerInfoAuth(host string, port int, password string) (string, error) {
-	hash := "getServerInfoAuth" + ":" + fmt.Sprint(host) + ":" + fmt.Sprint(port) + ":" + fmt.Sprint(password)
+func memoizedgetServerInfoAuth(executionId string, host string, port int, password string) (string, error) {
+	hash := "getServerInfoAuth" + ":" + fmt.Sprint(executionId) + ":" + fmt.Sprint(host) + ":" + fmt.Sprint(port) + ":" + fmt.Sprint(password)
 
 	v, err, _ := protocolstate.Memoizer.Do(hash, func() (interface{}, error) {
-		return getServerInfoAuth(host, port, password)
+		return getServerInfoAuth(executionId, host, port, password)
 	})
 	if err != nil {
 		return "", err
@@ -56,11 +56,11 @@ func memoizedgetServerInfoAuth(host string, port int, password string) (string, 
 	return "", errors.New("could not convert cached result")
 }
 
-func memoizedisAuthenticated(host string, port int) (bool, error) {
-	hash := "isAuthenticated" + ":" + fmt.Sprint(host) + ":" + fmt.Sprint(port)
+func memoizedisAuthenticated(executionId string, host string, port int) (bool, error) {
+	hash := "isAuthenticated" + ":" + fmt.Sprint(executionId) + ":" + fmt.Sprint(host) + ":" + fmt.Sprint(port)
 
 	v, err, _ := protocolstate.Memoizer.Do(hash, func() (interface{}, error) {
-		return isAuthenticated(host, port)
+		return isAuthenticated(executionId, host, port)
 	})
 	if err != nil {
 		return false, err

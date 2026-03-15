@@ -14,7 +14,7 @@ export function ExtractIP(arg1:string):Promise<string>;
 
 export function ExtractURLs(arg1:string):Promise<Array<string>>;
 
-export function FormatOutput(arg1:string):Promise<{[key: string]: Array<string>}>;
+export function FormatOutput(arg1:string):Promise<Record<string, Array<string>>>;
 
 export function GOOS():Promise<string>;
 

@@ -18,25 +18,26 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/utils"
 	httputil "github.com/projectdiscovery/nuclei/v3/pkg/protocols/utils/http"
 	"github.com/projectdiscovery/nuclei/v3/pkg/types"
-	errorutil "github.com/projectdiscovery/utils/errors"
+	"github.com/projectdiscovery/utils/errkit"
 	urlutil "github.com/projectdiscovery/utils/url"
 )
 
 // Page is a single page in an isolated browser instance
 type Page struct {
-	ctx            *contextargs.Context
-	inputURL       *urlutil.URL
-	options        *Options
-	page           *rod.Page
-	rules          []rule
-	instance       *Instance
-	hijackRouter   *rod.HijackRouter
-	hijackNative   *Hijack
-	mutex          *sync.RWMutex
-	History        []HistoryData
-	InteractshURLs []string
-	payloads       map[string]interface{}
-	variables      map[string]interface{}
+	ctx                *contextargs.Context
+	inputURL           *urlutil.URL
+	options            *Options
+	page               *rod.Page
+	rules              []rule
+	instance           *Instance
+	hijackRouter       *rod.HijackRouter
+	hijackNative       *Hijack
+	mutex              *sync.RWMutex
+	History            []HistoryData
+	InteractshURLs     []string
+	payloads           map[string]interface{}
+	variables          map[string]interface{}
+	lastActionNavigate *Action
 }
 
 // HistoryData contains the page request/response pairs
@@ -60,8 +61,14 @@ func (i *Instance) Run(ctx *contextargs.Context, actions []*Action, payloads map
 	}
 	page = page.Timeout(options.Timeout)
 
+	if err = i.browser.applyDefaultHeaders(page); err != nil {
+		_ = page.Close()
+		return nil, nil, err
+	}
+
 	if i.browser.customAgent != "" {
 		if userAgentErr := page.SetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: i.browser.customAgent}); userAgentErr != nil {
+			_ = page.Close()
 			return nil, nil, userAgentErr
 		}
 	}
@@ -73,7 +80,8 @@ func (i *Instance) Run(ctx *contextargs.Context, actions []*Action, payloads map
 	target := ctx.MetaInput.Input
 	input, err := urlutil.Parse(target)
 	if err != nil {
-		return nil, nil, errorutil.NewWithErr(err).Msgf("could not parse URL %s", target)
+		_ = page.Close()
+		return nil, nil, errkit.Wrapf(err, "could not parse URL %s", target)
 	}
 
 	hasTrailingSlash := httputil.HasTrailingSlash(target)
@@ -94,6 +102,14 @@ func (i *Instance) Run(ctx *contextargs.Context, actions []*Action, payloads map
 		variables: variables,
 		inputURL:  input,
 	}
+
+	successfulPageCreation := false
+	defer func() {
+		if !successfulPageCreation {
+			// to avoid leaking pages in case of errors
+			createdPage.Close()
+		}
+	}()
 
 	httpclient, err := i.browser.getHTTPClient()
 	if err != nil {
@@ -126,10 +142,6 @@ func (i *Instance) Run(ctx *contextargs.Context, actions []*Action, payloads map
 		Width:  float64(1920),
 		Height: float64(1080),
 	}}); err != nil {
-		return nil, nil, err
-	}
-
-	if _, err := page.SetExtraHeaders([]string{"Accept-Language", "en, en-GB, en-us;"}); err != nil {
 		return nil, nil, err
 	}
 
@@ -195,15 +207,25 @@ func (i *Instance) Run(ctx *contextargs.Context, actions []*Action, payloads map
 
 	// The first item of history data will contain the very first request from the browser
 	// we assume it's the one matching the initial URL
-	if len(createdPage.History) > 0 {
-		firstItem := createdPage.History[0]
-		if resp, err := http.ReadResponse(bufio.NewReader(strings.NewReader(firstItem.RawResponse)), nil); err == nil {
+	createdPage.mutex.RLock()
+	var firstHistoryItem HistoryData
+	hasHistory := len(createdPage.History) > 0
+	if hasHistory {
+		firstHistoryItem = createdPage.History[0]
+	}
+	createdPage.mutex.RUnlock()
+
+	if hasHistory {
+		if resp, err := http.ReadResponse(bufio.NewReader(strings.NewReader(firstHistoryItem.RawResponse)), nil); err == nil {
 			data["header"] = utils.HeadersToString(resp.Header)
 			data["status_code"] = fmt.Sprint(resp.StatusCode)
-			resp.Body.Close()
+			defer func() {
+				_ = resp.Body.Close()
+			}()
 		}
 	}
 
+	successfulPageCreation = true // avoid closing the page in case of success in deferred function
 	return data, createdPage, nil
 }
 
@@ -215,7 +237,7 @@ func (p *Page) Close() {
 	if p.hijackNative != nil {
 		_ = p.hijackNative.Stop()
 	}
-	p.page.Close()
+	_ = p.page.Close()
 }
 
 // Page returns the current page for the actions
@@ -272,6 +294,17 @@ func (p *Page) hasModificationRules() bool {
 		}
 	}
 	return false
+}
+
+// updateLastNavigatedURL updates the last navigated URL in the instance's
+// request log.
+func (p *Page) updateLastNavigatedURL() {
+	if p.lastActionNavigate == nil {
+		return
+	}
+
+	templateURL := p.lastActionNavigate.GetArg("url")
+	p.instance.requestLog[templateURL] = p.URL()
 }
 
 func containsModificationActions(actions ...*Action) bool {

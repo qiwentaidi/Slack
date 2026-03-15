@@ -1,12 +1,12 @@
 // Package json provides fast JSON encoding and decoding functionality.
 //
 // On supported platforms; Linux, Darwin, or Windows on amd64, or on arm64 with
-// Go >= 1.20 and <= 1.23, the package uses the high-performance [sonic] library.
+// Go >= 1.20 and <= 1.25, the package uses the high-performance [sonic] library.
 // On any other systems, it gracefully falls back to using the [go-json]
 // implementation.
 //
 // This package acts as a wrapper around the underlying JSON APIs, offering
-// standard operations such as marshaling, unmarshaling, and working with JSON
+// standard operations such as marshaling, unmarshalling, and working with JSON
 // encoders/decoders. It maintains compatibility with the standard encoding/json
 // interfaces while delivering improved performance when possible.
 //

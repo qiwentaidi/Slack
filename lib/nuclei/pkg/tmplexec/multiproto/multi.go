@@ -2,7 +2,6 @@ package multiproto
 
 import (
 	"strconv"
-	"strings"
 	"sync/atomic"
 
 	"github.com/projectdiscovery/nuclei/v3/pkg/output"
@@ -10,6 +9,7 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/generators"
 	"github.com/projectdiscovery/nuclei/v3/pkg/scan"
 	"github.com/projectdiscovery/nuclei/v3/pkg/templates/types"
+	"github.com/projectdiscovery/nuclei/v3/pkg/tmplexec/utils"
 	mapsutil "github.com/projectdiscovery/utils/maps"
 	stringsutil "github.com/projectdiscovery/utils/strings"
 )
@@ -66,7 +66,7 @@ func (m *MultiProtocol) ExecuteWithResults(ctx *scan.ScanContext) error {
 
 	// template context: contains values extracted using `internal` extractor from previous protocols
 	// these values are extracted from each protocol in queue and are passed to next protocol in queue
-	// instead of adding seperator field to handle such cases these values are appended to `dynamicValues` (which are meant to be used in workflows)
+	// instead of adding separator field to handle such cases these values are appended to `dynamicValues` (which are meant to be used in workflows)
 	// this makes it possible to use multi protocol templates in workflows
 	// Note: internal extractor values take precedence over dynamicValues from workflows (i.e other templates in workflow)
 
@@ -90,17 +90,7 @@ func (m *MultiProtocol) ExecuteWithResults(ctx *scan.ScanContext) error {
 				return
 			}
 
-			ID := req.GetID()
-			if ID != "" {
-				builder := &strings.Builder{}
-				for k, v := range event.InternalEvent {
-					builder.WriteString(ID)
-					builder.WriteString("_")
-					builder.WriteString(k)
-					_ = previous.Set(builder.String(), v)
-					builder.Reset()
-				}
-			}
+			utils.FillPreviousEvent(req.GetID(), event, previous)
 
 			// log event and generate result for the event
 			ctx.LogEvent(event)

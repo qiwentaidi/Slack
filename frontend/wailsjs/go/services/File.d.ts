@@ -52,9 +52,9 @@ export function Path(arg1:string):Promise<services.PathInfo>;
 
 export function ReadFile(arg1:string):Promise<services.FileInfo>;
 
-export function ReadLocalStore():Promise<{[key: string]: any}>;
+export function ReadLocalStore():Promise<Record<string, any>>;
 
-export function ReadMemo(arg1:string):Promise<{[key: string]: string}>;
+export function ReadMemo(arg1:string):Promise<Record<string, string>>;
 
 export function RemoveFile(arg1:string):Promise<boolean>;
 

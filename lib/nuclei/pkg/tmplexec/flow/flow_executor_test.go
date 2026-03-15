@@ -19,14 +19,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var executerOpts protocols.ExecutorOptions
+var executerOpts *protocols.ExecutorOptions
 
 func setup() {
 	options := testutils.DefaultOptions
 	testutils.Init(options)
 	progressImpl, _ := progress.NewStatsTicker(0, false, false, false, 0)
 
-	executerOpts = protocols.ExecutorOptions{
+	executerOpts = &protocols.ExecutorOptions{
 		Output:       testutils.NewMockOutputWriter(options.OmitTemplate),
 		Options:      options,
 		Progress:     progressImpl,
@@ -37,7 +37,7 @@ func setup() {
 		RateLimiter:  ratelimit.New(context.Background(), uint(options.RateLimit), time.Second),
 		Parser:       templates.NewParser(),
 	}
-	workflowLoader, err := workflow.NewLoader(&executerOpts)
+	workflowLoader, err := workflow.NewLoader(executerOpts)
 	if err != nil {
 		log.Fatalf("Could not create workflow loader: %s\n", err)
 	}
@@ -50,7 +50,7 @@ func TestFlowTemplateWithIndex(t *testing.T) {
 	Template, err := templates.Parse("testcases/nuclei-flow-dns.yaml", nil, executerOpts)
 	require.Nil(t, err, "could not parse template")
 
-	require.True(t, Template.Flow != "", "not a flow template") // this is classifer if template is flow or not
+	require.True(t, Template.Flow != "", "not a flow template") // this is classifier if template is flow or not
 
 	err = Template.Executer.Compile()
 	require.Nil(t, err, "could not compile template")
@@ -69,7 +69,7 @@ func TestFlowTemplateWithID(t *testing.T) {
 	Template, err := templates.Parse("testcases/nuclei-flow-dns-id.yaml", nil, executerOpts)
 	require.Nil(t, err, "could not parse template")
 
-	require.True(t, Template.Flow != "", "not a flow template") // this is classifer if template is flow or not
+	require.True(t, Template.Flow != "", "not a flow template") // this is classifier if template is flow or not
 
 	err = Template.Executer.Compile()
 	require.Nil(t, err, "could not compile template")
@@ -91,7 +91,7 @@ func TestFlowWithProtoPrefix(t *testing.T) {
 	Template, err := templates.Parse("testcases/nuclei-flow-dns-prefix.yaml", nil, executerOpts)
 	require.Nil(t, err, "could not parse template")
 
-	require.True(t, Template.Flow != "", "not a flow template") // this is classifer if template is flow or not
+	require.True(t, Template.Flow != "", "not a flow template") // this is classifier if template is flow or not
 
 	err = Template.Executer.Compile()
 	require.Nil(t, err, "could not compile template")
@@ -111,7 +111,7 @@ func TestFlowWithConditionNegative(t *testing.T) {
 	Template, err := templates.Parse("testcases/condition-flow.yaml", nil, executerOpts)
 	require.Nil(t, err, "could not parse template")
 
-	require.True(t, Template.Flow != "", "not a flow template") // this is classifer if template is flow or not
+	require.True(t, Template.Flow != "", "not a flow template") // this is classifier if template is flow or not
 
 	err = Template.Executer.Compile()
 	require.Nil(t, err, "could not compile template")
@@ -132,7 +132,7 @@ func TestFlowWithConditionPositive(t *testing.T) {
 	Template, err := templates.Parse("testcases/condition-flow.yaml", nil, executerOpts)
 	require.Nil(t, err, "could not parse template")
 
-	require.True(t, Template.Flow != "", "not a flow template") // this is classifer if template is flow or not
+	require.True(t, Template.Flow != "", "not a flow template") // this is classifier if template is flow or not
 
 	err = Template.Executer.Compile()
 	require.Nil(t, err, "could not compile template")
@@ -153,7 +153,7 @@ func TestFlowWithNoMatchers(t *testing.T) {
 	Template, err := templates.Parse("testcases/condition-flow-no-operators.yaml", nil, executerOpts)
 	require.Nil(t, err, "could not parse template")
 
-	require.True(t, Template.Flow != "", "not a flow template") // this is classifer if template is flow or not
+	require.True(t, Template.Flow != "", "not a flow template") // this is classifier if template is flow or not
 
 	err = Template.Executer.Compile()
 	require.Nil(t, err, "could not compile template")
@@ -169,7 +169,7 @@ func TestFlowWithNoMatchers(t *testing.T) {
 		Template, err := templates.Parse("testcases/condition-flow-extractors.yaml", nil, executerOpts)
 		require.Nil(t, err, "could not parse template")
 
-		require.True(t, Template.Flow != "", "not a flow template") // this is classifer if template is flow or not
+		require.True(t, Template.Flow != "", "not a flow template") // this is classifier if template is flow or not
 
 		err = Template.Executer.Compile()
 		require.Nil(t, err, "could not compile template")

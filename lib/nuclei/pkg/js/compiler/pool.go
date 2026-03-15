@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"sync/atomic"
+	"time"
 
-	"github.com/dop251/goja"
-	"github.com/dop251/goja_nodejs/console"
-	"github.com/dop251/goja_nodejs/require"
+	"github.com/Mzack9999/goja"
+	"github.com/Mzack9999/goja_nodejs/console"
+	"github.com/Mzack9999/goja_nodejs/require"
 	"github.com/kitabisa/go-ci"
 	"github.com/projectdiscovery/gologger"
 	_ "github.com/projectdiscovery/nuclei/v3/pkg/js/generated/go/libbytes"
@@ -74,6 +76,12 @@ var gojapool = &sync.Pool{
 }
 
 func executeWithRuntime(runtime *goja.Runtime, p *goja.Program, args *ExecuteArgs, opts *ExecuteOptions) (result goja.Value, err error) {
+	if opts != nil && opts.TimeoutVariants != nil {
+		timer := time.AfterFunc(opts.TimeoutVariants.JsCompilerExecutionTimeout, func() {
+			runtime.Interrupt(ErrJSExecDeadline)
+		})
+		defer timer.Stop()
+	}
 	defer func() {
 		// reset before putting back to pool
 		_ = runtime.GlobalObject().Delete("template") // template ctx
@@ -84,6 +92,7 @@ func executeWithRuntime(runtime *goja.Runtime, p *goja.Program, args *ExecuteArg
 		if opts != nil && opts.Cleanup != nil {
 			opts.Cleanup(runtime)
 		}
+		runtime.RemoveContextValue("executionId")
 	}()
 
 	// TODO(dwisiswant0): remove this once we get the RCA.
@@ -108,8 +117,11 @@ func executeWithRuntime(runtime *goja.Runtime, p *goja.Program, args *ExecuteArg
 		if err := opts.Callback(runtime); err != nil {
 			return nil, err
 		}
-
 	}
+
+	// inject execution id and context
+	runtime.SetContextValue("executionId", opts.ExecutionId)
+
 	// execute the script
 	return runtime.RunProgram(p)
 }
@@ -138,7 +150,29 @@ func executeWithPoolingProgram(p *goja.Program, args *ExecuteArgs, opts *Execute
 	pooljsc.Add()
 	defer pooljsc.Done()
 	runtime := gojapool.Get().(*goja.Runtime)
-	defer gojapool.Put(runtime)
+	var interrupted atomic.Bool
+	var stopAfterFunc func() bool
+
+	if opts != nil && opts.Context != nil {
+		stopAfterFunc = context.AfterFunc(opts.Context, func() {
+			interrupted.Store(true)
+			runtime.Interrupt(opts.Context.Err())
+		})
+	}
+
+	defer func() {
+		if stopAfterFunc != nil {
+			stopAfterFunc() // 返回值可以忽略
+		}
+	}()
+	defer func() {
+		if interrupted.Load() {
+			runtime = nil
+			// ❌ 被中断的 runtime 直接丢弃，不能回池
+			return
+		}
+		gojapool.Put(runtime)
+	}()
 	var buff bytes.Buffer
 	opts.exports = make(map[string]interface{})
 
@@ -196,7 +230,16 @@ func executeWithPoolingProgram(p *goja.Program, args *ExecuteArgs, opts *Execute
 // Internal purposes i.e generating bindings
 func InternalGetGeneratorRuntime() *goja.Runtime {
 	runtime := gojapool.Get().(*goja.Runtime)
+	runtime.SetContextValue("__internal_generator__", true)
 	return runtime
+}
+
+func ReleaseGeneratorRuntime(runtime *goja.Runtime) {
+	if runtime == nil {
+		return
+	}
+	runtime.RemoveContextValue("__internal_generator__")
+	gojapool.Put(runtime)
 }
 
 func getRegistry() *require.Registry {
@@ -210,7 +253,7 @@ func createNewRuntime() *goja.Runtime {
 	// by default import below modules every time
 	_ = runtime.Set("console", require.Require(runtime, console.ModuleName))
 
-	// Register embedded javacript helpers
+	// Register embedded javascript helpers
 	if err := global.RegisterNativeScripts(runtime); err != nil {
 		gologger.Error().Msgf("Could not register scripts: %s\n", err)
 	}
@@ -238,7 +281,7 @@ func stringify(gojaValue goja.Value, runtime *goja.Runtime) string {
 				return result.String()
 			}
 		}
-		// unlikely but if to_json throwed some error use native json.Marshal
+		// unlikely but if to_json threw some error use native json.Marshal
 		val := value
 		if kind == reflect.Ptr {
 			val = reflect.ValueOf(value).Elem().Interface()

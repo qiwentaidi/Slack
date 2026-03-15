@@ -3,15 +3,15 @@ package nuclei
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/projectdiscovery/nuclei/v3/pkg/input"
+	"github.com/projectdiscovery/nuclei/v3/pkg/reporting"
 
 	"github.com/logrusorgru/aurora"
 	"github.com/pkg/errors"
-	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/levels"
 	"github.com/projectdiscovery/httpx/common/httpx"
 	"github.com/projectdiscovery/nuclei/v3/internal/runner"
@@ -27,16 +27,14 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/interactsh"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/protocolinit"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/protocolstate"
+	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/headless/engine"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/http/httpclientpool"
-	"github.com/projectdiscovery/nuclei/v3/pkg/reporting"
 	"github.com/projectdiscovery/nuclei/v3/pkg/templates"
 	"github.com/projectdiscovery/nuclei/v3/pkg/testutils"
 	"github.com/projectdiscovery/nuclei/v3/pkg/types"
 	nucleiUtils "github.com/projectdiscovery/nuclei/v3/pkg/utils"
 	"github.com/projectdiscovery/ratelimit"
 )
-
-var sharedInit *sync.Once
 
 // applyRequiredDefaults to options
 func (e *NucleiEngine) applyRequiredDefaults(ctx context.Context) {
@@ -97,27 +95,37 @@ func (e *NucleiEngine) applyRequiredDefaults(ctx context.Context) {
 
 // init
 func (e *NucleiEngine) init(ctx context.Context) error {
+	// Update logger ref (if it was changed by [WithLogger])
+	// (Logger is already initialized)
+	if e.opts.Logger != e.Logger {
+		e.Logger = e.opts.Logger
+	}
+
 	if e.opts.Verbose {
-		gologger.DefaultLogger.SetMaxLevel(levels.LevelVerbose)
+		e.Logger.SetMaxLevel(levels.LevelVerbose)
 	} else if e.opts.Debug {
-		gologger.DefaultLogger.SetMaxLevel(levels.LevelDebug)
+		e.Logger.SetMaxLevel(levels.LevelDebug)
 	} else if e.opts.Silent {
-		gologger.DefaultLogger.SetMaxLevel(levels.LevelSilent)
+		e.Logger.SetMaxLevel(levels.LevelSilent)
 	}
 
 	if err := runner.ValidateOptions(e.opts); err != nil {
 		return err
 	}
 
-	e.parser = templates.NewParser()
-
-	if sharedInit == nil || protocolstate.ShouldInit() {
-		sharedInit = &sync.Once{}
+	if e.opts.Parser != nil {
+		if op, ok := e.opts.Parser.(*templates.Parser); ok {
+			e.parser = op
+		}
 	}
 
-	sharedInit.Do(func() {
+	if e.parser == nil {
+		e.parser = templates.NewParser()
+	}
+
+	if protocolstate.ShouldInit(e.opts.ExecutionId) {
 		_ = protocolinit.Init(e.opts)
-	})
+	}
 
 	if e.opts.ProxyInternal && e.opts.AliveHttpProxy != "" || e.opts.AliveSocksProxy != "" {
 		httpclient, err := httpclientpool.Get(e.opts, &httpclientpool.Configuration{})
@@ -155,29 +163,50 @@ func (e *NucleiEngine) init(ctx context.Context) error {
 		return err
 	}
 
+	if e.opts.Headless {
+		if engine.MustDisableSandbox() {
+			e.Logger.Warning().Msgf("The current platform and privileged user will run the browser without sandbox")
+		}
+		browser, err := engine.New(e.opts)
+		if err != nil {
+			return err
+		}
+		e.browserInstance = browser
+	}
+
 	if e.catalog == nil {
 		e.catalog = disk.NewCatalog(config.DefaultConfig.TemplatesDirectory)
 	}
 
-	e.executerOpts = protocols.ExecutorOptions{
-		Output:       e.customWriter,
-		Options:      e.opts,
-		Progress:     e.customProgress,
-		Catalog:      e.catalog,
-		IssuesClient: e.rc,
-		RateLimiter:  e.rateLimiter,
-		Interactsh:   e.interactshClient,
-		Colorizer:    aurora.NewAurora(true),
-		ResumeCfg:    types.NewResumeCfg(),
-		Browser:      e.browserInstance,
-		Parser:       e.parser,
-		InputHelper:  input.NewHelper(),
+	if e.tmpDir == "" {
+		tmpDir, err := os.MkdirTemp("", "nuclei-tmp-*")
+		if err != nil {
+			return err
+		}
+		e.tmpDir = tmpDir
+	}
+
+	e.executerOpts = &protocols.ExecutorOptions{
+		Output:             e.customWriter,
+		Options:            e.opts,
+		Progress:           e.customProgress,
+		Catalog:            e.catalog,
+		IssuesClient:       e.rc,
+		RateLimiter:        e.rateLimiter,
+		Interactsh:         e.interactshClient,
+		Colorizer:          aurora.NewAurora(true),
+		ResumeCfg:          types.NewResumeCfg(),
+		Browser:            e.browserInstance,
+		Parser:             e.parser,
+		InputHelper:        input.NewHelper(),
+		TemporaryDirectory: e.tmpDir,
+		Logger:             e.opts.Logger,
 	}
 	if e.opts.ShouldUseHostError() && e.hostErrCache != nil {
 		e.executerOpts.HostErrorsCache = e.hostErrCache
 	}
 	if len(e.opts.SecretsFile) > 0 {
-		authTmplStore, err := runner.GetAuthTmplStore(*e.opts, e.catalog, e.executerOpts)
+		authTmplStore, err := runner.GetAuthTmplStore(e.opts, e.catalog, e.executerOpts)
 		if err != nil {
 			return errors.Wrap(err, "failed to load dynamic auth templates")
 		}
@@ -217,6 +246,25 @@ func (e *NucleiEngine) init(ctx context.Context) error {
 		} else {
 			e.executerOpts.RateLimiter = ratelimit.New(ctx, uint(e.opts.RateLimit), e.opts.RateLimitDuration)
 		}
+	}
+
+	// Handle the case where the user passed an existing parser that we can use as a cache
+	if e.opts.Parser != nil {
+		if cachedParser, ok := e.opts.Parser.(*templates.Parser); ok {
+			e.parser = cachedParser
+			e.opts.Parser = cachedParser
+			e.executerOpts.Parser = cachedParser
+			e.executerOpts.Options.Parser = cachedParser
+		}
+	}
+
+	// Create a new parser if necessary
+	if e.parser == nil {
+		op := templates.NewParser()
+		e.parser = op
+		e.opts.Parser = op
+		e.executerOpts.Parser = op
+		e.executerOpts.Options.Parser = op
 	}
 
 	e.engine = core.New(e.opts)

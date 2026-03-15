@@ -38,15 +38,15 @@ export function ExportWebReportWithHtml(arg1:string,arg2:Array<string>):Promise<
 
 export function ExportWebReportWithJson(arg1:string,arg2:Array<structs.TaskResult>):Promise<boolean>;
 
-export function FetchDatabaseInfoFromOracle():Promise<{[key: string]: Array<string>}>;
+export function FetchDatabaseInfoFromOracle():Promise<Record<string, Array<string>>>;
 
-export function FetchDatabaseInfoFromPostgres(arg1:structs.DatabaseConnection):Promise<{[key: string]: Array<string>}>;
+export function FetchDatabaseInfoFromPostgres(arg1:structs.DatabaseConnection):Promise<Record<string, Array<string>>>;
 
-export function FetchDatabaseinfoFromMongodb():Promise<{[key: string]: Array<string>}>;
+export function FetchDatabaseinfoFromMongodb():Promise<Record<string, Array<string>>>;
 
-export function FetchDatabaseinfoFromMysql():Promise<{[key: string]: Array<string>}>;
+export function FetchDatabaseinfoFromMysql():Promise<Record<string, Array<string>>>;
 
-export function FetchDatabaseinfoFromSqlServer():Promise<{[key: string]: Array<string>}>;
+export function FetchDatabaseinfoFromSqlServer():Promise<Record<string, Array<string>>>;
 
 export function FetchTableInfoFromMysql(arg1:string,arg2:string):Promise<structs.RowData>;
 

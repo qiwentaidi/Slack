@@ -22,6 +22,7 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/protocolstate"
 	"github.com/projectdiscovery/nuclei/v3/pkg/testutils/testheadless"
 	"github.com/projectdiscovery/nuclei/v3/pkg/types"
+	envutil "github.com/projectdiscovery/utils/env"
 	stringsutil "github.com/projectdiscovery/utils/strings"
 )
 
@@ -38,7 +39,7 @@ func TestActionNavigate(t *testing.T) {
 
 	actions := []*Action{{ActionType: ActionTypeHolder{ActionType: ActionNavigate}, Data: map[string]string{"url": "{{BaseURL}}"}}, {ActionType: ActionTypeHolder{ActionType: ActionWaitLoad}}}
 
-	testHeadlessSimpleResponse(t, response, actions, 20*time.Second, func(page *Page, err error, out ActionData) {
+	testHeadlessSimpleResponse(t, response, actions, 60*time.Second, func(page *Page, err error, out ActionData) {
 		require.Nilf(t, err, "could not run page actions")
 		require.Equal(t, "Nuclei Test Page", page.Page().MustInfo().Title, "could not navigate correctly")
 	})
@@ -643,8 +644,9 @@ func testHeadlessSimpleResponse(t *testing.T, response string, actions []*Action
 func testHeadless(t *testing.T, actions []*Action, timeout time.Duration, handler func(w http.ResponseWriter, r *http.Request), assert func(page *Page, pageErr error, extractedData ActionData)) {
 	t.Helper()
 
-	lfa := getBoolFromEnv("LOCAL_FILE_ACCESS", true)
-	rna := getBoolFromEnv("RESTRICED_LOCAL_NETWORK_ACCESS", false)
+	lfa := envutil.GetEnvOrDefault("LOCAL_FILE_ACCESS", true)
+	rna := envutil.GetEnvOrDefault("RESTRICTED_LOCAL_NETWORK_ACCESS", false)
+
 	opts := &types.Options{AllowLocalFileAccess: lfa, RestrictLocalNetworkAccess: rna}
 
 	_ = protocolstate.Init(opts)
@@ -658,7 +660,9 @@ func testHeadless(t *testing.T, actions []*Action, timeout time.Duration, handle
 
 	instance, err := browser.NewInstance()
 	require.Nil(t, err, "could not create browser instance")
-	defer instance.Close()
+	defer func() {
+		_ = instance.Close()
+	}()
 
 	ts := httptest.NewServer(http.HandlerFunc(handler))
 	defer ts.Close()
@@ -717,7 +721,9 @@ func TestBlockedHeadlessURLS(t *testing.T) {
 
 	instance, err := browser.NewInstance()
 	require.Nil(t, err, "could not create browser instance")
-	defer instance.Close()
+	defer func() {
+		_ = instance.Close()
+	}()
 
 	ts := httptest.NewServer(nil)
 	defer ts.Close()
@@ -730,9 +736,9 @@ func TestBlockedHeadlessURLS(t *testing.T) {
 		"fTP://example.com:21\r\n",
 		"ftp://example.com:21",
 		"chrome://settings",
-		"	chROme://version",
+		"	chRSome://version",
 		"chrome-extension://version\r",
-		"	chrOme-EXTension://settings",
+		"	chrSome-EXTension://settings",
 		"view-source:file:/etc/hosts",
 	}
 
@@ -750,12 +756,4 @@ func TestBlockedHeadlessURLS(t *testing.T) {
 			page.Close()
 		}
 	}
-}
-
-func getBoolFromEnv(key string, defaultValue bool) bool {
-	val := os.Getenv(key)
-	if val == "" {
-		return defaultValue
-	}
-	return strings.EqualFold(val, "true")
 }

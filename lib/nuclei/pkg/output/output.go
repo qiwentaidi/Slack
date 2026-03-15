@@ -231,10 +231,8 @@ type IssueTrackerMetadata struct {
 
 // NewStandardWriter creates a new output writer based on user configurations
 func NewStandardWriter(options *types.Options) (*StandardWriter, error) {
-	resumeBool := false
-	if options.Resume != "" {
-		resumeBool = true
-	}
+	resumeBool := options.Resume != ""
+
 	auroraColorizer := aurora.NewAurora(!options.NoColor)
 
 	var outputFile io.WriteCloser
@@ -299,6 +297,10 @@ func (w *StandardWriter) ResultCount() int {
 
 // Write writes the event to file and/or screen.
 func (w *StandardWriter) Write(event *ResultEvent) error {
+	if event.Error != "" && !w.matcherStatus {
+		return nil
+	}
+
 	// Enrich the result event with extra metadata on the template-path and url.
 	if event.TemplatePath != "" {
 		event.Template, event.TemplateURL = utils.TemplatePathURL(types.ToString(event.TemplatePath), types.ToString(event.TemplateID), event.TemplateVerifier)
@@ -439,7 +441,7 @@ func getJSONLogRequestFromError(templatePath, input, requestType string, request
 			request.Attrs = slog.GroupValue(errX.Attrs()...)
 		}
 	}
-	// check if address slog attr is avaiable in error if set use it
+	// check if address slog attr is available in error if set use it
 	if val := errkit.GetAttrValue(requestErr, "address"); val.Any() != nil {
 		request.Address = val.String()
 	}
@@ -454,13 +456,13 @@ func (w *StandardWriter) Colorizer() aurora.Aurora {
 // Close closes the output writing interface
 func (w *StandardWriter) Close() {
 	if w.outputFile != nil {
-		w.outputFile.Close()
+		_ = w.outputFile.Close()
 	}
 	if w.traceFile != nil {
-		w.traceFile.Close()
+		_ = w.traceFile.Close()
 	}
 	if w.errorFile != nil {
-		w.errorFile.Close()
+		_ = w.errorFile.Close()
 	}
 }
 
@@ -562,11 +564,11 @@ func (w *StandardWriter) WriteStoreDebugData(host, templateID, eventType string,
 		filename = filepath.Join(subFolder, fmt.Sprintf("%s.txt", filename))
 		f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
-			fmt.Print(err)
+			gologger.Error().Msgf("Could not open debug output file: %s", err)
 			return
 		}
-		_, _ = f.WriteString(fmt.Sprintln(data))
-		f.Close()
+		_, _ = fmt.Fprintln(f, data)
+		_ = f.Close()
 	}
 }
 

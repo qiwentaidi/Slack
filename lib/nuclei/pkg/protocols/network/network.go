@@ -12,7 +12,7 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/expressions"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/generators"
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/network/networkclientpool"
-	errorutil "github.com/projectdiscovery/utils/errors"
+	"github.com/projectdiscovery/utils/errkit"
 	fileutil "github.com/projectdiscovery/utils/file"
 )
 
@@ -59,7 +59,7 @@ type Request struct {
 	//   Inputs contains inputs for the network socket
 	Inputs []*Input `yaml:"inputs,omitempty" json:"inputs,omitempty" jsonschema:"title=inputs for the network request,description=Inputs contains any input/output for the current request"`
 	// description: |
-	//   Port is the port to send network requests to. this acts as default port but is overriden if target/input contains
+	//   Port is the port to send network requests to. this acts as default port but is overridden if target/input contains
 	// non-http(s) ports like 80,8080,8081 etc
 	Port string `yaml:"port,omitempty" json:"port,omitempty" jsonschema:"title=port to send requests to,description=Port to send network requests to,oneof_type=string;integer"`
 
@@ -179,11 +179,20 @@ func (request *Request) Compile(options *protocols.ExecutorOptions) error {
 		request.addresses = append(request.addresses, addressKV{address: address, tls: shouldUseTLS})
 	}
 	// Pre-compile any input dsl functions before executing the request.
+	// Build a map with template variables and -var flag values for pre-compilation
+	preCompileVars := request.options.Variables.GetAll()
+	// Merge in -var flag values
+	if request.options.Options != nil {
+		generators.MergeMapsInto(preCompileVars, request.options.Options.Vars.AsMap())
+	}
+	// Also merge in constants
+	generators.MergeMapsInto(preCompileVars, request.options.Constants)
+
 	for _, input := range request.Inputs {
 		if input.Type.String() != "" {
 			continue
 		}
-		if compiled, evalErr := expressions.Evaluate(input.Data, map[string]interface{}{}); evalErr == nil {
+		if compiled, evalErr := expressions.Evaluate(input.Data, preCompileVars); evalErr == nil {
 			input.Data = compiled
 		}
 	}
@@ -196,10 +205,10 @@ func (request *Request) Compile(options *protocols.ExecutorOptions) error {
 			}
 			portInt, err := strconv.Atoi(port)
 			if err != nil {
-				return errorutil.NewWithErr(err).Msgf("could not parse port %v from '%s'", port, request.Port)
+				return errkit.Wrapf(err, "could not parse port %v from '%s'", port, request.Port)
 			}
 			if portInt < 1 || portInt > 65535 {
-				return errorutil.NewWithTag(request.TemplateID, "port %v is not in valid range", portInt)
+				return errkit.Newf("port %v is not in valid range", portInt)
 			}
 			request.ports = append(request.ports, port)
 		}
@@ -237,7 +246,9 @@ func (request *Request) Compile(options *protocols.ExecutorOptions) error {
 	}
 
 	// Create a client for the class
-	client, err := networkclientpool.Get(options.Options, &networkclientpool.Configuration{})
+	client, err := networkclientpool.Get(options.Options, &networkclientpool.Configuration{
+		CustomDialer: options.CustomFastdialer,
+	})
 	if err != nil {
 		return errors.Wrap(err, "could not get network client")
 	}
@@ -262,4 +273,9 @@ func (request *Request) Requests() int {
 
 func (request *Request) SetDialer(dialer *fastdialer.Dialer) {
 	request.dialer = dialer
+}
+
+// UpdateOptions replaces this request's options with a new copy
+func (r *Request) UpdateOptions(opts *protocols.ExecutorOptions) {
+	r.options.ApplyNewEngineOptions(opts)
 }

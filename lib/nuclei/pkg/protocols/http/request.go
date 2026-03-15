@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"strconv"
 	"strings"
@@ -58,9 +59,9 @@ const (
 
 var (
 	MaxBodyRead = 10 * unitutils.Mega
-	// ErrMissingVars is error occured when variables are missing
+	// ErrMissingVars is error occurred when variables are missing
 	ErrMissingVars = errkit.New("stop execution due to unresolved variables").SetKind(nucleierr.ErrTemplateLogic).Build()
-	// ErrHttpEngineRequestDeadline is error occured when request deadline set by http request engine is exceeded
+	// ErrHttpEngineRequestDeadline is error occurred when request deadline set by http request engine is exceeded
 	ErrHttpEngineRequestDeadline = errkit.New("http request engine deadline exceeded").SetKind(errkit.ErrKindDeadline).Build()
 )
 
@@ -149,7 +150,7 @@ func (request *Request) executeRaceRequest(input *contextargs.Context, previous 
 
 	// look for unresponsive hosts and cancel inflight requests as well
 	spmHandler.SetOnResultCallback(func(err error) {
-		// marks thsi host as unresponsive if applicable
+		// marks this host as unresponsive if applicable
 		request.markHostError(input, err)
 		if request.isUnresponsiveAddress(input) {
 			// stop all inflight requests
@@ -189,7 +190,7 @@ func (request *Request) executeRaceRequest(input *contextargs.Context, previous 
 	return multierr.Combine(spmHandler.CombinedResults()...)
 }
 
-// executeRaceRequest executes parallel requests for a template
+// executeParallelHTTP executes parallel requests for a template
 func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicValues output.InternalEvent, callback protocols.OutputEventCallback) error {
 	// Workers that keeps enqueuing new requests
 	maxWorkers := request.Threads
@@ -202,7 +203,7 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 	}
 
 	// Stop-at-first-match logic while executing requests
-	// parallely using threads
+	// parallelly using threads
 	shouldStop := (request.options.Options.StopAtFirstMatch || request.StopAtFirstMatch || request.options.StopAtFirstMatch)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -231,13 +232,72 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 
 	// look for unresponsive hosts and cancel inflight requests as well
 	spmHandler.SetOnResultCallback(func(err error) {
-		// marks thsi host as unresponsive if applicable
+		// marks this host as unresponsive if applicable
 		request.markHostError(input, err)
 		if request.isUnresponsiveAddress(input) {
 			// stop all inflight requests
 			spmHandler.Cancel()
 		}
 	})
+
+	// bounded worker-pool to avoid spawning one goroutine per payload
+	type task struct {
+		req                *generatedRequest
+		updatedInput       *contextargs.Context
+		hasInteractMarkers bool
+	}
+
+	var workersWg sync.WaitGroup
+	currentWorkers := maxWorkers
+	tasks := make(chan task, maxWorkers)
+	spawnWorker := func(ctx context.Context) {
+		workersWg.Add(1)
+		go func() {
+			defer workersWg.Done()
+			for t := range tasks {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+				if spmHandler.FoundFirstMatch() || request.isUnresponsiveAddress(t.updatedInput) || spmHandler.Cancelled() {
+					continue
+				}
+				spmHandler.Acquire()
+				if spmHandler.FoundFirstMatch() || request.isUnresponsiveAddress(t.updatedInput) || spmHandler.Cancelled() {
+					spmHandler.Release()
+					continue
+				}
+				request.options.RateLimitTake()
+				hasInteractMatchers := interactsh.HasMatchers(request.CompiledOperators)
+				needsRequestEvent := hasInteractMatchers && request.NeedsRequestCondition()
+				select {
+				case <-spmHandler.Done():
+					spmHandler.Release()
+					continue
+				case spmHandler.ResultChan <- request.executeRequest(t.updatedInput, t.req, make(map[string]interface{}), hasInteractMatchers, func(event *output.InternalWrappedEvent) {
+					if (t.hasInteractMarkers || needsRequestEvent) && request.options.Interactsh != nil {
+						requestData := &interactsh.RequestData{
+							MakeResultFunc: request.MakeResultEvent,
+							Event:          event,
+							Operators:      request.CompiledOperators,
+							MatchFunc:      request.Match,
+							ExtractFunc:    request.Extract,
+						}
+						allOASTUrls := httputils.GetInteractshURLSFromEvent(event.InternalEvent)
+						allOASTUrls = append(allOASTUrls, t.req.interactshURLs...)
+						request.options.Interactsh.RequestEvent(sliceutil.Dedupe(allOASTUrls), requestData)
+					}
+					wrappedCallback(event)
+				}, 0):
+					spmHandler.Release()
+				}
+			}
+		}()
+	}
+	for i := 0; i < currentWorkers; i++ {
+		spawnWorker(ctx)
+	}
 
 	// iterate payloads and make requests
 	generator := request.newGenerator(false)
@@ -249,6 +309,8 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 
 		select {
 		case <-input.Context().Done():
+			close(tasks)
+			workersWg.Wait()
 			return input.Context().Err()
 		default:
 		}
@@ -256,7 +318,16 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 		// resize check point - nop if there are no changes
 		if shouldFollowGlobal && spmHandler.Size() != request.options.Options.PayloadConcurrency {
 			if err := spmHandler.Resize(input.Context(), request.options.Options.PayloadConcurrency); err != nil {
+				close(tasks)
+				workersWg.Wait()
 				return err
+			}
+			// if payload concurrency increased, add more workers
+			if spmHandler.Size() > currentWorkers {
+				for i := 0; i < spmHandler.Size()-currentWorkers; i++ {
+					spawnWorker(ctx)
+				}
+				currentWorkers = spmHandler.Size()
 			}
 		}
 
@@ -272,8 +343,11 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 				break
 			}
 			request.options.Progress.IncrementFailedRequestsBy(int64(generator.Total()))
+			close(tasks)
+			workersWg.Wait()
 			return err
 		}
+		hasInteractMarkers := interactsh.HasMarkers(inputData) || len(generatedHttpRequest.interactshURLs) > 0
 		if input.MetaInput.Input == "" {
 			input.MetaInput.Input = generatedHttpRequest.URL()
 		}
@@ -281,31 +355,25 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 		if request.isUnresponsiveAddress(updatedInput) {
 			// skip on unresponsive host no need to continue
 			spmHandler.Cancel()
+			close(tasks)
+			workersWg.Wait()
 			return nil
 		}
-		spmHandler.Acquire()
-		go func(httpRequest *generatedRequest) {
-			defer spmHandler.Release()
-			if spmHandler.FoundFirstMatch() || request.isUnresponsiveAddress(updatedInput) || spmHandler.Cancelled() {
-				return
+		select {
+		case <-spmHandler.Done():
+			close(tasks)
+			workersWg.Wait()
+			spmHandler.Wait()
+			if spmHandler.FoundFirstMatch() {
+				return nil
 			}
-			// putting ratelimiter here prevents any unnecessary waiting if any
-			request.options.RateLimitTake()
-
-			// after ratelimit take, check if we need to stop
-			if spmHandler.FoundFirstMatch() || request.isUnresponsiveAddress(updatedInput) || spmHandler.Cancelled() {
-				return
-			}
-
-			select {
-			case <-spmHandler.Done():
-				return
-			case spmHandler.ResultChan <- request.executeRequest(input, httpRequest, make(map[string]interface{}), false, wrappedCallback, 0):
-				return
-			}
-		}(generatedHttpRequest)
+			return multierr.Combine(spmHandler.CombinedResults()...)
+		case tasks <- task{req: generatedHttpRequest, updatedInput: updatedInput, hasInteractMarkers: hasInteractMarkers}:
+		}
 		request.options.Progress.IncrementRequests()
 	}
+	close(tasks)
+	workersWg.Wait()
 	spmHandler.Wait()
 	if spmHandler.FoundFirstMatch() {
 		// ignore any context cancellation and in-transit execution errors
@@ -336,14 +404,11 @@ func (request *Request) executeTurboHTTP(input *contextargs.Context, dynamicValu
 	pipeClient := rawhttp.NewPipelineClient(pipeOptions)
 
 	// defaultMaxWorkers should be a sufficient value to keep queues always full
-	maxWorkers := defaultMaxWorkers
 	// in case the queue is bigger increase the workers
-	if pipeOptions.MaxPendingRequests > maxWorkers {
-		maxWorkers = pipeOptions.MaxPendingRequests
-	}
+	maxWorkers := max(pipeOptions.MaxPendingRequests, defaultMaxWorkers)
 
 	// Stop-at-first-match logic while executing requests
-	// parallely using threads
+	// parallelly using threads
 	shouldStop := (request.options.Options.StopAtFirstMatch || request.StopAtFirstMatch || request.options.StopAtFirstMatch)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -372,7 +437,7 @@ func (request *Request) executeTurboHTTP(input *contextargs.Context, dynamicValu
 
 	// look for unresponsive hosts and cancel inflight requests as well
 	spmHandler.SetOnResultCallback(func(err error) {
-		// marks thsi host as unresponsive if applicable
+		// marks this host as unresponsive if applicable
 		request.markHostError(input, err)
 		if request.isUnresponsiveAddress(input) {
 			// stop all inflight requests
@@ -439,10 +504,6 @@ func (request *Request) executeTurboHTTP(input *contextargs.Context, dynamicValu
 
 // ExecuteWithResults executes the final request on a URL
 func (request *Request) ExecuteWithResults(input *contextargs.Context, dynamicValues, previous output.InternalEvent, callback protocols.OutputEventCallback) error {
-	if request.Pipeline || request.Race && request.RaceNumberRequests > 0 || request.Threads > 0 {
-		variablesMap := request.options.Variables.Evaluate(generators.MergeMaps(dynamicValues, previous))
-		dynamicValues = generators.MergeMaps(variablesMap, dynamicValues, request.options.Constants)
-	}
 	// verify if pipeline was requested
 	if request.Pipeline {
 		return request.executeTurboHTTP(input, dynamicValues, previous, callback)
@@ -458,7 +519,7 @@ func (request *Request) ExecuteWithResults(input *contextargs.Context, dynamicVa
 	}
 
 	// verify if parallel elaboration was requested
-	if request.Threads > 0 && len(request.Payloads) > 0 {
+	if request.Threads > 0 && (len(request.Payloads) > 0 || request.Race) {
 		return request.executeParallelHTTP(input, dynamicValues, callback)
 	}
 
@@ -648,7 +709,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 			}
 			if err == nil {
 				// update the request body with the reusable reader
-				generatedRequest.request.Body = newReqBody
+				generatedRequest.request.SetBodyReader(newReqBody)
 				// get content length
 				length, _ := io.Copy(io.Discard, newReqBody)
 				generatedRequest.request.ContentLength = length
@@ -745,8 +806,8 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 		})
 	} else {
 		//** For Normal requests **//
-		hostname = generatedRequest.request.URL.Host
-		formedURL = generatedRequest.request.URL.String()
+		hostname = generatedRequest.request.Host
+		formedURL = generatedRequest.request.String()
 		// if nuclei-project is available check if the request was already sent previously
 		if request.options.ProjectFile != nil {
 			// if unavailable fail silently
@@ -778,6 +839,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 					connConfiguration := request.connConfiguration.Clone()
 					modifiedConfig = connConfiguration
 				}
+
 				modifiedConfig.ResponseHeaderTimeout = updatedTimeout.Timeout
 			}
 
@@ -821,11 +883,16 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 		}
 	}
 
+	dialers := protocolstate.GetDialersWithId(request.options.Options.ExecutionId)
+	if dialers == nil {
+		return fmt.Errorf("dialers not found for execution id %s", request.options.Options.ExecutionId)
+	}
+
 	if err != nil {
 		// rawhttp doesn't support draining response bodies.
 		if resp != nil && resp.Body != nil && generatedRequest.rawRequest == nil && !generatedRequest.original.Pipeline {
 			_, _ = io.CopyN(io.Discard, resp.Body, drainReqSize)
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		request.options.Output.Request(request.options.TemplatePath, formedURL, request.Type().String(), err)
 		request.options.Progress.IncrementErrorsBy(1)
@@ -841,7 +908,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 		if input.MetaInput.CustomIP != "" {
 			outputEvent["ip"] = input.MetaInput.CustomIP
 		} else {
-			outputEvent["ip"] = protocolstate.Dialer.GetDialedIP(hostname)
+			outputEvent["ip"] = dialers.Fastdialer.GetDialedIP(hostname)
 			// try getting cname
 			request.addCNameIfAvailable(hostname, outputEvent)
 		}
@@ -861,8 +928,10 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 	var curlCommand string
 	if !request.Unsafe && resp != nil && generatedRequest.request != nil && resp.Request != nil && !request.Race {
 		bodyBytes, _ := generatedRequest.request.BodyBytes()
-		resp.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
-		command, err := http2curl.GetCurlCommand(generatedRequest.request.Request)
+		// Use a clone to avoid a race condition with the http transport
+		req := resp.Request.Clone(resp.Request.Context())
+		req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+		command, err := http2curl.GetCurlCommand(req)
 		if err == nil && command != nil {
 			curlCommand = command.String()
 		}
@@ -893,21 +962,28 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 	onceFunc := sync.OnceFunc(func() {
 		// if nuclei-project is enabled store the response if not previously done
 		if request.options.ProjectFile != nil && !fromCache {
-			if err := request.options.ProjectFile.Set(dumpedRequest, resp, respChain.Body().Bytes()); err != nil {
+			if err := request.options.ProjectFile.Set(dumpedRequest, resp, respChain.BodyBytes()); err != nil {
 				errx = errors.Wrap(err, "could not store in project file")
 			}
 		}
 	})
 
-	// evaluate responses continiously until first redirect request in reverse order
+	// evaluate responses continuously until first redirect request in reverse order
 	for respChain.Has() {
 		// fill buffers, read response body and reuse connection
 		if err := respChain.Fill(); err != nil {
 			return errors.Wrap(err, "could not generate response chain")
 		}
 
+		// Cache response strings once per Fill() to avoid repeated allocs.
+		// NOTE(dwisiswant0): These are valid until Previous() (which reloads
+		// the buffer).
+		fullResponseStr := respChain.FullResponseString()
+		bodyStr := respChain.BodyString()
+		headersStr := respChain.HeadersString()
+
 		// log request stats
-		request.options.Output.RequestStatsLog(strconv.Itoa(respChain.Response().StatusCode), respChain.FullResponse().String())
+		request.options.Output.RequestStatsLog(strconv.Itoa(respChain.Response().StatusCode), fullResponseStr)
 
 		// save response to projectfile
 		onceFunc()
@@ -920,7 +996,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 			}
 		}
 		if generatedRequest.request != nil {
-			matchedURL = generatedRequest.request.URL.String()
+			matchedURL = generatedRequest.request.String()
 		}
 		// Give precedence to the final URL from response
 		if respChain.Request() != nil {
@@ -948,7 +1024,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 			}
 		}
 
-		outputEvent := request.responseToDSLMap(respChain.Response(), input.MetaInput.Input, matchedURL, convUtil.String(dumpedRequest), respChain.FullResponse().String(), respChain.Body().String(), respChain.Headers().String(), duration, generatedRequest.meta)
+		outputEvent := request.responseToDSLMap(respChain.Response(), input.MetaInput.Input, matchedURL, convUtil.String(dumpedRequest), fullResponseStr, bodyStr, headersStr, duration, generatedRequest.meta)
 		// add response fields to template context and merge templatectx variables to output event
 		request.options.AddTemplateVars(input.MetaInput, request.Type(), request.ID, outputEvent)
 		if request.options.HasTemplateCtx(input.MetaInput) {
@@ -961,7 +1037,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 		if input.MetaInput.CustomIP != "" {
 			outputEvent["ip"] = input.MetaInput.CustomIP
 		} else {
-			dialer := protocolstate.GetDialer()
+			dialer := dialers.Fastdialer
 			if dialer != nil {
 				outputEvent["ip"] = dialer.GetDialedIP(hostname)
 			}
@@ -972,12 +1048,8 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 		if request.options.Interactsh != nil {
 			request.options.Interactsh.MakePlaceholders(generatedRequest.interactshURLs, outputEvent)
 		}
-		for k, v := range previousEvent {
-			finalEvent[k] = v
-		}
-		for k, v := range outputEvent {
-			finalEvent[k] = v
-		}
+		maps.Copy(finalEvent, previousEvent)
+		maps.Copy(finalEvent, outputEvent)
 
 		// Add to history the current request number metadata if asked by the user.
 		if request.NeedsRequestCondition() {
@@ -993,6 +1065,12 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 		request.pruneSignatureInternalValues(generatedRequest.meta)
 
 		interimEvent := generators.MergeMaps(generatedRequest.dynamicValues, finalEvent)
+		interimEvent["payloads"] = generatedRequest.meta
+		// add the request URL pattern to the event BEFORE operators execute
+		// so that interactsh events etc can also access it
+		if request.options.ExportReqURLPattern {
+			interimEvent[ReqURLPatternKey] = generatedRequest.requestURLPattern
+		}
 		isDebug := request.options.Options.Debug || request.options.Options.DebugResponse
 		event := eventcreator.CreateEventWithAdditionalOptions(request, interimEvent, isDebug, func(internalWrappedEvent *output.InternalWrappedEvent) {
 			internalWrappedEvent.OperatorsResult.PayloadValues = generatedRequest.meta
@@ -1008,17 +1086,9 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 			})
 		}
 
-		// if requrlpattern is enabled, only then it is reflected in result event else it is empty string
-		// consult @Ice3man543 before changing this logic (context: vuln_hash)
-		if request.options.ExportReqURLPattern {
-			for _, v := range event.Results {
-				v.ReqURLPattern = generatedRequest.requestURLPattern
-			}
-		}
-
 		responseContentType := respChain.Response().Header.Get("Content-Type")
 		isResponseTruncated := request.MaxSize > 0 && respChain.Body().Len() >= request.MaxSize
-		dumpResponse(event, request, respChain.FullResponse().Bytes(), formedURL, responseContentType, isResponseTruncated, input.MetaInput.Input)
+		dumpResponse(event, request, fullResponseStr, formedURL, responseContentType, isResponseTruncated, input.MetaInput.Input)
 
 		callback(event)
 
@@ -1032,7 +1102,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 				StatusCode:    respChain.Response().StatusCode,
 				Matched:       event.HasResults(),
 				RawRequest:    string(dumpedRequest),
-				RawResponse:   respChain.FullResponse().String(),
+				RawResponse:   fullResponseStr,
 				Severity:      request.options.TemplateInfo.SeverityHolder.Severity.String(),
 			})
 		}
@@ -1085,11 +1155,20 @@ func (request *Request) validateNFixEvent(input *contextargs.Context, gr *genera
 
 // addCNameIfAvailable adds the cname to the event if available
 func (request *Request) addCNameIfAvailable(hostname string, outputEvent map[string]interface{}) {
-	if protocolstate.Dialer == nil {
+	if request.dialer == nil {
 		return
 	}
 
-	data, err := protocolstate.Dialer.GetDNSData(hostname)
+	if request.options.Interactsh != nil {
+		interactshDomain := request.options.Interactsh.GetHostname()
+		if interactshDomain != "" {
+			if strings.EqualFold(hostname, interactshDomain) || strings.HasSuffix(hostname, "."+interactshDomain) {
+				return
+			}
+		}
+	}
+
+	data, err := request.dialer.GetDNSData(hostname)
 	if err == nil {
 		switch len(data.CNAME) {
 		case 0:
@@ -1150,13 +1229,13 @@ func (request *Request) setCustomHeaders(req *generatedRequest) {
 
 const CRLF = "\r\n"
 
-func dumpResponse(event *output.InternalWrappedEvent, request *Request, redirectedResponse []byte, formedURL string, responseContentType string, isResponseTruncated bool, reqURL string) {
+func dumpResponse(event *output.InternalWrappedEvent, request *Request, redirectedResponse string, formedURL string, responseContentType string, isResponseTruncated bool, reqURL string) {
 	cliOptions := request.options.Options
 	if cliOptions.Debug || cliOptions.DebugResponse || cliOptions.StoreResponse {
-		response := string(redirectedResponse)
+		response := redirectedResponse
 
 		var highlightedResult string
-		if responseContentType == "application/octet-stream" || ((responseContentType == "" || responseContentType == "application/x-www-form-urlencoded") && responsehighlighter.HasBinaryContent(response)) {
+		if (responseContentType == "application/octet-stream" || responseContentType == "application/x-www-form-urlencoded") && responsehighlighter.HasBinaryContent(response) {
 			highlightedResult = createResponseHexDump(event, response, cliOptions.NoColor)
 		} else {
 			highlightedResult = responsehighlighter.Highlight(event.OperatorsResult, response, cliOptions.NoColor, false)

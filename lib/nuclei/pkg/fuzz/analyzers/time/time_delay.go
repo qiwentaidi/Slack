@@ -60,12 +60,8 @@ func checkTimingDependency(
 	requestsLeft := requestsLimit
 
 	var requestsSent []requestsSentMetadata
-	for {
-		if requestsLeft <= 0 {
-			break
-		}
-
-		isCorrelationPossible, delayRecieved, err := sendRequestAndTestConfidence(regression, highSleepTimeSeconds, requestSender, baselineDelay)
+	for requestsLeft > 0 {
+		isCorrelationPossible, delayReceived, err := sendRequestAndTestConfidence(regression, highSleepTimeSeconds, requestSender, baselineDelay)
 		if err != nil {
 			return false, "", err
 		}
@@ -73,29 +69,29 @@ func checkTimingDependency(
 			return false, "", nil
 		}
 		// Check the delay is greater than baseline by seconds requested
-		if delayRecieved < baselineDelay+float64(highSleepTimeSeconds)*0.8 {
+		if delayReceived < baselineDelay+float64(highSleepTimeSeconds)*0.8 {
 			return false, "", nil
 		}
 		requestsSent = append(requestsSent, requestsSentMetadata{
 			delay:         highSleepTimeSeconds,
-			delayReceived: delayRecieved,
+			delayReceived: delayReceived,
 		})
 
-		isCorrelationPossibleSecond, delayRecievedSecond, err := sendRequestAndTestConfidence(regression, int(DefaultLowSleepTimeSeconds), requestSender, baselineDelay)
+		isCorrelationPossibleSecond, delayReceivedSecond, err := sendRequestAndTestConfidence(regression, int(DefaultLowSleepTimeSeconds), requestSender, baselineDelay)
 		if err != nil {
 			return false, "", err
 		}
 		if !isCorrelationPossibleSecond {
 			return false, "", nil
 		}
-		if delayRecievedSecond < baselineDelay+float64(DefaultLowSleepTimeSeconds)*0.8 {
+		if delayReceivedSecond < baselineDelay+float64(DefaultLowSleepTimeSeconds)*0.8 {
 			return false, "", nil
 		}
 		requestsLeft = requestsLeft - 2
 
 		requestsSent = append(requestsSent, requestsSentMetadata{
 			delay:         int(DefaultLowSleepTimeSeconds),
-			delayReceived: delayRecievedSecond,
+			delayReceived: delayReceivedSecond,
 		})
 	}
 
