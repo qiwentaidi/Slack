@@ -114,21 +114,22 @@ jobs:
         shell: bash
         run: |
           mkdir -p release
-          mv build/bin/Slack.app "release/${{ matrix.artifact_name }}.app"
-          chmod +x "release/${{ matrix.artifact_name }}.app/Contents/MacOS/Slack"
-          xattr -c "release/${{ matrix.artifact_name }}.app"
-          ditto -c -k --sequesterRsrc --keepParent "release/${{ matrix.artifact_name }}.app" "release/${{ matrix.artifact_name }}.zip"
+          mv build/bin/Slack.app release/Slack.app
+          chmod +x "release/Slack.app/Contents/MacOS/Slack"
+          xattr -c "release/Slack.app"
+          ditto -c -k --sequesterRsrc --keepParent "release/Slack.app" "release/${{ matrix.artifact_name }}.zip"
           create-dmg \
             --volname "Slack" \
             --window-pos 200 120 \
             --window-size 800 400 \
             --icon-size 100 \
-            --icon "${{ matrix.artifact_name }}.app" 200 190 \
+            --icon "Slack.app" 200 190 \
             --app-drop-link 600 185 \
-            --hide-extension "${{ matrix.artifact_name }}.app" \
-            --volicon "release/${{ matrix.artifact_name }}.app/Contents/Resources/iconfile.icns" \
+            --hide-extension "Slack.app" \
+            --volicon "release/Slack.app/Contents/Resources/iconfile.icns" \
             "release/${{ matrix.artifact_name }}.dmg" \
-            "release/${{ matrix.artifact_name }}.app"
+            "release/Slack.app"
+          rm -rf "release/Slack.app"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
