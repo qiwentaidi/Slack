@@ -27,7 +27,7 @@ jobs:
             goarch: amd64
             artifact_name: Slack-linux-amd64
           - id: macos-amd64
-            os: macos-15-large
+            os: macos-15
             goos: darwin
             goarch: amd64
             artifact_name: Slack-macos-amd64
