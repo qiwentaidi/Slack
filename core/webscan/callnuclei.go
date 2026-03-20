@@ -49,6 +49,9 @@ func NewNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allOptions []s
 		gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] check vuln: %s", o.URL))
 		ne.LoadTargets([]string{o.URL}, false)
 		err = ne.ExecuteWithCallback(func(event *output.ResultEvent) {
+			if showMatched(event) == "" {
+				return
+			}
 			gologger.DualLog(ctx, gologger.Level_Success, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
 			var reference string
 			if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
@@ -93,6 +96,9 @@ func NewThreadSafeNucleiEngine(ctx, ctrlCtx context.Context, taskId string, allO
 	}
 	gologger.DualLog(ctx, gologger.Level_INFO, fmt.Sprintf("[nuclei] loading %d targets to scan", count))
 	ne.GlobalResultCallback(func(event *output.ResultEvent) {
+		if showMatched(event) == "" {
+			return
+		}
 		gologger.DualLog(ctx, gologger.Level_Success, fmt.Sprintf("[%s] [%s] %s", event.TemplateID, event.Info.SeverityHolder.Severity.String(), event.Matched))
 		var reference string
 		if event.Info.Reference != nil && !event.Info.Reference.IsEmpty() {
