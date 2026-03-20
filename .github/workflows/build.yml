@@ -27,12 +27,12 @@ jobs:
             goarch: amd64
             artifact_name: Slack-linux-amd64
           - id: macos-amd64
-            os: macos-14
+            os: macos-15-large
             goos: darwin
             goarch: amd64
             artifact_name: Slack-macos-amd64
           - id: macos-arm64
-            os: macos-14
+            os: macos-15
             goos: darwin
             goarch: arm64
             artifact_name: Slack-macos-arm64
@@ -74,6 +74,19 @@ jobs:
         shell: bash
         run: |
           brew install create-dmg
+
+      - name: Select Full Xcode
+        if: matrix.goos == 'darwin'
+        shell: bash
+        run: |
+          XCODE_PATH="$(ls -d /Applications/Xcode*.app/Contents/Developer 2>/dev/null | sort -V | tail -n1)"
+          if [ -z "$XCODE_PATH" ]; then
+            echo "No Xcode developer directory found"
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE_PATH"
+          xcodebuild -version
+          xcrun --show-sdk-path
 
       - name: Install Wails CLI
         shell: bash
