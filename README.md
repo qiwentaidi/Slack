@@ -16,7 +16,9 @@
 
 > [!NOTE]
 >
-> 目前该工具维护率会下降，目前做了一个Web增强版，可以带来全新的界面以及更好的体验 https://github.com/qiwentaidi/Hephaestus
+> V2版本已经停止维护
+> V3版本：https://github.com/qiwentaidi/Hephaestus-Desktop
+> WEB版本：https://github.com/qiwentaidi/Hephaestus
 
 ## 网站扫描
 
